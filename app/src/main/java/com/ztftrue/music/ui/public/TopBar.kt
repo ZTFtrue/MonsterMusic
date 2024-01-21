@@ -28,6 +28,7 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -42,6 +43,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -211,6 +213,7 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                     }
                 }
                 Row {
+                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)){
                     TextField(
                         value = inputMinutes,
                         onValueChange = {
@@ -240,7 +243,7 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                             Text("minutes",      color = MaterialTheme.colorScheme.onBackground)
                         },
                     )
-                }
+                }}
 
                 Row(
                     modifier = Modifier

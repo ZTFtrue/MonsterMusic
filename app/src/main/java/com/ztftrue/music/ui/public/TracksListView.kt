@@ -1,6 +1,7 @@
 package com.ztftrue.music.ui.public
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -8,10 +9,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
@@ -47,72 +50,84 @@ fun TracksListView(
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     key(tracksList) {
-        ConstraintLayout(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(0.dp),
-        ) {
-            val (list, button) = createRefs()
-            LazyColumn(
-                state = listState, modifier = Modifier
-                    .constrainAs(list) {
-                        top.linkTo(parent.top)
-                    }
+        if (tracksList.size == 0) {
+            Text(
+                text = "No music",
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.horizontalScroll(rememberScrollState(0))
+            )
+        }else{
+            ConstraintLayout(
+                modifier = Modifier
                     .fillMaxSize()
+                    .padding(0.dp),
             ) {
-                items(tracksList.size) { index ->
-                    val music = tracksList[index]
-                    MusicItemView(
-                        music,
-                        index,
-                        musicViewModel,
-                        playList,
-                        modifier = Modifier
-                            .padding(10.dp)
-                            .fillMaxWidth(),
-                        tracksList,
-                        selectStatus,
-                        selectList,
-                    )
-                    Divider(color = MaterialTheme.colorScheme.inverseOnSurface, thickness = 1.2.dp)
+                val (list, button) = createRefs()
+                LazyColumn(
+                    state = listState, modifier = Modifier
+                        .constrainAs(list) {
+                            top.linkTo(parent.top)
+                        }
+                        .fillMaxSize()
+                ) {
+                    items(tracksList.size) { index ->
+                        val music = tracksList[index]
+                        MusicItemView(
+                            music,
+                            index,
+                            musicViewModel,
+                            playList,
+                            modifier = Modifier
+                                .padding(10.dp)
+                                .fillMaxWidth(),
+                            tracksList,
+                            selectStatus,
+                            selectList,
+                        )
+                        Divider(
+                            color = MaterialTheme.colorScheme.inverseOnSurface,
+                            thickness = 1.2.dp
+                        )
+                    }
                 }
-            }
-            if (!selectStatus) {
-                SmallFloatingActionButton(
-                    onClick = {
-                        scope.launch {
-                            for ((index, entry) in tracksList.withIndex()) {
-                                if (entry.id == musicViewModel.currentPlay.value?.id) {
-                                    // TODO calculate the scroll position by　
-                                    listState.animateScrollToItem(if ((index - 5) < 0) 0 else (index - 5))
-                                    break
+                if (!selectStatus) {
+                    SmallFloatingActionButton(
+                        onClick = {
+                            scope.launch {
+                                for ((index, entry) in tracksList.withIndex()) {
+                                    if (entry.id == musicViewModel.currentPlay.value?.id) {
+                                        // TODO calculate the scroll position by　
+                                        listState.animateScrollToItem(if ((index - 4) < 0) 0 else (index - 4))
+                                        break
+                                    }
                                 }
                             }
-                        }
-                    },
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .size(56.dp)
-                        .zIndex(10f)
-                        .constrainAs(button) {
-                            bottom.linkTo(parent.bottom)
-                            end.linkTo(parent.end)
-                        }
-                        .offset(x = (-1).dp, y = (-40).dp),
-                    shape = CircleShape,
-                ) {
-                    Image(
-                        painter = painterResource(
-                            R.drawable.icon_location
-                        ),
-                        contentDescription = "find current playing music",
+                        },
                         modifier = Modifier
-                            .size(30.dp),
-                        colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
-                    )
+                            .padding(10.dp)
+                            .size(56.dp)
+                            .zIndex(10f)
+                            .constrainAs(button) {
+                                bottom.linkTo(parent.bottom)
+                                end.linkTo(parent.end)
+                            }
+                            .offset(x = (-1).dp, y = (-40).dp),
+                        shape = CircleShape,
+                    ) {
+                        Image(
+                            painter = painterResource(
+                                R.drawable.icon_location
+                            ),
+                            contentDescription = "find current playing music",
+                            modifier = Modifier
+                                .size(30.dp),
+                            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                        )
+                    }
                 }
             }
         }
+
     }
 
 }

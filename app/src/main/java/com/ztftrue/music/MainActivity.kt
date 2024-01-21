@@ -870,7 +870,7 @@ class MainActivity : ComponentActivity() {
                                 HorizontalPager(
                                     state = pagerState,
                                     Modifier
-                                        .fillMaxHeight()
+                                        .fillMaxSize()
                                         .padding(it),
                                 ) { it1 ->
                                     key(it1) {

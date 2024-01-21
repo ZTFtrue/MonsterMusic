@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -39,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -91,40 +93,43 @@ fun CreatePlayListDialog(
                         .background(color = MaterialTheme.colorScheme.primary)
                 )
                 Row {
-                    TextField(
-                        value = playListName,
-                        onValueChange = {
-                            playListName = it
-                        },
-                        label = {
-                            Text(
-                                "Enter name",
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        },
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = ImeAction.Done,
-                            keyboardType = KeyboardType.Text
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
+                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
+                        TextField(
+                            value = playListName,
+                            onValueChange = {
+                                playListName = it
+                            },
+                            label = {
+                                Text(
+                                    "Enter name",
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            },
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Done,
+                                keyboardType = KeyboardType.Text
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
 //                            startTimer(inputMinutes.toInt())
-                            }
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        suffix = {
+                                }
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            suffix = {
 //                            Text("")
-                        },
-                        colors = TextFieldDefaults.colors(
-                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                            disabledTextColor = MaterialTheme.colorScheme.onBackground,
-                            unfocusedSupportingTextColor = MaterialTheme.colorScheme.onBackground,
-                            focusedSupportingTextColor = MaterialTheme.colorScheme.onBackground
+                            },
+                            colors = TextFieldDefaults.colors(
+                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                disabledTextColor = MaterialTheme.colorScheme.onBackground,
+                                unfocusedSupportingTextColor = MaterialTheme.colorScheme.onBackground,
+                                focusedSupportingTextColor = MaterialTheme.colorScheme.onBackground
+                            )
                         )
-                    )
+                    }
+
                 }
                 Row(
                     modifier = Modifier
@@ -235,27 +240,30 @@ fun RenamePlayListDialog(
                         .background(color = MaterialTheme.colorScheme.onBackground)
                 )
                 Row {
-                    TextField(
-                        value = playListName,
-                        onValueChange = {
-                            playListName = it
-                        },
-                        label = { Text("Enter name") },
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = ImeAction.Done,
-                            keyboardType = KeyboardType.Text
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
+                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
+                        TextField(
+                            value = playListName,
+                            onValueChange = {
+                                playListName = it
+                            },
+                            label = { Text("Enter name") },
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Done,
+                                keyboardType = KeyboardType.Text
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
 //                            startTimer(inputMinutes.toInt())
-                            }
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        suffix = {
-                        },
-                    )
+                                }
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            suffix = {
+                            },
+                        )
+                    }
+
                 }
                 Row(
                     modifier = Modifier
@@ -566,7 +574,7 @@ fun AddMusicToPlayListDialog(
                         },
                     contentAlignment = Alignment.CenterStart
                 ) {
-                    Text(text = "Cancel", Modifier.padding(start = 10.dp))
+                    Text(text = "Cancel", Modifier.padding(start = 10.dp), color = MaterialTheme.colorScheme.onBackground)
                 }
             }
         }

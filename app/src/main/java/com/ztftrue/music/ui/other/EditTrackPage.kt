@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -36,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -162,6 +165,7 @@ fun EditTrackPage(
                     )
                 }
                 item {
+                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)){
                     TextField(
                         enabled = false,
                         value = title,
@@ -189,9 +193,10 @@ fun EditTrackPage(
                         modifier = Modifier
                             .fillMaxWidth(1f)
                             .focusRequester(focusRequester),
-                    )
+                    )}
                 }
                 item {
+                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)){
                     TextField(
                         enabled = false,
                         value = album,
@@ -219,9 +224,10 @@ fun EditTrackPage(
                         modifier = Modifier
                             .fillMaxWidth(1f)
                             .focusRequester(focusRequester),
-                    )
+                    )}
                 }
                 item {
+                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)){
                     TextField(
                         enabled = false,
                         value = artist,
@@ -249,9 +255,10 @@ fun EditTrackPage(
                         modifier = Modifier
                             .fillMaxWidth(1f)
                             .focusRequester(focusRequester),
-                    )
+                    )}
                 }
                 item {
+                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)){
                     TextField(
                         enabled = false,
                         value = genre,
@@ -279,9 +286,10 @@ fun EditTrackPage(
                         modifier = Modifier
                             .fillMaxWidth(1f)
                             .focusRequester(focusRequester),
-                    )
+                    )}
                 }
                 item {
+                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)){
                     TextField(
                         enabled = false,
                         value = year,
@@ -309,7 +317,7 @@ fun EditTrackPage(
                         modifier = Modifier
                             .fillMaxWidth(1f)
                             .focusRequester(focusRequester),
-                    )
+                    )}
                 }
                 item {
                     Box(

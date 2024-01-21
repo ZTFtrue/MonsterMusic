@@ -3,6 +3,7 @@ package com.ztftrue.music.ui.other
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,13 +13,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,8 +36,10 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -61,7 +68,7 @@ import kotlinx.coroutines.launch
 /**
  * show all music of playlist
  */
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @UnstableApi
 @Composable
 fun SearchPage(
@@ -78,7 +85,6 @@ fun SearchPage(
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
-    var noneListId = -1L
     var jobSeek: Job? = null
     val job = CoroutineScope(Dispatchers.IO)
     LaunchedEffect(keywords) {
@@ -118,7 +124,6 @@ fun SearchPage(
                                 tracksList.addAll(tracksListResult ?: emptyList())
                                 albumsList.addAll(albumListsResult ?: emptyList())
                                 artistList.addAll(artistListsResult ?: emptyList())
-
                             }
                         }
                     }
@@ -139,36 +144,80 @@ fun SearchPage(
                 ) {
                     BackButton(navController)
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        TextField(
-                            value = keywords,
-                            onValueChange = {
-                                val newText = it.ifEmpty {
-                                    ""
-                                }
-                                if (keywords != newText) {
-                                    keywords = newText
-                                }
-                            },
-                            placeholder = {
-                                Text("Enter text")
-                            }, // Placeholder or hint text
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                imeAction = ImeAction.Done,
-                                keyboardType = KeyboardType.Text
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    focusRequester.freeFocus()
-                                    keyboardController?.hide()
-                                }
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth(0.9f)
-                                .focusRequester(focusRequester),
-                            suffix = {
+                        ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
+                            TextField(
+                                value = keywords,
+                                onValueChange = {
+                                    val newText = it.ifEmpty {
+                                        ""
+                                    }
+                                    if (keywords != newText) {
+                                        keywords = newText
+                                    }
+                                },
+                                placeholder = {
+                                    Text("Enter text")
+                                }, // Placeholder or hint text
+                                keyboardOptions = KeyboardOptions.Default.copy(
+                                    imeAction = ImeAction.Done,
+                                    keyboardType = KeyboardType.Text
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        focusRequester.freeFocus()
+                                        keyboardController?.hide()
+                                    }
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .focusRequester(focusRequester),
+                                suffix = {
 
-                            },
-                        )
+                                },
+                                colors = TextFieldDefaults.colors(
+                                    focusedPlaceholderColor = Color.Red, // Set your desired text color here
+                                    unfocusedPlaceholderColor = Color.Red, // Set your desired text color here
+                                    disabledPlaceholderColor = Color.Red, // Set your desired text color here
+                                    errorPlaceholderColor = Color.Red, // Set your desired text color here
+                                )
+                            )
+                        }
+//                        TextField(
+//                            value = keywords,
+//                            onValueChange = {
+//                                val newText = it.ifEmpty {
+//                                    ""
+//                                }
+//                                if (keywords != newText) {
+//                                    keywords = newText
+//                                }
+//                            },
+//                            placeholder = {
+//                                Text("Enter text")
+//                            }, // Placeholder or hint text
+//                            keyboardOptions = KeyboardOptions.Default.copy(
+//                                imeAction = ImeAction.Done,
+//                                keyboardType = KeyboardType.Text
+//                            ),
+//                            keyboardActions = KeyboardActions(
+//                                onDone = {
+//                                    focusRequester.freeFocus()
+//                                    keyboardController?.hide()
+//                                }
+//                            ),
+//                            modifier = Modifier
+//                                .fillMaxWidth(0.9f)
+//                                .focusRequester(focusRequester),
+//                            suffix = {
+//
+//                            },
+//                            colors = TextFieldDefaults.colors(
+//                                focusedPlaceholderColor = Color.Red, // Set your desired text color here
+//                                unfocusedPlaceholderColor = Color.Red, // Set your desired text color here
+//                                disabledPlaceholderColor = Color.Red, // Set your desired text color here
+//                                errorPlaceholderColor = Color.Red, // Set your desired text color here
+//                            )
+//                        )
 //                        IconButton(onClick = {
 //                            focusRequester.freeFocus()
 //                            keyboardController?.hide()
@@ -193,8 +242,12 @@ fun SearchPage(
             ) {
                 item(1) {
                     val configuration = LocalConfiguration.current
-                    if (albumsList.isEmpty() && artistList.isEmpty() && tracksList.isEmpty()) {
-                        Text(text = "No result")
+                    if (keywords.isNotEmpty() && albumsList.isEmpty() && artistList.isEmpty() && tracksList.isEmpty()) {
+                        Text(
+                            text = "No result",
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.horizontalScroll(rememberScrollState(0))
+                        )
                     }
                     if (albumsList.isNotEmpty()) {
                         Text(text = "Album")
