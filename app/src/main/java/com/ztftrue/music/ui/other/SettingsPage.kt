@@ -20,7 +20,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -38,10 +38,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -325,13 +328,15 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                         {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Row(
-                                    modifier = Modifier.width(80.dp),
+                                    modifier = Modifier.width(120.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     if (it != 0) {
-                                        IconButton(modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(CircleShape),
+                                        FilledIconButton(modifier = Modifier
+                                            .size(50.dp)
+                                            .clip(CircleShape).semantics {
+                                                contentDescription = "Up tab priority"
+                                            },
                                             onClick = {
                                                 item.priority = it - 1
                                                 mainTabList.remove(item)
@@ -349,14 +354,18 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                     } else {
                                         Box(
                                             modifier = Modifier
-                                                .size(40.dp)
+                                                .size(60.dp)
                                                 .clip(CircleShape),
                                         )
                                     }
+                                    Divider(modifier = Modifier.height(40.dp).width(10.dp).background(
+                                        Color.Transparent))
                                     if (it < mainTabList.size - 1) {
-                                        IconButton(modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(CircleShape),
+                                        FilledIconButton(modifier = Modifier
+                                            .size(50.dp)
+                                            .clip(CircleShape).semantics {
+                                                contentDescription = "Down tab priority"
+                                            },
                                             onClick = {
                                                 item.priority = it + 1
                                                 mainTabList.remove(item)
@@ -367,7 +376,7 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                                 contentDescription = "Down",
                                                 modifier = Modifier
                                                     .size(30.dp)
-                                                    .clip(CircleShape),
+                                                    .clip(CircleShape) ,
                                                 colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                                             )
                                         }
@@ -388,7 +397,15 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                     isChecked = v
                                     item.isShow = v
                                 },
-                                modifier = Modifier.padding(8.dp)
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .semantics {
+                                        contentDescription = if (isChecked) {
+                                            "Show this tab${item.name}"
+                                        } else {
+                                            "Hide this tab${item.name}"
+                                        }
+                                    }
                             )
                         }
                     }
@@ -410,7 +427,7 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                         modifier = Modifier
                             .background(MaterialTheme.colorScheme.onBackground)
                             .width(1.dp)
-                            .height(40.dp)
+                            .height(50.dp)
                     )
                     TextButton(
                         onClick = {

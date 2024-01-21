@@ -76,6 +76,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
@@ -992,31 +994,38 @@ class MainActivity : ComponentActivity() {
                 }
                 Row {
                     if (musicViewModel.mainTabList[pagerState.currentPage].type == PlayListType.PlayLists) {
-                        IconButton(onClick = {
-                            showCreatePlayListDialog = true
-                        }) {
+                        IconButton(
+                            modifier = Modifier.semantics {
+                                contentDescription = "Add PlayList"
+                            }, onClick = {
+                                showCreatePlayListDialog = true
+                            }) {
                             Icon(
                                 imageVector = Icons.Default.Add,
-                                contentDescription = "Contact profile picture",
+                                contentDescription = "Add PlayList",
                                 modifier = Modifier
                                     .size(30.dp)
                                     .clip(CircleShape),
                             )
                         }
                     }
-                    IconButton(onClick = {
+                    IconButton(modifier = Modifier.semantics {
+                        contentDescription = "Set sleep time"
+                    }, onClick = {
                         showDialog = true
                     }) {
                         Image(
                             painter = painterResource(timerIcon),
-                            contentDescription = "Contact profile picture",
+                            contentDescription = "Sleeper time",
                             modifier = Modifier
                                 .size(30.dp)
                                 .clip(CircleShape),
                             colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                         )
                     }
-                    IconButton(onClick = {
+                    IconButton(modifier = Modifier.semantics {
+                        contentDescription = "Search"
+                    }, onClick = {
                         navController.navigate(
                             Router.SearchPage.route
                         )
@@ -1024,8 +1033,6 @@ class MainActivity : ComponentActivity() {
                         Icon(Icons.Filled.Search, contentDescription = "Search")
                     }
                 }
-
-
             }
             ScrollableTabRow(
                 selectedTabIndex = pagerState.currentPage,
