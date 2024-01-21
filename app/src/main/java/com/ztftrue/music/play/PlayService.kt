@@ -405,15 +405,14 @@ class PlayService : MediaBrowserServiceCompat() {
                 }
                 val musicItem = extras.getParcelable<MusicItem>("musicItem")
                 val playList = extras.getParcelable<AnyListBase>("playList")
+                val musicItems= extras.getParcelableArrayList<MusicItem>("musicItems")
                 val index = extras.getInt("index")
                 // TODO why this can change queue when click another playlist.
-                if (playList == null && musicItem != null && musicQueue[index].id == musicItem.id) {
-                    playMusicCurrentQueue(musicItem, index)
-                } else if (musicItem != null && playList != null) {
-                    if (currentPlayTrack?.id == musicItem.id && exoPlayer.isPlaying) {
-                        mediaController?.transportControls?.pause()
+                if (musicItem != null && playList != null) {
+                    if ( (musicQueue.size > index && musicQueue[index].id == musicItem.id) || playList.type == PlayListType.Queue) {
+                        playMusicCurrentQueue(musicItem, index)
                     } else {
-                        playMusicSwitchQueue(musicItem, playList, index)
+                        playMusicSwitchQueue(musicItem, playList, index,musicItems)
                     }
                 }
             }
@@ -1184,7 +1183,7 @@ class PlayService : MediaBrowserServiceCompat() {
     }
 
     private fun playMusicSwitchQueue(
-        musicItem: MusicItem, playList: AnyListBase, index: Int
+        musicItem: MusicItem, playList: AnyListBase, index: Int,musicItems: ArrayList<MusicItem>?
     ) {
         CoroutineScope(Job() + Dispatchers.Main).launch {
             playListCurrent = playList
@@ -1200,7 +1199,6 @@ class PlayService : MediaBrowserServiceCompat() {
                 }
             }
             musicQueue.clear()
-
             when (playList.type) {
                 PlayListType.Songs -> {
                     musicQueue.addAll(tracksLinkedHashMap.values)
@@ -1236,8 +1234,16 @@ class PlayService : MediaBrowserServiceCompat() {
                     )
                 }
 
+                PlayListType.Queue -> {
+
+                }
+
                 else -> {
-//                    musicQueue.clear()
+                    if (musicItems != null) {
+                        musicQueue.addAll(musicItems)
+                    }else{
+                        return@launch
+                    }
                 }
             }
             if (musicQueue.isNotEmpty()) {

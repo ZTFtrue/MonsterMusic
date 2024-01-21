@@ -42,6 +42,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.ztftrue.music.MusicViewModel
+import com.ztftrue.music.NonePlayList
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.ACTION_GET_ALBUM_BY_ID
@@ -80,7 +81,7 @@ fun TracksListPage(
     id: Long,
 ) {
     val tracksList = remember { mutableStateListOf<MusicItem>() }
-    val musicPlayList = remember { mutableStateOf<AnyListBase?>(null) }
+    val musicPlayList = remember { mutableStateOf<AnyListBase>(NonePlayList) }
     val albumsList = remember { mutableStateListOf<AlbumList>() }
     val context = LocalContext.current
     var showOperateDialog by remember { mutableStateOf(false) }
@@ -265,7 +266,9 @@ fun TracksListPage(
                         val tracksListResult = resultData.getParcelableArrayList<MusicItem>("list")
                         val albumLists = resultData.getParcelableArrayList<AlbumList>("albums")
                         val parentListMessage = resultData.getParcelable<AnyListBase>("message")
-                        musicPlayList.value = parentListMessage
+                        if (parentListMessage != null) {
+                            musicPlayList.value = parentListMessage
+                        }
                         tracksList.addAll(
                             tracksListResult ?: emptyList()
                         )

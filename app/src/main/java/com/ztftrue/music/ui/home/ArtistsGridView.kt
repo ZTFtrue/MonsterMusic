@@ -131,7 +131,7 @@ fun ArtistsGridView(
             LazyRow(
                 contentPadding = PaddingValues(5.dp),
                 state = rowListSate,
-                modifier = modifier.background(MaterialTheme.colorScheme.secondary)
+                modifier = modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth()
             ) {
                 items(artistLists.size) { index ->
                     val item = artistLists[index]

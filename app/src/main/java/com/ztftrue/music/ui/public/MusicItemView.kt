@@ -73,7 +73,7 @@ fun MusicItemView(
     music: MusicItem,
     index: Int,
     viewModel: MusicViewModel,
-    playList: AnyListBase?,
+    playList: AnyListBase,
     modifier: Modifier = Modifier,
     musicList: SnapshotStateList<MusicItem>,
     selectStatus: Boolean = false,
@@ -131,7 +131,8 @@ fun MusicItemView(
                     }
 
                     OperateType.PlayNext -> {
-                        val indexAdd=  if(viewModel.musicQueue.isEmpty()) 0 else  viewModel.currentPlayQueueIndex.intValue + 1
+                        val indexAdd =
+                            if (viewModel.musicQueue.isEmpty()) 0 else viewModel.currentPlayQueueIndex.intValue + 1
                         viewModel.musicQueue.add(
                             indexAdd,
                             music
@@ -281,7 +282,9 @@ fun MusicItemView(
                         selectList?.add(music)
                     }
                 } else {
-                    if (playList != null && viewModel.playListCurrent.value?.id != playList.id) {
+                    if (playList.type == PlayListType.Queue) {
+
+                    } else if ((playList.type != viewModel.playListCurrent.value?.type && viewModel.playListCurrent.value?.id != playList.id) || playList.type == PlayListType.None) {
                         viewModel.playListCurrent.value = playList
                         viewModel.musicQueue.clear()
                         viewModel.musicQueue.addAll(musicList)
@@ -289,6 +292,7 @@ fun MusicItemView(
                     val bundle = Bundle()
                     bundle.putParcelable("musicItem", music)
                     bundle.putParcelable("playList", playList)
+                    bundle.putParcelableArrayList("musicItems", ArrayList(musicList))
                     bundle.putInt("index", index)
                     viewModel.mediaBrowser?.sendCustomAction(
                         ACTION_PLAY_MUSIC,

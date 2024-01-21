@@ -11,15 +11,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -44,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
+import com.ztftrue.music.NonePlayList
 import com.ztftrue.music.play.ACTION_SEARCH
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.home.AlbumGridView
@@ -85,12 +81,12 @@ fun SearchPage(
     val job = CoroutineScope(Dispatchers.IO)
     LaunchedEffect(keywords) {
         jobSeek?.cancel()
-        if (keywords.isNotEmpty() && keywords.length > 1) {
+        if (keywords.isNotEmpty() && keywords.length >= 1) {
             jobSeek = job.launch {
                 Thread.sleep(300)
                 val bundle = Bundle()
                 bundle.putString("keyword", keywords)
-                if (keywords.isEmpty() || keywords.length <= 1) {
+                if (keywords.isEmpty() || keywords.length < 1) {
                     return@launch
                 }
                 if(!isActive){
@@ -169,15 +165,15 @@ fun SearchPage(
 
                             },
                         )
-                        IconButton(onClick = {
-                            focusRequester.freeFocus()
-                            keyboardController?.hide()
-                        }) {
-                            Icon(
-                                Icons.Filled.Search, contentDescription = "Search",
-                                modifier = Modifier.size(40.dp)
-                            )
-                        }
+//                        IconButton(onClick = {
+//                            focusRequester.freeFocus()
+//                            keyboardController?.hide()
+//                        }) {
+//                            Icon(
+//                                Icons.Filled.Search, contentDescription = "Search",
+//                                modifier = Modifier.size(40.dp)
+//                            )
+//                        }
 
                     }
                 }
@@ -246,7 +242,7 @@ fun SearchPage(
                         Box(modifier = Modifier.height(((tracksList.size + 2) * (60 + 1.2 + 25)).dp)) {
                             TracksListView(
                                 modifier = Modifier,
-                                musicViewModel, null, tracksList
+                                musicViewModel, NonePlayList, tracksList
                             )
                         }
                     }

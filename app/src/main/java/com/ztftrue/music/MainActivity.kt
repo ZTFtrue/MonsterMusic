@@ -879,7 +879,7 @@ class MainActivity : ComponentActivity() {
                                                 TracksListView(
                                                     Modifier.fillMaxHeight(),
                                                     musicViewModel,
-                                                    DefaultPlayList,
+                                                    SongsPlayList,
                                                     musicViewModel.songsList
                                                 )
                                             }
@@ -896,7 +896,7 @@ class MainActivity : ComponentActivity() {
                                                 TracksListView(
                                                     Modifier.fillMaxHeight(),
                                                     musicViewModel,
-                                                    null,
+                                                    QueuePlayList,
                                                     tracksList = musicViewModel.musicQueue
                                                 )
                                             }
@@ -933,6 +933,9 @@ class MainActivity : ComponentActivity() {
                                                 )
                                             }
 
+                                            else -> {
+
+                                            }
                                         }
                                     }
 

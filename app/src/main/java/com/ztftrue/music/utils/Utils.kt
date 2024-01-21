@@ -40,7 +40,8 @@ enum class PlayListType {
     Albums,
     Artists,
     Genres,
-    Folders
+    Folders,
+    None
 }
 
 

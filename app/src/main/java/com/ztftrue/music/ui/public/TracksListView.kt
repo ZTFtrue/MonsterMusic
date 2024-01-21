@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
 fun TracksListView(
     modifier: Modifier = Modifier,
     musicViewModel: MusicViewModel,
-    playList: AnyListBase?,
+    playList: AnyListBase,
     tracksList: SnapshotStateList<MusicItem>,
     selectStatus: Boolean = false,
     selectList: SnapshotStateList<MusicItem>? = null,
