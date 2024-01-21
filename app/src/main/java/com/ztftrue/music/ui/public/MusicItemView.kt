@@ -131,13 +131,14 @@ fun MusicItemView(
                     }
 
                     OperateType.PlayNext -> {
+                        val indexAdd=  if(viewModel.musicQueue.isEmpty()) 0 else  viewModel.currentPlayQueueIndex.intValue + 1
                         viewModel.musicQueue.add(
-                            viewModel.currentPlayQueueIndex.intValue + 1,
+                            indexAdd,
                             music
                         )
                         val bundle = Bundle()
                         bundle.putParcelable("musicItem", music)
-                        bundle.putInt("index", viewModel.currentPlayQueueIndex.intValue + 1)
+                        bundle.putInt("index", indexAdd)
                         viewModel.mediaBrowser?.sendCustomAction(ACTION_AddPlayQueue, bundle, null)
                     }
 

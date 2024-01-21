@@ -79,6 +79,7 @@ enum class ScrollDirectionType {
     GRID_VERTICAL,
     LIST_VERTICAL,
 }
+
 @Suppress("deprecation")
 object Utils {
     val items = listOf("Follow System", "Light", "Dark", "Follow Music Cover")
@@ -365,6 +366,7 @@ object Utils {
             }
         )
     }
+
     fun operateDialogDeal(
         operateType: OperateType,
         item: AnyListBase,
@@ -446,8 +448,12 @@ object Utils {
     fun addTracksToQueue(
         musicViewModel: MusicViewModel,
         tracksList: ArrayList<MusicItem>,
-        index: Int
+        indexTemp: Int
     ) {
+        var index = indexTemp
+        if (musicViewModel.musicQueue.isEmpty()) {
+            index = 0
+        }
         musicViewModel.musicQueue.addAll(
             index,
             tracksList

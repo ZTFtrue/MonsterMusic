@@ -21,8 +21,8 @@ android {
         applicationId = "com.ztftrue.music"
         minSdk = 30
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1"
+        versionCode = 2
+        versionName = "0.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -74,8 +74,8 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.6")
 
     implementation ("androidx.media3:media3-exoplayer:1.2.1")
-    implementation ("androidx.media3:media3-exoplayer-dash:1.2.1")
-    implementation ("androidx.media3:media3-ui:1.2.1")
+//    implementation ("androidx.media3:media3-exoplayer-dash:1.2.1")
+//    implementation ("androidx.media3:media3-ui:1.2.1")
     implementation ("androidx.media3:media3-cast:1.2.1")
 
     implementation("androidx.compose.ui:ui")
@@ -115,8 +115,8 @@ dependencies {
     implementation("androidx.collection:collection-ktx:1.3.0")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+
     implementation("androidx.palette:palette-ktx:1.0.0")
-    implementation("androidx.room:room-ktx:2.6.1")
 
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
