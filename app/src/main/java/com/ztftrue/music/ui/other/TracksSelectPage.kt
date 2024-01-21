@@ -35,13 +35,13 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
-import com.ztftrue.music.NonePlayList
 import com.ztftrue.music.R
 import com.ztftrue.music.play.ACTION_GET_TRACKS
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.ui.public.TracksListView
+import com.ztftrue.music.utils.AnyListBase
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.PlaylistManager
 
@@ -187,7 +187,7 @@ fun TracksSelectPage(
                 TracksListView(
                     modifier = Modifier
                         .fillMaxSize(),
-                    musicViewModel, NonePlayList, musicList,
+                    musicViewModel, AnyListBase(0, PlayListType.None), musicList,
                     true,
                     selectList
                 )

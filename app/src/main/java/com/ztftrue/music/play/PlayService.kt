@@ -405,14 +405,13 @@ class PlayService : MediaBrowserServiceCompat() {
                 }
                 val musicItem = extras.getParcelable<MusicItem>("musicItem")
                 val playList = extras.getParcelable<AnyListBase>("playList")
-                val musicItems= extras.getParcelableArrayList<MusicItem>("musicItems")
+                val musicItems = extras.getParcelableArrayList<MusicItem>("musicItems")
                 val index = extras.getInt("index")
-                // TODO why this can change queue when click another playlist.
                 if (musicItem != null && playList != null) {
-                    if ( (musicQueue.size > index && musicQueue[index].id == musicItem.id) || playList.type == PlayListType.Queue) {
+                    if (playList.type == PlayListType.Queue || (playList.type == playListCurrent?.type && playList.id == playListCurrent?.id)) {
                         playMusicCurrentQueue(musicItem, index)
                     } else {
-                        playMusicSwitchQueue(musicItem, playList, index,musicItems)
+                        playMusicSwitchQueue(musicItem, playList, index, musicItems)
                     }
                 }
             }
@@ -1183,7 +1182,7 @@ class PlayService : MediaBrowserServiceCompat() {
     }
 
     private fun playMusicSwitchQueue(
-        musicItem: MusicItem, playList: AnyListBase, index: Int,musicItems: ArrayList<MusicItem>?
+        musicItem: MusicItem, playList: AnyListBase, index: Int, musicItems: ArrayList<MusicItem>?
     ) {
         CoroutineScope(Job() + Dispatchers.Main).launch {
             playListCurrent = playList
@@ -1241,7 +1240,7 @@ class PlayService : MediaBrowserServiceCompat() {
                 else -> {
                     if (musicItems != null) {
                         musicQueue.addAll(musicItems)
-                    }else{
+                    } else {
                         return@launch
                     }
                 }

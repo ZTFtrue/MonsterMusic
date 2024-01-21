@@ -32,7 +32,7 @@ import java.io.InputStream
 
 var SongsPlayList = AnyListBase(-1, PlayListType.Songs)
 var QueuePlayList = AnyListBase(-1, PlayListType.Queue)
-var NonePlayList = AnyListBase(-1, PlayListType.None)
+
 
 @UnstableApi
 class MusicViewModel : ViewModel() {

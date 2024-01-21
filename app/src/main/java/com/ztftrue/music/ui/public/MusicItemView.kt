@@ -148,37 +148,35 @@ fun MusicItemView(
                     }
 
                     OperateType.RemoveFromPlaylist -> {
-                        if (playList != null) {
-                            val playListPath =
-                                PlaylistManager.removeTrackFromPlayList(context, playList.id, index)
-                            if (!playListPath.isNullOrEmpty()) {
-                                MediaScannerConnection.scanFile(
-                                    context,
-                                    arrayOf(playListPath),
-                                    arrayOf("*/*"),
-                                    object : MediaScannerConnection.MediaScannerConnectionClient {
-                                        override fun onMediaScannerConnected() {}
-                                        override fun onScanCompleted(path: String, uri: Uri) {
-                                            viewModel.mediaBrowser?.sendCustomAction(
-                                                ACTION_PlayLIST_CHANGE,
-                                                null,
-                                                object : MediaBrowserCompat.CustomActionCallback() {
-                                                    override fun onResult(
-                                                        action: String?,
-                                                        extras: Bundle?,
-                                                        resultData: Bundle?
-                                                    ) {
-                                                        super.onResult(action, extras, resultData)
-                                                        viewModel.refreshList.value =
-                                                            !viewModel.refreshList.value
-                                                    }
+                        val playListPath =
+                            PlaylistManager.removeTrackFromPlayList(context, playList.id, index)
+                        if (!playListPath.isNullOrEmpty()) {
+                            MediaScannerConnection.scanFile(
+                                context,
+                                arrayOf(playListPath),
+                                arrayOf("*/*"),
+                                object : MediaScannerConnection.MediaScannerConnectionClient {
+                                    override fun onMediaScannerConnected() {}
+                                    override fun onScanCompleted(path: String, uri: Uri) {
+                                        viewModel.mediaBrowser?.sendCustomAction(
+                                            ACTION_PlayLIST_CHANGE,
+                                            null,
+                                            object : MediaBrowserCompat.CustomActionCallback() {
+                                                override fun onResult(
+                                                    action: String?,
+                                                    extras: Bundle?,
+                                                    resultData: Bundle?
+                                                ) {
+                                                    super.onResult(action, extras, resultData)
+                                                    viewModel.refreshList.value =
+                                                        !viewModel.refreshList.value
                                                 }
-                                            )
-                                        }
-                                    })
+                                            }
+                                        )
+                                    }
+                                })
 
 
-                            }
                         }
                     }
 
@@ -252,7 +250,7 @@ fun MusicItemView(
                     showCreatePlayListDialog = true
                 } else {
                     PlaylistManager.addMusicToPlaylist(context, it, music.id)
-                    if (playList?.id == it) {
+                    if (playList.id == it) {
                         musicList.add(music)
                     }
                     viewModel.mediaBrowser?.sendCustomAction(
@@ -282,12 +280,12 @@ fun MusicItemView(
                         selectList?.add(music)
                     }
                 } else {
-                    if (playList.type == PlayListType.Queue) {
-
-                    } else if ((playList.type != viewModel.playListCurrent.value?.type && viewModel.playListCurrent.value?.id != playList.id) || playList.type == PlayListType.None) {
-                        viewModel.playListCurrent.value = playList
-                        viewModel.musicQueue.clear()
-                        viewModel.musicQueue.addAll(musicList)
+                    if (playList.type != PlayListType.Queue && !(playList.type == viewModel.playListCurrent.value?.type && playList.id == viewModel.playListCurrent.value?.id)) {
+                        if (playList.type != viewModel.playListCurrent.value?.type || viewModel.playListCurrent.value?.id != playList.id) {
+                            viewModel.playListCurrent.value = playList
+                            viewModel.musicQueue.clear()
+                            viewModel.musicQueue.addAll(musicList)
+                        }
                     }
                     val bundle = Bundle()
                     bundle.putParcelable("musicItem", music)

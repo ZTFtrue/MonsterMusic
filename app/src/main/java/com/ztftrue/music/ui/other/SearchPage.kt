@@ -39,7 +39,6 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
-import com.ztftrue.music.NonePlayList
 import com.ztftrue.music.play.ACTION_SEARCH
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.home.AlbumGridView
@@ -48,7 +47,9 @@ import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.ui.public.Bottom
 import com.ztftrue.music.ui.public.TracksListView
 import com.ztftrue.music.utils.AlbumList
+import com.ztftrue.music.utils.AnyListBase
 import com.ztftrue.music.utils.ArtistList
+import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -70,13 +71,14 @@ fun SearchPage(
     val tracksList = remember { mutableStateListOf<MusicItem>() }
     val albumsList = remember { mutableStateListOf<AlbumList>() }
     val artistList = remember { mutableStateListOf<ArtistList>() }
+    var modeList by remember { mutableStateOf(AnyListBase(-1, PlayListType.None)) }
     var keywords by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
-
+    var noneListId = -1L
     var jobSeek: Job? = null
     val job = CoroutineScope(Dispatchers.IO)
     LaunchedEffect(keywords) {
@@ -89,7 +91,7 @@ fun SearchPage(
                 if (keywords.isEmpty() || keywords.length < 1) {
                     return@launch
                 }
-                if(!isActive){
+                if (!isActive) {
                     return@launch
                 }
                 musicViewModel.mediaBrowser?.sendCustomAction(
@@ -106,6 +108,7 @@ fun SearchPage(
                                 tracksList.clear()
                                 albumsList.clear()
                                 artistList.clear()
+                                modeList = AnyListBase(modeList.id - 1, PlayListType.None)
                                 val tracksListResult =
                                     resultData.getParcelableArrayList<MusicItem>("tracks")
                                 val albumListsResult =
@@ -115,6 +118,7 @@ fun SearchPage(
                                 tracksList.addAll(tracksListResult ?: emptyList())
                                 albumsList.addAll(albumListsResult ?: emptyList())
                                 artistList.addAll(artistListsResult ?: emptyList())
+
                             }
                         }
                     }
@@ -242,7 +246,7 @@ fun SearchPage(
                         Box(modifier = Modifier.height(((tracksList.size + 2) * (60 + 1.2 + 25)).dp)) {
                             TracksListView(
                                 modifier = Modifier,
-                                musicViewModel, NonePlayList, tracksList
+                                musicViewModel, modeList, tracksList
                             )
                         }
                     }
