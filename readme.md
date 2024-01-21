@@ -7,7 +7,7 @@
 - 🔊 Advanced Equalizer: Customize your sound experience with our built-in equalizer. Fine-tune the audio to match your preferences and immerse yourself in crystal-clear, high-quality sound.
 - 🌈 Multiple Themes: Personalize your music player with a variety of themes. Switch effortlessly between themes to match your mood or style. Your music, your way!
 - 📜 Lyrics Support: Dive deeper into the lyrics of your favorite songs. [MonsterMusic] supports lyrics display, you can import txt or lyrics file.
-- 🔒 Privacy First: Rest easy knowing that your privacy is our top priority. [MonsterMusic] operates without any network requests, ensuring a secure and private music listening experience. No unnecessary permissions, just pure music enjoyment.
+- 🔒 Privacy First: Rest easy knowing that your privacy is our top priority. No unnecessary permissions, just pure music enjoyment.
 
 More features are waiting for your discovery.
 
