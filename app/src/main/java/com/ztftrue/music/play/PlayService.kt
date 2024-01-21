@@ -1,0 +1,1502 @@
+package com.ztftrue.music.play
+
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.os.Bundle
+import android.os.CountDownTimer
+import android.provider.MediaStore
+import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.session.MediaControllerCompat
+import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.media.MediaBrowserServiceCompat
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
+import androidx.media3.common.Format
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.PlaybackParameters
+import androidx.media3.common.Player
+import androidx.media3.common.audio.SonicAudioProcessor
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DefaultRenderersFactory
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.audio.AudioSink
+import androidx.media3.exoplayer.audio.DefaultAudioSink
+import androidx.media3.exoplayer.audio.ForwardingAudioSink
+import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
+import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
+import androidx.room.Room
+import com.ztftrue.music.MainActivity
+import com.ztftrue.music.effects.EchoAudioProcessor
+import com.ztftrue.music.effects.EqualizerAudioProcessor
+import com.ztftrue.music.sqlData.MusicDatabase
+import com.ztftrue.music.sqlData.model.Auxr
+import com.ztftrue.music.sqlData.model.CurrentList
+import com.ztftrue.music.sqlData.model.MainTab
+import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.sqlData.model.PlayConfig
+import com.ztftrue.music.utils.AlbumList
+import com.ztftrue.music.utils.AlbumManager
+import com.ztftrue.music.utils.AnyListBase
+import com.ztftrue.music.utils.ArtistList
+import com.ztftrue.music.utils.ArtistManager
+import com.ztftrue.music.utils.FolderList
+import com.ztftrue.music.utils.GenreManager
+import com.ztftrue.music.utils.GenresList
+import com.ztftrue.music.utils.MusicPlayList
+import com.ztftrue.music.utils.PlayListType
+import com.ztftrue.music.utils.PlaylistManager
+import com.ztftrue.music.utils.TracksManager
+import com.ztftrue.music.utils.stringToEnumForPlayListType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+
+/**
+ * playList
+ * albumsList
+ * artistsList
+ * genresList
+ * songsList
+ * foldersList
+ */
+const val ACTION_GET_TRACKS = "ACTION_GET_TRACKS"
+const val ACTION_PLAY_MUSIC = "PLAY_MUSIC"
+const val ACTION_SEEK_TO = "SeekTo"
+const val ACTION_CHANGE_PITCH = "ChangePitch"
+const val ACTION_SEARCH = "ACTION_SEARCH"
+
+//const val ACTION_CHANGE_SPEED = "ACTION_CHANGE_SPEED"  use MediaSessionCompat instead
+const val ACTION_DSP_ENABLE = "DSP_ENABLE"
+const val ACTION_DSP_BAND = "ACTION_DSP_BAND"
+const val ACTION_DSP_BAND_FLATTEN = "ACTION_DSP_BAND_FLATTEN"
+const val ACTION_ECHO_ENABLE = "ACTION_ECHO_ENABLE"
+const val ACTION_ECHO_DELAY = "ACTION_ECHO_DELAY"
+const val ACTION_ECHO_DECAY = "ACTION_ECHO_DECAY"
+const val ACTION_ECHO_FEEDBACK = "ACTION_ECHO_FEEDBACK"
+const val ACTION_SET_SLEEP_TIME = "set_sleep_time"
+const val ACTION_AddPlayQueue = "AddPlayQueue"
+const val ACTION_RemoveFromQueue = "ACTION_RemoveFromQueue"
+const val ACTION_PlayLIST_CHANGE = "ACTION_PlayLIST_CHANGE"
+const val ACTION_TRACKS_DELETE = "ACTION_TRACKS_DELETE"
+const val ACTION_TRACKS_UPDATE = "ACTION_TRACKS_UPDATE"
+const val ACTION_GET_TRACK_BY_ID = "ACTION_GET_TRACK_BY_ID"
+
+const val EVENT_changePlayQueue = 1
+const val EVENT_MEDIA_ITEM_Change = 3
+const val EVENT_MEDIA_METADATA_Change = 4
+const val EVENT_SLEEP_TIME_Change = 5
+const val EVENT_DATA_READY = 6
+const val ACTION_GET_ALBUM_BY_ID = "GET_ARTIST_FROM_ALBUM"
+const val MY_MEDIA_ROOT_ID = "MY_MEDIA_ROOT_ID"
+
+@Suppress("deprecation")
+@UnstableApi
+class PlayService : MediaBrowserServiceCompat() {
+
+    private var mediaSession: MediaSessionCompat? = null
+
+
+    val equalizerAudioProcessor: EqualizerAudioProcessor = EqualizerAudioProcessor()
+    val echoAudioProcessor: EchoAudioProcessor = EchoAudioProcessor()
+    val sonicAudioProcessor = SonicAudioProcessor()
+    lateinit var exoPlayer: ExoPlayer
+
+
+    private var playListCurrent: AnyListBase? = null
+    var musicQueue = java.util.ArrayList<MusicItem>()
+    var currentPlayTrack: MusicItem? = null
+
+
+    private val playListTracksHashMap = java.util.HashMap<Long, java.util.ArrayList<MusicItem>>()
+
+    // album tracks
+    private val albumsListTracksHashMap = java.util.HashMap<Long, java.util.ArrayList<MusicItem>>()
+    private val artistsListTracksHashMap = java.util.HashMap<Long, java.util.ArrayList<MusicItem>>()
+    private val genresListTracksHashMap = java.util.HashMap<Long, java.util.ArrayList<MusicItem>>()
+    private val foldersListTracksHashMap =
+        java.util.HashMap<Long, java.util.LinkedHashMap<Long, MusicItem>>()
+
+
+    private val tracksLinkedHashMap: LinkedHashMap<Long, MusicItem> = LinkedHashMap()
+
+    // album message
+    private val albumsLinkedHashMap: LinkedHashMap<Long, AlbumList> = LinkedHashMap()
+    private val playListLinkedHashMap: LinkedHashMap<Long, MusicPlayList> = LinkedHashMap()
+    private val artistsLinkedHashMap: LinkedHashMap<Long, ArtistList> = LinkedHashMap()
+    private val genresLinkedHashMap: LinkedHashMap<Long, GenresList> = LinkedHashMap()
+    private val foldersLinkedHashMap: LinkedHashMap<Long, FolderList> = LinkedHashMap()
+
+    private val artistHasAlbumMap: HashMap<Long, ArrayList<AlbumList>> = HashMap()
+    private val genreHasAlbumMap: HashMap<Long, ArrayList<AlbumList>> = HashMap()
+
+    var sleepTime = 0L
+
+    var currentDuration = mutableLongStateOf(0)
+
+    private var mediaController: MediaControllerCompat? = null
+    private val mainTab = ArrayList<MainTab>(7)
+    private lateinit var db: MusicDatabase
+    private var bandsValue =
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    private var auxr = Auxr(
+        0, 1f, 1f, false, 0.2f, 0.5f,
+        echoRevert = true,
+        equalizer = false,
+        equalizerBand = bandsValue
+    )
+
+    override fun onCreate() {
+        super.onCreate()
+        initExo(this@PlayService)
+        val contentIntent = Intent(this, MainActivity::class.java)
+        val pendingContentIntent = PendingIntent.getActivity(
+            this, 0, contentIntent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+        mediaSession = MediaSessionCompat(baseContext, PlayService::class.java.simpleName).apply {
+            val stateBuilder = PlaybackStateCompat.Builder()
+                .setActions(
+                    PlaybackStateCompat.ACTION_SEEK_TO
+                            or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+                            or PlaybackStateCompat.ACTION_PLAY_PAUSE or
+                            PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+
+                )
+            setFlags( // 线控
+                MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or  // 回调
+                        MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
+            )
+            setPlaybackState(stateBuilder.build())
+            setSessionToken(sessionToken)
+            setSessionActivity(pendingContentIntent)
+            setRepeatMode(
+                when (exoPlayer.repeatMode) {
+                    Player.REPEAT_MODE_ALL -> {
+                        PlaybackStateCompat.REPEAT_MODE_ALL
+                    }
+
+                    Player.REPEAT_MODE_ONE -> {
+                        PlaybackStateCompat.REPEAT_MODE_ONE
+                    }
+
+                    else -> {
+                        PlaybackStateCompat.REPEAT_MODE_NONE
+                    }
+                }
+            )
+
+            mediaController = controller
+
+            setCallback(object : MediaSessionCompat.Callback() {
+                override fun onPlay() {
+                    // Start playback
+                    pauseMusic()
+                }
+
+                override fun onPause() {
+                    // Pause playback
+                    pauseMusic()
+                }
+
+                override fun onStop() {
+                    // Stop playback
+//                    exoPlayer.stop()
+                    notify?.stop(this@PlayService)
+                } // Implement other media control callbacks as needed
+
+                override fun onSkipToNext() {
+                    super.onSkipToNext()
+                    playNext()
+                }
+
+                override fun onSkipToPrevious() {
+                    super.onSkipToPrevious()
+                    playPreview()
+                }
+
+                override fun onSeekTo(pos: Long) {
+                    super.onSeekTo(pos)
+                    exoPlayer.seekTo(pos)
+                }
+
+                override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean {
+                    return super.onMediaButtonEvent(mediaButtonEvent)
+                }
+
+
+                override fun onSetPlaybackSpeed(speed: Float) {
+                    super.onSetPlaybackSpeed(speed)
+                    val param1 = PlaybackParameters(
+                        speed, auxr.pitch
+                    )
+                    auxr.speed = speed
+                    CoroutineScope(Dispatchers.IO).launch {
+                        db.AuxDao().update(auxr)
+                    }
+                    exoPlayer.playbackParameters = param1
+                    notify?.updateNotification(
+                        this@PlayService,
+                        currentPlayTrack?.name ?: "",
+                        currentPlayTrack?.artist ?: "",
+                        exoPlayer
+                    )
+                }
+
+
+                override fun onSetRepeatMode(repeatMode: Int) {
+                    super.onSetRepeatMode(repeatMode)
+
+                    when (repeatMode) {
+                        PlaybackStateCompat.REPEAT_MODE_NONE -> {
+                            exoPlayer.repeatMode = Player.REPEAT_MODE_OFF
+                            CoroutineScope(Dispatchers.IO).launch {
+                                val config = db.PlayConfigDao().findConfig()
+                                if (config != null) {
+                                    config.repeatModel = Player.REPEAT_MODE_OFF
+                                    db.PlayConfigDao().update(config)
+                                }
+                            }
+                        }
+
+                        PlaybackStateCompat.REPEAT_MODE_ALL -> {
+                            exoPlayer.repeatMode = Player.REPEAT_MODE_ALL
+                            CoroutineScope(Dispatchers.IO).launch {
+                                val config = db.PlayConfigDao().findConfig()
+                                if (config != null) {
+                                    config.repeatModel = Player.REPEAT_MODE_ALL
+                                    db.PlayConfigDao().update(config)
+                                }
+                            }
+                        }
+
+                        PlaybackStateCompat.REPEAT_MODE_ONE -> {
+                            exoPlayer.repeatMode = Player.REPEAT_MODE_ONE
+                            CoroutineScope(Dispatchers.IO).launch {
+                                val config = db.PlayConfigDao().findConfig()
+                                if (config != null) {
+                                    config.repeatModel = Player.REPEAT_MODE_ONE
+                                    db.PlayConfigDao().update(config)
+                                }
+                            }
+
+
+                        }
+
+                        PlaybackStateCompat.REPEAT_MODE_GROUP -> {
+                        }
+
+                        PlaybackStateCompat.REPEAT_MODE_INVALID -> {
+                        }
+                    }
+                }
+            })
+        }
+    }
+
+    override fun onCustomAction(action: String, extras: Bundle?, result: Result<Bundle>) {
+        if (PlayListType.PlayLists.name == action) {
+            if (playListLinkedHashMap.isNotEmpty()) {
+                val bundle = Bundle()
+                bundle.putParcelableArrayList("list", ArrayList(playListLinkedHashMap.values))
+                result.sendResult(bundle)
+                return
+            } else {
+                result.detach()
+                PlaylistManager.getPlaylists(
+                    this@PlayService,
+                    playListLinkedHashMap,
+                    playListTracksHashMap,
+                    tracksLinkedHashMap,
+                    result
+                )
+            }
+        } else if (PlayListType.Songs.name == action) {
+            if (tracksLinkedHashMap.isNotEmpty()) {
+                val bundle = Bundle()
+                bundle.putParcelableArrayList("list", ArrayList(tracksLinkedHashMap.values))
+                result.sendResult(bundle)
+                return
+            } else {
+                result.detach()
+                TracksManager.getFolderList(
+                    this@PlayService,
+                    foldersLinkedHashMap,
+                    result,
+                    tracksLinkedHashMap,
+                    foldersListTracksHashMap,
+                    true
+                )
+            }
+        } else if (PlayListType.Genres.name == action) {
+            if (genresLinkedHashMap.isNotEmpty()) {
+                val bundle = Bundle()
+                bundle.putParcelableArrayList("list", ArrayList(genresLinkedHashMap.values))
+                result.sendResult(bundle)
+                return
+            } else {
+                result.detach()
+                GenreManager.getGenresList(
+                    this@PlayService,
+                    genresLinkedHashMap,
+                    genresListTracksHashMap,
+                    tracksLinkedHashMap,
+                    result
+                )
+            }
+        } else if (PlayListType.Albums.name == action) {
+            if (albumsLinkedHashMap.isNotEmpty()) {
+                val bundle = Bundle()
+                bundle.putParcelableArrayList("list", ArrayList(albumsLinkedHashMap.values))
+                result.sendResult(bundle)
+                return
+            } else {
+                result.detach()
+                AlbumManager.getAlbumList(
+                    this@PlayService,
+                    albumsLinkedHashMap,
+                    result
+                )
+            }
+        } else if (PlayListType.Artists.name == action) {
+            if (artistsLinkedHashMap.isNotEmpty()) {
+                val bundle = Bundle()
+                bundle.putParcelableArrayList("list", ArrayList(artistsLinkedHashMap.values))
+                result.sendResult(bundle)
+                return
+            } else {
+                result.detach()
+                ArtistManager.getArtistList(
+                    this@PlayService,
+                    artistsLinkedHashMap,
+                    result
+                )
+            }
+        } else if (PlayListType.Folders.name == action) {
+            if (foldersLinkedHashMap.isNotEmpty()) {
+                val bundle = Bundle()
+                bundle.putParcelableArrayList("list", ArrayList(foldersLinkedHashMap.values))
+                result.sendResult(bundle)
+                return
+            } else {
+                result.detach()
+                TracksManager.getFolderList(
+                    this@PlayService,
+                    foldersLinkedHashMap,
+                    result,
+                    tracksLinkedHashMap,
+                    foldersListTracksHashMap
+                )
+            }
+        } else if (ACTION_PLAY_MUSIC == action) {
+            if (extras != null) {
+                if (notify == null) {
+                    notify = CreateNotification(this@PlayService, mediaSession)
+                }
+                val musicItem = extras.getParcelable<MusicItem>("musicItem")
+                val playList = extras.getParcelable<AnyListBase>("playList")
+                val index = extras.getInt("index")
+                // TODO why this can change queue when click another playlist.
+                if (playList == null && musicItem != null && musicQueue[index].id == musicItem.id) {
+                    playMusicCurrentQueue(musicItem, index)
+                } else if (musicItem != null && playList != null) {
+                    if (currentPlayTrack?.id == musicItem.id && exoPlayer.isPlaying) {
+                        mediaController?.transportControls?.pause()
+                    } else {
+                        playMusicSwitchQueue(musicItem, playList, index)
+                    }
+                }
+            }
+            result.sendResult(null)
+        } else if (ACTION_SEEK_TO == action) {
+            if (extras != null) {
+                exoPlayer.seekTo(extras.getLong("position"))
+            }
+            result.sendResult(null)
+        } else if (ACTION_CHANGE_PITCH == action) {
+            if (extras != null) {
+                val pitch = extras.getFloat("pitch", 1f)
+                val param1 = PlaybackParameters(
+                    auxr.speed, pitch
+                )
+                exoPlayer.playbackParameters = param1
+                auxr.pitch = pitch
+                CoroutineScope(Dispatchers.IO).launch {
+                    db.AuxDao().update(auxr)
+                }
+            }
+            result.sendResult(null)
+        } else if (ACTION_DSP_ENABLE == action) {
+            if (extras != null) {
+                equalizerAudioProcessor.isActive = extras.getBoolean("enable")
+                auxr.equalizer = equalizerAudioProcessor.isSetActive()
+                CoroutineScope(Dispatchers.IO).launch {
+                    db.AuxDao().update(auxr)
+                }
+            }
+            result.sendResult(null)
+        } else if (ACTION_DSP_BAND == action) {
+            if (extras != null) {
+                val i = extras.getInt("index")
+                val v = extras.getInt("value")
+                equalizerAudioProcessor.setBand(i, v)
+                auxr.equalizerBand[i] = v
+                CoroutineScope(Dispatchers.IO).launch {
+                    db.AuxDao().update(auxr)
+                }
+            }
+            result.sendResult(null)
+        } else if (ACTION_DSP_BAND_FLATTEN == action) {
+            if (extras != null) {
+                if (equalizerAudioProcessor.flatBand()) {
+                    result.sendResult(Bundle().apply {
+                        putBoolean("result", true)
+                    })
+                    repeat(auxr.equalizerBand.size) {
+                        auxr.equalizerBand[it] = 0
+                    }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        db.AuxDao().update(auxr)
+                    }
+                    return
+                }
+            }
+            result.sendResult(null)
+        } else if (ACTION_ECHO_ENABLE == action) {
+            if (extras != null) {
+                val echoActive = extras.getBoolean("enable")
+                echoAudioProcessor.isActive = echoActive
+                auxr.echo = echoActive
+                CoroutineScope(Dispatchers.IO).launch {
+                    db.AuxDao().update(auxr)
+                }
+            }
+            result.sendResult(null)
+        } else if (ACTION_ECHO_DELAY == action) {
+            if (extras != null) {
+                val delayTime = extras.getFloat("delay")
+                echoAudioProcessor.setDaleyTime(delayTime)
+                auxr.echoDelay = delayTime
+                CoroutineScope(Dispatchers.IO).launch {
+                    db.AuxDao().update(auxr)
+                }
+            }
+            result.sendResult(null)
+        } else if (ACTION_ECHO_DECAY == action) {
+            if (extras != null) {
+                val decay = extras.getFloat("decay")
+                echoAudioProcessor.setDecay(decay)
+                auxr.echoDecay = decay
+                CoroutineScope(Dispatchers.IO).launch {
+                    db.AuxDao().update(auxr)
+                }
+            }
+            result.sendResult(null)
+        } else if (ACTION_ECHO_FEEDBACK == action) {
+            if (extras != null) {
+                val echoFeedBack = extras.getBoolean("enable")
+                echoAudioProcessor.setFeedBack(echoFeedBack)
+                auxr.echoRevert = echoFeedBack
+                CoroutineScope(Dispatchers.IO).launch {
+                    db.AuxDao().update(auxr)
+                }
+            }
+            result.sendResult(null)
+        } else if (ACTION_SET_SLEEP_TIME == action) {
+            if (extras != null) {
+                timeSet(extras, result)
+            }
+        } else if (ACTION_GET_TRACKS == action) {
+            val bundle = Bundle()
+            if (extras != null) {
+                val type = stringToEnumForPlayListType(
+                    extras.getString(
+                        "type",
+                        PlayListType.PlayLists.name
+                    )
+                )
+                val id = extras.getLong("id")
+                when (type) {
+                    PlayListType.PlayLists -> {
+                        if (playListTracksHashMap[id] != null) {
+                            bundle.putParcelableArrayList("list", playListTracksHashMap[id])
+                            bundle.putParcelable("message", playListLinkedHashMap[id])
+                        } else {
+                            result.detach()
+                            val tracksUri = MediaStore.Audio.Playlists.Members.getContentUri(
+                                "external", id
+                            )
+                            val tracks =
+                                PlaylistManager.getTracksByPlayListId(
+                                    this@PlayService,
+                                    tracksUri,
+                                    tracksLinkedHashMap
+                                )
+                            playListTracksHashMap[id] = tracks
+                            bundle.putParcelableArrayList("list", playListTracksHashMap[id])
+                            bundle.putParcelable("message", playListLinkedHashMap[id])
+                            result.sendResult(bundle)
+                            return
+                        }
+
+
+                    }
+
+                    PlayListType.Albums -> {
+                        if (albumsListTracksHashMap[id] != null) {
+                            bundle.putParcelableArrayList("list", albumsListTracksHashMap[id])
+                            bundle.putParcelable("message", albumsLinkedHashMap[id])
+                        } else {
+                            result.detach()
+                            val trackUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                            val listT: ArrayList<MusicItem> = TracksManager.getTracksById(
+                                this@PlayService,
+                                trackUri,
+                                tracksLinkedHashMap,
+                                MediaStore.Audio.Media.ALBUM_ID + "=?",
+                                arrayOf(id.toString()),
+                                null
+                            )
+                            albumsListTracksHashMap[id] = listT
+                            bundle.putParcelableArrayList("list", albumsListTracksHashMap[id])
+                            bundle.putParcelable("message", albumsLinkedHashMap[id])
+                            result.sendResult(bundle)
+                            return
+                        }
+                    }
+
+                    PlayListType.Artists -> {
+                        if (artistHasAlbumMap[id] != null && artistsListTracksHashMap[id] != null) {
+                            bundle.putParcelableArrayList("list", artistsListTracksHashMap[id])
+                            bundle.putParcelableArrayList("albums", artistHasAlbumMap[id])
+                            bundle.putParcelable("message", artistsLinkedHashMap[id])
+                        } else {
+                            result.detach()
+                            val trackUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                            val albumsList = AlbumManager.getAlbumsByArtist(
+                                this@PlayService,
+                                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                                albumsLinkedHashMap,
+                                MediaStore.Audio.Media.ARTIST_ID + "=?",
+                                arrayOf(id.toString()),
+                                null
+                            )
+                            artistHasAlbumMap[id] = albumsList
+                            val listT: ArrayList<MusicItem> = TracksManager.getTracksById(
+                                this@PlayService,
+                                trackUri,
+                                tracksLinkedHashMap,
+                                MediaStore.Audio.Media.ARTIST_ID + "=?",
+                                arrayOf(id.toString()),
+                                null
+                            )
+                            artistsListTracksHashMap[id] = listT
+                            bundle.putParcelableArrayList("list", artistsListTracksHashMap[id])
+                            bundle.putParcelableArrayList("albums", artistHasAlbumMap[id])
+                            bundle.putParcelable("message", artistsLinkedHashMap[id])
+                            result.sendResult(bundle)
+                            return
+                        }
+                    }
+
+                    PlayListType.Genres -> {
+                        if (genreHasAlbumMap[id] != null && genresListTracksHashMap[id] != null) {
+                            bundle.putParcelableArrayList("list", genresListTracksHashMap[id])
+                            bundle.putParcelableArrayList("albums", genreHasAlbumMap[id])
+                            bundle.putParcelable("message", genresLinkedHashMap[id])
+                        } else {
+                            result.detach()
+                            val uri =
+                                MediaStore.Audio.Genres.Members.getContentUri("external", id)
+                            val albums = AlbumManager.getAlbumsByGenre(
+                                this@PlayService,
+                                uri,
+                                albumsLinkedHashMap,
+                                null,
+                                null,
+                                null
+                            )
+                            genreHasAlbumMap[id] = albums
+                            bundle.putParcelableArrayList("list", genresListTracksHashMap[id])
+                            bundle.putParcelableArrayList("albums", genreHasAlbumMap[id])
+                            bundle.putParcelable("message", genresLinkedHashMap[id])
+                            result.sendResult(bundle)
+                            return
+                        }
+                    }
+
+                    PlayListType.Folders -> {
+                        bundle.putParcelableArrayList("list",
+                            foldersListTracksHashMap[id]?.values?.let { ArrayList(it) })
+                        bundle.putParcelable("message", foldersLinkedHashMap[id])
+                    }
+
+                    PlayListType.Songs -> {
+                        bundle.putParcelableArrayList(
+                            "list",
+                            ArrayList(tracksLinkedHashMap.values)
+                        )
+                    }
+
+                    else -> {
+                        bundle.putParcelableArrayList("list", musicQueue)
+                    }
+                }
+            }
+            result.sendResult(bundle)
+        } else if (ACTION_AddPlayQueue == action) {
+            if (extras != null) {
+                val musicItem = extras.getParcelable<MusicItem>("musicItem")
+                val musicItems = extras.getParcelableArrayList<MusicItem>("musicItems")
+                val index = extras.getInt("index", musicQueue.size)
+                if (musicItem != null) {
+                    musicItem.tableId = null
+                    playListCurrent = null
+                    CoroutineScope(Dispatchers.IO).launch {
+                        db.CurrentListDao().delete()
+                    }
+                    if (index == musicQueue.size) {
+                        musicQueue.add(musicItem)
+                        CoroutineScope(Dispatchers.IO).launch {
+                            db.QueueDao().insert(musicItem)
+                        }
+                    } else {
+                        musicQueue.add(index, musicItem)
+                        // TODO should remove in first get data
+                        musicQueue.forEach {
+                            it.tableId = null
+                        }
+                        CoroutineScope(Dispatchers.IO).launch {
+                            db.QueueDao().deleteAllQueue()
+                            db.QueueDao().insertAll(musicQueue)
+                        }
+                    }
+                    exoPlayer.addMediaItem(index, MediaItem.fromUri(musicItem.path))
+                } else if (musicItems != null) {
+                    val list = ArrayList<MediaItem>()
+
+                    musicItems.forEach {
+                        list.add(MediaItem.fromUri(it.path))
+                    }
+                    playListCurrent = null
+                    CoroutineScope(Dispatchers.IO).launch {
+                        db.CurrentListDao().delete()
+                    }
+                    if (index == musicQueue.size) {
+                        musicQueue.addAll(musicItems)
+                        CoroutineScope(Dispatchers.IO).launch {
+                            db.QueueDao().insertAll(musicItems)
+                        }
+                    } else {
+                        musicQueue.addAll(index, musicItems)
+                        // TODO should remove in first get data
+                        musicQueue.forEach {
+                            it.tableId = null
+                        }
+                        CoroutineScope(Dispatchers.IO).launch {
+                            db.QueueDao().deleteAllQueue()
+                            db.QueueDao().insertAll(musicQueue)
+                        }
+                    }
+                    exoPlayer.addMediaItems(index, list)
+                }
+
+            }
+            result.sendResult(null)
+        } else if (ACTION_RemoveFromQueue == action) {
+            if (extras != null) {
+                val index = extras.getInt("index")
+                if (index < musicQueue.size) {
+                    musicQueue.removeAt(index)
+                    musicQueue.forEach {
+                        it.tableId = null
+                    }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        db.QueueDao().deleteAllQueue()
+                        // TODO maybe, musicQueue item no tableId, even don't use  it.tableId = null
+                        db.QueueDao().insertAll(musicQueue)
+                    }
+                    exoPlayer.removeMediaItem(index)
+                }
+            }
+            result.sendResult(null)
+        } else if (ACTION_PlayLIST_CHANGE == action) {
+            playListLinkedHashMap.clear()
+            playListTracksHashMap.clear()
+            // TODO if some tracks is not music, that it can scan and add, even user add it in some playlist.
+            PlaylistManager.getPlaylists(
+                this@PlayService,
+                playListLinkedHashMap,
+                playListTracksHashMap,
+                tracksLinkedHashMap,
+                null
+            )
+            result.sendResult(null)
+        } else if (ACTION_SEARCH == action) {
+            if (extras != null) {
+                val keywords = extras.getString("keyword") ?: ""
+                if (keywords.isEmpty() || keywords.length <= 1) {
+                    result.sendResult(null)
+                    return
+                }
+                result.detach()
+                CoroutineScope(Dispatchers.IO).launch {
+                    var tracksList = ArrayList<MusicItem>()
+                    var albumsList = ArrayList<AlbumList>()
+                    var artistList = ArrayList<ArtistList>()
+                    runBlocking {
+                        awaitAll(
+                            async {
+                                tracksList = TracksManager.searchTracks(
+                                    this@PlayService,
+                                    tracksLinkedHashMap,
+                                    keywords
+                                )
+                            },
+                            async {
+                                albumsList = AlbumManager.getAlbumByName(this@PlayService, keywords)
+                            },
+                            async {
+                                artistList =
+                                    ArtistManager.getArtistByName(this@PlayService, keywords)
+                            }
+                        )
+                    }
+                    val bundle = Bundle()
+                    bundle.putParcelableArrayList("tracks", tracksList)
+                    bundle.putParcelableArrayList("albums", albumsList)
+                    bundle.putParcelableArrayList("artist", artistList)
+                    result.sendResult(bundle)
+                }
+            } else {
+                result.sendResult(null)
+            }
+        } else if (ACTION_GET_ALBUM_BY_ID == action) {
+            if (extras != null) {
+                val albumId = extras.getLong("albumId")
+                albumsLinkedHashMap[albumId]?.let {
+                    result.sendResult(Bundle().apply {
+                        putParcelable("album", it)
+                    })
+                }
+                return
+            }
+            result.sendResult(null)
+        } else if (ACTION_TRACKS_DELETE == action) {
+            if (extras != null) {
+                val id = extras.getLong("id")
+                tracksLinkedHashMap.remove(id)
+                albumsListTracksHashMap.clear()
+                artistsListTracksHashMap.clear()
+                genresListTracksHashMap.clear()
+                foldersListTracksHashMap.clear()
+                albumsLinkedHashMap.clear()
+                playListLinkedHashMap.clear()
+                artistsLinkedHashMap.clear()
+                genresLinkedHashMap.clear()
+                foldersLinkedHashMap.clear()
+                artistHasAlbumMap.clear()
+                genreHasAlbumMap.clear()
+                result.sendResult(null)
+                return
+            }
+            result.sendResult(null)
+        } else if (ACTION_TRACKS_UPDATE == action) {
+            if (extras != null) {
+                val id = extras.getLong("id")
+                val musicTrack = TracksManager.getMusicById(this@PlayService, id)
+                if (musicTrack != null) {
+                    tracksLinkedHashMap[id] = musicTrack
+                } else {
+                    tracksLinkedHashMap.remove(id)
+                }
+                albumsListTracksHashMap.clear()
+                artistsListTracksHashMap.clear()
+                genresListTracksHashMap.clear()
+                foldersListTracksHashMap.clear()
+                albumsLinkedHashMap.clear()
+                playListLinkedHashMap.clear()
+                artistsLinkedHashMap.clear()
+                genresLinkedHashMap.clear()
+                foldersLinkedHashMap.clear()
+                artistHasAlbumMap.clear()
+                genreHasAlbumMap.clear()
+                result.sendResult(null)
+                return
+            }
+            result.sendResult(null)
+        } else if ("com.ztftrue.music.ACTION_EXIT" == action) {
+            //initially, i thought app need to notify system this service can stop.
+            // then app can be stop. but i found this cant work, sometimes, it make a bug.
+            // so i add this code, let user exit app.
+            // of course, user can remove notify,make system stop service.
+            exoPlayer.pause()
+            notify?.cancelNotification(this@PlayService)
+            stopSelf()
+            result.sendResult(null)
+        } else if (ACTION_GET_TRACK_BY_ID == action) {
+            //initially, i thought app need to notify system this service can stop.
+            // then app can be stop. but i found this cant work, sometimes, it make a bug.
+            // so i add this code, let user exit app.
+            // of course, user can remove notify,make system stop service.
+            val bundle = Bundle()
+            bundle.putParcelable("track", tracksLinkedHashMap[extras?.getLong("id")])
+            result.sendResult(bundle)
+        }
+    }
+
+    var remainingTime = 0L
+    var playCompleted = false
+    var needPlayPause = false
+    private var countDownTimer: CountDownTimer? = null
+    private fun timeSet(extras: Bundle, result: Result<Bundle>) {
+        val t = extras.getLong("time")
+        val v = extras.getBoolean("play_completed", false)
+        sleepTime = t
+        playCompleted = v
+        if (countDownTimer != null) {
+            remainingTime = 0
+            countDownTimer?.cancel()
+        }
+        if (sleepTime > 0) {
+            countDownTimer = object : CountDownTimer(sleepTime, 1000) {
+                override fun onTick(millisUntilFinished: Long) {
+                    remainingTime = millisUntilFinished
+                    val bundle = Bundle()
+                    bundle.putInt("type", EVENT_SLEEP_TIME_Change)
+                    bundle.putLong("remaining", remainingTime)
+                    mediaSession?.setExtras(bundle)
+                }
+
+                override fun onFinish() {
+                    if (playCompleted) {
+                        needPlayPause = true
+                    } else {
+                        timeFinish()
+                    }
+                }
+            }
+            countDownTimer?.start()
+        } else {
+            remainingTime = 0
+            countDownTimer?.cancel()
+            val bundle = Bundle()
+            bundle.putInt("type", EVENT_SLEEP_TIME_Change)
+            bundle.putLong("remaining", remainingTime)
+            mediaSession?.setExtras(bundle)
+        }
+        result.sendResult(extras)
+    }
+
+    fun timeFinish() {
+        remainingTime = 0
+        sleepTime = 0
+        exoPlayer.pause()
+        val bundle = Bundle()
+        bundle.putInt("type", EVENT_SLEEP_TIME_Change)
+        bundle.putLong("remaining", remainingTime)
+        bundle.putLong("sleepTime", 0L)
+        mediaSession?.setExtras(bundle)
+        notify?.cancelNotification(this@PlayService)
+    }
+
+    override fun onGetRoot(
+        clientPackageName: String,
+        clientUid: Int,
+        rootHints: Bundle?
+    ): BrowserRoot? {
+        return if (clientPackageName == "com.ztftrue.music") {
+            // TODO avoid onGetRoot called multiple times in a short period of time
+            val bundle = getData(Bundle())
+            if (bundle != null) {
+                dataSend = true
+            } else {
+                initSqlData()
+            }
+            BrowserRoot(MY_MEDIA_ROOT_ID, bundle)
+        } else {
+            null
+        }
+    }
+
+    private var sqlDataInitialized = false
+    private var dataSend = false
+    private var config: PlayConfig? = null
+
+    private fun initSqlData() {
+        CoroutineScope(Dispatchers.IO).launch {
+            db = Room.databaseBuilder(
+                this@PlayService,
+                MusicDatabase::class.java, "default_data.db"
+            ).build()
+            // Read musics , times 300ms
+            TracksManager.getFolderList(
+                this@PlayService,
+                foldersLinkedHashMap,
+                null,
+                tracksLinkedHashMap,
+                foldersListTracksHashMap
+            )
+            runBlocking {
+                awaitAll(
+                    async {
+                        val auxTemp = db.AuxDao().findFirstAux()
+                        if (auxTemp == null) {
+                            db.AuxDao().insert(auxr)
+                        } else {
+                            auxr = auxTemp
+                        }
+                        echoAudioProcessor.setDaleyTime(auxr.echoDelay)
+                        echoAudioProcessor.setDecay(auxr.echoDecay)
+                        echoAudioProcessor.setFeedBack(auxr.echoRevert)
+                        echoAudioProcessor.isActive = auxr.echo
+                        equalizerAudioProcessor.isActive = auxr.equalizer
+                        for (i in 0 until 10) {
+                            equalizerAudioProcessor.setBand(i, auxr.equalizerBand[i])
+                        }
+                    },
+                    async {
+                        val queue = db.QueueDao().findQueue()
+                        musicQueue.clear()
+                        // TODO need re-design
+                        if (!queue.isNullOrEmpty()) {
+                            val idGot = getCurrentPlayId()
+                            var id = -1L
+                            queue.forEach {
+                                if (tracksLinkedHashMap[it.id] != null) {
+                                    musicQueue.add(it)
+                                    if (it.id == idGot) {
+                                        id = idGot
+                                    }
+                                }
+                            }
+                            if (musicQueue.isNotEmpty() && id >= 0) {
+                                val plaC = db.CurrentListDao().findCurrentList()
+                                if (plaC != null) {
+                                    playListCurrent =
+                                        AnyListBase(plaC.listID, enumValueOf(plaC.type))
+                                }
+                                foldersListTracksHashMap.entries.forEach {
+                                    if (it.value.isNotEmpty()) {
+                                        currentPlayTrack = it.value[id]
+                                        if (currentPlayTrack != null) {
+                                            return@forEach
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    async {
+                        config = db.PlayConfigDao().findConfig()
+                        if (config == null) {
+                            config = PlayConfig(0, Player.REPEAT_MODE_ALL)
+                            db.PlayConfigDao().insert(config!!)
+                        }
+                    },
+                    async {
+                        AlbumManager.getAlbumList(
+                            this@PlayService,
+                            albumsLinkedHashMap,
+                            null
+                        )
+                    },
+                    async {
+                        PlaylistManager.getPlaylists(
+                            this@PlayService,
+                            playListLinkedHashMap,
+                            playListTracksHashMap,
+                            tracksLinkedHashMap,
+                            null
+                        )
+                    },
+                    async {
+                        GenreManager.getGenresList(
+                            this@PlayService,
+                            genresLinkedHashMap,
+                            genresListTracksHashMap,
+                            tracksLinkedHashMap,
+                            null
+                        )
+                    },
+                    async {
+                        ArtistManager.getArtistList(
+                            this@PlayService,
+                            artistsLinkedHashMap,
+                            null
+                        )
+                    },
+                    async {
+                        val list = db.MainTabDao().findAllIsShowMainTabSortByPriority()
+                        if (list.isNullOrEmpty()) {
+                            mainTab.add(MainTab(null, "Songs", PlayListType.Songs, 1, true))
+                            mainTab.add(MainTab(null, "PlayLists", PlayListType.PlayLists, 2, true))
+                            mainTab.add(MainTab(null, "Queue", PlayListType.Queue, 3, true))
+                            mainTab.add(MainTab(null, "Albums", PlayListType.Albums, 4, true))
+                            mainTab.add(MainTab(null, "Artists", PlayListType.Artists, 5, true))
+                            mainTab.add(MainTab(null, "Genres", PlayListType.Genres, 6, true))
+                            mainTab.add(MainTab(null, "Folders", PlayListType.Folders, 7, true))
+                            db.MainTabDao().insertAll(mainTab)
+                        } else {
+                            mainTab.addAll(list)
+                        }
+                    }
+                )
+            }
+
+            sqlDataInitialized = true
+            CoroutineScope(Dispatchers.Main).launch {
+                if (!dataSend) {
+                    exoPlayer.repeatMode = config?.repeatModel ?: Player.REPEAT_MODE_ALL
+                    val p = PlaybackParameters(
+                        auxr.speed,
+                        auxr.pitch
+                    )
+                    exoPlayer.playbackParameters = p
+                    if (musicQueue.isNotEmpty()) {
+                        val t1 = ArrayList<MediaItem>()
+                        musicQueue.forEach {
+                            t1.add(MediaItem.fromUri(it.path))
+                        }
+                        exoPlayer.setMediaItems(t1)
+                        if (currentPlayTrack != null) {
+                            exoPlayer.seekToDefaultPosition(getSelectPosition())
+                        }
+                    }
+                    if (currentPlayTrack != null && musicQueue.isNotEmpty()) {
+                        if (notify == null) {
+                            notify = CreateNotification(this@PlayService, mediaSession)
+                        }
+                        updateNotify()
+                    }
+                    val bundle = Bundle()
+                    setData(bundle)
+                    mediaSession?.setExtras(bundle)
+                }
+            }
+        }
+    }
+
+    private fun getData(bundle: Bundle): Bundle? {
+        return if (sqlDataInitialized) {
+            setData(bundle)
+            bundle
+        } else {
+            null
+        }
+    }
+
+    private fun setData(bundle: Bundle) {
+        bundle.putInt("type", EVENT_DATA_READY)
+        bundle.putLong("playListID", playListCurrent?.id ?: -1)
+        bundle.putString("playListType", playListCurrent?.type?.name)
+        bundle.putParcelableArrayList("songsList", ArrayList(tracksLinkedHashMap.values))
+        bundle.putParcelableArrayList("musicQueue", musicQueue)
+        bundle.putSerializable("playListCurrent", playListCurrent)
+        bundle.putBoolean("isPlaying", exoPlayer.isPlaying)
+        bundle.putBoolean("play_completed", playCompleted)
+        bundle.putInt("index", exoPlayer.currentMediaItemIndex)
+        bundle.putFloat("pitch", auxr.pitch)
+        bundle.putFloat("speed", auxr.speed)
+        bundle.putBoolean("equalizerEnable", equalizerAudioProcessor.isSetActive())
+        bundle.putIntArray("equalizerValue", equalizerAudioProcessor.getBandLevels())
+        bundle.putParcelable("musicItem", currentPlayTrack)
+        bundle.putLong("sleepTime", sleepTime)
+        bundle.putLong("remaining", remainingTime)
+        bundle.putFloat("delayTime", auxr.echoDelay)
+        bundle.putFloat("decay", auxr.echoDecay)
+        bundle.putBoolean("echoActive", auxr.echo)
+        bundle.putBoolean("echoFeedBack", auxr.echoRevert)
+        bundle.putInt("repeat", exoPlayer.repeatMode)
+        bundle.putParcelableArrayList("mainTabList", mainTab)
+    }
+
+    override fun onLoadChildren(
+        parentId: String,
+        result: Result<MutableList<MediaBrowserCompat.MediaItem>>
+    ) {
+        if (parentId != MY_MEDIA_ROOT_ID) {
+            val mediaItems: MutableList<MediaBrowserCompat.MediaItem> = mutableListOf()
+//            String mediaId, CharSequence title, CharSequence subtitle,
+//            CharSequence description, Bitmap icon, Uri iconUri, Bundle extras, Uri mediaUri
+//            var description = MediaDescriptionCompat()
+//            var a=  MediaBrowserCompat.MediaItem(description,MediaBrowserCompat.MediaItem.FLAG_PLAYABLE)
+            // Check if this is the root menu:
+//        if (MY_MEDIA_ROOT_ID == parentId) {// Check if this is the root menu:
+//            val t = musicListMap[DefaultPlayList.id]
+//            if (t != null) {
+//                t.forEach {
+//                    mediaItems.add(MediaBrowserCompat.MediaItem.fromMediaItem(it.mediaItem))
+//                }
+//            } else {
+//            }
+            result.sendResult(mediaItems)
+        }
+    }
+
+    private fun stopTimer() {
+        remainingTime = 0
+        countDownTimer?.cancel()
+    }
+
+    override fun onDestroy() {
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopTimer()
+        notify?.cancelNotification(this@PlayService)
+        mediaSession?.release()
+
+        // I don't know why sometimes exoPlayer is null,
+        // Maybe , it's because system is no enough memory
+        // I found when i click stop button on android studio, `exoPlayer` is null
+        exoPlayer.stop()
+        exoPlayer.release()
+        super.onDestroy()
+    }
+
+    private var notify: CreateNotification? = null
+
+    private fun playMusicCurrentQueue(musicItem: MusicItem, index: Int) {
+        CoroutineScope(Job() + Dispatchers.Main).launch {
+            if (currentPlayTrack?.id == musicItem.id) {
+                val pbState = mediaController?.playbackState?.state
+                if (pbState == PlaybackStateCompat.STATE_PLAYING) {
+                    mediaController?.transportControls?.pause()
+                } else {
+                    mediaController?.transportControls?.play()
+                }
+            } else {
+                saveSelectIdAndPosition(musicQueue[index].id, index)
+                exoPlayer.seekToDefaultPosition(index)
+                exoPlayer.playWhenReady = true
+                exoPlayer.prepare()
+            }
+        }
+    }
+
+    private fun playMusicSwitchQueue(
+        musicItem: MusicItem, playList: AnyListBase, index: Int
+    ) {
+        CoroutineScope(Job() + Dispatchers.Main).launch {
+            playListCurrent = playList
+            CoroutineScope(Dispatchers.IO).launch {
+                var c = db.CurrentListDao().findCurrentList()
+                if (c == null) {
+                    c = CurrentList(null, playListCurrent?.id ?: -1, playList.type.name)
+                    db.CurrentListDao().insert(c)
+                } else {
+                    c.listID = playListCurrent?.id ?: -1
+                    c.type = playList.type.name
+                    db.CurrentListDao().update(c)
+                }
+            }
+            musicQueue.clear()
+
+            when (playList.type) {
+                PlayListType.Songs -> {
+                    musicQueue.addAll(tracksLinkedHashMap.values)
+                }
+
+                PlayListType.PlayLists -> {
+                    musicQueue.addAll(
+                        playListTracksHashMap[playListCurrent?.id ?: -1] ?: ArrayList()
+                    )
+                }
+
+                PlayListType.Albums -> {
+                    musicQueue.addAll(
+                        albumsListTracksHashMap[playListCurrent?.id ?: -1] ?: ArrayList()
+                    )
+                }
+
+                PlayListType.Artists -> {
+                    musicQueue.addAll(
+                        artistsListTracksHashMap[playListCurrent?.id ?: -1] ?: ArrayList()
+                    )
+                }
+
+                PlayListType.Genres -> {
+                    musicQueue.addAll(
+                        genresListTracksHashMap[playListCurrent?.id ?: -1] ?: ArrayList()
+                    )
+                }
+
+                PlayListType.Folders -> {
+                    musicQueue.addAll(
+                        foldersListTracksHashMap[playListCurrent?.id ?: -1]?.values ?: ArrayList()
+                    )
+                }
+
+                else -> {
+//                    musicQueue.clear()
+                }
+            }
+            if (musicQueue.isNotEmpty()) {
+                val t1 = ArrayList<MediaItem>()
+                val bundle = Bundle()
+                bundle.putInt("type", EVENT_changePlayQueue)
+                bundle.putInt("index", index)
+                bundle.putParcelable("musicItem", musicItem)
+                bundle.putParcelableArrayList("queue", musicQueue)
+                mediaSession?.setExtras(bundle)
+                musicQueue.forEach {
+                    t1.add(MediaItem.fromUri(it.path))
+                }
+                exoPlayer.setMediaItems(t1)
+                CoroutineScope(Dispatchers.IO).launch {
+                    db.QueueDao().deleteAllQueue()
+                    db.QueueDao().insertAll(musicQueue)
+                    saveSelectIdAndPosition(musicQueue[index].id, index)
+                }
+                exoPlayer.seekToDefaultPosition(index)
+                exoPlayer.playWhenReady = true
+                exoPlayer.prepare()
+                val pbState = mediaController?.playbackState?.state
+                if (pbState == PlaybackStateCompat.STATE_PLAYING) {
+                    mediaController?.transportControls?.pause()
+                } else {
+                    mediaController?.transportControls?.play()
+                }
+            }
+        }
+    }
+
+    private fun initExo(context: Context) {
+        val renderersFactory: DefaultRenderersFactory =
+            object : DefaultRenderersFactory(context) {
+                override fun buildAudioSink(
+                    context: Context,
+                    enableFloatOutput: Boolean,
+                    enableAudioTrackPlaybackParams: Boolean,
+                ): AudioSink {
+                    val au = DefaultAudioSink.Builder(context)
+                        .setEnableFloatOutput(enableFloatOutput)
+                        .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
+                        .setAudioProcessors(
+                            arrayOf(
+                                equalizerAudioProcessor,
+                                sonicAudioProcessor,
+                                echoAudioProcessor
+                            )
+                        )
+                        .build()
+                    return object : ForwardingAudioSink(au) {
+                        override fun configure(
+                            inputFormat: Format,
+                            specifiedBufferSize: Int,
+                            outputChannels: IntArray?
+                        ) {
+//                            val bytesPerSec = Util.getPcmFrameSize(
+//                                inputFormat.pcmEncoding,
+//                                inputFormat.channelCount
+//                            ) * inputFormat.sampleRate * 1 // 这里计算出的就是1s音频的缓冲长度
+                            if (needPlayPause) {
+                                needPlayPause = false
+                                timeFinish()
+                            }
+                            super.configure(inputFormat, specifiedBufferSize, outputChannels)
+                        }
+
+                    }
+                }
+            }
+        val trackSelectionFactory = AdaptiveTrackSelection.Factory()
+        val trackSelectorParameters = DefaultTrackSelector.Parameters.Builder(context).build()
+        val trackSelector = DefaultTrackSelector(context, trackSelectionFactory)
+        trackSelector.parameters = trackSelectorParameters
+        exoPlayer = ExoPlayer.Builder(context, renderersFactory)
+            .setTrackSelector(trackSelector)
+            .setHandleAudioBecomingNoisy(true)
+            .build()
+        exoPlayer.playWhenReady = true
+        exoPlayer.repeatMode = config?.repeatModel ?: Player.REPEAT_MODE_ALL
+        exoPlayer.setAudioAttributes(
+            AudioAttributes.Builder()
+                .setUsage(C.USAGE_MEDIA)
+                .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+                .build(),
+            true
+        )
+        exoPlayer.repeatMode = Player.REPEAT_MODE_ALL
+        playerAddListener()
+    }
+
+
+    private fun playPreview() {
+        if (exoPlayer.hasPreviousMediaItem()) {
+            exoPlayer.seekToPreviousMediaItem()
+        }
+    }
+
+    private fun playNext() {
+        if (exoPlayer.hasNextMediaItem()) {
+            exoPlayer.seekToNextMediaItem()
+        }
+    }
+
+    private fun pauseMusic() {
+//        if (notify == null) {
+//            notify = CreateNotification(this@PlayService, mediaSession)
+//        }
+        if (exoPlayer.isPlaying) {
+            exoPlayer.pause()
+        } else if (exoPlayer.mediaItemCount > 0) {
+            exoPlayer.prepare()
+            exoPlayer.play()
+        }
+    }
+
+    private fun playerAddListener() {
+        exoPlayer.addListener(@UnstableApi object : Player.Listener {
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                super.onIsPlayingChanged(isPlaying)
+                currentPlayTrack =
+                    musicQueue[exoPlayer.currentMediaItemIndex]
+                if (isPlaying) {
+                    notify?.updateNotification(
+                        this@PlayService,
+                        currentPlayTrack?.name ?: "",
+                        currentPlayTrack?.artist ?: "",
+                        exoPlayer
+                    )
+                } else {
+                    notify?.updateNotification(
+                        this@PlayService,
+                        currentPlayTrack?.name ?: "",
+                        currentPlayTrack?.artist ?: "",
+                        exoPlayer
+                    )
+                }
+            }
+
+            override fun onPlayerError(error: PlaybackException) {
+                super.onPlayerError(error)
+                error.printStackTrace()
+                notify?.updateNotification(
+                    this@PlayService,
+                    currentPlayTrack?.name ?: "",
+                    error.errorCodeName,
+                    exoPlayer
+                )
+            }
+
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                super.onPlaybackStateChanged(playbackState)
+                if (playbackState == Player.STATE_READY) {
+                    currentDuration.longValue = exoPlayer.duration
+                }
+            }
+
+            override fun onPositionDiscontinuity(
+                oldPosition: Player.PositionInfo,
+                newPosition: Player.PositionInfo,
+                reason: Int
+            ) {
+                super.onPositionDiscontinuity(oldPosition, newPosition, reason)
+                // TODO　seek bar also call this function
+                if (musicQueue.isEmpty()) return
+                currentPlayTrack =
+                    musicQueue[newPosition.mediaItemIndex]
+                updateNotify()
+                if (needPlayPause) {
+                    needPlayPause = false
+                    timeFinish()
+                }
+            }
+
+            override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+                super.onMediaMetadataChanged(mediaMetadata)
+                val bitArray = exoPlayer.mediaMetadata.artworkData
+                val metadataBuilder = MediaMetadataCompat.Builder()
+                metadataBuilder.putLong(
+                    MediaMetadataCompat.METADATA_KEY_DURATION,
+                    exoPlayer.duration
+                )
+                metadataBuilder.putText(
+                    MediaMetadataCompat.METADATA_KEY_TITLE,
+                    currentPlayTrack?.name
+                )
+                metadataBuilder.putText(
+                    MediaMetadataCompat.METADATA_KEY_ARTIST,
+                    currentPlayTrack?.artist
+                )
+                if (bitArray != null) {
+                    val bit = BitmapFactory.decodeByteArray(bitArray, 0, bitArray.size)
+                    metadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, bit)
+                }
+                val bundle = Bundle()
+                bundle.putInt("type", EVENT_MEDIA_METADATA_Change)
+                bundle.putByteArray("cover", exoPlayer.mediaMetadata.artworkData)
+                mediaSession?.setExtras(bundle)
+                mediaSession?.setMetadata(metadataBuilder.build())
+            }
+        })
+    }
+
+    fun updateNotify() {
+        notify?.updateNotification(
+            this@PlayService,
+            currentPlayTrack?.name ?: "",
+            currentPlayTrack?.artist ?: "",
+            exoPlayer
+        )
+        val metadataBuilder = MediaMetadataCompat.Builder()
+        metadataBuilder.putLong(
+            MediaMetadataCompat.METADATA_KEY_DURATION,
+            exoPlayer.duration
+        )
+        metadataBuilder.putText(
+            MediaMetadataCompat.METADATA_KEY_TITLE,
+            currentPlayTrack?.name
+        )
+        metadataBuilder.putText(
+            MediaMetadataCompat.METADATA_KEY_ARTIST,
+            currentPlayTrack?.artist
+        )
+        val bitArray = exoPlayer.mediaMetadata.artworkData
+        if (bitArray != null) {
+            val bit = BitmapFactory.decodeByteArray(bitArray, 0, bitArray.size)
+            metadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, bit)
+        }
+        val bundle = Bundle()
+        bundle.putInt("type", EVENT_MEDIA_ITEM_Change)
+        bundle.putParcelable("current", currentPlayTrack)
+        bundle.putInt("index", exoPlayer.currentMediaItemIndex)
+        saveSelectIdAndPosition(
+            musicQueue[exoPlayer.currentMediaItemIndex].id,
+            exoPlayer.currentMediaItemIndex
+        )
+        mediaSession?.setExtras(bundle)
+        mediaSession?.setMetadata(metadataBuilder.build())
+    }
+
+    private fun saveSelectIdAndPosition(id: Long, index: Int) {
+        this@PlayService.getSharedPreferences(
+            "SelectedPlayTrack",
+            Context.MODE_PRIVATE
+        ).edit().putLong("SelectedPlayTrack", id).putInt("PlayTrackIndex", index).apply()
+    }
+
+    private fun getCurrentPlayId(): Long {
+        return this@PlayService.getSharedPreferences(
+            "SelectedPlayTrack",
+            Context.MODE_PRIVATE
+        ).getLong("SelectedPlayTrack", -1)
+    }
+
+    private fun getSelectPosition(): Int {
+        return this@PlayService.getSharedPreferences(
+            "SelectedPlayTrack",
+            Context.MODE_PRIVATE
+        ).getInt("PlayTrackIndex", 0)
+    }
+}

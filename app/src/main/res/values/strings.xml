@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">MonsterMusic</string>
+    <!--    lyrics message parse-->
+    <string name="al">Album: </string>
+    <string name="ar">Artist: </string>
+    <string name="au">Author: </string>
+    <string name="by">Lyrics by: </string>
+    <string name="re">Re: </string>
+    <string name="ti">Title: </string>
+    <string name="ve">Version: </string>
+</resources>
