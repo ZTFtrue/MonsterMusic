@@ -201,12 +201,12 @@ class PlayService : MediaBrowserServiceCompat() {
             setCallback(object : MediaSessionCompat.Callback() {
                 override fun onPlay() {
                     // Start playback
-                    pauseMusic()
+                    pauseOrPlayMusic()
                 }
 
                 override fun onPause() {
                     // Pause playback
-                    pauseMusic()
+                    pauseOrPlayMusic()
                 }
 
                 override fun onStop() {
@@ -679,6 +679,9 @@ class PlayService : MediaBrowserServiceCompat() {
                             db.QueueDao().insertAll(musicQueue)
                         }
                     }
+                    if(!exoPlayer.isPlaying){
+                        exoPlayer.playWhenReady = false
+                    }
                     exoPlayer.addMediaItem(index, MediaItem.fromUri(musicItem.path))
                 } else if (musicItems != null) {
                     val list = ArrayList<MediaItem>()
@@ -706,25 +709,60 @@ class PlayService : MediaBrowserServiceCompat() {
                             db.QueueDao().insertAll(musicQueue)
                         }
                     }
+                    if(!exoPlayer.isPlaying){
+                        exoPlayer.playWhenReady = false
+                    }
                     exoPlayer.addMediaItems(index, list)
                 }
-
             }
             result.sendResult(null)
         } else if (ACTION_RemoveFromQueue == action) {
             if (extras != null) {
                 val index = extras.getInt("index")
                 if (index < musicQueue.size) {
+                    exoPlayer.removeMediaItem(index)
                     musicQueue.removeAt(index)
                     musicQueue.forEach {
                         it.tableId = null
                     }
                     CoroutineScope(Dispatchers.IO).launch {
                         db.QueueDao().deleteAllQueue()
-                        // TODO maybe, musicQueue item no tableId, even don't use  it.tableId = null
-                        db.QueueDao().insertAll(musicQueue)
+                        if (musicQueue.isNotEmpty())
+                            db.QueueDao().insertAll(musicQueue)
                     }
-                    exoPlayer.removeMediaItem(index)
+                    playListCurrent = if (playListCurrent?.type == PlayListType.None) {
+                        // Search page id = id-1, avoid new's id equal this
+                        AnyListBase(playListCurrent!!.id + 1, PlayListType.None)
+                    } else {
+                        // Search page default id is -1
+                        AnyListBase(3, PlayListType.None)
+                    }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        var c = db.CurrentListDao().findCurrentList()
+                        if (c == null) {
+                            c = CurrentList(null, playListCurrent?.id ?: -1, PlayListType.None.name)
+                            db.CurrentListDao().insert(c)
+                        } else {
+                            c.listID = playListCurrent?.id ?: -1
+                            c.type = PlayListType.None.name
+                            db.CurrentListDao().update(c)
+                        }
+                    }
+                    if (musicQueue.isNotEmpty()) {
+                        val currentIndex=exoPlayer.currentMediaItemIndex
+                        val bundle = Bundle()
+                        bundle.putInt("type", EVENT_changePlayQueue)
+                        bundle.putInt("index", currentIndex)
+                        bundle.putParcelable("musicItem", musicQueue[currentIndex])
+                        bundle.putParcelableArrayList("queue", musicQueue)
+                        // TODO
+                        mediaSession?.setExtras(bundle)
+                        CoroutineScope(Dispatchers.IO).launch {
+                            saveSelectIdAndPosition(musicQueue[currentIndex].id, currentIndex)
+                        }
+                        result.sendResult(bundle)
+                        return
+                    }
                 }
             }
             result.sendResult(null)
@@ -1348,7 +1386,7 @@ class PlayService : MediaBrowserServiceCompat() {
         }
     }
 
-    private fun pauseMusic() {
+    private fun pauseOrPlayMusic() {
 //        if (notify == null) {
 //            notify = CreateNotification(this@PlayService, mediaSession)
 //        }

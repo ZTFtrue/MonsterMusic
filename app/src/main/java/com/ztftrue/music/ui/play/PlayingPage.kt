@@ -37,6 +37,7 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -115,9 +116,12 @@ fun PlayingPage(
     val repeatModel = remember { mutableIntStateOf(viewModel.repeatModel.intValue) }
     var music: MusicItem? = viewModel.currentPlay.value
     var showDeleteTip by remember { mutableStateOf(false) }
-    if (music == null) {
-        navController.popBackStack()
+    LaunchedEffect(music) {
+        if (music == null) {
+            navController.popBackStack()
+        }
     }
+
     if (showDeleteTip && music != null) {
 
         DeleteTip(viewModel, music.name, onDismiss = {
@@ -223,15 +227,27 @@ fun PlayingPage(
                         }
 
                         OperateType.RemoveFromQueue -> {
-                            val index = viewModel.musicQueue.indexOf(music)
-                            viewModel.musicQueue.removeAt(index)
+                            val index = viewModel.musicQueue.indexOfFirst { it.id == music.id }
+                            if(index == -1) return@OperateDialog
                             val bundle = Bundle()
                             bundle.putInt("index", index)
                             viewModel.mediaBrowser?.sendCustomAction(
                                 ACTION_RemoveFromQueue,
                                 bundle,
-                                null
+                                object : MediaBrowserCompat.CustomActionCallback() {
+                                    override fun onResult(
+                                        action: String?,
+                                        extras: Bundle?,
+                                        resultData: Bundle?
+                                    ) {
+                                        super.onResult(action, extras, resultData)
+                                        if (ACTION_RemoveFromQueue == action && resultData == null) {
+                                            viewModel.currentPlay.value = null
+                                        }
+                                    }
+                                }
                             )
+                            viewModel.musicQueue.removeAt(index)
                         }
 
                         OperateType.EditMusicInfo -> {

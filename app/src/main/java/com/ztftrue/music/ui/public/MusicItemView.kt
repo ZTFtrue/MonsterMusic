@@ -213,14 +213,27 @@ fun MusicItemView(
                     }
 
                     OperateType.RemoveFromQueue -> {
-                        viewModel.musicQueue.removeAt(index)
+                        val indexM = viewModel.musicQueue.indexOfFirst { it.id == music.id }
+                        if(indexM == -1) return@OperateDialog
                         val bundle = Bundle()
-                        bundle.putInt("index", index)
+                        bundle.putInt("index", indexM)
                         viewModel.mediaBrowser?.sendCustomAction(
                             ACTION_RemoveFromQueue,
                             bundle,
-                            null
+                            object : MediaBrowserCompat.CustomActionCallback() {
+                                override fun onResult(
+                                    action: String?,
+                                    extras: Bundle?,
+                                    resultData: Bundle?
+                                ) {
+                                    super.onResult(action, extras, resultData)
+                                    if (ACTION_RemoveFromQueue == action && resultData == null) {
+                                        viewModel.currentPlay.value = null
+                                    }
+                                }
+                            }
                         )
+                        viewModel.musicQueue.removeAt(indexM)
                     }
 
                     OperateType.EditMusicInfo -> {
@@ -286,6 +299,11 @@ fun MusicItemView(
                             viewModel.musicQueue.clear()
                             viewModel.musicQueue.addAll(musicList)
                         }
+                    }
+                    if (viewModel.playListCurrent.value == null) {
+                        viewModel.playListCurrent.value = playList
+                        viewModel.currentMusicCover.value = null
+                        viewModel.currentPlay.value = music
                     }
                     val bundle = Bundle()
                     bundle.putParcelable("musicItem", music)
@@ -407,7 +425,33 @@ fun OperateDialog(
                 )
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
                     items(1) {
-                        if (!musicViewModel.musicQueue.any { it.id == music.id }) {
+                        if (musicViewModel.musicQueue.any { it.id == music.id }) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(50.dp)
+                                    .padding(0.dp)
+                                    .drawBehind {
+                                        drawLine(
+                                            color = color,
+                                            start = Offset(0f, size.height - 1.dp.toPx()),
+                                            end = Offset(size.width, size.height - 1.dp.toPx()),
+                                            strokeWidth = 1.dp.toPx()
+                                        )
+                                    }
+                                    .clickable {
+                                        musicViewModel.playListCurrent.value = null
+                                        onDismiss(OperateType.RemoveFromQueue)
+                                    },
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                Text(
+                                    text = "Remove from queue",
+                                    Modifier.padding(start = 10.dp),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                        } else {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -454,32 +498,6 @@ fun OperateDialog(
                             ) {
                                 Text(
                                     text = "Play next",
-                                    Modifier.padding(start = 10.dp),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            }
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(50.dp)
-                                    .padding(0.dp)
-                                    .drawBehind {
-                                        drawLine(
-                                            color = color,
-                                            start = Offset(0f, size.height - 1.dp.toPx()),
-                                            end = Offset(size.width, size.height - 1.dp.toPx()),
-                                            strokeWidth = 1.dp.toPx()
-                                        )
-                                    }
-                                    .clickable {
-                                        musicViewModel.playListCurrent.value = null
-                                        onDismiss(OperateType.RemoveFromQueue)
-                                    },
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                Text(
-                                    text = "Remove from queue",
                                     Modifier.padding(start = 10.dp),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
