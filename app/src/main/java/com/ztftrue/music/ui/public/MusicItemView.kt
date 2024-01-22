@@ -338,7 +338,7 @@ fun MusicItemView(
         } else {
             Image(
                 painter = painterResource(id),
-                contentDescription = "Contact profile picture",
+                contentDescription = "Operate More, will open dialog",
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape),
@@ -369,7 +369,7 @@ fun MusicItemView(
                     }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Contact profile picture",
+                        contentDescription = "Operate More, will open dialog",
                         modifier = Modifier
                             .size(20.dp)
                             .clip(CircleShape),

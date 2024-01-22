@@ -43,6 +43,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -89,19 +91,29 @@ fun TopBar(
             }) {
                 Image(
                     painter = painterResource(timerIcon),
-                    contentDescription = "Contact profile picture",
+                    contentDescription = "Operate More, will open dialog",
                     modifier = Modifier
                         .size(30.dp)
                         .clip(CircleShape),
                     colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                 )
             }
-            IconButton(onClick = {
-                navController.navigate(
-                    Router.SearchPage.route
+            IconButton(
+                modifier = Modifier
+                    .size(50.dp)
+                    .semantics {
+                        contentDescription = "Search"
+                    },
+                onClick = {
+                    navController.navigate(
+                        Router.SearchPage.route
+                    )
+                }) {
+                Icon(
+                    Icons.Filled.Search,
+                    modifier = Modifier.size(30.dp),
+                    contentDescription = "Search"
                 )
-            }) {
-                Icon(Icons.Filled.Search, contentDescription = "Search")
             }
             content()
         }
@@ -154,12 +166,15 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "Running: ${Utils.formatTime(musicViewModel.remainTime.longValue)}",      color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            text = "Running: ${Utils.formatTime(musicViewModel.remainTime.longValue)}",
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                         TextButton(
                             onClick = { onConfirmation(0L) },
                             modifier = Modifier.padding(8.dp),
                         ) {
-                            Text("Stop",      color = MaterialTheme.colorScheme.onBackground)
+                            Text("Stop", color = MaterialTheme.colorScheme.onBackground)
                         }
                     }
                     Divider(
@@ -179,7 +194,10 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                     Checkbox(checked = musicViewModel.playCompleted.value, onCheckedChange = {
                         musicViewModel.playCompleted.value = it
                     })
-                    Text(text = "Play completed last song",      color = MaterialTheme.colorScheme.onBackground)
+                    Text(
+                        text = "Play completed last song",
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 }
 
                 Divider(
@@ -213,37 +231,43 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                     }
                 }
                 Row {
-                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)){
-                    TextField(
-                        value = inputMinutes,
-                        onValueChange = {
-                            if (it.isNotEmpty()) {
-                                if (it.isDigitsOnly() && !it.contains(".") && it.length < 6 && (it.toLong() > 0)) {
-                                    inputMinutes = it
+                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
+                        TextField(
+                            value = inputMinutes,
+                            onValueChange = {
+                                if (it.isNotEmpty()) {
+                                    if (it.isDigitsOnly() && !it.contains(".") && it.length < 6 && (it.toLong() > 0)) {
+                                        inputMinutes = it
+                                    }
+                                } else {
+                                    inputMinutes = ""
                                 }
-                            } else {
-                                inputMinutes = ""
-                            }
 
-                        },
-                        label = { Text("Enter minutes",      color = MaterialTheme.colorScheme.onBackground) },
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = ImeAction.Done,
-                            keyboardType = KeyboardType.Number
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
+                            },
+                            label = {
+                                Text(
+                                    "Enter minutes",
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            },
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Done,
+                                keyboardType = KeyboardType.Number
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
 //                            startTimer(inputMinutes.toInt())
-                            }
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        suffix = {
-                            Text("minutes",      color = MaterialTheme.colorScheme.onBackground)
-                        },
-                    )
-                }}
+                                }
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            suffix = {
+                                Text("minutes", color = MaterialTheme.colorScheme.onBackground)
+                            },
+                        )
+                    }
+                }
 
                 Row(
                     modifier = Modifier
@@ -254,7 +278,7 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                         onClick = { onDismiss() },
                         modifier = Modifier.padding(8.dp),
                     ) {
-                        Text("Dismiss",      color = MaterialTheme.colorScheme.onBackground)
+                        Text("Dismiss", color = MaterialTheme.colorScheme.onBackground)
                     }
                     TextButton(
                         onClick = {
@@ -264,7 +288,7 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                         },
                         modifier = Modifier.padding(8.dp),
                     ) {
-                        Text("Confirm",      color = MaterialTheme.colorScheme.onBackground)
+                        Text("Confirm", color = MaterialTheme.colorScheme.onBackground)
                     }
                 }
 

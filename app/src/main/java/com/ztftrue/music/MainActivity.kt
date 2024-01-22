@@ -1026,14 +1026,16 @@ class MainActivity : ComponentActivity() {
                             colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                         )
                     }
-                    IconButton(modifier = Modifier.semantics {
-                        contentDescription = "Search"
-                    }, onClick = {
-                        navController.navigate(
-                            Router.SearchPage.route
-                        )
-                    }) {
-                        Icon(Icons.Filled.Search, contentDescription = "Search")
+                    IconButton(
+                        modifier = Modifier.size(50.dp).semantics {
+                            contentDescription = "Search"
+                        },
+                        onClick = {
+                            navController.navigate(
+                                Router.SearchPage.route
+                            )
+                        }) {
+                        Icon(Icons.Filled.Search,  modifier = Modifier.size(30.dp), contentDescription = "Search")
                     }
                 }
             }

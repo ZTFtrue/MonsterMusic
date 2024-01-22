@@ -517,7 +517,7 @@ fun AddMusicToPlayListDialog(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Contact profile picture",
+                        contentDescription = "Operate More, will open dialog",
                         modifier = Modifier
                             .size(30.dp)
                             .clip(CircleShape),

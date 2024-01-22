@@ -295,7 +295,7 @@ fun GenreItemView(
                     }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Contact profile picture",
+                        contentDescription = "Operate More, will open dialog",
                         modifier = Modifier
                             .size(20.dp)
                             .clip(CircleShape),

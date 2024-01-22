@@ -344,7 +344,7 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                             }) {
                                             Image(
                                                 painter = painterResource(R.drawable.ic_up),
-                                                contentDescription = "Up",
+                                                contentDescription = "Up tab priority",
                                                 modifier = Modifier
                                                     .size(30.dp)
                                                     .clip(CircleShape),
@@ -358,8 +358,10 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                                 .clip(CircleShape),
                                         )
                                     }
-                                    Divider(modifier = Modifier.height(40.dp).width(10.dp).background(
-                                        Color.Transparent))
+                                    Divider(
+                                        color= Color.Transparent,
+                                        modifier = Modifier.height(40.dp).width(10.dp).background(
+                                        MaterialTheme.colorScheme.background))
                                     if (it < mainTabList.size - 1) {
                                         FilledIconButton(modifier = Modifier
                                             .size(50.dp)
@@ -373,7 +375,7 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                             }) {
                                             Image(
                                                 painter = painterResource(R.drawable.ic_down),
-                                                contentDescription = "Down",
+                                                contentDescription = "Down tab priority",
                                                 modifier = Modifier
                                                     .size(30.dp)
                                                     .clip(CircleShape) ,

@@ -292,7 +292,7 @@ fun TracksListPage(
                         }) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Contact profile picture",
+                            contentDescription = "Operate More, will open dialog",
                             modifier = Modifier
                                 .size(20.dp)
                                 .clip(CircleShape),
@@ -359,7 +359,7 @@ fun TracksListPage(
                                     }) {
                                         Icon(
                                             imageVector = Icons.Default.Add,
-                                            contentDescription = "Contact profile picture",
+                                            contentDescription = "Add playlist",
                                             modifier = Modifier
                                                 .size(30.dp)
                                                 .clip(CircleShape),
