@@ -19,13 +19,15 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -51,7 +53,6 @@ import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.home.AlbumGridView
 import com.ztftrue.music.ui.home.ArtistsGridView
 import com.ztftrue.music.ui.public.BackButton
-import com.ztftrue.music.ui.public.Bottom
 import com.ztftrue.music.ui.public.TracksListView
 import com.ztftrue.music.utils.AlbumList
 import com.ztftrue.music.utils.AnyListBase
@@ -75,16 +76,14 @@ fun SearchPage(
     musicViewModel: MusicViewModel,
     navController: NavHostController,
 ) {
+    val focusRequester = remember { FocusRequester() }
     val tracksList = remember { mutableStateListOf<MusicItem>() }
     val albumsList = remember { mutableStateListOf<AlbumList>() }
     val artistList = remember { mutableStateListOf<ArtistList>() }
     var modeList by remember { mutableStateOf(AnyListBase(-1, PlayListType.None)) }
     var keywords by remember { mutableStateOf("") }
-    val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-    }
+
     var jobSeek: Job? = null
     val job = CoroutineScope(Dispatchers.IO)
     LaunchedEffect(keywords) {
@@ -131,7 +130,25 @@ fun SearchPage(
             }
         }
     }
-
+    /**
+     * sometimes some the focusRequester is not initialized
+     * java.lang.IllegalStateException:
+     * 01-22 04:40:38.980: W/AndroidJUnitRunner(9977):    FocusRequester is not initialized. Here are some possible fixes:
+     * 01-22 04:40:38.980: W/AndroidJUnitRunner(9977):    1. Remember the FocusRequester: val focusRequester = remember { FocusRequester() }
+     * 01-22 04:40:38.980: W/AndroidJUnitRunner(9977):    2. Did you forget to add a Modifier.focusRequester() ?
+     * 01-22 04:40:38.980: W/AndroidJUnitRunner(9977):    3. Are you attempting to request focus during composition? Focus requests
+     * should be made in response to some event. Eg Modifier.clickable { focusRequester.requestFocus() }
+     *   DisposableEffect(Unit) {
+     *         // This block will be executed when the composable is committed
+     *         onDispose {
+     *             // This block will be executed when the composable is disposed (removed)
+     *             // Perform any cleanup or actions needed when the composition is ending
+     *         }
+     *     }
+     */
+//    LaunchedEffect(Unit) {
+//        focusRequester.requestFocus()
+//    }
     Scaffold(
         modifier = Modifier.padding(all = 0.dp),
         topBar = {
@@ -145,7 +162,7 @@ fun SearchPage(
                     BackButton(navController)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
-                            TextField(
+                            OutlinedTextField(
                                 value = keywords,
                                 onValueChange = {
                                     val newText = it.ifEmpty {
@@ -156,7 +173,7 @@ fun SearchPage(
                                     }
                                 },
                                 placeholder = {
-                                    Text("Enter text")
+                                    Text("Enter text to search")
                                 }, // Placeholder or hint text
                                 keyboardOptions = KeyboardOptions.Default.copy(
                                     imeAction = ImeAction.Done,
@@ -170,7 +187,8 @@ fun SearchPage(
                                 ),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .focusRequester(focusRequester),
+                                    .focusRequester(focusRequester)
+                                    .background(MaterialTheme.colorScheme.primary),
                                 suffix = {
 
                                 },
@@ -232,7 +250,7 @@ fun SearchPage(
                 }
             }
         },
-        bottomBar = { Bottom(musicViewModel, navController) },
+//        bottomBar = { Bottom(musicViewModel, navController) },
         floatingActionButton = {},
         content = {
             LazyColumn(
