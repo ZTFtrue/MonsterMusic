@@ -12,9 +12,11 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.widget.Toast
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.AudioAttributes
+import androidx.media3.common.BuildConfig
 import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
@@ -679,13 +681,12 @@ class PlayService : MediaBrowserServiceCompat() {
                             db.QueueDao().insertAll(musicQueue)
                         }
                     }
-                    if(!exoPlayer.isPlaying){
+                    if (!exoPlayer.isPlaying) {
                         exoPlayer.playWhenReady = false
                     }
                     exoPlayer.addMediaItem(index, MediaItem.fromUri(musicItem.path))
                 } else if (musicItems != null) {
                     val list = ArrayList<MediaItem>()
-
                     musicItems.forEach {
                         list.add(MediaItem.fromUri(it.path))
                     }
@@ -709,7 +710,7 @@ class PlayService : MediaBrowserServiceCompat() {
                             db.QueueDao().insertAll(musicQueue)
                         }
                     }
-                    if(!exoPlayer.isPlaying){
+                    if (!exoPlayer.isPlaying) {
                         exoPlayer.playWhenReady = false
                     }
                     exoPlayer.addMediaItems(index, list)
@@ -749,7 +750,7 @@ class PlayService : MediaBrowserServiceCompat() {
                         }
                     }
                     if (musicQueue.isNotEmpty()) {
-                        val currentIndex=exoPlayer.currentMediaItemIndex
+                        val currentIndex = exoPlayer.currentMediaItemIndex
                         val bundle = Bundle()
                         bundle.putInt("type", EVENT_changePlayQueue)
                         bundle.putInt("index", currentIndex)
@@ -758,7 +759,7 @@ class PlayService : MediaBrowserServiceCompat() {
                         // TODO
                         mediaSession?.setExtras(bundle)
                         CoroutineScope(Dispatchers.IO).launch {
-                            saveSelectIdAndPosition(musicQueue[currentIndex].id, currentIndex)
+                            saveSelectMusicId(musicQueue[currentIndex].id)
                         }
                         result.sendResult(bundle)
                         return
@@ -1022,13 +1023,17 @@ class PlayService : MediaBrowserServiceCompat() {
                                     playListCurrent =
                                         AnyListBase(plaC.listID, enumValueOf(plaC.type))
                                 }
-                                foldersListTracksHashMap.entries.forEach {
+                                for (it in foldersListTracksHashMap.entries) {
                                     if (it.value.isNotEmpty()) {
                                         currentPlayTrack = it.value[id]
                                         if (currentPlayTrack != null) {
-                                            return@forEach
+                                            break
                                         }
                                     }
+                                }
+                                if (currentPlayTrack == null) {
+                                    playListCurrent = null
+                                    saveSelectMusicId(-1)
                                 }
                             }
                         }
@@ -1101,12 +1106,16 @@ class PlayService : MediaBrowserServiceCompat() {
                     exoPlayer.playbackParameters = p
                     if (musicQueue.isNotEmpty()) {
                         val t1 = ArrayList<MediaItem>()
-                        musicQueue.forEach {
+                        var currentIndex = 0
+                        musicQueue.forEachIndexed { index, it ->
                             t1.add(MediaItem.fromUri(it.path))
+                            if (it.id == currentPlayTrack?.id) {
+                                currentIndex = index
+                            }
                         }
                         exoPlayer.setMediaItems(t1)
                         if (currentPlayTrack != null) {
-                            exoPlayer.seekToDefaultPosition(getSelectPosition())
+                            exoPlayer.seekToDefaultPosition(currentIndex)
                         }
                     }
                     if (currentPlayTrack != null && musicQueue.isNotEmpty()) {
@@ -1211,7 +1220,7 @@ class PlayService : MediaBrowserServiceCompat() {
                     mediaController?.transportControls?.play()
                 }
             } else {
-                saveSelectIdAndPosition(musicQueue[index].id, index)
+                saveSelectMusicId(musicQueue[index].id)
                 exoPlayer.seekToDefaultPosition(index)
                 exoPlayer.playWhenReady = true
                 exoPlayer.prepare()
@@ -1298,7 +1307,7 @@ class PlayService : MediaBrowserServiceCompat() {
                 CoroutineScope(Dispatchers.IO).launch {
                     db.QueueDao().deleteAllQueue()
                     db.QueueDao().insertAll(musicQueue)
-                    saveSelectIdAndPosition(musicQueue[index].id, index)
+                    saveSelectMusicId(musicQueue[index].id)
                 }
                 exoPlayer.seekToDefaultPosition(index)
                 exoPlayer.playWhenReady = true
@@ -1398,6 +1407,7 @@ class PlayService : MediaBrowserServiceCompat() {
         }
     }
 
+    var errorCount = 0;
     private fun playerAddListener() {
         exoPlayer.addListener(@UnstableApi object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -1423,13 +1433,25 @@ class PlayService : MediaBrowserServiceCompat() {
 
             override fun onPlayerError(error: PlaybackException) {
                 super.onPlayerError(error)
-                error.printStackTrace()
-                notify?.updateNotification(
-                    this@PlayService,
-                    currentPlayTrack?.name ?: "",
-                    error.errorCodeName,
-                    exoPlayer
-                )
+                if (BuildConfig.DEBUG) {
+                    error.printStackTrace()
+                }
+                if (errorCount > 3) {
+                    Toast.makeText(
+                        this@PlayService,
+                        "Many times play error, Play paused",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    Toast.makeText(
+                        this@PlayService,
+                        "Play error, auto play next",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    exoPlayer.seekToNextMediaItem()
+                    exoPlayer.prepare()
+                    errorCount++
+                }
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {
@@ -1514,19 +1536,18 @@ class PlayService : MediaBrowserServiceCompat() {
         bundle.putInt("type", EVENT_MEDIA_ITEM_Change)
         bundle.putParcelable("current", currentPlayTrack)
         bundle.putInt("index", exoPlayer.currentMediaItemIndex)
-        saveSelectIdAndPosition(
-            musicQueue[exoPlayer.currentMediaItemIndex].id,
-            exoPlayer.currentMediaItemIndex
+        saveSelectMusicId(
+            musicQueue[exoPlayer.currentMediaItemIndex].id
         )
         mediaSession?.setExtras(bundle)
         mediaSession?.setMetadata(metadataBuilder.build())
     }
 
-    private fun saveSelectIdAndPosition(id: Long, index: Int) {
+    private fun saveSelectMusicId(id: Long) {
         this@PlayService.getSharedPreferences(
             "SelectedPlayTrack",
             Context.MODE_PRIVATE
-        ).edit().putLong("SelectedPlayTrack", id).putInt("PlayTrackIndex", index).apply()
+        ).edit().putLong("SelectedPlayTrack", id).apply()
     }
 
     private fun getCurrentPlayId(): Long {
@@ -1536,10 +1557,4 @@ class PlayService : MediaBrowserServiceCompat() {
         ).getLong("SelectedPlayTrack", -1)
     }
 
-    private fun getSelectPosition(): Int {
-        return this@PlayService.getSharedPreferences(
-            "SelectedPlayTrack",
-            Context.MODE_PRIVATE
-        ).getInt("PlayTrackIndex", 0)
-    }
 }

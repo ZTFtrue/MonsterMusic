@@ -182,10 +182,13 @@ class MusicViewModel : ViewModel() {
     }
 
     fun getCover(path: String): Bitmap? {
-        retriever.setDataSource(path)
-        val coverT = retriever.embeddedPicture
-        if (coverT != null) {
-            return BitmapFactory.decodeByteArray(coverT, 0, coverT.size)
+        try {
+            retriever.setDataSource(path)
+            val coverT = retriever.embeddedPicture
+            if (coverT != null) {
+                return BitmapFactory.decodeByteArray(coverT, 0, coverT.size)
+            }
+        } catch (_: Exception) {
         }
         return null
     }
