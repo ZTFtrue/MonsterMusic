@@ -19,6 +19,12 @@ Elevate your music journey with [MonsterMusic] - where innovation meets simplici
 <img alt="albums" src="./Picture/albums.jpg" width="200px"/>
 <img alt="songs" src="./Picture/songs.jpg" width="200px"/>
 
+<video width="320px" controls>
+  <source src="./Picture/MonstrMusicExample.mp4" type="video/mp4">
+</video>
+
+Songs from: https://helpguide.sony.net/high-res/sample1/v1/en/index.html
+
 It does not support Android 10 and below, but you can compile(need modify code) it to support it, but some features cannot be used.
 
 ## TODO
