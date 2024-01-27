@@ -223,7 +223,7 @@ fun FolderItemView(
         }
         IconButton(
             modifier = Modifier
-                .width(40.dp)
+                .width(50.dp)
                 .height(40.dp), onClick = {
                 showOperateDialog = true
             }) {

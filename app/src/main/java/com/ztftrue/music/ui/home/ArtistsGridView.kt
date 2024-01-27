@@ -307,7 +307,7 @@ fun ArtistItemView(
                 )
                 IconButton(
                     modifier = Modifier
-                        .width(40.dp)
+                        .width(50.dp)
                         .height(20.dp), onClick = {
                         showOperateDialog = true
                     }) {
