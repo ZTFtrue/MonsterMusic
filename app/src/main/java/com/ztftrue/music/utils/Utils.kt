@@ -72,7 +72,9 @@ enum class OperateType {
     No,
     RenamePlayList,
     DeletePlayList,
-    ShowArtist
+    ShowArtist,
+    ClearQueue,
+    SaveQueueToPlayList
 }
 
 enum class ScrollDirectionType {

@@ -22,6 +22,7 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -40,6 +41,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -47,6 +49,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -75,6 +78,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -87,6 +91,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.ztftrue.music.play.ACTION_CLEAR_QUEUE
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.play.ACTION_TRACKS_UPDATE
@@ -109,16 +114,20 @@ import com.ztftrue.music.ui.other.SearchPage
 import com.ztftrue.music.ui.other.SettingsPage
 import com.ztftrue.music.ui.other.TracksSelectPage
 import com.ztftrue.music.ui.play.PlayingPage
+import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.Bottom
 import com.ztftrue.music.ui.public.CreatePlayListDialog
+import com.ztftrue.music.ui.public.QueueOperateDialog
 import com.ztftrue.music.ui.public.QueuePage
 import com.ztftrue.music.ui.public.SleepTimeDialog
 import com.ztftrue.music.ui.public.TracksListPage
 import com.ztftrue.music.ui.public.TracksListView
 import com.ztftrue.music.ui.theme.MusicPitchTheme
 import com.ztftrue.music.utils.AnyListBase
+import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.OperateTypeInActivity
 import com.ztftrue.music.utils.PlayListType
+import com.ztftrue.music.utils.PlaylistManager
 import com.ztftrue.music.utils.PlaylistManager.removeTrackFromM3U
 import com.ztftrue.music.utils.stringToEnumForPlayListType
 import kotlinx.coroutines.CoroutineScope
@@ -956,8 +965,9 @@ class MainActivity : ComponentActivity() {
         pagerState: PagerState,
         navController: NavHostController
     ) {
+        val context = LocalContext.current
         val scope = rememberCoroutineScope()
-        var showDialog by remember { mutableStateOf(false) }
+        var showSleepDialog by remember { mutableStateOf(false) }
         var showCreatePlayListDialog by remember { mutableStateOf(false) }
         val timerIcon: Int = if (musicViewModel.remainTime.longValue == 0L) {
             R.drawable.set_timer
@@ -966,9 +976,9 @@ class MainActivity : ComponentActivity() {
         }
 
         Column {
-            if (showDialog) {
+            if (showSleepDialog) {
                 SleepTimeDialog(musicViewModel, onDismiss = {
-                    showDialog = false
+                    showSleepDialog = false
                 })
             }
             if (showCreatePlayListDialog) {
@@ -1011,11 +1021,96 @@ class MainActivity : ComponentActivity() {
                                     .clip(CircleShape),
                             )
                         }
+                    } else if (musicViewModel.mainTabList[pagerState.currentPage].type == PlayListType.Queue) {
+                        var showDialogForQueue by remember { mutableStateOf(false) }
+                        var showAddPlayListDialog by remember { mutableStateOf(false) }
+                        var showCreatePlayListDialogForQueue by remember { mutableStateOf(false) }
+
+                        if (showDialogForQueue) {
+                            QueueOperateDialog(onDismiss = {
+                                showDialogForQueue = false
+                                if (it == OperateType.ClearQueue) {
+                                    musicViewModel.mediaBrowser?.sendCustomAction(
+                                        ACTION_CLEAR_QUEUE,
+                                        null,
+                                        null
+                                    )
+                                    musicViewModel.musicQueue.clear()
+                                    musicViewModel.currentPlay.value = null
+                                    musicViewModel.playListCurrent.value = null
+                                    musicViewModel.currentPlayQueueIndex.intValue = 0
+                                    musicViewModel.currentLyricsList.clear()
+                                } else if (it == OperateType.SaveQueueToPlayList) {
+
+                                    showAddPlayListDialog = true
+                                }
+                            })
+                        }
+                        if (showAddPlayListDialog) {
+                            AddMusicToPlayListDialog(musicViewModel, null) { playListId ->
+                                showAddPlayListDialog = false
+                                if (playListId != null) {
+                                    if (playListId == -1L) {
+                                        showCreatePlayListDialogForQueue = true
+                                    } else {
+                                        val ids = ArrayList<Long>(musicViewModel.musicQueue.size)
+                                        musicViewModel.musicQueue.forEach {
+                                            ids.add(it.id)
+                                        }
+                                        PlaylistManager.addMusicsToPlaylist(
+                                            context,
+                                            playListId,
+                                            ids
+                                        )
+                                        musicViewModel.mediaBrowser?.sendCustomAction(
+                                            ACTION_PlayLIST_CHANGE, null, null
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        if (showCreatePlayListDialogForQueue) {
+                            CreatePlayListDialog(musicViewModel, onDismiss = {
+                                showCreatePlayListDialogForQueue = false
+                                if (!it.isNullOrEmpty()) {
+                                    val ids = ArrayList<Long>(musicViewModel.musicQueue.size)
+                                    musicViewModel.musicQueue.forEach {
+                                        ids.add(it.id)
+                                    }
+                                    val idPlayList = PlaylistManager.createPlaylist(context, it)
+                                    if (idPlayList != -1L) {
+                                        PlaylistManager.addMusicsToPlaylist(
+                                            context,
+                                            idPlayList,
+                                            ids
+                                        )
+                                        musicViewModel.mediaBrowser?.sendCustomAction(
+                                            ACTION_PlayLIST_CHANGE, null, null
+                                        )
+                                    } else {
+                                        Toast.makeText(context, "创建失败", Toast.LENGTH_SHORT)
+                                            .show()
+                                    }
+                                }
+                            })
+                        }
+                        IconButton(
+                            modifier = Modifier.width(50.dp), onClick = {
+                                showDialogForQueue = true
+                            }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "Operate",
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clip(CircleShape),
+                            )
+                        }
                     }
                     IconButton(modifier = Modifier.semantics {
                         contentDescription = "Set sleep time"
                     }, onClick = {
-                        showDialog = true
+                        showSleepDialog = true
                     }) {
                         Image(
                             painter = painterResource(timerIcon),
@@ -1027,15 +1122,21 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     IconButton(
-                        modifier = Modifier.size(50.dp).semantics {
-                            contentDescription = "Search"
-                        },
+                        modifier = Modifier
+                            .size(50.dp)
+                            .semantics {
+                                contentDescription = "Search"
+                            },
                         onClick = {
                             navController.navigate(
                                 Router.SearchPage.route
                             )
                         }) {
-                        Icon(Icons.Filled.Search,  modifier = Modifier.size(30.dp), contentDescription = "Search")
+                        Icon(
+                            Icons.Filled.Search,
+                            modifier = Modifier.size(30.dp),
+                            contentDescription = "Search"
+                        )
                     }
                 }
             }

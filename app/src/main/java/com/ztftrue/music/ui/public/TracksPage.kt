@@ -287,7 +287,7 @@ fun TracksListPage(
             Column {
                 TopBar(navController, musicViewModel, content = {
                     IconButton(
-                        modifier = Modifier.width(40.dp), onClick = {
+                        modifier = Modifier.width(50.dp), onClick = {
                             showOperateDialog = true
                         }) {
                         Icon(

@@ -311,7 +311,7 @@ fun PlayingPage(
                     key(Unit) {
                         TopBar(navController, viewModel, content = {
                             IconButton(
-                                modifier = Modifier.width(40.dp), onClick = {
+                                modifier = Modifier.width(50.dp), onClick = {
                                     showDialog = true
                                 }) {
                                 Icon(

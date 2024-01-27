@@ -13,7 +13,6 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.widget.Toast
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.BuildConfig
@@ -93,6 +92,7 @@ const val ACTION_PlayLIST_CHANGE = "ACTION_PlayLIST_CHANGE"
 const val ACTION_TRACKS_DELETE = "ACTION_TRACKS_DELETE"
 const val ACTION_TRACKS_UPDATE = "ACTION_TRACKS_UPDATE"
 const val ACTION_GET_TRACK_BY_ID = "ACTION_GET_TRACK_BY_ID"
+const val ACTION_CLEAR_QUEUE = "ACTION_CLEAR_QUEUE"
 
 const val EVENT_changePlayQueue = 1
 const val EVENT_MEDIA_ITEM_Change = 3
@@ -144,7 +144,7 @@ class PlayService : MediaBrowserServiceCompat() {
 
     var sleepTime = 0L
 
-    var currentDuration = mutableLongStateOf(0)
+    var currentDuration = 0L
 
     private var mediaController: MediaControllerCompat? = null
     private val mainTab = ArrayList<MainTab>(7)
@@ -889,6 +889,23 @@ class PlayService : MediaBrowserServiceCompat() {
             val bundle = Bundle()
             bundle.putParcelable("track", tracksLinkedHashMap[extras?.getLong("id")])
             result.sendResult(bundle)
+        } else if (ACTION_CLEAR_QUEUE == action) {
+            playListCurrent = null
+            currentPlayTrack = null
+            currentDuration = 0
+            exoPlayer.pause()
+            musicQueue.clear()
+            exoPlayer.setMediaItems(ArrayList())
+
+            CoroutineScope(Dispatchers.IO).launch {
+                db.QueueDao().deleteAllQueue()
+                val c = db.CurrentListDao().findCurrentList()
+                if (c != null) {
+                    db.CurrentListDao().delete()
+                }
+                saveSelectMusicId(-1)
+            }
+            result.sendResult(null)
         }
     }
 
@@ -1412,8 +1429,10 @@ class PlayService : MediaBrowserServiceCompat() {
         exoPlayer.addListener(@UnstableApi object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 super.onIsPlayingChanged(isPlaying)
-                currentPlayTrack =
-                    musicQueue[exoPlayer.currentMediaItemIndex]
+                if (musicQueue.isNotEmpty()) {
+                    currentPlayTrack =
+                        musicQueue[exoPlayer.currentMediaItemIndex]
+                }
                 if (isPlaying) {
                     notify?.updateNotification(
                         this@PlayService,
@@ -1457,7 +1476,7 @@ class PlayService : MediaBrowserServiceCompat() {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 super.onPlaybackStateChanged(playbackState)
                 if (playbackState == Player.STATE_READY) {
-                    currentDuration.longValue = exoPlayer.duration
+                    currentDuration = exoPlayer.duration
                 }
             }
 
