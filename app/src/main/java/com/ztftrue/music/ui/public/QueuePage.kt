@@ -99,14 +99,14 @@ fun QueuePage(
         }
     }
     if (showCreatePlayListDialog) {
-        CreatePlayListDialog(musicViewModel, onDismiss = {
+        CreatePlayListDialog(musicViewModel, onDismiss = { playListName ->
             showCreatePlayListDialog = false
-            if (!it.isNullOrEmpty()) {
+            if (!playListName.isNullOrEmpty()) {
                 val ids = ArrayList<Long>(musicList.size)
                 musicList.forEach {
                     ids.add(it.id)
                 }
-                val idPlayList = PlaylistManager.createPlaylist(context, it)
+                val idPlayList = PlaylistManager.createPlaylist(context, playListName)
                 if (idPlayList != -1L) {
                     PlaylistManager.addMusicsToPlaylist(context, idPlayList, ids)
                     musicViewModel.mediaBrowser?.sendCustomAction(

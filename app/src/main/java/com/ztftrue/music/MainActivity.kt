@@ -1070,14 +1070,14 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         if (showCreatePlayListDialogForQueue) {
-                            CreatePlayListDialog(musicViewModel, onDismiss = {
+                            CreatePlayListDialog(musicViewModel, onDismiss = { playListName ->
                                 showCreatePlayListDialogForQueue = false
-                                if (!it.isNullOrEmpty()) {
+                                if (!playListName.isNullOrEmpty()) {
                                     val ids = ArrayList<Long>(musicViewModel.musicQueue.size)
                                     musicViewModel.musicQueue.forEach {
                                         ids.add(it.id)
                                     }
-                                    val idPlayList = PlaylistManager.createPlaylist(context, it)
+                                    val idPlayList = PlaylistManager.createPlaylist(context, playListName)
                                     if (idPlayList != -1L) {
                                         PlaylistManager.addMusicsToPlaylist(
                                             context,

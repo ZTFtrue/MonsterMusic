@@ -1424,7 +1424,7 @@ class PlayService : MediaBrowserServiceCompat() {
         }
     }
 
-    var errorCount = 0;
+    var errorCount = 0
     private fun playerAddListener() {
         exoPlayer.addListener(@UnstableApi object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {

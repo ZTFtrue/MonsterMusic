@@ -213,7 +213,7 @@ fun MusicItemView(
                     }
 
                     OperateType.RemoveFromQueue -> {
-                        val indexM = viewModel.musicQueue.indexOfFirst { it.id == music.id }
+                        val indexM = viewModel.musicQueue.indexOfFirst { musicItem -> musicItem.id == music.id }
                         if(indexM == -1) return@OperateDialog
                         val bundle = Bundle()
                         bundle.putInt("index", indexM)
