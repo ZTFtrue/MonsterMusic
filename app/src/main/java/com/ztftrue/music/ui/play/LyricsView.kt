@@ -1,14 +1,23 @@
 package com.ztftrue.music.ui.play
 
+import android.content.Intent
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,17 +28,24 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalTextToolbar
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.util.Log
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
@@ -37,9 +53,11 @@ import com.ztftrue.music.utils.Caption
 import com.ztftrue.music.utils.CustomTextToolbar
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.Utils.getAllCitivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+
 
 const val Lyrics = "lyrics"
 var size = mutableStateOf(IntSize.Zero)
@@ -107,6 +125,73 @@ fun LyricsView(
         }
 
     }
+    var showMenu by remember { mutableStateOf(false) }
+    var word by remember {
+        mutableStateOf("")
+    }
+    if (showMenu) {
+        val list = getAllCitivity(context)
+        Popup(
+            // on below line we are adding
+            // alignment and properties.
+            alignment = Alignment.TopCenter,
+            properties = PopupProperties()
+        ) {
+            val rowListSate = rememberLazyListState()
+            val configuration = LocalConfiguration.current
+            // on the below line we are creating a box.
+            Column(
+                Modifier
+                    .size((configuration.screenWidthDp - 40).dp, 50.dp)
+                    .padding(top = 5.dp)
+                    // on below line we are adding background color
+                    .background(
+                        color = MaterialTheme.colorScheme.background,
+                        RoundedCornerShape(10.dp)
+                    )
+                    // on below line we are adding border.
+                    .border(
+                        1.dp,
+                        color = Color.Black,
+                        RoundedCornerShape(10.dp)
+                    )
+            ) {
+                LazyRow(
+                    contentPadding = PaddingValues(5.dp),
+                    state = rowListSate,
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.background)
+                        .fillMaxWidth()
+                ) {
+                    items(list.size) { index ->
+                        val resolveInfo = list[index]
+                        Button(
+                            onClick = {
+                                val intent = Intent()
+                                intent.setAction(Intent.ACTION_PROCESS_TEXT)
+                                intent.setClassName(
+                                    resolveInfo.activityInfo.packageName,
+                                    resolveInfo.activityInfo.name
+                                )
+                                intent.putExtra(
+                                    Intent.EXTRA_PROCESS_TEXT,
+                                    word
+                                )
+                                showMenu = false
+                                context.startActivity(intent)
+                            }
+//                                                color = MaterialTheme.colorScheme.onBackground,
+                        ) {
+                            Text(
+                                text = resolveInfo.loadLabel(context.packageManager)
+                                    .toString()
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
     if (musicViewModel.currentCaptionList.size == 0) {
         Text(
             text = "No Lyrics, Click to import lyrics",
@@ -156,6 +241,7 @@ fun LyricsView(
         CompositionLocalProvider(
             LocalTextToolbar provides CustomTextToolbar(LocalView.current)
         ) {
+
             SelectionContainer {
                 LazyColumn(
                     state = listState,
@@ -168,13 +254,31 @@ fun LyricsView(
                         .padding(start = 20.dp, end = 20.dp)
                 ) {
                     items(musicViewModel.currentCaptionList.size) {
+                        val tex = musicViewModel.currentCaptionList[it].text
+
+                        val annotatedString = buildAnnotatedString {
+                            for (text in tex.split(Regex("[\\n\\r\\s]+"))) {
+                                val pattern = Regex("[,:;.\"]")
+                                pushStringAnnotation("word", text.replace(pattern, ""))
+                                withStyle(style = SpanStyle()) {
+                                    append(text)
+                                }
+                                pop()
+                                pushStringAnnotation("space", "")
+                                append(" ")
+                                pop()
+                            }
+                        }
+
+
                         ClickableText(
-                            text = AnnotatedString(musicViewModel.currentCaptionList[it].text),
+                            text = annotatedString,
                             style = TextStyle(
                                 color = MaterialTheme.colorScheme.onBackground,
-                                fontSize = if (currentI == it) MaterialTheme.typography.titleLarge.fontSize else
-                                    MaterialTheme.typography.titleMedium.fontSize,
+                                fontSize = if (currentI == it && musicViewModel.autoHighLight.value) 24.sp else
+                                    18.sp,
                                 textAlign = TextAlign.Center,
+                                lineHeight = MaterialTheme.typography.titleLarge.fontSize
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -183,13 +287,20 @@ fun LyricsView(
                                     size.value = sizeIt
                                 },
                             onClick = { offset ->
-                                Log.d("ClickableText", "$offset -th character is clicked.")
+                                val annotations =
+                                    annotatedString.getStringAnnotations(offset, offset)
+                                annotations.firstOrNull()?.let { itemAnnotations ->
+                                    if (itemAnnotations.tag == "word") {
+                                        word = itemAnnotations.item
+                                        showMenu = true
+                                    }
+
+                                }
                             })
                     }
                 }
             }
         }
-
     }
 
 

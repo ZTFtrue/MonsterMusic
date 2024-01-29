@@ -7,12 +7,12 @@ import androidx.annotation.VisibleForTesting
 import androidx.compose.ui.geometry.Rect
 
 internal class TextActionModeCallback(
-    val onActionModeDestroy: (() -> Unit)? = null,
     var rect: Rect = Rect.Zero,
+    val onActionModeDestroy: (() -> Unit)? = null,
     var onCopyRequested: (() -> Unit)? = null,
     var onPasteRequested: (() -> Unit)? = null,
     var onCutRequested: (() -> Unit)? = null,
-    var onSelectAllRequested: (() -> Unit)? = null
+    var onSelectAllRequested: (() -> Unit)? = null,
 ) {
     fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
         requireNotNull(menu)

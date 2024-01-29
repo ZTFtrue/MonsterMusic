@@ -334,6 +334,7 @@ fun PlayingPage(
                                                 .show()
                                         }) {
                                             viewModel.autoScroll.value = !viewModel.autoScroll.value
+                                            viewModel.autoHighLight.value = !viewModel.autoHighLight.value
                                         }
                                         .padding(0.dp)
                                         .height(50.dp)
@@ -351,6 +352,7 @@ fun PlayingPage(
                                             .padding(0.dp),
                                         onCheckedChange = {
                                             viewModel.autoScroll.value = it
+                                            viewModel.autoHighLight.value = it
                                         }
                                     )
                                 }

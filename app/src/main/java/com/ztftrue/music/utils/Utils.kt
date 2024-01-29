@@ -2,6 +2,7 @@ package com.ztftrue.music.utils
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ResolveInfo
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
@@ -575,4 +576,18 @@ object Utils {
         return ((hours * 3600 + minutes * 60 + seconds) * 1000 + milliseconds)
     }
 
+    fun getAllCitivity(context: Context): List<ResolveInfo> {
+        val shareIntent = Intent(Intent.ACTION_PROCESS_TEXT)
+        shareIntent.type = "text/plain"
+        shareIntent.putExtra(Intent.EXTRA_TEXT, "")
+        val resolveInfoList: List<ResolveInfo> = context.packageManager.queryIntentActivities(shareIntent, 0)
+        for (resolveInfo in resolveInfoList) {
+            val activityInfo = resolveInfo.activityInfo
+            val packageName = activityInfo.packageName
+            val className = activityInfo.name
+            val label = resolveInfo.loadLabel(context.packageManager).toString()
+            println("Package Name: $packageName, Class Name: $className, Label: $label")
+        }
+        return resolveInfoList
+    }
 }

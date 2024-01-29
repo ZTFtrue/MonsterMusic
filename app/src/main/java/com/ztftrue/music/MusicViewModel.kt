@@ -77,6 +77,7 @@ class MusicViewModel : ViewModel() {
     var sliderPosition = mutableFloatStateOf(0F)
     var sliderTouching = false
     var autoScroll = mutableStateOf(true)
+    var autoHighLight = mutableStateOf(true)
 
     var enableEqualizer = mutableStateOf(false)
     var enableEcho = mutableStateOf(false)
@@ -162,7 +163,7 @@ class MusicViewModel : ViewModel() {
         }
         val duration = currentPlay.duration
         // every lyrics line duration
-        itemDuration = duration / currentCaptionList.size
+        itemDuration = duration / if(currentCaptionList.size == 0) 1 else currentCaptionList.size
     }
 
     private fun readLyricsOrText(file: File, context: Context): ArrayList<Caption> {
