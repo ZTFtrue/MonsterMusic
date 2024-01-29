@@ -4,10 +4,12 @@ import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.view.MotionEvent
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,6 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
@@ -48,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.input.pointer.pointerInput
@@ -55,6 +59,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.Player
@@ -228,7 +234,7 @@ fun PlayingPage(
 
                         OperateType.RemoveFromQueue -> {
                             val index = viewModel.musicQueue.indexOfFirst { it.id == music.id }
-                            if(index == -1) return@OperateDialog
+                            if (index == -1) return@OperateDialog
                             val bundle = Bundle()
                             bundle.putInt("index", index)
                             viewModel.mediaBrowser?.sendCustomAction(
@@ -308,8 +314,49 @@ fun PlayingPage(
             .fillMaxHeight(),
             topBar = {
                 Column(Modifier.fillMaxWidth()) {
-                    key(Unit) {
+                    key(Unit, pagerTabState.currentPage) {
                         TopBar(navController, viewModel, content = {
+                            /**
+                             * tabPositions[pagerTabState.currentPage]
+                             * playViewTab
+                             */
+                            if (playViewTab[pagerTabState.currentPage].id == LyricsID) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier
+                                        .combinedClickable(onLongClick = {
+                                            Toast
+                                                .makeText(
+                                                    context,
+                                                    "Switch auto scroll",
+                                                    Toast.LENGTH_SHORT
+                                                )
+                                                .show()
+                                        }) {
+                                            viewModel.autoScroll.value = !viewModel.autoScroll.value
+                                        }
+                                        .padding(0.dp)
+                                        .height(50.dp)
+                                ) {
+                                    Text(
+                                        text = "Scroll",
+                                        modifier = Modifier.padding(0.dp),
+                                        color = MaterialTheme.colorScheme.onBackground,
+                                        fontSize = TextUnit(12f, TextUnitType.Sp),
+                                        lineHeight = TextUnit(12f, TextUnitType.Sp),
+                                    )
+                                    Switch(checked = viewModel.autoScroll.value,
+                                        modifier = Modifier
+                                            .scale(0.5f)
+                                            .padding(0.dp),
+                                        onCheckedChange = {
+                                            viewModel.autoScroll.value = it
+                                        }
+                                    )
+                                }
+                            }
+
+
                             IconButton(
                                 modifier = Modifier.width(50.dp), onClick = {
                                     showDialog = true

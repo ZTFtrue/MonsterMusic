@@ -85,7 +85,7 @@ fun TopBar(
             })
         }
         BackButton(navController)
-        Row {
+        Row (     verticalAlignment = Alignment.CenterVertically){
             IconButton(onClick = {
                 showDialog = true
             }) {

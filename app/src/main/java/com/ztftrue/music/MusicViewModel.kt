@@ -156,12 +156,7 @@ class MusicViewModel : ViewModel() {
                 hasTime = LyricsType.VTT
                 currentCaptionList.addAll(readCaptions(File("$path.vtt"), LyricsType.VTT))
             } else {
-                currentCaptionList.add(
-                    Caption(
-                        text = "No Lyrics, Double click to import lyrics",
-                        0,
-                    )
-                )
+
             }
 
         }
