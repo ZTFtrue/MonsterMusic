@@ -2,12 +2,12 @@ package com.ztftrue.music.ui.play
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -24,9 +24,12 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalTextToolbar
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
@@ -163,25 +166,25 @@ fun LyricsView(
                             size.value = sizeIt
                         }
                         .padding(start = 20.dp, end = 20.dp)
-                        .combinedClickable(
-                        ) {
-                            // Toast.makeText(context, "Double click to import lyrics", Toast.LENGTH_SHORT).show()
-                        }
                 ) {
                     items(musicViewModel.currentCaptionList.size) {
-                        Text(
-                            text = musicViewModel.currentCaptionList[it].text,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = if (currentI == it) MaterialTheme.typography.titleLarge.fontSize else
-                                MaterialTheme.typography.titleMedium.fontSize,
-                            textAlign = TextAlign.Center,
+                        ClickableText(
+                            text = AnnotatedString(musicViewModel.currentCaptionList[it].text),
+                            style = TextStyle(
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontSize = if (currentI == it) MaterialTheme.typography.titleLarge.fontSize else
+                                    MaterialTheme.typography.titleMedium.fontSize,
+                                textAlign = TextAlign.Center,
+                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(2.dp)
                                 .onSizeChanged { sizeIt ->
                                     size.value = sizeIt
-                                }
-                        )
+                                },
+                            onClick = { offset ->
+                                Log.d("ClickableText", "$offset -th character is clicked.")
+                            })
                     }
                 }
             }
