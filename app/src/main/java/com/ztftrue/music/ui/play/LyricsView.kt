@@ -132,66 +132,71 @@ fun LyricsView(
     }
     if (showMenu) {
         val list = getAllCitivity(context)
-        Popup(
-            // on below line we are adding
-            // alignment and properties.
-            alignment = Alignment.TopCenter,
-            properties = PopupProperties()
-        ) {
-            val rowListSate = rememberLazyListState()
-            val configuration = LocalConfiguration.current
-            // on the below line we are creating a box.
-            Column(
-                Modifier
-                    .size((configuration.screenWidthDp - 40).dp, 50.dp)
-                    .padding(top = 5.dp)
-                    // on below line we are adding background color
-                    .background(
-                        color = MaterialTheme.colorScheme.background,
-                        RoundedCornerShape(10.dp)
-                    )
-                    // on below line we are adding border.
-                    .border(
-                        1.dp,
-                        color = Color.Black,
-                        RoundedCornerShape(10.dp)
-                    )
+        if(list.isEmpty()) {
+            showMenu=false
+        }else{
+            Popup(
+                // on below line we are adding
+                // alignment and properties.
+                alignment = Alignment.TopCenter,
+                properties = PopupProperties()
             ) {
-                LazyRow(
-                    contentPadding = PaddingValues(5.dp),
-                    state = rowListSate,
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.background)
-                        .fillMaxWidth()
+                val rowListSate = rememberLazyListState()
+                val configuration = LocalConfiguration.current
+                // on the below line we are creating a box.
+                Column(
+                    Modifier
+                        .size((configuration.screenWidthDp - 40).dp, 50.dp)
+                        .padding(top = 5.dp)
+                        // on below line we are adding background color
+                        .background(
+                            color = MaterialTheme.colorScheme.background,
+                            RoundedCornerShape(10.dp)
+                        )
+                        // on below line we are adding border.
+                        .border(
+                            1.dp,
+                            color = Color.Black,
+                            RoundedCornerShape(10.dp)
+                        )
                 ) {
-                    items(list.size) { index ->
-                        val resolveInfo = list[index]
-                        Button(
-                            onClick = {
-                                val intent = Intent()
-                                intent.setAction(Intent.ACTION_PROCESS_TEXT)
-                                intent.setClassName(
-                                    resolveInfo.activityInfo.packageName,
-                                    resolveInfo.activityInfo.name
-                                )
-                                intent.putExtra(
-                                    Intent.EXTRA_PROCESS_TEXT,
-                                    word
-                                )
-                                showMenu = false
-                                context.startActivity(intent)
-                            }
+                    LazyRow(
+                        contentPadding = PaddingValues(5.dp),
+                        state = rowListSate,
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.background)
+                            .fillMaxWidth()
+                    ) {
+                        items(list.size) { index ->
+                            val resolveInfo = list[index]
+                            Button(
+                                onClick = {
+                                    val intent = Intent()
+                                    intent.setAction(Intent.ACTION_PROCESS_TEXT)
+                                    intent.setClassName(
+                                        resolveInfo.activityInfo.packageName,
+                                        resolveInfo.activityInfo.name
+                                    )
+                                    intent.putExtra(
+                                        Intent.EXTRA_PROCESS_TEXT,
+                                        word
+                                    )
+                                    showMenu = false
+                                    context.startActivity(intent)
+                                }
 //                                                color = MaterialTheme.colorScheme.onBackground,
-                        ) {
-                            Text(
-                                text = resolveInfo.loadLabel(context.packageManager)
-                                    .toString()
-                            )
+                            ) {
+                                Text(
+                                    text = resolveInfo.loadLabel(context.packageManager)
+                                        .toString()
+                                )
+                            }
                         }
                     }
                 }
             }
         }
+
     }
     if (musicViewModel.currentCaptionList.size == 0) {
         Text(
