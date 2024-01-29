@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -35,7 +36,7 @@ import com.ztftrue.music.R
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 fun CoverView(musicViewModel: MusicViewModel) {
     val listState = rememberLazyListState()
-    var paint  by remember { mutableStateOf<Bitmap?>(null) }
+    var paint by remember { mutableStateOf<Bitmap?>(null) }
 
     val showOtherMessage = remember { mutableStateOf(false) }
     LaunchedEffect(musicViewModel.currentPlay.value) {
@@ -72,6 +73,16 @@ fun CoverView(musicViewModel: MusicViewModel) {
                             text = it1.path, modifier =
                             Modifier
                                 .padding(0.dp)
+                                .horizontalScroll(rememberScrollState(0))
+                                .fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.onBackground,// Set the text color here
+                            fontSize = MaterialTheme.typography.titleSmall.fontSize
+                        )
+                        Text(
+                            text = "artist: ${it1.artist}", modifier =
+                            Modifier
+                                .padding(0.dp)
+                                .height(30.dp)
                                 .horizontalScroll(rememberScrollState(0))
                                 .fillMaxWidth(),
                             color = MaterialTheme.colorScheme.onBackground,// Set the text color here

@@ -384,20 +384,9 @@ fun PlayingPage(
                                     text = it1.name,
                                     modifier = Modifier
                                         .padding(0.dp)
-                                        .height(40.dp)
                                         .horizontalScroll(rememberScrollState(0))
                                         .fillMaxWidth(),
                                     color = MaterialTheme.colorScheme.onBackground,
-                                    fontSize = MaterialTheme.typography.titleMedium.fontSize
-                                )
-                                Text(
-                                    text = it1.artist, modifier =
-                                    Modifier
-                                        .padding(0.dp)
-                                        .height(30.dp)
-                                        .horizontalScroll(rememberScrollState(0))
-                                        .fillMaxWidth(),
-                                    color = MaterialTheme.colorScheme.onBackground,// Set the text color here
                                     fontSize = MaterialTheme.typography.titleSmall.fontSize
                                 )
                             }

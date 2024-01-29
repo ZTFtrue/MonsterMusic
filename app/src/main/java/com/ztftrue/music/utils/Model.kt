@@ -1,6 +1,7 @@
 package com.ztftrue.music.utils
 
 import android.os.Parcelable
+import androidx.compose.ui.text.AnnotatedString
 import kotlinx.parcelize.Parcelize
 import java.io.Serializable
 
@@ -80,6 +81,12 @@ data class EqualizerBand(
 
 data class Caption(
     val text: String,
+    val timeStart: Long,
+    val timeEnd: Long=0
+)
+
+data class AnnotatedStringCaption(
+    val text: List<String>,
     val timeStart: Long,
     val timeEnd: Long=0
 )

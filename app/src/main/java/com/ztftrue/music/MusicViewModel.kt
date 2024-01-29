@@ -20,6 +20,7 @@ import androidx.navigation.NavHostController
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.play.Lyrics
+import com.ztftrue.music.utils.AnnotatedStringCaption
 import com.ztftrue.music.utils.AnyListBase
 import com.ztftrue.music.utils.Caption
 import com.ztftrue.music.utils.EqualizerBand
@@ -88,7 +89,7 @@ class MusicViewModel : ViewModel() {
     // lyrics
     var itemDuration: Long = 1
     var hasTime: LyricsType = LyricsType.TEXT
-    var currentCaptionList = mutableStateListOf<Caption>()
+    var currentCaptionList = mutableStateListOf<AnnotatedStringCaption>()
 
     // sleep time
     var sleepTime = mutableLongStateOf(0L)
@@ -157,24 +158,29 @@ class MusicViewModel : ViewModel() {
                 hasTime = LyricsType.VTT
                 currentCaptionList.addAll(readCaptions(File("$path.vtt"), LyricsType.VTT))
             } else {
-
+                return
             }
-
         }
         val duration = currentPlay.duration
         // every lyrics line duration
-        itemDuration = duration / if(currentCaptionList.size == 0) 1 else currentCaptionList.size
+        itemDuration = duration / if (currentCaptionList.size == 0) 1 else currentCaptionList.size
     }
 
-    private fun readLyricsOrText(file: File, context: Context): ArrayList<Caption> {
-        val arrayList = arrayListOf<Caption>()
+    private fun readLyricsOrText(file: File, context: Context): ArrayList<AnnotatedStringCaption> {
+        val arrayList = arrayListOf<AnnotatedStringCaption>()
         val inputStream: InputStream = file.inputStream()
         val inputString = inputStream.bufferedReader().use { it.readText() }
         inputString.split("\n").forEach {
             if (it.startsWith("offset:")) {
 // TODO
             } else {
-                arrayList.add(Utils.parseLyricLine(it, context))
+                val captions = Utils.parseLyricLine(it, context)
+                val an = AnnotatedStringCaption(
+                    text = captions.text.split(Regex("[\\n\\r\\s]+")),
+                    timeStart = captions.timeStart,
+                    timeEnd = captions.timeEnd
+                )
+                arrayList.add(an)
             }
         }
         return arrayList
@@ -183,13 +189,23 @@ class MusicViewModel : ViewModel() {
     private fun readCaptions(
         file: File,
         captionType: LyricsType,
-    ): ArrayList<Caption> {
-        val arrayList = arrayListOf<Caption>()
+    ): ArrayList<AnnotatedStringCaption> {
+        val captions = arrayListOf<Caption>()
         if (captionType == LyricsType.SRT) {
-            arrayList.addAll(Utils.parseSrtFile(file))
+            captions.addAll(Utils.parseSrtFile(file))
         } else if (captionType == LyricsType.VTT) {
-            arrayList.addAll(Utils.parseVttFile(file))
+            captions.addAll(Utils.parseVttFile(file))
         }
+        val arrayList = arrayListOf<AnnotatedStringCaption>()
+        captions.forEach {
+            val an = AnnotatedStringCaption(
+                text = it.text.split(Regex("[\\n\\r\\s]+")),
+                timeStart = it.timeStart,
+                timeEnd = it.timeEnd
+            )
+            arrayList.add(an)
+        }
+
         return arrayList
     }
 
