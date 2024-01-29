@@ -78,7 +78,8 @@ data class EqualizerBand(
     var value: Int,
 ) : Parcelable
 
-data class Lyrics(
+data class Caption(
     val text: String,
     val timeStart: Long,
+    val timeEnd: Long=0
 )

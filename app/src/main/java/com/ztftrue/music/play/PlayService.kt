@@ -1,5 +1,6 @@
 package com.ztftrue.music.play
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -144,7 +145,6 @@ class PlayService : MediaBrowserServiceCompat() {
 
     var sleepTime = 0L
 
-    var currentDuration = 0L
 
     private var mediaController: MediaControllerCompat? = null
     private val mainTab = ArrayList<MainTab>(7)
@@ -247,11 +247,20 @@ class PlayService : MediaBrowserServiceCompat() {
                         db.AuxDao().update(auxr)
                     }
                     exoPlayer.playbackParameters = param1
+                    /**
+                     *   isPlaying: Boolean,
+                     *         playSpeed: Float = 1f,
+                     *         position: Long = 0L,
+                     *         duration: Long = 0L
+                     */
                     notify?.updateNotification(
                         this@PlayService,
                         currentPlayTrack?.name ?: "",
                         currentPlayTrack?.artist ?: "",
-                        exoPlayer
+                        exoPlayer.isPlaying,
+                        exoPlayer.playbackParameters.speed,
+                        exoPlayer.currentPosition,
+                        exoPlayer.duration
                     )
                 }
 
@@ -892,7 +901,6 @@ class PlayService : MediaBrowserServiceCompat() {
         } else if (ACTION_CLEAR_QUEUE == action) {
             playListCurrent = null
             currentPlayTrack = null
-            currentDuration = 0
             exoPlayer.pause()
             musicQueue.clear()
             exoPlayer.setMediaItems(ArrayList())
@@ -1051,6 +1059,7 @@ class PlayService : MediaBrowserServiceCompat() {
                                 if (currentPlayTrack == null) {
                                     playListCurrent = null
                                     saveSelectMusicId(-1)
+                                    saveCurrentDuration(0)
                                 }
                             }
                         }
@@ -1120,6 +1129,7 @@ class PlayService : MediaBrowserServiceCompat() {
                         auxr.speed,
                         auxr.pitch
                     )
+                    var position = 0L
                     exoPlayer.playbackParameters = p
                     if (musicQueue.isNotEmpty()) {
                         val t1 = ArrayList<MediaItem>()
@@ -1132,17 +1142,17 @@ class PlayService : MediaBrowserServiceCompat() {
                         }
                         exoPlayer.setMediaItems(t1)
                         if (currentPlayTrack != null) {
-                            exoPlayer.seekToDefaultPosition(currentIndex)
+                            position = getCurrentPosition()
+                            exoPlayer.seekTo(currentIndex, position)
+                            if (notify == null) {
+                                notify = CreateNotification(this@PlayService, mediaSession)
+                            }
+                            updateNotify(position, currentPlayTrack?.duration)
                         }
                     }
-                    if (currentPlayTrack != null && musicQueue.isNotEmpty()) {
-                        if (notify == null) {
-                            notify = CreateNotification(this@PlayService, mediaSession)
-                        }
-                        updateNotify()
-                    }
+
                     val bundle = Bundle()
-                    setData(bundle)
+                    setData(bundle, position.toFloat())
                     mediaSession?.setExtras(bundle)
                 }
             }
@@ -1151,14 +1161,14 @@ class PlayService : MediaBrowserServiceCompat() {
 
     private fun getData(bundle: Bundle): Bundle? {
         return if (sqlDataInitialized) {
-            setData(bundle)
+            setData(bundle, null)
             bundle
         } else {
             null
         }
     }
 
-    private fun setData(bundle: Bundle) {
+    private fun setData(bundle: Bundle, position: Float?) {
         bundle.putInt("type", EVENT_DATA_READY)
         bundle.putLong("playListID", playListCurrent?.id ?: -1)
         bundle.putString("playListType", playListCurrent?.type?.name)
@@ -1180,6 +1190,7 @@ class PlayService : MediaBrowserServiceCompat() {
         bundle.putBoolean("echoActive", auxr.echo)
         bundle.putBoolean("echoFeedBack", auxr.echoRevert)
         bundle.putInt("repeat", exoPlayer.repeatMode)
+        bundle.putFloat("position", position ?: exoPlayer.currentPosition.toFloat())
         bundle.putParcelableArrayList("mainTabList", mainTab)
     }
 
@@ -1214,6 +1225,7 @@ class PlayService : MediaBrowserServiceCompat() {
     override fun onDestroy() {
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopTimer()
+        saveCurrentDuration(exoPlayer.currentPosition)
         notify?.cancelNotification(this@PlayService)
         mediaSession?.release()
 
@@ -1368,10 +1380,15 @@ class PlayService : MediaBrowserServiceCompat() {
 //                                inputFormat.pcmEncoding,
 //                                inputFormat.channelCount
 //                            ) * inputFormat.sampleRate * 1 // 这里计算出的就是1s音频的缓冲长度
-                            if (needPlayPause) {
-                                needPlayPause = false
-                                timeFinish()
+
+                            CoroutineScope(Dispatchers.Main).launch {
+                                if (needPlayPause) {
+                                    needPlayPause = false
+                                    timeFinish()
+                                }
+                                saveCurrentDuration(exoPlayer.duration)
                             }
+
                             super.configure(inputFormat, specifiedBufferSize, outputChannels)
                         }
 
@@ -1438,14 +1455,21 @@ class PlayService : MediaBrowserServiceCompat() {
                         this@PlayService,
                         currentPlayTrack?.name ?: "",
                         currentPlayTrack?.artist ?: "",
-                        exoPlayer
+                        true,
+                        exoPlayer.playbackParameters.speed,
+                        exoPlayer.currentPosition,
+                        exoPlayer.duration
                     )
+                    saveCurrentDuration(exoPlayer.currentPosition)
                 } else {
                     notify?.updateNotification(
                         this@PlayService,
                         currentPlayTrack?.name ?: "",
                         currentPlayTrack?.artist ?: "",
-                        exoPlayer
+                        false,
+                        exoPlayer.playbackParameters.speed,
+                        exoPlayer.currentPosition,
+                        exoPlayer.duration
                     )
                 }
             }
@@ -1470,13 +1494,6 @@ class PlayService : MediaBrowserServiceCompat() {
                     exoPlayer.seekToNextMediaItem()
                     exoPlayer.prepare()
                     errorCount++
-                }
-            }
-
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                super.onPlaybackStateChanged(playbackState)
-                if (playbackState == Player.STATE_READY) {
-                    currentDuration = exoPlayer.duration
                 }
             }
 
@@ -1526,12 +1543,15 @@ class PlayService : MediaBrowserServiceCompat() {
         })
     }
 
-    fun updateNotify() {
+    fun updateNotify(position: Long? = null, duration: Long? = null) {
         notify?.updateNotification(
             this@PlayService,
             currentPlayTrack?.name ?: "",
             currentPlayTrack?.artist ?: "",
-            exoPlayer
+            exoPlayer.isPlaying,
+            exoPlayer.playbackParameters.speed,
+            position ?: exoPlayer.currentPosition,
+            duration ?: exoPlayer.duration
         )
         val metadataBuilder = MediaMetadataCompat.Builder()
         metadataBuilder.putLong(
@@ -1576,4 +1596,18 @@ class PlayService : MediaBrowserServiceCompat() {
         ).getLong("SelectedPlayTrack", -1)
     }
 
+    @SuppressLint("ApplySharedPref")
+    private fun saveCurrentDuration(duration: Long) {
+        this@PlayService.getSharedPreferences(
+            "SelectedPlayTrack",
+            Context.MODE_PRIVATE
+        ).edit().putLong("CurrentPosition", duration).commit()
+    }
+
+    private fun getCurrentPosition(): Long {
+        return this@PlayService.getSharedPreferences(
+            "SelectedPlayTrack",
+            Context.MODE_PRIVATE
+        ).getLong("CurrentPosition", 0)
+    }
 }

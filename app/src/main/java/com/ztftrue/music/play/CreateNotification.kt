@@ -17,7 +17,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.media.session.MediaButtonReceiver
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.R
 
@@ -67,14 +66,21 @@ class CreateNotification(service: Service, private val mediaSession: MediaSessio
         service.stopForeground(STOP_FOREGROUND_REMOVE)
     }
 
+    //   exoPlayer: ExoPlayer,
     fun updateNotification(
         service: Service,
         title: String,
         subTitle: String,
-        exoPlayer: ExoPlayer
+        isPlaying: Boolean,
+        playSpeed: Float = 1f,
+        position: Long = 0L,
+        duration: Long = 0L
     ) {
         val metadataBuilder = MediaMetadataCompat.Builder()
-        metadataBuilder.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, exoPlayer.duration)
+        metadataBuilder.putLong(
+            MediaMetadataCompat.METADATA_KEY_DURATION,
+            duration
+        )
         metadataBuilder.putText(MediaMetadataCompat.METADATA_KEY_TITLE, title)
         metadataBuilder.putText(MediaMetadataCompat.METADATA_KEY_ARTIST, subTitle)
         mediaSession?.setMetadata(metadataBuilder.build())
@@ -83,9 +89,9 @@ class CreateNotification(service: Service, private val mediaSession: MediaSessio
         mediaSession?.setPlaybackState(
             PlaybackStateCompat.Builder()
                 .setState(
-                    if (exoPlayer.isPlaying) PlaybackStateCompat.STATE_PLAYING else PlaybackStateCompat.STATE_PAUSED,
-                    exoPlayer.currentPosition,
-                    exoPlayer.playbackParameters.speed
+                    if (isPlaying) PlaybackStateCompat.STATE_PLAYING else PlaybackStateCompat.STATE_PAUSED,
+                    position,
+                    playSpeed
                 )
                 .setActions(
                     PlaybackStateCompat.ACTION_SKIP_TO_NEXT or PlaybackStateCompat.ACTION_PLAY_PAUSE or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
@@ -96,7 +102,8 @@ class CreateNotification(service: Service, private val mediaSession: MediaSessio
         )
         mediaSession?.setFlags(
             MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
-                    MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
+                    MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
+        )
         val builder = NotificationCompat.Builder(service, CHANNEL_ID)
             .setStyle(
                 androidx.media.app.NotificationCompat.MediaStyle()
@@ -123,8 +130,8 @@ class CreateNotification(service: Service, private val mediaSession: MediaSessio
                 )
             )
             .setProgress(
-                (exoPlayer.duration / 1000).toInt(),
-                (exoPlayer.currentPosition / 1000).toInt(),
+                (duration / 1000).toInt(),
+                (position / 1000).toInt(),
                 false
             )
             .setAutoCancel(false)
@@ -136,12 +143,12 @@ class CreateNotification(service: Service, private val mediaSession: MediaSessio
             )
         )
         builder.addAction(
-            if (exoPlayer.isPlaying) {
+            if (isPlaying) {
                 R.drawable.pause
             } else {
                 R.drawable.play
             },
-            if (exoPlayer.isPlaying) "Pause" else "Play",
+            if (isPlaying) "Pause" else "Play",
             MediaButtonReceiver.buildMediaButtonPendingIntent(
                 service,
                 PlaybackStateCompat.ACTION_PLAY_PAUSE

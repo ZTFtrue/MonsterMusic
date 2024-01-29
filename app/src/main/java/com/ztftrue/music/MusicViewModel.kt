@@ -21,8 +21,9 @@ import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.play.Lyrics
 import com.ztftrue.music.utils.AnyListBase
+import com.ztftrue.music.utils.Caption
 import com.ztftrue.music.utils.EqualizerBand
-import com.ztftrue.music.utils.Lyrics
+import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.Utils
@@ -85,8 +86,8 @@ class MusicViewModel : ViewModel() {
 
     // lyrics
     var itemDuration: Long = 1
-    var hasTime: Boolean = false
-    var currentLyricsList = mutableStateListOf<Lyrics>()
+    var hasTime: LyricsType = LyricsType.TEXT
+    var currentCaptionList = mutableStateListOf<Caption>()
 
     // sleep time
     var sleepTime = mutableLongStateOf(0L)
@@ -96,7 +97,7 @@ class MusicViewModel : ViewModel() {
     var repeatModel = mutableIntStateOf(Player.REPEAT_MODE_ALL)
     fun reset() {
         if (currentPlay.value != null) {
-            currentLyricsList.clear()
+            currentCaptionList.clear()
         }
         mediaBrowser = null
         mediaController = null
@@ -127,8 +128,8 @@ class MusicViewModel : ViewModel() {
     }
 
     fun dealLyrics(context: Context, currentPlay: MusicItem) {
-        currentLyricsList.clear()
-        if (currentLyricsList.isEmpty()) {
+        currentCaptionList.clear()
+        if (currentCaptionList.isEmpty()) {
             val regexPattern = Regex("[<>\"/~'{}?,+=)(^&*%!@#\$]")
             val artistsFolder = currentPlay.artist.replace(
                 regexPattern,
@@ -140,21 +141,23 @@ class MusicViewModel : ViewModel() {
             )
             folder?.mkdirs()
             val id = currentPlay.name.replace(regexPattern, "_")
-            val pathLyrics: String =
-                context.getExternalFilesDir(folderPath)?.absolutePath + "/$id.lrc"
-            val path: String =
-                context.getExternalFilesDir(folderPath)?.absolutePath + "/$id.txt"
-            val lyrics = File(pathLyrics)
-            val text = File(path)
-            if (lyrics.exists()) {
-                hasTime = true
-                currentLyricsList.addAll(read(lyrics, context))
-            } else if (text.exists()) {
-                hasTime = false
-                currentLyricsList.addAll(read(text, context))
+            val path = "${context.getExternalFilesDir(folderPath)?.absolutePath}/$id"
+//                context.getExternalFilesDir(folderPath)?.absolutePath + "/$id.lrc"
+            val text = File("$path.txt")
+            if (text.exists()) {
+                hasTime = LyricsType.TEXT
+                currentCaptionList.addAll(readLyricsOrText(text, context))
+            } else if (File("$path.lrc").exists()) {
+                hasTime = LyricsType.LRC
+            } else if (File("$path.srt").exists()) {
+                hasTime = LyricsType.SRT
+                currentCaptionList.addAll(readCaptions(File("$path.srt"), LyricsType.SRT))
+            } else if (File("$path.vtt").exists()) {
+                hasTime = LyricsType.VTT
+                currentCaptionList.addAll(readCaptions(File("$path.vtt"), LyricsType.VTT))
             } else {
-                currentLyricsList.add(
-                    Lyrics(
+                currentCaptionList.add(
+                    Caption(
                         text = "No Lyrics, Double click to import lyrics",
                         0,
                     )
@@ -164,11 +167,11 @@ class MusicViewModel : ViewModel() {
         }
         val duration = currentPlay.duration
         // every lyrics line duration
-        itemDuration = duration / currentLyricsList.size
+        itemDuration = duration / currentCaptionList.size
     }
 
-    private fun read(file: File, context: Context): ArrayList<Lyrics> {
-        val arrayList = arrayListOf<Lyrics>()
+    private fun readLyricsOrText(file: File, context: Context): ArrayList<Caption> {
+        val arrayList = arrayListOf<Caption>()
         val inputStream: InputStream = file.inputStream()
         val inputString = inputStream.bufferedReader().use { it.readText() }
         inputString.split("\n").forEach {
@@ -177,6 +180,19 @@ class MusicViewModel : ViewModel() {
             } else {
                 arrayList.add(Utils.parseLyricLine(it, context))
             }
+        }
+        return arrayList
+    }
+
+    private fun readCaptions(
+        file: File,
+        captionType: LyricsType,
+    ): ArrayList<Caption> {
+        val arrayList = arrayListOf<Caption>()
+        if (captionType == LyricsType.SRT) {
+            arrayList.addAll(Utils.parseSrtFile(file))
+        } else if (captionType == LyricsType.VTT) {
+            arrayList.addAll(Utils.parseVttFile(file))
         }
         return arrayList
     }

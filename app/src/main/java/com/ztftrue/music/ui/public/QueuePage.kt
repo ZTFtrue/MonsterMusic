@@ -73,7 +73,7 @@ fun QueuePage(
                 musicViewModel.currentPlay.value = null
                 musicViewModel.playListCurrent.value = null
                 musicViewModel.currentPlayQueueIndex.intValue = 0
-                musicViewModel.currentLyricsList.clear()
+                musicViewModel.currentCaptionList.clear()
             } else if (it == OperateType.SaveQueueToPlayList) {
                 showAddPlayListDialog = true
             }

@@ -307,10 +307,16 @@ class MainActivity : ComponentActivity() {
                         val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
                         cursor.moveToFirst()
                         val name = cursor.getString(nameIndex)
-                        lyricsPath += if (name.endsWith(".txt")) {
+                        lyricsPath += if (name.lowercase().endsWith(".lrc")) {
+                            "lrc"
+                        } else if (name.lowercase().endsWith(".srt")) {
+                            "srt"
+                        } else if (name.lowercase().endsWith(".vtt")) {
+                            "vtt"
+                        } else if (name.lowercase().endsWith(".txt")) {
                             "txt"
                         } else {
-                            "lrc"
+                            return@registerForActivityResult
                         }
                         val inputStream =
                             this@MainActivity.contentResolver.openInputStream(selectedFileUri)
@@ -349,9 +355,9 @@ class MainActivity : ComponentActivity() {
 
     fun openFilePicker(filePath: String) {
         lyricsPath = filePath
-        val intent = Intent(Intent.ACTION_GET_CONTENT)
-        intent.type = "text/plain" // Specify the MIME type for text files
-        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        intent.type = "*/*" // Specify the MIME type for text files
+//        intent.addCategory(Intent.CATEGORY_OPENABLE)
 //        intent.type = "text/plain|application/octet-stream";
         filePickerLauncher.launch(intent)
     }
@@ -533,7 +539,7 @@ class MainActivity : ComponentActivity() {
 //                    musicViewModel.musicQueue.value = musicViewModel.musicListMap[playList?.id]
                 } else if (it.getInt("type") == EVENT_MEDIA_ITEM_Change) {
                     // before switch to another music, must clear lyrics
-                    musicViewModel.currentLyricsList.clear()
+                    musicViewModel.currentCaptionList.clear()
                     val index = it.getInt("index")
                     if (index >= 0 && musicViewModel.musicQueue.size > index) {
                         musicViewModel.currentMusicCover.value = null
@@ -707,6 +713,8 @@ class MainActivity : ComponentActivity() {
         musicViewModel.enableEcho.value = resultData.getBoolean("echoActive")
         musicViewModel.echoFeedBack.value = resultData.getBoolean("echoFeedBack")
         musicViewModel.repeatModel.intValue = resultData.getInt("repeat", Player.REPEAT_MODE_ALL)
+        musicViewModel.sliderPosition.floatValue = resultData.getFloat("position", 0F)
+        // SleepTime wait when play next
         musicViewModel.playCompleted.value =
             resultData.getBoolean("play_completed")
         getSeek()
@@ -1039,7 +1047,7 @@ class MainActivity : ComponentActivity() {
                                     musicViewModel.currentPlay.value = null
                                     musicViewModel.playListCurrent.value = null
                                     musicViewModel.currentPlayQueueIndex.intValue = 0
-                                    musicViewModel.currentLyricsList.clear()
+                                    musicViewModel.currentCaptionList.clear()
                                 } else if (it == OperateType.SaveQueueToPlayList) {
 
                                     showAddPlayListDialog = true
@@ -1077,7 +1085,8 @@ class MainActivity : ComponentActivity() {
                                     musicViewModel.musicQueue.forEach {
                                         ids.add(it.id)
                                     }
-                                    val idPlayList = PlaylistManager.createPlaylist(context, playListName)
+                                    val idPlayList =
+                                        PlaylistManager.createPlaylist(context, playListName)
                                     if (idPlayList != -1L) {
                                         PlaylistManager.addMusicsToPlaylist(
                                             context,

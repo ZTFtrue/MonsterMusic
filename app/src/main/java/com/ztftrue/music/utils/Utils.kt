@@ -83,6 +83,13 @@ enum class ScrollDirectionType {
     LIST_VERTICAL,
 }
 
+enum class LyricsType {
+    TEXT,
+    LRC,
+    SRT,
+    VTT,
+}
+
 @Suppress("deprecation")
 object Utils {
     val items = listOf("Follow System", "Light", "Dark", "Follow Music Cover")
@@ -177,7 +184,7 @@ object Utils {
      *  or
      *  I don't want a lot for Christmas
      */
-    fun parseLyricLine(line: String, context: Context): Lyrics {
+    fun parseLyricLine(line: String, context: Context): Caption {
         // time
         val s = line.replace("\r", "")
         val pattern: Pattern = Pattern.compile("\\[([0-9]+:[0-9]+\\.[0-9]+)](.*)")
@@ -186,9 +193,9 @@ object Utils {
             val timeStr = matcher.group(1)
             val text = matcher.group(2)
             val time = parseTime(timeStr)
-            return Lyrics(text ?: "", time)
+            return Caption(text ?: "", time)
         }
-        return Lyrics(parseLyricOtherMessage(s, context), 0)
+        return Caption(parseLyricOtherMessage(s, context), 0)
     }
 
 
@@ -481,4 +488,91 @@ object Utils {
         // 根据阈值判断是深色还是浅色
         return darkness >= 0.5
     }
+
+    fun parseVttFile(file: File): List<Caption> {
+        val captions = mutableListOf<Caption>()
+
+        file.bufferedReader().useLines { lines ->
+            var startTime = 0L
+            var endTime = 0L
+            val text = StringBuilder()
+            for (line in lines) {
+                // Check if the line represents a time range
+                if (line.matches(Regex("\\d{2}:\\d{2}:\\d{2}\\.\\d{3} --> \\d{2}:\\d{2}:\\d{2}\\.\\d{3}"))) {
+                    if (text.isNotEmpty()) {
+                        captions.add(Caption(text.toString().trim(), startTime, endTime))
+                        text.clear()
+                    }
+
+                    // Parse the time range
+                    val times = line.split(" --> ")
+                    startTime = captionTimestampToMilliseconds(times[0])
+                    endTime = captionTimestampToMilliseconds(times[1])
+                } else {
+                    // Add the text to the current caption
+                    text.append(line).append("\n")
+                }
+            }
+
+            // Add the last caption
+            if (text.isNotEmpty()) {
+                captions.add(Caption(text.toString().trim(), startTime, endTime))
+            }
+        }
+
+        return captions
+    }
+
+    fun parseSrtFile(file: File): List<Caption> {
+        val subtitles = mutableListOf<Caption>()
+
+        file.bufferedReader().useLines { lines ->
+            var startTime = 0L
+            var endTime = 0L
+            var text = StringBuilder()
+
+            for (line in lines) {
+                when {
+                    line.isBlank() -> {
+                        // Blank line indicates the end of a subtitle
+                        if (text.isNotEmpty()) {
+                            subtitles.add(Caption(text.toString().trim(), startTime, endTime))
+                            text = StringBuilder()
+                        }
+                    }
+
+                    line.matches(Regex("\\d+ --> \\d+")) -> {
+                        // Time range line
+                        val times = line.split(Pattern.compile("\\s+-->\\s+"))
+                        startTime = captionTimestampToMilliseconds(times[0])
+                        endTime = captionTimestampToMilliseconds(times[1])
+                    }
+
+                    else -> {
+                        // Text line
+                        text.append(line).append("\n")
+                    }
+                }
+            }
+
+            // Add the last subtitle
+            if (text.isNotEmpty()) {
+                subtitles.add(Caption(text.toString().trim(), startTime, endTime))
+            }
+        }
+
+        return subtitles
+    }
+
+    fun captionTimestampToMilliseconds(timestamp: String): Long {
+        val parts = timestamp.split(":")
+        val hours = parts[0].toLong()
+        val minutes = parts[1].toLong()
+        val secondsAndMilliseconds = parts[2].split(".")
+        val seconds = secondsAndMilliseconds[0].toLong()
+        val milliseconds = secondsAndMilliseconds[1].toLong()
+
+        return ((hours * 3600 + minutes * 60 + seconds) * 1000 + milliseconds)
+    }
+
 }

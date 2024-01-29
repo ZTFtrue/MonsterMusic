@@ -26,7 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
-import com.ztftrue.music.utils.Lyrics
+import com.ztftrue.music.utils.Caption
+import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.Utils.openFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -48,23 +49,46 @@ fun LyricsView(
     LaunchedEffect(musicViewModel.sliderPosition.floatValue) {
         val timeState = musicViewModel.sliderPosition.floatValue
 
-        if (musicViewModel.hasTime) {
-            for ((index, entry) in musicViewModel.currentLyricsList.withIndex()) {
+        if (musicViewModel.hasTime == LyricsType.LRC) {
+            for ((index, entry) in musicViewModel.currentCaptionList.withIndex()) {
                 if (entry.timeStart > timeState) {
-                    currentI = index - 1
-                    if (musicViewModel.autoScroll.value) {
-                        launch(Dispatchers.Main) {
-                            // TODO calculate the scroll position by　
-                            listState.scrollToItem(if ((currentI - 6) < 0) 0 else (currentI - 6), 0)
+                    if (currentI != index) {
+                        currentI = index
+                        if (musicViewModel.autoScroll.value) {
+                            launch(Dispatchers.Main) {
+                                // TODO calculate the scroll position by　
+                                listState.scrollToItem(
+                                    if ((currentI - 6) < 0) 0 else (currentI - 6),
+                                    0
+                                )
+                            }
                         }
                     }
                     break
                 }
             }
+        } else if (musicViewModel.hasTime == LyricsType.VTT || musicViewModel.hasTime == LyricsType.SRT) {
+            val cIndex = musicViewModel.currentCaptionList.binarySearch {
+                if (it.timeStart <= timeState.toLong() && it.timeEnd >= timeState.toLong()) 0
+                else if (it.timeStart > timeState) {
+                    1
+                } else {
+                    -1
+                }
+            }
+            if (cIndex >= 0 && cIndex != currentI) {
+                currentI = cIndex
+                if (musicViewModel.autoScroll.value) {
+                    launch(Dispatchers.Main) {
+                        // TODO calculate the scroll position by　
+                        listState.scrollToItem(if ((currentI - 1) < 0) 0 else (currentI - 1), 0)
+                    }
+                }
+            }
         } else {
             currentI = (timeState / musicViewModel.itemDuration).toInt()
-            if (musicViewModel.currentLyricsList.getOrElse(currentI) {
-                    Lyrics("", 0)
+            if (musicViewModel.currentCaptionList.getOrElse(currentI) {
+                    Caption("", 0)
                 }.text.isNotBlank()) {
                 if (musicViewModel.autoScroll.value) {
                     launch(Dispatchers.Main) {
@@ -87,12 +111,12 @@ fun LyricsView(
             .padding(start = 20.dp, end = 20.dp)
             .combinedClickable(
                 onLongClick = {
-                    if(musicViewModel.autoScroll.value) {
+                    if (musicViewModel.autoScroll.value) {
                         musicViewModel.autoScroll.value = false
                         Toast
                             .makeText(context, "Auto scroll is disabled", Toast.LENGTH_SHORT)
                             .show()
-                    }else{
+                    } else {
                         musicViewModel.autoScroll.value = true
                         Toast
                             .makeText(context, "Auto scroll is enable", Toast.LENGTH_SHORT)
@@ -135,9 +159,9 @@ fun LyricsView(
                 // Toast.makeText(context, "Double click to import lyrics", Toast.LENGTH_SHORT).show()
             }
     ) {
-        items(musicViewModel.currentLyricsList.size) {
+        items(musicViewModel.currentCaptionList.size) {
             Text(
-                text = musicViewModel.currentLyricsList[it].text,
+                text = musicViewModel.currentCaptionList[it].text,
                 color = MaterialTheme.colorScheme.onBackground,
                 fontSize = if (currentI == it) MaterialTheme.typography.titleLarge.fontSize else
                     MaterialTheme.typography.titleMedium.fontSize,
