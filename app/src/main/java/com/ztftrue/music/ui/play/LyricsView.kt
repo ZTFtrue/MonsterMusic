@@ -72,6 +72,7 @@ fun LyricsView(
     val listState = rememberLazyListState()
     var currentI by remember { mutableIntStateOf(0) }
     var isSelected by remember { mutableStateOf(true) }
+    var showMenu by remember { mutableStateOf(false) }
     LaunchedEffect(musicViewModel.sliderPosition.floatValue) {
         val timeState = musicViewModel.sliderPosition.floatValue
 
@@ -80,7 +81,7 @@ fun LyricsView(
                 if (entry.timeStart > timeState) {
                     if (currentI != index) {
                         currentI = index
-                        if (musicViewModel.autoScroll.value && isSelected) {
+                        if (musicViewModel.autoScroll.value && isSelected && !showMenu) {
                             launch(Dispatchers.Main) {
                                 // TODO calculate the scroll position by　
                                 listState.scrollToItem(
@@ -104,7 +105,7 @@ fun LyricsView(
             }
             if (cIndex >= 0 && cIndex != currentI) {
                 currentI = cIndex
-                if (musicViewModel.autoScroll.value && isSelected) {
+                if (musicViewModel.autoScroll.value && isSelected && !showMenu) {
                     launch(Dispatchers.Main) {
                         // TODO calculate the scroll position by　
                         listState.scrollToItem(if ((currentI - 1) < 0) 0 else (currentI - 1), 0)
@@ -116,7 +117,7 @@ fun LyricsView(
             if (musicViewModel.currentCaptionList.getOrElse(currentI) {
                     Caption("", 0)
                 }.text.isNotBlank()) {
-                if (musicViewModel.autoScroll.value && isSelected) {
+                if (musicViewModel.autoScroll.value && isSelected && !showMenu) {
                     launch(Dispatchers.Main) {
                         listState.scrollToItem(if ((currentI - 1) < 0) 0 else (currentI - 1), 0)
                     }
@@ -125,7 +126,7 @@ fun LyricsView(
         }
 
     }
-    var showMenu by remember { mutableStateOf(false) }
+
     var word by remember {
         mutableStateOf("")
     }
@@ -255,7 +256,6 @@ fun LyricsView(
                 ) {
                     items(musicViewModel.currentCaptionList.size) {
                         val tex = musicViewModel.currentCaptionList[it].text
-
                         val annotatedString = buildAnnotatedString {
                             for (text in tex.split(Regex("[\\n\\r\\s]+"))) {
                                 val pattern = Regex("[,:;.\"]")
@@ -269,8 +269,6 @@ fun LyricsView(
                                 pop()
                             }
                         }
-
-
                         ClickableText(
                             text = annotatedString,
                             style = TextStyle(
@@ -287,15 +285,21 @@ fun LyricsView(
                                     size.value = sizeIt
                                 },
                             onClick = { offset ->
-                                val annotations =
-                                    annotatedString.getStringAnnotations(offset, offset)
-                                annotations.firstOrNull()?.let { itemAnnotations ->
-                                    if (itemAnnotations.tag == "word") {
-                                        word = itemAnnotations.item
-                                        showMenu = true
-                                    }
+                                if (showMenu) {
+                                    showMenu = false
+                                } else {
+                                    val annotations =
+                                        annotatedString.getStringAnnotations(offset, offset)
+                                    annotations.firstOrNull()?.let { itemAnnotations ->
+                                        if (itemAnnotations.tag == "word") {
+                                            word = itemAnnotations.item
+                                            showMenu = true
+                                        } else {
 
+                                        }
+                                    }
                                 }
+
                             })
                     }
                 }
