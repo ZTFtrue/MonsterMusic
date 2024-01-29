@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.text.TextUtils
 import android.widget.Toast
+import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.FileProvider
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
@@ -580,7 +581,8 @@ object Utils {
         val shareIntent = Intent(Intent.ACTION_PROCESS_TEXT)
         shareIntent.type = "text/plain"
         shareIntent.putExtra(Intent.EXTRA_TEXT, "")
-        val resolveInfoList: List<ResolveInfo> = context.packageManager.queryIntentActivities(shareIntent, 0)
+        val resolveInfoList: List<ResolveInfo> =
+            context.packageManager.queryIntentActivities(shareIntent, 0)
         for (resolveInfo in resolveInfoList) {
             val activityInfo = resolveInfo.activityInfo
             val packageName = activityInfo.packageName
@@ -589,5 +591,26 @@ object Utils {
             println("Package Name: $packageName, Class Name: $className, Label: $label")
         }
         return resolveInfoList
+    }
+
+    fun saveFontSize(context: Context, fontSize: Int) {
+        context.getSharedPreferences("display", Context.MODE_PRIVATE).edit()
+            .putInt("fontSize", fontSize).apply()
+    }
+
+    fun getFontSize(context: Context): Int {
+        return context.getSharedPreferences("display", Context.MODE_PRIVATE).getInt("fontSize", 16)
+    }
+
+    fun saveDisplayAlign(context: Context, textAlign: TextAlign) {
+        context.getSharedPreferences("display", Context.MODE_PRIVATE).edit()
+            .putString("displayAlign", textAlign.toString()).apply()
+    }
+
+    fun getDisplayAlign(context: Context): TextAlign {
+        val t = context.getSharedPreferences("display", Context.MODE_PRIVATE)
+            .getString("displayAlign", TextAlign.Center.toString())
+        return TextAlign.values().firstOrNull { it.toString() == t.toString() }
+            ?: TextAlign.Center
     }
 }

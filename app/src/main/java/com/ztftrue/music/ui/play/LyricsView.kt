@@ -47,6 +47,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -135,8 +136,8 @@ fun LyricsView(
         }
 
     }
-    var fontSize by remember {
-        mutableIntStateOf(18)
+    val fontSize by remember {
+        musicViewModel.fontSize
     }
     var word by remember {
         mutableStateOf("")
@@ -284,9 +285,9 @@ fun LyricsView(
                                 MotionEvent.ACTION_DOWN -> {
                                     if (it.action == MotionEvent.ACTION_DOWN) {
                                         val a = if (it.y > size.value.height / 2) {
-                                            it.y - fontSize * 2.5 - 60.dp.toPx(context)
+                                            it.y - fontSize * 3 - 60.dp.toPx(context)
                                         } else {
-                                            it.y + fontSize * 2.5
+                                            it.y + fontSize * 3
                                         }
                                         popupOffset = IntOffset(0, a.toInt())
                                     }
@@ -331,14 +332,18 @@ fun LyricsView(
                                 text = annotatedString,
                                 style = TextStyle(
                                     color = if (currentI == listIndex && musicViewModel.autoHighLight.value) {
-//                                        MaterialTheme.colorScheme.onSecondary
                                         Color.Blue
                                     } else {
                                         MaterialTheme.colorScheme.onBackground
                                     },
                                     fontSize = fontSize.sp,
-                                    textAlign = TextAlign.Center,
-                                    lineHeight = (fontSize * 1.5).sp
+                                    textAlign = musicViewModel.textAlign.value,
+                                    lineHeight = (fontSize * 1.5).sp,
+                                    textIndent = if (musicViewModel.textAlign.value == TextAlign.Justify || musicViewModel.textAlign.value == TextAlign.Left) {
+                                        TextIndent(fontSize.sp * 2)
+                                    } else {
+                                        TextIndent.None
+                                    }
                                 ),
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -373,8 +378,9 @@ fun LyricsView(
 
 }
 
-private fun Dp.toPx(context: Context): Int {
+fun Dp.toPx(context: Context): Int {
     val displayMetrics = context.resources.displayMetrics
-    return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this.value, displayMetrics).toInt()
+    return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this.value, displayMetrics)
+        .toInt()
 }
 

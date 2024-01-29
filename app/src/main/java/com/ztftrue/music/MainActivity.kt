@@ -129,6 +129,7 @@ import com.ztftrue.music.utils.OperateTypeInActivity
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.PlaylistManager
 import com.ztftrue.music.utils.PlaylistManager.removeTrackFromM3U
+import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.stringToEnumForPlayListType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -416,6 +417,8 @@ class MainActivity : ComponentActivity() {
             "SelectedTheme",
             Context.MODE_PRIVATE
         ).getInt("SelectedTheme", 0)
+        musicViewModel.textAlign.value = Utils.getDisplayAlign(this)
+        musicViewModel.fontSize.intValue = Utils.getFontSize(this)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             if (ActivityCompat.checkSelfPermission(
                     this@MainActivity, Manifest.permission.READ_EXTERNAL_STORAGE

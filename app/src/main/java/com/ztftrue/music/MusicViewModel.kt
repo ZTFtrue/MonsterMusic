@@ -1,5 +1,6 @@
 package com.ztftrue.music
 
+import android.app.Application
 import android.content.ContentUris
 import android.content.Context
 import android.graphics.Bitmap
@@ -13,6 +14,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.ViewModel
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -30,6 +33,7 @@ import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.Utils
 import java.io.File
 import java.io.InputStream
+import javax.inject.Inject
 
 
 var SongsPlayList = AnyListBase(-1, PlayListType.Songs)
@@ -80,6 +84,7 @@ class MusicViewModel : ViewModel() {
     var autoScroll = mutableStateOf(true)
     var autoHighLight = mutableStateOf(true)
 
+
     var enableEqualizer = mutableStateOf(false)
     var enableEcho = mutableStateOf(false)
 
@@ -90,6 +95,9 @@ class MusicViewModel : ViewModel() {
     var itemDuration: Long = 1
     var hasTime: LyricsType = LyricsType.TEXT
     var currentCaptionList = mutableStateListOf<AnnotatedStringCaption>()
+
+    var fontSize = mutableIntStateOf(18)
+    var textAlign = mutableStateOf(TextAlign.Center)
 
     // sleep time
     var sleepTime = mutableLongStateOf(0L)
