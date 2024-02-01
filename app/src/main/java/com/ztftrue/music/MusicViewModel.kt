@@ -1,8 +1,8 @@
 package com.ztftrue.music
 
-import android.app.Application
 import android.content.ContentUris
 import android.content.Context
+import android.content.pm.ResolveInfo
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
@@ -14,12 +14,12 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.ViewModel
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
+import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.play.Lyrics
@@ -33,7 +33,6 @@ import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.Utils
 import java.io.File
 import java.io.InputStream
-import javax.inject.Inject
 
 
 var SongsPlayList = AnyListBase(-1, PlayListType.Songs)
@@ -84,6 +83,7 @@ class MusicViewModel : ViewModel() {
     var autoScroll = mutableStateOf(true)
     var autoHighLight = mutableStateOf(true)
 
+    var dictionaryAppList = mutableStateListOf<DictionaryApp>()
 
     var enableEqualizer = mutableStateOf(false)
     var enableEcho = mutableStateOf(false)

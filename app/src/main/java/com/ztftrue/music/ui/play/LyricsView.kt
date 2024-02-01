@@ -63,7 +63,6 @@ import com.ztftrue.music.utils.AnnotatedStringCaption
 import com.ztftrue.music.utils.CustomTextToolbar
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.Utils
-import com.ztftrue.music.utils.Utils.getAllCitivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
@@ -151,10 +150,11 @@ fun LyricsView(
     }
 
     if (showMenu) {
-        val list = getAllCitivity(context)
+        val list = musicViewModel.dictionaryAppList
         if (list.isEmpty()) {
             showMenu = false
         } else {
+
             Popup(
                 // on below line we are adding
                 // alignment and properties.
@@ -196,29 +196,36 @@ fun LyricsView(
                     ) {
                         items(list.size) { index ->
                             val resolveInfo = list[index]
+                            if(resolveInfo.autoGo){
+                                val intent = Intent()
+                                intent.setAction(Intent.ACTION_PROCESS_TEXT)
+                                intent.setClassName(
+                                    resolveInfo.packageName,
+                                    resolveInfo.name
+                                )
+                                intent.putExtra(
+                                    Intent.EXTRA_PROCESS_TEXT,
+                                    word
+                                )
+                                context.startActivity(intent)
+                            }
                             Button(
                                 onClick = {
                                     val intent = Intent()
                                     intent.setAction(Intent.ACTION_PROCESS_TEXT)
                                     intent.setClassName(
-                                        resolveInfo.activityInfo.packageName,
-                                        resolveInfo.activityInfo.name
+                                        resolveInfo.packageName,
+                                        resolveInfo.name
                                     )
                                     intent.putExtra(
                                         Intent.EXTRA_PROCESS_TEXT,
                                         word
                                     )
-                                    showMenu = false
-                                    isSelected = false
-                                    selectedTag = ""
-                                    word = ""
                                     context.startActivity(intent)
                                 }
-//                                                color = MaterialTheme.colorScheme.onBackground,
                             ) {
                                 Text(
-                                    text = resolveInfo.loadLabel(context.packageManager)
-                                        .toString()
+                                    text = resolveInfo.label
                                 )
                             }
                         }
@@ -360,8 +367,6 @@ fun LyricsView(
                                             selectedTag = "$listIndex ${itemAnnotations.tag}"
                                             word = itemAnnotations.item
                                             showMenu = true
-                                        } else {
-
                                         }
                                     }
                                 }

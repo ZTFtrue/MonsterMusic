@@ -101,6 +101,8 @@ import com.ztftrue.music.play.EVENT_MEDIA_METADATA_Change
 import com.ztftrue.music.play.EVENT_SLEEP_TIME_Change
 import com.ztftrue.music.play.EVENT_changePlayQueue
 import com.ztftrue.music.play.PlayService
+import com.ztftrue.music.sqlData.MusicDatabase
+import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.home.AlbumGridView
@@ -410,15 +412,41 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        CoroutineScope(Dispatchers.IO).launch {
+            val db: MusicDatabase = MusicDatabase.getDatabase(this@MainActivity)
+            musicViewModel.themeSelected.intValue = getSharedPreferences(
+                "SelectedTheme",
+                Context.MODE_PRIVATE
+            ).getInt("SelectedTheme", 0)
+            musicViewModel.textAlign.value = Utils.getDisplayAlign(this@MainActivity)
+            musicViewModel.fontSize.intValue = Utils.getFontSize(this@MainActivity)
+            musicViewModel.autoScroll.value=Utils.getAutoScroll(this@MainActivity)
+            musicViewModel.autoHighLight.value=Utils.getAutoHighLight(this@MainActivity)
+            val dicApps = db.DictionaryAppDao().findAllDictionaryApp()
+            if (dicApps.isNullOrEmpty()) {
+                val list = ArrayList<DictionaryApp>()
+                Utils.getAllDictionaryAcitivity(this@MainActivity)
+                    .forEachIndexed { index, it ->
+                        list.add(
+                            DictionaryApp(
+                                index,
+                                it.activityInfo.name,
+                                it.activityInfo.packageName,
+                                it.loadLabel(this@MainActivity.packageManager).toString(),
+                                true,
+                                false
+                            )
+                        )
+                    }
+                musicViewModel.dictionaryAppList.addAll(list)
+            } else {
+                musicViewModel.dictionaryAppList.addAll(dicApps)
+            }
+        }
 //        val i = Intent(this@MainActivity, PlayService::class.java)
         // startService does not work in there.
 //        startService(i)  // Start the service explicitly
-        musicViewModel.themeSelected.intValue = getSharedPreferences(
-            "SelectedTheme",
-            Context.MODE_PRIVATE
-        ).getInt("SelectedTheme", 0)
-        musicViewModel.textAlign.value = Utils.getDisplayAlign(this)
-        musicViewModel.fontSize.intValue = Utils.getFontSize(this)
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             if (ActivityCompat.checkSelfPermission(
                     this@MainActivity, Manifest.permission.READ_EXTERNAL_STORAGE

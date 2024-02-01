@@ -54,6 +54,7 @@ import androidx.navigation.NavHostController
 import androidx.room.Room
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
+import com.ztftrue.music.sqlData.MUSIC_DATABASE_NAME
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.ui.public.BackTopBar
@@ -264,9 +265,7 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
     var db: MusicDatabase? = null
     LaunchedEffect(Unit) {
         scopeMain.launch {
-            db = Room.databaseBuilder(
-                context, MusicDatabase::class.java, "default_data.db"
-            ).build()
+            db =   MusicDatabase.getDatabase(context)
             mainTabList.addAll(db?.MainTabDao()?.findAllMainTabSortByPriority() ?: emptyList())
             size = mainTabList.size
         }
@@ -354,7 +353,7 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                     } else {
                                         Box(
                                             modifier = Modifier
-                                                .size(60.dp)
+                                                .size(50.dp)
                                                 .clip(CircleShape),
                                         )
                                     }

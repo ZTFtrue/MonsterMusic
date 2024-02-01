@@ -3,14 +3,21 @@ package com.ztftrue.music.ui.play
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import android.view.MotionEvent
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,8 +28,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -31,6 +40,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,15 +49,19 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -55,11 +70,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
@@ -69,8 +86,12 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.media3.common.Player
@@ -84,6 +105,8 @@ import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_RemoveFromQueue
 import com.ztftrue.music.play.ACTION_SEEK_TO
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
+import com.ztftrue.music.sqlData.MusicDatabase
+import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.CreatePlayListDialog
@@ -97,6 +120,8 @@ import com.ztftrue.music.utils.TracksManager
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.saveDisplayAlign
 import com.ztftrue.music.utils.enumToStringForPlayListType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.math.roundToLong
 
@@ -315,11 +340,679 @@ fun PlayingPage(
             }
         })
     }
+    var popupWindow by remember {
+        mutableStateOf(false)
+    }
+    var popupWindowDictionary by remember {
+        mutableStateOf(false)
+    }
+    if (popupWindow) {
+        Popup(
+            // on below line we are adding
+            // alignment and properties.
+            alignment = Alignment.TopCenter,
+            properties = PopupProperties(),
+            offset = IntOffset(
+                0.dp.toPx(context),
+                40.dp.toPx(context)
+            ),
+            onDismissRequest = {
+                popupWindow = false
+            }
+        ) {
+            val color = MaterialTheme.colorScheme.onPrimary
+            val configuration = LocalConfiguration.current
+            Column(
+                modifier = Modifier
+                    .width(
+                        (configuration.screenWidthDp - 20.dp.toPx(
+                            context
+                        )).dp
+                    )
+                    .padding(top = 5.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.background,
+                        RoundedCornerShape(10.dp)
+                    )
+                    .border(
+                        1.dp,
+                        color = Color.Black,
+                        RoundedCornerShape(10.dp)
+                    )
+            ) {
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(60.dp), // Number of columns in the grid
+                    contentPadding = PaddingValues(5.dp),
+                    state = rememberLazyGridState(),
+                    modifier = Modifier
+                ) {
+                    item {
+                        IconButton(
+                            modifier = Modifier.width(50.dp),
+                            onClick = {
+                                viewModel.textAlign.value =
+                                    TextAlign.Left
+                                saveDisplayAlign(
+                                    context,
+                                    TextAlign.Left
+                                )
+                            }) {
+                            Image(
+                                painter = painterResource(
+                                    R.drawable.ic_format_align_left
+                                ),
+                                contentDescription = "Set lyrics display align left",
+                                modifier = Modifier
+                                    .width(24.dp)
+                                    .height(24.dp)
+                                    .drawBehind {
+                                        if (viewModel.textAlign.value == TextAlign.Left) {
+                                            drawRect(
+                                                color = color,
+                                                topLeft = Offset(
+                                                    0f,
+                                                    0f
+                                                ),
+                                                size = Size(
+                                                    size.width,
+                                                    size.height
+                                                ),
+                                                style = Stroke(4f)
+                                            )
+                                        }
+                                    },
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                            )
+                        }
+                    }
+                    item {
+                        IconButton(
+                            modifier = Modifier.width(50.dp),
+                            onClick = {
+                                viewModel.textAlign.value =
+                                    TextAlign.Center
+                                saveDisplayAlign(
+                                    context,
+                                    TextAlign.Center
+                                )
+                            }) {
+                            Image(
+                                painter = painterResource(
+                                    R.drawable.ic_format_align_center
+                                ),
+                                contentDescription = "Set lyrics display  align center",
+                                modifier = Modifier
+                                    .width(24.dp)
+                                    .height(24.dp)
+                                    .drawBehind {
+                                        if (viewModel.textAlign.value == TextAlign.Center) {
+                                            drawRect(
+                                                color = color,
+                                                topLeft = Offset(
+                                                    0f,
+                                                    0f
+                                                ),
+                                                size = Size(
+                                                    size.width,
+                                                    size.height
+                                                ),
+                                                style = Stroke(4f)
+                                            )
+                                        }
+                                    },
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                            )
+                        }
+                    }
+                    item {
+                        IconButton(
+                            modifier = Modifier.width(50.dp),
+                            onClick = {
+                                viewModel.textAlign.value =
+                                    TextAlign.Right
+                                saveDisplayAlign(
+                                    context,
+                                    TextAlign.Right
+                                )
+                            }) {
+                            Image(
+                                painter = painterResource(
+                                    R.drawable.ic_format_align_right
+                                ),
+                                contentDescription = "Set lyrics display align right",
+                                modifier = Modifier
+                                    .width(24.dp)
+                                    .height(24.dp)
+                                    .drawBehind {
+                                        if (viewModel.textAlign.value == TextAlign.Right) {
+                                            drawRect(
+                                                color = color,
+                                                topLeft = Offset(
+                                                    0f,
+                                                    0f
+                                                ),
+                                                size = Size(
+                                                    size.width,
+                                                    size.height
+                                                ),
+                                                style = Stroke(4f)
+                                            )
+                                        }
+                                    },
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                            )
+                        }
+                    }
+                    item {
+                        IconButton(
+                            modifier = Modifier.width(50.dp),
+                            onClick = {
+                                viewModel.textAlign.value =
+                                    TextAlign.Justify
+                                saveDisplayAlign(
+                                    context,
+                                    TextAlign.Justify
+                                )
+                            }) {
+                            Image(
+                                painter = painterResource(
+                                    R.drawable.ic_format_align_center
+                                ),
+                                contentDescription = "Set lyrics display align justify",
+                                modifier = Modifier
+                                    .width(24.dp)
+                                    .height(24.dp)
+                                    .drawBehind {
+                                        if (viewModel.textAlign.value == TextAlign.Justify)
+                                            drawRect(
+                                                color = color,
+                                                topLeft = Offset(
+                                                    0f,
+                                                    0f
+                                                ),
+                                                size = Size(
+                                                    size.width,
+                                                    size.height
+                                                ),
+                                                style = Stroke(4f)
+                                            )
+                                    },
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                            )
+                        }
+                    }
+
+                    item {
+                        IconButton(
+                            modifier = Modifier.width(50.dp),
+                            onClick = {
+                                viewModel.fontSize.intValue =
+                                    viewModel.fontSize.intValue - 1
+                                Utils.saveFontSize(
+                                    context,
+                                    viewModel.fontSize.intValue
+                                )
+                            }) {
+                            Image(
+                                painter = painterResource(
+                                    R.drawable.ic_text_decrease
+                                ),
+                                contentDescription = "Font size decrease",
+                                modifier = Modifier
+                                    .width(24.dp)
+                                    .height(24.dp),
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                            )
+                        }
+                    }
+                    item {
+                        IconButton(
+                            modifier = Modifier.width(50.dp),
+                            onClick = {
+                                viewModel.fontSize.intValue =
+                                    viewModel.fontSize.intValue + 1
+                                Utils.saveFontSize(
+                                    context,
+                                    viewModel.fontSize.intValue
+                                )
+                            }) {
+                            Image(
+                                painter = painterResource(
+                                    R.drawable.ic_text_increase
+                                ),
+                                contentDescription = "Font size increase",
+                                modifier = Modifier
+                                    .width(24.dp)
+                                    .height(24.dp),
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                            )
+                        }
+                    }
+                    item {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .combinedClickable(onLongClick = {
+                                    Toast
+                                        .makeText(
+                                            context,
+                                            "Switch auto scroll",
+                                            Toast.LENGTH_SHORT
+                                        )
+                                        .show()
+                                }) {
+                                    viewModel.autoScroll.value =
+                                        !viewModel.autoScroll.value
+                                    Utils.saveAutoScroll(context, viewModel.autoScroll.value)
+                                }
+                                .padding(0.dp)
+                                .height(50.dp)
+                        ) {
+                            Text(
+                                text = "Scroll",
+                                modifier = Modifier.padding(0.dp),
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontSize = TextUnit(
+                                    12f,
+                                    TextUnitType.Sp
+                                ),
+                                lineHeight = TextUnit(
+                                    12f,
+                                    TextUnitType.Sp
+                                ),
+                            )
+                            Switch(checked = viewModel.autoScroll.value,
+                                modifier = Modifier
+                                    .scale(0.5f)
+                                    .padding(0.dp),
+                                onCheckedChange = {
+                                    viewModel.autoScroll.value = it
+                                }
+                            )
+                        }
+                    }
+                    item {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .combinedClickable(onLongClick = {
+                                    Toast
+                                        .makeText(
+                                            context,
+                                            "Switch auto high light",
+                                            Toast.LENGTH_SHORT
+                                        )
+                                        .show()
+                                }) {
+                                    viewModel.autoHighLight.value =
+                                        !viewModel.autoHighLight.value
+                                    Utils.saveAutoHighLight(context, viewModel.autoHighLight.value)
+                                }
+                                .padding(0.dp)
+                                .height(50.dp)
+                        ) {
+                            Text(
+                                text = "Highlight",
+                                modifier = Modifier.padding(0.dp),
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontSize = TextUnit(
+                                    12f,
+                                    TextUnitType.Sp
+                                ),
+                                lineHeight = TextUnit(
+                                    12f,
+                                    TextUnitType.Sp
+                                ),
+                            )
+                            Switch(checked = viewModel.autoHighLight.value,
+                                modifier = Modifier
+                                    .scale(0.5f)
+                                    .padding(0.dp),
+                                onCheckedChange = {
+                                    viewModel.autoHighLight.value = it
+                                }
+                            )
+                        }
+                    }
+                    item {
+                        IconButton(
+                            modifier = Modifier.width(50.dp), onClick = {
+                                if (!popupWindowDictionary) {
+                                    popupWindowDictionary = true
+                                    popupWindow = false
+                                }
+                            }) {
+                            Image(
+                                painter = painterResource(
+                                    R.drawable.ic_dictionary
+                                ),
+                                contentDescription = "Set lyrics display format",
+                                modifier = Modifier
+                                    .width(24.dp)
+                                    .height(24.dp),
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                            )
+                        }
+                    }
+                }
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    IconButton(
+                        modifier = Modifier.width(50.dp),
+                        onClick = {
+                            popupWindow = false
+                        }) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close display set popup",
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(CircleShape),
+                        )
+                    }
+                }
+
+            }
+        }
+    }
+    val list = remember {
+        mutableStateListOf<DictionaryApp>()
+    }
+    LaunchedEffect(Unit) {
+        val hashMap = HashMap<String, DictionaryApp>()
+        viewModel.dictionaryAppList.forEach {
+            hashMap[it.packageName] = it
+        }
+        Utils.getAllDictionaryAcitivity(context)
+            .forEachIndexed { index, it ->
+                list.add(
+                    DictionaryApp(
+                        index,
+                        it.activityInfo.name,
+                        it.activityInfo.packageName,
+                        it.loadLabel(context.packageManager).toString(),
+                        hashMap[it.activityInfo.packageName] != null,
+                        hashMap[it.activityInfo.packageName] != null && hashMap[it.activityInfo.packageName]?.autoGo == true
+                    )
+                )
+            }
+    }
+    if (popupWindowDictionary) {
+        if (list.isEmpty()) {
+            Toast.makeText(
+                context,
+                "Dictionary app is not installed or your dictionary app do not support this feature.",
+                Toast.LENGTH_SHORT
+            ).show()
+            popupWindowDictionary = false
+        } else {
+            Dialog(
+                onDismissRequest = {
+                    popupWindowDictionary = false
+                },
+                properties = DialogProperties(
+                    usePlatformDefaultWidth = true,
+                    dismissOnBackPress = true,
+                    dismissOnClickOutside = true
+                ),
+                content = {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(color = MaterialTheme.colorScheme.background),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            text = "Manage Dictionary App", modifier = Modifier
+                                .padding(2.dp),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Divider(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(color = MaterialTheme.colorScheme.onBackground)
+                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(60.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        )
+                        {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(60.dp)
+
+                                ) { }
+                                Box(modifier = Modifier.width(100.dp)) { }
+                            }
+                            Text(
+                                text = "Show in menu",
+                                modifier = Modifier,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Text(
+                                text = "Auto go",
+                                modifier = Modifier,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(340.dp)
+                        ) {
+
+                            items(list.size) { listIndex ->
+                                val item = list[listIndex]
+                                var offset by remember { mutableFloatStateOf(0f) }
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(60.dp)
+                                        .graphicsLayer(
+                                            translationY = offset,
+                                        ),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                )
+                                {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(modifier = Modifier
+                                            .height(60.dp)
+                                            .draggable(
+                                                orientation = Orientation.Vertical,
+                                                state = rememberDraggableState { delta ->
+                                                    offset += delta
+                                                },
+                                                onDragStopped = { velocity ->
+                                                    var position =
+                                                        listIndex + (offset / 60.dp.toPx(context)).toInt()
+                                                    if (position < 0) {
+                                                        position = 0
+                                                    }
+                                                    if (position > list.size - 1) {
+                                                        position = list.size - 1
+                                                    }
+                                                    if (position != listIndex) {
+                                                        Log.i(
+                                                            "POSITION",
+                                                            "p=$listIndex ,${position} position=${
+                                                                offset / 60.dp.toPx(
+                                                                    context
+                                                                )
+                                                            }"
+                                                        )
+                                                        list.remove(item)
+                                                        list.add(position, item)
+                                                    }
+                                                    offset = 0f
+                                                }
+                                            )) {
+                                            Image(
+                                                painter = painterResource(
+                                                    R.drawable.ic_swipe_vertical
+                                                ),
+                                                contentDescription = "Down ${item.label} app priority",
+                                                modifier = Modifier
+                                                    .size(60.dp)
+                                                    .padding(15.dp)
+                                                    .clip(
+                                                        CircleShape
+                                                    ),
+                                                colorFilter = ColorFilter.tint(
+                                                    color = MaterialTheme.colorScheme.onBackground
+                                                )
+                                            )
+                                        }
+                                        Box(modifier = Modifier.width(100.dp)) {
+                                            Text(
+                                                text = item.label,
+                                                modifier = Modifier
+                                                    .horizontalScroll(rememberScrollState(0)),
+                                                color = MaterialTheme.colorScheme.onBackground,
+                                                maxLines = 1
+                                            )
+                                        }
+
+                                    }
+                                    var isChecked by remember {
+                                        mutableStateOf(false)
+                                    }
+                                    isChecked = item.isShow
+                                    Checkbox(
+                                        checked = isChecked,
+                                        onCheckedChange = { v ->
+                                            isChecked = v
+                                            item.isShow = v
+                                        },
+                                        modifier = Modifier
+                                            .padding(8.dp)
+                                            .semantics {
+                                                contentDescription =
+                                                    if (isChecked) {
+                                                        "Show this ${item.name}"
+                                                    } else {
+                                                        "Hide this ${item.name}"
+                                                    }
+                                            }
+                                    )
+                                    var autoGo by remember {
+                                        mutableStateOf(false)
+                                    }
+                                    autoGo = item.autoGo
+                                    Column() {
+                                        Checkbox(
+                                            checked = autoGo,
+                                            onCheckedChange = { v ->
+                                                for ((index, it) in list.withIndex()) {
+                                                    if(it.autoGo){
+                                                        list.removeAt(index)
+                                                        it.autoGo = false
+                                                        list.add(index,it)
+                                                        break
+                                                    }
+                                                }
+                                                autoGo = v
+                                                item.autoGo = v
+                                            },
+                                            modifier = Modifier
+                                                .padding(8.dp)
+                                                .semantics {
+                                                    contentDescription =
+                                                        if (isChecked) {
+                                                            "Auto go ${item.label}"
+                                                        } else {
+                                                            "Don't auto go ${item.label}"
+                                                        }
+                                                }
+                                        )
+                                    }
+
+                                }
+                            }
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            TextButton(
+                                onClick = {
+                                    popupWindowDictionary = false
+                                },
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .fillMaxWidth(0.5f),
+                            ) {
+                                Text(
+                                    "Cancel",
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                            Divider(
+                                modifier = Modifier
+                                    .background(MaterialTheme.colorScheme.onBackground)
+                                    .width(1.dp)
+                                    .height(50.dp)
+                            )
+                            TextButton(
+                                onClick = {
+                                    val result =
+                                        ArrayList<DictionaryApp>()
+                                    list.forEach {
+                                        if (it.isShow) {
+                                            result.add(it)
+                                        }
+                                    }
+                                    result.forEachIndexed() {
+                                        index, item ->
+                                        item.id = index
+                                    }
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        val db: MusicDatabase =
+                                            MusicDatabase.getDatabase(
+                                                context
+                                            )
+                                        db.DictionaryAppDao()
+                                            .deleteAll()
+                                        db.DictionaryAppDao()
+                                            .insertAll(result)
+                                    }
+                                    viewModel.dictionaryAppList.clear()
+                                    viewModel.dictionaryAppList.addAll(
+                                        result
+                                    )
+                                    popupWindowDictionary = false
+                                },
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .fillMaxWidth(),
+                            ) {
+                                Text(
+                                    "Ok",
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                        }
+                    }
+                }
+            )
+        }
+
+    }
     Surface(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
     ) {
+
         Scaffold(modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight(),
@@ -328,280 +1021,9 @@ fun PlayingPage(
                     key(Unit, pagerTabState.currentPage) {
                         TopBar(navController, viewModel, content = {
                             if (playViewTab[pagerTabState.currentPage].id == LyricsID) {
-                                var popupWindow by remember {
-                                    mutableStateOf(false)
-                                }
-                                if (popupWindow) {
-                                    val list = Utils.getAllCitivity(context)
-                                    if (list.isEmpty()) {
-                                        popupWindow = false
-                                    } else {
-                                        Popup(
-                                            // on below line we are adding
-                                            // alignment and properties.
-                                            alignment = Alignment.TopCenter,
-                                            properties = PopupProperties(),
-                                            offset = IntOffset(
-                                                0.dp.toPx(context),
-                                                40.dp.toPx(context)
-                                            ),
-                                            onDismissRequest = {
-                                                popupWindow = false
-                                            }
-                                        ) {
-                                            val color = MaterialTheme.colorScheme.onPrimary
-                                            val rowListSate = rememberLazyListState()
-                                            val configuration = LocalConfiguration.current
-                                            LazyRow(
-                                                contentPadding = PaddingValues(5.dp),
-                                                state = rowListSate,
-                                                modifier = Modifier
-                                                    .size(
-                                                        (configuration.screenWidthDp - 10.dp.toPx(
-                                                            context
-                                                        )).dp,
-                                                        60.dp
-                                                    )
-                                                    .padding(top = 5.dp)
-                                                    // on below line we are adding background color
-                                                    .background(
-                                                        color = MaterialTheme.colorScheme.background,
-                                                        RoundedCornerShape(10.dp)
-                                                    )
-                                                    // on below line we are adding border.
-                                                    .border(
-                                                        1.dp,
-                                                        color = Color.Black,
-                                                        RoundedCornerShape(10.dp)
-                                                    )
-                                            ) {
-                                                item {
-                                                    IconButton(
-                                                        modifier = Modifier.width(50.dp),
-                                                        onClick = {
-                                                            popupWindow = false
-                                                        }) {
-                                                        Icon(
-                                                            imageVector = Icons.Default.Close,
-                                                            contentDescription = "Close display set popup",
-                                                            modifier = Modifier
-                                                                .size(30.dp)
-                                                                .clip(CircleShape),
-                                                        )
-                                                    }
-                                                }
-                                                item {
-                                                    IconButton(
-                                                        modifier = Modifier.width(50.dp),
-                                                        onClick = {
-                                                            viewModel.fontSize.intValue =
-                                                                viewModel.fontSize.intValue - 1
-                                                            Utils.saveFontSize(
-                                                                context,
-                                                                viewModel.fontSize.intValue
-                                                            )
-                                                        }) {
-                                                        Image(
-                                                            painter = painterResource(
-                                                                R.drawable.ic_text_decrease
-                                                            ),
-                                                            contentDescription = "Font size decrease",
-                                                            modifier = Modifier
-                                                                .width(24.dp)
-                                                                .height(24.dp),
-                                                            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
-                                                        )
-                                                    }
-                                                }
-                                                item {
-                                                    IconButton(
-                                                        modifier = Modifier.width(50.dp),
-                                                        onClick = {
-                                                            viewModel.fontSize.intValue =
-                                                                viewModel.fontSize.intValue + 1
-                                                            Utils.saveFontSize(
-                                                                context,
-                                                                viewModel.fontSize.intValue
-                                                            )
-                                                        }) {
-                                                        Image(
-                                                            painter = painterResource(
-                                                                R.drawable.ic_text_increase
-                                                            ),
-                                                            contentDescription = "Font size increase",
-                                                            modifier = Modifier
-                                                                .width(24.dp)
-                                                                .height(24.dp),
-                                                            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
-                                                        )
-                                                    }
-                                                }
-                                                item {
-                                                    IconButton(
-                                                        modifier = Modifier.width(50.dp),
-                                                        onClick = {
-                                                            viewModel.textAlign.value =
-                                                                TextAlign.Left
-                                                            saveDisplayAlign(
-                                                                context,
-                                                                TextAlign.Left
-                                                            )
-                                                        }) {
-                                                        Image(
-                                                            painter = painterResource(
-                                                                R.drawable.ic_format_align_left
-                                                            ),
-                                                            contentDescription = "Set lyrics display align left",
-                                                            modifier = Modifier
-                                                                .width(24.dp)
-                                                                .height(24.dp)
-                                                                .drawBehind {
-                                                                    if (viewModel.textAlign.value == TextAlign.Left) {
-                                                                        drawRect(
-                                                                            color = color,
-                                                                            topLeft = Offset(
-                                                                                0f,
-                                                                                0f
-                                                                            ),
-                                                                            size = Size(
-                                                                                size.width,
-                                                                                size.height
-                                                                            ),
-                                                                            style = Stroke(4f)
-                                                                        )
-                                                                    }
-                                                                },
-                                                            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
-                                                        )
-                                                    }
-                                                }
-                                                item {
-                                                    IconButton(
-                                                        modifier = Modifier.width(50.dp),
-                                                        onClick = {
-                                                            viewModel.textAlign.value =
-                                                                TextAlign.Center
-                                                            saveDisplayAlign(
-                                                                context,
-                                                                TextAlign.Center
-                                                            )
-                                                        }) {
-                                                        Image(
-                                                            painter = painterResource(
-                                                                R.drawable.ic_format_align_center
-                                                            ),
-                                                            contentDescription = "Set lyrics display  align center",
-                                                            modifier = Modifier
-                                                                .width(24.dp)
-                                                                .height(24.dp)
-                                                                .drawBehind {
-                                                                    if (viewModel.textAlign.value == TextAlign.Center) {
-                                                                        drawRect(
-                                                                            color = color,
-                                                                            topLeft = Offset(
-                                                                                0f,
-                                                                                0f
-                                                                            ),
-                                                                            size = Size(
-                                                                                size.width,
-                                                                                size.height
-                                                                            ),
-                                                                            style = Stroke(4f)
-                                                                        )
-                                                                    }
-                                                                },
-                                                            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
-                                                        )
-                                                    }
-                                                }
-                                                item {
-                                                    IconButton(
-                                                        modifier = Modifier.width(50.dp),
-                                                        onClick = {
-                                                            viewModel.textAlign.value =
-                                                                TextAlign.Right
-                                                            saveDisplayAlign(
-                                                                context,
-                                                                TextAlign.Right
-                                                            )
-                                                        }) {
-                                                        Image(
-                                                            painter = painterResource(
-                                                                R.drawable.ic_format_align_right
-                                                            ),
-                                                            contentDescription = "Set lyrics display  align right",
-                                                            modifier = Modifier
-                                                                .width(24.dp)
-                                                                .height(24.dp)
-                                                                .drawBehind {
-                                                                    if (viewModel.textAlign.value == TextAlign.Right) {
-                                                                        drawRect(
-                                                                            color = color,
-                                                                            topLeft = Offset(
-                                                                                0f,
-                                                                                0f
-                                                                            ),
-                                                                            size = Size(
-                                                                                size.width,
-                                                                                size.height
-                                                                            ),
-                                                                            style = Stroke(4f)
-                                                                        )
-                                                                    }
-                                                                },
-                                                            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
-                                                        )
-                                                    }
-                                                }
-                                                item {
-                                                    IconButton(
-                                                        modifier = Modifier.width(50.dp),
-                                                        onClick = {
-                                                            viewModel.textAlign.value =
-                                                                TextAlign.Justify
-                                                            saveDisplayAlign(
-                                                                context,
-                                                                TextAlign.Justify
-                                                            )
-                                                        }) {
-                                                        Image(
-                                                            painter = painterResource(
-                                                                R.drawable.ic_format_align_center
-                                                            ),
-                                                            contentDescription = "Set lyrics display align justify",
-                                                            modifier = Modifier
-                                                                .width(24.dp)
-                                                                .height(24.dp)
-                                                                .drawBehind {
-                                                                    if (viewModel.textAlign.value == TextAlign.Justify)
-                                                                        drawRect(
-                                                                            color = color,
-                                                                            topLeft = Offset(
-                                                                                0f,
-                                                                                0f
-                                                                            ),
-                                                                            size = Size(
-                                                                                size.width,
-                                                                                size.height
-                                                                            ),
-                                                                            style = Stroke(4f)
-                                                                        )
-                                                                },
-                                                            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                }
-
                                 IconButton(
                                     modifier = Modifier.width(50.dp), onClick = {
-                                        if (!popupWindow) {
-                                            popupWindow = true
-                                        }
+                                        popupWindow = !popupWindow
                                     }) {
                                     Image(
                                         painter = painterResource(
@@ -614,6 +1036,8 @@ fun PlayingPage(
                                         colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
                                     )
                                 }
+
+
                             }
 
 

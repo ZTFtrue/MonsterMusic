@@ -577,7 +577,7 @@ object Utils {
         return ((hours * 3600 + minutes * 60 + seconds) * 1000 + milliseconds)
     }
 
-    fun getAllCitivity(context: Context): List<ResolveInfo> {
+    fun getAllDictionaryAcitivity(context: Context): List<ResolveInfo> {
         val shareIntent = Intent(Intent.ACTION_PROCESS_TEXT)
         shareIntent.type = "text/plain"
         shareIntent.putExtra(Intent.EXTRA_TEXT, "")
@@ -612,5 +612,21 @@ object Utils {
             .getString("displayAlign", TextAlign.Center.toString())
         return TextAlign.values().firstOrNull { it.toString() == t.toString() }
             ?: TextAlign.Center
+    }
+    fun saveAutoScroll(context: Context, autoScroll: Boolean) {
+        context.getSharedPreferences("display", Context.MODE_PRIVATE).edit()
+            .putBoolean("AutoScroll", autoScroll).apply()
+    }
+
+    fun getAutoScroll(context: Context): Boolean {
+        return context.getSharedPreferences("display", Context.MODE_PRIVATE).getBoolean("AutoScroll", true)
+    }
+    fun saveAutoHighLight(context: Context, autoHighLight: Boolean) {
+        context.getSharedPreferences("display", Context.MODE_PRIVATE).edit()
+            .putBoolean("AutoHighLight", autoHighLight).apply()
+    }
+
+    fun getAutoHighLight(context: Context): Boolean {
+        return context.getSharedPreferences("display", Context.MODE_PRIVATE).getBoolean("AutoHighLight", true)
     }
 }

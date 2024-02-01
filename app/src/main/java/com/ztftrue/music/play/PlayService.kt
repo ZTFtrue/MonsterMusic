@@ -37,6 +37,7 @@ import androidx.room.Room
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.effects.EchoAudioProcessor
 import com.ztftrue.music.effects.EqualizerAudioProcessor
+import com.ztftrue.music.sqlData.MUSIC_DATABASE_NAME
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.Auxr
 import com.ztftrue.music.sqlData.model.CurrentList
@@ -997,10 +998,7 @@ class PlayService : MediaBrowserServiceCompat() {
 
     private fun initSqlData() {
         CoroutineScope(Dispatchers.IO).launch {
-            db = Room.databaseBuilder(
-                this@PlayService,
-                MusicDatabase::class.java, "default_data.db"
-            ).build()
+            db = MusicDatabase.getDatabase(this@PlayService)
             // Read musics , times 300ms
             TracksManager.getFolderList(
                 this@PlayService,
