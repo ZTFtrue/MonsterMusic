@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.TypedValue
 import android.view.MotionEvent
+import android.view.View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -59,9 +60,9 @@ import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.utils.ListStringCaption
-import com.ztftrue.music.utils.textToolbar.CustomTextToolbar
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.textToolbar.CustomTextToolbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
@@ -278,109 +279,116 @@ fun LyricsView(
         )
     } else {
         CompositionLocalProvider(
-            LocalTextToolbar provides CustomTextToolbar(LocalView.current)
+            LocalTextToolbar provides CustomTextToolbar(
+                LocalView.current,
+                musicViewModel.dictionaryAppList
+            )
         ) {
-            SelectionContainer {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                        .pointerInteropFilter {
-                            when (it.action) {
-                                MotionEvent.ACTION_DOWN -> {
-                                    if (it.action == MotionEvent.ACTION_DOWN) {
-                                        val a = if (it.y > size.value.height / 2) {
-                                            it.y - fontSize * 3 - 60.dp.toPx(context)
-                                        } else {
-                                            it.y + fontSize * 3
-                                        }
-                                        popupOffset = IntOffset(0, a.toInt())
-                                    }
-                                }
-                            }
-                            false
-                        }
-                        .motionEventSpy {
-
-                        }
-                        .onSizeChanged { sizeIt ->
-                            size.value = sizeIt
-                        }
-                        .padding(start = 20.dp, end = 20.dp)
-                ) {
-                    items(musicViewModel.currentCaptionList.size) { listIndex ->
-                        key(Unit) {
-                            val tex = musicViewModel.currentCaptionList[listIndex].text
-                            val annotatedString = buildAnnotatedString {
-                                for ((index, text) in tex.withIndex()) {
-                                    val pattern = Regex("[,:;.\"]")
-                                    val tItem = text.replace(pattern, "")
-                                    pushStringAnnotation("word$tItem$index", tItem)
-                                    withStyle(
-                                        style = SpanStyle(
-                                            textDecoration = if (selectedTag == "$listIndex word$tItem$index") {
-                                                TextDecoration.Underline
+            SelectionContainer(
+                modifier = Modifier,
+                content = {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .pointerInteropFilter {
+                                when (it.action) {
+                                    MotionEvent.ACTION_DOWN -> {
+                                        if (it.action == MotionEvent.ACTION_DOWN) {
+                                            val a = if (it.y > size.value.height / 2) {
+                                                it.y - fontSize * 3 - 60.dp.toPx(context)
                                             } else {
-                                                TextDecoration.None
+                                                it.y + fontSize * 3
                                             }
-                                        )
-                                    ) {
-                                        append(text)
-                                    }
-                                    pop()
-                                    pushStringAnnotation("space", "")
-                                    append(" ")
-                                    pop()
-                                }
-                            }
-                            ClickableText(
-                                text = annotatedString,
-                                style = TextStyle(
-                                    color = if (currentI == listIndex && musicViewModel.autoHighLight.value) {
-                                        Color.Blue
-                                    } else {
-                                        MaterialTheme.colorScheme.onBackground
-                                    },
-                                    fontSize = fontSize.sp,
-                                    textAlign = musicViewModel.textAlign.value,
-                                    lineHeight = (fontSize * 1.5).sp,
-                                    textIndent = if (musicViewModel.textAlign.value == TextAlign.Justify || musicViewModel.textAlign.value == TextAlign.Left) {
-                                        TextIndent(fontSize.sp * 2)
-                                    } else {
-                                        TextIndent.None
-                                    }
-                                ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(2.dp)
-                            ) { offset ->
-
-                                if (showMenu) {
-                                    showMenu = false
-                                } else {
-                                    val annotations =
-                                        annotatedString.getStringAnnotations(offset, offset)
-                                    annotations.firstOrNull()?.let { itemAnnotations ->
-                                        if (itemAnnotations.tag.startsWith("word")) {
-                                            selectedTag = "$listIndex ${itemAnnotations.tag}"
-                                            word = itemAnnotations.item
-                                            showMenu = true
+                                            popupOffset = IntOffset(0, a.toInt())
                                         }
                                     }
                                 }
+                                false
+                            }
+                            .motionEventSpy {
 
                             }
-                        }
+                            .onSizeChanged { sizeIt ->
+                                size.value = sizeIt
+                            }
+                            .padding(start = 20.dp, end = 20.dp)
+                    ) {
+                        items(musicViewModel.currentCaptionList.size) { listIndex ->
+                            key(Unit) {
+                                val tex = musicViewModel.currentCaptionList[listIndex].text
+                                val annotatedString = buildAnnotatedString {
+                                    for ((index, text) in tex.withIndex()) {
+                                        val pattern = Regex("[,:;.\"]")
+                                        val tItem = text.replace(pattern, "")
+                                        pushStringAnnotation("word$tItem$index", tItem)
+                                        withStyle(
+                                            style = SpanStyle(
+                                                textDecoration = if (selectedTag == "$listIndex word$tItem$index") {
+                                                    TextDecoration.Underline
+                                                } else {
+                                                    TextDecoration.None
+                                                }
+                                            )
+                                        ) {
+                                            append(text)
+                                        }
+                                        pop()
+                                        pushStringAnnotation("space", "")
+                                        append(" ")
+                                        pop()
+                                    }
+                                }
+                                ClickableText(
+                                    text = annotatedString,
+                                    style = TextStyle(
+                                        color = if (currentI == listIndex && musicViewModel.autoHighLight.value) {
+                                            Color.Blue
+                                        } else {
+                                            MaterialTheme.colorScheme.onBackground
+                                        },
+                                        fontSize = fontSize.sp,
+                                        textAlign = musicViewModel.textAlign.value,
+                                        lineHeight = (fontSize * 1.5).sp,
+                                        textIndent = if (musicViewModel.textAlign.value == TextAlign.Justify || musicViewModel.textAlign.value == TextAlign.Left) {
+                                            TextIndent(fontSize.sp * 2)
+                                        } else {
+                                            TextIndent.None
+                                        }
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(2.dp)
+                                ) { offset ->
 
+                                    if (showMenu) {
+                                        showMenu = false
+                                    } else {
+                                        val annotations =
+                                            annotatedString.getStringAnnotations(offset, offset)
+                                        annotations.firstOrNull()?.let { itemAnnotations ->
+                                            if (itemAnnotations.tag.startsWith("word")) {
+                                                selectedTag = "$listIndex ${itemAnnotations.tag}"
+                                                word = itemAnnotations.item
+                                                showMenu = true
+                                            }
+                                        }
+                                    }
+
+                                }
+                            }
+
+                        }
                     }
                 }
-            }
+            )
         }
     }
 
 
 }
+
 
 fun Dp.toPx(context: Context): Int {
     val displayMetrics = context.resources.displayMetrics

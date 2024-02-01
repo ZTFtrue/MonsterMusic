@@ -9,6 +9,7 @@ internal class FloatingTextActionModeCallback(
     private val callback: TextActionModeCallback
 ) : ActionMode.Callback2() {
     override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
+
         return callback.onActionItemClicked(mode, item)
     }
 
