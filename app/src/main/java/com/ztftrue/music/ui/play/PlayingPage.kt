@@ -115,10 +115,10 @@ import com.ztftrue.music.ui.public.OperateDialog
 import com.ztftrue.music.ui.public.TopBar
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
-import com.ztftrue.music.utils.PlaylistManager
-import com.ztftrue.music.utils.TracksManager
+import com.ztftrue.music.utils.trackManager.PlaylistManager
+import com.ztftrue.music.utils.SharedPreferencesUtils
+import com.ztftrue.music.utils.trackManager.TracksManager
 import com.ztftrue.music.utils.Utils
-import com.ztftrue.music.utils.Utils.saveDisplayAlign
 import com.ztftrue.music.utils.enumToStringForPlayListType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -392,7 +392,7 @@ fun PlayingPage(
                             onClick = {
                                 viewModel.textAlign.value =
                                     TextAlign.Left
-                                saveDisplayAlign(
+                                SharedPreferencesUtils.saveDisplayAlign(
                                     context,
                                     TextAlign.Left
                                 )
@@ -431,7 +431,7 @@ fun PlayingPage(
                             onClick = {
                                 viewModel.textAlign.value =
                                     TextAlign.Center
-                                saveDisplayAlign(
+                                SharedPreferencesUtils.saveDisplayAlign(
                                     context,
                                     TextAlign.Center
                                 )
@@ -470,7 +470,7 @@ fun PlayingPage(
                             onClick = {
                                 viewModel.textAlign.value =
                                     TextAlign.Right
-                                saveDisplayAlign(
+                                SharedPreferencesUtils.saveDisplayAlign(
                                     context,
                                     TextAlign.Right
                                 )
@@ -509,14 +509,14 @@ fun PlayingPage(
                             onClick = {
                                 viewModel.textAlign.value =
                                     TextAlign.Justify
-                                saveDisplayAlign(
+                                SharedPreferencesUtils.saveDisplayAlign(
                                     context,
                                     TextAlign.Justify
                                 )
                             }) {
                             Image(
                                 painter = painterResource(
-                                    R.drawable.ic_format_align_center
+                                    R.drawable.ic_format_align_justify
                                 ),
                                 contentDescription = "Set lyrics display align justify",
                                 modifier = Modifier
@@ -548,7 +548,7 @@ fun PlayingPage(
                             onClick = {
                                 viewModel.fontSize.intValue =
                                     viewModel.fontSize.intValue - 1
-                                Utils.saveFontSize(
+                                SharedPreferencesUtils.saveFontSize(
                                     context,
                                     viewModel.fontSize.intValue
                                 )
@@ -571,7 +571,7 @@ fun PlayingPage(
                             onClick = {
                                 viewModel.fontSize.intValue =
                                     viewModel.fontSize.intValue + 1
-                                Utils.saveFontSize(
+                                SharedPreferencesUtils.saveFontSize(
                                     context,
                                     viewModel.fontSize.intValue
                                 )
@@ -603,7 +603,7 @@ fun PlayingPage(
                                 }) {
                                     viewModel.autoScroll.value =
                                         !viewModel.autoScroll.value
-                                    Utils.saveAutoScroll(context, viewModel.autoScroll.value)
+                                    SharedPreferencesUtils.saveAutoScroll(context, viewModel.autoScroll.value)
                                 }
                                 .padding(0.dp)
                                 .height(50.dp)
@@ -646,7 +646,7 @@ fun PlayingPage(
                                 }) {
                                     viewModel.autoHighLight.value =
                                         !viewModel.autoHighLight.value
-                                    Utils.saveAutoHighLight(context, viewModel.autoHighLight.value)
+                                    SharedPreferencesUtils.saveAutoHighLight(context, viewModel.autoHighLight.value)
                                 }
                                 .padding(0.dp)
                                 .height(50.dp)
@@ -725,18 +725,21 @@ fun PlayingPage(
         viewModel.dictionaryAppList.forEach {
             hashMap[it.packageName] = it
         }
-        Utils.getAllDictionaryAcitivity(context)
+        list.addAll(viewModel.dictionaryAppList)
+        Utils.getAllDictionaryActivity(context)
             .forEachIndexed { index, it ->
-                list.add(
-                    DictionaryApp(
-                        index,
-                        it.activityInfo.name,
-                        it.activityInfo.packageName,
-                        it.loadLabel(context.packageManager).toString(),
-                        hashMap[it.activityInfo.packageName] != null,
-                        hashMap[it.activityInfo.packageName] != null && hashMap[it.activityInfo.packageName]?.autoGo == true
+                if (hashMap[it.activityInfo.packageName] == null) {
+                    list.add(
+                        DictionaryApp(
+                            index,
+                            it.activityInfo.name,
+                            it.activityInfo.packageName,
+                            it.loadLabel(context.packageManager).toString(),
+                            isShow = false,
+                            autoGo = false
+                        )
                     )
-                )
+                }
             }
     }
     if (popupWindowDictionary) {
@@ -793,13 +796,13 @@ fun PlayingPage(
                                 Box(modifier = Modifier.width(100.dp)) { }
                             }
                             Text(
-                                text = "Show in menu",
-                                modifier = Modifier,
+                                text = "Show",
+                                modifier = Modifier.width(50.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Text(
                                 text = "Auto go",
-                                modifier = Modifier,
+                                modifier = Modifier.width(50.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -831,7 +834,7 @@ fun PlayingPage(
                                                 state = rememberDraggableState { delta ->
                                                     offset += delta
                                                 },
-                                                onDragStopped = { velocity ->
+                                                onDragStopped = { _ ->
                                                     var position =
                                                         listIndex + (offset / 60.dp.toPx(context)).toInt()
                                                     if (position < 0) {
@@ -907,15 +910,15 @@ fun PlayingPage(
                                         mutableStateOf(false)
                                     }
                                     autoGo = item.autoGo
-                                    Column() {
+                                    Column {
                                         Checkbox(
                                             checked = autoGo,
                                             onCheckedChange = { v ->
                                                 for ((index, it) in list.withIndex()) {
-                                                    if(it.autoGo){
+                                                    if (it.autoGo) {
                                                         list.removeAt(index)
                                                         it.autoGo = false
-                                                        list.add(index,it)
+                                                        list.add(index, it)
                                                         break
                                                     }
                                                 }
@@ -971,8 +974,7 @@ fun PlayingPage(
                                             result.add(it)
                                         }
                                     }
-                                    result.forEachIndexed() {
-                                        index, item ->
+                                    result.forEachIndexed { index, item ->
                                         item.id = index
                                     }
                                     CoroutineScope(Dispatchers.IO).launch {

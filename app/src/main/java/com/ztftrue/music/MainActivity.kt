@@ -129,8 +129,9 @@ import com.ztftrue.music.utils.AnyListBase
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.OperateTypeInActivity
 import com.ztftrue.music.utils.PlayListType
-import com.ztftrue.music.utils.PlaylistManager
-import com.ztftrue.music.utils.PlaylistManager.removeTrackFromM3U
+import com.ztftrue.music.utils.trackManager.PlaylistManager
+import com.ztftrue.music.utils.trackManager.PlaylistManager.removeTrackFromM3U
+import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.stringToEnumForPlayListType
 import kotlinx.coroutines.CoroutineScope
@@ -418,14 +419,14 @@ class MainActivity : ComponentActivity() {
                 "SelectedTheme",
                 Context.MODE_PRIVATE
             ).getInt("SelectedTheme", 0)
-            musicViewModel.textAlign.value = Utils.getDisplayAlign(this@MainActivity)
-            musicViewModel.fontSize.intValue = Utils.getFontSize(this@MainActivity)
-            musicViewModel.autoScroll.value=Utils.getAutoScroll(this@MainActivity)
-            musicViewModel.autoHighLight.value=Utils.getAutoHighLight(this@MainActivity)
+            musicViewModel.textAlign.value = SharedPreferencesUtils.getDisplayAlign(this@MainActivity)
+            musicViewModel.fontSize.intValue = SharedPreferencesUtils.getFontSize(this@MainActivity)
+            musicViewModel.autoScroll.value=SharedPreferencesUtils.getAutoScroll(this@MainActivity)
+            musicViewModel.autoHighLight.value=SharedPreferencesUtils.getAutoHighLight(this@MainActivity)
             val dicApps = db.DictionaryAppDao().findAllDictionaryApp()
             if (dicApps.isNullOrEmpty()) {
                 val list = ArrayList<DictionaryApp>()
-                Utils.getAllDictionaryAcitivity(this@MainActivity)
+                Utils.getAllDictionaryActivity(this@MainActivity)
                     .forEachIndexed { index, it ->
                         list.add(
                             DictionaryApp(
@@ -433,8 +434,8 @@ class MainActivity : ComponentActivity() {
                                 it.activityInfo.name,
                                 it.activityInfo.packageName,
                                 it.loadLabel(this@MainActivity.packageManager).toString(),
-                                true,
-                                false
+                                isShow = true,
+                                autoGo = false
                             )
                         )
                     }

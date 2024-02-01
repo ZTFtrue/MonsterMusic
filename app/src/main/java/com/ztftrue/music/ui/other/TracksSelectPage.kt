@@ -43,7 +43,7 @@ import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.ui.public.TracksListView
 import com.ztftrue.music.utils.AnyListBase
 import com.ztftrue.music.utils.PlayListType
-import com.ztftrue.music.utils.PlaylistManager
+import com.ztftrue.music.utils.trackManager.PlaylistManager
 
 
 /**

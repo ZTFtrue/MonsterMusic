@@ -51,10 +51,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
-import androidx.room.Room
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.sqlData.MUSIC_DATABASE_NAME
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.ui.public.BackTopBar
@@ -220,7 +218,7 @@ fun SettingsPage(
                                     MaterialTheme.colorScheme.primary
                                 ),
                             offset = DpOffset(
-                                x = with(LocalDensity.current) { 0.dp },
+                                x = 0.dp,
                                 y = with(LocalDensity.current) { offset.intValue.toDp() }
                             )
                         ) {
@@ -265,7 +263,7 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
     var db: MusicDatabase? = null
     LaunchedEffect(Unit) {
         scopeMain.launch {
-            db =   MusicDatabase.getDatabase(context)
+            db = MusicDatabase.getDatabase(context)
             mainTabList.addAll(db?.MainTabDao()?.findAllMainTabSortByPriority() ?: emptyList())
             size = mainTabList.size
         }
@@ -333,7 +331,8 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                     if (it != 0) {
                                         FilledIconButton(modifier = Modifier
                                             .size(50.dp)
-                                            .clip(CircleShape).semantics {
+                                            .clip(CircleShape)
+                                            .semantics {
                                                 contentDescription = "Up tab priority"
                                             },
                                             onClick = {
@@ -358,13 +357,19 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                         )
                                     }
                                     Divider(
-                                        color= Color.Transparent,
-                                        modifier = Modifier.height(40.dp).width(10.dp).background(
-                                        MaterialTheme.colorScheme.background))
+                                        color = Color.Transparent,
+                                        modifier = Modifier
+                                            .height(40.dp)
+                                            .width(10.dp)
+                                            .background(
+                                                MaterialTheme.colorScheme.background
+                                            )
+                                    )
                                     if (it < mainTabList.size - 1) {
                                         FilledIconButton(modifier = Modifier
                                             .size(50.dp)
-                                            .clip(CircleShape).semantics {
+                                            .clip(CircleShape)
+                                            .semantics {
                                                 contentDescription = "Down tab priority"
                                             },
                                             onClick = {
@@ -377,7 +382,7 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                                 contentDescription = "Down tab priority",
                                                 modifier = Modifier
                                                     .size(30.dp)
-                                                    .clip(CircleShape) ,
+                                                    .clip(CircleShape),
                                                 colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                                             )
                                         }

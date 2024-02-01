@@ -1,4 +1,4 @@
-package com.ztftrue.music.utils
+package com.ztftrue.music.utils.trackManager
 
 import android.app.RecoverableSecurityException
 import android.content.ContentResolver
@@ -22,6 +22,8 @@ import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.utils.MusicPlayList
+import com.ztftrue.music.utils.OperateTypeInActivity
 import java.io.File
 
 
@@ -364,7 +366,7 @@ object PlaylistManager {
                             }
                         }
                         val deleteUri = ContentUris.withAppendedId(membersUri, memberId)
-                        val rowsDeleted = contentResolver.delete(deleteUri, null, null)
+                        contentResolver.delete(deleteUri, null, null)
                     }
                     var uri = MediaStore.Audio.Playlists.getContentUri("external")
                     uri = ContentUris.withAppendedId(uri, playlistId)
@@ -394,7 +396,7 @@ object PlaylistManager {
                 return ""
             }
         }
-        return path
+        return null
     }
 
 
@@ -569,8 +571,8 @@ object PlaylistManager {
 //            sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file)))
     }
 
+    @Suppress("unused")
     fun getM3uFile(context: Context, filePath: String): Long? {
-        val resolver: ContentResolver = context.contentResolver
         val m3uUri = MediaStore.Files.getContentUri("external")
 
         // Define the columns you need in the projection
@@ -596,12 +598,11 @@ object PlaylistManager {
             selectionArgs,
             null
         )?.use {
-            val dataIndex = it.getColumnIndex(MediaStore.Files.FileColumns.DATA)
+//            val dataIndex = it.getColumnIndex(MediaStore.Files.FileColumns.DATA)
             val idIndex = it.getColumnIndex(MediaStore.Files.FileColumns._ID)
             if (it.moveToFirst()) {
 //                val filePath = it.getString(dataIndex)
-                val fileId = it.getLong(idIndex)
-                return fileId
+                return it.getLong(idIndex)
             }
         }
         return null

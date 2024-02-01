@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -38,7 +38,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalTextToolbar
 import androidx.compose.ui.platform.LocalView
@@ -59,8 +58,8 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
-import com.ztftrue.music.utils.AnnotatedStringCaption
-import com.ztftrue.music.utils.CustomTextToolbar
+import com.ztftrue.music.utils.ListStringCaption
+import com.ztftrue.music.utils.textToolbar.CustomTextToolbar
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.Utils
 import kotlinx.coroutines.Dispatchers
@@ -124,7 +123,7 @@ fun LyricsView(
         } else {
             currentI = (timeState / musicViewModel.itemDuration).toInt()
             if (musicViewModel.currentCaptionList.getOrElse(currentI) {
-                    AnnotatedStringCaption(arrayListOf(), 0)
+                    ListStringCaption(arrayListOf(), 0)
                 }.text.isNotEmpty()) {
                 if (musicViewModel.autoScroll.value && isSelected && !showMenu) {
                     launch(Dispatchers.Main) {
@@ -154,7 +153,22 @@ fun LyricsView(
         if (list.isEmpty()) {
             showMenu = false
         } else {
-
+            list.forEach {
+                if (it.autoGo) {
+                    val intent = Intent()
+                    intent.setAction(Intent.ACTION_PROCESS_TEXT)
+                    intent.setClassName(
+                        it.packageName,
+                        it.name
+                    )
+                    intent.putExtra(
+                        Intent.EXTRA_PROCESS_TEXT,
+                        word
+                    )
+                    context.startActivity(intent)
+                    return@forEach
+                }
+            }
             Popup(
                 // on below line we are adding
                 // alignment and properties.
@@ -169,11 +183,9 @@ fun LyricsView(
                 }
             ) {
                 val rowListSate = rememberLazyListState()
-                val configuration = LocalConfiguration.current
-                // on the below line we are creating a box.
                 Column(
                     Modifier
-                        .size((configuration.screenWidthDp - 40).dp, 60.dp)
+                        .height(60.dp)
                         .padding(top = 5.dp)
                         // on below line we are adding background color
                         .background(
@@ -196,19 +208,6 @@ fun LyricsView(
                     ) {
                         items(list.size) { index ->
                             val resolveInfo = list[index]
-                            if(resolveInfo.autoGo){
-                                val intent = Intent()
-                                intent.setAction(Intent.ACTION_PROCESS_TEXT)
-                                intent.setClassName(
-                                    resolveInfo.packageName,
-                                    resolveInfo.name
-                                )
-                                intent.putExtra(
-                                    Intent.EXTRA_PROCESS_TEXT,
-                                    word
-                                )
-                                context.startActivity(intent)
-                            }
                             Button(
                                 onClick = {
                                     val intent = Intent()

@@ -2,7 +2,6 @@ package com.ztftrue.music
 
 import android.content.ContentUris
 import android.content.Context
-import android.content.pm.ResolveInfo
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
@@ -23,9 +22,10 @@ import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.play.Lyrics
-import com.ztftrue.music.utils.AnnotatedStringCaption
+import com.ztftrue.music.utils.ListStringCaption
 import com.ztftrue.music.utils.AnyListBase
 import com.ztftrue.music.utils.Caption
+import com.ztftrue.music.utils.CaptionUtils
 import com.ztftrue.music.utils.EqualizerBand
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.PlayListType
@@ -94,7 +94,7 @@ class MusicViewModel : ViewModel() {
     // lyrics
     var itemDuration: Long = 1
     var hasTime: LyricsType = LyricsType.TEXT
-    var currentCaptionList = mutableStateListOf<AnnotatedStringCaption>()
+    var currentCaptionList = mutableStateListOf<ListStringCaption>()
 
     var fontSize = mutableIntStateOf(18)
     var textAlign = mutableStateOf(TextAlign.Center)
@@ -174,16 +174,16 @@ class MusicViewModel : ViewModel() {
         itemDuration = duration / if (currentCaptionList.size == 0) 1 else currentCaptionList.size
     }
 
-    private fun readLyricsOrText(file: File, context: Context): ArrayList<AnnotatedStringCaption> {
-        val arrayList = arrayListOf<AnnotatedStringCaption>()
+    private fun readLyricsOrText(file: File, context: Context): ArrayList<ListStringCaption> {
+        val arrayList = arrayListOf<ListStringCaption>()
         val inputStream: InputStream = file.inputStream()
         val inputString = inputStream.bufferedReader().use { it.readText() }
         inputString.split("\n").forEach {
             if (it.startsWith("offset:")) {
 // TODO
             } else {
-                val captions = Utils.parseLyricLine(it, context)
-                val an = AnnotatedStringCaption(
+                val captions = CaptionUtils.parseLyricLine(it, context)
+                val an = ListStringCaption(
                     text = captions.text.split(Regex("[\\n\\r\\s]+")),
                     timeStart = captions.timeStart,
                     timeEnd = captions.timeEnd
@@ -197,16 +197,16 @@ class MusicViewModel : ViewModel() {
     private fun readCaptions(
         file: File,
         captionType: LyricsType,
-    ): ArrayList<AnnotatedStringCaption> {
+    ): ArrayList<ListStringCaption> {
         val captions = arrayListOf<Caption>()
         if (captionType == LyricsType.SRT) {
-            captions.addAll(Utils.parseSrtFile(file))
+            captions.addAll(CaptionUtils.parseSrtFile(file))
         } else if (captionType == LyricsType.VTT) {
-            captions.addAll(Utils.parseVttFile(file))
+            captions.addAll(CaptionUtils.parseVttFile(file))
         }
-        val arrayList = arrayListOf<AnnotatedStringCaption>()
+        val arrayList = arrayListOf<ListStringCaption>()
         captions.forEach {
-            val an = AnnotatedStringCaption(
+            val an = ListStringCaption(
                 text = it.text.split(Regex("[\\n\\r\\s]+")),
                 timeStart = it.timeStart,
                 timeEnd = it.timeEnd

@@ -1,7 +1,6 @@
 package com.ztftrue.music.sqlData
 
 import android.content.Context
-import androidx.annotation.NonNull
 import androidx.room.Database
 import androidx.room.Room.databaseBuilder
 import androidx.room.RoomDatabase
@@ -20,7 +19,7 @@ import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.PlayConfig
 import kotlin.concurrent.Volatile
-public const val MUSIC_DATABASE_NAME = "default_data.db"
+const val MUSIC_DATABASE_NAME = "default_data.db"
 
 
 @Database(entities = [Auxr::class, CurrentList::class,MainTab::class, PlayConfig::class,MusicItem::class, DictionaryApp::class], version = 2, exportSchema = true)
@@ -51,12 +50,12 @@ abstract class MusicDatabase : RoomDatabase() {
             return INSTANCE!!
         }
         private val MIGRATION_1_2: Migration = object : Migration(1, 2) {
-            override fun migrate(@NonNull database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Perform the necessary database schema changes for migration from version 1 to version 2
                 // You may need to alter tables, add new columns, etc.
                 // For example:
                 // database.execSQL("ALTER TABLE your_entity ADD COLUMN new_column_name TEXT");
-                database.execSQL("CREATE TABLE IF NOT EXISTS dictionary_app (\n" +
+                db.execSQL("CREATE TABLE IF NOT EXISTS dictionary_app (\n" +
                         "    id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
                         "    name TEXT NOT NULL,\n" +
                         "    package_name TEXT NOT NULL,\n" +

@@ -17,5 +17,27 @@ data class DictionaryApp(
     @ColumnInfo var isShow: Boolean,
     @ColumnInfo var autoGo: Boolean
 ) : Parcelable {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
 
+        other as DictionaryApp
+
+        if (id != other.id) return false
+        if (name != other.name) return false
+        if (packageName != other.packageName) return false
+        if (label != other.label) return false
+        if (isShow != other.isShow) return false
+        return autoGo == other.autoGo
+    }
+
+    override fun hashCode(): Int {
+        var result = id ?: 0
+        result = 31 * result + name.hashCode()
+        result = 31 * result + packageName.hashCode()
+        result = 31 * result + label.hashCode()
+        result = 31 * result + isShow.hashCode()
+        result = 31 * result + autoGo.hashCode()
+        return result
+    }
 }

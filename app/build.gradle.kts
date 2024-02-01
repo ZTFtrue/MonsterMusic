@@ -28,6 +28,10 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        ksp {
+            arg("room.schemaLocation", "$projectDir/schemas")
+        }
     }
 
     buildTypes {
@@ -112,7 +116,7 @@ dependencies {
     implementation ("be.tarsos.dsp:core:2.5")
 
     implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.collection:collection-ktx:1.3.0")
+    implementation("androidx.collection:collection-ktx:1.4.0")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
 

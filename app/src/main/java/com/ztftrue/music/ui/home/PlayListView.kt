@@ -62,7 +62,7 @@ import com.ztftrue.music.ui.public.RenamePlayListDialog
 import com.ztftrue.music.utils.MusicPlayList
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
-import com.ztftrue.music.utils.PlaylistManager
+import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.operateDialogDeal
 import com.ztftrue.music.utils.enumToStringForPlayListType
@@ -113,9 +113,6 @@ fun PlayListView(
             PlayListItemView(
                 item,
                 musicViewModel,
-                modifier = Modifier
-                    .padding(10.dp)
-                    .fillMaxWidth(),
                 navController,
                 PlayListType.PlayLists,
                 playList,
@@ -132,7 +129,6 @@ data class ListParameter(val id: Long, val type: PlayListType) : Navigator.Extra
 fun PlayListItemView(
     item: MusicPlayList,
     musicViewModel: MusicViewModel,
-    modifier: Modifier,
     navController: NavController,
     type: PlayListType,
     playList: SnapshotStateList<MusicPlayList>,

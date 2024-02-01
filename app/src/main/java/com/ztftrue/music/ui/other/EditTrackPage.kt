@@ -48,7 +48,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.play.ACTION_TRACKS_UPDATE
 import com.ztftrue.music.ui.public.BackButton
-import com.ztftrue.music.utils.TracksManager
+import com.ztftrue.music.utils.trackManager.TracksManager
 
 
 /**

@@ -1,7 +1,6 @@
 package com.ztftrue.music.utils
 
 import android.os.Parcelable
-import androidx.compose.ui.text.AnnotatedString
 import kotlinx.parcelize.Parcelize
 import java.io.Serializable
 
@@ -85,7 +84,7 @@ data class Caption(
     val timeEnd: Long=0
 )
 
-data class AnnotatedStringCaption(
+data class ListStringCaption(
     val text: List<String>,
     val timeStart: Long,
     val timeEnd: Long=0

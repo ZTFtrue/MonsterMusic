@@ -61,8 +61,8 @@ import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.AnyListBase
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
-import com.ztftrue.music.utils.PlaylistManager
-import com.ztftrue.music.utils.TracksManager
+import com.ztftrue.music.utils.trackManager.PlaylistManager
+import com.ztftrue.music.utils.trackManager.TracksManager
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.enumToStringForPlayListType
 

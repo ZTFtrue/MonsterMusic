@@ -56,7 +56,7 @@ import com.ztftrue.music.ui.home.PlayListOperateDialog
 import com.ztftrue.music.utils.AlbumList
 import com.ztftrue.music.utils.AnyListBase
 import com.ztftrue.music.utils.ArtistList
-import com.ztftrue.music.utils.ArtistManager
+import com.ztftrue.music.utils.trackManager.ArtistManager
 import com.ztftrue.music.utils.FolderList
 import com.ztftrue.music.utils.GenresList
 import com.ztftrue.music.utils.ListBase

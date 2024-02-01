@@ -45,7 +45,7 @@ import com.ztftrue.music.QueuePlayList
 import com.ztftrue.music.play.ACTION_CLEAR_QUEUE
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.utils.OperateType
-import com.ztftrue.music.utils.PlaylistManager
+import com.ztftrue.music.utils.trackManager.PlaylistManager
 
 
 /**
