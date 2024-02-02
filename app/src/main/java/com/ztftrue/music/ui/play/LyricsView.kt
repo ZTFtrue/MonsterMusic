@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.util.TypedValue
 import android.view.MotionEvent
-import android.view.View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -35,13 +35,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalTextToolbar
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.TextToolbarStatus
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -148,7 +154,11 @@ fun LyricsView(
     var popupOffset by remember {
         mutableStateOf(IntOffset(0, 0))
     }
+    DisposableEffect(Unit) {
+        onDispose {
 
+        }
+    }
     if (showMenu) {
         val list = musicViewModel.dictionaryAppList
         if (list.isEmpty()) {
@@ -282,16 +292,33 @@ fun LyricsView(
             LocalTextToolbar provides CustomTextToolbar(
                 LocalView.current,
                 musicViewModel.dictionaryAppList
-            )
+            ),
         ) {
+            val textToolbar = LocalTextToolbar.current
+            val focusManager = LocalFocusManager.current
             SelectionContainer(
                 modifier = Modifier,
                 content = {
+                    val nestedScrollConnection = remember {
+                        object : NestedScrollConnection {
+                            override fun onPreScroll(
+                                available: Offset,
+                                source: NestedScrollSource
+                            ): Offset {
+                                if(textToolbar.status == TextToolbarStatus.Shown){
+                                    focusManager.clearFocus()
+                                    textToolbar.hide()
+                                }
+                                return super.onPreScroll(available, source)
+                            }
+                        }
+                    }
                     LazyColumn(
                         state = listState,
                         modifier = Modifier
                             .fillMaxWidth()
                             .fillMaxHeight()
+                            .nestedScroll(nestedScrollConnection)
                             .pointerInteropFilter {
                                 when (it.action) {
                                     MotionEvent.ACTION_DOWN -> {
@@ -304,11 +331,23 @@ fun LyricsView(
                                             popupOffset = IntOffset(0, a.toInt())
                                         }
                                     }
+
+                                    MotionEvent.ACTION_UP -> {
+                                        if (showMenu) {
+                                            showMenu = false
+                                            isSelected = false
+                                            selectedTag = ""
+                                            word = ""
+                                        }
+                                    }
                                 }
                                 false
                             }
                             .motionEventSpy {
-
+                                if(it.action == MotionEvent.ACTION_DOWN&&textToolbar.status == TextToolbarStatus.Shown) {
+                                    textToolbar.hide()
+                                    focusManager.clearFocus()
+                                }
                             }
                             .onSizeChanged { sizeIt ->
                                 size.value = sizeIt
@@ -361,8 +400,10 @@ fun LyricsView(
                                         .fillMaxWidth()
                                         .padding(2.dp)
                                 ) { offset ->
-
-                                    if (showMenu) {
+                                    if(textToolbar.status == TextToolbarStatus.Shown) {
+                                        textToolbar.hide()
+                                        focusManager.clearFocus()
+                                    }else if (showMenu) {
                                         showMenu = false
                                     } else {
                                         val annotations =

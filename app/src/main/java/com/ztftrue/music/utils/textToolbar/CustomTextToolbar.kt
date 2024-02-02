@@ -5,10 +5,8 @@ import android.view.ActionMode
 import android.view.View
 import androidx.annotation.DoNotInline
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.TextToolbar
 import androidx.compose.ui.platform.TextToolbarStatus
-import androidx.core.view.allViews
 import com.ztftrue.music.sqlData.model.DictionaryApp
 
 
@@ -50,6 +48,7 @@ internal class CustomTextToolbar(
         textActionModeCallback.onSelectAllRequested = onSelectAllRequested
         textActionModeCallback.customProcessTextApp = customApp
         textActionModeCallback.onProcessAppItemClick = {
+            view.tooltipText
             var min = 0
 //                    var max: Int = view.getText().length()
 //                    if (mTextView.isFocused()) {
@@ -73,8 +72,8 @@ internal class CustomTextToolbar(
             )
             view.context.startActivity(intent)
         }
+        status = TextToolbarStatus.Shown
         if (actionMode == null) {
-            status = TextToolbarStatus.Shown
             actionMode =
                 TextToolbarHelperMethods.startActionMode(
                     view,
