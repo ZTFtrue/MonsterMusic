@@ -4,15 +4,20 @@ import android.content.Intent
 import android.view.ActionMode
 import android.view.View
 import androidx.annotation.DoNotInline
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.TextToolbar
 import androidx.compose.ui.platform.TextToolbarStatus
+import androidx.compose.ui.text.buildAnnotatedString
 import com.ztftrue.music.sqlData.model.DictionaryApp
 
 
 internal class CustomTextToolbar(
     private val view: View,
     private val customApp: List<DictionaryApp>,
+    private val focusManager: FocusManager,
+    private val clipboardManager: ClipboardManager
 ) : TextToolbar {
     private var actionMode: ActionMode? = null
     private val textActionModeCallback: TextActionModeCallback = TextActionModeCallback()
@@ -21,6 +26,7 @@ internal class CustomTextToolbar(
         private set
 
     override fun hide() {
+//        focusManager.clearFocus()
         status = TextToolbarStatus.Hidden
         actionMode?.finish()
         actionMode = null
@@ -48,7 +54,20 @@ internal class CustomTextToolbar(
         textActionModeCallback.onSelectAllRequested = onSelectAllRequested
         textActionModeCallback.customProcessTextApp = customApp
         textActionModeCallback.onProcessAppItemClick = {
-            view.tooltipText
+            onCopyRequested?.invoke()
+            val t = clipboardManager.getText()
+            clipboardManager.setText(buildAnnotatedString { append("")})
+            val intent = Intent()
+            intent.setAction(Intent.ACTION_PROCESS_TEXT)
+            intent.setClassName(
+                it.packageName,
+                it.name
+            )
+            intent.putExtra(
+                Intent.EXTRA_PROCESS_TEXT,
+                t
+            )
+            view.context.startActivity(intent)
             var min = 0
 //                    var max: Int = view.getText().length()
 //                    if (mTextView.isFocused()) {
@@ -60,17 +79,7 @@ internal class CustomTextToolbar(
 //                    // Perform your definition lookup with the selected text
 //                    // Perform your definition lookup with the selected text
 //                    val selectedText: CharSequence = mTextView.getText().subSequence(min, max)
-            val intent = Intent()
-            intent.setAction(Intent.ACTION_PROCESS_TEXT)
-            intent.setClassName(
-                it.packageName,
-                it.name
-            )
-            intent.putExtra(
-                Intent.EXTRA_PROCESS_TEXT,
-                actionMode?.title
-            )
-            view.context.startActivity(intent)
+
         }
         status = TextToolbarStatus.Shown
         if (actionMode == null) {

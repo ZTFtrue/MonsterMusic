@@ -43,6 +43,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalTextToolbar
@@ -291,11 +292,14 @@ fun LyricsView(
         CompositionLocalProvider(
             LocalTextToolbar provides CustomTextToolbar(
                 LocalView.current,
-                musicViewModel.dictionaryAppList
+                musicViewModel.dictionaryAppList,
+                LocalFocusManager.current,
+                LocalClipboardManager.current
             ),
         ) {
             val textToolbar = LocalTextToolbar.current
             val focusManager = LocalFocusManager.current
+
             SelectionContainer(
                 modifier = Modifier,
                 content = {
