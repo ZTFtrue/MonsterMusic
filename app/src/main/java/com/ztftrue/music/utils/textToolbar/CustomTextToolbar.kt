@@ -54,32 +54,24 @@ internal class CustomTextToolbar(
         textActionModeCallback.onSelectAllRequested = onSelectAllRequested
         textActionModeCallback.customProcessTextApp = customApp
         textActionModeCallback.onProcessAppItemClick = {
-            onCopyRequested?.invoke()
-            val t = clipboardManager.getText()
-            clipboardManager.setText(buildAnnotatedString { append("")})
-            val intent = Intent()
-            intent.setAction(Intent.ACTION_PROCESS_TEXT)
-            intent.setClassName(
-                it.packageName,
-                it.name
-            )
-            intent.putExtra(
-                Intent.EXTRA_PROCESS_TEXT,
-                t
-            )
-            view.context.startActivity(intent)
-            var min = 0
-//                    var max: Int = view.getText().length()
-//                    if (mTextView.isFocused()) {
-//                        val selStart: Int = mTextView.getSelectionStart()
-//                        val selEnd: Int = mTextView.getSelectionEnd()
-//                        min = Math.max(0, Math.min(selStart, selEnd))
-//                        max = Math.max(0, Math.max(selStart, selEnd))
-//                    }
-//                    // Perform your definition lookup with the selected text
-//                    // Perform your definition lookup with the selected text
-//                    val selectedText: CharSequence = mTextView.getText().subSequence(min, max)
-
+            try {
+                onCopyRequested?.invoke()
+                val t = clipboardManager.getText()
+                clipboardManager.setText(buildAnnotatedString { append("")})
+                val intent = Intent()
+                intent.setAction(Intent.ACTION_PROCESS_TEXT)
+                intent.setClassName(
+                    it.packageName,
+                    it.name
+                )
+                intent.putExtra(
+                    Intent.EXTRA_PROCESS_TEXT,
+                    t
+                )
+                view.context.startActivity(intent)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
         status = TextToolbarStatus.Shown
         if (actionMode == null) {

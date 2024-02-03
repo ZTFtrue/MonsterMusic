@@ -37,6 +37,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -66,6 +67,8 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
+import com.ztftrue.music.utils.CustomColorUtils.getContrastingColor
+import com.ztftrue.music.utils.CustomColorUtils.toAndroidColor
 import com.ztftrue.music.utils.ListStringCaption
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.Utils
@@ -299,7 +302,11 @@ fun LyricsView(
         ) {
             val textToolbar = LocalTextToolbar.current
             val focusManager = LocalFocusManager.current
-
+            val colorI: Int = getContrastingColor(
+                MaterialTheme.colorScheme.background.toArgb().toAndroidColor(),
+                MaterialTheme.colorScheme.onBackground.toArgb().toAndroidColor()
+            )
+            val color = Color(colorI)
             SelectionContainer(
                 modifier = Modifier,
                 content = {
@@ -309,7 +316,7 @@ fun LyricsView(
                                 available: Offset,
                                 source: NestedScrollSource
                             ): Offset {
-                                if(textToolbar.status == TextToolbarStatus.Shown){
+                                if (textToolbar.status == TextToolbarStatus.Shown) {
                                     focusManager.clearFocus()
                                     textToolbar.hide()
                                 }
@@ -348,7 +355,7 @@ fun LyricsView(
                                 false
                             }
                             .motionEventSpy {
-                                if(it.action == MotionEvent.ACTION_DOWN&&textToolbar.status == TextToolbarStatus.Shown) {
+                                if (it.action == MotionEvent.ACTION_DOWN && textToolbar.status == TextToolbarStatus.Shown) {
                                     textToolbar.hide()
                                     focusManager.clearFocus()
                                 }
@@ -356,7 +363,6 @@ fun LyricsView(
                             .onSizeChanged { sizeIt ->
                                 size.value = sizeIt
                             }
-                            .padding(start = 20.dp, end = 20.dp)
                     ) {
                         items(musicViewModel.currentCaptionList.size) { listIndex ->
                             key(Unit) {
@@ -387,7 +393,7 @@ fun LyricsView(
                                     text = annotatedString,
                                     style = TextStyle(
                                         color = if (currentI == listIndex && musicViewModel.autoHighLight.value) {
-                                            Color.Blue
+                                            MaterialTheme.colorScheme.onPrimary
                                         } else {
                                             MaterialTheme.colorScheme.onBackground
                                         },
@@ -402,12 +408,22 @@ fun LyricsView(
                                     ),
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(2.dp)
+                                        .background(
+                                            if (currentI == listIndex && musicViewModel.autoHighLight.value) MaterialTheme.colorScheme.primaryContainer.copy(
+                                                alpha = 0.3f
+                                            ) else MaterialTheme.colorScheme.background
+                                        )
+                                        .padding(
+                                            start = 20.dp,
+                                            end = 20.dp,
+                                            top = 2.dp,
+                                            bottom = 2.dp
+                                        )
                                 ) { offset ->
-                                    if(textToolbar.status == TextToolbarStatus.Shown) {
+                                    if (textToolbar.status == TextToolbarStatus.Shown) {
                                         textToolbar.hide()
                                         focusManager.clearFocus()
-                                    }else if (showMenu) {
+                                    } else if (showMenu) {
                                         showMenu = false
                                     } else {
                                         val annotations =

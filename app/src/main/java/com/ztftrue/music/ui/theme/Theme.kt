@@ -22,7 +22,7 @@ import androidx.core.view.WindowCompat
 import androidx.media3.common.util.UnstableApi
 import androidx.palette.graphics.Palette
 import com.ztftrue.music.MusicViewModel
-import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.CustomColorUtils
 
 /**
  * “On” colors are primarily applied to text, iconography,
@@ -158,7 +158,7 @@ fun MusicPitchTheme(
             val window = (view.context as Activity).window
             window.statusBarColor = colorScheme.value.background.toArgb()
             window.navigationBarColor = colorScheme.value.background.toArgb()
-            val darkColor = !Utils.isColorDark(colorScheme.value.background.toArgb())
+            val darkColor = !CustomColorUtils.isColorDark(colorScheme.value.background.toArgb())
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkColor
             WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars =
                 darkColor

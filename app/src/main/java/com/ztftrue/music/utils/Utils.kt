@@ -3,7 +3,6 @@ package com.ztftrue.music.utils
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ResolveInfo
-import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
@@ -397,13 +396,6 @@ object Utils {
         )
     }
 
-    fun isColorDark(color: Int): Boolean {
-        // 计算相对亮度
-        val darkness: Double =
-            1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255
-        // 根据阈值判断是深色还是浅色
-        return darkness >= 0.5
-    }
 
     fun getAllDictionaryActivity(context: Context): List<ResolveInfo> {
         val shareIntent = Intent(Intent.ACTION_PROCESS_TEXT)

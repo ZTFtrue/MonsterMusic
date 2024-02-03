@@ -17,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Divider
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ProvideTextStyle
@@ -24,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -158,91 +160,67 @@ fun SearchPage(
                 ) {
                     BackButton(navController)
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
-                            OutlinedTextField(
-                                value = keywords,
-                                onValueChange = {
-                                    val newText = it.ifEmpty {
-                                        ""
-                                    }
-                                    if (keywords != newText) {
-                                        keywords = newText
-                                    }
-                                },
-                                placeholder = {
-                                    Text("Enter text to search")
-                                }, // Placeholder or hint text
-                                keyboardOptions = KeyboardOptions.Default.copy(
-                                    imeAction = ImeAction.Done,
-                                    keyboardType = KeyboardType.Text
-                                ),
-                                keyboardActions = KeyboardActions(
-                                    onDone = {
-                                        focusRequester.freeFocus()
-                                        keyboardController?.hide()
-                                    }
-                                ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .focusRequester(focusRequester)
-                                    .background(MaterialTheme.colorScheme.primary),
-                                suffix = {
+                        CompositionLocalProvider(
+                            LocalContentColor provides MaterialTheme.colorScheme.onPrimary
+                        ) {
+                            ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
+                                OutlinedTextField(
+                                    value = keywords,
+                                    onValueChange = {
+                                        val newText = it.ifEmpty {
+                                            ""
+                                        }
+                                        if (keywords != newText) {
+                                            keywords = newText
+                                        }
+                                    },
+                                    placeholder = {
+                                        Text("Enter text to search")
+                                    }, // Placeholder or hint text
+                                    keyboardOptions = KeyboardOptions.Default.copy(
+                                        imeAction = ImeAction.Done,
+                                        keyboardType = KeyboardType.Text
+                                    ),
+                                    keyboardActions = KeyboardActions(
+                                        onDone = {
+                                            focusRequester.freeFocus()
+                                            keyboardController?.hide()
+                                        }
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .focusRequester(focusRequester)
+                                        .background(MaterialTheme.colorScheme.primary),
+                                    suffix = {
 
-                                },
-                                colors = TextFieldDefaults.colors(
-                                    focusedPlaceholderColor = Color.Red, // Set your desired text color here
-                                    unfocusedPlaceholderColor = Color.Red, // Set your desired text color here
-                                    disabledPlaceholderColor = Color.Red, // Set your desired text color here
-                                    errorPlaceholderColor = Color.Red, // Set your desired text color here
+                                    },
+                                    colors = TextFieldDefaults.colors(
+                                        focusedPlaceholderColor = Color.Red, // Set your desired text color here
+                                        unfocusedPlaceholderColor = Color.Red, // Set your desired text color here
+                                        disabledPlaceholderColor = Color.Red, // Set your desired text color here
+                                        errorPlaceholderColor = Color.Red, // Set your desired text color here
+                                        focusedLabelColor = Color.Red, // Set your desired text color here
+                                        unfocusedLabelColor = Color.Red, // Set your desired text color here
+                                        disabledLabelColor = Color.Red, // Set your desired text color here
+                                        errorLabelColor = Color.Red, // Set your desired text color here
+                                        focusedContainerColor = MaterialTheme.colorScheme.background, // Set your desired text color here
+                                        unfocusedContainerColor = MaterialTheme.colorScheme.background, // Set your desired text color here
+                                        disabledContainerColor = MaterialTheme.colorScheme.background, // Set your desired text color here
+                                        errorContainerColor = MaterialTheme.colorScheme.background, // Set your desired text color here
+                                        focusedTextColor = Color.Red, // Set your desired text color here
+                                        unfocusedTextColor = Color.Red, // Set your desired text color here
+                                        disabledTextColor = Color.Red, // Set your desired text color here
+                                        errorTextColor = Color.Red, // Set your desired text color here
+                                        focusedSupportingTextColor = Color.Red, // Set your desired text color here
+                                        unfocusedSupportingTextColor = Color.Red, // Set your desired text color here
+                                        disabledSupportingTextColor = Color.Red, // Set your desired text color here
+                                        errorSupportingTextColor = Color.Red, // Set your desired text color here
+                                        cursorColor = MaterialTheme.colorScheme.onBackground, // Set your desired text color here
+                                        errorCursorColor =MaterialTheme.colorScheme.onBackground, // Set your desired text color here
+                                    )
                                 )
-                            )
+                            }
                         }
-//                        TextField(
-//                            value = keywords,
-//                            onValueChange = {
-//                                val newText = it.ifEmpty {
-//                                    ""
-//                                }
-//                                if (keywords != newText) {
-//                                    keywords = newText
-//                                }
-//                            },
-//                            placeholder = {
-//                                Text("Enter text")
-//                            }, // Placeholder or hint text
-//                            keyboardOptions = KeyboardOptions.Default.copy(
-//                                imeAction = ImeAction.Done,
-//                                keyboardType = KeyboardType.Text
-//                            ),
-//                            keyboardActions = KeyboardActions(
-//                                onDone = {
-//                                    focusRequester.freeFocus()
-//                                    keyboardController?.hide()
-//                                }
-//                            ),
-//                            modifier = Modifier
-//                                .fillMaxWidth(0.9f)
-//                                .focusRequester(focusRequester),
-//                            suffix = {
-//
-//                            },
-//                            colors = TextFieldDefaults.colors(
-//                                focusedPlaceholderColor = Color.Red, // Set your desired text color here
-//                                unfocusedPlaceholderColor = Color.Red, // Set your desired text color here
-//                                disabledPlaceholderColor = Color.Red, // Set your desired text color here
-//                                errorPlaceholderColor = Color.Red, // Set your desired text color here
-//                            )
-//                        )
-//                        IconButton(onClick = {
-//                            focusRequester.freeFocus()
-//                            keyboardController?.hide()
-//                        }) {
-//                            Icon(
-//                                Icons.Filled.Search, contentDescription = "Search",
-//                                modifier = Modifier.size(40.dp)
-//                            )
-//                        }
-
                     }
                 }
             }
