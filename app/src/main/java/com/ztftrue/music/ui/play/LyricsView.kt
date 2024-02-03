@@ -316,10 +316,10 @@ fun LyricsView(
                                 available: Offset,
                                 source: NestedScrollSource
                             ): Offset {
-                                if (textToolbar.status == TextToolbarStatus.Shown) {
+//                                if (textToolbar.status == TextToolbarStatus.Shown) {
                                     focusManager.clearFocus()
                                     textToolbar.hide()
-                                }
+//                                }
                                 return super.onPreScroll(available, source)
                             }
                         }
