@@ -37,7 +37,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -67,8 +66,6 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
-import com.ztftrue.music.utils.CustomColorUtils.getContrastingColor
-import com.ztftrue.music.utils.CustomColorUtils.toAndroidColor
 import com.ztftrue.music.utils.ListStringCaption
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.Utils
@@ -313,8 +310,12 @@ fun LyricsView(
                                 source: NestedScrollSource
                             ): Offset {
 //                                if (textToolbar.status == TextToolbarStatus.Shown) {
+                                try {
                                     focusManager.clearFocus()
                                     textToolbar.hide()
+                                } catch (_: Exception) {
+
+                                }
 //                                }
                                 return super.onPreScroll(available, source)
                             }
