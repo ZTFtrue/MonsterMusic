@@ -225,7 +225,7 @@ fun GenreItemView(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(5.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(5.dp))
             .clip(RoundedCornerShape(5.dp))
             .combinedClickable(onLongClick = {
                 showOperateDialog = true
@@ -246,9 +246,9 @@ fun GenreItemView(
                 modifier = Modifier
                     .zIndex(0f)
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.secondary)
+                    .background(MaterialTheme.colorScheme.primaryContainer)
                     .aspectRatio(1f),
-                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onSecondary)
+                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimaryContainer)
             )
             if (item.id == musicViewModel.playListCurrent.value?.id && item.type == musicViewModel.playListCurrent.value?.type) {
                 Image(
@@ -276,7 +276,7 @@ fun GenreItemView(
         ) {
             Text(
                 text = item.name,
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.horizontalScroll(rememberScrollState(0))
             )
             Row(
@@ -285,7 +285,7 @@ fun GenreItemView(
             ) {
                 Text(
                     text = "$number song${if (number <= 1L) "" else "s"}",
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 IconButton(
                     modifier = Modifier
@@ -299,6 +299,7 @@ fun GenreItemView(
                         modifier = Modifier
                             .size(20.dp)
                             .clip(CircleShape),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

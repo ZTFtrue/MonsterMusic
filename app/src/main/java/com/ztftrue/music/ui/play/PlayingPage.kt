@@ -360,7 +360,7 @@ fun PlayingPage(
                 popupWindow = false
             }
         ) {
-            val color = MaterialTheme.colorScheme.onPrimary
+            val color = MaterialTheme.colorScheme.secondary
             val configuration = LocalConfiguration.current
             Column(
                 modifier = Modifier
@@ -376,7 +376,7 @@ fun PlayingPage(
                     )
                     .border(
                         1.dp,
-                        color = Color.Black,
+                        color = MaterialTheme.colorScheme.primary,
                         RoundedCornerShape(10.dp)
                     )
             ) {
@@ -421,7 +421,7 @@ fun PlayingPage(
                                             )
                                         }
                                     },
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                             )
                         }
                     }
@@ -460,7 +460,7 @@ fun PlayingPage(
                                             )
                                         }
                                     },
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                             )
                         }
                     }
@@ -499,7 +499,7 @@ fun PlayingPage(
                                             )
                                         }
                                     },
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                             )
                         }
                     }
@@ -537,7 +537,7 @@ fun PlayingPage(
                                                 style = Stroke(4f)
                                             )
                                     },
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                             )
                         }
                     }
@@ -561,7 +561,7 @@ fun PlayingPage(
                                 modifier = Modifier
                                     .width(24.dp)
                                     .height(24.dp),
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                             )
                         }
                     }
@@ -584,7 +584,7 @@ fun PlayingPage(
                                 modifier = Modifier
                                     .width(24.dp)
                                     .height(24.dp),
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                             )
                         }
                     }
@@ -690,7 +690,7 @@ fun PlayingPage(
                                 modifier = Modifier
                                     .width(24.dp)
                                     .height(24.dp),
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                             )
                         }
                     }
@@ -1035,7 +1035,7 @@ fun PlayingPage(
                                         modifier = Modifier
                                             .width(24.dp)
                                             .height(24.dp),
-                                        colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                                        colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                                     )
                                 }
 

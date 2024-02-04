@@ -302,11 +302,7 @@ fun LyricsView(
         ) {
             val textToolbar = LocalTextToolbar.current
             val focusManager = LocalFocusManager.current
-            val colorI: Int = getContrastingColor(
-                MaterialTheme.colorScheme.background.toArgb().toAndroidColor(),
-                MaterialTheme.colorScheme.onBackground.toArgb().toAndroidColor()
-            )
-            val color = Color(colorI)
+
             SelectionContainer(
                 modifier = Modifier,
                 content = {
@@ -393,7 +389,7 @@ fun LyricsView(
                                     text = annotatedString,
                                     style = TextStyle(
                                         color = if (currentI == listIndex && musicViewModel.autoHighLight.value) {
-                                            MaterialTheme.colorScheme.onPrimary
+                                            MaterialTheme.colorScheme.onTertiaryContainer
                                         } else {
                                             MaterialTheme.colorScheme.onBackground
                                         },
@@ -409,7 +405,7 @@ fun LyricsView(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .background(
-                                            if (currentI == listIndex && musicViewModel.autoHighLight.value) MaterialTheme.colorScheme.primaryContainer.copy(
+                                            if (currentI == listIndex && musicViewModel.autoHighLight.value) MaterialTheme.colorScheme.tertiaryContainer.copy(
                                                 alpha = 0.3f
                                             ) else MaterialTheme.colorScheme.background
                                         )

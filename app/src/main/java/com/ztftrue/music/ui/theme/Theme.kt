@@ -128,17 +128,19 @@ fun MusicPitchTheme(
                         colorScheme.value = colorScheme.value.copy(
                             background = Color(palette.dominantSwatch?.rgb ?: 0),
                             surface = Color(palette.dominantSwatch?.rgb ?: 0),
-                            primary = Color(palette.mutedSwatch?.rgb ?: 0),
-                            onPrimary = Color(palette.mutedSwatch?.bodyTextColor ?: 0),
-                            primaryContainer = Color(palette.mutedSwatch?.rgb ?: 0),
+                            onBackground = Color(palette.dominantSwatch?.bodyTextColor ?: 0),
+                            onSurface = Color(palette.dominantSwatch?.bodyTextColor ?: 0),
+                            primary = Color(palette.lightMutedSwatch?.rgb ?: 0),
+                            onPrimary = Color(palette.lightMutedSwatch?.bodyTextColor ?: 0),
+                            primaryContainer = Color(palette.lightMutedSwatch?.titleTextColor ?: 0),
+                            onPrimaryContainer = Color(palette.lightMutedSwatch?.rgb ?: 0),
                             // slider uncovered and enable
-//                            surfaceVariant = Color(palette.darkVibrantSwatch?.rgb ?: 0),
-//                            onPrimaryContainer = Color(palette.vibrantSwatch?.bodyTextColor ?: 0),
+                            surfaceVariant = Color(palette.mutedSwatch?.rgb ?: 0),
+                            onSurfaceVariant = Color(palette.mutedSwatch?.bodyTextColor ?: 0),
                             secondary = Color(palette.darkVibrantSwatch?.rgb ?: 0),
                             onSecondary = Color(palette.darkVibrantSwatch?.bodyTextColor ?: 0),
                             // default icon color
-                            onBackground = Color(palette.dominantSwatch?.bodyTextColor ?: 0),
-                            onSurface = Color(palette.dominantSwatch?.bodyTextColor ?: 0),
+
                         )
                     }
                 }

@@ -121,7 +121,7 @@ fun TracksListView(
                             contentDescription = "find current playing music",
                             modifier = Modifier
                                 .size(30.dp),
-                            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimaryContainer)
                         )
                     }
                 }

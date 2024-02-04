@@ -161,9 +161,9 @@ fun SearchPage(
                     BackButton(navController)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         CompositionLocalProvider(
-                            LocalContentColor provides MaterialTheme.colorScheme.onPrimary
+                            LocalContentColor provides MaterialTheme.colorScheme.onBackground
                         ) {
-                            ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
+                            ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onBackground)) {
                                 OutlinedTextField(
                                     value = keywords,
                                     onValueChange = {
@@ -195,26 +195,10 @@ fun SearchPage(
 
                                     },
                                     colors = TextFieldDefaults.colors(
-                                        focusedPlaceholderColor = Color.Red, // Set your desired text color here
-                                        unfocusedPlaceholderColor = Color.Red, // Set your desired text color here
-                                        disabledPlaceholderColor = Color.Red, // Set your desired text color here
-                                        errorPlaceholderColor = Color.Red, // Set your desired text color here
-                                        focusedLabelColor = Color.Red, // Set your desired text color here
-                                        unfocusedLabelColor = Color.Red, // Set your desired text color here
-                                        disabledLabelColor = Color.Red, // Set your desired text color here
-                                        errorLabelColor = Color.Red, // Set your desired text color here
                                         focusedContainerColor = MaterialTheme.colorScheme.background, // Set your desired text color here
                                         unfocusedContainerColor = MaterialTheme.colorScheme.background, // Set your desired text color here
                                         disabledContainerColor = MaterialTheme.colorScheme.background, // Set your desired text color here
                                         errorContainerColor = MaterialTheme.colorScheme.background, // Set your desired text color here
-                                        focusedTextColor = Color.Red, // Set your desired text color here
-                                        unfocusedTextColor = Color.Red, // Set your desired text color here
-                                        disabledTextColor = Color.Red, // Set your desired text color here
-                                        errorTextColor = Color.Red, // Set your desired text color here
-                                        focusedSupportingTextColor = Color.Red, // Set your desired text color here
-                                        unfocusedSupportingTextColor = Color.Red, // Set your desired text color here
-                                        disabledSupportingTextColor = Color.Red, // Set your desired text color here
-                                        errorSupportingTextColor = Color.Red, // Set your desired text color here
                                         cursorColor = MaterialTheme.colorScheme.onBackground, // Set your desired text color here
                                         errorCursorColor =MaterialTheme.colorScheme.onBackground, // Set your desired text color here
                                     )

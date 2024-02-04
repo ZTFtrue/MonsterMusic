@@ -131,13 +131,16 @@ fun ArtistsGridView(
             LazyRow(
                 contentPadding = PaddingValues(5.dp),
                 state = rowListSate,
-                modifier = modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth()
+                modifier = modifier
+                    .background(MaterialTheme.colorScheme.background)
+                    .fillMaxWidth()
             ) {
                 items(artistLists.size) { index ->
                     val item = artistLists[index]
                     Box(
                         modifier = Modifier
-                            .padding(5.dp).fillMaxSize()
+                            .padding(5.dp)
+                            .fillMaxSize()
                             .width(((configuration.screenWidthDp - 80) / musicViewModel.albumItemsCount.intValue).dp)
                     ) {
                         ArtistItemView(
@@ -157,7 +160,9 @@ fun ArtistsGridView(
                 columns = GridCells.Fixed(musicViewModel.artistItemsCount.intValue), // Number of columns in the grid
                 contentPadding = PaddingValues(5.dp),
                 state = listState,
-                modifier = modifier.background(MaterialTheme.colorScheme.background).fillMaxSize()
+                modifier = modifier
+                    .background(MaterialTheme.colorScheme.background)
+                    .fillMaxSize()
             ) {
                 items(artistLists.size) { index ->
                     val item = artistLists[index]
@@ -230,7 +235,7 @@ fun ArtistItemView(
     val number = item.trackNumber
     Column(modifier = Modifier
         .fillMaxWidth()
-        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(5.dp))
+        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(5.dp))
         .clip(RoundedCornerShape(5.dp))
         .combinedClickable(
             onLongClick = {
@@ -264,9 +269,9 @@ fun ArtistItemView(
                 contentDescription = "Album cover",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.secondary)
+                    .background(MaterialTheme.colorScheme.primaryContainer)
                     .aspectRatio(1f),
-                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onSecondary)
+                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimaryContainer)
             )
             if (item.id == musicViewModel.playListCurrent.value?.id && item.type == musicViewModel.playListCurrent.value?.type) {
                 Image(
@@ -294,7 +299,7 @@ fun ArtistItemView(
         ) {
             Text(
                 text = item.name,
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.horizontalScroll(rememberScrollState(0))
             )
             Row(
@@ -303,7 +308,7 @@ fun ArtistItemView(
             ) {
                 Text(
                     text = "$number song${if (number <= 1L) "" else "s"}",
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 IconButton(
                     modifier = Modifier
@@ -317,6 +322,7 @@ fun ArtistItemView(
                         modifier = Modifier
                             .size(20.dp)
                             .clip(CircleShape),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

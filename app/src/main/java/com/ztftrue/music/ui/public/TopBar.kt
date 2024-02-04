@@ -112,7 +112,8 @@ fun TopBar(
                 Icon(
                     Icons.Filled.Search,
                     modifier = Modifier.size(30.dp),
-                    contentDescription = "Search"
+                    contentDescription = "Search",
+                    tint = MaterialTheme.colorScheme.onBackground
                 )
             }
             content()
@@ -231,7 +232,7 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                     }
                 }
                 Row {
-                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
+                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onBackground)) {
                         TextField(
                             value = inputMinutes,
                             onValueChange = {

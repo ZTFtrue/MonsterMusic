@@ -215,7 +215,7 @@ fun SettingsPage(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(
-                                    MaterialTheme.colorScheme.primary
+                                    MaterialTheme.colorScheme.tertiaryContainer
                                 ),
                             offset = DpOffset(
                                 x = 0.dp,
@@ -227,7 +227,7 @@ fun SettingsPage(
                                     text = {
                                         Text(
                                             item,
-                                            color = MaterialTheme.colorScheme.onBackground
+                                            color = MaterialTheme.colorScheme.onTertiaryContainer
                                         )
                                     },
                                     onClick = {

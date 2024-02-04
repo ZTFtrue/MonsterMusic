@@ -1176,7 +1176,9 @@ class MainActivity : ComponentActivity() {
                         Icon(
                             Icons.Filled.Search,
                             modifier = Modifier.size(30.dp),
-                            contentDescription = "Search"
+                            contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.onBackground
+
                         )
                     }
                 }
