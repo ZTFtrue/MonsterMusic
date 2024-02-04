@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import androidx.media.MediaBrowserServiceCompat
 import com.ztftrue.music.sqlData.model.MusicItem
-import com.ztftrue.music.utils.GenresList
+import com.ztftrue.music.utils.model.GenresList
 import com.ztftrue.music.utils.PlayListType
 
 object GenreManager {

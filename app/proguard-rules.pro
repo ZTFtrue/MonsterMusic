@@ -19,3 +19,22 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep Gson models
+-keep class com.ztftrue.music.utils.model.* {  *; }
+
+# Keep Room entities and DAOs
+-keep class com.ztftrue.music.sqlData.** { *; }
+-keepclassmembers class com.ztftrue.music.sqlData.model.** { *; }
+
+# Keep Room database class, change "AppDatabase" to your actual database class
+-keep class com.ztftrue.music.sqlData.MusicDatabase { *; }
+-keepclassmembers class com.ztftrue.music.sqlData.MusicDatabase { *; }
+
+
+# Keep Room annotations
+-keepattributes Room*Annotation*
+# class com.google.common.reflect.TypeToken isn't parameterized
+-keep class com.google.gson.reflect.TypeToken
+-keep class * extends com.google.gson.reflect.TypeToken
+-keep public class * implements java.lang.reflect.Type

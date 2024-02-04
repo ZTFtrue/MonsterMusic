@@ -16,7 +16,7 @@ import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.sqlData.model.MusicItem
-import com.ztftrue.music.utils.FolderList
+import com.ztftrue.music.utils.model.FolderList
 import com.ztftrue.music.utils.OperateTypeInActivity
 
 

@@ -22,7 +22,7 @@ import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.sqlData.model.MusicItem
-import com.ztftrue.music.utils.MusicPlayList
+import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.OperateTypeInActivity
 import java.io.File
 

@@ -5,7 +5,7 @@ import android.content.Context
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.media.MediaBrowserServiceCompat
-import com.ztftrue.music.utils.ArtistList
+import com.ztftrue.music.utils.model.ArtistList
 
 object ArtistManager {
     fun getArtistIdByName(context: Context, artistName: String): Long? {

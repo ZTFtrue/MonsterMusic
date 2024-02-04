@@ -6,7 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.media.MediaBrowserServiceCompat
-import com.ztftrue.music.utils.AlbumList
+import com.ztftrue.music.utils.model.AlbumList
 
 object AlbumManager {
     fun getAlbumList(

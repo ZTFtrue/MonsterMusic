@@ -67,7 +67,7 @@ import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.CreatePlayListDialog
-import com.ztftrue.music.utils.AlbumList
+import com.ztftrue.music.utils.model.AlbumList
 import com.ztftrue.music.utils.trackManager.ArtistManager
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType

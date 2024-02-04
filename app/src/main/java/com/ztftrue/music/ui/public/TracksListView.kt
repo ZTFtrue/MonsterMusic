@@ -22,6 +22,8 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -29,7 +31,7 @@ import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.sqlData.model.MusicItem
-import com.ztftrue.music.utils.AnyListBase
+import com.ztftrue.music.utils.model.AnyListBase
 import kotlinx.coroutines.launch
 
 /**
@@ -54,7 +56,9 @@ fun TracksListView(
             Text(
                 text = "No music",
                 color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.horizontalScroll(rememberScrollState(0))
+                modifier = Modifier.horizontalScroll(rememberScrollState(0)).semantics {
+                    contentDescription = "No music"
+                }
             )
         }else{
             ConstraintLayout(

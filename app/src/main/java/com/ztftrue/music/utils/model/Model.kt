@@ -1,6 +1,7 @@
-package com.ztftrue.music.utils
+package com.ztftrue.music.utils.model
 
 import android.os.Parcelable
+import com.ztftrue.music.utils.PlayListType
 import kotlinx.parcelize.Parcelize
 import java.io.Serializable
 

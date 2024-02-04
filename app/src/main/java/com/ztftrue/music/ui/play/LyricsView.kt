@@ -66,7 +66,7 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
-import com.ztftrue.music.utils.ListStringCaption
+import com.ztftrue.music.utils.model.ListStringCaption
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.textToolbar.CustomTextToolbar

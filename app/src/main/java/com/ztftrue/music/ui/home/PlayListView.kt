@@ -59,7 +59,7 @@ import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.CreatePlayListDialog
 import com.ztftrue.music.ui.public.DeleteTip
 import com.ztftrue.music.ui.public.RenamePlayListDialog
-import com.ztftrue.music.utils.MusicPlayList
+import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.trackManager.PlaylistManager

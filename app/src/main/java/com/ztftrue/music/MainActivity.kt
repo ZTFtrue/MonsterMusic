@@ -77,7 +77,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
@@ -85,6 +84,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
+import androidx.core.splashscreen.SplashScreen
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
@@ -125,15 +126,15 @@ import com.ztftrue.music.ui.public.SleepTimeDialog
 import com.ztftrue.music.ui.public.TracksListPage
 import com.ztftrue.music.ui.public.TracksListView
 import com.ztftrue.music.ui.theme.MusicPitchTheme
-import com.ztftrue.music.utils.AnyListBase
+import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.OperateTypeInActivity
 import com.ztftrue.music.utils.PlayListType
-import com.ztftrue.music.utils.trackManager.PlaylistManager
-import com.ztftrue.music.utils.trackManager.PlaylistManager.removeTrackFromM3U
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.stringToEnumForPlayListType
+import com.ztftrue.music.utils.trackManager.PlaylistManager
+import com.ztftrue.music.utils.trackManager.PlaylistManager.removeTrackFromM3U
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -410,19 +411,24 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
+    private lateinit var compatSplashScreen: SplashScreen
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        compatSplashScreen = installSplashScreen()
+        compatSplashScreen.setKeepOnScreenCondition() { musicViewModel.mainTabList.isEmpty() }
         CoroutineScope(Dispatchers.IO).launch {
             val db: MusicDatabase = MusicDatabase.getDatabase(this@MainActivity)
             musicViewModel.themeSelected.intValue = getSharedPreferences(
                 "SelectedTheme",
                 Context.MODE_PRIVATE
             ).getInt("SelectedTheme", 0)
-            musicViewModel.textAlign.value = SharedPreferencesUtils.getDisplayAlign(this@MainActivity)
+            musicViewModel.textAlign.value =
+                SharedPreferencesUtils.getDisplayAlign(this@MainActivity)
             musicViewModel.fontSize.intValue = SharedPreferencesUtils.getFontSize(this@MainActivity)
-            musicViewModel.autoScroll.value=SharedPreferencesUtils.getAutoScroll(this@MainActivity)
-            musicViewModel.autoHighLight.value=SharedPreferencesUtils.getAutoHighLight(this@MainActivity)
+            musicViewModel.autoScroll.value =
+                SharedPreferencesUtils.getAutoScroll(this@MainActivity)
+            musicViewModel.autoHighLight.value =
+                SharedPreferencesUtils.getAutoHighLight(this@MainActivity)
             val dicApps = db.DictionaryAppDao().findAllDictionaryApp()
             if (dicApps.isNullOrEmpty()) {
                 val list = ArrayList<DictionaryApp>()
@@ -766,24 +772,24 @@ class MainActivity : ComponentActivity() {
             composable(route = Router.MainView.route) {
                 key(Router.MainView.route) {
                     if (musicViewModel.mainTabList.isEmpty()) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize(),
-                            verticalArrangement = Arrangement.Bottom,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Image(
-                                painter =
-                                painterResource(id = R.drawable.launcher_image),
-                                contentDescription = "launching",
-                                modifier = Modifier
-                                    .padding(0.dp)
-                                    .fillMaxWidth()
-                                    .fillMaxHeight(),
-                                alignment = Alignment.BottomEnd,
-                                contentScale = ContentScale.FillBounds
-                            )
-                        }
+//                        Column(
+//                            modifier = Modifier
+//                                .fillMaxSize(),
+//                            verticalArrangement = Arrangement.Bottom,
+//                            horizontalAlignment = Alignment.CenterHorizontally
+//                        ) {
+//                            Image(
+//                                painter =
+//                                painterResource(id = R.drawable.launcher_image),
+//                                contentDescription = "launching",
+//                                modifier = Modifier
+//                                    .padding(0.dp)
+//                                    .fillMaxWidth()
+//                                    .fillMaxHeight(),
+//                                alignment = Alignment.BottomEnd,
+//                                contentScale = ContentScale.FillBounds
+//                            )
+//                        }
                     } else {
                         MainView(navController, pagerState)
                     }

@@ -22,11 +22,11 @@ import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.play.Lyrics
-import com.ztftrue.music.utils.ListStringCaption
-import com.ztftrue.music.utils.AnyListBase
-import com.ztftrue.music.utils.Caption
+import com.ztftrue.music.utils.model.ListStringCaption
+import com.ztftrue.music.utils.model.AnyListBase
+import com.ztftrue.music.utils.model.Caption
 import com.ztftrue.music.utils.CaptionUtils
-import com.ztftrue.music.utils.EqualizerBand
+import com.ztftrue.music.utils.model.EqualizerBand
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType

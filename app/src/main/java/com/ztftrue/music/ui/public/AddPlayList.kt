@@ -48,7 +48,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.sqlData.model.MusicItem
-import com.ztftrue.music.utils.MusicPlayList
+import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.PlayListType
 
 @Composable

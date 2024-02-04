@@ -2,6 +2,7 @@ package com.ztftrue.music.utils
 
 import android.content.Context
 import com.ztftrue.music.R
+import com.ztftrue.music.utils.model.Caption
 import java.io.File
 import java.util.Locale
 import java.util.regex.Matcher

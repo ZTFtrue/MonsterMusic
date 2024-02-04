@@ -46,6 +46,13 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
         getByName("debug") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -89,6 +96,9 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3:1.1.2")
     implementation("androidx.compose.material3:material3-window-size-class:1.1.2")
+
+    // splash
+    implementation("androidx.core:core-splashscreen")
 //    implementation("androidx.compose.material:material:1.5.4")
     implementation ("androidx.constraintlayout:constraintlayout-compose:1.0.1")
 //

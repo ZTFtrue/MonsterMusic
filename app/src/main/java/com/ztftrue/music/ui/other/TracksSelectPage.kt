@@ -41,7 +41,7 @@ import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.ui.public.TracksListView
-import com.ztftrue.music.utils.AnyListBase
+import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 

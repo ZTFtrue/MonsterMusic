@@ -43,12 +43,12 @@ import com.ztftrue.music.sqlData.model.CurrentList
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.PlayConfig
-import com.ztftrue.music.utils.AlbumList
-import com.ztftrue.music.utils.AnyListBase
-import com.ztftrue.music.utils.ArtistList
-import com.ztftrue.music.utils.FolderList
-import com.ztftrue.music.utils.GenresList
-import com.ztftrue.music.utils.MusicPlayList
+import com.ztftrue.music.utils.model.AlbumList
+import com.ztftrue.music.utils.model.AnyListBase
+import com.ztftrue.music.utils.model.ArtistList
+import com.ztftrue.music.utils.model.FolderList
+import com.ztftrue.music.utils.model.GenresList
+import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.stringToEnumForPlayListType
 import com.ztftrue.music.utils.trackManager.AlbumManager
@@ -1263,10 +1263,10 @@ class PlayService : MediaBrowserServiceCompat() {
             CoroutineScope(Dispatchers.IO).launch {
                 var c = db.CurrentListDao().findCurrentList()
                 if (c == null) {
-                    c = CurrentList(null, playListCurrent?.id ?: -1, playList.type.name)
+                    c = CurrentList(null, playList.id, playList.type.name)
                     db.CurrentListDao().insert(c)
                 } else {
-                    c.listID = playListCurrent?.id ?: -1
+                    c.listID = playList.id
                     c.type = playList.type.name
                     db.CurrentListDao().update(c)
                 }

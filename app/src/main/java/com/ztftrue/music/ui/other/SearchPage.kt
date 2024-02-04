@@ -37,7 +37,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
@@ -53,9 +52,9 @@ import com.ztftrue.music.ui.home.AlbumGridView
 import com.ztftrue.music.ui.home.ArtistsGridView
 import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.ui.public.TracksListView
-import com.ztftrue.music.utils.AlbumList
-import com.ztftrue.music.utils.AnyListBase
-import com.ztftrue.music.utils.ArtistList
+import com.ztftrue.music.utils.model.AlbumList
+import com.ztftrue.music.utils.model.AnyListBase
+import com.ztftrue.music.utils.model.ArtistList
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType
 import kotlinx.coroutines.CoroutineScope
