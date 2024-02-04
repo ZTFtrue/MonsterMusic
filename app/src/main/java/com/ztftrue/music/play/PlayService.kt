@@ -14,6 +14,7 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.widget.Toast
+import androidx.core.net.toUri
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.BuildConfig
@@ -43,18 +44,18 @@ import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.PlayConfig
 import com.ztftrue.music.utils.AlbumList
-import com.ztftrue.music.utils.trackManager.AlbumManager
 import com.ztftrue.music.utils.AnyListBase
 import com.ztftrue.music.utils.ArtistList
-import com.ztftrue.music.utils.trackManager.ArtistManager
 import com.ztftrue.music.utils.FolderList
-import com.ztftrue.music.utils.trackManager.GenreManager
 import com.ztftrue.music.utils.GenresList
 import com.ztftrue.music.utils.MusicPlayList
 import com.ztftrue.music.utils.PlayListType
+import com.ztftrue.music.utils.stringToEnumForPlayListType
+import com.ztftrue.music.utils.trackManager.AlbumManager
+import com.ztftrue.music.utils.trackManager.ArtistManager
+import com.ztftrue.music.utils.trackManager.GenreManager
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.TracksManager
-import com.ztftrue.music.utils.stringToEnumForPlayListType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -62,6 +63,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.io.File
 
 /**
  * playList
@@ -692,11 +694,11 @@ class PlayService : MediaBrowserServiceCompat() {
                     if (!exoPlayer.isPlaying) {
                         exoPlayer.playWhenReady = false
                     }
-                    exoPlayer.addMediaItem(index, MediaItem.fromUri(musicItem.path))
+                    exoPlayer.addMediaItem(index, MediaItem.fromUri(File(musicItem.path).toUri()))
                 } else if (musicItems != null) {
                     val list = ArrayList<MediaItem>()
                     musicItems.forEach {
-                        list.add(MediaItem.fromUri(it.path))
+                        list.add(MediaItem.fromUri(File(it.path).toUri()))
                     }
                     playListCurrent = null
                     CoroutineScope(Dispatchers.IO).launch {
@@ -1131,7 +1133,7 @@ class PlayService : MediaBrowserServiceCompat() {
                         val t1 = ArrayList<MediaItem>()
                         var currentIndex = 0
                         musicQueue.forEachIndexed { index, it ->
-                            t1.add(MediaItem.fromUri(it.path))
+                            t1.add(MediaItem.fromUri(File(it.path).toUri()))
                             if (it.id == currentPlayTrack?.id) {
                                 currentIndex = index
                             }
@@ -1326,7 +1328,7 @@ class PlayService : MediaBrowserServiceCompat() {
                 bundle.putParcelableArrayList("queue", musicQueue)
                 mediaSession?.setExtras(bundle)
                 musicQueue.forEach {
-                    t1.add(MediaItem.fromUri(it.path))
+                    t1.add(MediaItem.fromUri(File(it.path).toUri()))
                 }
                 exoPlayer.setMediaItems(t1)
                 CoroutineScope(Dispatchers.IO).launch {
