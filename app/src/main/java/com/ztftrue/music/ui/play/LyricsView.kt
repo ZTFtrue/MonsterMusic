@@ -248,7 +248,7 @@ fun LyricsView(
     }
     if (musicViewModel.currentCaptionList.size == 0) {
         Text(
-            text = "No Lyrics, Click to import lyrics",
+            text = "No Lyrics, Click to import lyrics.\n Support LRC/VTT/SRT/TXT",
             color = MaterialTheme.colorScheme.onBackground,
             fontSize = MaterialTheme.typography.titleLarge.fontSize,
             textAlign = TextAlign.Center,

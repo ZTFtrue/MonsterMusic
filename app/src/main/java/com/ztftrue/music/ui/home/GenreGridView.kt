@@ -58,13 +58,12 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.CreatePlayListDialog
-import com.ztftrue.music.utils.model.GenresList
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType
@@ -72,13 +71,14 @@ import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.addTracksToPlayList
 import com.ztftrue.music.utils.Utils.createPlayListAddTracks
 import com.ztftrue.music.utils.enumToStringForPlayListType
+import com.ztftrue.music.utils.model.GenresList
 
 
 @Composable
 fun GenreGridView(
     modifier: Modifier = Modifier,
     musicViewModel: MusicViewModel,
-    navController: NavController,
+    navController: NavHostController,
     type: PlayListType = PlayListType.Genres,
     scrollDirection: ScrollDirectionType? = null
 ) {
@@ -176,7 +176,7 @@ fun GenreGridView(
 fun GenreItemView(
     item: GenresList,
     musicViewModel: MusicViewModel,
-    navController: NavController,
+    navController: NavHostController,
     type: PlayListType = PlayListType.Genres
 ) {
     val context = LocalContext.current

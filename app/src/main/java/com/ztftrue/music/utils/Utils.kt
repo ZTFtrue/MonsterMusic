@@ -13,9 +13,14 @@ import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.play.ACTION_AddPlayQueue
 import com.ztftrue.music.play.ACTION_GET_TRACKS
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
+import com.ztftrue.music.sqlData.MusicDatabase
+import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.trackManager.PlaylistManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -97,6 +102,44 @@ object Utils {
     var qFactors = doubleArrayOf(
         0.707, 0.707, 0.707, 0.707, 0.707, 0.707, 0.707, 0.707, 0.707, 0.707
     )
+
+
+    fun initSettingsData(musicViewModel: MusicViewModel,context: Context) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val db: MusicDatabase = MusicDatabase.getDatabase(context)
+            musicViewModel.themeSelected.intValue = context.getSharedPreferences(
+                "SelectedTheme",
+                Context.MODE_PRIVATE
+            ).getInt("SelectedTheme", 0)
+            musicViewModel.textAlign.value =
+                SharedPreferencesUtils.getDisplayAlign(context)
+            musicViewModel.fontSize.intValue = SharedPreferencesUtils.getFontSize(context)
+            musicViewModel.autoScroll.value =
+                SharedPreferencesUtils.getAutoScroll(context)
+            musicViewModel.autoHighLight.value =
+                SharedPreferencesUtils.getAutoHighLight(context)
+            val dicApps = db.DictionaryAppDao().findAllDictionaryApp()
+            if (dicApps.isNullOrEmpty()) {
+                val list = ArrayList<DictionaryApp>()
+                getAllDictionaryActivity(context)
+                    .forEachIndexed { index, it ->
+                        list.add(
+                            DictionaryApp(
+                                index,
+                                it.activityInfo.name,
+                                it.activityInfo.packageName,
+                                it.loadLabel(context.packageManager).toString(),
+                                isShow = true,
+                                autoGo = false
+                            )
+                        )
+                    }
+                musicViewModel.dictionaryAppList.addAll(list)
+            } else {
+                musicViewModel.dictionaryAppList.addAll(dicApps)
+            }
+        }
+    }
 
     fun formatTime(millis: Long): String {
         val totalSeconds = millis / 1000

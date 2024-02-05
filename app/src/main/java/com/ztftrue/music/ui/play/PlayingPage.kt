@@ -73,7 +73,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -115,11 +114,11 @@ import com.ztftrue.music.ui.public.OperateDialog
 import com.ztftrue.music.ui.public.TopBar
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
-import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.SharedPreferencesUtils
-import com.ztftrue.music.utils.trackManager.TracksManager
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.enumToStringForPlayListType
+import com.ztftrue.music.utils.trackManager.PlaylistManager
+import com.ztftrue.music.utils.trackManager.TracksManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -241,6 +240,7 @@ fun PlayingPage(
                         }
 
                         OperateType.Artist -> {
+
                             viewModel.navController?.navigate(
                                 Router.PlayListView.withArgs(
                                     "${music.artistId}",
@@ -603,7 +603,10 @@ fun PlayingPage(
                                 }) {
                                     viewModel.autoScroll.value =
                                         !viewModel.autoScroll.value
-                                    SharedPreferencesUtils.saveAutoScroll(context, viewModel.autoScroll.value)
+                                    SharedPreferencesUtils.saveAutoScroll(
+                                        context,
+                                        viewModel.autoScroll.value
+                                    )
                                 }
                                 .padding(0.dp)
                                 .height(50.dp)
@@ -646,7 +649,10 @@ fun PlayingPage(
                                 }) {
                                     viewModel.autoHighLight.value =
                                         !viewModel.autoHighLight.value
-                                    SharedPreferencesUtils.saveAutoHighLight(context, viewModel.autoHighLight.value)
+                                    SharedPreferencesUtils.saveAutoHighLight(
+                                        context,
+                                        viewModel.autoHighLight.value
+                                    )
                                 }
                                 .padding(0.dp)
                                 .height(50.dp)
@@ -1122,7 +1128,8 @@ fun PlayingPage(
 
                     HorizontalPager(
                         state = pagerTabState,
-                        Modifier
+                        beyondBoundsPageCount = playViewTab.size,
+                        modifier = Modifier
                             .fillMaxHeight()
                             .padding(it)
                             .pointerInput(Unit) {

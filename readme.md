@@ -30,10 +30,6 @@ Songs from: https://helpguide.sony.net/high-res/sample1/v1/en/index.html
 
 It does not support Android 10 and below, but you can compile(need modify code) it to support it, but some features cannot be used.
 
-## TODO
-
-Supoort srt/ass file.
-
 ## Develop
 
 ## Note

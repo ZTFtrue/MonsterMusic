@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.ComponentName
 import android.content.ContentResolver
 import android.content.ContentValues
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
@@ -22,77 +21,27 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerState
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.DrawerState
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ScrollableTabRow
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDrawerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
-import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.ztftrue.music.play.ACTION_CLEAR_QUEUE
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.play.ACTION_TRACKS_UPDATE
@@ -102,38 +51,13 @@ import com.ztftrue.music.play.EVENT_MEDIA_METADATA_Change
 import com.ztftrue.music.play.EVENT_SLEEP_TIME_Change
 import com.ztftrue.music.play.EVENT_changePlayQueue
 import com.ztftrue.music.play.PlayService
-import com.ztftrue.music.sqlData.MusicDatabase
-import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
-import com.ztftrue.music.ui.home.AlbumGridView
-import com.ztftrue.music.ui.home.ArtistsGridView
-import com.ztftrue.music.ui.home.FolderListView
-import com.ztftrue.music.ui.home.GenreGridView
-import com.ztftrue.music.ui.home.PlayListView
-import com.ztftrue.music.ui.other.DrawMenu
-import com.ztftrue.music.ui.other.EditTrackPage
-import com.ztftrue.music.ui.other.SearchPage
-import com.ztftrue.music.ui.other.SettingsPage
-import com.ztftrue.music.ui.other.TracksSelectPage
-import com.ztftrue.music.ui.play.PlayingPage
-import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
-import com.ztftrue.music.ui.public.Bottom
-import com.ztftrue.music.ui.public.CreatePlayListDialog
-import com.ztftrue.music.ui.public.QueueOperateDialog
-import com.ztftrue.music.ui.public.QueuePage
-import com.ztftrue.music.ui.public.SleepTimeDialog
-import com.ztftrue.music.ui.public.TracksListPage
-import com.ztftrue.music.ui.public.TracksListView
+import com.ztftrue.music.ui.home.BaseLayout
 import com.ztftrue.music.ui.theme.MusicPitchTheme
-import com.ztftrue.music.utils.model.AnyListBase
-import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.OperateTypeInActivity
-import com.ztftrue.music.utils.PlayListType
-import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
-import com.ztftrue.music.utils.stringToEnumForPlayListType
-import com.ztftrue.music.utils.trackManager.PlaylistManager
+import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.trackManager.PlaylistManager.removeTrackFromM3U
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -154,7 +78,6 @@ class MainActivity : ComponentActivity() {
     private var jobSeek: Job? = null
     private val scopeMain = CoroutineScope(Dispatchers.Main)
     private var lyricsPath = ""
-
 
     val bundle = Bundle()
 
@@ -382,7 +305,7 @@ class MainActivity : ComponentActivity() {
             )
             setContent {
                 MusicPitchTheme(musicViewModel) {
-                    BaseLayout()
+                    BaseLayout(musicViewModel, this@MainActivity)
                 }
                 mediaBrowser?.connect()
             }
@@ -411,49 +334,13 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    private lateinit var compatSplashScreen: SplashScreen
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        compatSplashScreen = installSplashScreen()
-        compatSplashScreen.setKeepOnScreenCondition() { musicViewModel.mainTabList.isEmpty() }
-        CoroutineScope(Dispatchers.IO).launch {
-            val db: MusicDatabase = MusicDatabase.getDatabase(this@MainActivity)
-            musicViewModel.themeSelected.intValue = getSharedPreferences(
-                "SelectedTheme",
-                Context.MODE_PRIVATE
-            ).getInt("SelectedTheme", 0)
-            musicViewModel.textAlign.value =
-                SharedPreferencesUtils.getDisplayAlign(this@MainActivity)
-            musicViewModel.fontSize.intValue = SharedPreferencesUtils.getFontSize(this@MainActivity)
-            musicViewModel.autoScroll.value =
-                SharedPreferencesUtils.getAutoScroll(this@MainActivity)
-            musicViewModel.autoHighLight.value =
-                SharedPreferencesUtils.getAutoHighLight(this@MainActivity)
-            val dicApps = db.DictionaryAppDao().findAllDictionaryApp()
-            if (dicApps.isNullOrEmpty()) {
-                val list = ArrayList<DictionaryApp>()
-                Utils.getAllDictionaryActivity(this@MainActivity)
-                    .forEachIndexed { index, it ->
-                        list.add(
-                            DictionaryApp(
-                                index,
-                                it.activityInfo.name,
-                                it.activityInfo.packageName,
-                                it.loadLabel(this@MainActivity.packageManager).toString(),
-                                isShow = true,
-                                autoGo = false
-                            )
-                        )
-                    }
-                musicViewModel.dictionaryAppList.addAll(list)
-            } else {
-                musicViewModel.dictionaryAppList.addAll(dicApps)
-            }
-        }
-//        val i = Intent(this@MainActivity, PlayService::class.java)
-        // startService does not work in there.
-//        startService(i)  // Start the service explicitly
-
+        val compatSplashScreen = installSplashScreen()
+        compatSplashScreen.setKeepOnScreenCondition { musicViewModel.mainTabList.isEmpty() }
+        Utils.initSettingsData(musicViewModel, this)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             if (ActivityCompat.checkSelfPermission(
                     this@MainActivity, Manifest.permission.READ_EXTERNAL_STORAGE
@@ -463,7 +350,7 @@ class MainActivity : ComponentActivity() {
                 startService(i)  // Start the service explicitly
                 setContent {
                     MusicPitchTheme(musicViewModel) {
-                        BaseLayout()
+                        BaseLayout(musicViewModel, this@MainActivity)
                     }
                 }
             } else {
@@ -477,7 +364,8 @@ class MainActivity : ComponentActivity() {
             startService(i)  // Start the service explicitly
             setContent {
                 MusicPitchTheme(musicViewModel) {
-                    BaseLayout()
+                    BaseLayout(musicViewModel, this@MainActivity)
+
                 }
             }
         } else {
@@ -562,7 +450,6 @@ class MainActivity : ComponentActivity() {
     val callback = object : MediaControllerCompat.Callback() {
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
             super.onPlaybackStateChanged(state)
-//            musicViewModel.currentPlay.value?.isPlaying = options.getBoolean("isPlaying")
             if (state != null) {
                 musicViewModel.playStatus.value = state.state == PlaybackStateCompat.STATE_PLAYING
                 getSeek()
@@ -683,7 +570,6 @@ class MainActivity : ComponentActivity() {
     }
 
     fun getInitData(resultData: Bundle) {
-
         resultData.getParcelableArrayList<MusicItem>("musicQueue")?.also {
             musicViewModel.musicQueue.clear()
             musicViewModel.musicQueue.addAll(it)
@@ -759,472 +645,5 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    @OptIn(ExperimentalFoundationApi::class)
-    @Composable
-    fun BaseLayout(
-    ) {
-        val navController = rememberNavController()
-        musicViewModel.navController = navController
-        val pagerState = rememberPagerState { musicViewModel.mainTabList.size }
-        NavHost(
-            navController = navController, startDestination = Router.MainView.route,
-        ) {
-            composable(route = Router.MainView.route) {
-                key(Router.MainView.route) {
-                    if (musicViewModel.mainTabList.isEmpty()) {
-//                        Column(
-//                            modifier = Modifier
-//                                .fillMaxSize(),
-//                            verticalArrangement = Arrangement.Bottom,
-//                            horizontalAlignment = Alignment.CenterHorizontally
-//                        ) {
-//                            Image(
-//                                painter =
-//                                painterResource(id = R.drawable.launcher_image),
-//                                contentDescription = "launching",
-//                                modifier = Modifier
-//                                    .padding(0.dp)
-//                                    .fillMaxWidth()
-//                                    .fillMaxHeight(),
-//                                alignment = Alignment.BottomEnd,
-//                                contentScale = ContentScale.FillBounds
-//                            )
-//                        }
-                    } else {
-                        MainView(navController, pagerState)
-                    }
-                }
-            }
-            composable(
-                route = Router.MusicPlayerView.route,
-            ) { _ ->
-                key(Router.MusicPlayerView.route) {
-                    PlayingPage(navController, viewModel = musicViewModel)
-                }
-            }
-            composable(
-                route = Router.PlayListView.withArgs("{id}", "{itemType}"), arguments = listOf(),
-            ) { backStackEntry ->
-                val arg = backStackEntry.arguments
-
-                key(Unit) {
-                    if (arg != null) {
-                        TracksListPage(
-                            musicViewModel = musicViewModel,
-                            navController,
-                            stringToEnumForPlayListType(arg.getString("itemType") ?: ""),
-                            arg.getString("id")?.toLong() ?: 0
-                        )
-                    }
-                }
-            }
-            composable(
-                route = Router.TracksSelectPage.withArgs("{id}", "{name}"), arguments = listOf(),
-            ) { backStackEntry ->
-                val arg = backStackEntry.arguments
-                key(Unit) {
-                    if (arg != null) {
-                        TracksSelectPage(
-                            musicViewModel = musicViewModel,
-                            navController,
-                            arg.getString("name"),
-                            arg.getString("id")?.toLong()
-                        )
-                    }
-                }
-            }
-            composable(
-                route = Router.EditTrackPage.withArgs("{id}"), arguments = listOf(),
-            ) { backStackEntry ->
-                val arg = backStackEntry.arguments
-                key(Unit) {
-                    if (arg != null) {
-                        val id = arg.getString("id")?.toLong()
-                        if (id != null) {
-                            EditTrackPage(
-                                musicViewModel = musicViewModel,
-                                navController,
-                                id
-                            )
-                        }
-                    }
-                }
-            }
-            composable(
-                route = Router.SettingsPage.route, arguments = listOf(),
-            ) { _ ->
-                key(Unit) {
-                    SettingsPage(
-                        musicViewModel = musicViewModel,
-                        navController,
-                    )
-                }
-            }
-            composable(
-                route = Router.QueuePage.route, arguments = listOf(),
-            ) { _ ->
-                key(Unit) {
-                    QueuePage(
-                        musicViewModel = musicViewModel,
-                        navController,
-                    )
-                }
-            }
-            composable(
-                route = Router.SearchPage.route, arguments = listOf(),
-            ) { _ ->
-                key(Unit) {
-                    SearchPage(
-                        musicViewModel = musicViewModel,
-                        navController,
-                    )
-                }
-            }
-        }
-    }
-
-    @OptIn(ExperimentalFoundationApi::class)
-    @Composable
-    fun MainView(navController: NavHostController, pagerState: PagerState) {
-        val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-        val scope = rememberCoroutineScope()
-        key(
-            musicViewModel, navController, drawerState, pagerState
-        ) {
-            BackHandler(enabled = drawerState.isOpen) {
-                if (drawerState.isOpen) {
-                    scope.launch {
-                        drawerState.close()
-                    }
-                }
-            }
-            Surface(
-                modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
-            ) {
-                Row {
-                    ModalNavigationDrawer(
-                        drawerState = drawerState,
-                        drawerContent = {
-                            DrawMenu(
-                                pagerState,
-                                drawerState,
-                                navController,
-                                musicViewModel,
-                                this@MainActivity
-                            )
-                        },
-                    ) {
-                        Scaffold(modifier = Modifier,
-                            topBar = {
-                                MainTopBar(drawerState, pagerState, navController)
-                            }, bottomBar = {
-                                Bottom(
-                                    musicViewModel, navController
-                                )
-                            }, content = {
-                                HorizontalPager(
-                                    state = pagerState,
-                                    Modifier
-                                        .fillMaxSize()
-                                        .padding(it),
-                                ) { it1 ->
-                                    key(it1) {
-                                        when (musicViewModel.mainTabList[it1].type) {
-                                            PlayListType.Songs -> {
-                                                TracksListView(
-                                                    Modifier.fillMaxHeight(),
-                                                    musicViewModel,
-                                                    SongsPlayList,
-                                                    musicViewModel.songsList
-                                                )
-                                            }
-
-                                            PlayListType.PlayLists -> {
-                                                PlayListView(
-                                                    Modifier.fillMaxHeight(),
-                                                    musicViewModel,
-                                                    navController,
-                                                )
-                                            }
-
-                                            PlayListType.Queue -> {
-                                                TracksListView(
-                                                    Modifier.fillMaxHeight(),
-                                                    musicViewModel,
-                                                    QueuePlayList,
-                                                    tracksList = musicViewModel.musicQueue
-                                                )
-                                            }
-
-                                            PlayListType.Albums -> {
-                                                AlbumGridView(
-                                                    Modifier.fillMaxHeight(),
-                                                    musicViewModel,
-                                                    navController
-                                                )
-                                            }
-
-                                            PlayListType.Artists -> {
-                                                ArtistsGridView(
-                                                    Modifier.fillMaxHeight(),
-                                                    musicViewModel,
-                                                    navController,
-                                                )
-                                            }
-
-                                            PlayListType.Genres -> {
-                                                GenreGridView(
-                                                    Modifier.fillMaxHeight(),
-                                                    musicViewModel,
-                                                    navController,
-                                                )
-                                            }
-
-                                            PlayListType.Folders -> {
-                                                FolderListView(
-                                                    Modifier.fillMaxHeight(),
-                                                    musicViewModel,
-                                                    navController,
-                                                )
-                                            }
-
-                                            else -> {
-
-                                            }
-                                        }
-                                    }
-
-                                }
-
-                            })
-                    }
-                }
-            }
-        }
-
-    }
-
-    @OptIn(ExperimentalFoundationApi::class)
-    @Composable
-    fun MainTopBar(
-        drawerState: DrawerState,
-        pagerState: PagerState,
-        navController: NavHostController
-    ) {
-        val context = LocalContext.current
-        val scope = rememberCoroutineScope()
-        var showSleepDialog by remember { mutableStateOf(false) }
-        var showCreatePlayListDialog by remember { mutableStateOf(false) }
-        val timerIcon: Int = if (musicViewModel.remainTime.longValue == 0L) {
-            R.drawable.set_timer
-        } else {
-            R.drawable.setted_timer
-        }
-
-        Column {
-            if (showSleepDialog) {
-                SleepTimeDialog(musicViewModel, onDismiss = {
-                    showSleepDialog = false
-                })
-            }
-            if (showCreatePlayListDialog) {
-                CreatePlayListDialog(musicViewModel, onDismiss = {
-                    showCreatePlayListDialog = false
-                    if (!it.isNullOrEmpty()) {
-                        navController.navigate(
-                            Router.TracksSelectPage.withArgs("-1", it)
-                        )
-                    }
-                })
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = {
-                    scope.launch {
-                        drawerState.apply {
-                            if (isClosed) open() else close()
-                        }
-                    }
-                }) {
-                    Icon(Icons.Filled.Menu, contentDescription = "menu")
-                }
-                Row {
-                    if (musicViewModel.mainTabList[pagerState.currentPage].type == PlayListType.PlayLists) {
-                        IconButton(
-                            modifier = Modifier.semantics {
-                                contentDescription = "Add PlayList"
-                            }, onClick = {
-                                showCreatePlayListDialog = true
-                            }) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "Add PlayList",
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .clip(CircleShape),
-                            )
-                        }
-                    } else if (musicViewModel.mainTabList[pagerState.currentPage].type == PlayListType.Queue) {
-                        var showDialogForQueue by remember { mutableStateOf(false) }
-                        var showAddPlayListDialog by remember { mutableStateOf(false) }
-                        var showCreatePlayListDialogForQueue by remember { mutableStateOf(false) }
-
-                        if (showDialogForQueue) {
-                            QueueOperateDialog(onDismiss = {
-                                showDialogForQueue = false
-                                if (it == OperateType.ClearQueue) {
-                                    musicViewModel.mediaBrowser?.sendCustomAction(
-                                        ACTION_CLEAR_QUEUE,
-                                        null,
-                                        null
-                                    )
-                                    musicViewModel.musicQueue.clear()
-                                    musicViewModel.currentPlay.value = null
-                                    musicViewModel.playListCurrent.value = null
-                                    musicViewModel.currentPlayQueueIndex.intValue = 0
-                                    musicViewModel.currentCaptionList.clear()
-                                } else if (it == OperateType.SaveQueueToPlayList) {
-
-                                    showAddPlayListDialog = true
-                                }
-                            })
-                        }
-                        if (showAddPlayListDialog) {
-                            AddMusicToPlayListDialog(musicViewModel, null) { playListId ->
-                                showAddPlayListDialog = false
-                                if (playListId != null) {
-                                    if (playListId == -1L) {
-                                        showCreatePlayListDialogForQueue = true
-                                    } else {
-                                        val ids = ArrayList<Long>(musicViewModel.musicQueue.size)
-                                        musicViewModel.musicQueue.forEach {
-                                            ids.add(it.id)
-                                        }
-                                        PlaylistManager.addMusicsToPlaylist(
-                                            context,
-                                            playListId,
-                                            ids
-                                        )
-                                        musicViewModel.mediaBrowser?.sendCustomAction(
-                                            ACTION_PlayLIST_CHANGE, null, null
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        if (showCreatePlayListDialogForQueue) {
-                            CreatePlayListDialog(musicViewModel, onDismiss = { playListName ->
-                                showCreatePlayListDialogForQueue = false
-                                if (!playListName.isNullOrEmpty()) {
-                                    val ids = ArrayList<Long>(musicViewModel.musicQueue.size)
-                                    musicViewModel.musicQueue.forEach {
-                                        ids.add(it.id)
-                                    }
-                                    val idPlayList =
-                                        PlaylistManager.createPlaylist(context, playListName)
-                                    if (idPlayList != -1L) {
-                                        PlaylistManager.addMusicsToPlaylist(
-                                            context,
-                                            idPlayList,
-                                            ids
-                                        )
-                                        musicViewModel.mediaBrowser?.sendCustomAction(
-                                            ACTION_PlayLIST_CHANGE, null, null
-                                        )
-                                    } else {
-                                        Toast.makeText(context, "创建失败", Toast.LENGTH_SHORT)
-                                            .show()
-                                    }
-                                }
-                            })
-                        }
-                        IconButton(
-                            modifier = Modifier.width(50.dp), onClick = {
-                                showDialogForQueue = true
-                            }) {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = "Operate",
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .clip(CircleShape),
-                            )
-                        }
-                    }
-                    IconButton(modifier = Modifier.semantics {
-                        contentDescription = "Set sleep time"
-                    }, onClick = {
-                        showSleepDialog = true
-                    }) {
-                        Image(
-                            painter = painterResource(timerIcon),
-                            contentDescription = "Sleeper time",
-                            modifier = Modifier
-                                .size(30.dp)
-                                .clip(CircleShape),
-                            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
-                        )
-                    }
-                    IconButton(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .semantics {
-                                contentDescription = "Search"
-                            },
-                        onClick = {
-                            navController.navigate(
-                                Router.SearchPage.route
-                            )
-                        }) {
-                        Icon(
-                            Icons.Filled.Search,
-                            modifier = Modifier.size(30.dp),
-                            contentDescription = "Search",
-                            tint = MaterialTheme.colorScheme.onBackground
-
-                        )
-                    }
-                }
-            }
-            ScrollableTabRow(
-                selectedTabIndex = pagerState.currentPage,
-                modifier = Modifier.fillMaxWidth(),
-                indicator = { tabPositions ->
-                    if (tabPositions.isNotEmpty()) {
-                        TabRowDefaults.Indicator(
-                            Modifier
-                                .height(3.0.dp)
-                                .tabIndicatorOffset(tabPositions[pagerState.currentPage]),
-                            height = 3.0.dp,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    } else {
-                        TabRowDefaults.Indicator(
-                            Modifier.height(3.0.dp),
-                            height = 3.0.dp,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                },
-            ) {
-                musicViewModel.mainTabList.forEachIndexed { index, item ->
-                    Tab(selected = pagerState.currentPage == index, onClick = {
-                        scope.launch {
-                            pagerState.animateScrollToPage(index)
-                        }
-                    }, text = {
-                        Text(
-                            text = item.name,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = 14.sp,
-                        )
-                    })
-                }
-            }
-        }
-    }
 
 }

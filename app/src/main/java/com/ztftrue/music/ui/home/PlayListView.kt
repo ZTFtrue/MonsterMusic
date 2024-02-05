@@ -49,7 +49,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.Navigator
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
@@ -59,20 +59,20 @@ import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.CreatePlayListDialog
 import com.ztftrue.music.ui.public.DeleteTip
 import com.ztftrue.music.ui.public.RenamePlayListDialog
-import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
-import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.operateDialogDeal
 import com.ztftrue.music.utils.enumToStringForPlayListType
+import com.ztftrue.music.utils.model.MusicPlayList
+import com.ztftrue.music.utils.trackManager.PlaylistManager
 
 
 @Composable
 fun PlayListView(
     modifier: Modifier = Modifier,
     musicViewModel: MusicViewModel,
-    navController: NavController,
+    navController: NavHostController,
 ) {
     val listState = rememberLazyListState()
     val playList = remember { mutableStateListOf<MusicPlayList>() }
@@ -129,7 +129,7 @@ data class ListParameter(val id: Long, val type: PlayListType) : Navigator.Extra
 fun PlayListItemView(
     item: MusicPlayList,
     musicViewModel: MusicViewModel,
-    navController: NavController,
+    navController: NavHostController,
     type: PlayListType,
     playList: SnapshotStateList<MusicPlayList>,
 ) {

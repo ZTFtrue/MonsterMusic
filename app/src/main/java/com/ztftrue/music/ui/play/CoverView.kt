@@ -51,7 +51,7 @@ fun CoverView(musicViewModel: MusicViewModel) {
         items(1) {
             Image(
                 painter = rememberAsyncImagePainter(
-                    paint ?: R.drawable.large_cover
+                    paint ?: R.drawable.songs_thumbnail_cover
                 ), contentDescription = "Cover",
                 modifier = Modifier
                     .fillMaxSize()

@@ -437,6 +437,7 @@ fun DeleteTip(
     )
 }
 
+@SuppressWarnings("deprecation")
 @Composable
 fun AddMusicToPlayListDialog(
     musicViewModel: MusicViewModel,

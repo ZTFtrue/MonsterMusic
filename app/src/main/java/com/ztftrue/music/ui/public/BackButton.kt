@@ -20,6 +20,10 @@ fun BackButton(
             navigateUp()
         }
     }
+    // CompositioinLocal
+//    val LocalNavigationProvider = staticCompositionLocalOf { ... }
+//    LocalNavigationProvider provides navController // setValue
+//    val navController = LocalNavigationProvider.current // useValue
     IconButton(onClick = {
         navController.navigateBack { }
     }) {

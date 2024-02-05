@@ -58,7 +58,7 @@ public class DelayEffect {
         this.decay =   newDecay;
     }
 
-    public boolean process(float[] floatBuffer) {
+    public void process(float[] floatBuffer) {
         for (int i = 0; i < floatBuffer.length; i++) {
             if (position >= echoBuffer.length) {
                 position = 0;
@@ -80,7 +80,6 @@ public class DelayEffect {
             position++;
         }
         applyNewEchoLength();
-        return true;
     }
 
     public boolean isWithFeedBack() {

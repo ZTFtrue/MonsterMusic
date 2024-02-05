@@ -58,26 +58,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.CreatePlayListDialog
-import com.ztftrue.music.utils.model.ArtistList
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.enumToStringForPlayListType
+import com.ztftrue.music.utils.model.ArtistList
 
 
 @Composable
 fun ArtistsGridView(
     modifier: Modifier = Modifier,
     musicViewModel: MusicViewModel,
-    navController: NavController,
+    navController: NavHostController,
     artistListDefault: SnapshotStateList<ArtistList>? = null,
     type: PlayListType = PlayListType.Artists,
     scrollDirection: ScrollDirectionType? = null
@@ -187,7 +187,7 @@ fun ArtistsGridView(
 fun ArtistItemView(
     item: ArtistList,
     musicViewModel: MusicViewModel,
-    navController: NavController,
+    navController: NavHostController,
     type: PlayListType = PlayListType.Artists
 ) {
     val context = LocalContext.current

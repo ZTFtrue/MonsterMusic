@@ -6,8 +6,6 @@ import android.view.MenuItem
 import androidx.annotation.VisibleForTesting
 import androidx.compose.ui.geometry.Rect
 import com.ztftrue.music.sqlData.model.DictionaryApp
-import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.ui.platform.compositionContext
 
 internal class TextActionModeCallback(
     var rect: Rect = Rect.Zero,
@@ -26,7 +24,7 @@ internal class TextActionModeCallback(
         onCopyRequested?.let {
             addMenuItem(menu, MenuItemOption.Copy)
         }
-        customProcessTextApp?.forEachIndexed() { index, it ->
+        customProcessTextApp?.forEachIndexed { index, it ->
             addMenuItemDictionaryApp(menu, it, index)
         }
         onPasteRequested?.let {
@@ -91,7 +89,7 @@ internal class TextActionModeCallback(
         addOrRemoveMenuItem(menu, MenuItemOption.Paste, onPasteRequested)
         addOrRemoveMenuItem(menu, MenuItemOption.Cut, onCutRequested)
         addOrRemoveMenuItem(menu, MenuItemOption.SelectAll, onSelectAllRequested)
-        customProcessTextApp?.forEachIndexed() { index, it ->
+        customProcessTextApp?.forEachIndexed { index, it ->
             addOrRemoveMenuAppItem(menu, it, index, onProcessAppItemClick)
         }
     }

@@ -48,24 +48,24 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.CreatePlayListDialog
-import com.ztftrue.music.utils.model.FolderList
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.enumToStringForPlayListType
+import com.ztftrue.music.utils.model.FolderList
 
 
 @Composable
 fun FolderListView(
     modifier: Modifier = Modifier,
     musicViewModel: MusicViewModel,
-    navController: NavController,
+    navController: NavHostController,
     type: PlayListType = PlayListType.Folders
 ) {
 
@@ -133,7 +133,7 @@ fun FolderItemView(
     item: FolderList,
     musicViewModel: MusicViewModel,
     modifier: Modifier,
-    navController: NavController,
+    navController: NavHostController,
     type: PlayListType = PlayListType.Folders,
 ) {
     val context = LocalContext.current

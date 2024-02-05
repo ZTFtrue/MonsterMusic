@@ -21,8 +21,8 @@ android {
         applicationId = "com.ztftrue.music"
         minSdk = 30
         targetSdk = 34
-        versionCode = 8
-        versionName = "0.1.6"
+        versionCode = 10
+        versionName = "0.1.10"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -46,13 +46,13 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
         getByName("debug") {
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
+            isShrinkResources = false
 
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+//            proguardFiles(
+//                getDefaultProguardFile("proguard-android-optimize.txt"),
+//                "proguard-rules.pro"
+//            )
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -98,11 +98,10 @@ dependencies {
     implementation("androidx.compose.material3:material3-window-size-class:1.1.2")
 
     // splash
-    implementation("androidx.core:core-splashscreen")
+    implementation ("androidx.core:core-splashscreen:1.0.1")
 //    implementation("androidx.compose.material:material:1.5.4")
     implementation ("androidx.constraintlayout:constraintlayout-compose:1.0.1")
 //
-    implementation ("androidx.core:core-splashscreen:1.0.1")
 
     // load image
     implementation("io.coil-kt:coil-compose:2.5.0")

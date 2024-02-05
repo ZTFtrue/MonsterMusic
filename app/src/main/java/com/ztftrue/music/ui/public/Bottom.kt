@@ -29,7 +29,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
@@ -38,11 +38,14 @@ import com.ztftrue.music.sqlData.model.MusicItem
 
 @UnstableApi
 @Composable
-fun Bottom(musicViewModel: MusicViewModel, navController: NavController) {
+fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
     val currentMusic: MusicItem? = musicViewModel.currentPlay.value
     val modifier = remember {
         Modifier.clickable {
-            navController.navigate(Router.MusicPlayerView.withArgs())
+            navController.navigate(Router.MusicPlayerView.withArgs()) {
+                launchSingleTop = true
+                restoreState = true
+            }
         }
     }
     var paint by remember { mutableStateOf<Bitmap?>(null) }
@@ -144,7 +147,6 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavController) {
                         .height(50.dp)
                         .padding(10.dp),
                     colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
-
                 )
             }
         }

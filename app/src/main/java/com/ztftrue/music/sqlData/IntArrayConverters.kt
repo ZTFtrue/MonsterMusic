@@ -1,7 +1,7 @@
 package com.ztftrue.music.sqlData
 
 import androidx.room.TypeConverter
-import com.google.gson.reflect.TypeToken;
+import com.google.gson.reflect.TypeToken
 import com.google.gson.Gson
 import java.lang.reflect.Type
 
