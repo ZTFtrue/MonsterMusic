@@ -106,7 +106,7 @@ fun MainView(
         }
     }
     Surface(
-        modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
+        modifier = Modifier.fillMaxSize().semantics { contentDescription = "MainView" }, color = MaterialTheme.colorScheme.background
     ) {
         ModalNavigationDrawer(
             drawerState = drawerState,
