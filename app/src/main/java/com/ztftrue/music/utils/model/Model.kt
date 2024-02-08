@@ -80,13 +80,13 @@ data class EqualizerBand(
 ) : Parcelable
 
 data class Caption(
-    val text: String,
+    var text: String,
     val timeStart: Long,
     val timeEnd: Long=0
 )
 
 data class ListStringCaption(
-    val text: List<String>,
+    val text: ArrayList<String>,
     val timeStart: Long,
     val timeEnd: Long=0
 )

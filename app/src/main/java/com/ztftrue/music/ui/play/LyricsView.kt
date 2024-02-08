@@ -66,9 +66,9 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
-import com.ztftrue.music.utils.model.ListStringCaption
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.model.ListStringCaption
 import com.ztftrue.music.utils.textToolbar.CustomTextToolbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -91,26 +91,29 @@ fun LyricsView(
     var showMenu by remember { mutableStateOf(false) }
     LaunchedEffect(musicViewModel.sliderPosition.floatValue) {
         val timeState = musicViewModel.sliderPosition.floatValue
-
-        if (musicViewModel.hasTime == LyricsType.LRC) {
-            for ((index, entry) in musicViewModel.currentCaptionList.withIndex()) {
-                if (entry.timeStart > timeState) {
-                    if (currentI != index) {
-                        currentI = index
-                        if (musicViewModel.autoScroll.value && isSelected && !showMenu) {
-                            launch(Dispatchers.Main) {
-                                // TODO calculate the scroll position by　
-                                listState.scrollToItem(
-                                    if ((currentI - 1) < 0) 0 else (currentI - 1),
-                                    0
-                                )
-                            }
-                        }
-                    }
+        if (musicViewModel.lyricsType == LyricsType.LRC) {
+            var cIndex = 0;
+            for (index in musicViewModel.currentCaptionList.size - 1 downTo 0) {
+                val entry = musicViewModel.currentCaptionList[index]
+                if (timeState > entry.timeStart) {
+                    cIndex = index
                     break
                 }
             }
-        } else if (musicViewModel.hasTime == LyricsType.VTT || musicViewModel.hasTime == LyricsType.SRT) {
+            if (cIndex != currentI) {
+                currentI = cIndex
+                if (musicViewModel.autoScroll.value && isSelected && !showMenu) {
+                    launch(Dispatchers.Main) {
+                        // TODO calculate the scroll position by　
+                        listState.scrollToItem(
+                            if (currentI < 2) 0 else (currentI - 2),
+                            0
+                        )
+                    }
+                }
+            }
+
+        } else if (musicViewModel.lyricsType == LyricsType.VTT || musicViewModel.lyricsType == LyricsType.SRT) {
             val cIndex = musicViewModel.currentCaptionList.binarySearch {
                 if (it.timeStart <= timeState.toLong() && it.timeEnd >= timeState.toLong()) 0
                 else if (it.timeStart > timeState) {
@@ -124,7 +127,7 @@ fun LyricsView(
                 if (musicViewModel.autoScroll.value && isSelected && !showMenu) {
                     launch(Dispatchers.Main) {
                         // TODO calculate the scroll position by　
-                        listState.scrollToItem(if ((currentI - 1) < 0) 0 else (currentI - 1), 0)
+                        listState.scrollToItem(if (currentI < 2) 0 else (currentI - 2), 0)
                     }
                 }
             }
@@ -135,7 +138,7 @@ fun LyricsView(
                 }.text.isNotEmpty()) {
                 if (musicViewModel.autoScroll.value && isSelected && !showMenu) {
                     launch(Dispatchers.Main) {
-                        listState.scrollToItem(if ((currentI - 1) < 0) 0 else (currentI - 1), 0)
+                        listState.scrollToItem(if (currentI <2) 0 else (currentI - 2), 0)
                     }
                 }
             }

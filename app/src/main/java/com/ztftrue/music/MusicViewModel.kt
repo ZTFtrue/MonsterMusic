@@ -22,15 +22,15 @@ import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.play.Lyrics
-import com.ztftrue.music.utils.model.ListStringCaption
-import com.ztftrue.music.utils.model.AnyListBase
-import com.ztftrue.music.utils.model.Caption
 import com.ztftrue.music.utils.CaptionUtils
-import com.ztftrue.music.utils.model.EqualizerBand
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.model.AnyListBase
+import com.ztftrue.music.utils.model.Caption
+import com.ztftrue.music.utils.model.EqualizerBand
+import com.ztftrue.music.utils.model.ListStringCaption
 import java.io.File
 import java.io.InputStream
 
@@ -93,7 +93,7 @@ class MusicViewModel : ViewModel() {
 
     // lyrics
     var itemDuration: Long = 1
-    var hasTime: LyricsType = LyricsType.TEXT
+    var lyricsType: LyricsType = LyricsType.TEXT
     var currentCaptionList = mutableStateListOf<ListStringCaption>()
 
     var fontSize = mutableIntStateOf(18)
@@ -152,18 +152,18 @@ class MusicViewModel : ViewModel() {
             folder?.mkdirs()
             val id = currentPlay.name.replace(regexPattern, "_")
             val path = "${context.getExternalFilesDir(folderPath)?.absolutePath}/$id"
-//                context.getExternalFilesDir(folderPath)?.absolutePath + "/$id.lrc"
             val text = File("$path.txt")
             if (text.exists()) {
-                hasTime = LyricsType.TEXT
-                currentCaptionList.addAll(readLyricsOrText(text, context))
+                lyricsType = LyricsType.TEXT
+                currentCaptionList.addAll(readText(text, context))
             } else if (File("$path.lrc").exists()) {
-                hasTime = LyricsType.LRC
+                lyricsType = LyricsType.LRC
+                currentCaptionList.addAll(readLyrics(File("$path.lrc"), context))
             } else if (File("$path.srt").exists()) {
-                hasTime = LyricsType.SRT
+                lyricsType = LyricsType.SRT
                 currentCaptionList.addAll(readCaptions(File("$path.srt"), LyricsType.SRT))
             } else if (File("$path.vtt").exists()) {
-                hasTime = LyricsType.VTT
+                lyricsType = LyricsType.VTT
                 currentCaptionList.addAll(readCaptions(File("$path.vtt"), LyricsType.VTT))
             } else {
                 return
@@ -174,22 +174,47 @@ class MusicViewModel : ViewModel() {
         itemDuration = duration / if (currentCaptionList.size == 0) 1 else currentCaptionList.size
     }
 
-    private fun readLyricsOrText(file: File, context: Context): ArrayList<ListStringCaption> {
+    private fun readLyrics(file: File, context: Context): ArrayList<ListStringCaption> {
+        val arrayList = arrayListOf<ListStringCaption>()
+        val inputStream: InputStream = file.inputStream()
+        val inputString = inputStream.bufferedReader().use { it.readText() }
+        val lyricsHashMap: LinkedHashMap<Long, ListStringCaption> =
+            linkedMapOf()
+        inputString.split("\n").forEachIndexed { _, it ->
+            if (it.startsWith("offset:")) {
+                // TODO
+            } else {
+                val captions = CaptionUtils.parseLyricLine(it, context)
+                val an = ListStringCaption(
+                    text = ArrayList(captions.text.split(Regex("[\\r\\s]+"))),
+                    timeStart = captions.timeStart,
+                    timeEnd = captions.timeEnd
+                )
+                val temp = lyricsHashMap[captions.timeStart]
+                if (temp != null) {
+                    temp.text.add("\n")
+                    temp.text.addAll(captions.text.split("[\\r\\s]+"))
+                } else {
+                    lyricsHashMap[captions.timeStart] = an
+                }
+            }
+        }
+        arrayList.addAll(lyricsHashMap.values)
+        return arrayList
+    }
+
+    private fun readText(file: File, context: Context): ArrayList<ListStringCaption> {
         val arrayList = arrayListOf<ListStringCaption>()
         val inputStream: InputStream = file.inputStream()
         val inputString = inputStream.bufferedReader().use { it.readText() }
         inputString.split("\n").forEach {
-            if (it.startsWith("offset:")) {
-// TODO
-            } else {
-                val captions = CaptionUtils.parseLyricLine(it, context)
-                val an = ListStringCaption(
-                    text = captions.text.split(Regex("[\\n\\r\\s]+")),
-                    timeStart = captions.timeStart,
-                    timeEnd = captions.timeEnd
-                )
-                arrayList.add(an)
-            }
+            val captions = CaptionUtils.parseLyricLine(it, context)
+            val an = ListStringCaption(
+                text = ArrayList(captions.text.split(Regex("[\\n\\r\\s]+"))),
+                timeStart = captions.timeStart,
+                timeEnd = captions.timeEnd
+            )
+            arrayList.add(an)
         }
         return arrayList
     }
@@ -207,7 +232,7 @@ class MusicViewModel : ViewModel() {
         val arrayList = arrayListOf<ListStringCaption>()
         captions.forEach {
             val an = ListStringCaption(
-                text = it.text.split(Regex("[\\n\\r\\s]+")),
+                text = ArrayList(it.text.split(Regex("[\\n\\r\\s]+"))),
                 timeStart = it.timeStart,
                 timeEnd = it.timeEnd
             )
