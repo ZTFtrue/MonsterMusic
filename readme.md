@@ -37,6 +37,16 @@ but some features cannot be used.
 
 ## Develop
 
+### Need TODO
+
+- Direct read lyrics files from storage
+- DSP visualize
+- Input View color modify
+- Add feature PlayList\Queue sort by user
+- Add feature Album\Songs sort by Name/Other
+- Start Flash
+- Composition,Performance optimize
+
 ## Note
 
 In project:
