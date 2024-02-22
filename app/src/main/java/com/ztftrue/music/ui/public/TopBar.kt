@@ -1,7 +1,6 @@
 package com.ztftrue.music.ui.public
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +24,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +32,7 @@ import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,7 +42,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -60,6 +60,7 @@ import com.ztftrue.music.Router
 import com.ztftrue.music.play.ACTION_SET_SLEEP_TIME
 import com.ztftrue.music.utils.Utils
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
     navController: NavHostController,
@@ -72,20 +73,17 @@ fun TopBar(
     } else {
         R.drawable.setted_timer
     }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (showDialog) {
-            SleepTimeDialog(musicViewModel, onDismiss = {
-                showDialog = false
-            })
-        }
-        BackButton(navController)
-        Row (     verticalAlignment = Alignment.CenterVertically){
+    if (showDialog) {
+        SleepTimeDialog(musicViewModel, onDismiss = {
+            showDialog = false
+        })
+    }
+    TopAppBar(
+        navigationIcon = {
+            BackButton(navController)
+        },
+        title = {},
+        actions = {
             IconButton(onClick = {
                 showDialog = true
             }) {
@@ -118,7 +116,7 @@ fun TopBar(
             }
             content()
         }
-    }
+    )
 }
 
 @Composable
@@ -300,32 +298,14 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BackTopBar(
-    navController: NavHostController,
-    musicViewModel: MusicViewModel
+    navController: NavHostController
 ) {
-    val context = LocalContext.current
-    Row(
-        modifier = Modifier
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-
-        BackButton(navController)
-        Row {
-            IconButton(onClick = {
-                Toast.makeText(context, "Oh oh oh", Toast.LENGTH_SHORT).show()
-            }) {
-                Text(
-                    "",
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clip(CircleShape),
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            }
-        }
-    }
+    TopAppBar(
+        navigationIcon = { BackButton(navController) },
+        title = {
+            Text(text = "Settings", color = MaterialTheme.colorScheme.onBackground)
+        })
 }

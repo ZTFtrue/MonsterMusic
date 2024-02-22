@@ -83,7 +83,7 @@ fun SettingsPage(
         modifier = Modifier.padding(all = 0.dp),
         topBar = {
             Column {
-                BackTopBar(navController, musicViewModel)
+                BackTopBar(navController)
                 Divider(
                     modifier = Modifier
                         .fillMaxWidth()

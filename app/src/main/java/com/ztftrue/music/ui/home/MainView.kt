@@ -4,9 +4,7 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +23,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +35,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,7 +45,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
@@ -106,7 +105,10 @@ fun MainView(
         }
     }
     Surface(
-        modifier = Modifier.fillMaxSize().semantics { contentDescription = "MainView" }, color = MaterialTheme.colorScheme.background
+        modifier = Modifier
+            .fillMaxSize()
+            .semantics { contentDescription = "MainView" },
+        color = MaterialTheme.colorScheme.background
     ) {
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -209,7 +211,7 @@ fun MainView(
 }
 
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MainTopBar(
     musicViewModel: MusicViewModel,
@@ -226,6 +228,7 @@ fun MainTopBar(
     } else {
         R.drawable.setted_timer
     }
+
     Column {
         if (showSleepDialog) {
             SleepTimeDialog(musicViewModel, onDismiss = {
@@ -242,28 +245,27 @@ fun MainTopBar(
                 }
             })
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = {
-                scope.launch {
-                    drawerState.apply {
-                        if (isClosed) open() else close()
+        TopAppBar(
+            navigationIcon = {
+                IconButton(onClick = {
+                    scope.launch {
+                        drawerState.apply {
+                            if (isClosed) open() else close()
+                        }
                     }
+                }) {
+                    Icon(Icons.Filled.Menu, contentDescription = "menu")
                 }
-            }) {
-                Icon(Icons.Filled.Menu, contentDescription = "menu")
-            }
-            Row {
+            },
+            title = { },
+            actions = {
+
                 if (musicViewModel.mainTabList[pagerState.currentPage].type == PlayListType.PlayLists) {
-                    IconButton(
-                        modifier = Modifier.semantics {
-                            contentDescription = "Add PlayList"
-                        }, onClick = {
-                            showCreatePlayListDialog = true
-                        }) {
+                    IconButton(modifier = Modifier.semantics {
+                        contentDescription = "Add PlayList"
+                    }, onClick = {
+                        showCreatePlayListDialog = true
+                    }) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Add PlayList",
@@ -392,8 +394,7 @@ fun MainTopBar(
 
                     )
                 }
-            }
-        }
+            })
         ScrollableTabRow(
             selectedTabIndex = pagerState.currentPage,
             modifier = Modifier.fillMaxWidth(),

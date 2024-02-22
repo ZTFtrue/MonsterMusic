@@ -1,15 +1,11 @@
 package com.ztftrue.music.ui.other
 
 import android.graphics.Bitmap
-import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,18 +14,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -46,7 +43,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.ztftrue.music.MusicViewModel
-import com.ztftrue.music.play.ACTION_TRACKS_UPDATE
 import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.utils.trackManager.TracksManager
 
@@ -55,7 +51,10 @@ import com.ztftrue.music.utils.trackManager.TracksManager
  * https://stackoverflow.com/questions/57804074/how-to-update-metadata-of-audio-file-in-android-q-media-store
  *  // TODO this is disable,  because cant  updating real file in storage
  */
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class,
+    ExperimentalMaterial3Api::class
+)
 @UnstableApi
 @Composable
 fun EditTrackPage(
@@ -88,55 +87,36 @@ fun EditTrackPage(
             navController.popBackStack()
         }
     }
-    fun saveTrackMessage() {
-        TracksManager.saveTrackInfo(context, musicId, title, album, artist, genre, year)
-        val bundleTemp = Bundle()
-        bundleTemp.putLong("id", musicId)
-        musicViewModel.mediaBrowser?.sendCustomAction(
-            ACTION_TRACKS_UPDATE,
-            bundleTemp,
-            object : MediaBrowserCompat.CustomActionCallback() {
-                override fun onResult(
-                    action: String?,
-                    extras: Bundle?,
-                    resultData: Bundle?
-                ) {
-                    super.onResult(action, extras, resultData)
-                    if (ACTION_TRACKS_UPDATE == action) {
-                        musicViewModel.refreshList.value =
-                            !musicViewModel.refreshList.value
-                    }
-                }
-            }
-        )
-    }
+//    fun saveTrackMessage() {
+//        TracksManager.saveTrackInfo(context, musicId, title, album, artist, genre, year)
+//        val bundleTemp = Bundle()
+//        bundleTemp.putLong("id", musicId)
+//        musicViewModel.mediaBrowser?.sendCustomAction(
+//            ACTION_TRACKS_UPDATE,
+//            bundleTemp,
+//            object : MediaBrowserCompat.CustomActionCallback() {
+//                override fun onResult(
+//                    action: String?,
+//                    extras: Bundle?,
+//                    resultData: Bundle?
+//                ) {
+//                    super.onResult(action, extras, resultData)
+//                    if (ACTION_TRACKS_UPDATE == action) {
+//                        musicViewModel.refreshList.value =
+//                            !musicViewModel.refreshList.value
+//                    }
+//                }
+//            }
+//        )
+//    }
     Scaffold(
         modifier = Modifier.padding(all = 0.dp),
         topBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BackButton(navController)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-//                        IconButton(onClick = {
-//                            saveTrackMessage()
-//                            focusRequester.freeFocus()
-//                            keyboardController?.hide()
-//                        }) {
-//                            Image(
-//                                painter = painterResource(R.drawable.ic_save),
-//                                contentDescription = "Save",
-//                                modifier = Modifier
-//                                    .size(30.dp)
-//                                    .clip(CircleShape),
-//                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
-//                            )
-//                        }
-                }
-            }
+            TopAppBar(
+                navigationIcon = { BackButton(navController) },
+                title = {
+                    Text(text = title, color = MaterialTheme.colorScheme.onBackground)
+                })
         },
 
         content = { padding ->
@@ -165,159 +145,164 @@ fun EditTrackPage(
                     )
                 }
                 item {
-                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)){
-                    TextField(
-                        enabled = false,
-                        value = title,
-                        onValueChange = {
-                            val newText = it.ifEmpty {
-                                ""
-                            }
-                            if (title != newText) {
-                                title = newText
-                            }
-                        },
-                        label = {
-                            Text("Title")
-                        }, // Placeholder or hint text
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = ImeAction.Next,
-                            keyboardType = KeyboardType.Text
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                focusRequester.freeFocus()
-                                keyboardController?.hide()
-                            }
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth(1f)
-                            .focusRequester(focusRequester),
-                    )}
+                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
+                        TextField(
+                            enabled = false,
+                            value = title,
+                            onValueChange = {
+                                val newText = it.ifEmpty {
+                                    ""
+                                }
+                                if (title != newText) {
+                                    title = newText
+                                }
+                            },
+                            label = {
+                                Text("Title")
+                            }, // Placeholder or hint text
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Next,
+                                keyboardType = KeyboardType.Text
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    focusRequester.freeFocus()
+                                    keyboardController?.hide()
+                                }
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth(1f)
+                                .focusRequester(focusRequester),
+                        )
+                    }
                 }
                 item {
-                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)){
-                    TextField(
-                        enabled = false,
-                        value = album,
-                        onValueChange = {
-                            val newText = it.ifEmpty {
-                                ""
-                            }
-                            if (album != newText) {
-                                album = newText
-                            }
-                        },
-                        label = {
-                            Text("Album")
-                        }, // Placeholder or hint text
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = ImeAction.Next,
-                            keyboardType = KeyboardType.Text
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                focusRequester.freeFocus()
-                                keyboardController?.hide()
-                            }
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth(1f)
-                            .focusRequester(focusRequester),
-                    )}
+                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
+                        TextField(
+                            enabled = false,
+                            value = album,
+                            onValueChange = {
+                                val newText = it.ifEmpty {
+                                    ""
+                                }
+                                if (album != newText) {
+                                    album = newText
+                                }
+                            },
+                            label = {
+                                Text("Album")
+                            }, // Placeholder or hint text
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Next,
+                                keyboardType = KeyboardType.Text
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    focusRequester.freeFocus()
+                                    keyboardController?.hide()
+                                }
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth(1f)
+                                .focusRequester(focusRequester),
+                        )
+                    }
                 }
                 item {
-                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)){
-                    TextField(
-                        enabled = false,
-                        value = artist,
-                        onValueChange = {
-                            val newText = it.ifEmpty {
-                                ""
-                            }
-                            if (artist != newText) {
-                                artist = newText
-                            }
-                        },
-                        label = {
-                            Text("Artist")
-                        }, // Placeholder or hint text
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = ImeAction.Next,
-                            keyboardType = KeyboardType.Text
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                focusRequester.freeFocus()
-                                keyboardController?.hide()
-                            }
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth(1f)
-                            .focusRequester(focusRequester),
-                    )}
+                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
+                        TextField(
+                            enabled = false,
+                            value = artist,
+                            onValueChange = {
+                                val newText = it.ifEmpty {
+                                    ""
+                                }
+                                if (artist != newText) {
+                                    artist = newText
+                                }
+                            },
+                            label = {
+                                Text("Artist")
+                            }, // Placeholder or hint text
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Next,
+                                keyboardType = KeyboardType.Text
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    focusRequester.freeFocus()
+                                    keyboardController?.hide()
+                                }
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth(1f)
+                                .focusRequester(focusRequester),
+                        )
+                    }
                 }
                 item {
-                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)){
-                    TextField(
-                        enabled = false,
-                        value = genre,
-                        onValueChange = {
-                            val newText = it.ifEmpty {
-                                ""
-                            }
-                            if (genre != newText) {
-                                genre = newText
-                            }
-                        },
-                        label = {
-                            Text("Genre")
-                        }, // Placeholder or hint text
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = ImeAction.Next,
-                            keyboardType = KeyboardType.Text
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                focusRequester.freeFocus()
-                                keyboardController?.hide()
-                            }
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth(1f)
-                            .focusRequester(focusRequester),
-                    )}
+                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
+                        TextField(
+                            enabled = false,
+                            value = genre,
+                            onValueChange = {
+                                val newText = it.ifEmpty {
+                                    ""
+                                }
+                                if (genre != newText) {
+                                    genre = newText
+                                }
+                            },
+                            label = {
+                                Text("Genre")
+                            }, // Placeholder or hint text
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Next,
+                                keyboardType = KeyboardType.Text
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    focusRequester.freeFocus()
+                                    keyboardController?.hide()
+                                }
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth(1f)
+                                .focusRequester(focusRequester),
+                        )
+                    }
                 }
                 item {
-                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)){
-                    TextField(
-                        enabled = false,
-                        value = year,
-                        onValueChange = {
-                            val newText = it.ifEmpty {
-                                "0000"
-                            }
-                            if (year != newText) {
-                                year = newText
-                            }
-                        },
-                        label = {
-                            Text("Year")
-                        }, // Placeholder or hint text
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = ImeAction.Next,
-                            keyboardType = KeyboardType.Text
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                focusRequester.freeFocus()
-                                keyboardController?.hide()
-                            }
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth(1f)
-                            .focusRequester(focusRequester),
-                    )}
+                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
+                        TextField(
+                            enabled = false,
+                            value = year,
+                            onValueChange = {
+                                val newText = it.ifEmpty {
+                                    "0000"
+                                }
+                                if (year != newText) {
+                                    year = newText
+                                }
+                            },
+                            label = {
+                                Text("Year")
+                            }, // Placeholder or hint text
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Next,
+                                keyboardType = KeyboardType.Text
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    focusRequester.freeFocus()
+                                    keyboardController?.hide()
+                                }
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth(1f)
+                                .focusRequester(focusRequester),
+                        )
+                    }
                 }
                 item {
                     Box(

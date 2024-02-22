@@ -92,7 +92,7 @@ fun LyricsView(
     LaunchedEffect(musicViewModel.sliderPosition.floatValue) {
         val timeState = musicViewModel.sliderPosition.floatValue
         if (musicViewModel.lyricsType == LyricsType.LRC) {
-            var cIndex = 0;
+            var cIndex = 0
             for (index in musicViewModel.currentCaptionList.size - 1 downTo 0) {
                 val entry = musicViewModel.currentCaptionList[index]
                 if (timeState > entry.timeStart) {
@@ -138,7 +138,7 @@ fun LyricsView(
                 }.text.isNotEmpty()) {
                 if (musicViewModel.autoScroll.value && isSelected && !showMenu) {
                     launch(Dispatchers.Main) {
-                        listState.scrollToItem(if (currentI <2) 0 else (currentI - 2), 0)
+                        listState.scrollToItem(if (currentI < 2) 0 else (currentI - 2), 0)
                     }
                 }
             }
