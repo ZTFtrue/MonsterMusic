@@ -799,7 +799,7 @@ fun PlayingPage(
                                         .size(60.dp)
 
                                 ) { }
-                                Box(modifier = Modifier.width(100.dp)) { }
+                                Box(modifier = Modifier.width(80.dp)) { }
                             }
                             Text(
                                 text = "Show",
@@ -808,7 +808,7 @@ fun PlayingPage(
                             )
                             Text(
                                 text = "Auto go",
-                                modifier = Modifier.width(50.dp),
+                                modifier = Modifier.width(80.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -880,7 +880,7 @@ fun PlayingPage(
                                                 )
                                             )
                                         }
-                                        Box(modifier = Modifier.width(100.dp)) {
+                                        Box(modifier = Modifier.width(80.dp)) {
                                             Text(
                                                 text = item.label,
                                                 modifier = Modifier
