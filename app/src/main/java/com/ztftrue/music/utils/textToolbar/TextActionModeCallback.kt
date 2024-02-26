@@ -50,11 +50,15 @@ internal class TextActionModeCallback(
     fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
         if (item != null) {
             if (item.groupId == 0) {
-                when (item.itemId) {
-                    MenuItemOption.Copy.id -> onCopyRequested?.invoke()
-                    MenuItemOption.Paste.id -> onPasteRequested?.invoke()
-                    MenuItemOption.Cut.id -> onCutRequested?.invoke()
-                    MenuItemOption.SelectAll.id -> onSelectAllRequested?.invoke()
+                try {
+                    when (item.itemId) {
+                        MenuItemOption.Copy.id -> onCopyRequested?.invoke()
+                        MenuItemOption.Paste.id -> onPasteRequested?.invoke()
+                        MenuItemOption.Cut.id -> onCutRequested?.invoke()
+                        MenuItemOption.SelectAll.id -> onSelectAllRequested?.invoke()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
             } else if (item.groupId == 1) {
                 val app = customProcessTextApp?.get(item.order)
@@ -128,6 +132,7 @@ internal class TextActionModeCallback(
                 item,
                 index
             )
+
             callback == null && menu.findItem(index + 10) != null -> menu.removeItem(index + 10)
         }
     }
