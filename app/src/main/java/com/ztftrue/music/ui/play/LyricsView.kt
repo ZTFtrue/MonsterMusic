@@ -163,28 +163,34 @@ fun LyricsView(
 
         }
     }
+    LaunchedEffect(showMenu) {
+        if(showMenu){
+            val list = musicViewModel.dictionaryAppList
+            list.forEach {
+                if (it.autoGo) {
+                    val intent = Intent()
+                    intent.setAction(Intent.ACTION_PROCESS_TEXT)
+                    intent.setClassName(
+                        it.packageName,
+                        it.name
+                    )
+                    intent.putExtra(
+                        Intent.EXTRA_PROCESS_TEXT,
+                        word
+                    )
+                    context.startActivity(intent)
+                    return@forEach
+                }
+            }
+        }
+    }
     key(showMenu) {
         if (showMenu) {
             val list = musicViewModel.dictionaryAppList
             if (list.isEmpty()) {
                 showMenu = false
             } else {
-                list.forEach {
-                    if (it.autoGo) {
-                        val intent = Intent()
-                        intent.setAction(Intent.ACTION_PROCESS_TEXT)
-                        intent.setClassName(
-                            it.packageName,
-                            it.name
-                        )
-                        intent.putExtra(
-                            Intent.EXTRA_PROCESS_TEXT,
-                            word
-                        )
-                        context.startActivity(intent)
-                        return@forEach
-                    }
-                }
+
                 Popup(
                     // on below line we are adding
                     // alignment and properties.
