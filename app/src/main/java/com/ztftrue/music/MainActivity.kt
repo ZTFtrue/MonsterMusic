@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
+import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -310,6 +311,7 @@ class MainActivity : ComponentActivity() {
                 mediaBrowser?.connect()
             }
         } else {
+            compatSplashScreen?.setKeepOnScreenCondition { false }
             setContent {
                 MusicPitchTheme(musicViewModel) {
                     // A surface container using the 'background' color from the theme
@@ -335,11 +337,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private var compatSplashScreen: SplashScreen? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val compatSplashScreen = installSplashScreen()
-        compatSplashScreen.setKeepOnScreenCondition { musicViewModel.mainTabList.isEmpty() }
+        compatSplashScreen = installSplashScreen()
+        compatSplashScreen?.setKeepOnScreenCondition { musicViewModel.mainTabList.isEmpty() }
         Utils.initSettingsData(musicViewModel, this)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             if (ActivityCompat.checkSelfPermission(
@@ -365,7 +368,6 @@ class MainActivity : ComponentActivity() {
             setContent {
                 MusicPitchTheme(musicViewModel) {
                     BaseLayout(musicViewModel, this@MainActivity)
-
                 }
             }
         } else {
@@ -643,7 +645,6 @@ class MainActivity : ComponentActivity() {
             resultData.getBoolean("play_completed")
         getSeek()
     }
-
 
 
 }
