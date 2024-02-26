@@ -102,7 +102,7 @@ fun LyricsView(
             }
             if (cIndex != currentI) {
                 currentI = cIndex
-                if (musicViewModel.autoScroll.value && isSelected && !showMenu) {
+                if (musicViewModel.autoScroll.value && !isSelected && !showMenu) {
                     launch(Dispatchers.Main) {
                         // TODO calculate the scroll position by　
                         listState.scrollToItem(
@@ -124,7 +124,7 @@ fun LyricsView(
             }
             if (cIndex >= 0 && cIndex != currentI) {
                 currentI = cIndex
-                if (musicViewModel.autoScroll.value && isSelected && !showMenu) {
+                if (musicViewModel.autoScroll.value && !isSelected && !showMenu) {
                     launch(Dispatchers.Main) {
                         // TODO calculate the scroll position by　
                         listState.scrollToItem(if (currentI < 2) 0 else (currentI - 2), 0)
@@ -136,7 +136,7 @@ fun LyricsView(
             if (musicViewModel.currentCaptionList.getOrElse(currentI) {
                     ListStringCaption(arrayListOf(), 0)
                 }.text.isNotEmpty()) {
-                if (musicViewModel.autoScroll.value && isSelected && !showMenu) {
+                if (musicViewModel.autoScroll.value && !isSelected && !showMenu) {
                     launch(Dispatchers.Main) {
                         listState.scrollToItem(if (currentI < 2) 0 else (currentI - 2), 0)
                     }
@@ -163,92 +163,95 @@ fun LyricsView(
 
         }
     }
-    if (showMenu) {
-        val list = musicViewModel.dictionaryAppList
-        if (list.isEmpty()) {
-            showMenu = false
-        } else {
-            list.forEach {
-                if (it.autoGo) {
-                    val intent = Intent()
-                    intent.setAction(Intent.ACTION_PROCESS_TEXT)
-                    intent.setClassName(
-                        it.packageName,
-                        it.name
-                    )
-                    intent.putExtra(
-                        Intent.EXTRA_PROCESS_TEXT,
-                        word
-                    )
-                    context.startActivity(intent)
-                    return@forEach
-                }
-            }
-            Popup(
-                // on below line we are adding
-                // alignment and properties.
-                alignment = Alignment.TopCenter,
-                properties = PopupProperties(),
-                offset = popupOffset,
-                onDismissRequest = {
-                    showMenu = false
-                    isSelected = false
-                    selectedTag = ""
-                    word = ""
-                }
-            ) {
-                val rowListSate = rememberLazyListState()
-                Column(
-                    Modifier
-                        .height(60.dp)
-                        .padding(top = 5.dp)
-                        // on below line we are adding background color
-                        .background(
-                            color = MaterialTheme.colorScheme.background,
-                            RoundedCornerShape(10.dp)
+    key(showMenu) {
+        if (showMenu) {
+            val list = musicViewModel.dictionaryAppList
+            if (list.isEmpty()) {
+                showMenu = false
+            } else {
+                list.forEach {
+                    if (it.autoGo) {
+                        val intent = Intent()
+                        intent.setAction(Intent.ACTION_PROCESS_TEXT)
+                        intent.setClassName(
+                            it.packageName,
+                            it.name
                         )
-                        // on below line we are adding border.
-                        .border(
-                            1.dp,
-                            color = Color.Black,
-                            RoundedCornerShape(10.dp)
+                        intent.putExtra(
+                            Intent.EXTRA_PROCESS_TEXT,
+                            word
                         )
+                        context.startActivity(intent)
+                        return@forEach
+                    }
+                }
+                Popup(
+                    // on below line we are adding
+                    // alignment and properties.
+                    alignment = Alignment.TopCenter,
+                    properties = PopupProperties(),
+                    offset = popupOffset,
+                    onDismissRequest = {
+                        showMenu = false
+                        isSelected = false
+                        selectedTag = ""
+                        word = ""
+                    }
                 ) {
-                    LazyRow(
-                        contentPadding = PaddingValues(5.dp),
-                        state = rowListSate,
-                        modifier = Modifier
-                            .background(MaterialTheme.colorScheme.background)
-                            .fillMaxWidth()
+                    val rowListSate = rememberLazyListState()
+                    Column(
+                        Modifier
+                            .height(60.dp)
+                            .padding(top = 5.dp)
+                            // on below line we are adding background color
+                            .background(
+                                color = MaterialTheme.colorScheme.background,
+                                RoundedCornerShape(10.dp)
+                            )
+                            // on below line we are adding border.
+                            .border(
+                                1.dp,
+                                color = Color.Black,
+                                RoundedCornerShape(10.dp)
+                            )
                     ) {
-                        items(list.size) { index ->
-                            val resolveInfo = list[index]
-                            Button(
-                                onClick = {
-                                    val intent = Intent()
-                                    intent.setAction(Intent.ACTION_PROCESS_TEXT)
-                                    intent.setClassName(
-                                        resolveInfo.packageName,
-                                        resolveInfo.name
+                        LazyRow(
+                            contentPadding = PaddingValues(5.dp),
+                            state = rowListSate,
+                            modifier = Modifier
+                                .background(MaterialTheme.colorScheme.background)
+                                .fillMaxWidth()
+                        ) {
+                            items(list.size) { index ->
+                                val resolveInfo = list[index]
+                                Button(
+                                    onClick = {
+                                        val intent = Intent()
+                                        intent.setAction(Intent.ACTION_PROCESS_TEXT)
+                                        intent.setClassName(
+                                            resolveInfo.packageName,
+                                            resolveInfo.name
+                                        )
+                                        intent.putExtra(
+                                            Intent.EXTRA_PROCESS_TEXT,
+                                            word
+                                        )
+                                        context.startActivity(intent)
+                                    }
+                                ) {
+                                    Text(
+                                        text = resolveInfo.label
                                     )
-                                    intent.putExtra(
-                                        Intent.EXTRA_PROCESS_TEXT,
-                                        word
-                                    )
-                                    context.startActivity(intent)
                                 }
-                            ) {
-                                Text(
-                                    text = resolveInfo.label
-                                )
                             }
                         }
                     }
                 }
             }
-        }
 
+        }
     }
+
     if (musicViewModel.currentCaptionList.size == 0) {
         Text(
             text = "No Lyrics, Click to import lyrics.\n Support LRC/VTT/SRT/TXT",
