@@ -7,6 +7,7 @@ import java.io.File
 import java.util.Locale
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+
 enum class LyricsType {
     TEXT,
     LRC,
@@ -50,55 +51,46 @@ object CaptionUtils {
 
     fun parseSrtFile(file: File): List<Caption> {
         val subtitles = mutableListOf<Caption>()
-
-        file.bufferedReader().useLines { lines ->
-            var startTime = 0L
-            var endTime = 0L
-            var text = StringBuilder()
-
-            for (line in lines) {
-                when {
-                    line.isBlank() -> {
-                        // Blank line indicates the end of a subtitle
-                        if (text.isNotEmpty()) {
-                            subtitles.add(Caption(text.toString().trim(), startTime, endTime))
-                            text = StringBuilder()
-                        }
-                    }
-
-                    line.matches(Regex("\\d+ --> \\d+")) -> {
-                        // Time range line
-                        val times = line.split(Pattern.compile("\\s+-->\\s+"))
-                        startTime = captionTimestampToMilliseconds(times[0])
-                        endTime = captionTimestampToMilliseconds(times[1])
-                    }
-
-                    else -> {
-                        // Text line
-                        text.append(line).append("\n")
+        var startTime = 0L
+        var endTime = 0L
+        var text = StringBuilder()
+        file.readLines().forEach { line ->
+            when {
+                line.isBlank() -> {
+                    // Blank line indicates the end of a subtitle
+                    if (text.isNotEmpty()) {
+                        subtitles.add(Caption(text.toString().trim(), startTime, endTime))
                     }
                 }
-            }
 
-            // Add the last subtitle
-            if (text.isNotEmpty()) {
-                subtitles.add(Caption(text.toString().trim(), startTime, endTime))
+                line.matches(Regex("^\\d+:\\d+:\\d+,\\d+\\s-->\\s\\d+:\\d+:\\d+,\\d+")) -> {
+                    val times = line.split(Pattern.compile("\\s+-->\\s+"))
+                    startTime = captionTimestampToMilliseconds(times[0],",")
+                    endTime = captionTimestampToMilliseconds(times[1],",")
+                    text = StringBuilder()
+                }
+                else -> {
+                    // Text line
+                    text.append(line).append("\n")
+                }
             }
         }
-
+        if (text.isNotEmpty()) {
+            subtitles.add(Caption(text.toString().trim(), startTime, endTime))
+        }
         return subtitles
     }
 
-    private fun captionTimestampToMilliseconds(timestamp: String): Long {
+    private fun captionTimestampToMilliseconds(timestamp: String,splitter: String = "."): Long {
         val parts = timestamp.split(":")
         val hours = parts[0].toLong()
         val minutes = parts[1].toLong()
-        val secondsAndMilliseconds = parts[2].split(".")
+        val secondsAndMilliseconds = parts[2].split(splitter)
         val seconds = secondsAndMilliseconds[0].toLong()
         val milliseconds = secondsAndMilliseconds[1].toLong()
-
         return ((hours * 3600 + minutes * 60 + seconds) * 1000 + milliseconds)
     }
+
     /**
      * timeStr minutes:seconds.milliseconds
      */

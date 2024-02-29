@@ -87,7 +87,7 @@ fun LyricsView(
     val context = LocalContext.current
     val listState = rememberLazyListState()
     var currentI by remember { mutableIntStateOf(0) }
-    var isSelected by remember { mutableStateOf(true) }
+    var isSelected by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     LaunchedEffect(musicViewModel.sliderPosition.floatValue) {
         val timeState = musicViewModel.sliderPosition.floatValue
