@@ -630,6 +630,10 @@ fun PlayingPage(
                                     .padding(0.dp),
                                 onCheckedChange = {
                                     viewModel.autoScroll.value = it
+                                    SharedPreferencesUtils.saveAutoScroll(
+                                        context,
+                                        it
+                                    )
                                 }
                             )
                         }
@@ -676,6 +680,10 @@ fun PlayingPage(
                                     .padding(0.dp),
                                 onCheckedChange = {
                                     viewModel.autoHighLight.value = it
+                                    SharedPreferencesUtils.saveAutoHighLight(
+                                        context,
+                                        it
+                                    )
                                 }
                             )
                         }
