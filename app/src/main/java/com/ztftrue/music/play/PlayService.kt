@@ -43,13 +43,13 @@ import com.ztftrue.music.sqlData.model.CurrentList
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.PlayConfig
+import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.model.AlbumList
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.model.ArtistList
 import com.ztftrue.music.utils.model.FolderList
 import com.ztftrue.music.utils.model.GenresList
 import com.ztftrue.music.utils.model.MusicPlayList
-import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.stringToEnumForPlayListType
 import com.ztftrue.music.utils.trackManager.AlbumManager
 import com.ztftrue.music.utils.trackManager.ArtistManager
@@ -420,7 +420,9 @@ class PlayService : MediaBrowserServiceCompat() {
                 val musicItems = extras.getParcelableArrayList<MusicItem>("musicItems")
                 val index = extras.getInt("index")
                 if (musicItem != null && playList != null) {
-                    if (playList.type == PlayListType.Queue || (playList.type == playListCurrent?.type && playList.id == playListCurrent?.id)) {
+                    if (playList.type == PlayListType.Queue
+                        || (playList.type == playListCurrent?.type && playList.id == playListCurrent?.id
+                                &&musicQueue.size==musicItems?.size)) {
                         playMusicCurrentQueue(musicItem, index)
                     } else {
                         playMusicSwitchQueue(musicItem, playList, index, musicItems)
