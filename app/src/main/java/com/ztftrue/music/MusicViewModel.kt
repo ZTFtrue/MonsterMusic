@@ -218,7 +218,7 @@ class MusicViewModel : ViewModel() {
                                 ) {
                                     val musicName: String = try {
                                         currentPlay.path.substring(
-                                            currentPlay.path.lastIndexOf("/")+1,
+                                            currentPlay.path.lastIndexOf("/") + 1,
                                             currentPlay.path.lastIndexOf(".")
                                         )
                                     } catch (e: Exception) {
@@ -233,7 +233,9 @@ class MusicViewModel : ViewModel() {
                                     } catch (e: Exception) {
                                         ""
                                     }
-                                    if (fileName.trim().lowercase() == musicName.trim().lowercase()) {
+                                    if (fileName.trim().lowercase() == musicName.trim()
+                                            .lowercase()
+                                    ) {
                                         if (fileNameWithSuffix.endsWith(".lrc")) {
                                             fileRead(it.uri, context, LyricsType.LRC)
                                         } else if (fileNameWithSuffix.endsWith(".srt")) {
