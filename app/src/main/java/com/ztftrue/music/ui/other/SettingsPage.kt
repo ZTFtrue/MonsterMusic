@@ -53,7 +53,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.ui.public.BackTopBar
 import com.ztftrue.music.utils.Utils
@@ -252,7 +251,7 @@ fun SettingsPage(
 }
 
 
-@Composable
+@UnstableApi @Composable
 fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 
     val context = LocalContext.current
@@ -260,11 +259,10 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 
     val mainTabList = remember { mutableStateListOf<MainTab>() }
     var size by remember { mutableIntStateOf(0) }
-    var db: MusicDatabase? = null
+
     LaunchedEffect(Unit) {
         scopeMain.launch {
-            db = MusicDatabase.getDatabase(context)
-            mainTabList.addAll(db?.MainTabDao()?.findAllMainTabSortByPriority() ?: emptyList())
+            mainTabList.addAll(musicViewModel.getDb(context).MainTabDao().findAllMainTabSortByPriority() ?: emptyList())
             size = mainTabList.size
         }
     }
@@ -276,7 +274,7 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
             }
         }
         scopeMain.launch {
-            db?.MainTabDao()?.updateAll(mainTabList)
+            musicViewModel.getDb(context).MainTabDao().updateAll(mainTabList)
             onDismiss()
         }
     }

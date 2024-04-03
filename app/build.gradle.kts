@@ -143,7 +143,7 @@ dependencies {
     // optional - RxJava3 support for Room
     implementation("androidx.room:room-rxjava3:$roomVersion")
     // optional - Test helpers
-    testImplementation("androidx.room:room-testing:$roomVersion")
+    implementation("androidx.room:room-testing:$roomVersion")
     // optional - Paging 3 Integration
     implementation("androidx.room:room-paging:$roomVersion")
 

@@ -3,7 +3,7 @@ package com.ztftrue.music.utils
 import android.content.Context
 import com.ztftrue.music.R
 import com.ztftrue.music.utils.model.Caption
-import java.io.File
+import java.io.BufferedReader
 import java.util.Locale
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -16,9 +16,9 @@ enum class LyricsType {
 }
 
 object CaptionUtils {
-    fun parseVttFile(file: File): List<Caption> {
+    fun parseVttFile(bufferedReader: BufferedReader): List<Caption> {
         val captions = mutableListOf<Caption>()
-        file.bufferedReader().useLines { lines ->
+        bufferedReader.useLines { lines ->
             var startTime = 0L
             var endTime = 0L
             val text = StringBuilder()
@@ -49,29 +49,32 @@ object CaptionUtils {
         return captions
     }
 
-    fun parseSrtFile(file: File): List<Caption> {
+    fun parseSrtFile(bufferedReader: BufferedReader): List<Caption> {
         val subtitles = mutableListOf<Caption>()
         var startTime = 0L
         var endTime = 0L
         var text = StringBuilder()
-        file.readLines().forEach { line ->
-            when {
-                line.isBlank() -> {
-                    // Blank line indicates the end of a subtitle
-                    if (text.isNotEmpty()) {
-                        subtitles.add(Caption(text.toString().trim(), startTime, endTime))
+        bufferedReader.useLines {
+            for (line in it) {
+                when {
+                    line.isBlank() -> {
+                        // Blank line indicates the end of a subtitle
+                        if (text.isNotEmpty()) {
+                            subtitles.add(Caption(text.toString().trim(), startTime, endTime))
+                        }
                     }
-                }
 
-                line.matches(Regex("^\\d+:\\d+:\\d+,\\d+\\s-->\\s\\d+:\\d+:\\d+,\\d+")) -> {
-                    val times = line.split(Pattern.compile("\\s+-->\\s+"))
-                    startTime = captionTimestampToMilliseconds(times[0],",")
-                    endTime = captionTimestampToMilliseconds(times[1],",")
-                    text = StringBuilder()
-                }
-                else -> {
-                    // Text line
-                    text.append(line).append("\n")
+                    line.matches(Regex("^\\d+:\\d+:\\d+,\\d+\\s-->\\s\\d+:\\d+:\\d+,\\d+")) -> {
+                        val times = line.split(Pattern.compile("\\s+-->\\s+"))
+                        startTime = captionTimestampToMilliseconds(times[0], ",")
+                        endTime = captionTimestampToMilliseconds(times[1], ",")
+                        text = StringBuilder()
+                    }
+
+                    else -> {
+                        // Text line
+                        text.append(line).append("\n")
+                    }
                 }
             }
         }
@@ -81,7 +84,54 @@ object CaptionUtils {
         return subtitles
     }
 
-    private fun captionTimestampToMilliseconds(timestamp: String,splitter: String = "."): Long {
+    fun parseLrcFile(bufferedReader: BufferedReader, context: Context): ArrayList<Caption> {
+        val arrayList = arrayListOf<Caption>()
+        val lyricsHashMap: LinkedHashMap<Long, Caption> =
+            linkedMapOf()
+        bufferedReader.useLines {
+            for (line in it) {
+                if (line.startsWith("offset:")) {
+                    // TODO
+                } else {
+                    val captions = parseLyricLine(line, context)
+                    val temp = lyricsHashMap[captions.timeStart]
+                    if (temp != null) {
+                        temp.text += "\n"
+                        temp.text += captions.text
+                    } else {
+                        lyricsHashMap[captions.timeStart] = Caption(
+                            text = captions.text,
+                            timeStart = captions.timeStart,
+                            timeEnd = captions.timeEnd
+                        )
+                    }
+                }
+            }
+        }
+        arrayList.addAll(lyricsHashMap.values)
+        return arrayList
+    }
+
+      fun parseTextFile(
+        bufferedReader: BufferedReader,
+        context: Context
+    ): ArrayList<Caption> {
+        val arrayList = arrayListOf<Caption>()
+        bufferedReader.useLines {
+            for (line in it) {
+                val captions = parseLyricLine(line, context)
+                val an = Caption(
+                    text = captions.text,
+                    timeStart = captions.timeStart,
+                    timeEnd = captions.timeEnd
+                )
+                arrayList.add(an)
+            }
+        }
+        return arrayList
+    }
+
+    private fun captionTimestampToMilliseconds(timestamp: String, splitter: String = "."): Long {
         val parts = timestamp.split(":")
         val hours = parts[0].toLong()
         val minutes = parts[1].toLong()

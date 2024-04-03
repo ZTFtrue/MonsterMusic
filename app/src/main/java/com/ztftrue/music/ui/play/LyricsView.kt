@@ -164,7 +164,7 @@ fun LyricsView(
         }
     }
     LaunchedEffect(showMenu) {
-        if(showMenu){
+        if (showMenu) {
             val list = musicViewModel.dictionaryAppList
             list.forEach {
                 if (it.autoGo) {
@@ -259,47 +259,63 @@ fun LyricsView(
     }
 
     if (musicViewModel.currentCaptionList.size == 0) {
-        Text(
-            text = "No Lyrics, Click to import lyrics.\n Support LRC/VTT/SRT/TXT",
-            color = MaterialTheme.colorScheme.onBackground,
-            fontSize = MaterialTheme.typography.titleLarge.fontSize,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(2.dp)
-                .clickable {
-                    if (musicViewModel.currentPlay.value != null) {
-                        val regexPattern = Regex("[<>\"/~'{}?,+=)(^&*%!@#\$]")
-                        val artistsFolder = musicViewModel.currentPlay.value?.artist
-                            ?.replace(
-                                regexPattern,
-                                "_"
+        Column {
+            Text(
+                text = "No Lyrics, Click to import lyrics.\n Support LRC/VTT/SRT/TXT",
+                color = MaterialTheme.colorScheme.onBackground,
+                fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(2.dp)
+                    .clickable {
+                        if (musicViewModel.currentPlay.value != null) {
+                            val regexPattern = Regex("[<>\"/~'{}?,+=)(^&*%!@#\$]")
+                            val artistsFolder = musicViewModel.currentPlay.value?.artist
+                                ?.replace(
+                                    regexPattern,
+                                    "_"
+                                )
+                            val folderPath = "$Lyrics/$artistsFolder"
+                            val folder = context.getExternalFilesDir(
+                                folderPath
                             )
-                        val folderPath = "$Lyrics/$artistsFolder"
-                        val folder = context.getExternalFilesDir(
-                            folderPath
-                        )
-                        folder?.mkdirs()
-                        val id =
-                            musicViewModel.currentPlay.value?.name?.replace(regexPattern, "_")
-                        val pathLyrics: String =
-                            context.getExternalFilesDir(folderPath)?.absolutePath + "/$id.lrc"
-                        val path: String =
-                            context.getExternalFilesDir(folderPath)?.absolutePath + "/$id.txt"
-                        val lyrics = File(pathLyrics)
-                        val text = File(path)
-                        if (lyrics.exists()) {
-                            Utils.openFile(lyrics.path, context = context)
-                        } else if (text.exists()) {
-                            Utils.openFile(text.path, context = context)
-                        } else {
-                            val tempPath: String =
-                                context.getExternalFilesDir(folderPath)?.absolutePath + "/$id."
-                            (context as MainActivity).openFilePicker(tempPath)
+                            folder?.mkdirs()
+                            val id =
+                                musicViewModel.currentPlay.value?.name?.replace(regexPattern, "_")
+                            val pathLyrics: String =
+                                context.getExternalFilesDir(folderPath)?.absolutePath + "/$id.lrc"
+                            val path: String =
+                                context.getExternalFilesDir(folderPath)?.absolutePath + "/$id.txt"
+                            val lyrics = File(pathLyrics)
+                            val text = File(path)
+                            if (lyrics.exists()) {
+                                Utils.openFile(lyrics.path, context = context)
+                            } else if (text.exists()) {
+                                Utils.openFile(text.path, context = context)
+                            } else {
+                                val tempPath: String =
+                                    context.getExternalFilesDir(folderPath)?.absolutePath + "/$id."
+                                (context as MainActivity).openFilePicker(tempPath)
+                            }
                         }
                     }
-                }
-        )
+            )
+            Text(
+                text = "Or, Click to set lyrics folder",
+                color = MaterialTheme.colorScheme.onBackground,
+                fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(2.dp)
+                    .clickable {
+                        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                        (context as MainActivity).folderPickerLauncher.launch(intent)
+                    }
+            )
+        }
+
     } else {
         CompositionLocalProvider(
             LocalTextToolbar provides CustomTextToolbar(

@@ -54,6 +54,7 @@ import com.ztftrue.music.play.EVENT_changePlayQueue
 import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.sqlData.model.StorageFolder
 import com.ztftrue.music.ui.home.BaseLayout
 import com.ztftrue.music.ui.theme.MusicPitchTheme
 import com.ztftrue.music.utils.OperateTypeInActivity
@@ -267,6 +268,30 @@ class MainActivity : ComponentActivity() {
                         }
                         lyricsPath = ""
                     }
+                }
+            }
+        }
+    val folderPickerLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val treeUri = result.data?.data;
+                if (treeUri != null) {
+                    contentResolver.takePersistableUriPermission(
+                        treeUri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    )
+                    CoroutineScope(Dispatchers.IO).launch{
+                        musicViewModel.getDb(this@MainActivity).StorageFolderDao().insert(
+                            StorageFolder(null, treeUri.toString())
+                        )
+                        musicViewModel.dealLyrics(
+                            this@MainActivity,
+                            musicViewModel.currentPlay.value!!
+                        )
+                    }
+
                 }
             }
         }

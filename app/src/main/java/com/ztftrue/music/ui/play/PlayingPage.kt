@@ -104,7 +104,6 @@ import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_RemoveFromQueue
 import com.ztftrue.music.play.ACTION_SEEK_TO
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
-import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
@@ -992,13 +991,9 @@ fun PlayingPage(
                                         item.id = index
                                     }
                                     CoroutineScope(Dispatchers.IO).launch {
-                                        val db: MusicDatabase =
-                                            MusicDatabase.getDatabase(
-                                                context
-                                            )
-                                        db.DictionaryAppDao()
+                                        viewModel.getDb(context).DictionaryAppDao()
                                             .deleteAll()
-                                        db.DictionaryAppDao()
+                                        viewModel.getDb(context).DictionaryAppDao()
                                             .insertAll(result)
                                     }
                                     viewModel.dictionaryAppList.clear()

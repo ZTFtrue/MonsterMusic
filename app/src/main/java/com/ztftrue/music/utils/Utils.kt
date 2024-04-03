@@ -13,7 +13,6 @@ import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.play.ACTION_AddPlayQueue
 import com.ztftrue.music.play.ACTION_GET_TRACKS
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
-import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.model.AnyListBase
@@ -106,7 +105,7 @@ object Utils {
 
     fun initSettingsData(musicViewModel: MusicViewModel,context: Context) {
         CoroutineScope(Dispatchers.IO).launch {
-            val db: MusicDatabase = MusicDatabase.getDatabase(context)
+
             musicViewModel.themeSelected.intValue = context.getSharedPreferences(
                 "SelectedTheme",
                 Context.MODE_PRIVATE
@@ -118,7 +117,7 @@ object Utils {
                 SharedPreferencesUtils.getAutoScroll(context)
             musicViewModel.autoHighLight.value =
                 SharedPreferencesUtils.getAutoHighLight(context)
-            val dicApps = db.DictionaryAppDao().findAllDictionaryApp()
+            val dicApps = musicViewModel.getDb(context).DictionaryAppDao().findAllDictionaryApp()
             if (dicApps.isNullOrEmpty()) {
                 val list = ArrayList<DictionaryApp>()
                 getAllDictionaryActivity(context)
