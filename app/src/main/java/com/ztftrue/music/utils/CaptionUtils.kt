@@ -3,7 +3,12 @@ package com.ztftrue.music.utils
 import android.content.Context
 import com.ztftrue.music.R
 import com.ztftrue.music.utils.model.Caption
+import com.ztftrue.music.utils.model.ListStringCaption
+import org.jaudiotagger.audio.AudioFileIO
+import org.jaudiotagger.tag.FieldKey
+import org.jaudiotagger.tag.Tag
 import java.io.BufferedReader
+import java.io.File
 import java.util.Locale
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -112,7 +117,7 @@ object CaptionUtils {
         return arrayList
     }
 
-      fun parseTextFile(
+    fun parseTextFile(
         bufferedReader: BufferedReader,
         context: Context
     ): ArrayList<Caption> {
@@ -122,6 +127,26 @@ object CaptionUtils {
                 val captions = parseLyricLine(line, context)
                 val an = Caption(
                     text = captions.text,
+                    timeStart = captions.timeStart,
+                    timeEnd = captions.timeEnd
+                )
+                arrayList.add(an)
+            }
+        }
+        return arrayList
+    }
+
+    fun getEmbeddedLyrics(path: String, context: Context): ArrayList<ListStringCaption> {
+        val audioFile = File(path)
+        val f = AudioFileIO.read(audioFile)
+        val tag: Tag = f.tag
+        val arrayList = arrayListOf<ListStringCaption>()
+        val lyrics: String = tag.getFirst(FieldKey.LYRICS)
+        if (lyrics.trim().isNotEmpty()) {
+            lyrics.split("\n").forEach {
+                val captions = parseLyricLine(it, context)
+                val an = ListStringCaption(
+                    text = ArrayList(captions.text.split(Regex("[\\n\\r\\s]+"))),
                     timeStart = captions.timeStart,
                     timeEnd = captions.timeEnd
                 )
@@ -205,7 +230,7 @@ object CaptionUtils {
      *  or
      *  I don't want a lot for Christmas
      */
-    fun parseLyricLine(line: String, context: Context): Caption {
+    private fun parseLyricLine(line: String, context: Context): Caption {
         // time
         val s = line.replace("\r", "")
         val pattern: Pattern = Pattern.compile("\\[([0-9]+:[0-9]+\\.[0-9]+)](.*)")

@@ -81,15 +81,15 @@ dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
     implementation(platform("androidx.compose:compose-bom:2023.10.01"))
     implementation("androidx.navigation:navigation-compose:2.7.6")
 
-    implementation ("androidx.media3:media3-exoplayer:1.2.1")
+    implementation("androidx.media3:media3-exoplayer:1.2.1")
 //    implementation ("androidx.media3:media3-exoplayer-dash:1.2.1")
 //    implementation ("androidx.media3:media3-ui:1.2.1")
-    implementation ("androidx.media3:media3-cast:1.2.1")
+    implementation("androidx.media3:media3-cast:1.2.1")
 
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
@@ -98,9 +98,9 @@ dependencies {
     implementation("androidx.compose.material3:material3-window-size-class:1.1.2")
 
     // splash
-    implementation ("androidx.core:core-splashscreen:1.0.1")
+    implementation("androidx.core:core-splashscreen:1.0.1")
 //    implementation("androidx.compose.material:material:1.5.4")
-    implementation ("androidx.constraintlayout:constraintlayout-compose:1.0.1")
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
 //
 
     // load image
@@ -124,7 +124,9 @@ dependencies {
     implementation("com.github.wendykierp:JTransforms:3.1")
 // https://mvnrepository.com/artifact/org.apache.commons/commons-math3
     implementation("org.apache.commons:commons-math3:3.6.1")
-    implementation ("be.tarsos.dsp:core:2.5")
+    implementation("be.tarsos.dsp:core:2.5")
+// https://mvnrepository.com/artifact/org.bitbucket.ijabz/jaudiotagger
+    implementation("org.bitbucket.ijabz:jaudiotagger:7b004a1")
 
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.collection:collection-ktx:1.4.0")
@@ -147,6 +149,6 @@ dependencies {
     // optional - Paging 3 Integration
     implementation("androidx.room:room-paging:$roomVersion")
 
-    implementation ("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.code.gson:gson:2.10.1")
 
 }

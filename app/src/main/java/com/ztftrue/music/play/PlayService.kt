@@ -1418,12 +1418,14 @@ class PlayService : MediaBrowserServiceCompat() {
 
 
     private fun playPreview() {
+        saveCurrentDuration(0)
         if (exoPlayer.hasPreviousMediaItem()) {
             exoPlayer.seekToPreviousMediaItem()
         }
     }
 
     private fun playNext() {
+        saveCurrentDuration(0)
         if (exoPlayer.hasNextMediaItem()) {
             exoPlayer.seekToNextMediaItem()
         }

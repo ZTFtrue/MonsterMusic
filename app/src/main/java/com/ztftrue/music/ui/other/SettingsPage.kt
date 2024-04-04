@@ -23,6 +23,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -55,6 +56,8 @@ import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.ui.public.BackTopBar
+import com.ztftrue.music.utils.LyricsSettings.FIRST_EMBEDDED_LYRICS
+import com.ztftrue.music.utils.SharedPreferencesName.LYRICS_SETTINGS
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.openBrowser
 import kotlinx.coroutines.CoroutineScope
@@ -74,6 +77,14 @@ fun SettingsPage(
     val context = LocalContext.current
 
     var expanded by remember { mutableStateOf(false) }
+    var preferEmbedded by remember {
+        mutableStateOf(
+            context.getSharedPreferences(
+                LYRICS_SETTINGS, Context.MODE_PRIVATE
+            )
+                .getBoolean(FIRST_EMBEDDED_LYRICS, false)
+        )
+    }
     LaunchedEffect(Unit) {
 
     }
@@ -134,6 +145,44 @@ fun SettingsPage(
                             Modifier.padding(start = 10.dp),
                             color = MaterialTheme.colorScheme.onBackground
                         )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .padding(0.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row {
+                            Text(
+                                text = "Prefer embedded lyrics",
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Switch(
+                                checked = preferEmbedded,
+                                onCheckedChange = { value ->
+                                    preferEmbedded = value
+                                    context.getSharedPreferences(
+                                        LYRICS_SETTINGS,
+                                        Context.MODE_PRIVATE
+                                    ).edit().putBoolean(FIRST_EMBEDDED_LYRICS, value).apply()
+                                },
+//                                colors = SwitchDefaults.colors(checkedThumbColor = Color.Green)
+                            )
+                        }
+
                     }
                     Box(
                         modifier = Modifier
@@ -251,7 +300,8 @@ fun SettingsPage(
 }
 
 
-@UnstableApi @Composable
+@UnstableApi
+@Composable
 fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 
     val context = LocalContext.current
@@ -262,7 +312,10 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 
     LaunchedEffect(Unit) {
         scopeMain.launch {
-            mainTabList.addAll(musicViewModel.getDb(context).MainTabDao().findAllMainTabSortByPriority() ?: emptyList())
+            mainTabList.addAll(
+                musicViewModel.getDb(context).MainTabDao().findAllMainTabSortByPriority()
+                    ?: emptyList()
+            )
             size = mainTabList.size
         }
     }
