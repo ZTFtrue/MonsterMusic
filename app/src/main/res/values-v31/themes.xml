@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.MusicPitch" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <style name="Theme.MusicPitch" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
         <item name="android:windowSplashScreenIconBackgroundColor">#00CCFF</item>
         <item name="android:windowSplashScreenBackground">#00CCFF</item>
