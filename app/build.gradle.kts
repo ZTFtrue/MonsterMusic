@@ -85,11 +85,8 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.8.2")
     implementation(platform("androidx.compose:compose-bom:2023.10.01"))
     implementation("androidx.navigation:navigation-compose:2.7.6")
-
     implementation("androidx.media3:media3-exoplayer:1.2.1")
-//    implementation ("androidx.media3:media3-exoplayer-dash:1.2.1")
-//    implementation ("androidx.media3:media3-ui:1.2.1")
-    implementation("androidx.media3:media3-cast:1.2.1")
+    implementation ("androidx.media:media:1.7.0")
 
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
