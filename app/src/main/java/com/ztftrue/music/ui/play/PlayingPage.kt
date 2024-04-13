@@ -41,7 +41,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -67,6 +67,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -135,7 +136,7 @@ data class PlayingViewTab(
 
 
 @OptIn(
-    ExperimentalFoundationApi::class
+    ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class
 )
 @UnstableApi
 @Composable
@@ -545,8 +546,7 @@ fun PlayingPage(
                         IconButton(
                             modifier = Modifier.width(50.dp),
                             onClick = {
-                                viewModel.fontSize.intValue =
-                                    viewModel.fontSize.intValue - 1
+                                viewModel.fontSize.intValue -= 1
                                 SharedPreferencesUtils.saveFontSize(
                                     context,
                                     viewModel.fontSize.intValue
@@ -568,8 +568,7 @@ fun PlayingPage(
                         IconButton(
                             modifier = Modifier.width(50.dp),
                             onClick = {
-                                viewModel.fontSize.intValue =
-                                    viewModel.fontSize.intValue + 1
+                                viewModel.fontSize.intValue += 1
                                 SharedPreferencesUtils.saveFontSize(
                                     context,
                                     viewModel.fontSize.intValue
@@ -786,7 +785,7 @@ fun PlayingPage(
                                 .padding(2.dp),
                             color = MaterialTheme.colorScheme.onBackground
                         )
-                        Divider(
+                        HorizontalDivider(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(1.dp)
@@ -972,7 +971,7 @@ fun PlayingPage(
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                             }
-                            Divider(
+                            HorizontalDivider(
                                 modifier = Modifier
                                     .background(MaterialTheme.colorScheme.onBackground)
                                     .width(1.dp)
@@ -1092,7 +1091,7 @@ fun PlayingPage(
                             modifier = Modifier.fillMaxWidth(),
                             indicator = { tabPositions ->
                                 if (tabPositions.isNotEmpty()) {
-                                    TabRowDefaults.Indicator(
+                                    TabRowDefaults.SecondaryIndicator(
                                         Modifier
                                             .height(3.0.dp)
                                             .tabIndicatorOffset(tabPositions[pagerTabState.currentPage]),
@@ -1100,7 +1099,7 @@ fun PlayingPage(
                                         color = MaterialTheme.colorScheme.onBackground
                                     )
                                 } else {
-                                    TabRowDefaults.Indicator(
+                                    TabRowDefaults.SecondaryIndicator(
                                         Modifier.height(3.0.dp),
                                         height = 3.0.dp,
                                         color = MaterialTheme.colorScheme.onBackground
