@@ -890,7 +890,7 @@ class PlayService : MediaBrowserServiceCompat() {
             // so i add this code, let user exit app.
             // of course, user can remove notify,make system stop service.
             exoPlayer.pause()
-            notify?.cancelNotification(this@PlayService)
+            notify?.cancelNotification()
             stopSelf()
             result.sendResult(null)
         } else if (ACTION_GET_TRACK_BY_ID == action) {
@@ -972,7 +972,7 @@ class PlayService : MediaBrowserServiceCompat() {
         bundle.putLong("remaining", remainingTime)
         bundle.putLong("sleepTime", 0L)
         mediaSession?.setExtras(bundle)
-        notify?.cancelNotification(this@PlayService)
+        notify?.cancelNotification()
     }
 
     override fun onGetRoot(
@@ -1226,7 +1226,7 @@ class PlayService : MediaBrowserServiceCompat() {
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopTimer()
         saveCurrentDuration(exoPlayer.currentPosition)
-        notify?.cancelNotification(this@PlayService)
+        notify?.cancelNotification()
         mediaSession?.release()
 
         // I don't know why sometimes exoPlayer is null,
