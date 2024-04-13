@@ -1,6 +1,7 @@
 package com.ztftrue.music.utils
 
 import android.content.Context
+import android.util.Log
 import com.ztftrue.music.R
 import com.ztftrue.music.utils.model.Caption
 import com.ztftrue.music.utils.model.ListStringCaption
@@ -138,20 +139,25 @@ object CaptionUtils {
 
     fun getEmbeddedLyrics(path: String, context: Context): ArrayList<ListStringCaption> {
         val audioFile = File(path)
-        val f = AudioFileIO.read(audioFile)
-        val tag: Tag = f.tag
         val arrayList = arrayListOf<ListStringCaption>()
-        val lyrics: String = tag.getFirst(FieldKey.LYRICS)
-        if (lyrics.trim().isNotEmpty()) {
-            lyrics.split("\n").forEach {
-                val captions = parseLyricLine(it, context)
-                val an = ListStringCaption(
-                    text = ArrayList(captions.text.split(Regex("[\\n\\r\\s]+"))),
-                    timeStart = captions.timeStart,
-                    timeEnd = captions.timeEnd
-                )
-                arrayList.add(an)
+
+        try {
+            val f = AudioFileIO.read(audioFile)
+            val tag: Tag = f.tag
+            val lyrics: String = tag.getFirst(FieldKey.LYRICS)
+            if (lyrics.trim().isNotEmpty()) {
+                lyrics.split("\n").forEach {
+                    val captions = parseLyricLine(it, context)
+                    val an = ListStringCaption(
+                        text = ArrayList(captions.text.split(Regex("[\\n\\r\\s]+"))),
+                        timeStart = captions.timeStart,
+                        timeEnd = captions.timeEnd
+                    )
+                    arrayList.add(an)
+                }
             }
+        } catch (e: Exception) {
+            Log.e("getEmbeddedLyrics",e.message?:"")
         }
         return arrayList
     }
