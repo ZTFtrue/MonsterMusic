@@ -1,6 +1,5 @@
 package com.ztftrue.music.play
 
-import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -8,13 +7,10 @@ import android.app.Service
 import android.app.Service.STOP_FOREGROUND_REMOVE
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.media.session.MediaButtonReceiver
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
@@ -42,24 +38,24 @@ class CreateNotification(service: Service, private val mediaSession: MediaSessio
             .setContentIntent(pendingContentIntent)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         service.startForeground(NOTIFICATION_ID, builder.build())
-        if (ActivityCompat.checkSelfPermission(
-                service,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            with(NotificationManagerCompat.from(service)) {
-                notify(NOTIFICATION_ID, builder.build())
-            }
-        }
+//        if (ActivityCompat.checkSelfPermission(
+//                service,
+//                Manifest.permission.POST_NOTIFICATIONS
+//            ) == PackageManager.PERMISSION_GRANTED
+//        ) {
+//            with(NotificationManagerCompat.from(service)) {
+//                notify(NOTIFICATION_ID, builder.build())
+//            }
+//        }
     }
 
 
-    fun cancelNotification(service: Service) {
-        with(NotificationManagerCompat.from(service)) {
-            cancel(NOTIFICATION_ID)
-            cancelAll()
-            service.stopForeground(STOP_FOREGROUND_REMOVE)
-        }
+    fun cancelNotification() {
+//        with(NotificationManagerCompat.from(service)) {
+//            cancel(NOTIFICATION_ID)
+//            cancelAll()
+//            service.stopForeground(STOP_FOREGROUND_REMOVE)
+//        }
     }
 
     fun stop(service: Service) {
@@ -100,10 +96,10 @@ class CreateNotification(service: Service, private val mediaSession: MediaSessio
                 )
                 .build()
         )
-        mediaSession?.setFlags(
-            MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
-                    MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
-        )
+//        mediaSession?.setFlags(
+//            MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
+//                    MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
+//        )
         val builder = NotificationCompat.Builder(service, CHANNEL_ID)
             .setStyle(
                 androidx.media.app.NotificationCompat.MediaStyle()
@@ -173,15 +169,15 @@ class CreateNotification(service: Service, private val mediaSession: MediaSessio
         // Waring: don't use this it make your app crash,unless you confirm you app need stop
 //            service.stopForeground(STOP_FOREGROUND_DETACH)
 //        }
-        if (ActivityCompat.checkSelfPermission(
-                service,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            with(NotificationManagerCompat.from(service)) {
-                notify(NOTIFICATION_ID, builder.build())
-            }
-        }
+//        if (ActivityCompat.checkSelfPermission(
+//                service,
+//                Manifest.permission.POST_NOTIFICATIONS
+//            ) == PackageManager.PERMISSION_GRANTED
+//        ) {
+//            with(NotificationManagerCompat.from(service)) {
+//                notify(NOTIFICATION_ID, builder.build())
+//            }
+//        }
     }
 
     private fun createNotificationChannel(context: Context) {
