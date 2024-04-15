@@ -16,7 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -33,7 +33,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -52,11 +51,11 @@ import com.ztftrue.music.ui.home.AlbumGridView
 import com.ztftrue.music.ui.home.ArtistsGridView
 import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.ui.public.TracksListView
+import com.ztftrue.music.utils.PlayListType
+import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.model.AlbumList
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.model.ArtistList
-import com.ztftrue.music.utils.PlayListType
-import com.ztftrue.music.utils.ScrollDirectionType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -67,7 +66,6 @@ import kotlinx.coroutines.launch
 /**
  * show all music of playlist
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @UnstableApi
 @Composable
 fun SearchPage(
@@ -241,7 +239,7 @@ fun SearchPage(
                             )
                         }
 
-                        Divider(
+                        HorizontalDivider(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(1.dp)
@@ -263,7 +261,7 @@ fun SearchPage(
                                 scrollDirection = ScrollDirectionType.GRID_HORIZONTAL
                             )
                         }
-                        Divider(
+                        HorizontalDivider(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(1.dp)

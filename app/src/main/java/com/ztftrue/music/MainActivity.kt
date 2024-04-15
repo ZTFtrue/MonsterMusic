@@ -276,7 +276,7 @@ class MainActivity : ComponentActivity() {
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (result.resultCode == RESULT_OK) {
-                val treeUri = result.data?.data;
+                val treeUri = result.data?.data
                 if (treeUri != null) {
                     contentResolver.takePersistableUriPermission(
                         treeUri,

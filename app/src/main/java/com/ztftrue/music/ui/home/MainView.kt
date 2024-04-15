@@ -400,7 +400,7 @@ fun MainTopBar(
             modifier = Modifier.fillMaxWidth(),
             indicator = { tabPositions ->
                 if (tabPositions.isNotEmpty()) {
-                    TabRowDefaults.Indicator(
+                    TabRowDefaults.SecondaryIndicator(
                         Modifier
                             .height(3.0.dp)
                             .tabIndicatorOffset(tabPositions[pagerState.currentPage]),
@@ -408,7 +408,7 @@ fun MainTopBar(
                         color = MaterialTheme.colorScheme.onBackground
                     )
                 } else {
-                    TabRowDefaults.Indicator(
+                    TabRowDefaults.SecondaryIndicator(
                         Modifier.height(3.0.dp),
                         height = 3.0.dp,
                         color = MaterialTheme.colorScheme.onBackground

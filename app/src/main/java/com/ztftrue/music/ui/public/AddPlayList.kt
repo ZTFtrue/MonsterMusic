@@ -21,7 +21,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
@@ -48,8 +48,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.sqlData.model.MusicItem
-import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.PlayListType
+import com.ztftrue.music.utils.model.MusicPlayList
 
 @Composable
 fun CreatePlayListDialog(
@@ -86,7 +86,7 @@ fun CreatePlayListDialog(
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground,
                 )
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
@@ -159,7 +159,7 @@ fun CreatePlayListDialog(
                             color = MaterialTheme.colorScheme.onBackground,
                         )
                     }
-                    Divider(
+                    HorizontalDivider(
                         modifier = Modifier
                             .width(1.dp)
                             .fillMaxWidth(0.1f)
@@ -233,7 +233,7 @@ fun RenamePlayListDialog(
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground,
                 )
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
@@ -293,7 +293,7 @@ fun RenamePlayListDialog(
                             color = MaterialTheme.colorScheme.onBackground,
                         )
                     }
-                    Divider(
+                    HorizontalDivider(
                         modifier = Modifier
                             .width(1.dp)
                             .fillMaxWidth(0.1f)
@@ -366,7 +366,7 @@ fun DeleteTip(
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground,
                 )
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
@@ -399,7 +399,7 @@ fun DeleteTip(
                             color = MaterialTheme.colorScheme.onBackground,
                         )
                     }
-                    Divider(
+                    HorizontalDivider(
                         modifier = Modifier
                             .width(1.dp)
                             .fillMaxWidth(0.1f)
@@ -502,7 +502,7 @@ fun AddMusicToPlayListDialog(
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
@@ -551,7 +551,7 @@ fun AddMusicToPlayListDialog(
                                 )
                             }
                         }
-                        Divider(
+                        HorizontalDivider(
                             color = MaterialTheme.colorScheme.inverseOnSurface,
                             thickness = 1.2.dp
                         )

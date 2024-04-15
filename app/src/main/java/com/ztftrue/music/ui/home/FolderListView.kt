@@ -24,7 +24,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -119,7 +119,7 @@ fun FolderListView(
                         .fillMaxWidth(),
                     navController
                 )
-                Divider(color = MaterialTheme.colorScheme.inverseOnSurface, thickness = 1.2.dp)
+                HorizontalDivider(color = MaterialTheme.colorScheme.inverseOnSurface, thickness = 1.2.dp)
             }
         }
     }
@@ -272,7 +272,7 @@ fun FolderListOperateDialog(
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
