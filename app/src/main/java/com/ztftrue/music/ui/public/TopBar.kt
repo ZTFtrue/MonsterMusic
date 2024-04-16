@@ -301,11 +301,12 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BackTopBar(
-    navController: NavHostController
+    navController: NavHostController,
+    text:String
 ) {
     TopAppBar(
         navigationIcon = { BackButton(navController) },
         title = {
-            Text(text = "Settings", color = MaterialTheme.colorScheme.onBackground)
+            Text(text =text, color = MaterialTheme.colorScheme.onBackground)
         })
 }
