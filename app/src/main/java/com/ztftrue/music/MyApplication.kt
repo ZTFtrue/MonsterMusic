@@ -7,15 +7,15 @@ import android.content.Intent
 class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        Thread.setDefaultUncaughtExceptionHandler { thread, e ->
-            handleUncaughtException(thread, e)
+        Thread.setDefaultUncaughtExceptionHandler { _, e ->
+            handleUncaughtException(e)
         }
     }
 
-    private fun handleUncaughtException(thread: Thread, e: Throwable) {
+    private fun handleUncaughtException(e: Throwable) {
         val intent = Intent(applicationContext, ErrorTipActivity::class.java)
         intent.putExtra("error", e)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
     }
 }
