@@ -68,7 +68,7 @@ class ErrorTipActivity : ComponentActivity() {
             }
         }
         BackHandler(enabled = true) {
-
+            finish()
         }
         Surface(
             modifier = Modifier
