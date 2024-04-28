@@ -421,7 +421,7 @@ fun ArtistsOperateDialog(
                                 contentAlignment = Alignment.CenterStart
                             ) {
                                 Text(
-                                    text = "Play next",
+                                    text = stringResource(id = R.string.play_next),
                                     Modifier.padding(start = 10.dp),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
@@ -446,7 +446,7 @@ fun ArtistsOperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Add to playlist",
+                                text = stringResource(id = R.string.add_to_playlist),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -466,7 +466,7 @@ fun ArtistsOperateDialog(
                             .padding(8.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onBackground)
+                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
                     }
                 }
             }

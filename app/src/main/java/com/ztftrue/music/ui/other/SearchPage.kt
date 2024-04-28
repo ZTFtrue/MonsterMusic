@@ -38,6 +38,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -45,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
+import com.ztftrue.music.R
 import com.ztftrue.music.play.ACTION_SEARCH
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.home.AlbumGridView
@@ -172,7 +174,7 @@ fun SearchPage(
                                         }
                                     },
                                     placeholder = {
-                                        Text("Enter text to search")
+                                        Text(stringResource(R.string.enter_text_to_search))
                                     }, // Placeholder or hint text
                                     keyboardOptions = KeyboardOptions.Default.copy(
                                         imeAction = ImeAction.Done,
@@ -218,13 +220,13 @@ fun SearchPage(
                     val configuration = LocalConfiguration.current
                     if (keywords.isNotEmpty() && albumsList.isEmpty() && artistList.isEmpty() && tracksList.isEmpty()) {
                         Text(
-                            text = "No result",
+                            text = stringResource(R.string.no_music),
                             color = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.horizontalScroll(rememberScrollState(0))
                         )
                     }
                     if (albumsList.isNotEmpty()) {
-                        Text(text = "Album")
+                        Text(text =stringResource(R.string.album))
                         Box(
                             modifier = Modifier
                                 .height((configuration.screenWidthDp / musicViewModel.albumItemsCount.intValue + 40).dp)
@@ -247,7 +249,7 @@ fun SearchPage(
                         )
                     }
                     if (artistList.isNotEmpty()) {
-                        Text(text = "Artist")
+                        Text(text = stringResource(R.string.artist))
                         Box(
                             modifier = Modifier
                                 .height((configuration.screenWidthDp / musicViewModel.albumItemsCount.intValue + 40).dp)

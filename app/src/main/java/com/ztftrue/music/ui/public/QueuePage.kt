@@ -261,7 +261,7 @@ fun QueueOperateDialog(
                             .padding(8.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onBackground)
+                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
                     }
                 }
             }

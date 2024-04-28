@@ -81,7 +81,10 @@ class ErrorTipActivity : ComponentActivity() {
             Scaffold(modifier = Modifier,
                 topBar = {
                     Column {
-                        Text(text = stringResource(R.string.error_tip), color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            text = stringResource(R.string.error_tip),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                         HorizontalDivider(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -107,7 +110,7 @@ class ErrorTipActivity : ComponentActivity() {
                             }
                         ) {
                             Text(
-                                text = stringResource(R.string.feed_back)
+                                text = stringResource(R.string.feedback)
                             )
                         }
                         Button(
@@ -123,7 +126,7 @@ class ErrorTipActivity : ComponentActivity() {
                             }
                         ) {
                             Text(
-                                text = stringResource(R.string.send_to_email)
+                                text = stringResource(R.string.send_email)
                             )
                         }
                     }

@@ -82,6 +82,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -610,7 +611,7 @@ fun PlayingPage(
                                 .height(50.dp)
                         ) {
                             Text(
-                                text = "Scroll",
+                                text = stringResource(R.string.scroll),
                                 modifier = Modifier.padding(0.dp),
                                 color = MaterialTheme.colorScheme.onBackground,
                                 fontSize = TextUnit(
@@ -660,7 +661,7 @@ fun PlayingPage(
                                 .height(50.dp)
                         ) {
                             Text(
-                                text = "Highlight",
+                                text = stringResource(R.string.highlight),
                                 modifier = Modifier.padding(0.dp),
                                 color = MaterialTheme.colorScheme.onBackground,
                                 fontSize = TextUnit(
@@ -781,7 +782,7 @@ fun PlayingPage(
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text(
-                            text = "Manage Dictionary App", modifier = Modifier
+                            text = stringResource(R.string.manage_dictionary_app), modifier = Modifier
                                 .padding(2.dp),
                             color = MaterialTheme.colorScheme.onBackground
                         )
@@ -808,12 +809,12 @@ fun PlayingPage(
                                 Box(modifier = Modifier.width(80.dp)) { }
                             }
                             Text(
-                                text = "Show",
+                                text = stringResource(R.string.show),
                                 modifier = Modifier.width(50.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Text(
-                                text = "Auto go",
+                                text = stringResource(R.string.auto_go),
                                 modifier = Modifier.width(80.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -1114,7 +1115,7 @@ fun PlayingPage(
                                     }
                                 }, text = {
                                     Text(
-                                        text = item.name,
+                                        text = stringResource(id = Utils.translateMap[item.name] ?:R.string.app_name),
                                         color = MaterialTheme.colorScheme.onBackground,
                                         fontSize = 14.sp,
                                     )
@@ -1218,7 +1219,7 @@ fun PlayingPage(
                     } else {
                         if (viewModel.currentPlay.value != null) {
                             Text(
-                                text = "Get duration failed",
+                                text = stringResource(R.string.get_duration_failed),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }

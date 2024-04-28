@@ -237,7 +237,9 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     }
                 }
                 Text(
-                    text = "${stringResource(R.string.delay)}${(delayTime.floatValue)}seconds",
+                    text =    stringResource(R.string.delay)+(delayTime.floatValue)+stringResource(
+                        R.string.seconds
+                    ),
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Slider(

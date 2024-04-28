@@ -415,7 +415,7 @@ fun OperateDialog(
             ) {
                 Text(
                     color = MaterialTheme.colorScheme.onBackground,
-                    text = "Operate ${music.name}", modifier = Modifier
+                    text = stringResource(R.string.operate_music, music.name), modifier = Modifier
                         .padding(2.dp)
                 )
                 HorizontalDivider(
@@ -597,7 +597,7 @@ fun OperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = stringResource(id = R.string.artist), modifier = Modifier.padding(start = 10.dp),
+                                text = stringResource(id = R.string.artist,music.artist), modifier = Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -620,7 +620,7 @@ fun OperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = stringResource(id = R.string.album), modifier = Modifier.padding(start = 10.dp),
+                                text = stringResource(id = R.string.album,music.album), modifier = Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -687,7 +687,7 @@ fun OperateDialog(
                             .padding(8.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onBackground)
+                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
                     }
                 }
             }

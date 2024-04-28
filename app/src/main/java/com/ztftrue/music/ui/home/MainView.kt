@@ -50,6 +50,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -74,6 +75,7 @@ import com.ztftrue.music.ui.public.SleepTimeDialog
 import com.ztftrue.music.ui.public.TracksListView
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
+import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import kotlinx.coroutines.launch
 
@@ -354,7 +356,7 @@ fun MainTopBar(
                         }) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Operate",
+                            contentDescription =stringResource(id = R.string.operate),
                             modifier = Modifier
                                 .size(20.dp)
                                 .clip(CircleShape),
@@ -426,7 +428,7 @@ fun MainTopBar(
                     },
                     text = {
                         Text(
-                            text = item.name,
+                            text =stringResource(id = Utils.translateMap[item.name] ?:R.string.app_name) ,
                             color = MaterialTheme.colorScheme.onBackground,
                             fontSize = 14.sp,
                         )
