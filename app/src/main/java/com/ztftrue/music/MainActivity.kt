@@ -603,7 +603,6 @@ class MainActivity : ComponentActivity() {
             musicViewModel.musicQueue.addAll(it)
         }
         resultData.getParcelableArrayList<MusicItem>("songsList")?.also {
-            Log.i("TAG", "getInitData: ${it.size}")
             musicViewModel.songsList.clear()
             musicViewModel.songsList.addAll(it)
         }
