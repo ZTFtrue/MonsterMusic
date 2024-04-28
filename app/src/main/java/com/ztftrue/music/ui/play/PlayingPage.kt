@@ -759,7 +759,7 @@ fun PlayingPage(
         if (list.isEmpty()) {
             Toast.makeText(
                 context,
-                "Dictionary app is not installed or your dictionary app do not support this feature.",
+                stringResource(R.string.no_dictionary_app_tip),
                 Toast.LENGTH_SHORT
             ).show()
             popupWindowDictionary = false
@@ -857,14 +857,6 @@ fun PlayingPage(
                                                         position = list.size - 1
                                                     }
                                                     if (position != listIndex) {
-                                                        Log.i(
-                                                            "POSITION",
-                                                            "p=$listIndex ,${position} position=${
-                                                                offset / 60.dp.toPx(
-                                                                    context
-                                                                )
-                                                            }"
-                                                        )
                                                         list.remove(item)
                                                         list.add(position, item)
                                                     }
@@ -968,7 +960,7 @@ fun PlayingPage(
                                     .fillMaxWidth(0.5f),
                             ) {
                                 Text(
-                                    "Cancel",
+                                    stringResource(id = R.string.cancel),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                             }

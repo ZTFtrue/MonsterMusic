@@ -255,7 +255,7 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                             },
                             label = {
                                 Text(
-                                    "Enter minutes",
+                                    text = stringResource(R.string.enter_minutes),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                             },

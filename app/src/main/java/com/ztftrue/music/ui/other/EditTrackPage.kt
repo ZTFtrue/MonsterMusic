@@ -160,7 +160,7 @@ fun EditTrackPage(
                                 }
                             },
                             label = {
-                                Text("Title")
+                                Text(stringResource(id = R.string.title))
                             }, // Placeholder or hint text
                             keyboardOptions = KeyboardOptions.Default.copy(
                                 imeAction = ImeAction.Next,

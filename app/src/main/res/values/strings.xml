@@ -92,4 +92,11 @@
     <string name="theme_dark">Dark</string>
     <string name="theme_follow_music_cover">Follow Music Cover</string>
     <string name="theme_material_you">Material You</string>
+    <string name="enter_minutes">Enter minutes</string>
+    <string name="title">Title</string>
+    <string name="create_failed">Create failed</string>
+    <string name="mutiple_error_tip">Many times play error, Play paused</string>
+    <string name="play_error_play_next">Play error, auto play next</string>
+    <string name="no_dictionary_app_tip">Dictionary app is not installed or your dictionary app do not support this feature.</string>
+    <string name="cant_support_feature_tip">You system don\'t support this feature</string>
 </resources>

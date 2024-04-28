@@ -103,7 +103,7 @@ fun CreatePlayListDialog(
                             },
                             label = {
                                 Text(
-                                    "Enter name",
+                                    text = stringResource(id = R.string.enter_name),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                             },

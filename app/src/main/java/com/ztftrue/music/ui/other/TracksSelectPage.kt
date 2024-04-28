@@ -139,7 +139,8 @@ fun TracksSelectPage(
                                         navController.popBackStack()
 
                                     } else {
-                                        Toast.makeText(context, "创建失败", Toast.LENGTH_SHORT)
+                                        Toast.makeText(context,
+                                            context.getString(R.string.create_failed), Toast.LENGTH_SHORT)
                                             .show()
                                     }
                                 }

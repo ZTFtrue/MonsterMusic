@@ -92,4 +92,11 @@
     <string name="theme_dark">暗</string>
     <string name="theme_follow_music_cover">跟随音乐封面</string>
     <string name="theme_material_you">Material You</string>
+    <string name="enter_minutes">输入分钟数</string>
+    <string name="title">标题</string>
+    <string name="create_failed">创建失败</string>
+    <string name="mutiple_error_tip">多次播放错误, 暂停播放</string>
+    <string name="play_error_play_next">播放错误, 自动播放下一首</string>
+    <string name="no_dictionary_app_tip">没有安装字典应用， 或者已安装的应用不支持这个功能</string>
+    <string name="cant_support_feature_tip">当前系统不支持这个功能</string>
 </resources>
