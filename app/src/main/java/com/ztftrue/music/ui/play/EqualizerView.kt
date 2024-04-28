@@ -35,11 +35,13 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.ztftrue.music.MusicViewModel
+import com.ztftrue.music.R
 import com.ztftrue.music.play.ACTION_CHANGE_PITCH
 import com.ztftrue.music.play.ACTION_DSP_BAND
 import com.ztftrue.music.play.ACTION_DSP_BAND_FLATTEN
@@ -96,7 +98,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Pitch" + (pitch.floatValue).toString(),
+                        text = stringResource(R.string.pitch) + (pitch.floatValue).toString(),
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     OutlinedButton(
@@ -113,7 +115,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                             )
                         },
                     ) {
-                        Text(text = "Reset", color = MaterialTheme.colorScheme.onBackground)
+                        Text(text = stringResource(R.string.reset), color = MaterialTheme.colorScheme.onBackground)
                     }
                 }
                 Slider(
@@ -142,7 +144,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Speed" + (speed.floatValue).toString(),
+                        text = stringResource(R.string.speed) + (speed.floatValue).toString(),
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     OutlinedButton(
@@ -154,7 +156,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                             )
                         },
                     ) {
-                        Text(text = "Reset", color = MaterialTheme.colorScheme.onBackground)
+                        Text(text = stringResource(R.string.reset), color = MaterialTheme.colorScheme.onBackground)
                     }
                 }
                 Slider(
@@ -187,7 +189,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "Echo", color = MaterialTheme.colorScheme.onBackground)
+                        Text(text = stringResource(R.string.echo), color = MaterialTheme.colorScheme.onBackground)
                         Box(
                             modifier = Modifier
                                 .width(4.dp)
@@ -235,7 +237,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     }
                 }
                 Text(
-                    text = "Delay: " + (delayTime.floatValue).toString() + "seconds",
+                    text = "${stringResource(R.string.delay)}${(delayTime.floatValue)}seconds",
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Slider(
@@ -260,7 +262,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     },
                 )
                 Text(
-                    text = "Decay: " + (decay.floatValue).toString(),
+                    text = stringResource(R.string.decay) + (decay.floatValue).toString(),
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Slider(
@@ -305,7 +307,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "Equalizer", color = MaterialTheme.colorScheme.onBackground)
+                        Text(text = stringResource(R.string.equalizer), color = MaterialTheme.colorScheme.onBackground)
                         Box(
                             modifier = Modifier
                                 .width(10.dp)
@@ -357,7 +359,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                                 } else {
                                                     Toast.makeText(
                                                         context,
-                                                        "flatten failed",
+                                                        context.getString(R.string.flatten_failed),
                                                         Toast.LENGTH_SHORT
                                                     ).show()
                                                 }
@@ -367,7 +369,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                 )
                             },
                         ) {
-                            Text(text = "Flatten", color = MaterialTheme.colorScheme.onBackground)
+                            Text(text = stringResource(R.string.flatten), color = MaterialTheme.colorScheme.onBackground)
                         }
                     }
                 }

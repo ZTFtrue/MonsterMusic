@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -47,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.ztftrue.music.MusicViewModel
+import com.ztftrue.music.R
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.model.MusicPlayList
@@ -425,7 +427,7 @@ fun DeleteTip(
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
-                            text = "Confirm",
+                            text = stringResource(R.string.confirm),
                             Modifier.padding(start = 10.dp),
                             color = MaterialTheme.colorScheme.onBackground,
                         )
@@ -524,7 +526,7 @@ fun AddMusicToPlayListDialog(
                             .clip(CircleShape),
                     )
                     Text(
-                        text = "Add New PlayList",
+                        text = stringResource(R.string.add_new_playlist),
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.horizontalScroll(rememberScrollState(0))
                     )

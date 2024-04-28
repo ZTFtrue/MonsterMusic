@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -126,7 +127,9 @@ fun GenreGridView(
             LazyRow(
                 contentPadding = PaddingValues(5.dp),
                 state = rowListSate,
-                modifier = modifier.background(MaterialTheme.colorScheme.background).fillMaxSize()
+                modifier = modifier
+                    .background(MaterialTheme.colorScheme.background)
+                    .fillMaxSize()
             ) {
                 items(genreList.size) { index ->
                     val item = genreList[index]
@@ -152,7 +155,9 @@ fun GenreGridView(
                 columns = GridCells.Fixed(musicViewModel.genreItemsCount.intValue), // Number of columns in the grid
                 contentPadding = PaddingValues(5.dp),
                 state = listState,
-                modifier = modifier.background(MaterialTheme.colorScheme.background).fillMaxSize()
+                modifier = modifier
+                    .background(MaterialTheme.colorScheme.background)
+                    .fillMaxSize()
             ) {
                 items(genreList.size) { index ->
                     val item = genreList[index]
@@ -284,7 +289,7 @@ fun GenreItemView(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "$number song${if (number <= 1L) "" else "s"}",
+                    text = stringResource(R.string.song, number, if (number <= 1L) "" else "s"),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 IconButton(

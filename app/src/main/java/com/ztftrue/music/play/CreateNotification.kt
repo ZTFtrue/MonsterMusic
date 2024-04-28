@@ -183,8 +183,8 @@ class CreateNotification(service: Service, private val mediaSession: MediaSessio
     private fun createNotificationChannel(context: Context) {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
-        val name = "MonsterMusic"
-        val descriptionText = "PlayNotify"
+        val name = context.getString(R.string.monstermusic)
+        val descriptionText = context.getString(R.string.playnotify)
         val importance = NotificationManager.IMPORTANCE_LOW
         val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
             description = descriptionText

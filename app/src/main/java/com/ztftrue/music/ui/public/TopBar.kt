@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -194,7 +195,7 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                         musicViewModel.playCompleted.value = it
                     })
                     Text(
-                        text = "Play completed last song",
+                        text = stringResource(R.string.play_completed_last_song),
                         color = MaterialTheme.colorScheme.onBackground
                     )
                 }
@@ -221,7 +222,7 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                 modifier = Modifier
                             ) {
                                 Text(
-                                    text = "${sleepT[item]}\n minutes",
+                                    text = stringResource(R.string.minutes, sleepT[item]),
                                     textAlign = TextAlign.Center,
                                     color = MaterialTheme.colorScheme.onBackground
                                 )

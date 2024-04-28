@@ -49,6 +49,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalTextToolbar
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.TextToolbarStatus
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -66,6 +67,7 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
+import com.ztftrue.music.R
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.model.ListStringCaption
@@ -261,7 +263,7 @@ fun LyricsView(
     if (musicViewModel.currentCaptionList.size == 0) {
         Column {
             Text(
-                text = "No Lyrics, Click to import lyrics.\n Support LRC/VTT/SRT/TXT",
+                text = stringResource(R.string.no_lyrics_import_tip),
                 color = MaterialTheme.colorScheme.onBackground,
                 fontSize = MaterialTheme.typography.titleLarge.fontSize,
                 textAlign = TextAlign.Center,
@@ -302,7 +304,7 @@ fun LyricsView(
                     }
             )
             Text(
-                text = "Or, Click to set lyrics folder",
+                text = stringResource(R.string.no_lyrics_set_folder),
                 color = MaterialTheme.colorScheme.onBackground,
                 fontSize = MaterialTheme.typography.titleLarge.fontSize,
                 textAlign = TextAlign.Center,

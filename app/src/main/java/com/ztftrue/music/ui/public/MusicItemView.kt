@@ -45,6 +45,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -446,8 +447,8 @@ fun OperateDialog(
                                 contentAlignment = Alignment.CenterStart
                             ) {
                                 Text(
-                                    text = "Remove from queue",
-                                    Modifier.padding(start = 10.dp),
+                                    text = stringResource(R.string.remove_from_queue),
+                                    modifier = Modifier.padding(start = 10.dp),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                             }
@@ -472,7 +473,7 @@ fun OperateDialog(
                                 contentAlignment = Alignment.CenterStart
                             ) {
                                 Text(
-                                    text = "Add to queue",
+                                    text = stringResource(id = R.string.add_to_queue),
                                     modifier = Modifier.padding(start = 10.dp),
                                     color = MaterialTheme.colorScheme.onBackground,
                                 )
@@ -497,8 +498,8 @@ fun OperateDialog(
                                 contentAlignment = Alignment.CenterStart
                             ) {
                                 Text(
-                                    text = "Play next",
-                                    Modifier.padding(start = 10.dp),
+                                    text = stringResource(id = R.string.play_next),
+                                    modifier = Modifier.padding(start = 10.dp),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                             }
@@ -522,8 +523,8 @@ fun OperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Add to playlist",
-                                Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.add_to_playlist),
+                                modifier = Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -547,8 +548,8 @@ fun OperateDialog(
                                 contentAlignment = Alignment.CenterStart
                             ) {
                                 Text(
-                                    text = "Remove from current playlist",
-                                    Modifier.padding(start = 10.dp),
+                                    text = stringResource(R.string.remove_from_current_playlist),
+                                    modifier = Modifier.padding(start = 10.dp),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                             }
@@ -596,7 +597,7 @@ fun OperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Artist", Modifier.padding(start = 10.dp),
+                                text = stringResource(id = R.string.artist), modifier = Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -619,7 +620,7 @@ fun OperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Album", Modifier.padding(start = 10.dp),
+                                text = stringResource(id = R.string.album), modifier = Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -642,7 +643,7 @@ fun OperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Music info",
+                                text = stringResource(R.string.music_info),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -666,7 +667,7 @@ fun OperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Delete from storage",
+                                text = stringResource(R.string.delete_from_storage),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )

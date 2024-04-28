@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.DpOffset
@@ -141,7 +142,7 @@ fun SettingsPage(
                                 })
                         }
                         Text(
-                            text = "Manage tab items",
+                            text = stringResource(R.string.manage_tab_items),
                             Modifier.padding(start = 10.dp),
                             color = MaterialTheme.colorScheme.onBackground
                         )
@@ -166,7 +167,7 @@ fun SettingsPage(
                     ) {
                         Row {
                             Text(
-                                text = "Prefer embedded lyrics",
+                                text = stringResource(R.string.prefer_embedded_lyrics),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -208,7 +209,7 @@ fun SettingsPage(
                             }
                         }
                         Text(
-                            text = "About",
+                            text = stringResource(R.string.about),
                             Modifier.padding(start = 10.dp),
                             color = MaterialTheme.colorScheme.onBackground
                         )
@@ -246,7 +247,7 @@ fun SettingsPage(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Select theme:",
+                                text = stringResource(R.string.select_theme),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -348,7 +349,7 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "ManageTab", modifier = Modifier
+                    text = stringResource(R.string.managetab), modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -532,7 +533,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "About&Thanks", modifier = Modifier
+                    text = stringResource(id = R.string.about_thanks), modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -566,8 +567,8 @@ fun AboutDialog(onDismiss: () -> Unit) {
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "SourceCode",
-                                Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.sourcecode),
+                                modifier = Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }

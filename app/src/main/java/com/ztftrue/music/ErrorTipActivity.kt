@@ -29,6 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -80,7 +81,7 @@ class ErrorTipActivity : ComponentActivity() {
             Scaffold(modifier = Modifier,
                 topBar = {
                     Column {
-                        Text(text = "Error tip", color = MaterialTheme.colorScheme.onBackground)
+                        Text(text = stringResource(R.string.error_tip), color = MaterialTheme.colorScheme.onBackground)
                         HorizontalDivider(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -106,7 +107,7 @@ class ErrorTipActivity : ComponentActivity() {
                             }
                         ) {
                             Text(
-                                text = "Feed back"
+                                text = stringResource(R.string.feed_back)
                             )
                         }
                         Button(
@@ -122,7 +123,7 @@ class ErrorTipActivity : ComponentActivity() {
                             }
                         ) {
                             Text(
-                                text = "Send to email"
+                                text = stringResource(R.string.send_to_email)
                             )
                         }
                     }
@@ -135,7 +136,7 @@ class ErrorTipActivity : ComponentActivity() {
                     ) {
                         item(1) {
                             Text(
-                                text = "Sorry some error happens, you can feedback it with this message.",
+                                text = stringResource(R.string.sorry_some_error_happens_you_can_feedback_it_with_this_message),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Text(
