@@ -17,10 +17,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.DpOffset
@@ -93,8 +94,8 @@ fun SettingsPage(
         modifier = Modifier.padding(all = 0.dp),
         topBar = {
             Column {
-                BackTopBar(navController)
-                Divider(
+                BackTopBar(navController, stringResource(id = R.string.settings))
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
@@ -141,7 +142,7 @@ fun SettingsPage(
                                 })
                         }
                         Text(
-                            text = "Manage tab items",
+                            text = stringResource(R.string.manage_tab_items),
                             Modifier.padding(start = 10.dp),
                             color = MaterialTheme.colorScheme.onBackground
                         )
@@ -166,7 +167,7 @@ fun SettingsPage(
                     ) {
                         Row {
                             Text(
-                                text = "Prefer embedded lyrics",
+                                text = stringResource(R.string.prefer_embedded_lyrics),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -208,7 +209,7 @@ fun SettingsPage(
                             }
                         }
                         Text(
-                            text = "About",
+                            text = stringResource(R.string.about),
                             Modifier.padding(start = 10.dp),
                             color = MaterialTheme.colorScheme.onBackground
                         )
@@ -238,7 +239,7 @@ fun SettingsPage(
                         val selectedText = if (selectedIndex >= 0) {
                             Utils.items[selectedIndex]
                         } else {
-                            ""
+                            R.string.app_name
                         }
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -246,12 +247,12 @@ fun SettingsPage(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Select theme:",
+                                text = stringResource(R.string.select_theme),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Text(
-                                text = selectedText,
+                                text = stringResource(id = selectedText),
                                 Modifier.padding(end = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -274,7 +275,7 @@ fun SettingsPage(
                                 DropdownMenuItem(
                                     text = {
                                         Text(
-                                            item,
+                                            stringResource(id = item),
                                             color = MaterialTheme.colorScheme.onTertiaryContainer
                                         )
                                     },
@@ -348,12 +349,12 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "ManageTab", modifier = Modifier
+                    text = stringResource(R.string.manage_tab_items), modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
@@ -407,7 +408,7 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                                 .clip(CircleShape),
                                         )
                                     }
-                                    Divider(
+                                    HorizontalDivider(
                                         color = Color.Transparent,
                                         modifier = Modifier
                                             .height(40.dp)
@@ -440,7 +441,9 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                     }
                                 }
                                 Text(
-                                    text = item.name,
+                                    text = stringResource(
+                                        id = Utils.translateMap[item.name] ?: R.string.app_name
+                                    ),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                             }
@@ -478,9 +481,12 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                             .padding(8.dp)
                             .fillMaxWidth(0.5f),
                     ) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
-                    Divider(
+                    HorizontalDivider(
                         modifier = Modifier
                             .background(MaterialTheme.colorScheme.onBackground)
                             .width(1.dp)
@@ -495,7 +501,10 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                             .fillMaxWidth(),
 
                         ) {
-                        Text("Ok", color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            stringResource(id = R.string.confirm),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
             }
@@ -532,12 +541,12 @@ fun AboutDialog(onDismiss: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "About&Thanks", modifier = Modifier
+                    text = stringResource(id = R.string.about_thanks), modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
@@ -566,8 +575,8 @@ fun AboutDialog(onDismiss: () -> Unit) {
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "SourceCode",
-                                Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.sourcecode),
+                                modifier = Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -687,7 +696,10 @@ fun AboutDialog(onDismiss: () -> Unit) {
                             .padding(8.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text("Ok", color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            stringResource(id = R.string.confirm),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
             }

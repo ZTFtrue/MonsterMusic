@@ -1,7 +1,7 @@
 package com.ztftrue.music.ui.public
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -20,14 +20,14 @@ fun BackButton(
             navigateUp()
         }
     }
-    // CompositioinLocal
+    // Composition Local
 //    val LocalNavigationProvider = staticCompositionLocalOf { ... }
 //    LocalNavigationProvider provides navController // setValue
 //    val navController = LocalNavigationProvider.current // useValue
     IconButton(onClick = {
         navController.navigateBack { }
     }) {
-        Icon(Icons.Filled.ArrowBack, contentDescription = "Back",  tint = MaterialTheme.colorScheme.onBackground)
+        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back",  tint = MaterialTheme.colorScheme.onBackground)
     }
 }
 

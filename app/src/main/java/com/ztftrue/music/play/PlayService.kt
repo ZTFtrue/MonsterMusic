@@ -35,6 +35,7 @@ import androidx.media3.exoplayer.audio.ForwardingAudioSink
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import com.ztftrue.music.MainActivity
+import com.ztftrue.music.R
 import com.ztftrue.music.effects.EchoAudioProcessor
 import com.ztftrue.music.effects.EqualizerAudioProcessor
 import com.ztftrue.music.sqlData.MusicDatabase
@@ -422,7 +423,8 @@ class PlayService : MediaBrowserServiceCompat() {
                 if (musicItem != null && playList != null) {
                     if (playList.type == PlayListType.Queue
                         || (playList.type == playListCurrent?.type && playList.id == playListCurrent?.id
-                                &&musicQueue.size==musicItems?.size)) {
+                                && musicQueue.size == musicItems?.size)
+                    ) {
                         playMusicCurrentQueue(musicItem, index)
                     } else {
                         playMusicSwitchQueue(musicItem, playList, index, musicItems)
@@ -1444,6 +1446,7 @@ class PlayService : MediaBrowserServiceCompat() {
     }
 
     var errorCount = 0
+    var lastMediaIndex = -1
     private fun playerAddListener() {
         exoPlayer.addListener(@UnstableApi object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -1484,13 +1487,13 @@ class PlayService : MediaBrowserServiceCompat() {
                 if (errorCount > 3) {
                     Toast.makeText(
                         this@PlayService,
-                        "Many times play error, Play paused",
+                        getString(R.string.mutiple_error_tip),
                         Toast.LENGTH_SHORT
                     ).show()
                 } else {
                     Toast.makeText(
                         this@PlayService,
-                        "Play error, auto play next",
+                        getString(R.string.play_error_play_next),
                         Toast.LENGTH_SHORT
                     ).show()
                     exoPlayer.seekToNextMediaItem()
@@ -1505,7 +1508,6 @@ class PlayService : MediaBrowserServiceCompat() {
                 reason: Int
             ) {
                 super.onPositionDiscontinuity(oldPosition, newPosition, reason)
-                // TODO　seek bar also call this function
                 if (musicQueue.isEmpty()) return
                 currentPlayTrack =
                     musicQueue[newPosition.mediaItemIndex]
@@ -1514,6 +1516,21 @@ class PlayService : MediaBrowserServiceCompat() {
                     needPlayPause = false
                     timeFinish()
                 }
+//                when (reason) {
+//                    Player.DISCONTINUITY_REASON_SEEK -> {
+//                        // Handle seek
+//                    }
+//
+//                    Player.DISCONTINUITY_REASON_SEEK_ADJUSTMENT -> {
+//
+//                    }
+//
+//                    else -> {
+//                        // Handle other reasons
+//                    }
+//                }
+
+
             }
 
             override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {

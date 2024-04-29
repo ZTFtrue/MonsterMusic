@@ -31,7 +31,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -126,7 +127,9 @@ fun GenreGridView(
             LazyRow(
                 contentPadding = PaddingValues(5.dp),
                 state = rowListSate,
-                modifier = modifier.background(MaterialTheme.colorScheme.background).fillMaxSize()
+                modifier = modifier
+                    .background(MaterialTheme.colorScheme.background)
+                    .fillMaxSize()
             ) {
                 items(genreList.size) { index ->
                     val item = genreList[index]
@@ -152,7 +155,9 @@ fun GenreGridView(
                 columns = GridCells.Fixed(musicViewModel.genreItemsCount.intValue), // Number of columns in the grid
                 contentPadding = PaddingValues(5.dp),
                 state = listState,
-                modifier = modifier.background(MaterialTheme.colorScheme.background).fillMaxSize()
+                modifier = modifier
+                    .background(MaterialTheme.colorScheme.background)
+                    .fillMaxSize()
             ) {
                 items(genreList.size) { index ->
                     val item = genreList[index]
@@ -284,7 +289,7 @@ fun GenreItemView(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "$number song${if (number <= 1L) "" else "s"}",
+                    text = stringResource(R.string.song, number),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 IconButton(
@@ -338,11 +343,11 @@ fun GenreListOperateDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Operate", modifier = Modifier
+                    text = stringResource(id = R.string.operate), modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
@@ -373,8 +378,8 @@ fun GenreListOperateDialog(
                                 contentAlignment = Alignment.CenterStart
                             ) {
                                 Text(
-                                    text = "Add to queue",
-                                    Modifier.padding(start = 10.dp),
+                                    text = stringResource(id = R.string.add_to_queue),
+                                    modifier = Modifier.padding(start = 10.dp),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                             }
@@ -398,7 +403,7 @@ fun GenreListOperateDialog(
                                 contentAlignment = Alignment.CenterStart
                             ) {
                                 Text(
-                                    text = "Play next",
+                                    text = stringResource(id = R.string.play_next),
                                     Modifier.padding(start = 10.dp),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
@@ -423,7 +428,7 @@ fun GenreListOperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Add to playlist",
+                                text = stringResource(id = R.string.add_to_playlist),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -443,7 +448,7 @@ fun GenreListOperateDialog(
                             .padding(8.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onBackground)
+                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
                     }
                 }
             }

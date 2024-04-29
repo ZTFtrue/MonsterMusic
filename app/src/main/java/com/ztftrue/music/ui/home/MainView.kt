@@ -50,6 +50,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -74,6 +75,7 @@ import com.ztftrue.music.ui.public.SleepTimeDialog
 import com.ztftrue.music.ui.public.TracksListView
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
+import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import kotlinx.coroutines.launch
 
@@ -342,7 +344,7 @@ fun MainTopBar(
                                         ACTION_PlayLIST_CHANGE, null, null
                                     )
                                 } else {
-                                    Toast.makeText(context, "创建失败", Toast.LENGTH_SHORT)
+                                    Toast.makeText(context,    context.getString(R.string.create_failed), Toast.LENGTH_SHORT)
                                         .show()
                                 }
                             }
@@ -354,7 +356,7 @@ fun MainTopBar(
                         }) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Operate",
+                            contentDescription =stringResource(id = R.string.operate),
                             modifier = Modifier
                                 .size(20.dp)
                                 .clip(CircleShape),
@@ -400,7 +402,7 @@ fun MainTopBar(
             modifier = Modifier.fillMaxWidth(),
             indicator = { tabPositions ->
                 if (tabPositions.isNotEmpty()) {
-                    TabRowDefaults.Indicator(
+                    TabRowDefaults.SecondaryIndicator(
                         Modifier
                             .height(3.0.dp)
                             .tabIndicatorOffset(tabPositions[pagerState.currentPage]),
@@ -408,7 +410,7 @@ fun MainTopBar(
                         color = MaterialTheme.colorScheme.onBackground
                     )
                 } else {
-                    TabRowDefaults.Indicator(
+                    TabRowDefaults.SecondaryIndicator(
                         Modifier.height(3.0.dp),
                         height = 3.0.dp,
                         color = MaterialTheme.colorScheme.onBackground
@@ -426,7 +428,7 @@ fun MainTopBar(
                     },
                     text = {
                         Text(
-                            text = item.name,
+                            text =stringResource(id = Utils.translateMap[item.name] ?:R.string.app_name) ,
                             color = MaterialTheme.colorScheme.onBackground,
                             fontSize = 14.sp,
                         )

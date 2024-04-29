@@ -24,7 +24,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -45,6 +45,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -102,7 +103,7 @@ fun FolderListView(
 
     Column {
         Text(
-            text = "Warning: Not all tracks can be show in other tabs, they don't show that in Ringtones or Notifications folders",
+            text = stringResource(R.string.warning_for_tracks_tab),
             modifier = Modifier.padding(10.dp),
             color = MaterialTheme.colorScheme.onBackground
         )
@@ -119,7 +120,7 @@ fun FolderListView(
                         .fillMaxWidth(),
                     navController
                 )
-                Divider(color = MaterialTheme.colorScheme.inverseOnSurface, thickness = 1.2.dp)
+                HorizontalDivider(color = MaterialTheme.colorScheme.inverseOnSurface, thickness = 1.2.dp)
             }
         }
     }
@@ -268,11 +269,11 @@ fun FolderListOperateDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Operate", modifier = Modifier
+                    text = stringResource(R.string.operate), modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
@@ -303,8 +304,8 @@ fun FolderListOperateDialog(
                                 contentAlignment = Alignment.CenterStart
                             ) {
                                 Text(
-                                    text = "Add to queue",
-                                    Modifier.padding(start = 10.dp),
+                                    text = stringResource(R.string.add_to_queue),
+                                    modifier = Modifier.padding(start = 10.dp),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
 
@@ -329,7 +330,7 @@ fun FolderListOperateDialog(
                                 contentAlignment = Alignment.CenterStart
                             ) {
                                 Text(
-                                    text = "Play next",
+                                    text = stringResource(R.string.play_next),
                                     Modifier.padding(start = 10.dp),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
@@ -355,7 +356,7 @@ fun FolderListOperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Add to playlist",
+                                text = stringResource(R.string.add_to_playlist),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -375,7 +376,7 @@ fun FolderListOperateDialog(
                             .padding(8.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onBackground)
+                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
                     }
                 }
             }

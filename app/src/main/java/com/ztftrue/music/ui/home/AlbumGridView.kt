@@ -31,7 +31,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -54,6 +54,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -134,7 +135,9 @@ fun AlbumGridView(
             LazyRow(
                 contentPadding = PaddingValues(5.dp),
                 state = rowListSate,
-                modifier = modifier.background(MaterialTheme.colorScheme.background).fillMaxSize()
+                modifier = modifier
+                    .background(MaterialTheme.colorScheme.background)
+                    .fillMaxSize()
             ) {
                 items(albumList.size) { index ->
                     val item = albumList[index]
@@ -158,7 +161,8 @@ fun AlbumGridView(
             // ScrollDirectionType.GRID_VERTICAL
             LazyVerticalGrid(
                 modifier = Modifier
-                    .background(MaterialTheme.colorScheme.background).fillMaxSize(),
+                    .background(MaterialTheme.colorScheme.background)
+                    .fillMaxSize(),
                 columns = GridCells.Fixed(musicViewModel.albumItemsCount.intValue), // Number of columns in the grid
                 contentPadding = PaddingValues(5.dp),
                 state = listState
@@ -360,10 +364,10 @@ fun AlbumsOperateDialog(
             ) {
                 Text(
                     color = MaterialTheme.colorScheme.onBackground,
-                    text = "Operate", modifier = Modifier
+                    text = stringResource(id = R.string.operate), modifier = Modifier
                         .padding(2.dp)
                 )
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
@@ -394,7 +398,8 @@ fun AlbumsOperateDialog(
                                 contentAlignment = Alignment.CenterStart
                             ) {
                                 Text(
-                                    text = "Add to queue", Modifier.padding(start = 10.dp),
+                                    text = stringResource(id = R.string.add_to_queue),
+                                    modifier = Modifier.padding(start = 10.dp),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                             }
@@ -418,8 +423,8 @@ fun AlbumsOperateDialog(
                                 contentAlignment = Alignment.CenterStart
                             ) {
                                 Text(
-                                    text = "Play next",
-                                    Modifier.padding(start = 10.dp),
+                                    text = stringResource(id = R.string.play_next),
+                                    modifier = Modifier.padding(start = 10.dp),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                             }
@@ -443,8 +448,8 @@ fun AlbumsOperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Add to playlist",
-                                Modifier.padding(start = 10.dp),
+                                text = stringResource(id = R.string.add_to_playlist),
+                                modifier = Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -467,8 +472,8 @@ fun AlbumsOperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Artist",
-                                Modifier.padding(start = 10.dp),
+                                text = stringResource(id = R.string.artist),
+                                modifier = Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -487,7 +492,7 @@ fun AlbumsOperateDialog(
                             .padding(8.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onBackground)
+                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
                     }
                 }
             }

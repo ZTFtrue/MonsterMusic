@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -43,6 +44,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.ztftrue.music.MusicViewModel
+import com.ztftrue.music.R
 import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.utils.trackManager.TracksManager
 
@@ -158,7 +160,7 @@ fun EditTrackPage(
                                 }
                             },
                             label = {
-                                Text("Title")
+                                Text(stringResource(id = R.string.title))
                             }, // Placeholder or hint text
                             keyboardOptions = KeyboardOptions.Default.copy(
                                 imeAction = ImeAction.Next,
@@ -190,7 +192,7 @@ fun EditTrackPage(
                                 }
                             },
                             label = {
-                                Text("Album")
+                                Text(stringResource(R.string.album))
                             }, // Placeholder or hint text
                             keyboardOptions = KeyboardOptions.Default.copy(
                                 imeAction = ImeAction.Next,
@@ -222,7 +224,7 @@ fun EditTrackPage(
                                 }
                             },
                             label = {
-                                Text("Artist")
+                                Text(stringResource(id = R.string.artist, ""))
                             }, // Placeholder or hint text
                             keyboardOptions = KeyboardOptions.Default.copy(
                                 imeAction = ImeAction.Next,
@@ -254,7 +256,7 @@ fun EditTrackPage(
                                 }
                             },
                             label = {
-                                Text("Genre")
+                                Text(stringResource(R.string.genre))
                             }, // Placeholder or hint text
                             keyboardOptions = KeyboardOptions.Default.copy(
                                 imeAction = ImeAction.Next,
@@ -286,7 +288,7 @@ fun EditTrackPage(
                                 }
                             },
                             label = {
-                                Text("Year")
+                                Text(stringResource(R.string.year))
                             }, // Placeholder or hint text
                             keyboardOptions = KeyboardOptions.Default.copy(
                                 imeAction = ImeAction.Next,

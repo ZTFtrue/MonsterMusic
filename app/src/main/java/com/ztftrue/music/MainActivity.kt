@@ -20,7 +20,6 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
@@ -37,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.splashscreen.SplashScreen
@@ -276,13 +276,13 @@ class MainActivity : ComponentActivity() {
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (result.resultCode == RESULT_OK) {
-                val treeUri = result.data?.data;
+                val treeUri = result.data?.data
                 if (treeUri != null) {
                     contentResolver.takePersistableUriPermission(
                         treeUri,
                         Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                     )
-                    CoroutineScope(Dispatchers.IO).launch{
+                    CoroutineScope(Dispatchers.IO).launch {
                         musicViewModel.getDb(this@MainActivity).StorageFolderDao().insert(
                             StorageFolder(null, treeUri.toString())
                         )
@@ -352,7 +352,7 @@ class MainActivity : ComponentActivity() {
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "Can't find any audio file\n I need permission\nClick here to open settings",
+                            text = stringResource(R.string.can_t_find_any_audio_file_i_need_permission_click_here_to_open_settings),
                             fontSize = 20.sp,
                             color = Color.Red
                         )
@@ -493,7 +493,7 @@ class MainActivity : ComponentActivity() {
                     // before switch to another music, must clear lyrics
                     musicViewModel.currentCaptionList.clear()
                     val index = it.getInt("index")
-                    if (index >= 0 && musicViewModel.musicQueue.size > index) {
+                    if (index >= 0 && musicViewModel.musicQueue.size > index && index != musicViewModel.currentPlayQueueIndex.intValue) {
                         musicViewModel.currentMusicCover.value = null
                         musicViewModel.currentPlay.value =
                             musicViewModel.musicQueue[index]
@@ -504,7 +504,6 @@ class MainActivity : ComponentActivity() {
                             this@MainActivity,
                             musicViewModel.musicQueue[index]
                         )
-
                     }
                 } else if (it.getInt("type") == EVENT_MEDIA_METADATA_Change) {
                     val cover = it.getByteArray("cover")
@@ -602,7 +601,6 @@ class MainActivity : ComponentActivity() {
             musicViewModel.musicQueue.addAll(it)
         }
         resultData.getParcelableArrayList<MusicItem>("songsList")?.also {
-            Log.i("TAG", "getInitData: ${it.size}")
             musicViewModel.songsList.clear()
             musicViewModel.songsList.addAll(it)
         }

@@ -11,10 +11,6 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven(
-            // for Tarsos
-            url = "https://mvn.0110.be/releases"
-        )
-        maven(
             url = "https://jitpack.io"
         )
     }
