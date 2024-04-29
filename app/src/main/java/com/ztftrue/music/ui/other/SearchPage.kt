@@ -16,7 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -33,12 +33,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -46,17 +46,18 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
+import com.ztftrue.music.R
 import com.ztftrue.music.play.ACTION_SEARCH
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.home.AlbumGridView
 import com.ztftrue.music.ui.home.ArtistsGridView
 import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.ui.public.TracksListView
+import com.ztftrue.music.utils.PlayListType
+import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.model.AlbumList
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.model.ArtistList
-import com.ztftrue.music.utils.PlayListType
-import com.ztftrue.music.utils.ScrollDirectionType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -67,7 +68,6 @@ import kotlinx.coroutines.launch
 /**
  * show all music of playlist
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @UnstableApi
 @Composable
 fun SearchPage(
@@ -174,7 +174,7 @@ fun SearchPage(
                                         }
                                     },
                                     placeholder = {
-                                        Text("Enter text to search")
+                                        Text(stringResource(R.string.enter_text_to_search))
                                     }, // Placeholder or hint text
                                     keyboardOptions = KeyboardOptions.Default.copy(
                                         imeAction = ImeAction.Done,
@@ -220,13 +220,13 @@ fun SearchPage(
                     val configuration = LocalConfiguration.current
                     if (keywords.isNotEmpty() && albumsList.isEmpty() && artistList.isEmpty() && tracksList.isEmpty()) {
                         Text(
-                            text = "No result",
+                            text = stringResource(R.string.no_music),
                             color = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.horizontalScroll(rememberScrollState(0))
                         )
                     }
                     if (albumsList.isNotEmpty()) {
-                        Text(text = "Album")
+                        Text(text =stringResource(R.string.album))
                         Box(
                             modifier = Modifier
                                 .height((configuration.screenWidthDp / musicViewModel.albumItemsCount.intValue + 40).dp)
@@ -241,7 +241,7 @@ fun SearchPage(
                             )
                         }
 
-                        Divider(
+                        HorizontalDivider(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(1.dp)
@@ -249,7 +249,7 @@ fun SearchPage(
                         )
                     }
                     if (artistList.isNotEmpty()) {
-                        Text(text = "Artist")
+                        Text(text = stringResource(R.string.artist))
                         Box(
                             modifier = Modifier
                                 .height((configuration.screenWidthDp / musicViewModel.albumItemsCount.intValue + 40).dp)
@@ -263,7 +263,7 @@ fun SearchPage(
                                 scrollDirection = ScrollDirectionType.GRID_HORIZONTAL
                             )
                         }
-                        Divider(
+                        HorizontalDivider(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(1.dp)

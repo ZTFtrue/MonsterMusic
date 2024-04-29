@@ -16,8 +16,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerState
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.Text
@@ -36,6 +36,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -154,7 +155,7 @@ fun DrawMenu(
                 contentAlignment = Alignment.CenterStart
             ) {
                 Text(
-                    text = "Settings",
+                    text = stringResource(R.string.settings),
                     Modifier.padding(start = 10.dp),
                     color = MaterialTheme.colorScheme.onBackground,
                 )
@@ -186,7 +187,7 @@ fun DrawMenu(
                 contentAlignment = Alignment.CenterStart
             ) {
                 Text(
-                    text = "FeedBack",
+                    text = stringResource(R.string.feedback),
                     Modifier.padding(start = 10.dp),
                     color = MaterialTheme.colorScheme.onBackground,
                 )
@@ -215,7 +216,7 @@ fun DrawMenu(
                 contentAlignment = Alignment.CenterStart
             ) {
                 Text(
-                    text = "Exit APP", Modifier.padding(start = 10.dp),
+                    text = stringResource(R.string.exit_app), Modifier.padding(start = 10.dp),
                     color = MaterialTheme.colorScheme.onBackground,
                 )
             }
@@ -250,12 +251,12 @@ fun FeedBackDialog(onDismiss: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "About&Thanks", modifier = Modifier
+                    text = stringResource(R.string.about_thanks), modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
@@ -288,7 +289,7 @@ fun FeedBackDialog(onDismiss: () -> Unit) {
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "To github",
+                                text = stringResource(R.string.to_github),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -317,7 +318,7 @@ fun FeedBackDialog(onDismiss: () -> Unit) {
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Send email", Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.send_email), Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -336,7 +337,7 @@ fun FeedBackDialog(onDismiss: () -> Unit) {
                             .padding(8.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onBackground)
+                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
                     }
                 }
             }

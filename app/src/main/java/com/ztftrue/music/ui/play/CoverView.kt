@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.ztftrue.music.MusicViewModel
@@ -52,7 +53,7 @@ fun CoverView(musicViewModel: MusicViewModel) {
             Image(
                 painter = rememberAsyncImagePainter(
                     paint ?: R.drawable.songs_thumbnail_cover
-                ), contentDescription = "Cover",
+                ), contentDescription = stringResource(R.string.cover),
                 modifier = Modifier
                     .fillMaxSize()
                     .aspectRatio(1f)
@@ -79,7 +80,7 @@ fun CoverView(musicViewModel: MusicViewModel) {
                             fontSize = MaterialTheme.typography.titleSmall.fontSize
                         )
                         Text(
-                            text = "artist: ${it1.artist}", modifier =
+                            text = stringResource(R.string.artist, it1.artist), modifier =
                             Modifier
                                 .padding(0.dp)
                                 .height(30.dp)
@@ -89,7 +90,7 @@ fun CoverView(musicViewModel: MusicViewModel) {
                             fontSize = MaterialTheme.typography.titleSmall.fontSize
                         )
                         Text(
-                            text = "album: ${it1.album}", modifier =
+                            text = stringResource(R.string.album, it1.album), modifier =
                             Modifier
                                 .padding(top = 10.dp)
                                 .horizontalScroll(rememberScrollState(0))

@@ -11,7 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
@@ -22,6 +22,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -54,11 +55,13 @@ fun TracksListView(
     key(tracksList) {
         if (tracksList.size == 0) {
             Text(
-                text = "No music",
+                text = stringResource(R.string.no_music),
                 color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.horizontalScroll(rememberScrollState(0)).semantics {
-                    contentDescription = "No music"
-                }
+                modifier = Modifier
+                    .horizontalScroll(rememberScrollState(0))
+                    .semantics {
+                        contentDescription = "No music"
+                    }
             )
         }else{
             ConstraintLayout(
@@ -88,7 +91,7 @@ fun TracksListView(
                             selectStatus,
                             selectList,
                         )
-                        Divider(
+                        HorizontalDivider(
                             color = MaterialTheme.colorScheme.inverseOnSurface,
                             thickness = 1.2.dp
                         )

@@ -21,6 +21,7 @@ import androidx.annotation.RequiresApi
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
+import com.ztftrue.music.R
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.OperateTypeInActivity
@@ -215,7 +216,6 @@ object PlaylistManager {
                     bundle.putString("action", OperateTypeInActivity.InsertTrackToPlaylist.name)
                     bundle.putParcelable("uri", uri)
                     bundle.putParcelableArrayList("values", contentValues)
-                    Log.i("addMusicsToPlaylist", uri.toString())
                     try {
                         val pendingIntent = MediaStore.createWriteRequest(resolver, listOf(uri))
                         val intentSenderRequest: IntentSenderRequest =
@@ -465,7 +465,8 @@ object PlaylistManager {
                     .build()
             context.modifyMediaLauncher.launch(intentSenderRequest)
         } catch (e: Exception) {
-            Toast.makeText(context, "You system don't support this feature", Toast.LENGTH_SHORT)
+            Toast.makeText(context,
+                context.getString(R.string.cant_support_feature_tip), Toast.LENGTH_SHORT)
                 .show()
             e.printStackTrace()
         }

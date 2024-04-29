@@ -125,7 +125,7 @@ dependencies {
     implementation("com.github.wendykierp:JTransforms:3.1")
 // https://mvnrepository.com/artifact/org.apache.commons/commons-math3
     implementation("org.apache.commons:commons-math3:3.6.1")
-    implementation("be.tarsos.dsp:core:2.5")
+//    implementation("be.tarsos.dsp:core:2.5")
 // https://mvnrepository.com/artifact/org.bitbucket.ijabz/jaudiotagger
     implementation("org.bitbucket.ijabz:jaudiotagger:7b004a1")
 

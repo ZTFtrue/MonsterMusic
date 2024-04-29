@@ -22,9 +22,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,12 +42,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -67,6 +70,7 @@ fun TopBar(
     musicViewModel: MusicViewModel,
     content: @Composable RowScope.() -> Unit
 ) {
+    var context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
     val timerIcon: Int = if (musicViewModel.remainTime.longValue == 0L) {
         R.drawable.set_timer
@@ -100,7 +104,7 @@ fun TopBar(
                 modifier = Modifier
                     .size(50.dp)
                     .semantics {
-                        contentDescription = "Search"
+                        contentDescription = context.getString(R.string.search)
                     },
                 onClick = {
                     navController.navigate(
@@ -145,12 +149,12 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Sleep timer", modifier = Modifier
+                    text = stringResource(R.string.sleep_timer), modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
@@ -166,17 +170,23 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Running: ${Utils.formatTime(musicViewModel.remainTime.longValue)}",
+                            text = stringResource(
+                                R.string.running,
+                                Utils.formatTime(musicViewModel.remainTime.longValue)
+                            ),
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         TextButton(
                             onClick = { onConfirmation(0L) },
                             modifier = Modifier.padding(8.dp),
                         ) {
-                            Text("Stop", color = MaterialTheme.colorScheme.onBackground)
+                            Text(
+                                text = stringResource(R.string.stop),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
                         }
                     }
-                    Divider(
+                    HorizontalDivider(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(1.dp)
@@ -194,12 +204,12 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                         musicViewModel.playCompleted.value = it
                     })
                     Text(
-                        text = "Play completed last song",
+                        text = stringResource(R.string.play_completed_last_song),
                         color = MaterialTheme.colorScheme.onBackground
                     )
                 }
 
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
@@ -221,7 +231,7 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                 modifier = Modifier
                             ) {
                                 Text(
-                                    text = "${sleepT[item]}\n minutes",
+                                    text = stringResource(R.string.minutes, sleepT[item]),
                                     textAlign = TextAlign.Center,
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
@@ -245,7 +255,7 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                             },
                             label = {
                                 Text(
-                                    "Enter minutes",
+                                    text = stringResource(R.string.enter_minutes),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                             },
@@ -262,7 +272,10 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                 .fillMaxWidth()
                                 .padding(bottom = 16.dp),
                             suffix = {
-                                Text("minutes", color = MaterialTheme.colorScheme.onBackground)
+                                Text(
+                                    text = stringResource(id = R.string.minutes),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
                             },
                         )
                     }
@@ -277,7 +290,10 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                         onClick = { onDismiss() },
                         modifier = Modifier.padding(8.dp),
                     ) {
-                        Text("Dismiss", color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            stringResource(id = R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                     TextButton(
                         onClick = {
@@ -287,7 +303,10 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                         },
                         modifier = Modifier.padding(8.dp),
                     ) {
-                        Text("Confirm", color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            stringResource(id = R.string.confirm),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
 
@@ -301,11 +320,12 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BackTopBar(
-    navController: NavHostController
+    navController: NavHostController,
+    text: String
 ) {
     TopAppBar(
         navigationIcon = { BackButton(navController) },
         title = {
-            Text(text = "Settings", color = MaterialTheme.colorScheme.onBackground)
+            Text(text = text, color = MaterialTheme.colorScheme.onBackground)
         })
 }

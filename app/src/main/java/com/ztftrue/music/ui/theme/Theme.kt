@@ -98,7 +98,7 @@ fun MusicPitchTheme(
     musicViewModel: MusicViewModel,
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = false,
+    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
@@ -110,17 +110,14 @@ fun MusicPitchTheme(
         musicViewModel.themeSelected.intValue,
         musicViewModel.currentPlay.value
     ) {
-        // "Follow System", "Light", "Dark", "Follow Music Cover"
+        // "Follow System", "Light", "Dark", "Follow Music Cover","material you"
         if (musicViewModel.themeSelected.intValue == 0) {
-            colorScheme.value =
-                if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) if (darkTheme) dynamicDarkColorScheme(
-                    context
-                ) else dynamicLightColorScheme(context) else if (darkTheme) DarkColorScheme else LightColorScheme
+            colorScheme.value = if (darkTheme) DarkColorScheme else LightColorScheme
         } else if (musicViewModel.themeSelected.intValue == 1) {
             colorScheme.value = LightColorScheme
         } else if (musicViewModel.themeSelected.intValue == 2) {
             colorScheme.value = DarkColorScheme
-        } else {
+        } else if (musicViewModel.themeSelected.intValue == 3) {
             val bitmap = musicViewModel.getCurrentMusicCover()
             if (bitmap != null) {
                 Palette.from(bitmap).generate { palette -> // 从 Palette 中获取颜色信息
@@ -150,9 +147,14 @@ fun MusicPitchTheme(
                         context
                     ) else dynamicLightColorScheme(context) else if (darkTheme) DarkColorScheme else LightColorScheme
             }
+        } else if (musicViewModel.themeSelected.intValue == 4) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                colorScheme.value =
+                    if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(
+                        context
+                    )
+            }
         }
-
-
     }
     val view = LocalView.current
     if (!view.isInEditMode) {

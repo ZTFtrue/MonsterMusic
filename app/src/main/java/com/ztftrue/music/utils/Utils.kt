@@ -10,6 +10,7 @@ import android.text.TextUtils
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.ztftrue.music.MusicViewModel
+import com.ztftrue.music.R
 import com.ztftrue.music.play.ACTION_AddPlayQueue
 import com.ztftrue.music.play.ACTION_GET_TRACKS
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
@@ -24,7 +25,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
-
 
 enum class OperateTypeInActivity {
     DeletePlayList,
@@ -45,7 +45,6 @@ enum class PlayListType {
     Folders,
     None
 }
-
 
 fun enumToStringForPlayListType(myEnum: PlayListType): String {
     return myEnum.name
@@ -88,7 +87,26 @@ enum class ScrollDirectionType {
 
 @Suppress("deprecation")
 object Utils {
-    val items = listOf("Follow System", "Light", "Dark", "Follow Music Cover")
+    val translateMap = HashMap<String, Int>().apply {
+        put("Songs", R.string.tab_songs)
+        put("PlayLists", R.string.tab_playLists)
+        put("Queue", R.string.tab_queue)
+        put("Albums", R.string.tab_albums)
+        put("Artists", R.string.tab_artists)
+        put("Genres", R.string.tab_genres)
+        put("Folders", R.string.tab_folders)
+        put("Cover", R.string.tab_cover)
+        put("Lyrics", R.string.tab_lyrics)
+        put("Equalizer", R.string.tab_equalizer)
+    }
+
+    val items = listOf(
+        R.string.theme_follow_system,
+        R.string.theme_light,
+        R.string.theme_dark,
+        R.string.theme_follow_music_cover,
+        R.string.theme_material_you,
+    )
     var kThirdOct = doubleArrayOf(
         31.5, 63.0, 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0, 16000.0
     )
@@ -103,7 +121,7 @@ object Utils {
     )
 
 
-    fun initSettingsData(musicViewModel: MusicViewModel,context: Context) {
+    fun initSettingsData(musicViewModel: MusicViewModel, context: Context) {
         CoroutineScope(Dispatchers.IO).launch {
 
             musicViewModel.themeSelected.intValue = context.getSharedPreferences(
@@ -153,8 +171,6 @@ object Utils {
             seconds
         ) else String.format("%02d:%02d", minutes, seconds)
     }
-
-
 
 
     fun openFile(path: String, minType: String = "text/plain", context: Context) {
@@ -261,7 +277,7 @@ object Utils {
                     }
                 )
             } else {
-                Toast.makeText(context, "创建失败", Toast.LENGTH_SHORT)
+                Toast.makeText(context,    context.getString(R.string.create_failed), Toast.LENGTH_SHORT)
                     .show()
             }
         }
@@ -281,7 +297,7 @@ object Utils {
                     ACTION_PlayLIST_CHANGE, null, null
                 )
             } else {
-                Toast.makeText(context, "创建失败", Toast.LENGTH_SHORT)
+                Toast.makeText(context,    context.getString(R.string.create_failed), Toast.LENGTH_SHORT)
                     .show()
             }
         }

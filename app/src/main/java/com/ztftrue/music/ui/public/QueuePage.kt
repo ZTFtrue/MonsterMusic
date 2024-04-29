@@ -17,7 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -42,6 +43,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.QueuePlayList
+import com.ztftrue.music.R
 import com.ztftrue.music.play.ACTION_CLEAR_QUEUE
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.utils.OperateType
@@ -113,7 +115,7 @@ fun QueuePage(
                         ACTION_PlayLIST_CHANGE, null, null
                     )
                 } else {
-                    Toast.makeText(context, "创建失败", Toast.LENGTH_SHORT)
+                    Toast.makeText(context,    context.getString(R.string.create_failed), Toast.LENGTH_SHORT)
                         .show()
                 }
             }
@@ -181,10 +183,10 @@ fun QueueOperateDialog(
             ) {
                 Text(
                     color = MaterialTheme.colorScheme.onBackground,
-                    text = "Operate current queue", modifier = Modifier
+                    text = stringResource(R.string.operate_current_queue), modifier = Modifier
                         .padding(2.dp)
                 )
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
@@ -211,7 +213,7 @@ fun QueueOperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Save current queue to playlist",
+                                text = stringResource(R.string.save_current_queue_to_playlist),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -237,7 +239,7 @@ fun QueueOperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Clear current queue",
+                                text = stringResource(R.string.clear_current_queue),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -259,7 +261,7 @@ fun QueueOperateDialog(
                             .padding(8.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onBackground)
+                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
                     }
                 }
             }

@@ -21,7 +21,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -47,9 +48,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.ztftrue.music.MusicViewModel
+import com.ztftrue.music.R
 import com.ztftrue.music.sqlData.model.MusicItem
-import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.PlayListType
+import com.ztftrue.music.utils.model.MusicPlayList
 
 @Composable
 fun CreatePlayListDialog(
@@ -81,12 +83,12 @@ fun CreatePlayListDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Create PlayList",
+                    text = stringResource(R.string.create_playlist),
                     modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground,
                 )
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
@@ -101,7 +103,7 @@ fun CreatePlayListDialog(
                             },
                             label = {
                                 Text(
-                                    "Enter name",
+                                    text = stringResource(id = R.string.enter_name),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                             },
@@ -154,12 +156,12 @@ fun CreatePlayListDialog(
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
-                            text = "Cancel",
-                            Modifier.padding(start = 10.dp),
+                            text = stringResource(R.string.cancel),
+                            modifier = Modifier.padding(start = 10.dp),
                             color = MaterialTheme.colorScheme.onBackground,
                         )
                     }
-                    Divider(
+                    HorizontalDivider(
                         modifier = Modifier
                             .width(1.dp)
                             .fillMaxWidth(0.1f)
@@ -185,8 +187,8 @@ fun CreatePlayListDialog(
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
-                            text = "Ok",
-                            Modifier.padding(start = 10.dp),
+                            text = stringResource(R.string.confirm),
+                            modifier = Modifier.padding(start = 10.dp),
                             color = MaterialTheme.colorScheme.onBackground,
                         )
                     }
@@ -228,12 +230,12 @@ fun RenamePlayListDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Rename PlayList name",
+                    text = stringResource(R.string.rename_playlist),
                     modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground,
                 )
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
@@ -246,7 +248,7 @@ fun RenamePlayListDialog(
                             onValueChange = {
                                 playListName = it
                             },
-                            label = { Text("Enter name") },
+                            label = { Text(stringResource(R.string.enter_name)) },
                             keyboardOptions = KeyboardOptions.Default.copy(
                                 imeAction = ImeAction.Done,
                                 keyboardType = KeyboardType.Text
@@ -288,12 +290,12 @@ fun RenamePlayListDialog(
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
-                            text = "Cancel",
+                            text =stringResource(R.string.cancel),
                             Modifier.padding(start = 10.dp),
                             color = MaterialTheme.colorScheme.onBackground,
                         )
                     }
-                    Divider(
+                    HorizontalDivider(
                         modifier = Modifier
                             .width(1.dp)
                             .fillMaxWidth(0.1f)
@@ -319,7 +321,7 @@ fun RenamePlayListDialog(
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
-                            text = "Ok",
+                            text = stringResource(R.string.confirm),
                             Modifier.padding(start = 10.dp),
                             color = MaterialTheme.colorScheme.onBackground,
                         )
@@ -361,12 +363,12 @@ fun DeleteTip(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Confirm to delete $titleTip?",
+                    text = stringResource(R.string.confirm_to_delete, titleTip),
                     modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground,
                 )
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
@@ -395,11 +397,11 @@ fun DeleteTip(
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
-                            text = "Cancel", Modifier.padding(start = 10.dp),
+                            text =stringResource(R.string.cancel), Modifier.padding(start = 10.dp),
                             color = MaterialTheme.colorScheme.onBackground,
                         )
                     }
-                    Divider(
+                    HorizontalDivider(
                         modifier = Modifier
                             .width(1.dp)
                             .fillMaxWidth(0.1f)
@@ -425,7 +427,7 @@ fun DeleteTip(
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
-                            text = "Confirm",
+                            text = stringResource(R.string.confirm),
                             Modifier.padding(start = 10.dp),
                             color = MaterialTheme.colorScheme.onBackground,
                         )
@@ -498,11 +500,11 @@ fun AddMusicToPlayListDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Add ${musicItem?.name} Music To PlayList", modifier = Modifier
+                    text = stringResource(R.string.add_music_to_playlist, musicItem?.name?:""), modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
@@ -524,7 +526,7 @@ fun AddMusicToPlayListDialog(
                             .clip(CircleShape),
                     )
                     Text(
-                        text = "Add New PlayList",
+                        text = stringResource(R.string.add_new_playlist),
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.horizontalScroll(rememberScrollState(0))
                     )
@@ -551,7 +553,7 @@ fun AddMusicToPlayListDialog(
                                 )
                             }
                         }
-                        Divider(
+                        HorizontalDivider(
                             color = MaterialTheme.colorScheme.inverseOnSurface,
                             thickness = 1.2.dp
                         )
@@ -575,7 +577,7 @@ fun AddMusicToPlayListDialog(
                         },
                     contentAlignment = Alignment.CenterStart
                 ) {
-                    Text(text = "Cancel", Modifier.padding(start = 10.dp), color = MaterialTheme.colorScheme.onBackground)
+                    Text(text = stringResource(R.string.cancel), Modifier.padding(start = 10.dp), color = MaterialTheme.colorScheme.onBackground)
                 }
             }
         }
