@@ -491,9 +491,9 @@ class MainActivity : ComponentActivity() {
 //                    musicViewModel.musicQueue.value = musicViewModel.musicListMap[playList?.id]
                 } else if (it.getInt("type") == EVENT_MEDIA_ITEM_Change) {
                     // before switch to another music, must clear lyrics
-                    musicViewModel.currentCaptionList.clear()
                     val index = it.getInt("index")
                     if (index >= 0 && musicViewModel.musicQueue.size > index && index != musicViewModel.currentPlayQueueIndex.intValue) {
+                        musicViewModel.currentCaptionList.clear()
                         musicViewModel.currentMusicCover.value = null
                         musicViewModel.currentPlay.value =
                             musicViewModel.musicQueue[index]
