@@ -20,7 +20,6 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
@@ -283,7 +282,7 @@ class MainActivity : ComponentActivity() {
                         treeUri,
                         Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                     )
-                    CoroutineScope(Dispatchers.IO).launch{
+                    CoroutineScope(Dispatchers.IO).launch {
                         musicViewModel.getDb(this@MainActivity).StorageFolderDao().insert(
                             StorageFolder(null, treeUri.toString())
                         )
@@ -494,7 +493,7 @@ class MainActivity : ComponentActivity() {
                     // before switch to another music, must clear lyrics
                     musicViewModel.currentCaptionList.clear()
                     val index = it.getInt("index")
-                    if (index >= 0 && musicViewModel.musicQueue.size > index) {
+                    if (index >= 0 && musicViewModel.musicQueue.size > index && index != musicViewModel.currentPlayQueueIndex.intValue) {
                         musicViewModel.currentMusicCover.value = null
                         musicViewModel.currentPlay.value =
                             musicViewModel.musicQueue[index]
@@ -505,7 +504,6 @@ class MainActivity : ComponentActivity() {
                             this@MainActivity,
                             musicViewModel.musicQueue[index]
                         )
-
                     }
                 } else if (it.getInt("type") == EVENT_MEDIA_METADATA_Change) {
                     val cover = it.getByteArray("cover")

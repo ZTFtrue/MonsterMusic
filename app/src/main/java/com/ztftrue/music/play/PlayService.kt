@@ -13,7 +13,6 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
 import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.media.MediaBrowserServiceCompat
@@ -1509,30 +1508,28 @@ class PlayService : MediaBrowserServiceCompat() {
                 reason: Int
             ) {
                 super.onPositionDiscontinuity(oldPosition, newPosition, reason)
-                when (reason) {
-                    Player.DISCONTINUITY_REASON_SEEK -> {
-                        // Handle seek
-                    }
-
-                    Player.DISCONTINUITY_REASON_SEEK_ADJUSTMENT -> {
-                        // Handle seek adjustment
-                    }
-
-                    else -> {
-                        // Handle other reasons
-                    }
-                }
                 if (musicQueue.isEmpty()) return
-                if (lastMediaIndex != newPosition.mediaItemIndex) {
-                    lastMediaIndex = newPosition.mediaItemIndex
-                    currentPlayTrack =
-                        musicQueue[newPosition.mediaItemIndex]
-                    updateNotify()
-                    if (needPlayPause) {
-                        needPlayPause = false
-                        timeFinish()
-                    }
+                currentPlayTrack =
+                    musicQueue[newPosition.mediaItemIndex]
+                updateNotify()
+                if (needPlayPause) {
+                    needPlayPause = false
+                    timeFinish()
                 }
+//                when (reason) {
+//                    Player.DISCONTINUITY_REASON_SEEK -> {
+//                        // Handle seek
+//                    }
+//
+//                    Player.DISCONTINUITY_REASON_SEEK_ADJUSTMENT -> {
+//
+//                    }
+//
+//                    else -> {
+//                        // Handle other reasons
+//                    }
+//                }
+
 
             }
 
