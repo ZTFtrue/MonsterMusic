@@ -99,4 +99,5 @@
     <string name="play_error_play_next">Play error, auto play next</string>
     <string name="no_dictionary_app_tip">Dictionary app is not installed or your dictionary app do not support this feature.</string>
     <string name="cant_support_feature_tip">You system don\'t support this feature</string>
+
 </resources>

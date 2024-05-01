@@ -32,7 +32,7 @@
     <string name="flatten_failed">展平失败</string>
     <string name="flatten">展平</string>
     <string name="can_t_find_any_audio_file_i_need_permission_click_here_to_open_settings">没有权限，无法获取音乐，点击设置权限</string>
-    <string name="song">%1$s 歌曲%2$s</string>
+    <string name="song">%1$s 首歌曲</string>
     <string name="settings">设置</string>
     <string name="feedback">反馈</string>
     <string name="exit_app">退出APP</string>

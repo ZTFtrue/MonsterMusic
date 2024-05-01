@@ -59,13 +59,13 @@ import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_RemoveFromQueue
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.sqlData.model.MusicItem
-import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
-import com.ztftrue.music.utils.trackManager.PlaylistManager
-import com.ztftrue.music.utils.trackManager.TracksManager
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.enumToStringForPlayListType
+import com.ztftrue.music.utils.model.AnyListBase
+import com.ztftrue.music.utils.trackManager.PlaylistManager
+import com.ztftrue.music.utils.trackManager.TracksManager
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalFoundationApi::class)
@@ -298,6 +298,9 @@ fun MusicItemView(
                         if (playList.type != viewModel.playListCurrent.value?.type || viewModel.playListCurrent.value?.id != playList.id) {
                             viewModel.playListCurrent.value = playList
                             viewModel.musicQueue.clear()
+                            // TODO need re-design, should use event EVENT_changePlayQueue
+                            // avoid can't switch current play lyrics
+                            viewModel.currentPlayQueueIndex.intValue=-1
                             viewModel.musicQueue.addAll(musicList)
                         }
                     }
