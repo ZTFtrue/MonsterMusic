@@ -7,9 +7,9 @@ import android.content.Intent
 class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        Thread.setDefaultUncaughtExceptionHandler { _, e ->
-            handleUncaughtException(e)
-        }
+//        Thread.setDefaultUncaughtExceptionHandler { _, e ->
+//            handleUncaughtException(e)
+//        }
     }
 
     private fun handleUncaughtException(e: Throwable) {

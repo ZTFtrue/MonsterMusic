@@ -310,7 +310,7 @@ fun AlbumItemView(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "$number song${if (number <= 1L) "" else "s"}",
+                    text = stringResource(R.string.song, number, if (number <= 1L) "" else "s"),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 IconButton(

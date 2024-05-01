@@ -278,7 +278,7 @@ fun PlayListItemView(
                 modifier = Modifier.horizontalScroll(rememberScrollState(0))
             )
             Text(
-                text = "$number",
+                text = stringResource(R.string.song, number, if (number <= 1L) "" else "s"),
                 color = MaterialTheme.colorScheme.onBackground,
             )
         }
