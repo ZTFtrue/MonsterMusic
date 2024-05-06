@@ -1,17 +1,17 @@
 # MonsterMusic
 
-## This is local music player on android platform
+## This is a local music player on Android platform
 
 [Download from Play](https://play.google.com/store/apps/details?id=com.ztftrue.music&pcampaignid=web_share)
 
-[MonsterMusic] is open source, free and freedom. Enjoy all the features without any cost!
+[MonsterMusic] is open source, free. Enjoy all the features without any cost!
 
 - 🔊 Advanced Equalizer: Customize your sound experience with our built-in equalizer. Fine-tune the
   audio to match your preferences and immerse yourself in crystal-clear, high-quality sound.
 - 🌈 Multiple Themes: Personalize your music player with a variety of themes. Switch effortlessly
   between themes to match your mood or style. Your music, your way!
 - 📜 Lyrics Support: Dive deeper into the lyrics of your favorite songs. [MonsterMusic] supports
-  lyrics display, you can import txt or lyrics file.
+  lyrics display, you can import text or lyrics files.
   Click the lyrics word, you can find a feature.
 - 🔒 Privacy First: Rest easy knowing that your privacy is our top priority. No unnecessary
   permissions, just pure music enjoyment.
@@ -39,13 +39,12 @@ but some features cannot be used.
 
 ### Need TODO
 
-- Direct read lyrics files from storage
 - DSP visualize
 - Input View color modify
 - Add feature PlayList\Queue sort by user
 - Add feature Album\Songs sort by Name/Other
 - Start Flash
-- Composition,Performance optimize
+- Composition, Performance optimize
 
 ## Note
 
@@ -54,4 +53,4 @@ In project:
 The copyright of these pictures (large_cover.jpg,launcher_image.jpg,songs_thumbnail_cover.jpg)
 belongs to me and you can use them for free, but need to indicate the source.
 
-Other Icon from: <https://fonts.google.com/icons>.
+Other Icons from: <https://fonts.google.com/icons>.
