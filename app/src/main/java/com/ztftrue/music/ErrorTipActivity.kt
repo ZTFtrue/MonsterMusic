@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -57,13 +58,7 @@ class ErrorTipActivity : ComponentActivity() {
         var errorMessage by remember { mutableStateOf("") }
         LaunchedEffect(Unit) {
             try {
-                val error: Throwable = intent.getSerializableExtra("error") as Throwable
-                val sb = StringBuilder("")
-                for (element in error.stackTrace) {
-                    sb.append(element.toString())
-                    sb.append("\n")
-                }
-                errorMessage = sb.toString()
+                errorMessage = intent.getStringExtra("error") ?: ""
             } catch (e: Exception) {
                 Log.e("ERROR", e.toString())
             }
@@ -142,9 +137,14 @@ class ErrorTipActivity : ComponentActivity() {
                                 text = stringResource(R.string.sorry_some_error_happens_you_can_feedback_it_with_this_message),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
-                            Text(
-                                text = errorMessage,
-                                color = MaterialTheme.colorScheme.onBackground
+                            SelectionContainer(
+                                modifier = Modifier,
+                                content = {
+                                    Text(
+                                        text = errorMessage,
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
                             )
                         }
                     }
