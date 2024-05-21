@@ -1,6 +1,7 @@
 package com.ztftrue.music.ui.other
 
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,17 +17,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -38,15 +46,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -76,7 +90,9 @@ fun SettingsPage(
     navController: NavHostController,
 ) {
     val context = LocalContext.current
-
+    var durationValue by remember { mutableStateOf("0") }
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
     var expanded by remember { mutableStateOf(false) }
     var preferEmbedded by remember {
         mutableStateOf(
@@ -165,7 +181,7 @@ fun SettingsPage(
                             },
                         contentAlignment = Alignment.CenterStart
                     ) {
-                        Row {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = stringResource(R.string.prefer_embedded_lyrics),
                                 Modifier.padding(start = 10.dp),
@@ -182,6 +198,99 @@ fun SettingsPage(
                                 },
 //                                colors = SwitchDefaults.colors(checkedThumbColor = Color.Green)
                             )
+                        }
+
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .padding(0.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+
+                            Text(
+                                text = stringResource(R.string.ignore_tracks_duration_less_than),
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            CompositionLocalProvider(
+                                LocalContentColor provides MaterialTheme.colorScheme.onBackground
+                            ) {
+                                ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onBackground)) {
+                                    OutlinedTextField(
+                                        value = durationValue,
+                                        onValueChange = { s ->
+                                            val newText = s.ifEmpty {
+                                                "0"
+                                            }
+
+                                            if (!newText.contains(".") && newText.toLongOrNull() != null) {
+                                                durationValue = newText
+                                            }
+                                        },
+                                        keyboardOptions = KeyboardOptions.Default.copy(
+                                            imeAction = ImeAction.Done,
+                                            keyboardType = KeyboardType.Number
+                                        ),
+                                        keyboardActions = KeyboardActions(
+                                            onDone = {
+                                                val sharedPreferences =
+                                                    context.getSharedPreferences(
+                                                        "scan_config",
+                                                        Context.MODE_PRIVATE
+                                                    )
+                                                // -1 don't ignore any,0 ignore duration less than or equal 0s,
+                                                sharedPreferences.edit().putLong(
+                                                    "ignore_duration",
+                                                    durationValue.toLong()
+                                                ).apply()
+                                                Toast.makeText(
+                                                    context,
+                                                    context.getString(
+                                                        R.string.ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect,
+                                                        durationValue
+                                                    ),
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                focusRequester.freeFocus()
+                                                keyboardController?.hide()
+                                            }
+                                        ),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .focusRequester(focusRequester)
+                                            .background(MaterialTheme.colorScheme.primary),
+                                        colors = TextFieldDefaults.colors(
+                                            focusedContainerColor = MaterialTheme.colorScheme.background, // Set your desired text color here
+                                            unfocusedContainerColor = MaterialTheme.colorScheme.background, // Set your desired text color here
+                                            disabledContainerColor = MaterialTheme.colorScheme.background, // Set your desired text color here
+                                            errorContainerColor = MaterialTheme.colorScheme.background, // Set your desired text color here
+                                            cursorColor = MaterialTheme.colorScheme.onBackground, // Set your desired text color here
+                                            errorCursorColor = MaterialTheme.colorScheme.onBackground, // Set your desired text color here
+                                        ),
+                                        suffix = {
+                                            Text(
+                                                text = "s",
+                                                Modifier.padding(start = 10.dp),
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
+                                    )
+                                }
+                            }
                         }
 
                     }

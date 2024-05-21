@@ -99,4 +99,7 @@
     <string name="play_error_play_next">播放错误, 自动播放下一首</string>
     <string name="no_dictionary_app_tip">没有安装字典应用， 或者已安装的应用不支持这个功能</string>
     <string name="cant_support_feature_tip">当前系统不支持这个功能</string>
+    <string name="ignore_tracks_duration_less_than">忽略时常少于(包括)该秒数的音频</string>
+    <string name="ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect">忽略时常少于 %1$s s 的音频成功, 请重启APP 以生效。</string>
+
 </resources>

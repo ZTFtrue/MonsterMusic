@@ -11,9 +11,11 @@ import java.io.StringWriter
 class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        Thread.setDefaultUncaughtExceptionHandler { _, e ->
-            handleUncaughtException(e)
-        }
+//        if(BuildConfig.DEBUG) {
+//            Thread.setDefaultUncaughtExceptionHandler { _, e ->
+//                handleUncaughtException(e)
+//            }
+//        }
     }
 
     private fun handleUncaughtException(e: Throwable) {
