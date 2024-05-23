@@ -889,7 +889,6 @@ fun ManageFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
             val sharedPreferences =
                 context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
             // -1 don't ignore any,0 ignore duration less than or equal 0s,
-            val ignoreDuration = sharedPreferences.getLong("ignore_duration", 0)
             val ignoreFolders = sharedPreferences.getString("ignore_folders", "")
             val folderMap: HashMap<Long, FolderList> = FolderManger.getMusicFolders(context)
             if (!ignoreFolders.isNullOrEmpty()) {

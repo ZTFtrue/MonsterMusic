@@ -32,7 +32,7 @@ object FolderManger {
                     bucketId,
                     FolderList(
                         bucketName ?: "/",
-                        bucketId ?: 0,
+                        bucketId,
                         tracksNumber,
                         type = PlayListType.Folders
                     )
