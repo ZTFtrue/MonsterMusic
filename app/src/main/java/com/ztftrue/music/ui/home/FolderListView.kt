@@ -1,7 +1,9 @@
 package com.ztftrue.music.ui.home
 
+import android.content.Context
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -120,7 +122,10 @@ fun FolderListView(
                         .fillMaxWidth(),
                     navController
                 )
-                HorizontalDivider(color = MaterialTheme.colorScheme.inverseOnSurface, thickness = 1.2.dp)
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.inverseOnSurface,
+                    thickness = 1.2.dp
+                )
             }
         }
     }
@@ -150,6 +155,21 @@ fun FolderItemView(
                 when (it) {
                     OperateType.AddToPlaylist -> {
                         showAddPlayListDialog = true
+                    }
+
+                    OperateType.IgnoreFolder -> {
+                        val sharedPreferences =
+                            context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
+                        val ignoreFolders = sharedPreferences.getString("ignore_folders", "")
+                        val newIgnoreFolders: String = if (ignoreFolders.isNullOrEmpty()) {
+                            item.id.toString()
+                        } else {
+                            "$ignoreFolders,${item.id}"
+                        }
+                        sharedPreferences.edit().putString("ignore_folders", newIgnoreFolders)
+                            .apply()
+                        Toast.makeText(context,
+                            context.getString(R.string.ignored_this_folder_please_restart_the_app_to_take_effect), Toast.LENGTH_SHORT).show()
                     }
 
                     else -> {
@@ -361,6 +381,30 @@ fun FolderListOperateDialog(
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
+                                .clickable {
+                                    onDismiss(OperateType.IgnoreFolder)
+                                },
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text(
+                                text = "Ignore this folder",
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
                     }
                 }
                 Row(
@@ -376,7 +420,10 @@ fun FolderListOperateDialog(
                             .padding(8.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
             }

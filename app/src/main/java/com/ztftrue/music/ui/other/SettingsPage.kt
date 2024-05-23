@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -75,9 +76,12 @@ import com.ztftrue.music.utils.LyricsSettings.FIRST_EMBEDDED_LYRICS
 import com.ztftrue.music.utils.SharedPreferencesName.LYRICS_SETTINGS
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.openBrowser
+import com.ztftrue.music.utils.model.FolderList
+import com.ztftrue.music.utils.trackManager.FolderManger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.internal.toLongOrDefault
 
 
 /**
@@ -130,6 +134,7 @@ fun SettingsPage(
                 item(1) {
                     val color = MaterialTheme.colorScheme.onBackground
                     var showDialog by remember { mutableStateOf(false) }
+                    var showManageFolderDialog by remember { mutableStateOf(false) }
                     var showAboutDialog by remember { mutableStateOf(false) }
 
                     Box(
@@ -219,7 +224,61 @@ fun SettingsPage(
                             },
                         contentAlignment = Alignment.CenterStart
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
+                                .clickable {
+                                    showManageFolderDialog = !showManageFolderDialog
+                                },
+                        ) {
+
+                            if (showManageFolderDialog) {
+                                ManageFolderDialog(
+                                    musicViewModel,
+                                    onDismiss = {
+                                        showManageFolderDialog = false
+                                    })
+                            }
+                            Text(
+                                text = "Manage ignore folder",
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+
+
+                        }
+
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp)
+                            .padding(0.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Column() {
 
                             Text(
                                 text = stringResource(R.string.ignore_tracks_duration_less_than),
@@ -816,3 +875,175 @@ fun AboutDialog(onDismiss: () -> Unit) {
     )
 }
 
+@UnstableApi
+@Composable
+fun ManageFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
+
+    val context = LocalContext.current
+    val scopeMain = CoroutineScope(Dispatchers.IO)
+
+    val folderList = remember { mutableStateListOf<FolderList>() }
+
+    LaunchedEffect(Unit) {
+        scopeMain.launch {
+            val sharedPreferences =
+                context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
+            // -1 don't ignore any,0 ignore duration less than or equal 0s,
+            val ignoreDuration = sharedPreferences.getLong("ignore_duration", 0)
+            val ignoreFolders = sharedPreferences.getString("ignore_folders", "")
+            val folderMap: HashMap<Long, FolderList> = FolderManger.getMusicFolders(context)
+            if (!ignoreFolders.isNullOrEmpty()) {
+                ignoreFolders.split(",").forEach() {
+                    if (it.isNotEmpty()) {
+                        folderMap[it.toLongOrDefault(-1)]?.isShow = false
+                    }
+                }
+            }
+            folderList.addAll(folderMap.values)
+        }
+    }
+    fun onConfirmation() {
+        val hideFolderIds = StringBuilder()
+        folderList.forEach {
+            if (!it.isShow) {
+                if (hideFolderIds.isNotEmpty()) {
+                    hideFolderIds.append(",").append(it.id)
+                } else {
+                    hideFolderIds.append(it.id)
+                }
+            }
+        }
+        val sharedPreferences = context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
+        sharedPreferences.edit().putString("ignore_folders", hideFolderIds.toString()).apply()
+        scopeMain.launch {
+            onDismiss()
+        }
+    }
+
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = true, dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        ),
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .background(color = MaterialTheme.colorScheme.background),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(color = MaterialTheme.colorScheme.background),
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(color = MaterialTheme.colorScheme.onBackground)
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    )
+                    {
+                        Text(
+                            text = stringResource(R.string.check_to_not_ignore_the_folder_you_need_restart_the_app_to_take_effect),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                        items(folderList.size) {
+                            val item = folderList[it]
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        start = 10.dp, end = 10.dp
+                                    ),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            )
+                            {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = item.name,
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                                var isChecked by remember {
+                                    mutableStateOf(false)
+                                }
+                                isChecked = item.isShow
+                                Checkbox(
+                                    checked = isChecked,
+                                    onCheckedChange = { v ->
+                                        isChecked = v
+                                        item.isShow = v
+                                    },
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .semantics {
+                                            contentDescription = if (isChecked) {
+                                                "Show this tab${item.name}"
+                                            } else {
+                                                "Hide this tab${item.name}"
+                                            }
+                                        }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    TextButton(
+                        onClick = { onDismiss() },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(0.5f),
+                    ) {
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.onBackground)
+                            .width(1.dp)
+                            .height(50.dp)
+                    )
+                    TextButton(
+                        onClick = {
+                            onConfirmation()
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(),
+
+                        ) {
+                        Text(
+                            stringResource(id = R.string.confirm),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+            }
+        }
+    )
+}

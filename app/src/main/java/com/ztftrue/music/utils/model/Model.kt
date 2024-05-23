@@ -19,6 +19,7 @@ data class FolderList(
     override var id: Long,
     override var trackNumber: Int,
     override var type: PlayListType = PlayListType.Folders,
+    var isShow: Boolean = true
 ) : ListBase(id, name, trackNumber, type)
 
 @Parcelize
@@ -71,7 +72,6 @@ abstract class AbstractListBase : Parcelable, Serializable {
 }
 
 
-
 @Parcelize
 data class EqualizerBand(
     val id: Int,
@@ -82,11 +82,11 @@ data class EqualizerBand(
 data class Caption(
     var text: String,
     val timeStart: Long,
-    val timeEnd: Long=0
+    val timeEnd: Long = 0
 )
 
 data class ListStringCaption(
     val text: ArrayList<String>,
     val timeStart: Long,
-    val timeEnd: Long=0
+    val timeEnd: Long = 0
 )
