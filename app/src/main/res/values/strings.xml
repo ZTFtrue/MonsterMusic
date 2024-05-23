@@ -99,5 +99,9 @@
     <string name="play_error_play_next">Play error, auto play next</string>
     <string name="no_dictionary_app_tip">Dictionary app is not installed or your dictionary app do not support this feature.</string>
     <string name="cant_support_feature_tip">You system don\'t support this feature</string>
+    <string name="ignore_tracks_duration_less_than">Ignore tracks duration less than(include)</string>
+    <string name="ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect">Ignore tracks duration less than %1$s s set successfully, please restart the app to take effect</string>
+    <string name="ignored_this_folder_please_restart_the_app_to_take_effect">Ignored this folder, please restart the app to take effect</string>
+    <string name="check_to_not_ignore_the_folder_you_need_restart_the_app_to_take_effect">Check to not ignore the folder, you need restart the app to take effect</string>
 
 </resources>

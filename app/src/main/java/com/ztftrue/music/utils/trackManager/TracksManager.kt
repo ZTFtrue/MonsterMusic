@@ -16,8 +16,8 @@ import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.sqlData.model.MusicItem
-import com.ztftrue.music.utils.model.FolderList
 import com.ztftrue.music.utils.OperateTypeInActivity
+import com.ztftrue.music.utils.model.FolderList
 
 
 object TracksManager {
@@ -30,15 +30,41 @@ object TracksManager {
         map: HashMap<Long, LinkedHashMap<Long, MusicItem>>,
         needTrack: Boolean = false
     ) {
-
+        val sharedPreferences = context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
+        // -1 don't ignore any,0 ignore duration less than or equal 0s,
+        val ignoreDuration = sharedPreferences.getLong("ignore_duration", 0)
+        val ignoreFolders = sharedPreferences.getString("ignore_folders", "")
+        val ignoreFoldersMap: List<Long> =
+            if (ignoreFolders.isNullOrEmpty()) emptyList() else ignoreFolders.split(",")
+                .map { it.toLong() }
 
         val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
-        val selection = "title != ''"
+        // Build the selection clause to exclude the folders by their IDs
+        val selectionBuilder = StringBuilder()
+        val selectionArgs = mutableListOf<String>()
+        selectionBuilder.append("  title != ''")
+        if (ignoreDuration >= 0) {
+            if (selectionBuilder.isNotEmpty()) {
+                selectionBuilder.append(" AND ")
+            }
+            selectionBuilder.append("${MediaStore.Audio.Media.DURATION} > ?")
+            selectionArgs.add(ignoreDuration.toString())
+        }
+        if (ignoreFoldersMap.isNotEmpty()) {
+            ignoreFoldersMap.forEachIndexed { index, folderId ->
+                if (selectionBuilder.isNotEmpty()) {
+                    selectionBuilder.append(" AND ")
+                }
+                selectionBuilder.append("${MediaStore.Audio.Media.BUCKET_ID} != ?")
+                selectionArgs.add(folderId.toString())
+            }
+        }
 
+        val selection = selectionBuilder.toString()
         val musicResolver = context.contentResolver
         val cursor = musicResolver.query(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-            trackMediaProjection, selection, null, sortOrder
+            trackMediaProjection,selection, selectionArgs.toTypedArray(), sortOrder
         )
         val mapFolder = LinkedHashMap<Long, FolderList>()
         if (cursor != null && cursor.moveToFirst()) {
@@ -129,7 +155,7 @@ object TracksManager {
         list.clear()
         list.putAll(mapFolder)
         cursor?.close()
-        if(result == null) return
+        if (result == null) return
         val bundle = Bundle()
         if (needTrack) {
             bundle.putParcelableArrayList("list", ArrayList(tracksHashMap.values))
