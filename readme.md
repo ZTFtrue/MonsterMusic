@@ -4,6 +4,8 @@
 
 [Download from Play](https://play.google.com/store/apps/details?id=com.ztftrue.music&pcampaignid=web_share)
 
+[Download from F-Droid](https://f-droid.org/zh_Hans/packages/com.ztftrue.music/)
+
 [MonsterMusic] is open source, free. Enjoy all the features without any cost!
 
 - 🔊 Advanced Equalizer: Customize your sound experience with our built-in equalizer. Fine-tune the
