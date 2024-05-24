@@ -43,8 +43,9 @@ but some features cannot be used.
 - Input View color modify
 - Add feature PlayList\Queue sort by user
 - Add feature Album\Songs sort by Name/Other
-- Start Flash
+- App Start Flash
 - Composition, Performance optimize
+- Disable eq when can't support the track's encode or make it support.
 
 ## Note
 
