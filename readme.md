@@ -2,10 +2,6 @@
 
 ## This is a local music player on Android platform
 
-[Download from Play](https://play.google.com/store/apps/details?id=com.ztftrue.music&pcampaignid=web_share)
-
-[Download from F-Droid](https://f-droid.org/zh_Hans/packages/com.ztftrue.music/)
-
 [MonsterMusic] is open source, free. Enjoy all the features without any cost!
 
 - 🔊 Advanced Equalizer: Customize your sound experience with our built-in equalizer. Fine-tune the
@@ -22,6 +18,15 @@ More features are waiting for your discovery.
 
 Elevate your music journey with [MonsterMusic] - where innovation meets simplicity. Download now and
 embark on a musical adventure like never before!
+
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
+     alt="Get it on F-Droid"
+     height="80">](https://f-droid.org/packages/com.ztftrue.music/)
+[<img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png"
+     alt="Get it on Google Play"
+     height="80">](https://play.google.com/store/apps/details?id=com.ztftrue.music)
+
+Or download the latest APK from the [Releases Section](https://github.com/ZTFtrue/MonsterMusic/releases/latest).
 
 <img alt="equalizer" src="./Picture/equalizer.jpg" width="200px"/><img alt="cover" src="./Picture/cover.jpg" width="200px"/>
 <img alt="settings" src="./Picture/settings.jpg" width="200px"/><img alt="albums" src="./Picture/albums.jpg" width="200px"/>
