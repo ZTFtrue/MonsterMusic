@@ -614,7 +614,7 @@ class MainActivity : ComponentActivity() {
         val isPlaying = resultData.getBoolean("isPlaying")
         musicViewModel.playStatus.value = isPlaying
         val index = resultData.getInt("index")
-        if (index >= 0 && musicViewModel.musicQueue.size > index&&index != musicViewModel.currentPlayQueueIndex.intValue
+        if (index >= 0 && musicViewModel.musicQueue.size > index && index != musicViewModel.currentPlayQueueIndex.intValue
         ) {
             musicViewModel.currentMusicCover.value = null
             musicViewModel.currentPlay.value =
