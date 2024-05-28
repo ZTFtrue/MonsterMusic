@@ -39,9 +39,10 @@ class EqualizerAudioProcessor : AudioProcessor {
     private val mCoefficientRight: ArrayList<BiQuadraticFilter> = arrayListOf()
     private val gainFilterLeft = BiQuadraticFilter()
     private val highPassFilterLeft = BiQuadraticFilter()
+    private val lowPassFilterLeft = BiQuadraticFilter()
     private val gainFilterRight = BiQuadraticFilter()
     private val highPassFilterRight = BiQuadraticFilter()
-
+    private val lowPassFilterRight = BiQuadraticFilter()
     private lateinit var converter: TarsosDSPAudioFloatConverter
 
     init {
@@ -107,13 +108,6 @@ class EqualizerAudioProcessor : AudioProcessor {
             0.0,
             -9.0
         )
-        highPassFilterLeft.configure(
-            BiQuadraticFilter.HIGHPASS,
-            20.0,
-            outputAudioFormat!!.sampleRate.toDouble(),
-            1.0,
-            0.0
-        )
         gainFilterRight.configureBw(
             BiQuadraticFilter.Gain,
             BiQuadraticFilter.BIND_TYPE.BW,
@@ -122,11 +116,32 @@ class EqualizerAudioProcessor : AudioProcessor {
             0.0,
             -9.0
         )
+        highPassFilterLeft.configure(
+            BiQuadraticFilter.HIGHPASS,
+            100.0,
+            outputAudioFormat!!.sampleRate.toDouble(),
+            0.707,
+            0.0
+        )
         highPassFilterRight.configure(
             BiQuadraticFilter.HIGHPASS,
-            20.0,
+            100.0,
             outputAudioFormat!!.sampleRate.toDouble(),
-            1.0,
+            0.707,
+            0.0
+        )
+        lowPassFilterLeft.configure(
+            BiQuadraticFilter.LOWPASS,
+            5000.0,
+            outputAudioFormat!!.sampleRate.toDouble(),
+            0.707,
+            0.0
+        )
+        lowPassFilterRight.configure(
+            BiQuadraticFilter.LOWPASS,
+            5000.0,
+            outputAudioFormat!!.sampleRate.toDouble(),
+            0.707,
             0.0
         )
         return outputAudioFormat!!
@@ -182,10 +197,10 @@ class EqualizerAudioProcessor : AudioProcessor {
                 // TODO need support more channel count
                 for (i in 0 until bufferSize / 2) {
                     if (i % 2 == 0) {
-                        sampleBufferRealLeft[i / 2] = floatArray[i].toDouble() * 0.5f
+                        sampleBufferRealLeft[i / 2] = floatArray[i].toDouble()*0.6
                     } else {
                         sampleBufferRealRight[FastMath.floor((i / 2).toDouble()).toInt()] =
-                            floatArray[i].toDouble() * 0.5f
+                            floatArray[i].toDouble()*0.6
                     }
                 }
                 runBlocking {
@@ -194,7 +209,8 @@ class EqualizerAudioProcessor : AudioProcessor {
                             sampleBufferRealLeft.forEachIndexed { index, it ->
                                 var outY: Double = it
 //                                outY = gainFilterLeft.filter(outY)
-//                                outY = highPassFilterLeft.filter(outY)
+                                outY = highPassFilterLeft.filter(outY)
+                                outY = lowPassFilterLeft.filter(outY)
                                 mCoefficientLeft.forEach { filter ->
                                     outY = filter.filter(outY)
                                 }
@@ -206,7 +222,8 @@ class EqualizerAudioProcessor : AudioProcessor {
                             sampleBufferRealRight.forEachIndexed { index, it ->
                                 var outY: Double = it
 //                                outY = gainFilterRight.filter(outY)
-//                                outY = highPassFilterRight.filter(outY)
+                                outY = highPassFilterRight.filter(outY)
+                                outY = lowPassFilterRight.filter(outY)
                                 mCoefficientRight.forEach { filter ->
                                     outY = filter.filter(outY)
                                 }
@@ -238,7 +255,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             val floatArray = FloatArray(a.size / outputAudioFormat!!.channelCount)
             converter.toFloatArray(a, floatArray)
             for (i in floatArray.indices) {
-                floatArray[i] = floatArray[i] * 0.5f
+                floatArray[i] = floatArray[i] * 0.6f
             }
             val outB = ByteArray(a.size)
             converter.toByteArray(floatArray, outB)
@@ -260,6 +277,8 @@ class EqualizerAudioProcessor : AudioProcessor {
         highPassFilterLeft.reset()
         gainFilterRight.reset()
         highPassFilterRight.reset()
+        lowPassFilterRight.reset()
+        lowPassFilterLeft.reset()
         mCoefficientLeft.forEach {
             it.reset()
         }
