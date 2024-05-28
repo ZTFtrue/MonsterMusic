@@ -9,7 +9,6 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.MediaControllerCompat
-import android.util.Log
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -74,7 +73,7 @@ class MusicViewModel : ViewModel() {
     var currentMusicCover = mutableStateOf<Bitmap?>(null)
     var currentPlay = mutableStateOf<MusicItem?>(null)
 
-    var currentPlayQueueIndex = mutableIntStateOf(0)
+    var currentPlayQueueIndex = mutableIntStateOf(-1)
     var songsList = mutableStateListOf<MusicItem>()
     var playListCurrent = mutableStateOf<AnyListBase?>(null)
 
@@ -153,7 +152,7 @@ class MusicViewModel : ViewModel() {
         }
         return db!!
     }
-    var lyricsJob: Job? =null
+    private var lyricsJob: Job? =null
     fun dealLyrics(context: Context, currentPlay: MusicItem) {
         currentCaptionList.clear()
         if(lyricsJob!=null&&lyricsJob?.isActive==true){
@@ -226,7 +225,7 @@ class MusicViewModel : ViewModel() {
                 } catch (e: Exception) {
                     ""
                 }
-                val files = getDb(context).StorageFolderDao().findAll();
+                val files = getDb(context).StorageFolderDao().findAll()
                 if (files != null) {
                     outer@ for (storageFolder in files) {
                         val treeUri = Uri.parse(storageFolder.uri)

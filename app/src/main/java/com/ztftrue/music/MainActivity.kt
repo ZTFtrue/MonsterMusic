@@ -46,7 +46,6 @@ import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.play.ACTION_TRACKS_UPDATE
-import com.ztftrue.music.play.EVENT_DATA_READY
 import com.ztftrue.music.play.EVENT_MEDIA_ITEM_Change
 import com.ztftrue.music.play.EVENT_MEDIA_METADATA_Change
 import com.ztftrue.music.play.EVENT_SLEEP_TIME_Change
@@ -518,8 +517,6 @@ class MainActivity : ComponentActivity() {
                     if (remainTime == 0L) {
                         musicViewModel.sleepTime.longValue = 0
                     }
-                } else if (it.getInt("type") == EVENT_DATA_READY) {
-                    getInitData(it)
                 }
             }
         }
