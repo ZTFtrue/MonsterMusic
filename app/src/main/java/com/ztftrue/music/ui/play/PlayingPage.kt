@@ -3,7 +3,6 @@ package com.ztftrue.music.ui.play
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
 import android.view.MotionEvent
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
