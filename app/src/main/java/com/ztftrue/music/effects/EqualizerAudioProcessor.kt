@@ -12,7 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
-import org.apache.commons.math3.util.FastMath
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -27,22 +26,22 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var active = false
     private var outputAudioFormat: AudioProcessor.AudioFormat? = null
 
-    private val sampleBufferRealLeft: DoubleArray
-    private val sampleBufferRealRight: DoubleArray
+    private lateinit var sampleBufferRealLeft: DoubleArray
+    private lateinit var sampleBufferRealRight: DoubleArray
 
+    private var bufferSize = 2048
     private var outputBuffer: ByteBuffer
-    private var bufferSize = 4096
-    private val dataBuffer: ByteBuffer
+    private lateinit var dataBuffer: ByteBuffer
     private var inputEnded = false
 
     private val mCoefficientLeft: ArrayList<BiQuadraticFilter> = arrayListOf()
     private val mCoefficientRight: ArrayList<BiQuadraticFilter> = arrayListOf()
-    private val gainFilterLeft = BiQuadraticFilter()
     private val highPassFilterLeft = BiQuadraticFilter()
     private val lowPassFilterLeft = BiQuadraticFilter()
-    private val gainFilterRight = BiQuadraticFilter()
     private val highPassFilterRight = BiQuadraticFilter()
     private val lowPassFilterRight = BiQuadraticFilter()
+
+
     private lateinit var converter: TarsosDSPAudioFloatConverter
 
     init {
@@ -51,20 +50,28 @@ class EqualizerAudioProcessor : AudioProcessor {
             mCoefficientLeft.add(BiQuadraticFilter())
             mCoefficientRight.add(BiQuadraticFilter())
         }
-        dataBuffer = ByteBuffer.allocate(bufferSize * 8)
-        sampleBufferRealLeft = DoubleArray(bufferSize / 4)
-        sampleBufferRealRight = DoubleArray(bufferSize / 4)
         outputAudioFormat = AudioProcessor.AudioFormat.NOT_SET
         pendingOutputSampleRate = SAMPLE_RATE_NO_CHANGE
     }
 
 
     fun setActive(active: Boolean) {
+        mCoefficientLeft.forEach {
+            it.reset()
+        }
+        mCoefficientRight.forEach {
+            it.reset()
+        }
+        highPassFilterLeft.reset()
+        lowPassFilterLeft.reset()
+        highPassFilterRight.reset()
+        lowPassFilterRight.reset()
         if (this.active != active) {
             this.active = active
         }
     }
 
+    var r = 2
 
     override fun configure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
         // TODO need support more encoding
@@ -73,6 +80,12 @@ class EqualizerAudioProcessor : AudioProcessor {
             return AudioProcessor.AudioFormat.NOT_SET
         }
         outputAudioFormat = inputAudioFormat
+        // ENCODING_PCM_16BIT, is two byte to one float
+        r = if (outputAudioFormat!!.encoding == C.ENCODING_PCM_16BIT) 2 else 1
+        dataBuffer = ByteBuffer.allocate(bufferSize * 16)
+        val size = bufferSize / r / outputAudioFormat!!.channelCount
+        sampleBufferRealLeft = DoubleArray(size)
+        sampleBufferRealRight = DoubleArray(size)
         // https://stackoverflow.com/questions/68776031/playing-a-wav-file-with-tarsosdsp-on-android
         val tarsosDSPAudioFormat = TarsosDSPAudioFormat(
             inputAudioFormat.sampleRate.toFloat(),
@@ -81,6 +94,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             true,
             ByteOrder.BIG_ENDIAN == ByteOrder.nativeOrder()
         )
+
         converter =
             TarsosDSPAudioFloatConverter.getConverter(
                 tarsosDSPAudioFormat
@@ -100,22 +114,6 @@ class EqualizerAudioProcessor : AudioProcessor {
             filter.reset()
         }
 
-        gainFilterLeft.configureBw(
-            BiQuadraticFilter.Gain,
-            BiQuadraticFilter.BIND_TYPE.BW,
-            0.0,
-            outputAudioFormat!!.sampleRate.toDouble(),
-            0.0,
-            -9.0
-        )
-        gainFilterRight.configureBw(
-            BiQuadraticFilter.Gain,
-            BiQuadraticFilter.BIND_TYPE.BW,
-            0.0,
-            outputAudioFormat!!.sampleRate.toDouble(),
-            0.0,
-            -9.0
-        )
         highPassFilterLeft.configure(
             BiQuadraticFilter.HIGHPASS,
             100.0,
@@ -132,18 +130,19 @@ class EqualizerAudioProcessor : AudioProcessor {
         )
         lowPassFilterLeft.configure(
             BiQuadraticFilter.LOWPASS,
-            5000.0,
+            10000.0,
             outputAudioFormat!!.sampleRate.toDouble(),
             0.707,
             0.0
         )
         lowPassFilterRight.configure(
             BiQuadraticFilter.LOWPASS,
-            5000.0,
+            10000.0,
             outputAudioFormat!!.sampleRate.toDouble(),
             0.707,
             0.0
         )
+
         return outputAudioFormat!!
 
     }
@@ -192,23 +191,20 @@ class EqualizerAudioProcessor : AudioProcessor {
                 processedBuffer.flip()
                 dataBuffer.position(bufferSize)
                 dataBuffer.compact()
-                val floatArray = FloatArray(bufferSize / outputAudioFormat!!.channelCount)
+                val floatArray = FloatArray(bufferSize / r)
                 converter.toFloatArray(processedBuffer.array(), floatArray)
+                var ind = 0
                 // TODO need support more channel count
-                for (i in 0 until bufferSize / 2) {
-                    if (i % 2 == 0) {
-                        sampleBufferRealLeft[i / 2] = floatArray[i].toDouble()*0.6
-                    } else {
-                        sampleBufferRealRight[FastMath.floor((i / 2).toDouble()).toInt()] =
-                            floatArray[i].toDouble()*0.6
-                    }
+                for (i in floatArray.indices step outputAudioFormat!!.channelCount) {
+                    sampleBufferRealLeft[ind] = floatArray[i] * 0.4
+                    sampleBufferRealRight[ind] = floatArray[i + 1] * 0.4
+                    ind += 1
                 }
                 runBlocking {
                     awaitAll(
                         async(Dispatchers.IO) {
                             sampleBufferRealLeft.forEachIndexed { index, it ->
                                 var outY: Double = it
-//                                outY = gainFilterLeft.filter(outY)
                                 outY = highPassFilterLeft.filter(outY)
                                 outY = lowPassFilterLeft.filter(outY)
                                 mCoefficientLeft.forEach { filter ->
@@ -221,7 +217,6 @@ class EqualizerAudioProcessor : AudioProcessor {
                         async(Dispatchers.IO) {
                             sampleBufferRealRight.forEachIndexed { index, it ->
                                 var outY: Double = it
-//                                outY = gainFilterRight.filter(outY)
                                 outY = highPassFilterRight.filter(outY)
                                 outY = lowPassFilterRight.filter(outY)
                                 mCoefficientRight.forEach { filter ->
@@ -233,20 +228,20 @@ class EqualizerAudioProcessor : AudioProcessor {
                         }
                     )
                 }
-                val outD = FloatArray(bufferSize / outputAudioFormat!!.channelCount)
+                val outDoubleArray = FloatArray(sampleBufferRealLeft.size * 2)
                 var pI = 0
                 // TODO need support more channel count
-                for (i in 0 until sampleBufferRealLeft.size) {
-                    outD[pI] = sampleBufferRealLeft[i].toFloat()
-                    outD[pI + 1] = sampleBufferRealRight[i].toFloat()
-                    pI = pI + 2
+                for (i in floatArray.indices step outputAudioFormat!!.channelCount) {
+                    outDoubleArray[i] = sampleBufferRealLeft[pI].toFloat()
+                    outDoubleArray[i + 1] = sampleBufferRealRight[pI].toFloat()
+                    pI += 1
                 }
                 val outB = ByteArray(bufferSize)
-                converter.toByteArray(outD, outB)
-                val processedBuffer2 = ByteBuffer.wrap(outB)
-                processedBuffer2.position(bufferSize)
-                processedBuffer2.order(ByteOrder.nativeOrder())
-                this.outputBuffer = processedBuffer2
+                converter.toByteArray(outDoubleArray, outB)
+                val processedResultBuffer = ByteBuffer.wrap(outB)
+                processedResultBuffer.position(bufferSize)
+                processedResultBuffer.order(ByteOrder.nativeOrder())
+                this.outputBuffer = processedResultBuffer
             }
         } else {
             dataBuffer.flip()
@@ -255,7 +250,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             val floatArray = FloatArray(a.size / outputAudioFormat!!.channelCount)
             converter.toFloatArray(a, floatArray)
             for (i in floatArray.indices) {
-                floatArray[i] = floatArray[i] * 0.6f
+                floatArray[i] = floatArray[i] * 0.5f
             }
             val outB = ByteArray(a.size)
             converter.toByteArray(floatArray, outB)
@@ -273,9 +268,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     override fun flush() {
         outputBuffer = EMPTY_BUFFER
         dataBuffer.clear()
-        gainFilterLeft.reset()
         highPassFilterLeft.reset()
-        gainFilterRight.reset()
         highPassFilterRight.reset()
         lowPassFilterRight.reset()
         lowPassFilterLeft.reset()
@@ -309,8 +302,6 @@ class EqualizerAudioProcessor : AudioProcessor {
                 BiQuadraticFilter.PEAK, Utils.kThirdOct[index],
                 outputAudioFormat!!.sampleRate.toDouble(), qFactors[index], value.toDouble()
             )
-            filterLeft.reset()
-            filterRight.reset()
         }
     }
 
@@ -327,8 +318,6 @@ class EqualizerAudioProcessor : AudioProcessor {
                     BiQuadraticFilter.PEAK, Utils.kThirdOct[index],
                     outputAudioFormat!!.sampleRate.toDouble(), qFactors[index], 0.0
                 )
-                filterLeft.reset()
-                filterRight.reset()
             }
             return true
         } else {
