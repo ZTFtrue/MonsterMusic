@@ -1435,9 +1435,9 @@ class PlayService : MediaBrowserServiceCompat() {
                         .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
                         .setAudioProcessors(
                             arrayOf(
-                                equalizerAudioProcessor,
                                 sonicAudioProcessor,
-                                echoAudioProcessor
+                                echoAudioProcessor,
+                                equalizerAudioProcessor
                             )
                         )
                         .build()
