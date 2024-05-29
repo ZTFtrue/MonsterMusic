@@ -65,6 +65,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
+import java.util.concurrent.locks.ReentrantLock
 
 /**
  * playList
@@ -984,12 +985,13 @@ class PlayService : MediaBrowserServiceCompat() {
         rootHints: Bundle?
     ): BrowserRoot? {
         return if (clientPackageName == "com.ztftrue.music") {
-            // TODO avoid onGetRoot called multiple times in a short period of time
+            lock.lock()
             var bundle = getData(Bundle())
             if (bundle == null) {
                 bundle = Bundle()
                 initSqlData(bundle)
             }
+            lock.unlock()
             BrowserRoot(MY_MEDIA_ROOT_ID, bundle)
         } else {
             null
@@ -998,7 +1000,7 @@ class PlayService : MediaBrowserServiceCompat() {
 
     private var sqlDataInitialized = false
     private var config: PlayConfig? = null
-
+    val lock = ReentrantLock()
     private fun initSqlData(bundle: Bundle) {
         runBlocking {
             awaitAll(
