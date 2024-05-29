@@ -41,6 +41,9 @@ class EqualizerAudioProcessor : AudioProcessor {
     private val highPassFilterRight = BiQuadraticFilter()
     private val lowPassFilterRight = BiQuadraticFilter()
 
+    private val mCoefficientLeftBandPass: ArrayList<BiQuadraticFilter> = arrayListOf()
+    private val mCoefficientRightBandPass: ArrayList<BiQuadraticFilter> = arrayListOf()
+
 
     private lateinit var converter: TarsosDSPAudioFloatConverter
 
@@ -49,6 +52,8 @@ class EqualizerAudioProcessor : AudioProcessor {
         repeat(Utils.kThirdOct.count()) {
             mCoefficientLeft.add(BiQuadraticFilter())
             mCoefficientRight.add(BiQuadraticFilter())
+            mCoefficientLeftBandPass.add(BiQuadraticFilter())
+            mCoefficientRightBandPass.add(BiQuadraticFilter())
         }
         outputAudioFormat = AudioProcessor.AudioFormat.NOT_SET
         pendingOutputSampleRate = SAMPLE_RATE_NO_CHANGE
@@ -60,6 +65,12 @@ class EqualizerAudioProcessor : AudioProcessor {
             it.reset()
         }
         mCoefficientRight.forEach {
+            it.reset()
+        }
+        mCoefficientLeftBandPass.forEach {
+            it.reset()
+        }
+        mCoefficientRightBandPass.forEach {
             it.reset()
         }
         highPassFilterLeft.reset()
@@ -113,7 +124,18 @@ class EqualizerAudioProcessor : AudioProcessor {
             )
             filter.reset()
         }
-
+        mCoefficientLeftBandPass.forEachIndexed { index, biQuadraticFilter ->
+            biQuadraticFilter.configure(
+                BiQuadraticFilter.BANDPASS, Utils.kThirdOct[index],
+                outputAudioFormat!!.sampleRate.toDouble(),2.0, biQuadraticFilter.gainDB
+            )
+        }
+        mCoefficientRightBandPass.forEachIndexed { index, biQuadraticFilter ->
+            biQuadraticFilter.configure(
+                BiQuadraticFilter.BANDPASS, Utils.kThirdOct[index],
+                outputAudioFormat!!.sampleRate.toDouble(), 2.0, biQuadraticFilter.gainDB
+            )
+        }
         highPassFilterLeft.configure(
             BiQuadraticFilter.HIGHPASS,
             100.0,
@@ -196,20 +218,34 @@ class EqualizerAudioProcessor : AudioProcessor {
                 var ind = 0
                 // TODO need support more channel count
                 for (i in floatArray.indices step outputAudioFormat!!.channelCount) {
-                    sampleBufferRealLeft[ind] = floatArray[i] * 0.4
-                    sampleBufferRealRight[ind] = floatArray[i + 1] * 0.4
+                    sampleBufferRealLeft[ind] = floatArray[i].toDouble()
+                    sampleBufferRealRight[ind] = floatArray[i + 1].toDouble()
                     ind += 1
                 }
                 runBlocking {
                     awaitAll(
                         async(Dispatchers.IO) {
+                            // https://stackoverflow.com/questions/24003887/how-properly-implement-equalization-using-band-pass-filer
                             sampleBufferRealLeft.forEachIndexed { index, it ->
                                 var outY: Double = it
                                 outY = highPassFilterLeft.filter(outY)
                                 outY = lowPassFilterLeft.filter(outY)
-                                mCoefficientLeft.forEach { filter ->
-                                    outY = filter.filter(outY)
+//                                var b = 0.0
+//                                mCoefficientLeft.forEach { filter ->
+//                                    b =b+ filter.filter(outY)
+//                                }
+//                                outY = b;
+//                                mCoefficientLeft.forEach { filter ->
+//                                    outY = filter.filter(outY)
+//                                }
+                                var sum = 0.0
+                                mCoefficientLeftBandPass.forEach { filter ->
+                                    // only used for peaking and shelving filters
+                                    sum += filter.gain_abs * filter.filter(
+                                        outY
+                                    )
                                 }
+                                outY = sum
                                 sampleBufferRealLeft[index] =
                                     (if (outY > 1.0) 1.0 else if (outY < -1.0) -1.0 else outY)
                             }
@@ -219,9 +255,22 @@ class EqualizerAudioProcessor : AudioProcessor {
                                 var outY: Double = it
                                 outY = highPassFilterRight.filter(outY)
                                 outY = lowPassFilterRight.filter(outY)
-                                mCoefficientRight.forEach { filter ->
-                                    outY = filter.filter(outY)
+//                                var b = 0.0
+//                                mCoefficientRight.forEach { filter ->
+//                                    b  =b+ filter.filter(outY)
+//                                }
+//                                outY = b;
+//                                mCoefficientRight.forEach { filter ->
+//                                    outY = filter.filter(outY)
+//                                }
+                                var sum = 0.0
+                                mCoefficientRightBandPass.forEach { filter ->
+                                    // only used for peaking and shelving filters
+                                    sum += filter.gain_abs * filter.filter(
+                                        outY
+                                    )
                                 }
+                                outY = sum
                                 sampleBufferRealRight[index] =
                                     (if (outY > 1.0) 1.0 else if (outY < -1.0) -1.0 else outY)
                             }
@@ -246,15 +295,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         } else {
             dataBuffer.flip()
             val processedBuffer = ByteBuffer.allocate(dataBuffer.limit())
-            val a = dataBuffer.array()
-            val floatArray = FloatArray(a.size / outputAudioFormat!!.channelCount)
-            converter.toFloatArray(a, floatArray)
-            for (i in floatArray.indices) {
-                floatArray[i] = floatArray[i] * 0.5f
-            }
-            val outB = ByteArray(a.size)
-            converter.toByteArray(floatArray, outB)
-            processedBuffer.put(outB, 0, dataBuffer.limit())
+            processedBuffer.put(dataBuffer.array(), 0, dataBuffer.limit())
             dataBuffer.clear()
             processedBuffer.order(ByteOrder.nativeOrder())
             this.outputBuffer = processedBuffer
@@ -276,6 +317,12 @@ class EqualizerAudioProcessor : AudioProcessor {
             it.reset()
         }
         mCoefficientRight.forEach {
+            it.reset()
+        }
+        mCoefficientLeftBandPass.forEach {
+            it.reset()
+        }
+        mCoefficientRightBandPass.forEach {
             it.reset()
         }
         inputEnded = false
@@ -302,6 +349,14 @@ class EqualizerAudioProcessor : AudioProcessor {
                 BiQuadraticFilter.PEAK, Utils.kThirdOct[index],
                 outputAudioFormat!!.sampleRate.toDouble(), qFactors[index], value.toDouble()
             )
+            mCoefficientLeftBandPass[index].configure(
+                BiQuadraticFilter.BANDPASS, Utils.kThirdOct[index],
+                outputAudioFormat!!.sampleRate.toDouble(), 2.0, value.toDouble()
+            )
+            mCoefficientRightBandPass[index].configure(
+                BiQuadraticFilter.BANDPASS, Utils.kThirdOct[index],
+                outputAudioFormat!!.sampleRate.toDouble(), 2.0, value.toDouble()
+            )
         }
     }
 
@@ -318,7 +373,16 @@ class EqualizerAudioProcessor : AudioProcessor {
                     BiQuadraticFilter.PEAK, Utils.kThirdOct[index],
                     outputAudioFormat!!.sampleRate.toDouble(), qFactors[index], 0.0
                 )
+                mCoefficientLeftBandPass[index].configure(
+                    BiQuadraticFilter.BANDPASS, Utils.kThirdOct[index],
+                    outputAudioFormat!!.sampleRate.toDouble(), 2.0, 0.0
+                )
+                mCoefficientRightBandPass[index].configure(
+                    BiQuadraticFilter.BANDPASS, Utils.kThirdOct[index],
+                    outputAudioFormat!!.sampleRate.toDouble(), 2.0, 0.0
+                )
             }
+
             return true
         } else {
             return false
@@ -326,8 +390,8 @@ class EqualizerAudioProcessor : AudioProcessor {
     }
 
     fun getBandLevels(): IntArray {
-        val bandLevels = IntArray(mCoefficientLeft.size)
-        mCoefficientLeft.forEachIndexed { index: Int, biQuadraticFilter: BiQuadraticFilter ->
+        val bandLevels = IntArray(mCoefficientLeftBandPass.size)
+        mCoefficientLeftBandPass.forEachIndexed { index: Int, biQuadraticFilter: BiQuadraticFilter ->
             bandLevels[index] = biQuadraticFilter.gainDB.toInt()
         }
         return bandLevels
