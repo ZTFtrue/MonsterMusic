@@ -65,6 +65,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
+import java.util.concurrent.locks.ReentrantLock
 
 /**
  * playList
@@ -977,19 +978,20 @@ class PlayService : MediaBrowserServiceCompat() {
         notify?.cancelNotification()
     }
 
+
     override fun onGetRoot(
         clientPackageName: String,
         clientUid: Int,
         rootHints: Bundle?
     ): BrowserRoot? {
         return if (clientPackageName == "com.ztftrue.music") {
-            // TODO avoid onGetRoot called multiple times in a short period of time
-            val bundle = getData(Bundle())
-            if (bundle != null) {
-                dataSend = true
-            } else {
-                initSqlData()
+            lock.lock()
+            var bundle = getData(Bundle())
+            if (bundle == null) {
+                bundle = Bundle()
+                initSqlData(bundle)
             }
+            lock.unlock()
             BrowserRoot(MY_MEDIA_ROOT_ID, bundle)
         } else {
             null
@@ -997,168 +999,227 @@ class PlayService : MediaBrowserServiceCompat() {
     }
 
     private var sqlDataInitialized = false
-    private var dataSend = false
     private var config: PlayConfig? = null
-
-    private fun initSqlData() {
-        CoroutineScope(Dispatchers.IO).launch {
-            db = MusicDatabase.getDatabase(this@PlayService)
-            // Read musics , times 300ms
-            TracksManager.getFolderList(
-                this@PlayService,
-                foldersLinkedHashMap,
-                null,
-                tracksLinkedHashMap,
-                foldersListTracksHashMap
-            )
-            runBlocking {
-                awaitAll(
-                    async {
-                        val auxTemp = db.AuxDao().findFirstAux()
-                        if (auxTemp == null) {
-                            db.AuxDao().insert(auxr)
-                        } else {
-                            auxr = auxTemp
-                        }
-                        echoAudioProcessor.setDaleyTime(auxr.echoDelay)
-                        echoAudioProcessor.setDecay(auxr.echoDecay)
-                        echoAudioProcessor.setFeedBack(auxr.echoRevert)
-                        echoAudioProcessor.isActive = auxr.echo
-                        equalizerAudioProcessor.isActive = auxr.equalizer
-                        for (i in 0 until 10) {
-                            equalizerAudioProcessor.setBand(i, auxr.equalizerBand[i])
-                        }
-                    },
-                    async {
-                        val queue = db.QueueDao().findQueue()
-                        musicQueue.clear()
-                        // TODO need re-design
-                        if (!queue.isNullOrEmpty()) {
-                            val idGot = getCurrentPlayId()
-                            var id = -1L
-                            queue.forEach {
-                                if (tracksLinkedHashMap[it.id] != null) {
-                                    musicQueue.add(it)
-                                    if (it.id == idGot) {
-                                        id = idGot
+    val lock = ReentrantLock()
+    private fun initSqlData(bundle: Bundle) {
+        runBlocking {
+            awaitAll(
+                async(Dispatchers.IO) {
+                    db = MusicDatabase.getDatabase(this@PlayService)
+                    // Read musics , times 300ms
+                    TracksManager.getFolderList(
+                        this@PlayService,
+                        foldersLinkedHashMap,
+                        null,
+                        tracksLinkedHashMap,
+                        foldersListTracksHashMap
+                    )
+                    runBlocking {
+                        awaitAll(
+                            async {
+                                val auxTemp = db.AuxDao().findFirstAux()
+                                if (auxTemp == null) {
+                                    db.AuxDao().insert(auxr)
+                                } else {
+                                    auxr = auxTemp
+                                }
+                                echoAudioProcessor.setDaleyTime(auxr.echoDelay)
+                                echoAudioProcessor.setDecay(auxr.echoDecay)
+                                echoAudioProcessor.setFeedBack(auxr.echoRevert)
+                                echoAudioProcessor.isActive = auxr.echo
+                                equalizerAudioProcessor.isActive = auxr.equalizer
+                                for (i in 0 until 10) {
+                                    equalizerAudioProcessor.setBand(
+                                        i,
+                                        auxr.equalizerBand[i]
+                                    )
+                                }
+                            },
+                            async {
+                                val queue = db.QueueDao().findQueue()
+                                musicQueue.clear()
+                                // TODO need re-design
+                                if (!queue.isNullOrEmpty()) {
+                                    val idGot = getCurrentPlayId()
+                                    var id = -1L
+                                    queue.forEach {
+                                        if (tracksLinkedHashMap[it.id] != null) {
+                                            musicQueue.add(it)
+                                            if (it.id == idGot) {
+                                                id = idGot
+                                            }
+                                        }
                                     }
-                                }
-                            }
-                            if (musicQueue.isNotEmpty() && id >= 0) {
-                                val plaC = db.CurrentListDao().findCurrentList()
-                                if (plaC != null) {
-                                    playListCurrent =
-                                        AnyListBase(plaC.listID, enumValueOf(plaC.type))
-                                }
-                                for (it in foldersListTracksHashMap.entries) {
-                                    if (it.value.isNotEmpty()) {
-                                        currentPlayTrack = it.value[id]
-                                        if (currentPlayTrack != null) {
-                                            break
+                                    if (musicQueue.isNotEmpty() && id >= 0) {
+                                        val plaC = db.CurrentListDao().findCurrentList()
+                                        if (plaC != null) {
+                                            playListCurrent =
+                                                AnyListBase(
+                                                    plaC.listID,
+                                                    enumValueOf(plaC.type)
+                                                )
+                                        }
+                                        for (it in foldersListTracksHashMap.entries) {
+                                            if (it.value.isNotEmpty()) {
+                                                currentPlayTrack = it.value[id]
+                                                if (currentPlayTrack != null) {
+                                                    break
+                                                }
+                                            }
+                                        }
+                                        if (currentPlayTrack == null) {
+                                            playListCurrent = null
+                                            saveSelectMusicId(-1)
+                                            saveCurrentDuration(0)
                                         }
                                     }
                                 }
-                                if (currentPlayTrack == null) {
-                                    playListCurrent = null
-                                    saveSelectMusicId(-1)
-                                    saveCurrentDuration(0)
+                            },
+                            async {
+                                config = db.PlayConfigDao().findConfig()
+                                if (config == null) {
+                                    config = PlayConfig(0, Player.REPEAT_MODE_ALL)
+                                    db.PlayConfigDao().insert(config!!)
+                                }
+                            },
+                            async {
+                                AlbumManager.getAlbumList(
+                                    this@PlayService,
+                                    albumsLinkedHashMap,
+                                    null
+                                )
+                            },
+                            async {
+                                PlaylistManager.getPlaylists(
+                                    this@PlayService,
+                                    playListLinkedHashMap,
+                                    playListTracksHashMap,
+                                    tracksLinkedHashMap,
+                                    null
+                                )
+                            },
+                            async {
+                                GenreManager.getGenresList(
+                                    this@PlayService,
+                                    genresLinkedHashMap,
+                                    genresListTracksHashMap,
+                                    tracksLinkedHashMap,
+                                    null
+                                )
+                            },
+                            async {
+                                ArtistManager.getArtistList(
+                                    this@PlayService,
+                                    artistsLinkedHashMap,
+                                    null
+                                )
+                            },
+                            async {
+                                val list =
+                                    db.MainTabDao().findAllIsShowMainTabSortByPriority()
+                                if (list.isNullOrEmpty()) {
+                                    mainTab.add(
+                                        MainTab(
+                                            null,
+                                            "Songs",
+                                            PlayListType.Songs,
+                                            1,
+                                            true
+                                        )
+                                    )
+                                    mainTab.add(
+                                        MainTab(
+                                            null,
+                                            "PlayLists",
+                                            PlayListType.PlayLists,
+                                            2,
+                                            true
+                                        )
+                                    )
+                                    mainTab.add(
+                                        MainTab(
+                                            null,
+                                            "Queue",
+                                            PlayListType.Queue,
+                                            3,
+                                            true
+                                        )
+                                    )
+                                    mainTab.add(
+                                        MainTab(
+                                            null,
+                                            "Albums",
+                                            PlayListType.Albums,
+                                            4,
+                                            true
+                                        )
+                                    )
+                                    mainTab.add(
+                                        MainTab(
+                                            null,
+                                            "Artists",
+                                            PlayListType.Artists,
+                                            5,
+                                            true
+                                        )
+                                    )
+                                    mainTab.add(
+                                        MainTab(
+                                            null,
+                                            "Genres",
+                                            PlayListType.Genres,
+                                            6,
+                                            true
+                                        )
+                                    )
+                                    mainTab.add(
+                                        MainTab(
+                                            null,
+                                            "Folders",
+                                            PlayListType.Folders,
+                                            7,
+                                            true
+                                        )
+                                    )
+                                    db.MainTabDao().insertAll(mainTab)
+                                } else {
+                                    mainTab.addAll(list)
                                 }
                             }
-                        }
-                    },
-                    async {
-                        config = db.PlayConfigDao().findConfig()
-                        if (config == null) {
-                            config = PlayConfig(0, Player.REPEAT_MODE_ALL)
-                            db.PlayConfigDao().insert(config!!)
-                        }
-                    },
-                    async {
-                        AlbumManager.getAlbumList(
-                            this@PlayService,
-                            albumsLinkedHashMap,
-                            null
                         )
-                    },
-                    async {
-                        PlaylistManager.getPlaylists(
-                            this@PlayService,
-                            playListLinkedHashMap,
-                            playListTracksHashMap,
-                            tracksLinkedHashMap,
-                            null
-                        )
-                    },
-                    async {
-                        GenreManager.getGenresList(
-                            this@PlayService,
-                            genresLinkedHashMap,
-                            genresListTracksHashMap,
-                            tracksLinkedHashMap,
-                            null
-                        )
-                    },
-                    async {
-                        ArtistManager.getArtistList(
-                            this@PlayService,
-                            artistsLinkedHashMap,
-                            null
-                        )
-                    },
-                    async {
-                        val list = db.MainTabDao().findAllIsShowMainTabSortByPriority()
-                        if (list.isNullOrEmpty()) {
-                            mainTab.add(MainTab(null, "Songs", PlayListType.Songs, 1, true))
-                            mainTab.add(MainTab(null, "PlayLists", PlayListType.PlayLists, 2, true))
-                            mainTab.add(MainTab(null, "Queue", PlayListType.Queue, 3, true))
-                            mainTab.add(MainTab(null, "Albums", PlayListType.Albums, 4, true))
-                            mainTab.add(MainTab(null, "Artists", PlayListType.Artists, 5, true))
-                            mainTab.add(MainTab(null, "Genres", PlayListType.Genres, 6, true))
-                            mainTab.add(MainTab(null, "Folders", PlayListType.Folders, 7, true))
-                            db.MainTabDao().insertAll(mainTab)
-                        } else {
-                            mainTab.addAll(list)
-                        }
                     }
-                )
-            }
+                    sqlDataInitialized = true
+                }
+            )
+        }
 
-            sqlDataInitialized = true
-            CoroutineScope(Dispatchers.Main).launch {
-                if (!dataSend) {
-                    exoPlayer.repeatMode = config?.repeatModel ?: Player.REPEAT_MODE_ALL
-                    val p = PlaybackParameters(
-                        auxr.speed,
-                        auxr.pitch
-                    )
-                    var position = 0L
-                    exoPlayer.playbackParameters = p
-                    if (musicQueue.isNotEmpty()) {
-                        val t1 = ArrayList<MediaItem>()
-                        var currentIndex = 0
-                        musicQueue.forEachIndexed { index, it ->
-                            t1.add(MediaItem.fromUri(File(it.path).toUri()))
-                            if (it.id == currentPlayTrack?.id) {
-                                currentIndex = index
-                            }
-                        }
-                        exoPlayer.setMediaItems(t1)
-                        if (currentPlayTrack != null) {
-                            position = getCurrentPosition()
-                            exoPlayer.seekTo(currentIndex, position)
-                            if (notify == null) {
-                                notify = CreateNotification(this@PlayService, mediaSession)
-                            }
-                            updateNotify(position, currentPlayTrack?.duration)
-                        }
-                    }
-
-                    val bundle = Bundle()
-                    setData(bundle, position.toFloat())
-                    mediaSession?.setExtras(bundle)
+        exoPlayer.repeatMode = config?.repeatModel ?: Player.REPEAT_MODE_ALL
+        val p = PlaybackParameters(
+            auxr.speed,
+            auxr.pitch
+        )
+        var position = 0L
+        exoPlayer.playbackParameters = p
+        if (musicQueue.isNotEmpty()) {
+            val t1 = ArrayList<MediaItem>()
+            var currentIndex = 0
+            musicQueue.forEachIndexed { index, it ->
+                t1.add(MediaItem.fromUri(File(it.path).toUri()))
+                if (it.id == currentPlayTrack?.id) {
+                    currentIndex = index
                 }
             }
+            exoPlayer.setMediaItems(t1)
+            if (currentPlayTrack != null) {
+                position = getCurrentPosition()
+                exoPlayer.seekTo(currentIndex, position)
+                if (notify == null) {
+                    notify = CreateNotification(this@PlayService, mediaSession)
+                }
+                updateNotify(position, currentPlayTrack?.duration)
+            }
         }
+        setData(bundle, position.toFloat())
     }
 
     private fun getData(bundle: Bundle): Bundle? {
@@ -1217,6 +1278,14 @@ class PlayService : MediaBrowserServiceCompat() {
 //            }
             result.sendResult(mediaItems)
         }
+    }
+
+    override fun onLoadChildren(
+        parentId: String,
+        result: Result<MutableList<MediaBrowserCompat.MediaItem>>,
+        options: Bundle
+    ) {
+        super.onLoadChildren(parentId, result, options)
     }
 
     private fun stopTimer() {
@@ -1366,9 +1435,9 @@ class PlayService : MediaBrowserServiceCompat() {
                         .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
                         .setAudioProcessors(
                             arrayOf(
-                                equalizerAudioProcessor,
                                 sonicAudioProcessor,
-                                echoAudioProcessor
+                                echoAudioProcessor,
+                                equalizerAudioProcessor
                             )
                         )
                         .build()
@@ -1446,7 +1515,6 @@ class PlayService : MediaBrowserServiceCompat() {
     }
 
     var errorCount = 0
-    var lastMediaIndex = -1
     private fun playerAddListener() {
         exoPlayer.addListener(@UnstableApi object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {

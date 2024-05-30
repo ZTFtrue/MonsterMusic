@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Process
 import android.provider.MediaStore
+import android.util.Log
 import androidx.activity.result.IntentSenderRequest
 import androidx.annotation.OptIn
 import androidx.media.MediaBrowserServiceCompat
@@ -67,6 +68,7 @@ object TracksManager {
             trackMediaProjection,selection, selectionArgs.toTypedArray(), sortOrder
         )
         val mapFolder = LinkedHashMap<Long, FolderList>()
+
         if (cursor != null && cursor.moveToFirst()) {
             val bucketIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.BUCKET_ID)
             val bucketNameColumn =
@@ -151,17 +153,27 @@ object TracksManager {
                 )
             } while (cursor.moveToNext())
         }
+
         mapFolder.forEach { it.value.trackNumber = map[it.key]?.size ?: 0 }
         list.clear()
         list.putAll(mapFolder)
         cursor?.close()
         if (result == null) return
         val bundle = Bundle()
+        val a=System.currentTimeMillis()
+
         if (needTrack) {
+            val b=System.currentTimeMillis()
+            Log.d("TAG1",(b-a).toString())
             bundle.putParcelableArrayList("list", ArrayList(tracksHashMap.values))
+
         } else {
+            val c=System.currentTimeMillis()
+            Log.d("TAG2",(c-a).toString())
             bundle.putParcelableArrayList("list", ArrayList(list.values))
+
         }
+
         result.sendResult(bundle)
     }
 

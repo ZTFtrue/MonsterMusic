@@ -39,7 +39,7 @@ final public class BiQuadraticFilter {
     final static int Gain = 7;
     private double a0, a1, a2, b0, b1, b2;
     private double x1, x2, y, y1, y2;
-    private double gain_abs;
+    public double gain_abs;
     private int type;
     BIND_TYPE bindType = BIND_TYPE.Q;
 
