@@ -111,8 +111,11 @@ object Utils {
     var kThirdOct = doubleArrayOf(
         31.5, 63.0, 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0, 16000.0
     )
-    var equalizerMax = 15
-    var equalizerMin = -15
+    var kThirdBW = doubleArrayOf(
+        20.0, 40.0, 80.0, 160.0, 320.0, 640.0, 1280.0, 2560.0, 5120.0, 10240.0
+    )
+    var equalizerMax = 20
+    var equalizerMin = -20
 
     /**
      * B≈2×fc Q=fc/B
