@@ -144,8 +144,8 @@ class EqualizerAudioProcessor : AudioProcessor {
         }
         if (outputAudioFormat!!.sampleRate.toDouble() > 0) {
             butterWorthLeftBandPass.forEachIndexed { index, butter ->
-                butter.highPass(0, outputAudioFormat!!.sampleRate.toDouble(), 100.0)
-                butter.lowPass(1, outputAudioFormat!!.sampleRate.toDouble(), 10000.0)
+//                butter.highPass(0, outputAudioFormat!!.sampleRate.toDouble(), 100.0)
+//                butter.lowPass(1, outputAudioFormat!!.sampleRate.toDouble(), 10000.0)
                 butter.bandPass(
                     2,
                     outputAudioFormat!!.sampleRate.toDouble(),
@@ -154,8 +154,8 @@ class EqualizerAudioProcessor : AudioProcessor {
                 )
             }
             butterWorthRightBandPass.forEachIndexed { index, butter ->
-                butter.highPass(0, outputAudioFormat!!.sampleRate.toDouble(), 100.0)
-                butter.lowPass(1, outputAudioFormat!!.sampleRate.toDouble(), 10000.0)
+//                butter.highPass(0, outputAudioFormat!!.sampleRate.toDouble(), 100.0)
+//                butter.lowPass(1, outputAudioFormat!!.sampleRate.toDouble(), 10000.0)
                 butter.bandPass(
                     2,
                     outputAudioFormat!!.sampleRate.toDouble(),

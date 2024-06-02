@@ -114,8 +114,27 @@ object Utils {
     var kThirdBW = doubleArrayOf(
         20.0, 40.0, 80.0, 160.0, 320.0, 640.0, 1280.0, 2560.0, 5120.0, 10240.0
     )
-    var equalizerMax = 20
-    var equalizerMin = -20
+    var equalizerMax = 15
+    var equalizerMin = -24
+    var eqPreset = HashMap<String, IntArray>().apply {
+        put("Classical", intArrayOf(0, 0, 0, 0, 0, 0, -40, -40, -40, -50))
+        put("Club", intArrayOf(0, 0, 20, 30, 30, 30, 20, 0, 0, 0))
+        put("Dance", intArrayOf(50, 35, 10, 0, 0, -30, -40, -40, 0, 0))
+        put("FullBass", intArrayOf(70, 70, 70, 40, 20, -45, -50, -55, -55, -55))
+        put("FullTreble", intArrayOf(-50, -50, -50, -25, 15, 55, 80, 80, 80, 85))
+        put("FullBass+Treble", intArrayOf(35, 30, 0, -40, -25, 10, 45, 55, 60, 60))
+        put("Laptop/Headphones", intArrayOf(25, 50, 25, -20, 0, -30, -40, -40, 0, 0))
+        put("LargeHall", intArrayOf(50, 50, 30, 30, 0, -25, -25, -25, 0, 0))
+        put("Live", intArrayOf(-25, 0, 20, 25, 30, 30, 20, 15, 15, 10))
+        put("Party", intArrayOf(35, 35, 0, 0, 0, 0, 0, 0, 35, 35))
+        put("Pop", intArrayOf(-10, 25, 35, 40, 25, -5, -15, -15, -10, -10))
+        put("Reggae", intArrayOf(0, 0, -5, -30, 0, -35, -35, 0, 0, 0))
+        put("Rock", intArrayOf(40, 25, -30, -40, -20, 20, 45, 55, 55, 55))
+        put("Soft", intArrayOf(25, 10, -5, -15, -5, 20, 45, 50, 55, 60))
+        put("Ska", intArrayOf(-15, -25, -25, -5, 20, 30, 45, 50, 55, 50))
+        put("SoftRock", intArrayOf(20, 20, 10, -5, -25, -30, -20, -5, 15, 45))
+        put("Techno", intArrayOf(40, 30, 0, -30, -25, 0, 40, 50, 50, 45))
+    }
 
     /**
      * B≈2×fc Q=fc/B
@@ -281,7 +300,11 @@ object Utils {
                     }
                 )
             } else {
-                Toast.makeText(context,    context.getString(R.string.create_failed), Toast.LENGTH_SHORT)
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.create_failed),
+                    Toast.LENGTH_SHORT
+                )
                     .show()
             }
         }
@@ -301,7 +324,11 @@ object Utils {
                     ACTION_PlayLIST_CHANGE, null, null
                 )
             } else {
-                Toast.makeText(context,    context.getString(R.string.create_failed), Toast.LENGTH_SHORT)
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.create_failed),
+                    Toast.LENGTH_SHORT
+                )
                     .show()
             }
         }
