@@ -103,6 +103,5 @@
     <string name="ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect">忽略时长少于 %1$s s 的音频成功, 请重启APP 以生效。</string>
     <string name="ignored_this_folder_please_restart_the_app_to_take_effect">忽略文件夹成功，重启后生效</string>
     <string name="check_to_not_ignore_the_folder_you_need_restart_the_app_to_take_effect">勾选表示扫描这个文件夹，重启后生效</string>
-
-
+    <string name="custom">自定义</string>
 </resources>

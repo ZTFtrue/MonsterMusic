@@ -1,9 +1,12 @@
 package com.ztftrue.music.ui.play
 
+import android.content.Context
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,15 +20,23 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableFloatState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,15 +46,19 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.ACTION_CHANGE_PITCH
 import com.ztftrue.music.play.ACTION_DSP_BAND
+import com.ztftrue.music.play.ACTION_DSP_BANDS_SET
 import com.ztftrue.music.play.ACTION_DSP_BAND_FLATTEN
 import com.ztftrue.music.play.ACTION_DSP_ENABLE
 import com.ztftrue.music.play.ACTION_ECHO_DECAY
@@ -52,6 +67,7 @@ import com.ztftrue.music.play.ACTION_ECHO_ENABLE
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.equalizerMax
 import com.ztftrue.music.utils.Utils.equalizerMin
+import com.ztftrue.music.utils.model.EqualizerBand
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import kotlin.math.roundToInt
@@ -70,7 +86,15 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
         val bandValue = remember { mutableFloatStateOf(band.value.toFloat()) }
         tempBandValue.add(bandValue)
     }
-
+    var selectedIndex by remember {
+        mutableStateOf(Utils.custom)
+    }
+    LaunchedEffect(key1 = Unit) {
+        selectedIndex = context.getSharedPreferences(
+            "SelectedPreset",
+            Context.MODE_PRIVATE
+        ).getString("SelectedPreset", Utils.custom) ?: Utils.custom
+    }
     val delayTime = remember { mutableFloatStateOf(musicViewModel.delayTime.floatValue) }
     val decay = remember { mutableFloatStateOf(musicViewModel.decay.floatValue) }
     val color = MaterialTheme.colorScheme.onBackground
@@ -115,7 +139,10 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                             )
                         },
                     ) {
-                        Text(text = stringResource(R.string.reset), color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            text = stringResource(R.string.reset),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
                 Slider(
@@ -156,7 +183,10 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                             )
                         },
                     ) {
-                        Text(text = stringResource(R.string.reset), color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            text = stringResource(R.string.reset),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
                 Slider(
@@ -189,7 +219,10 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = stringResource(R.string.echo), color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            text = stringResource(R.string.echo),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                         Box(
                             modifier = Modifier
                                 .width(4.dp)
@@ -237,7 +270,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     }
                 }
                 Text(
-                    text =    stringResource(R.string.delay)+(delayTime.floatValue)+stringResource(
+                    text = stringResource(R.string.delay) + (delayTime.floatValue) + stringResource(
                         R.string.seconds
                     ),
                     color = MaterialTheme.colorScheme.onBackground
@@ -309,7 +342,10 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = stringResource(R.string.equalizer), color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            text = stringResource(R.string.equalizer),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                         Box(
                             modifier = Modifier
                                 .width(10.dp)
@@ -371,12 +407,16 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                 )
                             },
                         ) {
-                            Text(text = stringResource(R.string.flatten), color = MaterialTheme.colorScheme.onBackground)
+                            Text(
+                                text = stringResource(R.string.flatten),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
                         }
                     }
                 }
+
                 LazyRow {
-                    items(Utils.kThirdOct.size) { index ->
+                    items(bands.size, key = { it }) { index ->
                         val band = bands[index]
                         Column {
                             Text(
@@ -412,6 +452,11 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                 valueRange = minEQLevel.toFloat()..maxEQLevel.toFloat(),
                                 steps = 21,
                                 onValueChangeFinished = {
+                                    selectedIndex = Utils.custom
+                                    context.getSharedPreferences(
+                                        "SelectedPreset",
+                                        Context.MODE_PRIVATE
+                                    ).edit().putString("SelectedPreset", Utils.custom).apply()
                                     band.value = tempBandValue[index].floatValue.roundToInt()
                                     musicViewModel.mediaBrowser?.sendCustomAction(
                                         ACTION_DSP_BAND,
@@ -430,6 +475,94 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                 text = "${tempBandValue[index].floatValue.roundToInt()}db",
                                 color = MaterialTheme.colorScheme.onBackground
                             )
+                        }
+                    }
+                }
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .padding(top = 5.dp, bottom = 5.dp)
+                        .background(color = MaterialTheme.colorScheme.onBackground)
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically, modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
+                ) {
+                    val offset = remember { mutableIntStateOf(200) }
+                    var expanded by remember { mutableStateOf(false) }
+                    BackHandler(enabled = expanded) {
+                        if (expanded) {
+                            expanded = false
+                        }
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 5.dp)
+                            .height(60.dp)
+                            .clickable { expanded = !expanded },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Preset",
+                            Modifier.padding(start = 10.dp),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Text(
+                            text = if (selectedIndex == Utils.custom) stringResource(
+                                id = Utils.translateMap[selectedIndex] ?: R.string.app_name
+                            ) else selectedIndex,
+                            Modifier.padding(end = 10.dp),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height((LocalView.current.height / 2f).dp)
+                            .background(
+                                MaterialTheme.colorScheme.tertiaryContainer
+                            ),
+                        offset = DpOffset(
+                            x = 0.dp,
+                            y = with(LocalDensity.current) { offset.intValue.toDp() }
+                        )
+                    ) {
+                        Utils.eqPreset.forEach { (key, value) ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        key,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                },
+                                onClick = {
+                                    selectedIndex = key
+                                    expanded = false
+                                    value.forEachIndexed { i, v ->
+                                        tempBandValue[i].floatValue = v.toFloat()
+                                        bands[i] = EqualizerBand(bands[i].id, bands[i].name, v)
+                                    }
+                                    musicViewModel.mediaBrowser?.sendCustomAction(
+                                        ACTION_DSP_BANDS_SET,
+                                        Bundle().apply {
+                                            putIntArray(
+                                                "value",
+                                                value
+                                            )
+                                        },
+                                        null
+                                    )
+                                    context.getSharedPreferences(
+                                        "SelectedPreset",
+                                        Context.MODE_PRIVATE
+                                    ).edit().putString("SelectedPreset", key).apply()
+                                })
                         }
                     }
                 }

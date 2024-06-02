@@ -103,5 +103,5 @@
     <string name="ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect">Ignore tracks duration less than %1$s s set successfully, please restart the app to take effect</string>
     <string name="ignored_this_folder_please_restart_the_app_to_take_effect">Ignored this folder, please restart the app to take effect</string>
     <string name="check_to_not_ignore_the_folder_you_need_restart_the_app_to_take_effect">Check to not ignore the folder, you need restart the app to take effect</string>
-
+    <string name="custom">Custom</string>
 </resources>
