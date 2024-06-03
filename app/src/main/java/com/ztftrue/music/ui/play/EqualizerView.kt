@@ -395,6 +395,11 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                                     tempBandValue.forEach {
                                                         it.floatValue = 0f
                                                     }
+                                                    selectedIndex = Utils.custom
+                                                    context.getSharedPreferences(
+                                                        "SelectedPreset",
+                                                        Context.MODE_PRIVATE
+                                                    ).edit().putString("SelectedPreset", Utils.custom).apply()
                                                 } else {
                                                     Toast.makeText(
                                                         context,
