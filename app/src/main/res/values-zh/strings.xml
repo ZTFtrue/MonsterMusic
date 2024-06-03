@@ -105,4 +105,6 @@
     <string name="check_to_not_ignore_the_folder_you_need_restart_the_app_to_take_effect">勾选表示扫描这个文件夹，重启后生效</string>
     <string name="custom">自定义</string>
     <string name="join_discord">加入 Discord</string>
+    <string name="star_share_tip">如果你喜欢这个应用，可以分享它，让更多的人知道；并且，如果你有一个Github账户，请给一个star.</string>
+
 </resources>

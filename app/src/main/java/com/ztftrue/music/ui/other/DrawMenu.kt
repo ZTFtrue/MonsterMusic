@@ -255,6 +255,11 @@ fun FeedBackDialog(onDismiss: () -> Unit) {
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )
+                Text(
+                    text = stringResource(R.string.star_share_tip), modifier = Modifier
+                        .padding(2.dp),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
 
                 HorizontalDivider(
                     modifier = Modifier

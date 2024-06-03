@@ -105,4 +105,5 @@
     <string name="check_to_not_ignore_the_folder_you_need_restart_the_app_to_take_effect">Check to not ignore the folder, you need restart the app to take effect</string>
     <string name="custom">Custom</string>
     <string name="join_discord">Join Discord</string>
+    <string name="star_share_tip">If you like it, please share it; And, if you have a GitHub account, please give a star to this project.</string>
 </resources>
