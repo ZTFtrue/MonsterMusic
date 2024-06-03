@@ -32,6 +32,9 @@ embark on a musical adventure like never before!
 
 Or download the latest APK from the [Releases Section](https://github.com/ZTFtrue/MonsterMusic/releases/latest).
 
+[Discord](https://discord.gg/uMtf4z5F)
+
+
 <img alt="equalizer" src="./Picture/equalizer.jpg" width="200px"/><img alt="cover" src="./Picture/cover.jpg" width="200px"/>
 <img alt="settings" src="./Picture/settings.jpg" width="200px"/><img alt="albums" src="./Picture/albums.jpg" width="200px"/>
 <img alt="songs" src="./Picture/songs.jpg" width="200px"/><img alt="songs" src="./Picture/songs.jpg" width="200px"/>
