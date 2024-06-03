@@ -104,4 +104,5 @@
     <string name="ignored_this_folder_please_restart_the_app_to_take_effect">忽略文件夹成功，重启后生效</string>
     <string name="check_to_not_ignore_the_folder_you_need_restart_the_app_to_take_effect">勾选表示扫描这个文件夹，重启后生效</string>
     <string name="custom">自定义</string>
+    <string name="join_discord">加入 Discord</string>
 </resources>
