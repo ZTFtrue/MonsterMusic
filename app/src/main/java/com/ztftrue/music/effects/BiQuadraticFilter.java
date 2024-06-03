@@ -42,7 +42,7 @@ final public class BiQuadraticFilter {
     public double gain_abs;
     private int type;
     BIND_TYPE bindType = BIND_TYPE.Q;
-
+    private double w1, w2;
     enum BIND_TYPE {
         Q,
         BW,
@@ -65,6 +65,7 @@ final public class BiQuadraticFilter {
 
     public void reset() {
         x1 = x2 = y1 = y2 = 0;
+        w1 = w2 = 0;
     }
 
     public double frequency() {
@@ -216,11 +217,14 @@ final public class BiQuadraticFilter {
 
     // perform one filtering step
     public double filter(double x) {
+        double w0 = x - a1 * w1 - a2 * w2;
         y = b0 * x + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
         x2 = x1;
         x1 = x;
         y2 = y1;
         y1 = y;
+        w2 = w1;
+        w1 = w0;
         return (y);
     }
 }

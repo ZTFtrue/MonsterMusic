@@ -251,7 +251,12 @@ fun FeedBackDialog(onDismiss: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = stringResource(R.string.about_thanks), modifier = Modifier
+                    text = stringResource(R.string.feedback), modifier = Modifier
+                        .padding(2.dp),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    text = stringResource(R.string.star_share_tip), modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -266,6 +271,34 @@ fun FeedBackDialog(onDismiss: () -> Unit) {
 
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
                     items(1) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
+                                .clickable {
+                                    onConfirmation()
+                                    Utils.openBrowser(
+                                        "https://discord.gg/uMtf4z5F",
+                                        context
+                                    )
+                                },
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text(
+                                text = stringResource(R.string.join_discord),
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()

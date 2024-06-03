@@ -25,6 +25,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.Locale
 
 enum class OperateTypeInActivity {
     DeletePlayList,
@@ -99,6 +100,7 @@ object Utils {
         put("Cover", R.string.tab_cover)
         put("Lyrics", R.string.tab_lyrics)
         put("Equalizer", R.string.tab_equalizer)
+        put("Custom", R.string.custom)
     }
 
     val items = listOf(
@@ -111,16 +113,32 @@ object Utils {
     var kThirdOct = doubleArrayOf(
         31.5, 63.0, 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0, 16000.0
     )
-    var equalizerMax = 15
-    var equalizerMin = -15
-
-    /**
-     * B≈2×fc Q=fc/B
-     */
-    var qFactors = doubleArrayOf(
-        0.67, 0.67, 0.67, 0.67, 0.67, 0.67, 0.67, 0.67, 0.67, 0.67
+    var kThirdBW = doubleArrayOf(
+        20.0, 40.0, 80.0, 160.0, 320.0, 640.0, 1280.0, 2560.0, 5120.0, 10240.0
     )
-
+    var equalizerMax = 15
+    var equalizerMin = -20
+    var custom="Custom"
+    var eqPreset = LinkedHashMap<String, IntArray>().apply {
+        put("Zero", intArrayOf(0,0,0,0,0,0,0,0,0,0))
+        put("Classical", intArrayOf(0,0,0,0,0,0,-9,-9,-9,-12))
+        put("Club", intArrayOf(0,0,2,3,3,3,2,0,0,0))
+        put("Dance", intArrayOf(6,4,1,0,0,-7,-9,-9,0,0))
+        put("FullBass", intArrayOf(8,8,8,4,2,-10,-12,-13,-13,-13))
+        put("FullTreble", intArrayOf(-12,-12,-12,-6,1,6,9,9,9,10))
+        put("FullBass+Treble", intArrayOf(4,3,0,-9,-6,1,5,6,7,7))
+        put("Laptop/Headphones", intArrayOf(3,6,3,-4,0,-7,-9,-9,0,0))
+        put("LargeHall", intArrayOf(6,6,3,3,0,-6,-6,-6,0,0))
+        put("Live", intArrayOf(-6,0,2,3,3,3,2,1,1,1))
+        put("Party", intArrayOf(4,4,0,0,0,0,0,0,4,4))
+        put("Pop", intArrayOf(-2,3,4,4,3,-1,-3,-3,-2,-2))
+        put("Reggae", intArrayOf(0,0,-1,-7,0,-8,-8,0,0,0))
+        put("Rock", intArrayOf(4,3,-7,-9,-4,2,5,6,6,6))
+        put("Soft", intArrayOf(3,1,-1,-3,-1,2,5,6,6,7))
+        put("Ska", intArrayOf(-3,-6,-6,-1,2,3,5,6,6,6))
+        put("SoftRock", intArrayOf(2,2,1,-1,-6,-7,-4,-1,1,5))
+        put("Techno", intArrayOf(4,3,0,-7,-6,0,4,6,6,5))
+    }
 
     fun initSettingsData(musicViewModel: MusicViewModel, context: Context) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -166,11 +184,12 @@ object Utils {
         val hours = minutes / 60
         minutes %= 60
         return if (hours > 0) String.format(
+            Locale.getDefault(),
             "%02d:%02d:%02d",
             hours,
             minutes,
             seconds
-        ) else String.format("%02d:%02d", minutes, seconds)
+        ) else String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
     }
 
 
@@ -278,7 +297,11 @@ object Utils {
                     }
                 )
             } else {
-                Toast.makeText(context,    context.getString(R.string.create_failed), Toast.LENGTH_SHORT)
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.create_failed),
+                    Toast.LENGTH_SHORT
+                )
                     .show()
             }
         }
@@ -298,7 +321,11 @@ object Utils {
                     ACTION_PlayLIST_CHANGE, null, null
                 )
             } else {
-                Toast.makeText(context,    context.getString(R.string.create_failed), Toast.LENGTH_SHORT)
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.create_failed),
+                    Toast.LENGTH_SHORT
+                )
                     .show()
             }
         }

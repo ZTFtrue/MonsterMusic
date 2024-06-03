@@ -45,6 +45,7 @@ import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.PlayConfig
 import com.ztftrue.music.utils.PlayListType
+import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.model.AlbumList
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.model.ArtistList
@@ -85,6 +86,7 @@ const val ACTION_SEARCH = "ACTION_SEARCH"
 const val ACTION_DSP_ENABLE = "DSP_ENABLE"
 const val ACTION_DSP_BAND = "ACTION_DSP_BAND"
 const val ACTION_DSP_BAND_FLATTEN = "ACTION_DSP_BAND_FLATTEN"
+const val ACTION_DSP_BANDS_SET = "ACTION_DSP_BANDS_SET"
 const val ACTION_ECHO_ENABLE = "ACTION_ECHO_ENABLE"
 const val ACTION_ECHO_DELAY = "ACTION_ECHO_DELAY"
 const val ACTION_ECHO_DECAY = "ACTION_ECHO_DECAY"
@@ -484,6 +486,14 @@ class PlayService : MediaBrowserServiceCompat() {
                         db.AuxDao().update(auxr)
                     }
                     return
+                }
+            }
+            result.sendResult(null)
+        } else if (ACTION_DSP_BANDS_SET == action) {
+            if (extras != null) {
+                val value = extras.getIntArray("value")
+                value?.forEachIndexed { index, v ->
+                    equalizerAudioProcessor.setBand(index, v)
                 }
             }
             result.sendResult(null)
@@ -1000,7 +1010,7 @@ class PlayService : MediaBrowserServiceCompat() {
 
     private var sqlDataInitialized = false
     private var config: PlayConfig? = null
-    val lock = ReentrantLock()
+    private val lock = ReentrantLock()
     private fun initSqlData(bundle: Bundle) {
         runBlocking {
             awaitAll(
@@ -1028,11 +1038,24 @@ class PlayService : MediaBrowserServiceCompat() {
                                 echoAudioProcessor.setFeedBack(auxr.echoRevert)
                                 echoAudioProcessor.isActive = auxr.echo
                                 equalizerAudioProcessor.isActive = auxr.equalizer
-                                for (i in 0 until 10) {
-                                    equalizerAudioProcessor.setBand(
-                                        i,
-                                        auxr.equalizerBand[i]
-                                    )
+                                val selectedPreset = this@PlayService.getSharedPreferences(
+                                    "SelectedPreset",
+                                    Context.MODE_PRIVATE
+                                ).getString("SelectedPreset", Utils.custom)
+                                if (selectedPreset == Utils.custom) {
+                                    for (i in 0 until 10) {
+                                        equalizerAudioProcessor.setBand(
+                                            i,
+                                            auxr.equalizerBand[i]
+                                        )
+                                    }
+                                } else {
+                                    Utils.eqPreset[selectedPreset]?.forEachIndexed { index, i ->
+                                        equalizerAudioProcessor.setBand(
+                                            index,
+                                            i
+                                        )
+                                    }
                                 }
                             },
                             async {
