@@ -45,12 +45,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -524,7 +525,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                         onDismissRequest = { expanded = false },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height((LocalView.current.height / 2f).dp)
+                            .height((LocalConfiguration.current.screenHeightDp / 2f).dp)
                             .background(
                                 MaterialTheme.colorScheme.tertiaryContainer
                             ),
@@ -533,6 +534,26 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                             y = with(LocalDensity.current) { offset.intValue.toDp() }
                         )
                     ) {
+                        DropdownMenuItem(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Text(
+                                        stringResource(id = R.string.cancel),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+
+                            },
+                            onClick = {
+                                expanded = false
+                            })
                         Utils.eqPreset.forEach { (key, value) ->
                             DropdownMenuItem(
                                 text = {
@@ -564,6 +585,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                     ).edit().putString("SelectedPreset", key).apply()
                                 })
                         }
+
                     }
                 }
             }
