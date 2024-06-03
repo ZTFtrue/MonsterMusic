@@ -507,7 +507,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Preset",
+                            text = stringResource(R.string.preset),
                             Modifier.padding(start = 10.dp),
                             color = MaterialTheme.colorScheme.onBackground
                         )

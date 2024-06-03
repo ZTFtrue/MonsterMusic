@@ -106,4 +106,5 @@
     <string name="custom">Custom</string>
     <string name="join_discord">Join Discord</string>
     <string name="star_share_tip">If you like it, please share it; And, if you have a GitHub account, please give a star to this project.</string>
+    <string name="preset">Preset</string>
 </resources>
