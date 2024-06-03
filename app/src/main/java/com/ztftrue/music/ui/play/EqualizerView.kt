@@ -503,7 +503,11 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                             .fillMaxWidth()
                             .padding(top = 5.dp)
                             .height(60.dp)
-                            .clickable { expanded = !expanded },
+                            .clickable {
+                                if (musicViewModel.enableEqualizer.value) {
+                                    expanded = !expanded
+                                }
+                            },
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
