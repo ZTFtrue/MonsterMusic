@@ -68,6 +68,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
+import java.util.concurrent.locks.ReentrantLock
 
 
 @Suppress("DEPRECATION")
@@ -451,8 +452,9 @@ class MainActivity : ComponentActivity() {
         musicViewModel.reset()
         super.onDestroy()
     }
-
+    private val lock = ReentrantLock()
     fun getSeek() {
+        lock.lock()
         if (musicViewModel.playStatus.value) {
             jobSeek = scopeMain.launch {
                 // i debug it, when i set it while(true),
@@ -471,6 +473,7 @@ class MainActivity : ComponentActivity() {
         } else {
             jobSeek?.cancel()
         }
+        lock.unlock()
     }
 
     val callback = object : MediaControllerCompat.Callback() {
@@ -497,6 +500,7 @@ class MainActivity : ComponentActivity() {
                         musicViewModel.currentPlay.value =
                             musicViewModel.musicQueue[index]
                         musicViewModel.currentPlayQueueIndex.intValue = index
+                        musicViewModel.sliderPosition.floatValue = 0f
                         musicViewModel.currentDuration.longValue =
                             musicViewModel.currentPlay.value?.duration ?: 0
                         musicViewModel.dealLyrics(
