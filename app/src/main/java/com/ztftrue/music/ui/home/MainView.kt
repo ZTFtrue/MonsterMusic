@@ -124,7 +124,10 @@ fun MainView(
                 )
             },
         ) {
-            Scaffold(modifier = Modifier,
+            Scaffold(modifier = Modifier  .semantics {
+                contentDescription =
+                    "This is main page"
+            },
                 topBar = {
                     MainTopBar(musicViewModel, drawerState, pagerState, navController)
                 }, bottomBar = {
@@ -139,7 +142,7 @@ fun MainView(
                             .padding(it)
                             .semantics {
                                 contentDescription =
-                                    "Song's pager,current page is ${musicViewModel.mainTabList[pagerState.currentPage].name}"
+                                    "current page is ${musicViewModel.mainTabList[pagerState.currentPage].name}"
                             },
                     ) { page ->
                         when (tabList[page].type) {
