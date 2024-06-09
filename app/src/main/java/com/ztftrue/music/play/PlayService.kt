@@ -426,7 +426,8 @@ class PlayService : MediaBrowserServiceCompat() {
                 if (musicItem != null && playList != null) {
                     if (playList.type == PlayListType.Queue
                         || (playList.type == playListCurrent?.type && playList.id == playListCurrent?.id
-                                && musicQueue.size == musicItems?.size)
+                                && musicQueue.size == musicItems?.size&&musicQueue.size>index&&
+                                musicQueue[index].id == musicItems[index].id)
                     ) {
                         playMusicCurrentQueue(musicItem, index)
                     } else {
