@@ -116,8 +116,8 @@ object Utils {
     var kThirdBW = doubleArrayOf(
         20.0, 40.0, 80.0, 160.0, 320.0, 640.0, 1280.0, 2560.0, 5120.0, 10240.0
     )
-    var Q=0.67
-    var order=3
+    var Q=1.0
+    var order=2
     var equalizerMax = 15
     var equalizerMin = -20
     var custom="Custom"
