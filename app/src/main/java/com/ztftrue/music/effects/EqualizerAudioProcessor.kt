@@ -17,6 +17,8 @@ import org.apache.commons.math3.util.FastMath
 import uk.me.berndporr.iirj.Butterworth
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlin.math.abs
+import kotlin.math.max
 
 
 /** Indicates that the output sample rate should be the same as the input.  */
@@ -118,10 +120,24 @@ class EqualizerAudioProcessor : AudioProcessor {
                 tarsosDSPAudioFormat
             )
         mCoefficientLeftBandPass.forEachIndexed { index, biQuadraticFilter ->
-            biQuadraticFilter.configure(
-                BiQuadraticFilter.BANDPASS, Utils.kThirdOct[index],
-                outputAudioFormat!!.sampleRate.toDouble(), Q, biQuadraticFilter.gainDB
-            )
+            if (index == 0) {
+                // The first filter, includes all lower frequencies
+                biQuadraticFilter.configure(
+                    BiQuadraticFilter.LOWSHELF, Utils.kThirdOct[index],
+                    outputAudioFormat!!.sampleRate.toDouble(), Q, biQuadraticFilter.gainDB
+                )
+            } else if (index == mCoefficientRightBandPass.size - 1) {
+                // The last filter, includes all higher frequencies
+                biQuadraticFilter.configure(
+                    BiQuadraticFilter.HIGHSHELF, Utils.kThirdOct[index],
+                    outputAudioFormat!!.sampleRate.toDouble(), Q, biQuadraticFilter.gainDB
+                )
+            } else {
+                biQuadraticFilter.configure(
+                    BiQuadraticFilter.PEAK, Utils.kThirdOct[index],
+                    outputAudioFormat!!.sampleRate.toDouble(), Q, biQuadraticFilter.gainDB
+                )
+            }
         }
         mCoefficientRightBandPass.forEachIndexed { index, biQuadraticFilter ->
             if (index == 0) {
@@ -262,6 +278,22 @@ class EqualizerAudioProcessor : AudioProcessor {
         inputEnded = true
     }
 
+    // 获取浮点数组的最大绝对值
+    private fun getMaxAbsValue(audioData: DoubleArray): Double {
+        var maxVal = 0.0
+        audioData.forEach { value ->
+            maxVal = max(abs(value), maxVal)
+        }
+        return maxVal
+    }
+
+    // 归一化处理
+    private fun normalize(audioData: DoubleArray, maxVal: Double) {
+        for (i in audioData.indices) {
+            audioData[i] /= maxVal
+        }
+    }
+
     private fun processData() {
         if (active) {
             if (dataBuffer.position() >= bufferSize) {
@@ -294,15 +326,17 @@ class EqualizerAudioProcessor : AudioProcessor {
                                         outY
                                     )
                                 }
+                                outY = sum
 //                                mCoefficientLeftBandPass.forEach { filter ->
 //                                    // only used for peaking and shelving filters
-//                                    sum += filter.gain_abs * filter.filter(
-//                                        outY
-//                                    )
+//                                    outY = filter.filter(outY)
 //                                }
-                                outY = sum
-                                sampleBufferRealLeft[index] =
-                                    (if (outY > 1.0) 1.0 else if (outY < -1.0) -1.0 else outY)
+//
+                                sampleBufferRealLeft[index] = outY
+                            }
+                            val maxVal = getMaxAbsValue(sampleBufferRealLeft)
+                            if (maxVal > 1.0) {
+                                normalize(sampleBufferRealLeft, maxVal)
                             }
                         },
                         async(Dispatchers.IO) {
@@ -315,15 +349,19 @@ class EqualizerAudioProcessor : AudioProcessor {
                                         outY
                                     )
                                 }
+                                outY = sum
 //                                mCoefficientRightBandPass.forEach { filter ->
 //                                    // only used for peaking and shelving filters
-//                                    sum += filter.gain_abs * filter.filter(
+//                                    outY = filter.filter(
 //                                        outY
 //                                    )
 //                                }
-                                outY = sum
-                                sampleBufferRealRight[index] =
-                                    (if (outY > 1.0) 1.0 else if (outY < -1.0) -1.0 else outY)
+//
+                                sampleBufferRealRight[index] = outY
+                            }
+                            val maxVal = getMaxAbsValue(sampleBufferRealRight)
+                            if (maxVal > 1.0f) {
+                                normalize(sampleBufferRealRight, maxVal);
                             }
                         }
                     )
@@ -395,34 +433,46 @@ class EqualizerAudioProcessor : AudioProcessor {
             gainDBArray[index] = value
             butterWorthLeftBandPass[index].reset()
             butterWorthRightBandPass[index].reset()
-            mCoefficientLeftBandPass[index].configure(
-                BiQuadraticFilter.BANDPASS, Utils.kThirdOct[index],
-                outputAudioFormat!!.sampleRate.toDouble(), Q, value.toDouble()
-            )
-            mCoefficientRightBandPass[index].configure(
-                BiQuadraticFilter.BANDPASS, Utils.kThirdOct[index],
-                outputAudioFormat!!.sampleRate.toDouble(), Q, value.toDouble()
-            )
+            if (index == 0) {
+                // The first filter, includes all lower frequencies
+                mCoefficientLeftBandPass[index].configure(
+                    BiQuadraticFilter.LOWSHELF, Utils.kThirdOct[index],
+                    outputAudioFormat!!.sampleRate.toDouble(), Q, value.toDouble()
+                )
+                mCoefficientRightBandPass[index].configure(
+                    BiQuadraticFilter.LOWSHELF, Utils.kThirdOct[index],
+                    outputAudioFormat!!.sampleRate.toDouble(), Q, value.toDouble()
+                )
+            } else if (index == mCoefficientRightBandPass.size - 1) {
+                // The last filter, includes all higher frequencies
+                mCoefficientLeftBandPass[index].configure(
+                    BiQuadraticFilter.HIGHSHELF, Utils.kThirdOct[index],
+                    outputAudioFormat!!.sampleRate.toDouble(), Q, value.toDouble()
+                )
+                mCoefficientRightBandPass[index].configure(
+                    BiQuadraticFilter.HIGHSHELF, Utils.kThirdOct[index],
+                    outputAudioFormat!!.sampleRate.toDouble(), Q, value.toDouble()
+                )
+            } else {
+                mCoefficientLeftBandPass[index].configure(
+                    BiQuadraticFilter.PEAK, Utils.kThirdOct[index],
+                    outputAudioFormat!!.sampleRate.toDouble(), Q, value.toDouble()
+                )
+                mCoefficientRightBandPass[index].configure(
+                    BiQuadraticFilter.PEAK, Utils.kThirdOct[index],
+                    outputAudioFormat!!.sampleRate.toDouble(), Q, value.toDouble()
+                )
+            }
+
+
         }
     }
 
     fun flatBand(): Boolean {
         if (outputAudioFormat != null) {
             for (index in butterWorthRightBandPass.indices) {
-                gainDBAbsArray[index] = 1.0
-                gainDBArray[index] = 0
-                butterWorthLeftBandPass[index].reset()
-                butterWorthRightBandPass[index].reset()
-                mCoefficientLeftBandPass[index].configure(
-                    BiQuadraticFilter.BANDPASS, Utils.kThirdOct[index],
-                    outputAudioFormat!!.sampleRate.toDouble(), Q, 0.0
-                )
-                mCoefficientRightBandPass[index].configure(
-                    BiQuadraticFilter.BANDPASS, Utils.kThirdOct[index],
-                    outputAudioFormat!!.sampleRate.toDouble(), Q, 0.0
-                )
+                setBand(index, 0)
             }
-
             return true
         } else {
             return false
