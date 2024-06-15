@@ -218,7 +218,7 @@ final public class BiQuadraticFilter {
     // perform one filtering step
     public double filter(double x) {
         double w0 = x - a1 * w1 - a2 * w2;
-        y = b0 * x + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+        y = b0 * w0 + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
         x2 = x1;
         x1 = x;
         y2 = y1;

@@ -118,8 +118,8 @@ object Utils {
     )
     var Q=1.0
     var order=2
-    var equalizerMax = 10
-    var equalizerMin = -13
+    var equalizerMax = 12
+    var equalizerMin = -12
     var custom="Custom"
     var eqPreset = LinkedHashMap<String, IntArray>().apply {
         put("Zero", intArrayOf(0,0,0,0,0,0,0,0,0,0))
