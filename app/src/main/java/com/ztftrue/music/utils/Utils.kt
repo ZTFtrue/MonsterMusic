@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.text.TextUtils
+import android.util.Log
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.ztftrue.music.MusicViewModel
@@ -21,6 +22,7 @@ import com.ztftrue.music.utils.trackManager.PlaylistManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.apache.commons.math3.util.FastMath
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -111,35 +113,44 @@ object Utils {
         R.string.theme_material_you,
     )
     var kThirdOct = doubleArrayOf(
-        31.5, 63.0, 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0, 16000.0
+        31.0, 62.0, 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0, 16000.0
+    )
+    var qs = doubleArrayOf(
+       0.707, 19.1, 9.55, 6.28, 3.14, 1.57, 0.79, 0.39,0.19,0.098, 0.049
     )
     var kThirdBW = doubleArrayOf(
-        20.0, 40.0, 80.0, 160.0, 320.0, 640.0, 1280.0, 2560.0, 5120.0, 10240.0
+        42.0, 94.0, 188.0, 375.0, 750.0, 1500.0, 3000.0, 6000.0, 12000.0, 14000.0
     )
-    var Q=1.0
-    var order=2
-    var equalizerMax = 10
+    fun calculateQs(gainAbsDB:Double,cf:Double,bw:Double):Double{
+        // Bandwidth = sqrt(gain)*centre frequency/Q
+        val q=cf/20
+        Log.d("TAG-Q",q.toString())
+        return q
+    }
+    var Q = 1.0
+    var order = 3
+    var equalizerMax = 13
     var equalizerMin = -13
-    var custom="Custom"
+    var custom = "Custom"
     var eqPreset = LinkedHashMap<String, IntArray>().apply {
-        put("Zero", intArrayOf(0,0,0,0,0,0,0,0,0,0))
-        put("Classical", intArrayOf(0,0,0,0,0,0,-9,-9,-9,-12))
-        put("Club", intArrayOf(0,0,2,3,3,3,2,0,0,0))
-        put("Dance", intArrayOf(6,4,1,0,0,-7,-9,-9,0,0))
-        put("FullBass", intArrayOf(8,8,8,4,2,-10,-12,-13,-13,-13))
-        put("FullTreble", intArrayOf(-12,-12,-12,-6,1,6,9,9,9,10))
-        put("FullBass+Treble", intArrayOf(4,3,0,-9,-6,1,5,6,7,7))
-        put("Laptop/Headphones", intArrayOf(3,6,3,-4,0,-7,-9,-9,0,0))
-        put("LargeHall", intArrayOf(6,6,3,3,0,-6,-6,-6,0,0))
-        put("Live", intArrayOf(-6,0,2,3,3,3,2,1,1,1))
-        put("Party", intArrayOf(4,4,0,0,0,0,0,0,4,4))
-        put("Pop", intArrayOf(-2,3,4,4,3,-1,-3,-3,-2,-2))
-        put("Reggae", intArrayOf(0,0,-1,-7,0,-8,-8,0,0,0))
-        put("Rock", intArrayOf(4,3,-7,-9,-4,2,5,6,6,6))
-        put("Soft", intArrayOf(3,1,-1,-3,-1,2,5,6,6,7))
-        put("Ska", intArrayOf(-3,-6,-6,-1,2,3,5,6,6,6))
-        put("SoftRock", intArrayOf(2,2,1,-1,-6,-7,-4,-1,1,5))
-        put("Techno", intArrayOf(4,3,0,-7,-6,0,4,6,6,5))
+        put("Zero", intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+        put("Classical", intArrayOf(0, 0, 0, 0, 0, 0, -9, -9, -9, -12))
+        put("Club", intArrayOf(0, 0, 2, 3, 3, 3, 2, 0, 0, 0))
+        put("Dance", intArrayOf(6, 4, 1, 0, 0, -7, -9, -9, 0, 0))
+        put("FullBass", intArrayOf(8, 8, 8, 4, 2, -10, -12, -13, -13, -13))
+        put("FullTreble", intArrayOf(-12, -12, -12, -6, 1, 6, 9, 9, 9, 10))
+        put("FullBass+Treble", intArrayOf(4, 3, 0, -9, -6, 1, 5, 6, 7, 7))
+        put("Laptop/Headphones", intArrayOf(3, 6, 3, -4, 0, -7, -9, -9, 0, 0))
+        put("LargeHall", intArrayOf(6, 6, 3, 3, 0, -6, -6, -6, 0, 0))
+        put("Live", intArrayOf(-6, 0, 2, 3, 3, 3, 2, 1, 1, 1))
+        put("Party", intArrayOf(4, 4, 0, 0, 0, 0, 0, 0, 4, 4))
+        put("Pop", intArrayOf(-2, 3, 4, 4, 3, -1, -3, -3, -2, -2))
+        put("Reggae", intArrayOf(0, 0, -1, -7, 0, -8, -8, 0, 0, 0))
+        put("Rock", intArrayOf(4, 3, -7, -9, -4, 2, 5, 6, 6, 6))
+        put("Soft", intArrayOf(3, 1, -1, -3, -1, 2, 5, 6, 6, 7))
+        put("Ska", intArrayOf(-3, -6, -6, -1, 2, 3, 5, 6, 6, 6))
+        put("SoftRock", intArrayOf(2, 2, 1, -1, -6, -7, -4, -1, 1, 5))
+        put("Techno", intArrayOf(4, 3, 0, -7, -6, 0, 4, 6, 6, 5))
     }
 
     fun initSettingsData(musicViewModel: MusicViewModel, context: Context) {

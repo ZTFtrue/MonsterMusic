@@ -42,8 +42,8 @@ final public class BiQuadraticFilter {
     public double gain_abs;
     private int type;
     BIND_TYPE bindType = BIND_TYPE.Q;
-    private double w1, w2;
-    enum BIND_TYPE {
+
+    public enum BIND_TYPE {
         Q,
         BW,
         S
@@ -65,14 +65,18 @@ final public class BiQuadraticFilter {
 
     public void reset() {
         x1 = x2 = y1 = y2 = 0;
-        w1 = w2 = 0;
     }
 
     public double frequency() {
         return center_freq;
     }
 
-    public void configure(int type, double center_freq, double sample_rate, double Q, double gainDB) {
+
+    public void configure(int type, double center_freq, double sample_rate, double Q) {
+        configure(type, center_freq, sample_rate, Q, 0);
+    }
+
+    public void configure(int type, double center_freq, double sample_rate, double gainDB, double Q) {
         reset();
         Q = (Q == 0) ? 1e-9 : Q;
         this.type = type;
@@ -82,14 +86,10 @@ final public class BiQuadraticFilter {
         reconfigure(center_freq);
     }
 
-    public void configure(int type, double center_freq, double sample_rate, double Q) {
-        configure(type, center_freq, sample_rate, Q, 0);
-    }
-
-    public void configureBw(int type, BIND_TYPE bindType, double center_freq, double sample_rate, double bw, double gainDB) {
+    public void configure(int type, double center_freq, double sample_rate, double gainDB,BIND_TYPE bindType, double bw) {
         reset();
         this.type = type;
-        this.bindType = bindType;
+        this.bindType = BIND_TYPE.BW;
         this.bw = bw;
         this.sample_rate = sample_rate;
         this.gainDB = gainDB;
@@ -99,6 +99,7 @@ final public class BiQuadraticFilter {
 
     // allow parameter change while running
     public void reconfigure(double cf) {
+
         center_freq = cf;
         // only used for peaking and shelving filters
         gain_abs = FastMath.pow(10, gainDB / 40);
@@ -217,14 +218,11 @@ final public class BiQuadraticFilter {
 
     // perform one filtering step
     public double filter(double x) {
-        double w0 = x - a1 * w1 - a2 * w2;
         y = b0 * x + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
         x2 = x1;
         x1 = x;
         y2 = y1;
         y1 = y;
-        w2 = w1;
-        w1 = w0;
-        return (y);
+        return y;
     }
 }
