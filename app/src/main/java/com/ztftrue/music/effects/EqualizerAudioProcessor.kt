@@ -187,13 +187,18 @@ class EqualizerAudioProcessor : AudioProcessor {
 //                                        outY
 //                                    )
 //                                }
+//                                mCoefficientLeftBandPass.forEachIndexed { index1, filter ->
+//                                    // only used for peaking and shelving filters
+//                                    sum += gainDBAbsArray[index1] * filter.filter(
+//                                        outY
+//                                    )
+//                                }
 //                                outY = sum
                                 mCoefficientLeftBandPass.forEach { filter ->
                                     outY = filter.filter(
                                         outY
                                     )
                                 }
-////
                                 sampleBufferRealLeft[index] =
                                     (if (outY > 1.0) 1.0 else if (outY < -1.0) -1.0 else outY)
                             }
@@ -207,6 +212,12 @@ class EqualizerAudioProcessor : AudioProcessor {
                                 var outY: Double = it
 //                                var sum = 0.0
 //                                butterWorthRightBandPass.forEachIndexed { index1, filter ->
+//                                    // only used for peaking and shelving filters
+//                                    sum += gainDBAbsArray[index1] * filter.filter(
+//                                        outY
+//                                    )
+//                                }
+//                                mCoefficientRightBandPass.forEachIndexed { index1, filter ->
 //                                    // only used for peaking and shelving filters
 //                                    sum += gainDBAbsArray[index1] * filter.filter(
 //                                        outY
@@ -246,7 +257,11 @@ class EqualizerAudioProcessor : AudioProcessor {
         } else {
             dataBuffer.flip()
             val processedBuffer = ByteBuffer.allocate(dataBuffer.limit())
-            processedBuffer.put(dataBuffer.array(), 0, dataBuffer.limit())
+            val a=dataBuffer.array();
+//            a.forEachIndexed{i,t->
+//                a[i]= ((t)*0.6).toInt().toByte()
+//            }
+            processedBuffer.put(a, 0, dataBuffer.limit())
             dataBuffer.clear()
             processedBuffer.order(ByteOrder.nativeOrder())
             this.outputBuffer = processedBuffer
@@ -274,7 +289,7 @@ class EqualizerAudioProcessor : AudioProcessor {
 
     fun setBand(index: Int, value: Int) {
         if (outputAudioFormat != null) {
-            gainDBAbsArray[index] = FastMath.pow(10.0, (value.toDouble() / 40))
+            gainDBAbsArray[index] = FastMath.pow(10.0, (value.toDouble() / 20))
             gainDBArray[index] = value
             if (outputAudioFormat!!.sampleRate.toDouble() > 0) {
                 butterWorthLeftBandPass[index].bandPass(
