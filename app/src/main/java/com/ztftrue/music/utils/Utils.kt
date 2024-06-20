@@ -22,7 +22,6 @@ import com.ztftrue.music.utils.trackManager.PlaylistManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.apache.commons.math3.util.FastMath
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -116,10 +115,19 @@ object Utils {
         31.0, 62.0, 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0, 16000.0
     )
     var qs = doubleArrayOf(
-       0.707, 19.1, 9.55, 6.28, 3.14, 1.57, 0.79, 0.39,0.19,0.098, 0.049
+        19.1, 22.36, 11.86, 7.28, 4.36, 1.86, 1.1, 1.0,1.0,1.0, 1.0
     )
     var kThirdBW = doubleArrayOf(
-        42.0, 94.0, 188.0, 375.0, 750.0, 1500.0, 3000.0, 6000.0, 12000.0, 14000.0
+        21.92,
+        43.84,
+        88.39,
+        176.78,
+        353.55,
+        707.11,
+        1414.21,
+        2828.43,
+        5656.85,
+        11313.71
     )
     fun calculateQs(gainAbsDB:Double,cf:Double,bw:Double):Double{
         // Bandwidth = sqrt(gain)*centre frequency/Q
@@ -127,8 +135,7 @@ object Utils {
         Log.d("TAG-Q",q.toString())
         return q
     }
-    var Q = 1.0
-    var order = 3
+    var order = 2
     var equalizerMax = 13
     var equalizerMin = -13
     var custom = "Custom"
