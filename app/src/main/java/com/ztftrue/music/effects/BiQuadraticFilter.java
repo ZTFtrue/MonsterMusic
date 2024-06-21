@@ -96,6 +96,16 @@ final public class BiQuadraticFilter {
         this.Q = bw / 60.0;
         reconfigure(center_freq);
     }
+    public void configure(int type, double center_freq, double sample_rate, double gainDB,double Q,BIND_TYPE bindType ) {
+        reset();
+        Q = (Q == 0) ? 1e-9 : Q;
+        this.type = type;
+        this.sample_rate = sample_rate;
+        this.Q = Q;
+        this.gainDB = gainDB;
+        this.bindType =bindType;
+        reconfigure(center_freq);
+    }
 
     // allow parameter change while running
     public void reconfigure(double cf) {

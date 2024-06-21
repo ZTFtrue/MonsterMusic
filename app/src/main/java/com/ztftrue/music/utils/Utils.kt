@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.text.TextUtils
-import android.util.Log
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.ztftrue.music.MusicViewModel
@@ -115,26 +114,21 @@ object Utils {
         31.0, 62.0, 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0, 16000.0
     )
     var qs = doubleArrayOf(
-        19.1, 10.86, 10.86, 8.28, 8.28, 8.28, 3.36, 3.36,3.36,3.36, 3.36
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        27.0,
+        27.0,
+        27.0,
+        27.0,
+        27.0,
     )
     var kThirdBW = doubleArrayOf(
-        32.88,
-        65.76,
-        132.585,
-        264.27,
-        530.325,
-       1060.665,
-        2121.315,
-        4242.644,
-        8485.275,
-        16970.565,
+        20.0, 40.0, 80.0, 160.0, 320.0, 640.0, 1280.0, 2560.0, 5120.0, 10240.0
     )
-    fun calculateQs(gainAbsDB:Double,cf:Double,bw:Double):Double{
-        // Bandwidth = sqrt(gain)*centre frequency/Q
-        val q=cf/20
-        Log.d("TAG-Q",q.toString())
-        return q
-    }
+
     var order = 2
     var equalizerMax = 13
     var equalizerMin = -13
