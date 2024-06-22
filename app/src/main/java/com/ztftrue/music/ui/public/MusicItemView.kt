@@ -214,8 +214,9 @@ fun MusicItemView(
                     }
 
                     OperateType.RemoveFromQueue -> {
-                        val indexM = viewModel.musicQueue.indexOfFirst { musicItem -> musicItem.id == music.id }
-                        if(indexM == -1) return@OperateDialog
+                        val indexM =
+                            viewModel.musicQueue.indexOfFirst { musicItem -> musicItem.id == music.id }
+                        if (indexM == -1) return@OperateDialog
                         val bundle = Bundle()
                         bundle.putInt("index", indexM)
                         viewModel.mediaBrowser?.sendCustomAction(
@@ -287,6 +288,7 @@ fun MusicItemView(
         .height(60.dp)
         .combinedClickable(
             onClick = {
+                // in select tracks status for add playlist
                 if (selectStatus) {
                     if (selectList?.contains(music) == true) {
                         selectList.remove(music)
@@ -294,22 +296,24 @@ fun MusicItemView(
                         selectList?.add(music)
                     }
                 } else {
-                    if (playList.type != PlayListType.Queue && !(playList.type == viewModel.playListCurrent.value?.type && playList.id == viewModel.playListCurrent.value?.id)) {
-                        if (playList.type != viewModel.playListCurrent.value?.type || viewModel.playListCurrent.value?.id != playList.id) {
-                            viewModel.playListCurrent.value = playList
-                            viewModel.musicQueue.clear()
-                            // TODO need re-design, should use event EVENT_changePlayQueue
-                            // avoid can't switch current play lyrics
-                            viewModel.currentPlayQueueIndex.intValue=-1
-                            viewModel.musicQueue.addAll(musicList)
-                        }
+                    val bundle = Bundle()
+                    if (playList.type != PlayListType.Queue
+                        && !(playList.type == viewModel.playListCurrent.value?.type
+                                && playList.id == viewModel.playListCurrent.value?.id)
+                    ) {
+                        viewModel.playListCurrent.value = playList
+                        viewModel.musicQueue.clear()
+                        viewModel.currentPlayQueueIndex.intValue = -1
+                        viewModel.musicQueue.addAll(musicList)
+                        bundle.putBoolean("switch_queue",true)
+                    }else{
+                        bundle.putBoolean("switch_queue",false)
                     }
                     if (viewModel.playListCurrent.value == null) {
                         viewModel.playListCurrent.value = playList
                         viewModel.currentMusicCover.value = null
                         viewModel.currentPlay.value = music
                     }
-                    val bundle = Bundle()
                     bundle.putParcelable("musicItem", music)
                     bundle.putParcelable("playList", playList)
                     bundle.putParcelableArrayList("musicItems", ArrayList(musicList))
@@ -600,7 +604,8 @@ fun OperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = stringResource(id = R.string.artist,music.artist), modifier = Modifier.padding(start = 10.dp),
+                                text = stringResource(id = R.string.artist, music.artist),
+                                modifier = Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -623,7 +628,8 @@ fun OperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = stringResource(id = R.string.album,music.album), modifier = Modifier.padding(start = 10.dp),
+                                text = stringResource(id = R.string.album, music.album),
+                                modifier = Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -690,7 +696,10 @@ fun OperateDialog(
                             .padding(8.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
             }

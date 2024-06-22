@@ -14,6 +14,7 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.widget.Toast
+import androidx.annotation.IntDef
 import androidx.core.net.toUri
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.AudioAttributes
@@ -100,15 +101,13 @@ const val ACTION_TRACKS_UPDATE = "ACTION_TRACKS_UPDATE"
 const val ACTION_GET_TRACK_BY_ID = "ACTION_GET_TRACK_BY_ID"
 const val ACTION_CLEAR_QUEUE = "ACTION_CLEAR_QUEUE"
 
-const val EVENT_changePlayQueue = 1
 const val EVENT_MEDIA_ITEM_Change = 3
-const val EVENT_MEDIA_METADATA_Change = 4
 const val EVENT_SLEEP_TIME_Change = 5
 const val EVENT_DATA_READY = 6
 const val ACTION_GET_ALBUM_BY_ID = "GET_ARTIST_FROM_ALBUM"
 const val MY_MEDIA_ROOT_ID = "MY_MEDIA_ROOT_ID"
 
-@Suppress("deprecation")
+//@Suppress("deprecation")
 @UnstableApi
 class PlayService : MediaBrowserServiceCompat() {
 
@@ -150,7 +149,6 @@ class PlayService : MediaBrowserServiceCompat() {
 
     var sleepTime = 0L
 
-
     private var mediaController: MediaControllerCompat? = null
     private val mainTab = ArrayList<MainTab>(7)
     private lateinit var db: MusicDatabase
@@ -180,10 +178,6 @@ class PlayService : MediaBrowserServiceCompat() {
                             PlaybackStateCompat.ACTION_SKIP_TO_NEXT
 
                 )
-            setFlags( // 线控
-                MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or  // 回调
-                        MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
-            )
             setPlaybackState(stateBuilder.build())
             setSessionToken(sessionToken)
             setSessionActivity(pendingContentIntent)
@@ -207,17 +201,14 @@ class PlayService : MediaBrowserServiceCompat() {
 
             setCallback(object : MediaSessionCompat.Callback() {
                 override fun onPlay() {
-                    // Start playback
                     pauseOrPlayMusic()
                 }
 
                 override fun onPause() {
-                    // Pause playback
                     pauseOrPlayMusic()
                 }
 
                 override fun onStop() {
-                    // Stop playback
 //                    exoPlayer.stop()
                     notify?.stop(this@PlayService)
                 } // Implement other media control callbacks as needed
@@ -252,12 +243,6 @@ class PlayService : MediaBrowserServiceCompat() {
                         db.AuxDao().update(auxr)
                     }
                     exoPlayer.playbackParameters = param1
-                    /**
-                     *   isPlaying: Boolean,
-                     *         playSpeed: Float = 1f,
-                     *         position: Long = 0L,
-                     *         duration: Long = 0L
-                     */
                     notify?.updateNotification(
                         this@PlayService,
                         currentPlayTrack?.name ?: "",
@@ -275,38 +260,15 @@ class PlayService : MediaBrowserServiceCompat() {
 
                     when (repeatMode) {
                         PlaybackStateCompat.REPEAT_MODE_NONE -> {
-                            exoPlayer.repeatMode = Player.REPEAT_MODE_OFF
-                            CoroutineScope(Dispatchers.IO).launch {
-                                val config = db.PlayConfigDao().findConfig()
-                                if (config != null) {
-                                    config.repeatModel = Player.REPEAT_MODE_OFF
-                                    db.PlayConfigDao().update(config)
-                                }
-                            }
+                            switchRepeatModel(Player.REPEAT_MODE_OFF)
                         }
 
                         PlaybackStateCompat.REPEAT_MODE_ALL -> {
-                            exoPlayer.repeatMode = Player.REPEAT_MODE_ALL
-                            CoroutineScope(Dispatchers.IO).launch {
-                                val config = db.PlayConfigDao().findConfig()
-                                if (config != null) {
-                                    config.repeatModel = Player.REPEAT_MODE_ALL
-                                    db.PlayConfigDao().update(config)
-                                }
-                            }
+                            switchRepeatModel(Player.REPEAT_MODE_ALL)
                         }
 
                         PlaybackStateCompat.REPEAT_MODE_ONE -> {
-                            exoPlayer.repeatMode = Player.REPEAT_MODE_ONE
-                            CoroutineScope(Dispatchers.IO).launch {
-                                val config = db.PlayConfigDao().findConfig()
-                                if (config != null) {
-                                    config.repeatModel = Player.REPEAT_MODE_ONE
-                                    db.PlayConfigDao().update(config)
-                                }
-                            }
-
-
+                            switchRepeatModel(Player.REPEAT_MODE_ONE)
                         }
 
                         PlaybackStateCompat.REPEAT_MODE_GROUP -> {
@@ -319,6 +281,7 @@ class PlayService : MediaBrowserServiceCompat() {
             })
         }
     }
+
 
     override fun onCustomAction(action: String, extras: Bundle?, result: Result<Bundle>) {
         if (PlayListType.PlayLists.name == action) {
@@ -420,18 +383,17 @@ class PlayService : MediaBrowserServiceCompat() {
                     notify = CreateNotification(this@PlayService, mediaSession)
                 }
                 val musicItem = extras.getParcelable<MusicItem>("musicItem")
-                val playList = extras.getParcelable<AnyListBase>("playList")
-                val musicItems = extras.getParcelableArrayList<MusicItem>("musicItems")
+                val switchQueue = extras.getBoolean("switch_queue", false)
                 val index = extras.getInt("index")
-                if (musicItem != null && playList != null) {
-                    if (playList.type == PlayListType.Queue
-                        || (playList.type == playListCurrent?.type && playList.id == playListCurrent?.id
-                                && musicQueue.size == musicItems?.size&&musicQueue.size>index&&
-                                musicQueue[index].id == musicItems[index].id)
-                    ) {
-                        playMusicCurrentQueue(musicItem, index)
+                if (musicItem != null) {
+                    if (switchQueue) {
+                        val playList = extras.getParcelable<AnyListBase>("playList")
+                        val musicItems = extras.getParcelableArrayList<MusicItem>("musicItems")
+                        if (playList != null && musicItems != null) {
+                            playMusicSwitchQueue(playList, index, musicItems)
+                        }
                     } else {
-                        playMusicSwitchQueue(musicItem, playList, index, musicItems)
+                        playMusicCurrentQueue(musicItem, index)
                     }
                 }
             }
@@ -777,17 +739,10 @@ class PlayService : MediaBrowserServiceCompat() {
                     }
                     if (musicQueue.isNotEmpty()) {
                         val currentIndex = exoPlayer.currentMediaItemIndex
-                        val bundle = Bundle()
-                        bundle.putInt("type", EVENT_changePlayQueue)
-                        bundle.putInt("index", currentIndex)
-                        bundle.putParcelable("musicItem", musicQueue[currentIndex])
-                        bundle.putParcelableArrayList("queue", musicQueue)
-                        // TODO
-                        mediaSession?.setExtras(bundle)
                         CoroutineScope(Dispatchers.IO).launch {
                             saveSelectMusicId(musicQueue[currentIndex].id)
                         }
-                        result.sendResult(bundle)
+                        result.sendResult(null)
                         return
                     }
                 }
@@ -1318,17 +1273,16 @@ class PlayService : MediaBrowserServiceCompat() {
     }
 
     override fun onDestroy() {
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopTimer()
-        saveCurrentDuration(exoPlayer.currentPosition)
-        notify?.cancelNotification()
-        mediaSession?.release()
-
-        // I don't know why sometimes exoPlayer is null,
-        // Maybe , it's because system is no enough memory
-        // I found when i click stop button on android studio, `exoPlayer` is null
-        exoPlayer.stop()
-        exoPlayer.release()
+        try {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopTimer()
+            saveCurrentDuration(exoPlayer.currentPosition)
+            notify?.cancelNotification()
+            mediaSession?.release()
+            exoPlayer.stop()
+            exoPlayer.release()
+        } catch (_: Exception) {
+        }
         super.onDestroy()
     }
 
@@ -1345,6 +1299,7 @@ class PlayService : MediaBrowserServiceCompat() {
                 }
             } else {
                 saveSelectMusicId(musicQueue[index].id)
+                saveCurrentDuration(0L)
                 exoPlayer.seekToDefaultPosition(index)
                 exoPlayer.playWhenReady = true
                 exoPlayer.prepare()
@@ -1353,82 +1308,28 @@ class PlayService : MediaBrowserServiceCompat() {
     }
 
     private fun playMusicSwitchQueue(
-        musicItem: MusicItem, playList: AnyListBase, index: Int, musicItems: ArrayList<MusicItem>?
+        playList: AnyListBase, index: Int, musicItems: ArrayList<MusicItem>
     ) {
         CoroutineScope(Job() + Dispatchers.Main).launch {
             playListCurrent = playList
-            CoroutineScope(Dispatchers.IO).launch {
-                var c = db.CurrentListDao().findCurrentList()
-                if (c == null) {
-                    c = CurrentList(null, playList.id, playList.type.name)
-                    db.CurrentListDao().insert(c)
-                } else {
-                    c.listID = playList.id
-                    c.type = playList.type.name
-                    db.CurrentListDao().update(c)
-                }
-            }
             musicQueue.clear()
-            when (playList.type) {
-                PlayListType.Songs -> {
-                    musicQueue.addAll(tracksLinkedHashMap.values)
-                }
-
-                PlayListType.PlayLists -> {
-                    musicQueue.addAll(
-                        playListTracksHashMap[playListCurrent?.id ?: -1] ?: ArrayList()
-                    )
-                }
-
-                PlayListType.Albums -> {
-                    musicQueue.addAll(
-                        albumsListTracksHashMap[playListCurrent?.id ?: -1] ?: ArrayList()
-                    )
-                }
-
-                PlayListType.Artists -> {
-                    musicQueue.addAll(
-                        artistsListTracksHashMap[playListCurrent?.id ?: -1] ?: ArrayList()
-                    )
-                }
-
-                PlayListType.Genres -> {
-                    musicQueue.addAll(
-                        genresListTracksHashMap[playListCurrent?.id ?: -1] ?: ArrayList()
-                    )
-                }
-
-                PlayListType.Folders -> {
-                    musicQueue.addAll(
-                        foldersListTracksHashMap[playListCurrent?.id ?: -1]?.values ?: ArrayList()
-                    )
-                }
-
-                PlayListType.Queue -> {
-
-                }
-
-                else -> {
-                    if (musicItems != null) {
-                        musicQueue.addAll(musicItems)
-                    } else {
-                        return@launch
-                    }
-                }
-            }
+            musicQueue.addAll(musicItems)
             if (musicQueue.isNotEmpty()) {
                 val t1 = ArrayList<MediaItem>()
-                val bundle = Bundle()
-                bundle.putInt("type", EVENT_changePlayQueue)
-                bundle.putInt("index", index)
-                bundle.putParcelable("musicItem", musicItem)
-                bundle.putParcelableArrayList("queue", musicQueue)
-                mediaSession?.setExtras(bundle)
                 musicQueue.forEach {
                     t1.add(MediaItem.fromUri(File(it.path).toUri()))
                 }
                 exoPlayer.setMediaItems(t1)
                 CoroutineScope(Dispatchers.IO).launch {
+                    var currentList = db.CurrentListDao().findCurrentList()
+                    if (currentList == null) {
+                        currentList = CurrentList(null, playList.id, playList.type.name)
+                        db.CurrentListDao().insert(currentList)
+                    } else {
+                        currentList.listID = playList.id
+                        currentList.type = playList.type.name
+                        db.CurrentListDao().update(currentList)
+                    }
                     db.QueueDao().deleteAllQueue()
                     db.QueueDao().insertAll(musicQueue)
                     saveSelectMusicId(musicQueue[index].id)
@@ -1436,12 +1337,7 @@ class PlayService : MediaBrowserServiceCompat() {
                 exoPlayer.seekToDefaultPosition(index)
                 exoPlayer.playWhenReady = true
                 exoPlayer.prepare()
-                val pbState = mediaController?.playbackState?.state
-                if (pbState == PlaybackStateCompat.STATE_PLAYING) {
-                    mediaController?.transportControls?.pause()
-                } else {
-                    mediaController?.transportControls?.play()
-                }
+                mediaController?.transportControls?.play()
             }
         }
     }
@@ -1527,9 +1423,6 @@ class PlayService : MediaBrowserServiceCompat() {
     }
 
     private fun pauseOrPlayMusic() {
-//        if (notify == null) {
-//            notify = CreateNotification(this@PlayService, mediaSession)
-//        }
         if (exoPlayer.isPlaying) {
             exoPlayer.pause()
         } else if (exoPlayer.mediaItemCount > 0) {
@@ -1645,11 +1538,6 @@ class PlayService : MediaBrowserServiceCompat() {
                     val bit = BitmapFactory.decodeByteArray(bitArray, 0, bitArray.size)
                     metadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, bit)
                 }
-                val bundle = Bundle()
-                bundle.putInt("type", EVENT_MEDIA_METADATA_Change)
-                bundle.putByteArray("cover", exoPlayer.mediaMetadata.artworkData)
-                mediaSession?.setExtras(bundle)
-                mediaSession?.setMetadata(metadataBuilder.build())
             }
         })
     }
@@ -1721,4 +1609,16 @@ class PlayService : MediaBrowserServiceCompat() {
             Context.MODE_PRIVATE
         ).getLong("CurrentPosition", 0)
     }
+
+    fun switchRepeatModel(repeatModel: Int) {
+        exoPlayer.repeatMode = repeatModel
+        CoroutineScope(Dispatchers.IO).launch {
+            val config = db.PlayConfigDao().findConfig()
+            if (config != null) {
+                config.repeatModel = repeatModel
+                db.PlayConfigDao().update(config)
+            }
+        }
+    }
+
 }

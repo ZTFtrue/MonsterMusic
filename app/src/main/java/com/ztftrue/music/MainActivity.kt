@@ -47,9 +47,7 @@ import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.play.ACTION_TRACKS_UPDATE
 import com.ztftrue.music.play.EVENT_MEDIA_ITEM_Change
-import com.ztftrue.music.play.EVENT_MEDIA_METADATA_Change
 import com.ztftrue.music.play.EVENT_SLEEP_TIME_Change
-import com.ztftrue.music.play.EVENT_changePlayQueue
 import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
@@ -452,6 +450,7 @@ class MainActivity : ComponentActivity() {
         musicViewModel.reset()
         super.onDestroy()
     }
+
     private val lock = ReentrantLock()
     fun getSeek() {
         lock.lock()
@@ -488,10 +487,7 @@ class MainActivity : ComponentActivity() {
         override fun onExtrasChanged(extras: Bundle?) {
             super.onExtrasChanged(extras)
             extras?.let {
-                if (it.getInt("type") == EVENT_changePlayQueue) {
-//                    val playList = it.getParcelable<MusicPlayList>("playList")
-//                    musicViewModel.musicQueue.value = musicViewModel.musicListMap[playList?.id]
-                } else if (it.getInt("type") == EVENT_MEDIA_ITEM_Change) {
+                if (it.getInt("type") == EVENT_MEDIA_ITEM_Change) {
                     // before switch to another music, must clear lyrics
                     val index = it.getInt("index")
                     if (index >= 0 && musicViewModel.musicQueue.size > index && index != musicViewModel.currentPlayQueueIndex.intValue) {
@@ -508,13 +504,6 @@ class MainActivity : ComponentActivity() {
                             musicViewModel.musicQueue[index]
                         )
                     }
-                } else if (it.getInt("type") == EVENT_MEDIA_METADATA_Change) {
-                    val cover = it.getByteArray("cover")
-                    if (cover != null)
-                        musicViewModel.currentMusicCover.value = BitmapFactory.decodeByteArray(
-                            cover, 0,
-                            cover.size
-                        )
                 } else if (it.getInt("type") == EVENT_SLEEP_TIME_Change) {
                     val remainTime = it.getLong("remaining")
                     musicViewModel.remainTime.longValue = remainTime
