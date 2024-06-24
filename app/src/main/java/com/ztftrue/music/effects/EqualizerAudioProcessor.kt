@@ -3,7 +3,6 @@ package com.ztftrue.music.effects
 import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import be.tarsos.dsp.io.TarsosDSPAudioFloatConverter
 import be.tarsos.dsp.io.TarsosDSPAudioFormat
@@ -152,9 +151,6 @@ class EqualizerAudioProcessor : AudioProcessor {
         audioData.forEach { value ->
             maxVal = max(abs(value), maxVal)
         }
-        if (maxVal > 1) {
-            Log.d("TAG-MAX", maxVal.toString())
-        }
         return maxVal
     }
 
@@ -279,7 +275,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         } else {
             dataBuffer.flip()
             val processedBuffer = ByteBuffer.allocate(dataBuffer.limit())
-            val a = dataBuffer.array();
+            val a = dataBuffer.array()
 //            a.forEachIndexed{i,t->
 //                a[i]= ((t)*0.6).toInt().toByte()
 //            }
@@ -313,7 +309,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     fun setBand(index: Int, value: Int) {
         lock.lock()
         if (outputAudioFormat != null) {
-            changeDb = true;
+            changeDb = true
             gainDBAbsArray[index] = FastMath.pow(10.0, (value.toDouble() / 40))
             gainDBArray[index] = value
             if (outputAudioFormat!!.sampleRate.toDouble() > 0) {

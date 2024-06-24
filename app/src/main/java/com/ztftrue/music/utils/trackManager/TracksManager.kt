@@ -8,7 +8,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Process
 import android.provider.MediaStore
-import android.util.Log
 import androidx.activity.result.IntentSenderRequest
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.util.UnstableApi
@@ -151,18 +150,10 @@ object TracksManager {
         cursor?.close()
         if (result == null) return
         val bundle = Bundle()
-        val a = System.currentTimeMillis()
-
         if (needTrack) {
-            val b = System.currentTimeMillis()
-            Log.d("TAG1", (b - a).toString())
             bundle.putParcelableArrayList("list", ArrayList(tracksHashMap.values))
-
         } else {
-            val c = System.currentTimeMillis()
-            Log.d("TAG2", (c - a).toString())
             bundle.putParcelableArrayList("list", ArrayList(list.values))
-
         }
 
         result.sendResult(bundle)
