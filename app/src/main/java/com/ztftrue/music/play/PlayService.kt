@@ -644,35 +644,13 @@ class PlayService : MediaBrowserServiceCompat() {
         } else if (ACTION_AddPlayQueue == action) {
             if (extras != null) {
                 val musicItem = extras.getParcelable<MusicItem>("musicItem")
-                val musicItems = extras.getParcelableArrayList<MusicItem>("musicItems")
+                var musicItems = extras.getParcelableArrayList<MusicItem>("musicItems")
                 val index = extras.getInt("index", musicQueue.size)
-                if (musicItem != null) {
-                    musicItem.tableId = null
-                    playListCurrent = null
-                    CoroutineScope(Dispatchers.IO).launch {
-                        db.CurrentListDao().delete()
-                    }
-                    if (index == musicQueue.size) {
-                        musicQueue.add(musicItem)
-                        CoroutineScope(Dispatchers.IO).launch {
-                            db.QueueDao().insert(musicItem)
-                        }
-                    } else {
-                        musicQueue.add(index, musicItem)
-                        // TODO should remove in first get data
-                        musicQueue.forEach {
-                            it.tableId = null
-                        }
-                        CoroutineScope(Dispatchers.IO).launch {
-                            db.QueueDao().deleteAllQueue()
-                            db.QueueDao().insertAll(musicQueue)
-                        }
-                    }
-                    if (!exoPlayer.isPlaying) {
-                        exoPlayer.playWhenReady = false
-                    }
-                    exoPlayer.addMediaItem(index, MediaItem.fromUri(File(musicItem.path).toUri()))
-                } else if (musicItems != null) {
+                if (musicItems == null && musicItem != null) {
+                    musicItems = ArrayList<MusicItem>()
+                    musicItems.add(musicItem)
+                }
+                if (musicItems != null) {
                     val list = ArrayList<MediaItem>()
                     musicItems.forEach {
                         list.add(MediaItem.fromUri(File(it.path).toUri()))
@@ -688,7 +666,6 @@ class PlayService : MediaBrowserServiceCompat() {
                         }
                     } else {
                         musicQueue.addAll(index, musicItems)
-                        // TODO should remove in first get data
                         musicQueue.forEach {
                             it.tableId = null
                         }
@@ -750,7 +727,6 @@ class PlayService : MediaBrowserServiceCompat() {
         } else if (ACTION_PlayLIST_CHANGE == action) {
             playListLinkedHashMap.clear()
             playListTracksHashMap.clear()
-            // TODO if some tracks is not music, that it can scan and add, even user add it in some playlist.
             PlaylistManager.getPlaylists(
                 this@PlayService,
                 playListLinkedHashMap,
@@ -1016,7 +992,6 @@ class PlayService : MediaBrowserServiceCompat() {
                             async {
                                 val queue = db.QueueDao().findQueue()
                                 musicQueue.clear()
-                                // TODO need re-design
                                 if (!queue.isNullOrEmpty()) {
                                     val idCurrent = getCurrentPlayId()
                                     var id = -1L
