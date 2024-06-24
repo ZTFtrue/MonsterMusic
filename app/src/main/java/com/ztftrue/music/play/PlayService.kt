@@ -14,7 +14,6 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.widget.Toast
-import androidx.annotation.IntDef
 import androidx.core.net.toUri
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.AudioAttributes
@@ -1019,13 +1018,15 @@ class PlayService : MediaBrowserServiceCompat() {
                                 musicQueue.clear()
                                 // TODO need re-design
                                 if (!queue.isNullOrEmpty()) {
-                                    val idGot = getCurrentPlayId()
+                                    val idCurrent = getCurrentPlayId()
                                     var id = -1L
                                     queue.forEach {
+                                        // check has this tracks, avoid user remove it in storage
                                         if (tracksLinkedHashMap[it.id] != null) {
                                             musicQueue.add(it)
-                                            if (it.id == idGot) {
-                                                id = idGot
+                                            if (it.id == idCurrent) {
+                                                currentPlayTrack = tracksLinkedHashMap[it.id]
+                                                id = idCurrent
                                             }
                                         }
                                     }
@@ -1037,14 +1038,6 @@ class PlayService : MediaBrowserServiceCompat() {
                                                     plaC.listID,
                                                     enumValueOf(plaC.type)
                                                 )
-                                        }
-                                        for (it in foldersListTracksHashMap.entries) {
-                                            if (it.value.isNotEmpty()) {
-                                                currentPlayTrack = it.value[id]
-                                                if (currentPlayTrack != null) {
-                                                    break
-                                                }
-                                            }
                                         }
                                         if (currentPlayTrack == null) {
                                             playListCurrent = null
