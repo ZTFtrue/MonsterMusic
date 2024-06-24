@@ -38,15 +38,6 @@ class CreateNotification(service: Service, private val mediaSession: MediaSessio
             .setContentIntent(pendingContentIntent)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         service.startForeground(NOTIFICATION_ID, builder.build())
-//        if (ActivityCompat.checkSelfPermission(
-//                service,
-//                Manifest.permission.POST_NOTIFICATIONS
-//            ) == PackageManager.PERMISSION_GRANTED
-//        ) {
-//            with(NotificationManagerCompat.from(service)) {
-//                notify(NOTIFICATION_ID, builder.build())
-//            }
-//        }
     }
 
 
@@ -96,10 +87,6 @@ class CreateNotification(service: Service, private val mediaSession: MediaSessio
                 )
                 .build()
         )
-//        mediaSession?.setFlags(
-//            MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
-//                    MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
-//        )
         val builder = NotificationCompat.Builder(service, CHANNEL_ID)
             .setStyle(
                 androidx.media.app.NotificationCompat.MediaStyle()
@@ -163,21 +150,7 @@ class CreateNotification(service: Service, private val mediaSession: MediaSessio
                 PlaybackStateCompat.ACTION_STOP
             )
         )
-//        if (exoPlayer.isPlaying) {
         service.startForeground(NOTIFICATION_ID, builder.build())
-//        } else {
-        // Waring: don't use this it make your app crash,unless you confirm you app need stop
-//            service.stopForeground(STOP_FOREGROUND_DETACH)
-//        }
-//        if (ActivityCompat.checkSelfPermission(
-//                service,
-//                Manifest.permission.POST_NOTIFICATIONS
-//            ) == PackageManager.PERMISSION_GRANTED
-//        ) {
-//            with(NotificationManagerCompat.from(service)) {
-//                notify(NOTIFICATION_ID, builder.build())
-//            }
-//        }
     }
 
     private fun createNotificationChannel(context: Context) {

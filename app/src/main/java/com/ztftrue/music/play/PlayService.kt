@@ -13,6 +13,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.media.MediaBrowserServiceCompat
@@ -133,10 +134,8 @@ class PlayService : MediaBrowserServiceCompat() {
     private val foldersListTracksHashMap =
         java.util.HashMap<Long, java.util.LinkedHashMap<Long, MusicItem>>()
 
-
     private val tracksLinkedHashMap: LinkedHashMap<Long, MusicItem> = LinkedHashMap()
 
-    // album message
     private val albumsLinkedHashMap: LinkedHashMap<Long, AlbumList> = LinkedHashMap()
     private val playListLinkedHashMap: LinkedHashMap<Long, MusicPlayList> = LinkedHashMap()
     private val artistsLinkedHashMap: LinkedHashMap<Long, ArtistList> = LinkedHashMap()
@@ -504,226 +503,11 @@ class PlayService : MediaBrowserServiceCompat() {
                 timeSet(extras, result)
             }
         } else if (ACTION_GET_TRACKS == action) {
-            val bundle = Bundle()
-            if (extras != null) {
-                val type = stringToEnumForPlayListType(
-                    extras.getString(
-                        "type",
-                        PlayListType.PlayLists.name
-                    )
-                )
-                val id = extras.getLong("id")
-                when (type) {
-                    PlayListType.PlayLists -> {
-                        if (playListTracksHashMap[id] != null) {
-                            bundle.putParcelableArrayList("list", playListTracksHashMap[id])
-                            bundle.putParcelable("message", playListLinkedHashMap[id])
-                        } else {
-                            result.detach()
-                            val tracksUri = MediaStore.Audio.Playlists.Members.getContentUri(
-                                "external", id
-                            )
-                            val tracks =
-                                PlaylistManager.getTracksByPlayListId(
-                                    this@PlayService,
-                                    tracksUri,
-                                    tracksLinkedHashMap
-                                )
-                            playListTracksHashMap[id] = tracks
-                            bundle.putParcelableArrayList("list", playListTracksHashMap[id])
-                            bundle.putParcelable("message", playListLinkedHashMap[id])
-                            result.sendResult(bundle)
-                            return
-                        }
-
-
-                    }
-
-                    PlayListType.Albums -> {
-                        if (albumsListTracksHashMap[id] != null) {
-                            bundle.putParcelableArrayList("list", albumsListTracksHashMap[id])
-                            bundle.putParcelable("message", albumsLinkedHashMap[id])
-                        } else {
-                            result.detach()
-                            val trackUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                            val listT: ArrayList<MusicItem> = TracksManager.getTracksById(
-                                this@PlayService,
-                                trackUri,
-                                tracksLinkedHashMap,
-                                MediaStore.Audio.Media.ALBUM_ID + "=?",
-                                arrayOf(id.toString()),
-                                null
-                            )
-                            albumsListTracksHashMap[id] = listT
-                            bundle.putParcelableArrayList("list", albumsListTracksHashMap[id])
-                            bundle.putParcelable("message", albumsLinkedHashMap[id])
-                            result.sendResult(bundle)
-                            return
-                        }
-                    }
-
-                    PlayListType.Artists -> {
-                        if (artistHasAlbumMap[id] != null && artistsListTracksHashMap[id] != null) {
-                            bundle.putParcelableArrayList("list", artistsListTracksHashMap[id])
-                            bundle.putParcelableArrayList("albums", artistHasAlbumMap[id])
-                            bundle.putParcelable("message", artistsLinkedHashMap[id])
-                        } else {
-                            result.detach()
-                            val trackUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                            val albumsList = AlbumManager.getAlbumsByArtist(
-                                this@PlayService,
-                                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                                albumsLinkedHashMap,
-                                MediaStore.Audio.Media.ARTIST_ID + "=?",
-                                arrayOf(id.toString()),
-                                null
-                            )
-                            artistHasAlbumMap[id] = albumsList
-                            val listT: ArrayList<MusicItem> = TracksManager.getTracksById(
-                                this@PlayService,
-                                trackUri,
-                                tracksLinkedHashMap,
-                                MediaStore.Audio.Media.ARTIST_ID + "=?",
-                                arrayOf(id.toString()),
-                                null
-                            )
-                            artistsListTracksHashMap[id] = listT
-                            bundle.putParcelableArrayList("list", artistsListTracksHashMap[id])
-                            bundle.putParcelableArrayList("albums", artistHasAlbumMap[id])
-                            bundle.putParcelable("message", artistsLinkedHashMap[id])
-                            result.sendResult(bundle)
-                            return
-                        }
-                    }
-
-                    PlayListType.Genres -> {
-                        if (genreHasAlbumMap[id] != null && genresListTracksHashMap[id] != null) {
-                            bundle.putParcelableArrayList("list", genresListTracksHashMap[id])
-                            bundle.putParcelableArrayList("albums", genreHasAlbumMap[id])
-                            bundle.putParcelable("message", genresLinkedHashMap[id])
-                        } else {
-                            result.detach()
-                            val uri =
-                                MediaStore.Audio.Genres.Members.getContentUri("external", id)
-                            val albums = AlbumManager.getAlbumsByGenre(
-                                this@PlayService,
-                                uri,
-                                albumsLinkedHashMap,
-                                null,
-                                null,
-                                null
-                            )
-                            genreHasAlbumMap[id] = albums
-                            bundle.putParcelableArrayList("list", genresListTracksHashMap[id])
-                            bundle.putParcelableArrayList("albums", genreHasAlbumMap[id])
-                            bundle.putParcelable("message", genresLinkedHashMap[id])
-                            result.sendResult(bundle)
-                            return
-                        }
-                    }
-
-                    PlayListType.Folders -> {
-                        bundle.putParcelableArrayList("list",
-                            foldersListTracksHashMap[id]?.values?.let { ArrayList(it) })
-                        bundle.putParcelable("message", foldersLinkedHashMap[id])
-                    }
-
-                    PlayListType.Songs -> {
-                        bundle.putParcelableArrayList(
-                            "list",
-                            ArrayList(tracksLinkedHashMap.values)
-                        )
-                    }
-
-                    else -> {
-                        bundle.putParcelableArrayList("list", musicQueue)
-                    }
-                }
-            }
-            result.sendResult(bundle)
+            getTracksByType(extras, result)
         } else if (ACTION_AddPlayQueue == action) {
-            if (extras != null) {
-                val musicItem = extras.getParcelable<MusicItem>("musicItem")
-                var musicItems = extras.getParcelableArrayList<MusicItem>("musicItems")
-                val index = extras.getInt("index", musicQueue.size)
-                if (musicItems == null && musicItem != null) {
-                    musicItems = ArrayList<MusicItem>()
-                    musicItems.add(musicItem)
-                }
-                if (musicItems != null) {
-                    val list = ArrayList<MediaItem>()
-                    musicItems.forEach {
-                        list.add(MediaItem.fromUri(File(it.path).toUri()))
-                    }
-                    playListCurrent = null
-                    CoroutineScope(Dispatchers.IO).launch {
-                        db.CurrentListDao().delete()
-                    }
-                    if (index == musicQueue.size) {
-                        musicQueue.addAll(musicItems)
-                        CoroutineScope(Dispatchers.IO).launch {
-                            db.QueueDao().insertAll(musicItems)
-                        }
-                    } else {
-                        musicQueue.addAll(index, musicItems)
-                        musicQueue.forEach {
-                            it.tableId = null
-                        }
-                        CoroutineScope(Dispatchers.IO).launch {
-                            db.QueueDao().deleteAllQueue()
-                            db.QueueDao().insertAll(musicQueue)
-                        }
-                    }
-                    if (!exoPlayer.isPlaying) {
-                        exoPlayer.playWhenReady = false
-                    }
-                    exoPlayer.addMediaItems(index, list)
-                }
-            }
-            result.sendResult(null)
+            addPlayQueue(extras, result)
         } else if (ACTION_RemoveFromQueue == action) {
-            if (extras != null) {
-                val index = extras.getInt("index")
-                if (index < musicQueue.size) {
-                    exoPlayer.removeMediaItem(index)
-                    musicQueue.removeAt(index)
-                    musicQueue.forEach {
-                        it.tableId = null
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        db.QueueDao().deleteAllQueue()
-                        if (musicQueue.isNotEmpty())
-                            db.QueueDao().insertAll(musicQueue)
-                    }
-                    playListCurrent = if (playListCurrent?.type == PlayListType.None) {
-                        // Search page id = id-1, avoid new's id equal this
-                        AnyListBase(playListCurrent!!.id + 1, PlayListType.None)
-                    } else {
-                        // Search page default id is -1
-                        AnyListBase(3, PlayListType.None)
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        var c = db.CurrentListDao().findCurrentList()
-                        if (c == null) {
-                            c = CurrentList(null, playListCurrent?.id ?: -1, PlayListType.None.name)
-                            db.CurrentListDao().insert(c)
-                        } else {
-                            c.listID = playListCurrent?.id ?: -1
-                            c.type = PlayListType.None.name
-                            db.CurrentListDao().update(c)
-                        }
-                    }
-                    if (musicQueue.isNotEmpty()) {
-                        val currentIndex = exoPlayer.currentMediaItemIndex
-                        CoroutineScope(Dispatchers.IO).launch {
-                            saveSelectMusicId(musicQueue[currentIndex].id)
-                        }
-                        result.sendResult(null)
-                        return
-                    }
-                }
-            }
-            result.sendResult(null)
+            removePlayQueue(extras, result)
         } else if (ACTION_PlayLIST_CHANGE == action) {
             playListLinkedHashMap.clear()
             playListTracksHashMap.clear()
@@ -736,44 +520,7 @@ class PlayService : MediaBrowserServiceCompat() {
             )
             result.sendResult(null)
         } else if (ACTION_SEARCH == action) {
-            if (extras != null) {
-                val keywords = extras.getString("keyword") ?: ""
-                if (keywords.isEmpty() || keywords.length <= 1) {
-                    result.sendResult(null)
-                    return
-                }
-                result.detach()
-                CoroutineScope(Dispatchers.IO).launch {
-                    var tracksList = ArrayList<MusicItem>()
-                    var albumsList = ArrayList<AlbumList>()
-                    var artistList = ArrayList<ArtistList>()
-                    runBlocking {
-                        awaitAll(
-                            async {
-                                tracksList = TracksManager.searchTracks(
-                                    this@PlayService,
-                                    tracksLinkedHashMap,
-                                    keywords
-                                )
-                            },
-                            async {
-                                albumsList = AlbumManager.getAlbumByName(this@PlayService, keywords)
-                            },
-                            async {
-                                artistList =
-                                    ArtistManager.getArtistByName(this@PlayService, keywords)
-                            }
-                        )
-                    }
-                    val bundle = Bundle()
-                    bundle.putParcelableArrayList("tracks", tracksList)
-                    bundle.putParcelableArrayList("albums", albumsList)
-                    bundle.putParcelableArrayList("artist", artistList)
-                    result.sendResult(bundle)
-                }
-            } else {
-                result.sendResult(null)
-            }
+            search(extras, result)
         } else if (ACTION_GET_ALBUM_BY_ID == action) {
             if (extras != null) {
                 val albumId = extras.getLong("albumId")
@@ -789,18 +536,7 @@ class PlayService : MediaBrowserServiceCompat() {
             if (extras != null) {
                 val id = extras.getLong("id")
                 tracksLinkedHashMap.remove(id)
-                albumsListTracksHashMap.clear()
-                artistsListTracksHashMap.clear()
-                genresListTracksHashMap.clear()
-                foldersListTracksHashMap.clear()
-                albumsLinkedHashMap.clear()
-                playListLinkedHashMap.clear()
-                artistsLinkedHashMap.clear()
-                genresLinkedHashMap.clear()
-                foldersLinkedHashMap.clear()
-                artistHasAlbumMap.clear()
-                genreHasAlbumMap.clear()
-                result.sendResult(null)
+                clearCacheData()
                 return
             }
             result.sendResult(null)
@@ -813,17 +549,7 @@ class PlayService : MediaBrowserServiceCompat() {
                 } else {
                     tracksLinkedHashMap.remove(id)
                 }
-                albumsListTracksHashMap.clear()
-                artistsListTracksHashMap.clear()
-                genresListTracksHashMap.clear()
-                foldersListTracksHashMap.clear()
-                albumsLinkedHashMap.clear()
-                playListLinkedHashMap.clear()
-                artistsLinkedHashMap.clear()
-                genresLinkedHashMap.clear()
-                foldersLinkedHashMap.clear()
-                artistHasAlbumMap.clear()
-                genreHasAlbumMap.clear()
+                clearCacheData()
                 result.sendResult(null)
                 return
             }
@@ -1210,19 +936,6 @@ class PlayService : MediaBrowserServiceCompat() {
     ) {
         if (parentId != MY_MEDIA_ROOT_ID) {
             val mediaItems: MutableList<MediaBrowserCompat.MediaItem> = mutableListOf()
-//            String mediaId, CharSequence title, CharSequence subtitle,
-//            CharSequence description, Bitmap icon, Uri iconUri, Bundle extras, Uri mediaUri
-//            var description = MediaDescriptionCompat()
-//            var a=  MediaBrowserCompat.MediaItem(description,MediaBrowserCompat.MediaItem.FLAG_PLAYABLE)
-            // Check if this is the root menu:
-//        if (MY_MEDIA_ROOT_ID == parentId) {// Check if this is the root menu:
-//            val t = musicListMap[DefaultPlayList.id]
-//            if (t != null) {
-//                t.forEach {
-//                    mediaItems.add(MediaBrowserCompat.MediaItem.fromMediaItem(it.mediaItem))
-//                }
-//            } else {
-//            }
             result.sendResult(mediaItems)
         }
     }
@@ -1384,10 +1097,11 @@ class PlayService : MediaBrowserServiceCompat() {
     }
 
     private fun playNext() {
-        saveCurrentDuration(0)
+
         if (exoPlayer.hasNextMediaItem()) {
             exoPlayer.seekToNextMediaItem()
         }
+        saveCurrentDuration(0)
     }
 
     private fun pauseOrPlayMusic() {
@@ -1462,28 +1176,23 @@ class PlayService : MediaBrowserServiceCompat() {
             ) {
                 super.onPositionDiscontinuity(oldPosition, newPosition, reason)
                 if (musicQueue.isEmpty()) return
-                currentPlayTrack =
-                    musicQueue[newPosition.mediaItemIndex]
                 updateNotify()
-                if (needPlayPause) {
-                    needPlayPause = false
-                    timeFinish()
+                if(oldPosition.mediaItemIndex!=newPosition.mediaItemIndex){
+                    saveSelectMusicId(
+                        musicQueue[newPosition.mediaItemIndex].id
+                    )
+                    currentPlayTrack =
+                        musicQueue[newPosition.mediaItemIndex]
+                    val bundle = Bundle()
+                    bundle.putParcelable("current", currentPlayTrack)
+                    bundle.putInt("type", EVENT_MEDIA_ITEM_Change)
+                    bundle.putInt("index", exoPlayer.currentMediaItemIndex)
+                    mediaSession?.setExtras(bundle)
+                    if (needPlayPause) {
+                        needPlayPause = false
+                        timeFinish()
+                    }
                 }
-//                when (reason) {
-//                    Player.DISCONTINUITY_REASON_SEEK -> {
-//                        // Handle seek
-//                    }
-//
-//                    Player.DISCONTINUITY_REASON_SEEK_ADJUSTMENT -> {
-//
-//                    }
-//
-//                    else -> {
-//                        // Handle other reasons
-//                    }
-//                }
-
-
             }
 
             override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
@@ -1538,14 +1247,6 @@ class PlayService : MediaBrowserServiceCompat() {
             val bit = BitmapFactory.decodeByteArray(bitArray, 0, bitArray.size)
             metadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, bit)
         }
-        val bundle = Bundle()
-        bundle.putInt("type", EVENT_MEDIA_ITEM_Change)
-        bundle.putParcelable("current", currentPlayTrack)
-        bundle.putInt("index", exoPlayer.currentMediaItemIndex)
-        saveSelectMusicId(
-            musicQueue[exoPlayer.currentMediaItemIndex].id
-        )
-        mediaSession?.setExtras(bundle)
         mediaSession?.setMetadata(metadataBuilder.build())
     }
 
@@ -1578,6 +1279,20 @@ class PlayService : MediaBrowserServiceCompat() {
         ).getLong("CurrentPosition", 0)
     }
 
+    private fun clearCacheData() {
+        albumsListTracksHashMap.clear()
+        artistsListTracksHashMap.clear()
+        genresListTracksHashMap.clear()
+        foldersListTracksHashMap.clear()
+        albumsLinkedHashMap.clear()
+        playListLinkedHashMap.clear()
+        artistsLinkedHashMap.clear()
+        genresLinkedHashMap.clear()
+        foldersLinkedHashMap.clear()
+        artistHasAlbumMap.clear()
+        genreHasAlbumMap.clear()
+    }
+
     fun switchRepeatModel(repeatModel: Int) {
         exoPlayer.repeatMode = repeatModel
         CoroutineScope(Dispatchers.IO).launch {
@@ -1589,4 +1304,271 @@ class PlayService : MediaBrowserServiceCompat() {
         }
     }
 
+    private fun search(extras: Bundle?, result: Result<Bundle>) {
+        if (extras != null) {
+            val keywords = extras.getString("keyword") ?: ""
+            if (keywords.isEmpty() || keywords.length <= 1) {
+                result.sendResult(null)
+                return
+            }
+            result.detach()
+            CoroutineScope(Dispatchers.IO).launch {
+                var tracksList = ArrayList<MusicItem>()
+                var albumsList = ArrayList<AlbumList>()
+                var artistList = ArrayList<ArtistList>()
+                runBlocking {
+                    awaitAll(
+                        async {
+                            tracksList = TracksManager.searchTracks(
+                                this@PlayService,
+                                tracksLinkedHashMap,
+                                keywords
+                            )
+                        },
+                        async {
+                            albumsList = AlbumManager.getAlbumByName(this@PlayService, keywords)
+                        },
+                        async {
+                            artistList =
+                                ArtistManager.getArtistByName(this@PlayService, keywords)
+                        }
+                    )
+                }
+                val bundle = Bundle()
+                bundle.putParcelableArrayList("tracks", tracksList)
+                bundle.putParcelableArrayList("albums", albumsList)
+                bundle.putParcelableArrayList("artist", artistList)
+                result.sendResult(bundle)
+            }
+        } else {
+            result.sendResult(null)
+        }
+    }
+
+    private fun addPlayQueue(extras: Bundle?, result: Result<Bundle>) {
+        if (extras != null) {
+            val musicItem = extras.getParcelable<MusicItem>("musicItem")
+            var musicItems = extras.getParcelableArrayList<MusicItem>("musicItems")
+            val index = extras.getInt("index", musicQueue.size)
+            if (musicItems == null && musicItem != null) {
+                musicItems = ArrayList<MusicItem>()
+                musicItems.add(musicItem)
+            }
+            if (musicItems != null) {
+                val list = ArrayList<MediaItem>()
+                musicItems.forEach {
+                    list.add(MediaItem.fromUri(File(it.path).toUri()))
+                }
+                playListCurrent = null
+                CoroutineScope(Dispatchers.IO).launch {
+                    db.CurrentListDao().delete()
+                }
+                if (index == musicQueue.size) {
+                    musicQueue.addAll(musicItems)
+                    CoroutineScope(Dispatchers.IO).launch {
+                        db.QueueDao().insertAll(musicItems)
+                    }
+                } else {
+                    musicQueue.addAll(index, musicItems)
+                    musicQueue.forEach {
+                        it.tableId = null
+                    }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        db.QueueDao().deleteAllQueue()
+                        db.QueueDao().insertAll(musicQueue)
+                    }
+                }
+                if (!exoPlayer.isPlaying) {
+                    exoPlayer.playWhenReady = false
+                }
+                exoPlayer.addMediaItems(index, list)
+            }
+        }
+        result.sendResult(null)
+    }
+
+    private fun removePlayQueue(extras: Bundle?, result: Result<Bundle>) {
+        if (extras != null) {
+            val index = extras.getInt("index")
+            if (index < musicQueue.size) {
+                exoPlayer.removeMediaItem(index)
+                musicQueue.removeAt(index)
+                musicQueue.forEach {
+                    it.tableId = null
+                }
+                CoroutineScope(Dispatchers.IO).launch {
+                    db.QueueDao().deleteAllQueue()
+                    if (musicQueue.isNotEmpty())
+                        db.QueueDao().insertAll(musicQueue)
+                }
+                playListCurrent = if (playListCurrent?.type == PlayListType.None) {
+                    // Search page id = id-1, avoid new's id equal this
+                    AnyListBase(playListCurrent!!.id + 1, PlayListType.None)
+                } else {
+                    // Search page default id is -1
+                    AnyListBase(3, PlayListType.None)
+                }
+                CoroutineScope(Dispatchers.IO).launch {
+                    var c = db.CurrentListDao().findCurrentList()
+                    if (c == null) {
+                        c = CurrentList(null, playListCurrent?.id ?: -1, PlayListType.None.name)
+                        db.CurrentListDao().insert(c)
+                    } else {
+                        c.listID = playListCurrent?.id ?: -1
+                        c.type = PlayListType.None.name
+                        db.CurrentListDao().update(c)
+                    }
+                }
+                if (musicQueue.isNotEmpty()) {
+                    val currentIndex = exoPlayer.currentMediaItemIndex
+                    CoroutineScope(Dispatchers.IO).launch {
+                        saveSelectMusicId(musicQueue[currentIndex].id)
+                    }
+                    result.sendResult(null)
+                    return
+                }
+            }
+        }
+        result.sendResult(null)
+    }
+
+    private fun getTracksByType(extras: Bundle?, result: Result<Bundle>) {
+        val bundle = Bundle()
+        if (extras != null) {
+            val type = stringToEnumForPlayListType(
+                extras.getString(
+                    "type",
+                    PlayListType.PlayLists.name
+                )
+            )
+            val id = extras.getLong("id")
+            when (type) {
+                PlayListType.PlayLists -> {
+                    if (playListTracksHashMap[id] != null) {
+                        bundle.putParcelableArrayList("list", playListTracksHashMap[id])
+                        bundle.putParcelable("message", playListLinkedHashMap[id])
+                    } else {
+                        result.detach()
+                        val tracksUri = MediaStore.Audio.Playlists.Members.getContentUri(
+                            "external", id
+                        )
+                        val tracks =
+                            PlaylistManager.getTracksByPlayListId(
+                                this@PlayService,
+                                tracksUri,
+                                tracksLinkedHashMap
+                            )
+                        playListTracksHashMap[id] = tracks
+                        bundle.putParcelableArrayList("list", playListTracksHashMap[id])
+                        bundle.putParcelable("message", playListLinkedHashMap[id])
+                        result.sendResult(bundle)
+                        return
+                    }
+
+
+                }
+
+                PlayListType.Albums -> {
+                    if (albumsListTracksHashMap[id] != null) {
+                        bundle.putParcelableArrayList("list", albumsListTracksHashMap[id])
+                        bundle.putParcelable("message", albumsLinkedHashMap[id])
+                    } else {
+                        result.detach()
+                        val trackUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                        val listT: ArrayList<MusicItem> = TracksManager.getTracksById(
+                            this@PlayService,
+                            trackUri,
+                            tracksLinkedHashMap,
+                            MediaStore.Audio.Media.ALBUM_ID + "=?",
+                            arrayOf(id.toString()),
+                            null
+                        )
+                        albumsListTracksHashMap[id] = listT
+                        bundle.putParcelableArrayList("list", albumsListTracksHashMap[id])
+                        bundle.putParcelable("message", albumsLinkedHashMap[id])
+                        result.sendResult(bundle)
+                        return
+                    }
+                }
+
+                PlayListType.Artists -> {
+                    if (artistHasAlbumMap[id] != null && artistsListTracksHashMap[id] != null) {
+                        bundle.putParcelableArrayList("list", artistsListTracksHashMap[id])
+                        bundle.putParcelableArrayList("albums", artistHasAlbumMap[id])
+                        bundle.putParcelable("message", artistsLinkedHashMap[id])
+                    } else {
+                        result.detach()
+                        val trackUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                        val albumsList = AlbumManager.getAlbumsByArtist(
+                            this@PlayService,
+                            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                            albumsLinkedHashMap,
+                            MediaStore.Audio.Media.ARTIST_ID + "=?",
+                            arrayOf(id.toString()),
+                            null
+                        )
+                        artistHasAlbumMap[id] = albumsList
+                        val listT: ArrayList<MusicItem> = TracksManager.getTracksById(
+                            this@PlayService,
+                            trackUri,
+                            tracksLinkedHashMap,
+                            MediaStore.Audio.Media.ARTIST_ID + "=?",
+                            arrayOf(id.toString()),
+                            null
+                        )
+                        artistsListTracksHashMap[id] = listT
+                        bundle.putParcelableArrayList("list", artistsListTracksHashMap[id])
+                        bundle.putParcelableArrayList("albums", artistHasAlbumMap[id])
+                        bundle.putParcelable("message", artistsLinkedHashMap[id])
+                        result.sendResult(bundle)
+                        return
+                    }
+                }
+
+                PlayListType.Genres -> {
+                    if (genreHasAlbumMap[id] != null && genresListTracksHashMap[id] != null) {
+                        bundle.putParcelableArrayList("list", genresListTracksHashMap[id])
+                        bundle.putParcelableArrayList("albums", genreHasAlbumMap[id])
+                        bundle.putParcelable("message", genresLinkedHashMap[id])
+                    } else {
+                        result.detach()
+                        val uri =
+                            MediaStore.Audio.Genres.Members.getContentUri("external", id)
+                        val albums = AlbumManager.getAlbumsByGenre(
+                            this@PlayService,
+                            uri,
+                            albumsLinkedHashMap,
+                            null,
+                            null,
+                            null
+                        )
+                        genreHasAlbumMap[id] = albums
+                        bundle.putParcelableArrayList("list", genresListTracksHashMap[id])
+                        bundle.putParcelableArrayList("albums", genreHasAlbumMap[id])
+                        bundle.putParcelable("message", genresLinkedHashMap[id])
+                        result.sendResult(bundle)
+                        return
+                    }
+                }
+
+                PlayListType.Folders -> {
+                    bundle.putParcelableArrayList("list",
+                        foldersListTracksHashMap[id]?.values?.let { ArrayList(it) })
+                    bundle.putParcelable("message", foldersLinkedHashMap[id])
+                }
+
+                PlayListType.Songs -> {
+                    bundle.putParcelableArrayList(
+                        "list",
+                        ArrayList(tracksLinkedHashMap.values)
+                    )
+                }
+
+                else -> {
+                    bundle.putParcelableArrayList("list", musicQueue)
+                }
+            }
+        }
+        result.sendResult(bundle)
+    }
 }

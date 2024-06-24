@@ -42,6 +42,7 @@ import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
+import java.util.concurrent.locks.ReentrantLock
 
 
 var SongsPlayList = AnyListBase(-1, PlayListType.Songs)
@@ -104,7 +105,7 @@ class MusicViewModel : ViewModel() {
     var itemDuration: Long = 1
     var lyricsType: LyricsType = LyricsType.TEXT
     var currentCaptionList = mutableStateListOf<ListStringCaption>()
-
+    var isEmbeddedLyrics = mutableStateOf(false)
     var fontSize = mutableIntStateOf(18)
     var textAlign = mutableStateOf(TextAlign.Center)
 
@@ -152,10 +153,13 @@ class MusicViewModel : ViewModel() {
         }
         return db!!
     }
-    private var lyricsJob: Job? =null
+    private val lock = ReentrantLock()
+    private var lyricsJob: Job? = null
     fun dealLyrics(context: Context, currentPlay: MusicItem) {
+        lock.lock()
         currentCaptionList.clear()
-        if(lyricsJob!=null&&lyricsJob?.isActive==true){
+        lyricsType = LyricsType.TEXT
+        if (lyricsJob != null && lyricsJob?.isActive == true) {
             lyricsJob?.cancel()
         }
         lyricsJob = CoroutineScope(Dispatchers.IO).launch {
@@ -280,13 +284,13 @@ class MusicViewModel : ViewModel() {
                             }
                         }
                     }
-
                 }
-
             }
             if (fileLyrics.isNotEmpty()) {
+                isEmbeddedLyrics.value = false
                 currentCaptionList.addAll(fileLyrics)
             } else if (embeddedLyrics.isNotEmpty()) {
+                isEmbeddedLyrics.value = true
                 currentCaptionList.addAll(embeddedLyrics)
             }
             val duration = currentPlay.duration
@@ -294,6 +298,7 @@ class MusicViewModel : ViewModel() {
             itemDuration =
                 duration / if (currentCaptionList.size == 0) 1 else currentCaptionList.size
         }
+        lock.unlock()
     }
 
     private fun fileRead(

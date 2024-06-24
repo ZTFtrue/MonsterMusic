@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -284,8 +285,6 @@ fun MusicItemView(
         })
     }
     Row(modifier
-        .padding(0.dp)
-        .height(60.dp)
         .combinedClickable(
             onClick = {
                 // in select tracks status for add playlist
@@ -305,9 +304,9 @@ fun MusicItemView(
                         viewModel.musicQueue.clear()
                         viewModel.currentPlayQueueIndex.intValue = -1
                         viewModel.musicQueue.addAll(musicList)
-                        bundle.putBoolean("switch_queue",true)
-                    }else{
-                        bundle.putBoolean("switch_queue",false)
+                        bundle.putBoolean("switch_queue", true)
+                    } else {
+                        bundle.putBoolean("switch_queue", false)
                     }
                     if (viewModel.playListCurrent.value == null) {
                         viewModel.playListCurrent.value = playList
@@ -331,64 +330,68 @@ fun MusicItemView(
                 }
             }
         ), verticalAlignment = Alignment.CenterVertically) {
-        if (selectStatus) {
-            Checkbox(
-                checked = selectList?.contains(music) ?: false,
-                onCheckedChange = { v ->
-                    if (v) {
-                        selectList?.add(music)
-                    } else {
-                        selectList?.remove(music)
-                    }
-                },
-                modifier = Modifier.padding(8.dp)
-            )
-        } else {
-            Image(
-                painter = painterResource(id),
-                contentDescription = "Operate More, will open dialog",
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape),
-                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
-            )
-        }
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.weight(1f)
+            modifier
+                .wrapContentHeight(Alignment.CenterVertically)
+                .padding(top = 10.dp, bottom = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.fillMaxWidth(0.9f)) {
-                Text(
-                    text = music.name,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.horizontalScroll(rememberScrollState(0))
+            if (selectStatus) {
+                Checkbox(
+                    checked = selectList?.contains(music) ?: false,
+                    onCheckedChange = { v ->
+                        if (v) {
+                            selectList?.add(music)
+                        } else {
+                            selectList?.remove(music)
+                        }
+                    },
+                    modifier = Modifier.padding(8.dp)
                 )
-                Text(
-                    text = music.artist,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.horizontalScroll(rememberScrollState(0))
+            } else {
+                Image(
+                    painter = painterResource(id),
+                    contentDescription = "Operate More, will open dialog",
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape),
+                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                 )
             }
-            if (!selectStatus) {
-                IconButton(
-                    modifier = Modifier.width(50.dp), onClick = {
-                        showDialog = true
-                    }) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Operate More, will open dialog",
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clip(CircleShape),
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(modifier = Modifier.fillMaxWidth(0.9f)) {
+                    Text(
+                        text = music.name,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.horizontalScroll(rememberScrollState(0))
                     )
+                    Text(
+                        text = music.artist,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.horizontalScroll(rememberScrollState(0))
+                    )
+                }
+                if (!selectStatus) {
+                    IconButton(
+                        modifier = Modifier.width(50.dp), onClick = {
+                            showDialog = true
+                        }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Operate More, will open dialog",
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clip(CircleShape),
+                        )
+                    }
                 }
             }
         }
-
-
     }
-
 }
 
 @Composable
