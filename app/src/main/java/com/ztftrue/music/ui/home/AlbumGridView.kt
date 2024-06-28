@@ -91,8 +91,9 @@ fun AlbumGridView(
     if (albumListDefault != null) {
         albumList = albumListDefault
     }
-    LaunchedEffect(Unit) {
+    LaunchedEffect(musicViewModel.refreshAlbum.value) {
         if (albumListDefault == null) {
+            albumList.clear()
             musicViewModel.mediaBrowser?.sendCustomAction(
                 type.name,
                 null,

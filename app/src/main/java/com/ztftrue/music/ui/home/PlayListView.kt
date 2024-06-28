@@ -77,7 +77,7 @@ fun PlayListView(
 ) {
     val listState = rememberLazyListState()
     val playList = remember { mutableStateListOf<MusicPlayList>() }
-    LaunchedEffect(musicViewModel.refreshList.value) {
+    LaunchedEffect(musicViewModel.refreshPlayList.value) {
         musicViewModel.mediaBrowser?.sendCustomAction(
             PlayListType.PlayLists.name,
             null,
@@ -203,7 +203,7 @@ fun PlayListItemView(
                                 resultData: Bundle?
                             ) {
                                 super.onResult(action, extras, resultData)
-                                musicViewModel.refreshList.value = !musicViewModel.refreshList.value
+                                musicViewModel.refreshPlayList.value = !musicViewModel.refreshPlayList.value
                             }
                         }
                     )
@@ -227,7 +227,7 @@ fun PlayListItemView(
                                 resultData: Bundle?
                             ) {
                                 super.onResult(action, extras, resultData)
-                                musicViewModel.refreshList.value = !musicViewModel.refreshList.value
+                                musicViewModel.refreshPlayList.value = !musicViewModel.refreshPlayList.value
                             }
                         }
                     )

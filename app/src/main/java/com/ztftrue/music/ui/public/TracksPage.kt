@@ -244,8 +244,7 @@ fun TracksListPage(
         })
     }
 
-    LaunchedEffect(musicViewModel.refreshList.value) {
-
+    LaunchedEffect(musicViewModel.refreshPlayList.value) {
         val bundle = Bundle()
         bundle.putString("type", type.name)
         bundle.putLong("id", id)

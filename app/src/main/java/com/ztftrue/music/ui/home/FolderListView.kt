@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -118,7 +119,7 @@ fun FolderListView(
                     item,
                     musicViewModel,
                     modifier = Modifier
-                        .padding(10.dp)
+                        .wrapContentHeight()
                         .fillMaxWidth(),
                     navController
                 )
@@ -168,8 +169,11 @@ fun FolderItemView(
                         }
                         sharedPreferences.edit().putString("ignore_folders", newIgnoreFolders)
                             .apply()
-                        Toast.makeText(context,
-                            context.getString(R.string.ignored_this_folder_please_restart_the_app_to_take_effect), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.ignored_this_folder_please_restart_the_app_to_take_effect),
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
 
                     else -> {
@@ -201,8 +205,7 @@ fun FolderItemView(
     }
     val number = item.trackNumber
     Row(
-        modifier
-            .padding(0.dp)
+        modifier = Modifier
             .combinedClickable(
                 onLongClick = {
                     showOperateDialog = true
@@ -214,48 +217,52 @@ fun FolderItemView(
                 )
             }, verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            painter = painterResource(
-                if (item.id == musicViewModel.playListCurrent.value?.id && item.type == musicViewModel.playListCurrent.value?.type) {
-                    R.drawable.pause
+        Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Image(
+                painter = painterResource(
+                    if (item.id == musicViewModel.playListCurrent.value?.id && item.type == musicViewModel.playListCurrent.value?.type) {
+                        R.drawable.pause
+                    } else {
+                        R.drawable.play
+                    }
+                ),
+                contentDescription = if (musicViewModel.playStatus.value) {
+                    "pause"
                 } else {
-                    R.drawable.play
-                }
-            ),
-            contentDescription = if (musicViewModel.playStatus.value) {
-                "pause"
-            } else {
-                "play"
-            },
-            modifier = Modifier
-                .size(40.dp),
-            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
-        )
-        Column(modifier = Modifier.fillMaxWidth(0.9f)) {
-            Text(
-                text = item.name,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.horizontalScroll(rememberScrollState(0)),
-            )
-            Text(
-                text = stringResource(R.string.song, number, if (number <= 1L) "" else "s"),
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-        }
-        IconButton(
-            modifier = Modifier
-                .width(50.dp)
-                .height(40.dp), onClick = {
-                showOperateDialog = true
-            }) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = "Operate More, will open dialog",
+                    "play"
+                },
                 modifier = Modifier
-                    .size(20.dp)
-                    .clip(CircleShape),
+                    .size(30.dp)
+                    .padding(5.dp),
+                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
             )
+            Column(modifier = Modifier.fillMaxWidth(0.9f)) {
+                Text(
+                    text = item.name,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.horizontalScroll(rememberScrollState(0)),
+                )
+                Text(
+                    text = stringResource(R.string.song, number, if (number <= 1L) "" else "s"),
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+            }
+            IconButton(
+                modifier = Modifier
+                    .width(50.dp)
+                    .height(40.dp), onClick = {
+                    showOperateDialog = true
+                }) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "Operate More, will open dialog",
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clip(CircleShape),
+                )
+            }
         }
+
 
     }
 }

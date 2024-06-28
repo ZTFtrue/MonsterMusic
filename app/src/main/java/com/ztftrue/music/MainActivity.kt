@@ -126,8 +126,8 @@ class MainActivity : ComponentActivity() {
                                             ) {
                                                 super.onResult(action, extras, resultData)
                                                 if (ACTION_PlayLIST_CHANGE == action) {
-                                                    musicViewModel.refreshList.value =
-                                                        !musicViewModel.refreshList.value
+                                                    musicViewModel.refreshPlayList.value =
+                                                        !musicViewModel.refreshPlayList.value
                                                 }
                                             }
                                         }
@@ -154,8 +154,8 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     super.onResult(action, extras, resultData)
                                     if (ACTION_TRACKS_DELETE == action) {
-                                        musicViewModel.refreshList.value =
-                                            !musicViewModel.refreshList.value
+                                        musicViewModel.refreshPlayList.value =
+                                            !musicViewModel.refreshPlayList.value
                                     }
                                 }
                             }
@@ -184,8 +184,8 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     super.onResult(action, extras, resultData)
                                     if (ACTION_TRACKS_UPDATE == action) {
-                                        musicViewModel.refreshList.value =
-                                            !musicViewModel.refreshList.value
+                                        musicViewModel.refreshPlayList.value =
+                                            !musicViewModel.refreshPlayList.value
                                     }
                                 }
                             }
@@ -205,7 +205,7 @@ class MainActivity : ComponentActivity() {
                         ) {
                             super.onResult(action, extras, resultData)
                             if (ACTION_PlayLIST_CHANGE == action) {
-                                musicViewModel.refreshList.value = !musicViewModel.refreshList.value
+                                musicViewModel.refreshPlayList.value = !musicViewModel.refreshPlayList.value
                             }
                         }
                     }

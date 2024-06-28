@@ -77,7 +77,8 @@ enum class OperateType {
     ShowArtist,
     ClearQueue,
     SaveQueueToPlayList,
-    IgnoreFolder
+    IgnoreFolder,
+    QueueSwipeSort
 }
 
 enum class ScrollDirectionType {
@@ -300,8 +301,8 @@ object Utils {
                                                 resultData: Bundle?
                                             ) {
                                                 super.onResult(action, extras, resultData)
-                                                musicViewModel.refreshList.value =
-                                                    !musicViewModel.refreshList.value
+                                                musicViewModel.refreshPlayList.value =
+                                                    !musicViewModel.refreshPlayList.value
                                             }
                                         }
                                     )
@@ -381,8 +382,8 @@ object Utils {
                                         resultData: Bundle?
                                     ) {
                                         super.onResult(action, extras, resultData)
-                                        musicViewModel.refreshList.value =
-                                            !musicViewModel.refreshList.value
+                                        musicViewModel.refreshPlayList.value =
+                                            !musicViewModel.refreshPlayList.value
                                     }
                                 }
                             )

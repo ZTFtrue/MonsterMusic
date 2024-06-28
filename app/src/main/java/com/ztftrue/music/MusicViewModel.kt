@@ -53,7 +53,10 @@ class MusicViewModel : ViewModel() {
 
     private val retriever = MediaMetadataRetriever()
     var db: MusicDatabase? = null
-    val refreshList = mutableStateOf(false)
+    val refreshPlayList = mutableStateOf(false)
+    val refreshAlbum = mutableStateOf(false)
+    val refreshArtist = mutableStateOf(false)
+    val refreshGenre = mutableStateOf(false)
     var navController: NavHostController? = null
     var themeSelected = mutableIntStateOf(0)
     val albumItemsCount = mutableIntStateOf(2)

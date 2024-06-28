@@ -21,12 +21,16 @@ object TracksManager {
 
     fun getFolderList(
         context: Context,
-        list: LinkedHashMap<Long, FolderList>,
+        folderListLinkedHashMap: LinkedHashMap<Long, FolderList>,
         result: MediaBrowserServiceCompat.Result<Bundle>?,
         tracksHashMap: LinkedHashMap<Long, MusicItem>,
-        map: HashMap<Long, LinkedHashMap<Long, MusicItem>>,
-        needTrack: Boolean = false
+        sortOrder1: String,
+        needTracks: Boolean = false,
+        allTracksHashMap: LinkedHashMap<Long, MusicItem>?=null,
     ) {
+        tracksHashMap.clear()
+        folderListLinkedHashMap.clear()
+        allTracksHashMap?.clear()
         val sharedPreferences = context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
         // -1 don't ignore any,0 ignore duration less than or equal 0s,
         val ignoreDuration = sharedPreferences.getLong("ignore_duration", 0)
@@ -34,8 +38,9 @@ object TracksManager {
         val ignoreFoldersMap: List<Long> =
             if (ignoreFolders.isNullOrEmpty()) emptyList() else ignoreFolders.split(",")
                 .map { it.toLong() }
-
-        val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
+        val sortOrder = sortOrder1.ifBlank {
+            "${MediaStore.Audio.Media.TITLE} ASC"
+        }
         // Build the selection clause to exclude the folders by their IDs
         val selectionBuilder = StringBuilder()
         val selectionArgs = mutableListOf<String>()
@@ -64,7 +69,7 @@ object TracksManager {
             trackMediaProjection, selection, selectionArgs.toTypedArray(), sortOrder
         )
         val mapFolder = LinkedHashMap<Long, FolderList>()
-
+        val map: HashMap<Long, LinkedHashMap<Long, MusicItem>> = HashMap()
         if (cursor != null && cursor.moveToFirst()) {
             val bucketIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.BUCKET_ID)
             val bucketNameColumn =
@@ -127,10 +132,12 @@ object TracksManager {
 //                    discNumber,
                     songNumber
                 )
-
+                // For songs
                 if (isMusic) {
                     tracksHashMap[musicID] = musicItem
                 }
+                // For not songs, example RingTones
+                allTracksHashMap?.set(musicID, musicItem)
                 map.getOrPut(folderId) {
                     LinkedHashMap()
                 }[musicID] = musicItem
@@ -145,24 +152,23 @@ object TracksManager {
         }
 
         mapFolder.forEach { it.value.trackNumber = map[it.key]?.size ?: 0 }
-        list.clear()
-        list.putAll(mapFolder)
+        folderListLinkedHashMap.clear()
+        folderListLinkedHashMap.putAll(mapFolder)
         cursor?.close()
         if (result == null) return
         val bundle = Bundle()
-        if (needTrack) {
-            bundle.putParcelableArrayList("list", ArrayList(tracksHashMap.values))
+        if (needTracks) {
+            bundle.putParcelableArrayList("songsList", ArrayList(tracksHashMap.values))
         } else {
-            bundle.putParcelableArrayList("list", ArrayList(list.values))
+            bundle.putParcelableArrayList("songsList", ArrayList(folderListLinkedHashMap.values))
         }
-
         result.sendResult(bundle)
     }
 
 
     fun getTracksById(
         context: Context,
-        genreId: Uri,
+        uri: Uri,
         tracksHashMap: LinkedHashMap<Long, MusicItem>,
         selection: String?,
         selectionArgs: Array<String>?,
@@ -174,7 +180,7 @@ object TracksManager {
         )
         // Create a cursor to query the media store for tracks in the genre
         val trackCursor = context.contentResolver.query(
-            genreId,
+            uri,
             trackProjection,
             selection,
             selectionArgs,

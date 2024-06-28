@@ -108,7 +108,7 @@ fun MusicItemView(
                                 resultData: Bundle?
                             ) {
                                 super.onResult(action, extras, resultData)
-                                viewModel.refreshList.value = !viewModel.refreshList.value
+                                viewModel.refreshPlayList.value = !viewModel.refreshPlayList.value
                             }
                         }
                     )
@@ -170,8 +170,8 @@ fun MusicItemView(
                                                     resultData: Bundle?
                                                 ) {
                                                     super.onResult(action, extras, resultData)
-                                                    viewModel.refreshList.value =
-                                                        !viewModel.refreshList.value
+                                                    viewModel.refreshPlayList.value =
+                                                        !viewModel.refreshPlayList.value
                                                 }
                                             }
                                         )

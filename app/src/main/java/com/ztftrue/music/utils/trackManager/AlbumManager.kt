@@ -13,6 +13,7 @@ object AlbumManager {
         context: Context,
         list: LinkedHashMap<Long, AlbumList>,
         result: MediaBrowserServiceCompat.Result<Bundle>?,
+        sortOrder1: String
     ) {
 
         val playListProjection = arrayOf(
@@ -24,7 +25,7 @@ object AlbumManager {
             MediaStore.Audio.Albums.FIRST_YEAR,
             MediaStore.Audio.Albums.LAST_YEAR,
         )
-        val sortOrder = "${MediaStore.Audio.Albums.ALBUM} ASC"
+        val sortOrder = sortOrder1.ifBlank { "${MediaStore.Audio.Albums.ALBUM} ASC" }
         val musicResolver = context.contentResolver
         val cursor = musicResolver.query(
             MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
@@ -51,8 +52,8 @@ object AlbumManager {
                 val lastYear = cursor.getString(lastYearColumn)
                 val albumList = AlbumList(
                     albumId,
-                    albumResult?:"Unknown Album",
-                    artist?:"Unknown",
+                    albumResult ?: "Unknown Album",
+                    artist ?: "Unknown",
                     firstYear ?: "",
                     lastYear ?: "",
                     numberSongs,
@@ -62,12 +63,13 @@ object AlbumManager {
         }
         list.putAll(playList)
         cursor?.close()
-        if(result == null) return
+        if (result == null) return
         val bundle = Bundle()
         bundle.putParcelableArrayList("list", ArrayList(list.values))
         result.sendResult(bundle)
 
     }
+
     fun getAlbumByName(context: Context, name: String): ArrayList<AlbumList> {
         val list = ArrayList<AlbumList>()
         val projection = arrayOf(
@@ -120,6 +122,7 @@ object AlbumManager {
 
         return list
     }
+
     fun getAlbumsByGenre(
         context: Context,
         genreId: Uri,
@@ -148,7 +151,11 @@ object AlbumManager {
             val idColumn = trackCursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ID)
             do {
                 val trackId: Long = trackCursor.getLong(idColumn)
-                albumsHashMap[trackId]?.let { list.add(it) }
+                albumsHashMap[trackId]?.let {
+                    if (!list.contains(it)) {
+                        list.add(it)
+                    }
+                }
             } while (trackCursor.moveToNext())
         }
         trackCursor?.close()
@@ -186,7 +193,11 @@ object AlbumManager {
             val idColumn = trackCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
             do {
                 val trackId: Long = trackCursor.getLong(idColumn)
-                albumsHashMap[trackId]?.let { list.add(it) }
+                albumsHashMap[trackId]?.let {
+                    if (!list.contains(it)) {
+                        list.add(it)
+                    }
+                }
             } while (trackCursor.moveToNext())
         }
         trackCursor?.close()

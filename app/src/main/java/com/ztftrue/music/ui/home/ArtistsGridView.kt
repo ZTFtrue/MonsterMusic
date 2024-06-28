@@ -88,8 +88,10 @@ fun ArtistsGridView(
     if (artistListDefault != null) {
         artistLists = artistListDefault
     }
-    LaunchedEffect(Unit) {
+    LaunchedEffect(musicViewModel.refreshArtist.value) {
+        // if there has artist, don't get new artist
         if (artistListDefault == null) {
+            artistLists.clear()
             musicViewModel.mediaBrowser?.sendCustomAction(
                 type.name,
                 null,
@@ -105,6 +107,7 @@ fun ArtistsGridView(
                     ) {
                         super.onResult(action, extras, resultData)
                         if (action == type.name) {
+
                             resultData?.getParcelableArrayList<ArtistList>("list")
                                 ?.also { list ->
                                     artistLists.addAll(list)

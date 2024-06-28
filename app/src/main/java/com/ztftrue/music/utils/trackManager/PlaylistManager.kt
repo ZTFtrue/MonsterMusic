@@ -36,7 +36,8 @@ object PlaylistManager {
         list: LinkedHashMap<Long, MusicPlayList>,
         map: HashMap<Long, ArrayList<MusicItem>>,
         tracksHashMap: LinkedHashMap<Long, MusicItem>,
-        result: MediaBrowserServiceCompat.Result<Bundle>?
+        result: MediaBrowserServiceCompat.Result<Bundle>?,
+        sortOrder:String
     ) {
         val playListProjection = arrayOf(
             MediaStore.Audio.Playlists._ID,
@@ -48,7 +49,7 @@ object PlaylistManager {
             playListProjection,
             null,
             null,
-            null
+            sortOrder.ifBlank { null }
         )
         val playList = LinkedHashMap<Long, MusicPlayList>()
         if (cursor != null && cursor.moveToFirst()) {

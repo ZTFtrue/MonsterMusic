@@ -85,7 +85,7 @@ fun GenreGridView(
 ) {
     val listState = rememberLazyGridState()
     val genreList = remember { mutableStateListOf<GenresList>() }
-    LaunchedEffect(Unit) {
+    LaunchedEffect(musicViewModel.refreshGenre.value) {
         genreList.clear()
         musicViewModel.mediaBrowser?.sendCustomAction(
             type.name,
