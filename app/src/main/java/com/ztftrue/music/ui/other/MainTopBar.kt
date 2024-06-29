@@ -2,7 +2,6 @@ package com.ztftrue.music.ui.other
 
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -274,6 +273,7 @@ fun MainTopBar(
                                 modifier = Modifier
                                     .size(30.dp)
                                     .clip(CircleShape),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         IconButton(
@@ -363,7 +363,6 @@ fun MainTopBar(
                                                     }
 
                                                     else -> {
-                                                        Log.d("TAG","11111")
                                                     }
                                                 }
                                             }
@@ -377,6 +376,7 @@ fun MainTopBar(
                                 modifier = Modifier
                                     .size(30.dp)
                                     .clip(CircleShape),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -522,6 +522,7 @@ fun MainTopBar(
                                         modifier = Modifier
                                             .size(30.dp)
                                             .clip(CircleShape),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -558,6 +559,7 @@ fun MainTopBar(
                                 modifier = Modifier
                                     .size(30.dp)
                                     .clip(CircleShape),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -574,7 +576,7 @@ fun MainTopBar(
                         }
                     }
                 }) {
-                    Icon(Icons.Filled.Menu, contentDescription = "menu")
+                    Icon(Icons.Filled.Menu, contentDescription = "menu",tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
             title = { },
@@ -595,6 +597,7 @@ fun MainTopBar(
                             modifier = Modifier
                                 .size(25.dp)
                                 .clip(CircleShape),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -628,7 +631,6 @@ fun MainTopBar(
                         modifier = Modifier.size(30.dp),
                         contentDescription = "Search",
                         tint = MaterialTheme.colorScheme.onBackground
-
                     )
                 }
             })

@@ -172,12 +172,13 @@ object TracksManager {
         tracksHashMap: LinkedHashMap<Long, MusicItem>,
         selection: String?,
         selectionArgs: Array<String>?,
-        sortOrder: String?,
+        sortOrder1: String?,
     ): ArrayList<MusicItem> {
         // Define the columns to retrieve from the media store for the number of tracks
         val trackProjection = arrayOf(
             MediaStore.Audio.Media._ID,
         )
+        val sortOrder=sortOrder1?.ifBlank {  "${MediaStore.Audio.Media.TITLE} ASC" }
         // Create a cursor to query the media store for tracks in the genre
         val trackCursor = context.contentResolver.query(
             uri,

@@ -524,6 +524,7 @@ fun AddMusicToPlayListDialog(
                         modifier = Modifier
                             .size(30.dp)
                             .clip(CircleShape),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = stringResource(R.string.add_new_playlist),

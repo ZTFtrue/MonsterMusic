@@ -722,6 +722,7 @@ fun PlayingPage(
                             modifier = Modifier
                                 .size(30.dp)
                                 .clip(CircleShape),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -1053,6 +1054,7 @@ fun PlayingPage(
                                     modifier = Modifier
                                         .size(30.dp)
                                         .clip(CircleShape),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         })

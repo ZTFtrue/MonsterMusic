@@ -296,7 +296,6 @@ class PlayService : MediaBrowserServiceCompat() {
                     PlaylistManager.getPlaylists(
                         this@PlayService,
                         playListLinkedHashMap,
-                        playListTracksHashMap,
                         tracksLinkedHashMap,
                         result,
                         "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
@@ -544,7 +543,6 @@ class PlayService : MediaBrowserServiceCompat() {
                 PlaylistManager.getPlaylists(
                     this@PlayService,
                     playListLinkedHashMap,
-                    playListTracksHashMap,
                     tracksLinkedHashMap,
                     null,
                     "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
@@ -1422,6 +1420,31 @@ class PlayService : MediaBrowserServiceCompat() {
                             }
                             return
                         }
+
+                        PlayUtils.ListTypeTracks.PlayListsTracks -> {
+                            playListTracksHashMap.clear()
+
+                        }
+
+                        PlayUtils.ListTypeTracks.AlbumsTracks -> {
+                            albumsListTracksHashMap.clear()
+
+                        }
+
+                        PlayUtils.ListTypeTracks.ArtistsTracks -> {
+                            artistsListTracksHashMap.clear()
+
+                        }
+
+                        PlayUtils.ListTypeTracks.GenresTracks -> {
+                            genresListTracksHashMap.clear()
+
+                        }
+
+                        PlayUtils.ListTypeTracks.FoldersTracks -> {
+                            foldersListTracksHashMap.clear()
+                        }
+
                     }
                 }
             }
@@ -1444,19 +1467,28 @@ class PlayService : MediaBrowserServiceCompat() {
                         bundle.putParcelable("message", playListLinkedHashMap[id])
                     } else {
                         result.detach()
-                        val tracksUri = MediaStore.Audio.Playlists.Members.getContentUri(
-                            "external", id
-                        )
-                        val tracks =
-                            PlaylistManager.getTracksByPlayListId(
-                                this@PlayService,
-                                tracksUri,
-                                allTracksLinkedHashMap
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val sortData =
+                                db.SortFiledDao()
+                                    .findSortByType(PlayUtils.ListTypeTracks.PlayListsTracks)
+                            val tracksUri = MediaStore.Audio.Playlists.Members.getContentUri(
+                                "external", id
                             )
-                        playListTracksHashMap[id] = tracks
-                        bundle.putParcelableArrayList("list", playListTracksHashMap[id])
-                        bundle.putParcelable("message", playListLinkedHashMap[id])
-                        result.sendResult(bundle)
+                            val tracks =
+                                PlaylistManager.getTracksByPlayListId(
+                                    this@PlayService,
+                                    tracksUri,
+                                    allTracksLinkedHashMap,
+                                    null,
+                                    null,
+                                    "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
+                                )
+                            playListTracksHashMap[id] = tracks
+                            bundle.putParcelableArrayList("list", playListTracksHashMap[id])
+                            bundle.putParcelable("message", playListLinkedHashMap[id])
+                            result.sendResult(bundle)
+                        }
+
                         return
                     }
 
@@ -1469,19 +1501,24 @@ class PlayService : MediaBrowserServiceCompat() {
                         bundle.putParcelable("message", albumsLinkedHashMap[id])
                     } else {
                         result.detach()
-                        val trackUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                        val listT: ArrayList<MusicItem> = TracksManager.getTracksById(
-                            this@PlayService,
-                            trackUri,
-                            allTracksLinkedHashMap,
-                            MediaStore.Audio.Media.ALBUM_ID + "=?",
-                            arrayOf(id.toString()),
-                            null
-                        )
-                        albumsListTracksHashMap[id] = listT
-                        bundle.putParcelableArrayList("list", albumsListTracksHashMap[id])
-                        bundle.putParcelable("message", albumsLinkedHashMap[id])
-                        result.sendResult(bundle)
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val sortData =
+                                db.SortFiledDao()
+                                    .findSortByType(PlayUtils.ListTypeTracks.AlbumsTracks)
+                            val trackUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                            val listT: ArrayList<MusicItem> = TracksManager.getTracksById(
+                                this@PlayService,
+                                trackUri,
+                                allTracksLinkedHashMap,
+                                MediaStore.Audio.Media.ALBUM_ID + "=?",
+                                arrayOf(id.toString()),
+                                "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
+                            )
+                            albumsListTracksHashMap[id] = listT
+                            bundle.putParcelableArrayList("list", albumsListTracksHashMap[id])
+                            bundle.putParcelable("message", albumsLinkedHashMap[id])
+                            result.sendResult(bundle)
+                        }
                         return
                     }
                 }
@@ -1493,44 +1530,50 @@ class PlayService : MediaBrowserServiceCompat() {
                         bundle.putParcelable("message", artistsLinkedHashMap[id])
                     } else {
                         result.detach()
-                        val trackUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                        runBlocking {
-                            awaitAll(
-                                async(Dispatchers.IO) {
-                                    val sortDataP =
-                                        db.SortFiledDao().findSortByType(PlayListType.Albums.name)
-                                    AlbumManager.getAlbumList(
-                                        this@PlayService,
-                                        albumsLinkedHashMap,
-                                        null,
-                                        "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
-                                    )
-                                }
-                            )
-                        }
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val sortData =
+                                db.SortFiledDao()
+                                    .findSortByType(PlayUtils.ListTypeTracks.ArtistsTracks)
+                            val trackUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                            runBlocking {
+                                awaitAll(
+                                    async(Dispatchers.IO) {
+                                        val sortDataP =
+                                            db.SortFiledDao()
+                                                .findSortByType(PlayListType.Albums.name)
+                                        AlbumManager.getAlbumList(
+                                            this@PlayService,
+                                            albumsLinkedHashMap,
+                                            null,
+                                            "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
+                                        )
+                                    }
+                                )
+                            }
 
-                        val albumsList = AlbumManager.getAlbumsByArtist(
-                            this@PlayService,
-                            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                            albumsLinkedHashMap,
-                            MediaStore.Audio.Media.ARTIST_ID + "=?",
-                            arrayOf(id.toString()),
-                            null
-                        )
-                        artistHasAlbumMap[id] = albumsList
-                        val listT: ArrayList<MusicItem> = TracksManager.getTracksById(
-                            this@PlayService,
-                            trackUri,
-                            allTracksLinkedHashMap,
-                            MediaStore.Audio.Media.ARTIST_ID + "=?",
-                            arrayOf(id.toString()),
-                            null
-                        )
-                        artistsListTracksHashMap[id] = listT
-                        bundle.putParcelableArrayList("list", artistsListTracksHashMap[id])
-                        bundle.putParcelableArrayList("albums", artistHasAlbumMap[id])
-                        bundle.putParcelable("message", artistsLinkedHashMap[id])
-                        result.sendResult(bundle)
+                            val albumsList = AlbumManager.getAlbumsByArtist(
+                                this@PlayService,
+                                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                                albumsLinkedHashMap,
+                                MediaStore.Audio.Media.ARTIST_ID + "=?",
+                                arrayOf(id.toString()),
+                                null
+                            )
+                            artistHasAlbumMap[id] = albumsList
+                            val listT: ArrayList<MusicItem> = TracksManager.getTracksById(
+                                this@PlayService,
+                                trackUri,
+                                allTracksLinkedHashMap,
+                                MediaStore.Audio.Media.ARTIST_ID + "=?",
+                                arrayOf(id.toString()),
+                                "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
+                            )
+                            artistsListTracksHashMap[id] = listT
+                            bundle.putParcelableArrayList("list", artistsListTracksHashMap[id])
+                            bundle.putParcelableArrayList("albums", artistHasAlbumMap[id])
+                            bundle.putParcelable("message", artistsLinkedHashMap[id])
+                            result.sendResult(bundle)
+                        }
                         return
                     }
                 }
@@ -1542,45 +1585,51 @@ class PlayService : MediaBrowserServiceCompat() {
                         bundle.putParcelable("message", genresLinkedHashMap[id])
                     } else {
                         result.detach()
-                        val uri =
-                            MediaStore.Audio.Genres.Members.getContentUri("external", id)
-                        runBlocking {
-                            awaitAll(
-                                async(Dispatchers.IO) {
-                                    val sortDataP =
-                                        db.SortFiledDao().findSortByType(PlayListType.Albums.name)
-                                    AlbumManager.getAlbumList(
-                                        this@PlayService,
-                                        albumsLinkedHashMap,
-                                        null,
-                                        "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
-                                    )
-                                }
-                            )
-                        }
-                        val albums = AlbumManager.getAlbumsByGenre(
-                            this@PlayService,
-                            uri,
-                            albumsLinkedHashMap,
-                            null,
-                            null,
-                            null
-                        )
-                        val listT: ArrayList<MusicItem> =
-                            TracksManager.getTracksById(
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val sortData =
+                                db.SortFiledDao()
+                                    .findSortByType(PlayUtils.ListTypeTracks.GenresTracks)
+                            val uri =
+                                MediaStore.Audio.Genres.Members.getContentUri("external", id)
+                            runBlocking {
+                                awaitAll(
+                                    async(Dispatchers.IO) {
+                                        val sortDataP =
+                                            db.SortFiledDao()
+                                                .findSortByType(PlayListType.Albums.name)
+                                        AlbumManager.getAlbumList(
+                                            this@PlayService,
+                                            albumsLinkedHashMap,
+                                            null,
+                                            "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
+                                        )
+                                    }
+                                )
+                            }
+                            val albums = AlbumManager.getAlbumsByGenre(
                                 this@PlayService,
                                 uri,
-                                allTracksLinkedHashMap,
+                                albumsLinkedHashMap,
                                 null,
                                 null,
                                 null
                             )
-                        genresListTracksHashMap[id] = listT
-                        genreHasAlbumMap[id] = albums
-                        bundle.putParcelableArrayList("list", genresListTracksHashMap[id])
-                        bundle.putParcelableArrayList("albums", genreHasAlbumMap[id])
-                        bundle.putParcelable("message", genresLinkedHashMap[id])
-                        result.sendResult(bundle)
+                            val listT: ArrayList<MusicItem> =
+                                TracksManager.getTracksById(
+                                    this@PlayService,
+                                    uri,
+                                    allTracksLinkedHashMap,
+                                    null,
+                                    null,
+                                    "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
+                                )
+                            genresListTracksHashMap[id] = listT
+                            genreHasAlbumMap[id] = albums
+                            bundle.putParcelableArrayList("list", genresListTracksHashMap[id])
+                            bundle.putParcelableArrayList("albums", genreHasAlbumMap[id])
+                            bundle.putParcelable("message", genresLinkedHashMap[id])
+                            result.sendResult(bundle)
+                        }
                         return
                     }
                 }
@@ -1593,26 +1642,31 @@ class PlayService : MediaBrowserServiceCompat() {
                         bundle.putParcelable("message", foldersLinkedHashMap[id])
                     } else {
                         result.detach()
-                        val uri =
-                            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                        val selection = MediaStore.Audio.Media.BUCKET_ID + "=?"
-                        val listT: ArrayList<MusicItem> =
-                            TracksManager.getTracksById(
-                                this@PlayService,
-                                uri,
-                                allTracksLinkedHashMap,
-                                selection,
-                                arrayOf(id.toString()),
-                                null
-                            )
-                        val m = LinkedHashMap<Long, MusicItem>();
-                        listT.forEach { itM ->
-                            m[itM.id] = itM
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val sortData =
+                                db.SortFiledDao()
+                                    .findSortByType(PlayUtils.ListTypeTracks.GenresTracks)
+                            val uri =
+                                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                            val selection = MediaStore.Audio.Media.BUCKET_ID + "=?"
+                            val listT: ArrayList<MusicItem> =
+                                TracksManager.getTracksById(
+                                    this@PlayService,
+                                    uri,
+                                    allTracksLinkedHashMap,
+                                    selection,
+                                    arrayOf(id.toString()),
+                                    "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
+                                )
+                            val m = LinkedHashMap<Long, MusicItem>();
+                            listT.forEach { itM ->
+                                m[itM.id] = itM
+                            }
+                            foldersListTracksHashMap[id] = m
+                            bundle.putParcelableArrayList("list", listT)
+                            bundle.putParcelable("message", foldersLinkedHashMap[id])
+                            result.sendResult(bundle)
                         }
-                        foldersListTracksHashMap[id] = m
-                        bundle.putParcelableArrayList("list", listT)
-                        bundle.putParcelable("message", foldersLinkedHashMap[id])
-                        result.sendResult(bundle)
                         return
                     }
                 }

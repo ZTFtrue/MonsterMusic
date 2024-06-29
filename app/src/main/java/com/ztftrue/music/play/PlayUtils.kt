@@ -42,13 +42,21 @@ object PlayUtils {
         PlayListType.Genres.name to genresFiled,
     )
 
+    object ListTypeTracks {
+        val PlayListsTracks = "PlayLists@Tracks"
+        val AlbumsTracks = "Albums@Tracks"
+        val ArtistsTracks = "Artists@Tracks"
+        val GenresTracks = "Genres@Tracks"
+        val FoldersTracks = "Folders@Tracks"
+    }
+
     // for tracks in album or artist etc. child
     val trackSortFiledMap = mapOf(
-        PlayListType.PlayLists.name + "@Tracks" to tracksFiled,
-        PlayListType.Albums.name + "@Tracks" to tracksFiled,
-        PlayListType.Artists.name + "@Tracks" to tracksFiled,
-        PlayListType.Genres.name + "@Tracks" to tracksFiled,
-        PlayListType.Folders.name + "@Tracks" to tracksFiled,
+        ListTypeTracks.PlayListsTracks to tracksFiled,
+        ListTypeTracks.AlbumsTracks to tracksFiled,
+        ListTypeTracks.ArtistsTracks to tracksFiled,
+        ListTypeTracks.GenresTracks to tracksFiled,
+        ListTypeTracks.FoldersTracks to tracksFiled,
     )
     val methodMap = mapOf(
         "Ascending" to "ASC",

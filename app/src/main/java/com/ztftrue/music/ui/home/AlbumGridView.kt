@@ -473,7 +473,7 @@ fun AlbumsOperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = stringResource(id = R.string.artist),
+                                text = stringResource(id = R.string.artist, playList.artist),
                                 modifier = Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )

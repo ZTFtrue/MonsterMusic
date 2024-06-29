@@ -491,6 +491,7 @@ fun LyricsView(
                     if (musicViewModel.isEmbeddedLyrics.value) {
                         Icon(
                             imageVector = Icons.Outlined.Info,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             contentDescription = "This is embedded lyrics",
                             modifier = Modifier
                                 .size(20.dp)

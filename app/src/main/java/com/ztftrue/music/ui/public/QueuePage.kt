@@ -137,6 +137,7 @@ fun QueuePage(
                         modifier = Modifier
                             .size(20.dp)
                             .clip(CircleShape),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             })
