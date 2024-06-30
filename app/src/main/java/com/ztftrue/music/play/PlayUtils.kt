@@ -53,8 +53,18 @@ object PlayUtils {
     // for tracks in album or artist etc. child
     val trackSortFiledMap = mapOf(
         ListTypeTracks.PlayListsTracks to tracksFiled,
-        ListTypeTracks.AlbumsTracks to tracksFiled,
-        ListTypeTracks.ArtistsTracks to tracksFiled,
+        ListTypeTracks.AlbumsTracks to linkedMapOf(
+            "Alphabetical" to MediaStore.Audio.Media.TITLE,
+            "Artist" to MediaStore.Audio.Media.ARTIST,
+            "Duration" to MediaStore.Audio.Media.DURATION,
+            "Year" to MediaStore.Audio.Media.YEAR
+        ),
+        ListTypeTracks.ArtistsTracks to linkedMapOf(
+            "Alphabetical" to MediaStore.Audio.Media.TITLE,
+            "Album" to MediaStore.Audio.Media.ALBUM,
+            "Duration" to MediaStore.Audio.Media.DURATION,
+            "Year" to MediaStore.Audio.Media.YEAR
+        ),
         ListTypeTracks.GenresTracks to tracksFiled,
         ListTypeTracks.FoldersTracks to tracksFiled,
     )

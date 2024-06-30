@@ -2,7 +2,6 @@ package com.ztftrue.music.ui.public
 
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -44,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
@@ -318,41 +319,7 @@ fun TracksListPage(
                                     ) {
                                         super.onResult(action, extras, resultData)
                                         if (ACTION_SORT == action) {
-                                            refreshCurrentValueList=!refreshCurrentValueList
-                                            when (type.name + "@Tracks") {
-//                                                PlayUtils.ListTypeTracks.PlayListsTracks -> {
-//                                                    musicViewModel.refreshPlayList.value =
-//                                                        !musicViewModel.refreshPlayList.value
-//                                                }
-//
-//                                                PlayUtils.ListTypeTracks.AlbumsTracks -> {
-//                                                    musicViewModel.refreshAlbum.value =
-//                                                        !musicViewModel.refreshAlbum.value
-//                                                }
-//
-//                                                PlayUtils.ListTypeTracks.ArtistsTracks -> {
-//                                                    musicViewModel.refreshArtist.value =
-//                                                        !musicViewModel.refreshArtist.value
-//                                                }
-//
-//                                                PlayUtils.ListTypeTracks.GenresTracks -> {
-//                                                    musicViewModel.refreshGenre.value =
-//                                                        !musicViewModel.refreshGenre.value
-//                                                }
-//
-//                                                PlayUtils.ListTypeTracks.FoldersTracks -> {
-//                                                    resultData?.getParcelableArrayList<MusicItem>(
-//                                                        "songsList"
-//                                                    )?.also {
-//                                                        musicViewModel.refreshAlbum.value =
-//                                                            !musicViewModel.refreshGenre.value
-//                                                    }
-//                                                }
-
-                                                else -> {
-                                                    Log.d("TAG", "11111")
-                                                }
-                                            }
+                                            refreshCurrentValueList = !refreshCurrentValueList
                                         }
                                     }
                                 }
@@ -375,7 +342,14 @@ fun TracksListPage(
     if (showMoreOperateDialog) {
         if (type == PlayListType.Albums) {
             // TODO this can avoid use an error dialog
-            val item = AlbumList(id, "", "", "", "", 0)
+            val item =
+                if (musicPlayList.value is AlbumList) {
+                    val a=(musicPlayList.value as AlbumList)
+                    AlbumList(id, "", a.artist, a.firstYear, a.lastYear, 0)
+                } else {
+                    AlbumList(id, "", "", "", "", 0)
+                }
+
             AlbumsOperateDialog(
                 musicViewModel,
                 playList = item,
@@ -529,14 +503,14 @@ fun TracksListPage(
             }
         })
     }
-    if (showOperatePopup){
+    if (showOperatePopup) {
         Popup(
             // on below line we are adding
             // alignment and properties.
             alignment = Alignment.TopEnd,
             properties = PopupProperties(),
             offset = IntOffset(
-                -100.dp.toPx(context),
+                -10.dp.toPx(context),
                 50.dp.toPx(context)
             ),
             onDismissRequest = {
@@ -565,24 +539,24 @@ fun TracksListPage(
                     modifier = Modifier
                 ) {
                     item {
-                            IconButton(modifier = Modifier.semantics {
-                                contentDescription = "Add PlayList"
-                            }, onClick = {
-                                showOperatePopup = false
-                                showMoreOperateDialog = true
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "Add PlayList",
-                                    modifier = Modifier
-                                        .size(30.dp)
-                                        .clip(CircleShape),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                        IconButton(modifier = Modifier.semantics {
+                            contentDescription = "Show more operate"
+                        }, onClick = {
+                            showOperatePopup = false
+                            showMoreOperateDialog = true
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "Show more operate",
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clip(CircleShape),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                     item {
-                        if (!PlayUtils.trackSortFiledMap[ type.name+"@Tracks"].isNullOrEmpty()) {
+                        if (!PlayUtils.trackSortFiledMap[type.name + "@Tracks"].isNullOrEmpty()) {
                             IconButton(
                                 modifier = Modifier.width(50.dp), onClick = {
                                     showOperatePopup = false
@@ -621,7 +595,7 @@ fun TracksListPage(
             }
         }
     }
-    LaunchedEffect(musicViewModel.refreshPlayList.value,refreshCurrentValueList) {
+    LaunchedEffect(musicViewModel.refreshPlayList.value, refreshCurrentValueList) {
         val bundle = Bundle()
         bundle.putString("type", type.name)
         bundle.putLong("id", id)
@@ -666,13 +640,15 @@ fun TracksListPage(
                         modifier = Modifier.width(50.dp), onClick = {
                             showOperatePopup = true
                         }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Operate More, will open dialog",
+                        Image(
+                            painter = rememberAsyncImagePainter(
+                                R.drawable.apps
+                            ),
+                            contentDescription = "Operate More, will open popup",
                             modifier = Modifier
-                                .size(20.dp)
-                                .clip(CircleShape),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                .width(30.dp)
+                                .aspectRatio(1f),
+                            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimaryContainer)
                         )
                     }
                 })

@@ -1121,7 +1121,7 @@ class PlayService : MediaBrowserServiceCompat() {
                 super.onPositionDiscontinuity(oldPosition, newPosition, reason)
                 if (musicQueue.isEmpty()) return
                 updateNotify()
-                if (oldPosition.mediaItemIndex != newPosition.mediaItemIndex) {
+                if (oldPosition.mediaItemIndex != newPosition.mediaItemIndex||reason>=4) {
                     saveSelectMusicId(
                         musicQueue[newPosition.mediaItemIndex].id
                     )
@@ -1645,7 +1645,7 @@ class PlayService : MediaBrowserServiceCompat() {
                         CoroutineScope(Dispatchers.IO).launch {
                             val sortData =
                                 db.SortFiledDao()
-                                    .findSortByType(PlayUtils.ListTypeTracks.GenresTracks)
+                                    .findSortByType(PlayUtils.ListTypeTracks.FoldersTracks)
                             val uri =
                                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
                             val selection = MediaStore.Audio.Media.BUCKET_ID + "=?"
