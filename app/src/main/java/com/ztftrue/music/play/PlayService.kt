@@ -1121,7 +1121,7 @@ class PlayService : MediaBrowserServiceCompat() {
                 super.onPositionDiscontinuity(oldPosition, newPosition, reason)
                 if (musicQueue.isEmpty()) return
                 updateNotify()
-                if (oldPosition.mediaItemIndex != newPosition.mediaItemIndex||reason>=4) {
+                if (oldPosition.mediaItemIndex != newPosition.mediaItemIndex || reason >= 4) {
                     saveSelectMusicId(
                         musicQueue[newPosition.mediaItemIndex].id
                     )
@@ -1672,7 +1672,10 @@ class PlayService : MediaBrowserServiceCompat() {
                 }
 
                 else -> {
-
+                    bundle.putParcelableArrayList(
+                        "list",
+                        ArrayList(allTracksLinkedHashMap.values)
+                    )
                 }
             }
         }
