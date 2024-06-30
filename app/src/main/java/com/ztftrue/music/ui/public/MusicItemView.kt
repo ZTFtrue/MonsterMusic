@@ -9,6 +9,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -44,6 +48,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -60,6 +65,7 @@ import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_RemoveFromQueue
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.ui.play.toPx
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
@@ -81,11 +87,12 @@ fun MusicItemView(
     selectStatus: Boolean = false,
     selectList: SnapshotStateList<MusicItem>?,
 ) {
-    val id: Int = if (viewModel.playStatus.value && music.id == viewModel.currentPlay.value?.id) {
-        R.drawable.pause
-    } else {
-        R.drawable.play
-    }
+    val playStatusIcon: Int =
+        if (viewModel.playStatus.value && music.id == viewModel.currentPlay.value?.id) {
+            R.drawable.pause
+        } else {
+            R.drawable.play
+        }
     val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
     var showAddPlayListDialog by remember { mutableStateOf(false) }
@@ -284,7 +291,12 @@ fun MusicItemView(
             }
         })
     }
+    var offset by remember { mutableFloatStateOf(0f) }
     Row(modifier
+        .height(80.dp)
+        .graphicsLayer(
+            translationY = offset,
+        )
         .combinedClickable(
             onClick = {
                 // in select tracks status for add playlist
@@ -350,10 +362,11 @@ fun MusicItemView(
                 )
             } else {
                 Image(
-                    painter = painterResource(id),
+                    painter = painterResource(playStatusIcon),
                     contentDescription = "Operate More, will open dialog",
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(30.dp)
+                        .padding(5.dp)
                         .clip(CircleShape),
                     colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                 )
@@ -363,7 +376,7 @@ fun MusicItemView(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.weight(1f)
             ) {
-                Column(modifier = Modifier.fillMaxWidth(0.9f)) {
+                Column(modifier = Modifier.weight(1f).padding(start = 5.dp,end = 5.dp)) {
                     Text(
                         text = music.name,
                         color = MaterialTheme.colorScheme.onBackground,
@@ -375,9 +388,52 @@ fun MusicItemView(
                         modifier = Modifier.horizontalScroll(rememberScrollState(0))
                     )
                 }
+                if (playList.type == PlayListType.Queue || playList.type == PlayListType.PlayLists) {
+                    Box(modifier = Modifier
+                        .height(45.dp)
+                        .width(45.dp)
+                        .draggable(
+                            orientation = Orientation.Vertical,
+                            state = rememberDraggableState { delta ->
+                                offset += delta
+                            },
+                            onDragStopped = { _ ->
+                                var position =
+                                    index + (offset / 80.dp.toPx(context)).toInt()
+                                if (position < 0) {
+                                    position = 0
+                                }
+                                if (position > musicList.size - 1) {
+                                    position = musicList.size - 1
+                                }
+                                if (position != index) {
+                                    musicList.remove(music)
+                                    musicList.add(position, music)
+                                }
+                                offset = 0f
+                            }
+                        )) {
+                        Image(
+                            painter = painterResource(
+                                R.drawable.ic_swipe_vertical
+                            ),
+                            contentDescription = "${music.name} sort",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .padding(5.dp)
+                                .clip(
+                                    CircleShape
+                                ),
+                            colorFilter = ColorFilter.tint(
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        )
+                    }
+                }
                 if (!selectStatus) {
                     IconButton(
-                        modifier = Modifier.width(50.dp), onClick = {
+                        modifier = Modifier
+                            .width(45.dp), onClick = {
                             showDialog = true
                         }) {
                         Icon(

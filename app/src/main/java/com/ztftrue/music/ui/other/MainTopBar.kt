@@ -137,11 +137,11 @@ fun MainTopBar(
                 return
             }
             val (filedSelected, onFiledOptionSelected) = remember {
-                mutableStateOf(sortFiledOptions.entries.first().key)
+                mutableStateOf("")
             }
 
             val (methodSelected, onMethodOptionSelected) = remember {
-                mutableStateOf(PlayUtils.methodMap.entries.first().key)
+                mutableStateOf("")
             }
             var sortDb: SortFiledDao?
 
@@ -190,6 +190,39 @@ fun MainTopBar(
                         contentPadding = PaddingValues(5.dp),
                         modifier = Modifier
                     ) {
+                        item(){
+                            Row(
+                                horizontalArrangement = Arrangement.End,
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .wrapContentSize()
+                                    .clickable {
+
+                                    }
+                                    .padding(all = Dp(value = 8F))
+                            ) {
+                                Text(
+                                    text = "Default",
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                                RadioButton(
+                                    selected = ("" == filedSelected),
+                                    modifier = Modifier
+                                        .wrapContentSize(),
+                                    onClick = {
+                                        onFiledOptionSelected("")
+                                        onMethodOptionSelected("")
+                                    }
+                                )
+                            }
+                            HorizontalDivider(
+                                modifier = Modifier
+                                    .height(1.dp)
+                                    .wrapContentSize(align = Alignment.BottomCenter)
+                                    .width(140.dp)
+                                    .background(color = MaterialTheme.colorScheme.onBackground)
+                            )
+                        }
                         val filedKeys = sortFiledOptions.keys.toList()
                         items(filedKeys.size) { i ->
                             Row(
@@ -199,6 +232,9 @@ fun MainTopBar(
                                     .wrapContentSize()
                                     .clickable {
                                         onFiledOptionSelected(filedKeys[i])
+                                        if(methodSelected.isEmpty()||methodSelected.isBlank()){
+                                            onMethodOptionSelected(PlayUtils.methodMap.entries.first().key)
+                                        }
                                     }
                                     .padding(all = Dp(value = 8F))
                             ) {
@@ -212,6 +248,9 @@ fun MainTopBar(
                                         .wrapContentSize(),
                                     onClick = {
                                         onFiledOptionSelected(filedKeys[i])
+                                        if(methodSelected.isEmpty()||methodSelected.isBlank()){
+                                            onMethodOptionSelected(PlayUtils.methodMap.entries.first().key)
+                                        }
                                     }
                                 )
                             }
@@ -238,6 +277,10 @@ fun MainTopBar(
                                     .padding(all = Dp(value = 8F))
                                     .clickable {
                                         onMethodOptionSelected(methodKeys[i])
+                                        if(filedSelected.isEmpty()||filedSelected.isBlank()){
+                                            onFiledOptionSelected(sortFiledOptions.entries.first().key)
+                                        }
+
                                     }
                             ) {
                                 Text(
@@ -250,6 +293,9 @@ fun MainTopBar(
                                         .wrapContentSize(),
                                     onClick = {
                                         onMethodOptionSelected(methodKeys[i])
+                                        if(filedSelected.isEmpty()||filedSelected.isBlank()){
+                                            onFiledOptionSelected(sortFiledOptions.entries.first().key)
+                                        }
                                     }
                                 )
                             }
@@ -289,18 +335,18 @@ fun MainTopBar(
                                                 sortDb?.findSortByType(musicViewModel.mainTabList[pagerState.currentPage].type.name)
                                             if (sortData != null) {
                                                 sortData.method =
-                                                    PlayUtils.methodMap[methodSelected] ?: "AES"
+                                                    PlayUtils.methodMap[methodSelected] ?: ""
                                                 sortData.methodName = methodSelected
                                                 sortData.filed = sortFiledOptions[filedSelected]
-                                                    ?: "Alphabetical"
+                                                    ?: ""
                                                 sortData.filedName = filedSelected
                                                 sortDb?.update(sortData)
                                             } else {
                                                 sortData = SortFiledData(
                                                     musicViewModel.mainTabList[pagerState.currentPage].type.name,
                                                     sortFiledOptions[filedSelected]
-                                                        ?: "Alphabetical",
-                                                    PlayUtils.methodMap[methodSelected] ?: "AES",
+                                                        ?: "",
+                                                    PlayUtils.methodMap[methodSelected] ?: "",
                                                     methodSelected,
                                                     filedSelected
                                                 )
@@ -311,11 +357,11 @@ fun MainTopBar(
                                 val bundle = Bundle()
                                 bundle.putString(
                                     "method",
-                                    PlayUtils.methodMap[methodSelected] ?: "AES"
+                                    PlayUtils.methodMap[methodSelected] ?: ""
                                 )
                                 bundle.putString(
                                     "filed", sortFiledOptions[filedSelected]
-                                        ?: "Alphabetical"
+                                        ?: ""
                                 )
                                 bundle.putString(
                                     "type",

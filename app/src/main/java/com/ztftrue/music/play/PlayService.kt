@@ -13,6 +13,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.media.MediaBrowserServiceCompat
@@ -1066,28 +1067,16 @@ class PlayService : MediaBrowserServiceCompat() {
                     currentPlayTrack =
                         musicQueue[exoPlayer.currentMediaItemIndex]
                 }
-                if (isPlaying) {
-                    notify?.updateNotification(
-                        this@PlayService,
-                        currentPlayTrack?.name ?: "",
-                        currentPlayTrack?.artist ?: "",
-                        true,
-                        exoPlayer.playbackParameters.speed,
-                        exoPlayer.currentPosition,
-                        exoPlayer.duration
-                    )
-                    saveCurrentDuration(exoPlayer.currentPosition)
-                } else {
-                    notify?.updateNotification(
-                        this@PlayService,
-                        currentPlayTrack?.name ?: "",
-                        currentPlayTrack?.artist ?: "",
-                        false,
-                        exoPlayer.playbackParameters.speed,
-                        exoPlayer.currentPosition,
-                        exoPlayer.duration
-                    )
-                }
+                saveCurrentDuration(exoPlayer.currentPosition)
+                notify?.updateNotification(
+                    this@PlayService,
+                    currentPlayTrack?.name ?: "",
+                    currentPlayTrack?.artist ?: "",
+                    isPlaying,
+                    exoPlayer.playbackParameters.speed,
+                    exoPlayer.currentPosition,
+                    exoPlayer.duration
+                )
             }
 
             override fun onPlayerError(error: PlaybackException) {
@@ -1121,7 +1110,12 @@ class PlayService : MediaBrowserServiceCompat() {
                 super.onPositionDiscontinuity(oldPosition, newPosition, reason)
                 if (musicQueue.isEmpty()) return
                 updateNotify()
-                if (oldPosition.mediaItemIndex != newPosition.mediaItemIndex || reason >= 4) {
+                Log.i("TAG-onPositionDiscontinuity", reason.toString())
+                Log.i(
+                    "TAG-onPositionDiscontinuity",
+                    "${oldPosition.mediaItem?.mediaId},${newPosition.mediaItem?.mediaId}"
+                )
+                if (oldPosition.mediaItemIndex != newPosition.mediaItemIndex || reason >= 4 || currentPlayTrack?.id != musicQueue[newPosition.mediaItemIndex].id) {
                     saveSelectMusicId(
                         musicQueue[newPosition.mediaItemIndex].id
                     )
