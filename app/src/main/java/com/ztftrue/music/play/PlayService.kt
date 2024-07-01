@@ -45,6 +45,8 @@ import com.ztftrue.music.sqlData.model.CurrentList
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.PlayConfig
+import com.ztftrue.music.sqlData.model.PlayListData
+import com.ztftrue.music.sqlData.model.PlayListTable
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.model.AlbumList
@@ -292,15 +294,18 @@ class PlayService : MediaBrowserServiceCompat() {
             } else {
                 result.detach()
                 CoroutineScope(Dispatchers.IO).launch {
-                    val sortData =
+                    val sortDataP =
                         db.SortFiledDao().findSortByType(PlayListType.PlayLists.name)
-                    PlaylistManager.getPlaylists(
-                        this@PlayService,
-                        playListLinkedHashMap,
-                        tracksLinkedHashMap,
-                        result,
-                        "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
-                    )
+//                    tracksLinkedHashMap
+                    val list = db.PlayListDao()
+                        .findPlayListAll("${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}".ifBlank { null })
+                    list?.forEach { item ->
+                        playListLinkedHashMap[item.id] =
+                            MusicPlayList(item.name, item.id, item.tracksNumber)
+                    }
+                    val bundle = Bundle()
+                    bundle.putParcelableArrayList("list", ArrayList(playListLinkedHashMap.values))
+                    result.sendResult(bundle)
                 }
             }
         } else if (PlayListType.Songs.name == action) {
@@ -538,18 +543,20 @@ class PlayService : MediaBrowserServiceCompat() {
         } else if (ACTION_PlayLIST_CHANGE == action) {
             playListLinkedHashMap.clear()
             playListTracksHashMap.clear()
+            result.detach()
             CoroutineScope(Dispatchers.IO).launch {
-                val sortData =
+                val sortDataP =
                     db.SortFiledDao().findSortByType(PlayListType.PlayLists.name)
-                PlaylistManager.getPlaylists(
-                    this@PlayService,
-                    playListLinkedHashMap,
-                    tracksLinkedHashMap,
-                    null,
-                    "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
-                )
+                val list = db.PlayListDao()
+                    .findPlayListAll("${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}".ifBlank { null })
+                list?.forEach { item ->
+                    playListLinkedHashMap[item.id] =
+                        MusicPlayList(item.name, item.id, item.tracksNumber)
+                }
+                val bundle = Bundle()
+                bundle.putParcelableArrayList("list", ArrayList(playListLinkedHashMap.values))
+                result.sendResult(bundle)
             }
-            result.sendResult(null)
         } else if (ACTION_SEARCH == action) {
             search(extras, result)
         } else if (ACTION_GET_ALBUM_BY_ID == action) {
@@ -721,6 +728,50 @@ class PlayService : MediaBrowserServiceCompat() {
                     )
                     runBlocking {
                         awaitAll(
+                            async {
+                                val playList = db.PlayListDao().findPlayListAll(null);
+                                if (playList.isNullOrEmpty()) {
+                                    val sortDataP =
+                                        db.SortFiledDao()
+                                            .findSortByType(PlayListType.PlayLists.name)
+                                    val playListMapTracks: HashMap<Long, ArrayList<MusicItem>> =
+                                        HashMap()
+                                    PlaylistManager.getPlaylists(
+                                        this@PlayService,
+                                        playListLinkedHashMap,
+                                        playListMapTracks,
+                                        tracksLinkedHashMap,
+                                        "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
+                                    )
+                                    val playListArray = ArrayList<PlayListTable>()
+                                    val playListDataArray = ArrayList<PlayListData>()
+                                    playListLinkedHashMap.values.forEachIndexed { index, item ->
+                                        val playListTable = PlayListTable(
+                                            index + 1L,
+                                            item.id,
+                                            item.name,
+                                            item.trackNumber
+                                        )
+                                        playListMapTracks[item.id]?.forEachIndexed() { tIndex, track ->
+                                            val playListData =
+                                                PlayListData(
+                                                    null,
+                                                    item.id,
+                                                    track.id,
+                                                    track.album,
+                                                    track.artist,
+                                                    track.duration,
+                                                    track.name,
+                                                    track.year,
+                                                    tIndex
+                                                )
+                                            playListDataArray.add(playListData)
+                                        }
+                                        playListArray.add(playListTable)
+                                    }
+                                    db.PlayListDao().insertPlayListArray(playListArray)
+                                }
+                            },
                             async {
                                 val auxTemp = db.AuxDao().findFirstAux()
                                 if (auxTemp == null) {
@@ -1033,7 +1084,6 @@ class PlayService : MediaBrowserServiceCompat() {
         playerAddListener()
     }
 
-
     private fun playPreview() {
         saveCurrentDuration(0)
         if (exoPlayer.hasPreviousMediaItem()) {
@@ -1042,7 +1092,6 @@ class PlayService : MediaBrowserServiceCompat() {
     }
 
     private fun playNext() {
-
         if (exoPlayer.hasNextMediaItem()) {
             exoPlayer.seekToNextMediaItem()
         }

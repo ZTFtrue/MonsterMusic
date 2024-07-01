@@ -12,6 +12,7 @@ import com.ztftrue.music.sqlData.dao.CurrentListDao
 import com.ztftrue.music.sqlData.dao.DictionaryAppDao
 import com.ztftrue.music.sqlData.dao.MainTabDao
 import com.ztftrue.music.sqlData.dao.PlayConfigDao
+import com.ztftrue.music.sqlData.dao.PlayListDao
 import com.ztftrue.music.sqlData.dao.QueueDao
 import com.ztftrue.music.sqlData.dao.SortFiledDao
 import com.ztftrue.music.sqlData.dao.StorageFolderDao
@@ -21,6 +22,8 @@ import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.PlayConfig
+import com.ztftrue.music.sqlData.model.PlayListData
+import com.ztftrue.music.sqlData.model.PlayListTable
 import com.ztftrue.music.sqlData.model.SortFiledData
 import com.ztftrue.music.sqlData.model.StorageFolder
 import kotlin.concurrent.Volatile
@@ -30,11 +33,11 @@ const val MUSIC_DATABASE_NAME = "default_data.db"
 
 @Database(
     entities = [Auxr::class, CurrentList::class, MainTab::class, PlayConfig::class, MusicItem::class,
-        DictionaryApp::class, StorageFolder::class,SortFiledData::class],
-    version = 4,
+        DictionaryApp::class, StorageFolder::class, SortFiledData::class, PlayListTable::class, PlayListData::class],
+    version = 5,
     exportSchema = true,
     autoMigrations = [
-        AutoMigration(from = 3, to = 4)
+        AutoMigration(from = 4, to = 5)
     ]
 )
 abstract class MusicDatabase : RoomDatabase() {
@@ -46,6 +49,7 @@ abstract class MusicDatabase : RoomDatabase() {
     abstract fun DictionaryAppDao(): DictionaryAppDao
     abstract fun StorageFolderDao(): StorageFolderDao
     abstract fun SortFiledDao(): SortFiledDao
+    abstract fun PlayListDao(): PlayListDao
 
     companion object {
         @Volatile
@@ -61,6 +65,7 @@ abstract class MusicDatabase : RoomDatabase() {
                             .addMigrations(MIGRATION_1_2) // Add migration path from version 1 to version 2
                             .addMigrations(MIGRATION_2_3)
                             .addMigrations(MIGRATION_3_4)
+                            .addMigrations(MIGRATION_4_5)
                             .build()
                     }
                 }
@@ -107,6 +112,38 @@ abstract class MusicDatabase : RoomDatabase() {
                 methodName TEXT NOT NULL,
                 filedName TEXT NOT NULL,
                 PRIMARY KEY(type)
+            )
+        """.trimIndent()
+                )
+            }
+        }
+        val MIGRATION_4_5: Migration = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Create the play_list_data table
+                db.execSQL(
+                    """
+            CREATE TABLE IF NOT EXISTS play_list_data (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                playListId INTEGER NOT NULL,
+                trackId INTEGER NOT NULL,
+                album TEXT NOT NULL,
+                artist TEXT NOT NULL,
+                duration INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                year INTEGER NOT NULL,
+                priority INTEGER NOT NULL
+            )
+        """.trimIndent()
+                )
+
+                // Create the play_list table
+                db.execSQL(
+                    """
+            CREATE TABLE IF NOT EXISTS play_list (
+                id INTEGER PRIMARY KEY NOT NULL,
+                systemId INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                tracksNumber INTEGER NOT NULL
             )
         """.trimIndent()
                 )

@@ -7,14 +7,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.os.Process
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
 import androidx.annotation.OptIn
-import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.R
@@ -34,12 +32,10 @@ object PlaylistManager {
     fun getPlaylists(
         context: Context,
         list: LinkedHashMap<Long, MusicPlayList>,
-
+        playListMapTracks: HashMap<Long, ArrayList<MusicItem>>,
         tracksHashMap: LinkedHashMap<Long, MusicItem>,
-        result: MediaBrowserServiceCompat.Result<Bundle>?,
         sortOrder: String
     ) {
-        val map: HashMap<Long, ArrayList<MusicItem>> = HashMap()
         val playListProjection = arrayOf(
             MediaStore.Audio.Playlists._ID,
             MediaStore.Audio.Playlists.NAME,
@@ -66,16 +62,12 @@ object PlaylistManager {
                 musicResolver.notifyChange(tracksUri, null)
                 val tracks =
                     getTracksByPlayListId(context, tracksUri, tracksHashMap, null, null, null)
-                map[id] = tracks
+                playListMapTracks[id] = tracks
                 playList[id] = MusicPlayList(name, id, tracks.size)
             } while (cursor.moveToNext())
         }
-
         list.putAll(playList)
         cursor?.close()
-        val bundle = Bundle()
-        bundle.putParcelableArrayList("list", ArrayList(list.values))
-        result?.sendResult(bundle)
     }
 
     fun getTracksByPlayListId(
