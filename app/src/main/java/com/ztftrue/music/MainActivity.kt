@@ -57,6 +57,7 @@ import com.ztftrue.music.utils.OperateTypeInActivity
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.trackManager.PlaylistManager.removeTrackFromM3U
+import com.ztftrue.music.utils.trackManager.PlaylistManager.sortTrackFromM3U
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -106,8 +107,43 @@ class MainActivity : ComponentActivity() {
                 } else if (OperateTypeInActivity.RemoveTrackFromPlayList.name == action) {
                     val playListPath = bundle.getString("playListPath", "")
                     val trackIndex = bundle.getInt("trackIndex", -1)
+                    val uri = bundle.getString("uri", "")
                     if (playListPath.isNotEmpty() && trackIndex != -1) {
-                        removeTrackFromM3U(playListPath, trackIndex)
+                        removeTrackFromM3U(this@MainActivity ,Uri.parse(uri), trackIndex)
+                        MediaScannerConnection.scanFile(
+                            this@MainActivity,
+                            arrayOf<String>(playListPath),
+                            arrayOf("*/*"),
+                            object : MediaScannerConnectionClient {
+                                override fun onMediaScannerConnected() {}
+                                override fun onScanCompleted(path: String, uri: Uri) {
+                                    musicViewModel.mediaBrowser?.sendCustomAction(
+                                        ACTION_PlayLIST_CHANGE,
+                                        null,
+                                        object : MediaBrowserCompat.CustomActionCallback() {
+                                            override fun onResult(
+                                                action: String?,
+                                                extras: Bundle?,
+                                                resultData: Bundle?
+                                            ) {
+                                                super.onResult(action, extras, resultData)
+                                                if (ACTION_PlayLIST_CHANGE == action) {
+                                                    musicViewModel.refreshPlayList.value =
+                                                        !musicViewModel.refreshPlayList.value
+                                                }
+                                            }
+                                        }
+                                    )
+                                }
+                            })
+                    }
+                    return@registerForActivityResult
+                } else if (OperateTypeInActivity.ResortTrackForPlaylist.name == action) {
+                    val playListPath = bundle.getString("playListPath", "")
+                    val targetIndex = bundle.getInt("targetIndex", -1)
+                    val currentIndex = bundle.getInt("currentIndex", -1)
+                    if (playListPath.isNotEmpty() && targetIndex != -1 && currentIndex != -1) {
+                        sortTrackFromM3U(playListPath, targetIndex, currentIndex)
                         MediaScannerConnection.scanFile(
                             this@MainActivity,
                             arrayOf<String>(playListPath),
@@ -205,7 +241,8 @@ class MainActivity : ComponentActivity() {
                         ) {
                             super.onResult(action, extras, resultData)
                             if (ACTION_PlayLIST_CHANGE == action) {
-                                musicViewModel.refreshPlayList.value = !musicViewModel.refreshPlayList.value
+                                musicViewModel.refreshPlayList.value =
+                                    !musicViewModel.refreshPlayList.value
                             }
                         }
                     }

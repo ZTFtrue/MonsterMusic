@@ -1377,69 +1377,65 @@ class PlayService : MediaBrowserServiceCompat() {
             //filed
             val typeString = extras.getString("type")
             if (!typeString.isNullOrEmpty()) {
-                val filed = extras.getString("filed", "")
-                val method = extras.getString("method", "")
-                if (filed.isNotEmpty() && method.isNotEmpty()) {
-                    when (typeString) {
-                        PlayListType.PlayLists.name -> {
-                            playListLinkedHashMap.clear()
+                when (typeString) {
+                    PlayListType.PlayLists.name -> {
+                        playListLinkedHashMap.clear()
+                    }
+
+                    PlayListType.Albums.name -> {
+                        albumsLinkedHashMap.clear()
+                    }
+
+                    PlayListType.Artists.name -> {
+                        artistsLinkedHashMap.clear()
+                    }
+
+                    PlayListType.Genres.name -> {
+                        genresLinkedHashMap.clear()
+                    }
+
+                    PlayListType.Songs.name -> {
+                        tracksLinkedHashMap.clear()
+                        result.detach()
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val sortData =
+                                db.SortFiledDao().findSortByType(PlayListType.Songs.name)
+                            TracksManager.getFolderList(
+                                this@PlayService,
+                                foldersLinkedHashMap,
+                                result,
+                                tracksLinkedHashMap,
+                                "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
+                                true
+                            )
                         }
+                        return
+                    }
 
-                        PlayListType.Albums.name -> {
-                            albumsLinkedHashMap.clear()
-                        }
-
-                        PlayListType.Artists.name -> {
-                            artistsLinkedHashMap.clear()
-                        }
-
-                        PlayListType.Genres.name -> {
-                            genresLinkedHashMap.clear()
-                        }
-
-                        PlayListType.Songs.name -> {
-                            tracksLinkedHashMap.clear()
-                            result.detach()
-                            CoroutineScope(Dispatchers.IO).launch {
-                                val sortData =
-                                    db.SortFiledDao().findSortByType(PlayListType.Songs.name)
-                                TracksManager.getFolderList(
-                                    this@PlayService,
-                                    foldersLinkedHashMap,
-                                    result,
-                                    tracksLinkedHashMap,
-                                    "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
-                                    true
-                                )
-                            }
-                            return
-                        }
-
-                        PlayUtils.ListTypeTracks.PlayListsTracks -> {
-                            playListTracksHashMap.clear()
-
-                        }
-
-                        PlayUtils.ListTypeTracks.AlbumsTracks -> {
-                            albumsListTracksHashMap.clear()
-
-                        }
-
-                        PlayUtils.ListTypeTracks.ArtistsTracks -> {
-                            artistsListTracksHashMap.clear()
-
-                        }
-
-                        PlayUtils.ListTypeTracks.GenresTracks -> {
-                            genresListTracksHashMap.clear()
-
-                        }
-
-                        PlayUtils.ListTypeTracks.FoldersTracks -> {
-                            foldersListTracksHashMap.clear()
-                        }
+                    PlayUtils.ListTypeTracks.PlayListsTracks -> {
+                        playListTracksHashMap.clear()
 
                     }
+
+                    PlayUtils.ListTypeTracks.AlbumsTracks -> {
+                        albumsListTracksHashMap.clear()
+
+                    }
+
+                    PlayUtils.ListTypeTracks.ArtistsTracks -> {
+                        artistsListTracksHashMap.clear()
+
+                    }
+
+                    PlayUtils.ListTypeTracks.GenresTracks -> {
+                        genresListTracksHashMap.clear()
+
+                    }
+
+                    PlayUtils.ListTypeTracks.FoldersTracks -> {
+                        foldersListTracksHashMap.clear()
+                    }
+
                 }
             }
         }

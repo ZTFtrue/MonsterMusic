@@ -31,6 +31,7 @@ enum class OperateTypeInActivity {
     DeletePlayList,
     InsertTrackToPlaylist,
     RemoveTrackFromPlayList,
+    ResortTrackForPlaylist,
     RenamePlaylist,
     RemoveTrackFromStorage,
     EditTrackInfo,

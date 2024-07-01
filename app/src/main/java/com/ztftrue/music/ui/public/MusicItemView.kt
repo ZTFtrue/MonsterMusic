@@ -398,19 +398,20 @@ fun MusicItemView(
                                 offset += delta
                             },
                             onDragStopped = { _ ->
-                                var position =
+                                var targetPosition =
                                     index + (offset / 80.dp.toPx(context)).toInt()
-                                if (position < 0) {
-                                    position = 0
+                                if (targetPosition < 0) {
+                                    targetPosition = 0
                                 }
-                                if (position > musicList.size - 1) {
-                                    position = musicList.size - 1
+                                if (targetPosition > musicList.size - 1) {
+                                    targetPosition = musicList.size - 1
                                 }
-                                if (position != index) {
+                                if (targetPosition != index) {
                                     musicList.remove(music)
-                                    musicList.add(position, music)
+                                    musicList.add(targetPosition, music)
                                 }
                                 offset = 0f
+                             PlaylistManager.   sortTrackFromPlayList(context, playList.id,targetPosition, index)
                             }
                         )) {
                         Image(
