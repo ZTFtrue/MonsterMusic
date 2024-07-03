@@ -126,7 +126,7 @@ import kotlin.math.roundToLong
 
 const val CoverID = 0
 const val LyricsID = 1
-const val EqualizerID = 2
+const val EffectID = 2
 
 data class PlayingViewTab(
     val name: String,
@@ -147,7 +147,7 @@ fun PlayingPage(
     val context = LocalContext.current
     val playViewTab: Array<PlayingViewTab> = arrayOf(
         PlayingViewTab("Cover", CoverID, 1), PlayingViewTab("Lyrics", LyricsID, 1),
-        PlayingViewTab("Equalizer", EqualizerID, 1)
+        PlayingViewTab("Effect", EffectID, 1)
     )
     val pagerTabState = rememberPagerState { playViewTab.size }
     val coroutineScope = rememberCoroutineScope()
@@ -1142,7 +1142,7 @@ fun PlayingPage(
                                 LyricsView(viewModel)
                             }
 
-                            EqualizerID -> {
+                            EffectID -> {
                                 EqualizerView(viewModel)
                             }
                         }

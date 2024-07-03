@@ -101,6 +101,7 @@ object Utils {
         put("Cover", R.string.tab_cover)
         put("Lyrics", R.string.tab_lyrics)
         put("Equalizer", R.string.tab_equalizer)
+        put("Effect", R.string.effect)
         put("Custom", R.string.custom)
     }
 
