@@ -1,9 +1,11 @@
 package com.ztftrue.music.ui.public
 
+import android.content.Context
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -63,8 +65,12 @@ import com.ztftrue.music.play.ACTION_AddPlayQueue
 import com.ztftrue.music.play.ACTION_PLAY_MUSIC
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_RemoveFromQueue
+import com.ztftrue.music.play.ACTION_Sort_Queue
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
+import com.ztftrue.music.play.PlayUtils
+import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.sqlData.model.SortFiledData
 import com.ztftrue.music.ui.play.toPx
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
@@ -73,6 +79,10 @@ import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.TracksManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalFoundationApi::class)
@@ -157,8 +167,15 @@ fun MusicItemView(
                     }
 
                     OperateType.RemoveFromPlaylist -> {
+                        if (index < musicList.size)
+                            musicList.removeAt(index)
                         val playListPath =
-                            PlaylistManager.removeTrackFromPlayList(context, playList.id, index)
+                            PlaylistManager.modifyTrackFromPlayList(
+                                context,
+                                playList.id,
+                                ArrayList(musicList.toList()),
+                                music.path
+                            )
                         if (!playListPath.isNullOrEmpty()) {
                             MediaScannerConnection.scanFile(
                                 context,
@@ -184,8 +201,6 @@ fun MusicItemView(
                                         )
                                     }
                                 })
-
-
                         }
                     }
 
@@ -308,10 +323,7 @@ fun MusicItemView(
                     }
                 } else {
                     val bundle = Bundle()
-                    if (playList.type != PlayListType.Queue
-                        && !(playList.type == viewModel.playListCurrent.value?.type
-                                && playList.id == viewModel.playListCurrent.value?.id)
-                    ) {
+                    if (playList.type != PlayListType.Queue) {
                         viewModel.playListCurrent.value = playList
                         viewModel.musicQueue.clear()
                         viewModel.currentPlayQueueIndex.intValue = -1
@@ -376,7 +388,11 @@ fun MusicItemView(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.weight(1f)
             ) {
-                Column(modifier = Modifier.weight(1f).padding(start = 5.dp,end = 5.dp)) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 5.dp, end = 5.dp)
+                ) {
                     Text(
                         text = music.name,
                         color = MaterialTheme.colorScheme.onBackground,
@@ -409,9 +425,18 @@ fun MusicItemView(
                                 if (targetPosition != index) {
                                     musicList.remove(music)
                                     musicList.add(targetPosition, music)
+                                    saveSortResult(
+                                        playList,
+                                        musicList,
+                                        context,
+                                        music,
+                                        viewModel,
+                                        index,
+                                        targetPosition
+                                    )
                                 }
                                 offset = 0f
-                             PlaylistManager.   sortTrackFromPlayList(context, playList.id,targetPosition, index)
+
                             }
                         )) {
                         Image(
@@ -449,6 +474,114 @@ fun MusicItemView(
                 }
             }
         }
+    }
+}
+
+fun saveSortResult(
+    playList: AnyListBase,
+    musicList: SnapshotStateList<MusicItem>,
+    context: Context,
+    music: MusicItem,
+    viewModel: MusicViewModel,
+    index: Int,
+    targetIndex: Int
+) {
+    if (playList.type == PlayListType.PlayLists) {
+        val playListPath =
+            PlaylistManager.modifyTrackFromPlayList(
+                context,
+                playList.id,
+                ArrayList(musicList.toList()),
+                music.path
+            )
+        CoroutineScope(Dispatchers.IO).launch {
+            val sortDb =
+                MusicDatabase
+                    .getDatabase(context)
+                    .SortFiledDao()
+            var sortData =
+                sortDb.findSortByType(playList.type.name + "@Tracks")
+            if (sortData != null) {
+                if (sortData.method != "" || sortData.filed != "") {
+                    CoroutineScope(Dispatchers.Main).launch {
+                        Toast
+                            .makeText(
+                                context,
+                                "Already change you sort order to default",
+                                Toast.LENGTH_LONG
+                            )
+                            .show()
+                    }
+                }
+                sortData.method = ""
+                sortData.methodName = ""
+                sortData.filed = ""
+                sortData.filedName = ""
+                sortDb.update(sortData)
+            } else {
+                sortData = SortFiledData(
+                    playList.type.name + "@Tracks",
+                    "", "", "", ""
+                )
+                sortDb.insert(sortData)
+            }
+            if (!playListPath.isNullOrEmpty()) {
+                MediaScannerConnection.scanFile(
+                    context,
+                    arrayOf(playListPath),
+                    arrayOf("*/*"),
+                    object :
+                        MediaScannerConnection.MediaScannerConnectionClient {
+                        override fun onMediaScannerConnected() {}
+                        override fun onScanCompleted(
+                            path: String,
+                            uri: Uri
+                        ) {
+                            viewModel.mediaBrowser?.sendCustomAction(
+                                ACTION_PlayLIST_CHANGE,
+                                null,
+                                object :
+                                    MediaBrowserCompat.CustomActionCallback() {
+                                    override fun onResult(
+                                        action: String?,
+                                        extras: Bundle?,
+                                        resultData: Bundle?
+                                    ) {
+                                        super.onResult(
+                                            action,
+                                            extras,
+                                            resultData
+                                        )
+                                    }
+                                }
+                            )
+                        }
+                    })
+            }
+        }
+    } else if (playList.type == PlayListType.Queue) {
+        val bundle = Bundle();
+        bundle.putInt("index", index)
+        bundle.putInt("targetIndex", targetIndex)
+        viewModel.mediaBrowser?.sendCustomAction(
+            ACTION_Sort_Queue,
+            bundle,
+            object :
+                MediaBrowserCompat.CustomActionCallback() {
+                override fun onResult(
+                    action: String?,
+                    extras: Bundle?,
+                    resultData: Bundle?
+                ) {
+                    super.onResult(
+                        action,
+                        extras,
+                        resultData
+                    )
+                }
+            }
+        )
+
     }
 }
 

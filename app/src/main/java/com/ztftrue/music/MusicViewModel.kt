@@ -290,10 +290,11 @@ class MusicViewModel : ViewModel() {
                                 }
                             }
                         } catch (e: Exception) {
+                            getDb(context).StorageFolderDao().deleteById(storageFolder.id!!)
                             CoroutineScope(Dispatchers.Main).launch {
                                 Toast.makeText(
                                     context,
-                                    "There has error, maybe you should clear data. Most of times, this occur after you reinstall app.",
+                                    "There has error, can't read some lyrics. Most of times, this occur after you reinstall app.",
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }

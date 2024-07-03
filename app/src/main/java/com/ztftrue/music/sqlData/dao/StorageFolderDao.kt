@@ -26,5 +26,5 @@ interface StorageFolderDao {
     fun update(folder: StorageFolder)
 
     @Query("DELETE FROM storage_folder WHERE id = :id")
-    fun deleteById(id: Long)
+    fun deleteById(id: Int)
 }

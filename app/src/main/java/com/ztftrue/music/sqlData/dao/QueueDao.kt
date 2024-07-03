@@ -10,7 +10,7 @@ import com.ztftrue.music.sqlData.model.MusicItem
 @Dao
 interface QueueDao {
 
-    @Query("SELECT * FROM queue")
+    @Query("SELECT * FROM queue ORDER by tableId")
     fun findQueue(): List<MusicItem>?
 
     @Insert
@@ -24,6 +24,9 @@ interface QueueDao {
 
     @Update
     fun update(main: MusicItem)
+
+    @Update
+    fun updateList(m: List<MusicItem>)
 
     @Query("DELETE FROM queue")
     fun deleteAllQueue()

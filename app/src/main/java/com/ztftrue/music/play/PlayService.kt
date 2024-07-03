@@ -94,6 +94,7 @@ const val ACTION_ECHO_FEEDBACK = "ACTION_ECHO_FEEDBACK"
 const val ACTION_SET_SLEEP_TIME = "set_sleep_time"
 const val ACTION_AddPlayQueue = "AddPlayQueue"
 const val ACTION_RemoveFromQueue = "ACTION_RemoveFromQueue"
+const val ACTION_Sort_Queue = "ACTION_Sort_Queue"
 const val ACTION_PlayLIST_CHANGE = "ACTION_PlayLIST_CHANGE"
 const val ACTION_TRACKS_DELETE = "ACTION_TRACKS_DELETE"
 const val ACTION_TRACKS_UPDATE = "ACTION_TRACKS_UPDATE"
@@ -535,6 +536,8 @@ class PlayService : MediaBrowserServiceCompat() {
             addPlayQueue(extras, result)
         } else if (ACTION_RemoveFromQueue == action) {
             removePlayQueue(extras, result)
+        } else if (ACTION_Sort_Queue == action) {
+            sortPlayQueue(extras, result)
         } else if (ACTION_PlayLIST_CHANGE == action) {
             playListLinkedHashMap.clear()
             playListTracksHashMap.clear()
@@ -942,9 +945,17 @@ class PlayService : MediaBrowserServiceCompat() {
             musicQueue.addAll(musicItems)
             if (musicQueue.isNotEmpty()) {
                 val t1 = ArrayList<MediaItem>()
-                musicQueue.forEach {
+
+                musicQueue.forEachIndexed { index, it ->
+                    it.tableId = index + 1L
                     t1.add(MediaItem.fromUri(File(it.path).toUri()))
                 }
+                val currentPosition = if (currentPlayTrack?.id == musicQueue[index].id) {
+                    exoPlayer.currentPosition
+                } else {
+                    0
+                }
+                exoPlayer.clearMediaItems()
                 exoPlayer.setMediaItems(t1)
                 CoroutineScope(Dispatchers.IO).launch {
                     var currentList = db.CurrentListDao().findCurrentList()
@@ -961,6 +972,7 @@ class PlayService : MediaBrowserServiceCompat() {
                     saveSelectMusicId(musicQueue[index].id)
                 }
                 exoPlayer.seekToDefaultPosition(index)
+                exoPlayer.seekTo(currentPosition)
                 exoPlayer.playWhenReady = true
                 exoPlayer.prepare()
                 mediaController?.transportControls?.play()
@@ -1294,7 +1306,8 @@ class PlayService : MediaBrowserServiceCompat() {
             }
             if (musicItems != null) {
                 val list = ArrayList<MediaItem>()
-                musicItems.forEach {
+                musicItems.forEachIndexed() { index1, it ->
+                    it.tableId = index1.toLong() + index+1L
                     list.add(MediaItem.fromUri(File(it.path).toUri()))
                 }
                 playListCurrent = null
@@ -1303,14 +1316,28 @@ class PlayService : MediaBrowserServiceCompat() {
                 }
                 if (index == musicQueue.size) {
                     musicQueue.addAll(musicItems)
+//                    if(BuildConfig.DEBUG){
+//                        for (i in 1 until musicQueue.size){
+//                            if(musicQueue[i-1].tableId==musicQueue[i].tableId){
+//                                Log.e("TAG-tableId","tableId equals")
+//                            }
+//                        }
+//                    }
                     CoroutineScope(Dispatchers.IO).launch {
                         db.QueueDao().insertAll(musicItems)
                     }
                 } else {
                     musicQueue.addAll(index, musicItems)
-                    musicQueue.forEach {
-                        it.tableId = null
+                    for (i in index until musicQueue.size) {
+                        musicQueue[i].tableId = index.toLong()+1L
                     }
+//                    if(BuildConfig.DEBUG){
+//                        for (i in 1 until musicQueue.size){
+//                            if(musicQueue[i-1].tableId==musicQueue[i].tableId){
+//                                Log.e("TAG-tableId","tableId equals")
+//                            }
+//                        }
+//                    }
                     CoroutineScope(Dispatchers.IO).launch {
                         db.QueueDao().deleteAllQueue()
                         db.QueueDao().insertAll(musicQueue)
@@ -1320,6 +1347,30 @@ class PlayService : MediaBrowserServiceCompat() {
                     exoPlayer.playWhenReady = false
                 }
                 exoPlayer.addMediaItems(index, list)
+            }
+        }
+        result.sendResult(null)
+    }
+
+    private fun sortPlayQueue(extras: Bundle?, result: Result<Bundle>) {
+        result.detach()
+        if (extras != null) {
+            val index = extras.getInt("index")
+            val targetIndex = extras.getInt("targetIndex")
+            val m = musicQueue.removeAt(index)
+            musicQueue.add(targetIndex, m)
+            val im = exoPlayer.getMediaItemAt(index)
+            exoPlayer.removeMediaItem(index)
+            exoPlayer.addMediaItem(targetIndex, im)
+            val start = Math.min(index, targetIndex)
+            val end = Math.max(index, targetIndex)
+            val changedQueueArray = ArrayList<MusicItem>(end - start + 1)
+            for (i in start..end) {
+                musicQueue[i].tableId = i.toLong() + 1
+                changedQueueArray.add(musicQueue[i])
+            }
+            CoroutineScope(Dispatchers.IO).launch {
+                db.QueueDao().updateList(changedQueueArray)
             }
         }
         result.sendResult(null)

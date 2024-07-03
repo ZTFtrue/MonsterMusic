@@ -26,7 +26,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStreamReader
-
+import java.util.ArrayList
 
 @Suppress("DEPRECATION")
 @OptIn(UnstableApi::class)
@@ -34,7 +34,6 @@ object PlaylistManager {
     fun getPlaylists(
         context: Context,
         list: LinkedHashMap<Long, MusicPlayList>,
-
         tracksHashMap: LinkedHashMap<Long, MusicItem>,
         result: MediaBrowserServiceCompat.Result<Bundle>?,
         sortOrder: String
@@ -248,65 +247,46 @@ object PlaylistManager {
 
 
     // Method to remove a track from a playlist
-    fun removeTrackFromPlayList(
+    fun modifyTrackFromPlayList(
         context: Context,
         playlistId: Long,
-        trackIndex: Int
+        arrayList: ArrayList<MusicItem>,
+        tracksPath: String
     ): String? {
         val contentResolver: ContentResolver = context.contentResolver
         val path = getPlayListPath(context, playlistId)
         if (path != null) {
-            var playlistUriTMD =
+            var uri: Uri =
                 MediaStore.Audio.Playlists.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            playlistUriTMD = ContentUris.withAppendedId(playlistUriTMD!!, playlistId)
+            uri = ContentUris.withAppendedId(uri, playlistId)
             if (context.checkUriPermission(
-                    playlistUriTMD,
+                    uri,
                     Process.myPid(),
                     Process.myUid(),
                     Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
-                removeTrackFromM3U(context,playlistUriTMD, trackIndex)
+                modifyTrackFromM3U(context, uri, path, arrayList, tracksPath)
                 return path
             } else {
                 if (context is MainActivity) {
-                    /**
-                     *    val bundle = context.bundle
-                     *                 bundle.putString("action", OperateTypeInActivity.InsertTrackToPlaylist.name)
-                     *                 bundle.putParcelable("uri", uri)
-                     *                 bundle.putParcelableArrayList("values", contentValues)
-                     *                 try {
-                     *                     val pendingIntent = MediaStore.createWriteRequest(resolver, listOf(uri))
-                     *                     val intentSenderRequest: IntentSenderRequest =
-                     *                         IntentSenderRequest.Builder(pendingIntent.intentSender)
-                     *                             .setFlags(
-                     *                                 Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-                     *                                 Intent.FLAG_GRANT_READ_URI_PERMISSION
-                     *                             )
-                     *                             .build()
-                     *                     context.modifyMediaLauncher.launch(intentSenderRequest)
-                     */
                     val bundle = context.bundle
                     bundle.putString(
                         "action",
-                        OperateTypeInActivity.RemoveTrackFromPlayList.name
+                        OperateTypeInActivity.ModifyTrackFromPlayList.name
                     )
-                    bundle.putInt("trackIndex", trackIndex)
                     bundle.putString("playListPath", path)
-                    var uri: Uri = MediaStore.Audio.Playlists.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-                    uri = ContentUris.withAppendedId(uri, playlistId)
                     bundle.putString("uri", uri.toString())
+                    bundle.putString("tracksPath", tracksPath)
+                    bundle.putParcelableArrayList("list", arrayList)
                     try {
                         val pendingIntent =
-                            MediaStore.createWriteRequest(
-                                contentResolver,
-                                listOf(Uri.fromFile(File(path)),uri)
-                            )
+                            MediaStore.createWriteRequest(contentResolver, listOf(uri))
                         val intentSenderRequest: IntentSenderRequest =
                             IntentSenderRequest.Builder(pendingIntent.intentSender)
                                 .setFlags(
                                     Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-                                    Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                                    Intent.FLAG_GRANT_READ_URI_PERMISSION
                                 )
                                 .build()
                         context.modifyMediaLauncher.launch(intentSenderRequest)
@@ -451,126 +431,50 @@ object PlaylistManager {
         return null
     }
 
-    fun removeTrackFromM3U(context: Context,uri: Uri, trackIndex: Int) {
 
-        val pfd: ParcelFileDescriptor? = context.getContentResolver().openFileDescriptor(uri, "rw")
-        if(pfd!=null){
-            var tIndex = trackIndex
-            val playlistContent = StringBuilder()
-            val fileInputStream=FileInputStream(pfd.fileDescriptor)
+    fun modifyTrackFromM3U(
+        context: Context, uri: Uri, m3uPath: String,
+        arrayList: ArrayList<MusicItem>,
+        tracksPath: String
+    ) {
+        val pfd: ParcelFileDescriptor? = context.contentResolver.openFileDescriptor(uri, "r")
+        val file = (File(m3uPath).parent ?: "") + "/"
+        val stringBu = StringBuilder("#EXTM3U").append("\n")
+        val hashMap = HashMap<String, Boolean>()
+        hashMap[tracksPath.replace(file, "")] = true
+        arrayList.forEach {
+            val p = it.path.replace(file, "")
+            stringBu.append(p).append("\n")
+            hashMap[p] = true
+        }
+        if (pfd != null) {
+            val fileInputStream = FileInputStream(pfd.fileDescriptor)
             val reader = BufferedReader(InputStreamReader(fileInputStream))
             var line: String?
-            var index=0;
             while ((reader.readLine().also { line = it }) != null) {
-                if (index == 0 && line == "#EXTM3U") {
-                    tIndex = trackIndex + 1
+                if (line == "" || line == "#EXTM3U") {
+                    continue
                 }
-                if (tIndex != index) {
-                    playlistContent.append(line).append("\n")
-                } else {
-                    println("Track removed from playlist: $line")
+                // save origin data of don't exist storage
+                if (hashMap[line] == null) {
+                    stringBu.append(line).append("\n")
                 }
-                index++
             }
             reader.close()
             fileInputStream.close()
-            val fileOutputStream = FileOutputStream(pfd.fileDescriptor)
-            fileOutputStream.write(playlistContent.toString().toByteArray())
-            fileOutputStream.close()
+            val pfdWT = context.contentResolver.openFileDescriptor(uri, "wt")
+            if (pfdWT != null) {
+                val fileOutputStream = FileOutputStream(pfdWT.fileDescriptor)
+                val a = stringBu.toString().toByteArray()
+                fileOutputStream.write(a)
+                fileOutputStream.flush()
+                fileOutputStream.close()
+                pfdWT.close()
+            }
             pfd.close()
         }
-        /**
-         *if need delete multiple tracks  use list to store will delete racks
-         */
-
-        // Read the contents of the existing playlist
-
-        // Write the updated content back to the playlist file
-
-//            sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file)))
     }
 
-    fun sortTrackFromPlayList(
-        context: Context,
-        playlistId: Long,
-        targetIndex: Int,
-        currentPosition: Int
-    ): String? {
-        val contentResolver: ContentResolver = context.contentResolver
-        val path = getPlayListPath(context, playlistId)
-        if (path != null) {
-            var playlistUriTMD =
-                MediaStore.Audio.Playlists.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            playlistUriTMD = ContentUris.withAppendedId(playlistUriTMD!!, playlistId)
-            if (context.checkUriPermission(
-                    playlistUriTMD,
-                    Process.myPid(),
-                    Process.myUid(),
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                sortTrackFromM3U(path, targetIndex, currentPosition)
-                return path
-            } else {
-                if (context is MainActivity) {
-                    val bundle = context.bundle
-                    bundle.putString(
-                        "action",
-                        OperateTypeInActivity.ResortTrackForPlaylist.name
-                    )
-                    bundle.putInt("targetIndex", targetIndex)
-                    bundle.putInt("currentIndex", currentPosition)
-                    bundle.putString("playListPath", path)
-                    try {
-                        val pendingIntent =
-                            MediaStore.createWriteRequest(
-                                contentResolver,
-                                setOf(Uri.fromFile(File(path)))
-                            )
-                        val intentSenderRequest: IntentSenderRequest =
-                            IntentSenderRequest.Builder(pendingIntent.intentSender)
-                                .setFlags(
-                                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-                                    Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                )
-                                .build()
-                        context.modifyMediaLauncher.launch(intentSenderRequest)
-                    } catch (e: Exception) {
-                        operateForQ(contentResolver, context, playlistId)
-                    }
-                }
-                return null
-            }
-        }
-        return null
-    }
-
-    fun sortTrackFromM3U(filePath: String, targetIndex: Int, currentPosition: Int) {
-        // Read the contents of the existing playlist
-        val file = File(filePath)
-        val arrayList = ArrayList<String>()
-        val playlistContent = StringBuilder()
-        val defaultHeader = "#EXTM3U\n"
-        file.bufferedReader().useLines { lines ->
-            lines.forEachIndexed { index, line ->
-                if (index != 0 || line != "#EXTM3U") {
-                    arrayList.add(line)
-                }
-            }
-        }
-        playlistContent.append(defaultHeader)
-        val c = arrayList.removeAt(currentPosition)
-        arrayList.add(targetIndex, c)
-        arrayList.forEach {
-            if (it.isNotEmpty()) {
-                playlistContent.append(it).append("\n")
-            }
-        }
-
-        file.bufferedWriter().use { writer ->
-            writer.write(playlistContent.toString())
-        }
-    }
 
     @Suppress("unused")
     fun getM3uFile(context: Context, filePath: String): Long? {

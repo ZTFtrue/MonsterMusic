@@ -30,8 +30,7 @@ import java.util.Locale
 enum class OperateTypeInActivity {
     DeletePlayList,
     InsertTrackToPlaylist,
-    RemoveTrackFromPlayList,
-    ResortTrackForPlaylist,
+    ModifyTrackFromPlayList,//sort and remove tracks
     RenamePlaylist,
     RemoveTrackFromStorage,
     EditTrackInfo,
