@@ -950,7 +950,12 @@ class PlayService : MediaBrowserServiceCompat() {
                     it.tableId = index + 1L
                     t1.add(MediaItem.fromUri(File(it.path).toUri()))
                 }
+                var needPlay=true;
                 val currentPosition = if (currentPlayTrack?.id == musicQueue[index].id) {
+                    if(exoPlayer.isPlaying){
+                        exoPlayer.pause()
+                        needPlay=false;
+                    }
                     exoPlayer.currentPosition
                 } else {
                     0
@@ -973,9 +978,13 @@ class PlayService : MediaBrowserServiceCompat() {
                 }
                 exoPlayer.seekToDefaultPosition(index)
                 exoPlayer.seekTo(currentPosition)
-                exoPlayer.playWhenReady = true
+                exoPlayer.playWhenReady = needPlay
                 exoPlayer.prepare()
-                mediaController?.transportControls?.play()
+//                if(needPlay){
+//                    mediaController?.transportControls?.play()
+//                }else{
+//                    mediaController?.transportControls?.pause()
+//                }
             }
         }
     }
