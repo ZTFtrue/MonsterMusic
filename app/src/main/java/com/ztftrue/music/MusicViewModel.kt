@@ -117,7 +117,7 @@ class MusicViewModel : ViewModel() {
     var sleepTime = mutableLongStateOf(0L)
     var remainTime = mutableLongStateOf(0L)
     var playCompleted = mutableStateOf(false)
-
+    var volume = mutableIntStateOf(100)
     var repeatModel = mutableIntStateOf(Player.REPEAT_MODE_ALL)
     fun reset() {
         if (currentPlay.value != null) {

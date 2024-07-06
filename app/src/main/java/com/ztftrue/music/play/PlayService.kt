@@ -96,6 +96,7 @@ const val ACTION_AddPlayQueue = "AddPlayQueue"
 const val ACTION_RemoveFromQueue = "ACTION_RemoveFromQueue"
 const val ACTION_Sort_Queue = "ACTION_Sort_Queue"
 const val ACTION_PlayLIST_CHANGE = "ACTION_PlayLIST_CHANGE"
+const val ACTION_Volume_CHANGE = "ACTION_Volume_CHANGE"
 const val ACTION_TRACKS_DELETE = "ACTION_TRACKS_DELETE"
 const val ACTION_TRACKS_UPDATE = "ACTION_TRACKS_UPDATE"
 const val ACTION_GET_TRACK_BY_ID = "ACTION_GET_TRACK_BY_ID"
@@ -125,7 +126,7 @@ class PlayService : MediaBrowserServiceCompat() {
     var musicQueue = java.util.ArrayList<MusicItem>()
     var currentPlayTrack: MusicItem? = null
 
-
+    var volumeValue: Int = 0
     private val playListTracksHashMap = java.util.HashMap<Long, java.util.ArrayList<MusicItem>>()
 
     // album tracks
@@ -611,7 +612,6 @@ class PlayService : MediaBrowserServiceCompat() {
             exoPlayer.pause()
             musicQueue.clear()
             exoPlayer.setMediaItems(ArrayList())
-
             CoroutineScope(Dispatchers.IO).launch {
                 db.QueueDao().deleteAllQueue()
                 val c = db.CurrentListDao().findCurrentList()
@@ -623,6 +623,14 @@ class PlayService : MediaBrowserServiceCompat() {
             result.sendResult(null)
         } else if (action == ACTION_SORT) {
             sortAction(extras, result)
+        } else if (action == ACTION_Volume_CHANGE) {
+            if (extras != null) {
+                volumeValue=extras.getInt("volume", 100)
+                saveVolume(volumeValue)
+//                equalizerAudioProcessor.setVolume(volumeValue)
+                exoPlayer.volume=volumeValue/100f
+            }
+            result.sendResult(null)
         }
     }
 
@@ -813,6 +821,9 @@ class PlayService : MediaBrowserServiceCompat() {
             )
         }
 
+        volumeValue = getVolume()
+//             equalizerAudioProcessor.setVolume(volumeValue)
+        exoPlayer.volume = volumeValue / 100f
         exoPlayer.repeatMode = config?.repeatModel ?: Player.REPEAT_MODE_ALL
         val p = PlaybackParameters(
             auxr.speed,
@@ -854,6 +865,7 @@ class PlayService : MediaBrowserServiceCompat() {
 
     private fun setData(bundle: Bundle, position: Float?) {
         bundle.putInt("type", EVENT_DATA_READY)
+        bundle.putInt("volume", volumeValue)
         bundle.putLong("playListID", playListCurrent?.id ?: -1)
         bundle.putString("playListType", playListCurrent?.type?.name)
         bundle.putParcelableArrayList("songsList", ArrayList(tracksLinkedHashMap.values))
@@ -950,11 +962,11 @@ class PlayService : MediaBrowserServiceCompat() {
                     it.tableId = index + 1L
                     t1.add(MediaItem.fromUri(File(it.path).toUri()))
                 }
-                var needPlay=true;
+                var needPlay = true;
                 val currentPosition = if (currentPlayTrack?.id == musicQueue[index].id) {
-                    if(exoPlayer.isPlaying){
+                    if (exoPlayer.isPlaying) {
                         exoPlayer.pause()
-                        needPlay=false;
+                        needPlay = false;
                     }
                     exoPlayer.currentPosition
                 } else {
@@ -1231,6 +1243,21 @@ class PlayService : MediaBrowserServiceCompat() {
         ).edit().putLong("CurrentPosition", duration).commit()
     }
 
+    @SuppressLint("ApplySharedPref")
+    private fun saveVolume(volume: Int) {
+        this@PlayService.getSharedPreferences(
+            "volume",
+            Context.MODE_PRIVATE
+        ).edit().putInt("volume", volume).commit()
+    }
+
+    private fun getVolume(): Int {
+        return this@PlayService.getSharedPreferences(
+            "volume",
+            Context.MODE_PRIVATE
+        ).getInt("volume", 100)
+    }
+
     private fun getCurrentPosition(): Long {
         return this@PlayService.getSharedPreferences(
             "SelectedPlayTrack",
@@ -1316,7 +1343,7 @@ class PlayService : MediaBrowserServiceCompat() {
             if (musicItems != null) {
                 val list = ArrayList<MediaItem>()
                 musicItems.forEachIndexed() { index1, it ->
-                    it.tableId = index1.toLong() + index+1L
+                    it.tableId = index1.toLong() + index + 1L
                     list.add(MediaItem.fromUri(File(it.path).toUri()))
                 }
                 playListCurrent = null
@@ -1338,7 +1365,7 @@ class PlayService : MediaBrowserServiceCompat() {
                 } else {
                     musicQueue.addAll(index, musicItems)
                     for (i in index until musicQueue.size) {
-                        musicQueue[i].tableId = index.toLong()+1L
+                        musicQueue[i].tableId = index.toLong() + 1L
                     }
 //                    if(BuildConfig.DEBUG){
 //                        for (i in 1 until musicQueue.size){

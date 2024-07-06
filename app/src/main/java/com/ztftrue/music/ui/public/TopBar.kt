@@ -1,8 +1,10 @@
 package com.ztftrue.music.ui.public
 
 import android.os.Bundle
+import android.support.v4.media.MediaBrowserCompat
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,9 +16,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -29,6 +34,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -42,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -50,18 +57,23 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.core.text.isDigitsOnly
 import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.ACTION_SET_SLEEP_TIME
+import com.ztftrue.music.play.ACTION_Volume_CHANGE
+import com.ztftrue.music.ui.play.toPx
 import com.ztftrue.music.utils.Utils
+import kotlin.math.roundToLong
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,17 +82,119 @@ fun TopBar(
     musicViewModel: MusicViewModel,
     content: @Composable RowScope.() -> Unit
 ) {
-    var context = LocalContext.current
+    val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
+    var popupVolumeWindow by remember { mutableStateOf(false) }
     val timerIcon: Int = if (musicViewModel.remainTime.longValue == 0L) {
         R.drawable.set_timer
     } else {
         R.drawable.setted_timer
     }
+    val volumeIcon: Int = if (musicViewModel.volume.intValue == 0) {
+        R.drawable.volume_off
+    } else {
+        R.drawable.volume_up
+    }
     if (showDialog) {
         SleepTimeDialog(musicViewModel, onDismiss = {
             showDialog = false
         })
+    }
+    if (popupVolumeWindow) {
+        Popup(
+            // on below line we are adding
+            // alignment and properties.
+            alignment = Alignment.TopCenter,
+            properties = PopupProperties(),
+            offset = IntOffset(
+                0.dp.toPx(context),
+                40.dp.toPx(context)
+            ),
+            onDismissRequest = {
+                popupVolumeWindow = false
+            }
+        ) {
+            val color = MaterialTheme.colorScheme.secondary
+            val configuration = LocalConfiguration.current
+            Column(
+                modifier = Modifier
+                    .width(
+                        (configuration.screenWidthDp - 20.dp.toPx(
+                            context
+                        )).dp
+                    )
+                    .padding(top = 5.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.background,
+                        RoundedCornerShape(10.dp)
+                    )
+                    .border(
+                        1.dp,
+                        color = MaterialTheme.colorScheme.primary,
+                        RoundedCornerShape(10.dp)
+                    )
+            ) {
+                LazyColumn(
+                    contentPadding = PaddingValues(5.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    item {
+                        Column( modifier = Modifier.fillMaxWidth()) {
+                            Slider(
+                                modifier = Modifier
+                                    .semantics { contentDescription = "Slider" },
+                                value = musicViewModel.volume.intValue.toFloat(),
+                                onValueChange = {
+                                    musicViewModel.volume.intValue =
+                                        it.roundToLong().toInt()
+                                },
+                                valueRange = 0f..100f,
+                                steps = 100,
+                                onValueChangeFinished = {
+                                    val bundle = Bundle()
+                                    bundle.putInt(
+                                        "volume",
+                                        musicViewModel.volume.intValue
+                                    )
+                                    musicViewModel.mediaBrowser?.sendCustomAction(      ACTION_Volume_CHANGE,
+                                        bundle,
+                                        object : MediaBrowserCompat.CustomActionCallback() {
+                                            override fun onResult(
+                                                action: String?,
+                                                extras: Bundle?,
+                                                resultData: Bundle?
+                                            ) {
+                                                super.onResult(action, extras, resultData)
+//
+                                            }
+                                        }
+                                    )
+                                },
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = buildString {
+                                        append(musicViewModel.volume.intValue.toString())
+                                        append("%")
+                                    },
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                        }
+                    }
+                    item {
+
+                    }
+
+                    item {
+
+                    }
+                }
+            }
+        }
     }
     TopAppBar(
         navigationIcon = {
@@ -88,6 +202,23 @@ fun TopBar(
         },
         title = {},
         actions = {
+            IconButton(
+                modifier = Modifier
+                    .semantics {
+                        contentDescription = "Adjust Volume"
+                    },
+                onClick = {
+                    popupVolumeWindow = true
+                }) {
+                Image(
+                    painter = painterResource(volumeIcon),
+                    contentDescription = "Operate More, will open popup",
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(CircleShape),
+                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                )
+            }
             IconButton(onClick = {
                 showDialog = true
             }) {

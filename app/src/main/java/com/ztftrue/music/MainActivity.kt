@@ -665,6 +665,7 @@ class MainActivity : ComponentActivity() {
         // SleepTime wait when play next
         musicViewModel.playCompleted.value =
             resultData.getBoolean("play_completed")
+        musicViewModel.volume.intValue = resultData.getInt("volume",100)
         getSeek()
     }
 

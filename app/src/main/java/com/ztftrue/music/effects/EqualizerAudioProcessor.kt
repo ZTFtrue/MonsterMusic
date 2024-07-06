@@ -37,7 +37,8 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var outputBuffer: ByteBuffer
     private lateinit var dataBuffer: ByteBuffer
     private var inputEnded = false
-
+    private var volumeValue: Int = 100;
+    private var volumeFloat: Float = 1.0f
     private val gainDBAbsArray: DoubleArray =
         doubleArrayOf(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
     private val gainDBArray: IntArray = intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
@@ -124,6 +125,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             return
         }
         inputBuffer.order(ByteOrder.nativeOrder())
+
         dataBuffer.put(inputBuffer)
     }
 
@@ -187,8 +189,8 @@ class EqualizerAudioProcessor : AudioProcessor {
                 var ind = 0
                 // TODO need support more channel count
                 for (i in floatArray.indices step outputAudioFormat!!.channelCount) {
-                    sampleBufferRealLeft[ind] = floatArray[i].toDouble()
-                    sampleBufferRealRight[ind] = floatArray[i + 1].toDouble()
+                    sampleBufferRealLeft[ind] = floatArray[i].toDouble() * volumeFloat
+                    sampleBufferRealRight[ind] = floatArray[i + 1].toDouble() * volumeFloat
                     ind += 1
                 }
                 runBlocking {
@@ -276,9 +278,9 @@ class EqualizerAudioProcessor : AudioProcessor {
             dataBuffer.flip()
             val processedBuffer = ByteBuffer.allocate(dataBuffer.limit())
             val a = dataBuffer.array()
-//            a.forEachIndexed{i,t->
-//                a[i]= ((t)*0.6).toInt().toByte()
-//            }
+            a.forEachIndexed { i, t ->
+                a[i] = ((t) * volumeFloat).toInt().toByte()
+            }
             processedBuffer.put(a, 0, dataBuffer.limit())
             dataBuffer.clear()
             processedBuffer.order(ByteOrder.nativeOrder())
@@ -305,6 +307,12 @@ class EqualizerAudioProcessor : AudioProcessor {
     }
 
     private val lock = ReentrantLock()
+    fun setVolume(value: Int) {
+        lock.lock()
+        volumeValue = value
+        volumeFloat = volumeValue / 100f
+        lock.unlock()
+    }
 
     fun setBand(index: Int, value: Int) {
         lock.lock()
