@@ -605,7 +605,7 @@ fun MainTopBar(
                                 modifier = Modifier
                                     .size(30.dp)
                                     .clip(CircleShape),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     }
@@ -622,7 +622,7 @@ fun MainTopBar(
                         }
                     }
                 }) {
-                    Icon(Icons.Filled.Menu, contentDescription = "menu",tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Icon(Icons.Filled.Menu, contentDescription = "menu",tint = MaterialTheme.colorScheme.onBackground)
                 }
             },
             title = { },
@@ -643,7 +643,7 @@ fun MainTopBar(
                             modifier = Modifier
                                 .size(25.dp)
                                 .clip(CircleShape),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 }

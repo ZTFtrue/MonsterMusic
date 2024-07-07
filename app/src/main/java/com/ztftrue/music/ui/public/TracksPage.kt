@@ -304,7 +304,7 @@ fun TracksListPage(
                             modifier = Modifier
                                 .size(30.dp)
                                 .clip(CircleShape),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                     IconButton(
@@ -375,7 +375,7 @@ fun TracksListPage(
                             modifier = Modifier
                                 .size(30.dp)
                                 .clip(CircleShape),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 }
@@ -595,7 +595,7 @@ fun TracksListPage(
                                 modifier = Modifier
                                     .size(30.dp)
                                     .clip(CircleShape),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     }
@@ -631,7 +631,7 @@ fun TracksListPage(
                             modifier = Modifier
                                 .size(30.dp)
                                 .clip(CircleShape),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 }
@@ -762,7 +762,7 @@ fun TracksListPage(
                                             modifier = Modifier
                                                 .size(30.dp)
                                                 .clip(CircleShape),
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                            tint = MaterialTheme.colorScheme.onBackground
                                         )
                                     }
                                 }

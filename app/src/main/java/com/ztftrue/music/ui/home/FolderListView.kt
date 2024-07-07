@@ -259,7 +259,7 @@ fun FolderItemView(
                     modifier = Modifier
                         .size(20.dp)
                         .clip(CircleShape),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = MaterialTheme.colorScheme.onBackground
                 )
             }
         }
