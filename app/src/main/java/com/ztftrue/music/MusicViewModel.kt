@@ -139,11 +139,11 @@ class MusicViewModel : ViewModel() {
 
     init {
         val band = ArrayList<EqualizerBand>()
-        for (index in 0 until Utils.kThirdOct.size) {
-            val hz = if (Utils.kThirdOct[index] < 1000) {
-                "${Utils.kThirdOct[index]}"
+        for (index in 0 until Utils.bandsCenter.size) {
+            val hz = if (Utils.bandsCenter[index] < 1000) {
+                "${Utils.bandsCenter[index]}"
             } else {
-                "${Utils.kThirdOct[index] / 1000}k"
+                "${Utils.bandsCenter[index] / 1000}k"
             }
             band.add(EqualizerBand(index, hz, 0))
         }

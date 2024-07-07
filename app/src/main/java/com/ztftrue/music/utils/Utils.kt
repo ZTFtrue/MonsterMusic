@@ -112,20 +112,20 @@ object Utils {
         R.string.theme_follow_music_cover,
         R.string.theme_material_you,
     )
-    var kThirdOct = doubleArrayOf(
+    var bandsCenter = doubleArrayOf(
         31.0, 62.0, 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0, 16000.0
     )
     var qs = doubleArrayOf(
-        30.0,
-        30.0,
-        30.0,
-        30.0,
-        30.0,
-        27.0,
-        27.0,
-        27.0,
-        27.0,
-        27.0,
+        0.707,
+        0.707,
+        0.707,
+        0.707,
+        0.707,
+        0.707,
+        0.707,
+        0.707,
+        0.707,
+        0.707,
     )
     var kThirdBW = doubleArrayOf(
         20.0, 40.0, 80.0, 160.0, 320.0, 640.0, 1280.0, 2560.0, 5120.0, 10240.0

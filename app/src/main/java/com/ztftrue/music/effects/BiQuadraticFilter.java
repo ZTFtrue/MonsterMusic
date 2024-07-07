@@ -1,31 +1,8 @@
-/***************************************************************************
- *   Copyright (C) 2011 by Paul Lutus                                      *
- *   lutusp@arachnoid.com                                                  *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/
 package com.ztftrue.music.effects;
 
 
 import org.apache.commons.math3.util.FastMath;
 
-/**
- * @author lutusp
- */
-// http://en.wikipedia.org/wiki/Digital_biquad_filter
 @SuppressWarnings("unused")
 final public class BiQuadraticFilter {
 
@@ -39,11 +16,11 @@ final public class BiQuadraticFilter {
     final static int Gain = 7;
     private double a0, a1, a2, b0, b1, b2;
     private double x1, x2, y, y1, y2;
-    public double gain_abs;
+    private double gain_abs;
     private int type;
     BIND_TYPE bindType = BIND_TYPE.Q;
 
-    public enum BIND_TYPE {
+    enum BIND_TYPE {
         Q,
         BW,
         S
@@ -71,12 +48,7 @@ final public class BiQuadraticFilter {
         return center_freq;
     }
 
-
-    public void configure(int type, double center_freq, double sample_rate, double Q) {
-        configure(type, center_freq, sample_rate, Q, 0);
-    }
-
-    public void configure(int type, double center_freq, double sample_rate, double gainDB, double Q) {
+    public void configure(int type, double center_freq, double sample_rate, double Q, double gainDB) {
         reset();
         Q = (Q == 0) ? 1e-9 : Q;
         this.type = type;
@@ -86,30 +58,23 @@ final public class BiQuadraticFilter {
         reconfigure(center_freq);
     }
 
-    public void configure(int type, double center_freq, double sample_rate, double gainDB,BIND_TYPE bindType, double bw) {
+    public void configure(int type, double center_freq, double sample_rate, double Q) {
+        configure(type, center_freq, sample_rate, Q, 0);
+    }
+
+    public void configureBw(int type, BIND_TYPE bindType, double center_freq, double sample_rate, double bw, double gainDB) {
         reset();
         this.type = type;
-        this.bindType = BIND_TYPE.BW;
+        this.bindType = bindType;
         this.bw = bw;
         this.sample_rate = sample_rate;
         this.gainDB = gainDB;
         this.Q = bw / 60.0;
         reconfigure(center_freq);
     }
-    public void configure(int type, double center_freq, double sample_rate, double gainDB,double Q,BIND_TYPE bindType ) {
-        reset();
-        Q = (Q == 0) ? 1e-9 : Q;
-        this.type = type;
-        this.sample_rate = sample_rate;
-        this.Q = Q;
-        this.gainDB = gainDB;
-        this.bindType =bindType;
-        reconfigure(center_freq);
-    }
 
     // allow parameter change while running
     public void reconfigure(double cf) {
-
         center_freq = cf;
         // only used for peaking and shelving filters
         gain_abs = FastMath.pow(10, gainDB / 40);
@@ -233,6 +198,6 @@ final public class BiQuadraticFilter {
         x1 = x;
         y2 = y1;
         y1 = y;
-        return y;
+        return (y);
     }
 }

@@ -16,8 +16,6 @@ import uk.me.berndporr.iirj.Butterworth
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.locks.ReentrantLock
-import kotlin.math.abs
-import kotlin.math.max
 
 
 /** Indicates that the output sample rate should be the same as the input.  */
@@ -37,8 +35,6 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var outputBuffer: ByteBuffer
     private lateinit var dataBuffer: ByteBuffer
     private var inputEnded = false
-    private var volumeValue: Int = 100;
-    private var volumeFloat: Float = 1.0f
     private val gainDBAbsArray: DoubleArray =
         doubleArrayOf(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
     private val gainDBArray: IntArray = intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
@@ -52,7 +48,7 @@ class EqualizerAudioProcessor : AudioProcessor {
 
     init {
         outputBuffer = EMPTY_BUFFER
-        repeat(Utils.kThirdOct.count()) {
+        repeat(Utils.bandsCenter.count()) {
             mCoefficientLeftBiQuad.add(BiQuadraticFilter())
             mCoefficientRightBiQuad.add(BiQuadraticFilter())
             butterWorthLeftBandPass.add(Butterworth())
@@ -147,21 +143,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         inputEnded = true
     }
 
-    // 获取浮点数组的最大绝对值
-    private fun getMaxAbsValue(audioData: DoubleArray): Double {
-        var maxVal = 0.0
-        audioData.forEach { value ->
-            maxVal = max(abs(value), maxVal)
-        }
-        return maxVal
-    }
 
-    // 归一化处理
-    private fun normalize(audioData: DoubleArray, maxVal: Double) {
-        for (i in audioData.indices) {
-            audioData[i] /= maxVal
-        }
-    }
 
     private var changeDb = false
     private fun processData() {
@@ -189,8 +171,8 @@ class EqualizerAudioProcessor : AudioProcessor {
                 var ind = 0
                 // TODO need support more channel count
                 for (i in floatArray.indices step outputAudioFormat!!.channelCount) {
-                    sampleBufferRealLeft[ind] = floatArray[i].toDouble() * volumeFloat
-                    sampleBufferRealRight[ind] = floatArray[i + 1].toDouble() * volumeFloat
+                    sampleBufferRealLeft[ind] = floatArray[i].toDouble()
+                    sampleBufferRealRight[ind] = floatArray[i + 1].toDouble()
                     ind += 1
                 }
                 runBlocking {
@@ -206,7 +188,7 @@ class EqualizerAudioProcessor : AudioProcessor {
                                         outY
                                     )
                                 }
-//                                mCoefficientLeftBandPass.forEachIndexed { index1, filter ->
+//                                mCoefficientLeftBiQuad.forEachIndexed { index1, filter ->
 //                                    // only used for peaking and shelving filters
 //                                    sum += gainDBAbsArray[index1] * filter.filter(
 //                                        outY
@@ -221,10 +203,6 @@ class EqualizerAudioProcessor : AudioProcessor {
                                 sampleBufferRealLeft[index] =
                                     (if (outY > 1.0) 1.0 else if (outY < -1.0) -1.0 else outY)
                             }
-//                            val maxVal = getMaxAbsValue(sampleBufferRealLeft)
-//                            if (maxVal > 1.0) {
-//                                normalize(sampleBufferRealLeft, maxVal)
-//                            }
                         },
                         async(Dispatchers.IO) {
                             sampleBufferRealRight.forEachIndexed { index, it ->
@@ -236,7 +214,7 @@ class EqualizerAudioProcessor : AudioProcessor {
                                         outY
                                     )
                                 }
-//                                mCoefficientRightBandPass.forEachIndexed { index1, filter ->
+//                                mCoefficientRightBiQuad.forEachIndexed { index1, filter ->
 //                                    // only used for peaking and shelving filters
 //                                    sum += gainDBAbsArray[index1] * filter.filter(
 //                                        outY
@@ -251,10 +229,6 @@ class EqualizerAudioProcessor : AudioProcessor {
                                 sampleBufferRealRight[index] =
                                     (if (outY > 1.0) 1.0 else if (outY < -1.0) -1.0 else outY)
                             }
-//                            val maxVal = getMaxAbsValue(sampleBufferRealRight)
-//                            if (maxVal > 1.0f) {
-//                                normalize(sampleBufferRealRight, maxVal)
-//                            }
                         }
                     )
                 }
@@ -279,7 +253,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             val processedBuffer = ByteBuffer.allocate(dataBuffer.limit())
             val a = dataBuffer.array()
             a.forEachIndexed { i, t ->
-                a[i] = ((t) * volumeFloat).toInt().toByte()
+                a[i] = ((t)).toInt().toByte()
             }
             processedBuffer.put(a, 0, dataBuffer.limit())
             dataBuffer.clear()
@@ -307,13 +281,6 @@ class EqualizerAudioProcessor : AudioProcessor {
     }
 
     private val lock = ReentrantLock()
-    fun setVolume(value: Int) {
-        lock.lock()
-        volumeValue = value
-        volumeFloat = volumeValue / 100f
-        lock.unlock()
-    }
-
     fun setBand(index: Int, value: Int) {
         lock.lock()
         if (outputAudioFormat != null) {
@@ -324,61 +291,29 @@ class EqualizerAudioProcessor : AudioProcessor {
                 butterWorthLeftBandPass[index].bandPass(
                     Utils.order,
                     outputAudioFormat!!.sampleRate.toDouble(),
-                    Utils.kThirdOct[index],
+                    Utils.bandsCenter[index],
                     Utils.kThirdBW[index]
                 )
                 butterWorthRightBandPass[index].bandPass(
                     Utils.order,
                     outputAudioFormat!!.sampleRate.toDouble(),
-                    Utils.kThirdOct[index],
+                    Utils.bandsCenter[index],
                     Utils.kThirdBW[index]
                 )
-                if (index == 0) {
-                    // The first filter, includes all lower frequencies
-                    mCoefficientLeftBiQuad[index].configure(
-                        BiQuadraticFilter.LOWSHELF,
-                        Utils.kThirdOct[index],
-                        outputAudioFormat!!.sampleRate.toDouble(),
-                        value.toDouble(),
-                        Utils.qs[index],
-                    )
-                    mCoefficientRightBiQuad[index].configure(
-                        BiQuadraticFilter.LOWSHELF,
-                        Utils.kThirdOct[index],
-                        outputAudioFormat!!.sampleRate.toDouble(),
-                        value.toDouble(),
-                        Utils.qs[index],
-                    )
-                } else if (index == mCoefficientRightBiQuad.size - 1) {
-                    // The last filter, includes all higher frequencies
-                    mCoefficientLeftBiQuad[index].configure(
-                        BiQuadraticFilter.HIGHSHELF,
-                        Utils.kThirdOct[index],
-                        outputAudioFormat!!.sampleRate.toDouble(),
-                        value.toDouble(),
-                        Utils.qs[index],
-                    )
-                    mCoefficientRightBiQuad[index].configure(
-                        BiQuadraticFilter.HIGHSHELF,
-                        Utils.kThirdOct[index],
-                        outputAudioFormat!!.sampleRate.toDouble(),
-                        value.toDouble(),
-                        Utils.qs[index],
-                    )
-                } else {
-                    mCoefficientLeftBiQuad[index].configure(
-                        BiQuadraticFilter.PEAK,
-                        Utils.kThirdOct[index],
-                        outputAudioFormat!!.sampleRate.toDouble(),
-                        value.toDouble(),
-                    )
-                    mCoefficientRightBiQuad[index].configure(
-                        BiQuadraticFilter.PEAK,
-                        Utils.kThirdOct[index],
-                        outputAudioFormat!!.sampleRate.toDouble(),
-                        value.toDouble(),
-                    )
-                }
+                mCoefficientLeftBiQuad[index].configure(
+                    BiQuadraticFilter.BANDPASS,
+                    Utils.bandsCenter[index],
+                    outputAudioFormat!!.sampleRate.toDouble(),
+                    Utils.qs[index],
+                    value.toDouble(),
+                )
+                mCoefficientRightBiQuad[index].configure(
+                    BiQuadraticFilter.BANDPASS,
+                    Utils.bandsCenter[index],
+                    outputAudioFormat!!.sampleRate.toDouble(),
+                    Utils.qs[index],
+                    value.toDouble(),
+                )
             }
 
         }

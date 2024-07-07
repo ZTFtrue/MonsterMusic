@@ -82,7 +82,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
     val context = LocalContext.current
     val minEQLevel = remember { equalizerMin }
     val maxEQLevel = remember { equalizerMax }
-    val tempBandValue = ArrayList<MutableFloatState>(Utils.kThirdOct.size)
+    val tempBandValue = ArrayList<MutableFloatState>(Utils.bandsCenter.size)
     bands.forEach { band ->
         val bandValue = remember { mutableFloatStateOf(band.value.toFloat()) }
         tempBandValue.add(bandValue)
