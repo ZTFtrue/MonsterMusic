@@ -60,9 +60,8 @@ class MusicViewModel : ViewModel() {
     val refreshGenre = mutableStateOf(false)
     var navController: NavHostController? = null
     var themeSelected = mutableIntStateOf(0)
-    val albumItemsCount = mutableIntStateOf(2)
-    val artistItemsCount = mutableIntStateOf(2)
-    val genreItemsCount = mutableIntStateOf(2)
+//    val albumItemsCount = mutableIntStateOf(2)
+//    val genreItemsCount = mutableIntStateOf(2)
     var mediaController: MediaControllerCompat? = null
     var mediaBrowser: MediaBrowserCompat? = null
 

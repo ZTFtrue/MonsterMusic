@@ -132,6 +132,7 @@ fun ArtistsGridView(
         ScrollDirectionType.GRID_HORIZONTAL -> {
             val rowListSate = rememberLazyListState()
             val configuration = LocalConfiguration.current
+            val width = (configuration.screenWidthDp - 10 - 10 - 10 - 5) / 2.5
             LazyRow(
                 contentPadding = PaddingValues(5.dp),
                 state = rowListSate,
@@ -145,7 +146,7 @@ fun ArtistsGridView(
                         modifier = Modifier
                             .padding(5.dp)
                             .fillMaxSize()
-                            .width(((configuration.screenWidthDp - 80) / musicViewModel.albumItemsCount.intValue).dp)
+                            .width(width.dp)
                     ) {
                         ArtistItemView(
                             item,
@@ -161,7 +162,7 @@ fun ArtistsGridView(
         else -> {
             // ScrollDirectionType.GRID_VERTICAL
             LazyVerticalGrid(
-                columns = GridCells.Fixed(musicViewModel.artistItemsCount.intValue), // Number of columns in the grid
+                columns = GridCells.Adaptive(140.dp), // Number of columns in the grid
                 contentPadding = PaddingValues(5.dp),
                 state = listState,
                 modifier = modifier

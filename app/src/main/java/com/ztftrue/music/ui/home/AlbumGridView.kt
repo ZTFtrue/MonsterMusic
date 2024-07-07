@@ -133,6 +133,7 @@ fun AlbumGridView(
         ScrollDirectionType.GRID_HORIZONTAL -> {
             val rowListSate = rememberLazyListState()
             val configuration = LocalConfiguration.current
+            val width = (configuration.screenWidthDp - 10 - 10 - 10 - 5) / 2.5
             LazyRow(
                 contentPadding = PaddingValues(5.dp),
                 state = rowListSate,
@@ -145,7 +146,7 @@ fun AlbumGridView(
                     Box(
                         modifier = Modifier
                             .padding(5.dp)
-                            .width(((configuration.screenWidthDp - 80) / musicViewModel.albumItemsCount.intValue).dp)
+                            .width(width.dp)
                     ) {
                         AlbumItemView(
                             item,
@@ -158,13 +159,12 @@ fun AlbumGridView(
             }
         }
 
-        else ->
-            // ScrollDirectionType.GRID_VERTICAL
+        else -> {
             LazyVerticalGrid(
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.background)
                     .fillMaxSize(),
-                columns = GridCells.Fixed(musicViewModel.albumItemsCount.intValue), // Number of columns in the grid
+                columns = GridCells.Adaptive(140.dp), // Number of columns in the grid
                 contentPadding = PaddingValues(5.dp),
                 state = listState
             ) {
@@ -180,6 +180,9 @@ fun AlbumGridView(
                     }
                 }
             }
+        }
+        // ScrollDirectionType.GRID_VERTICAL
+
     }
 }
 
@@ -493,7 +496,10 @@ fun AlbumsOperateDialog(
                             .padding(8.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
             }

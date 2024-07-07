@@ -176,7 +176,7 @@ fun TracksListPage(
                     contentPadding = PaddingValues(5.dp),
                     modifier = Modifier
                 ) {
-                    item(){
+                    item() {
                         Row(
                             horizontalArrangement = Arrangement.End,
                             verticalAlignment = Alignment.CenterVertically,
@@ -218,7 +218,7 @@ fun TracksListPage(
                                 .wrapContentSize()
                                 .clickable {
                                     onFiledOptionSelected(filedKeys[i])
-                                    if(methodSelected.isEmpty()||methodSelected.isBlank()){
+                                    if (methodSelected.isEmpty() || methodSelected.isBlank()) {
                                         onMethodOptionSelected(PlayUtils.methodMap.entries.first().key)
                                     }
                                 }
@@ -234,7 +234,7 @@ fun TracksListPage(
                                     .wrapContentSize(),
                                 onClick = {
                                     onFiledOptionSelected(filedKeys[i])
-                                    if(methodSelected.isEmpty()||methodSelected.isBlank()){
+                                    if (methodSelected.isEmpty() || methodSelected.isBlank()) {
                                         onMethodOptionSelected(PlayUtils.methodMap.entries.first().key)
                                     }
                                 }
@@ -263,7 +263,7 @@ fun TracksListPage(
                                 .padding(all = Dp(value = 8F))
                                 .clickable {
                                     onMethodOptionSelected(methodKeys[i])
-                                    if(filedSelected.isEmpty()||filedSelected.isBlank()){
+                                    if (filedSelected.isEmpty() || filedSelected.isBlank()) {
                                         onFiledOptionSelected(sortFiledOptions.entries.first().key)
                                     }
                                 }
@@ -278,7 +278,7 @@ fun TracksListPage(
                                     .wrapContentSize(),
                                 onClick = {
                                     onMethodOptionSelected(methodKeys[i])
-                                    if(filedSelected.isEmpty()||filedSelected.isBlank()){
+                                    if (filedSelected.isEmpty() || filedSelected.isBlank()) {
                                         onFiledOptionSelected(sortFiledOptions.entries.first().key)
                                     }
                                 }
@@ -388,7 +388,7 @@ fun TracksListPage(
             // TODO this can avoid use an error dialog
             val item =
                 if (musicPlayList.value is AlbumList) {
-                    val a=(musicPlayList.value as AlbumList)
+                    val a = (musicPlayList.value as AlbumList)
                     AlbumList(id, "", a.artist, a.firstYear, a.lastYear, 0)
                 } else {
                     AlbumList(id, "", "", "", "", 0)
@@ -820,10 +820,11 @@ fun TracksListPage(
             ) {
                 if (albumsList.isNotEmpty()) {
                     val configuration = LocalConfiguration.current
+                    val width = (configuration.screenWidthDp / 2.5) + 70
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height((configuration.screenWidthDp / musicViewModel.albumItemsCount.intValue + 60).dp),
+                            .height(width.dp),
                     ) {
                         AlbumGridView(
                             musicViewModel = musicViewModel,
