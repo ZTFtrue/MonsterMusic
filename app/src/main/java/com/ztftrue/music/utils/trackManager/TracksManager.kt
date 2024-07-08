@@ -1,18 +1,14 @@
 package com.ztftrue.music.utils.trackManager
 
 import android.content.ContentUris
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Process
 import android.provider.MediaStore
-import android.util.Log
 import androidx.activity.result.IntentSenderRequest
-import androidx.annotation.OptIn
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
@@ -25,12 +21,16 @@ object TracksManager {
 
     fun getFolderList(
         context: Context,
-        list: LinkedHashMap<Long, FolderList>,
+        folderListLinkedHashMap: LinkedHashMap<Long, FolderList>,
         result: MediaBrowserServiceCompat.Result<Bundle>?,
         tracksHashMap: LinkedHashMap<Long, MusicItem>,
-        map: HashMap<Long, LinkedHashMap<Long, MusicItem>>,
-        needTrack: Boolean = false
+        sortOrder1: String,
+        needTracks: Boolean = false,
+        allTracksHashMap: LinkedHashMap<Long, MusicItem>?=null,
     ) {
+        tracksHashMap.clear()
+        folderListLinkedHashMap.clear()
+        allTracksHashMap?.clear()
         val sharedPreferences = context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
         // -1 don't ignore any,0 ignore duration less than or equal 0s,
         val ignoreDuration = sharedPreferences.getLong("ignore_duration", 0)
@@ -38,8 +38,9 @@ object TracksManager {
         val ignoreFoldersMap: List<Long> =
             if (ignoreFolders.isNullOrEmpty()) emptyList() else ignoreFolders.split(",")
                 .map { it.toLong() }
-
-        val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
+        val sortOrder = sortOrder1.ifBlank {
+            "${MediaStore.Audio.Media.TITLE} ASC"
+        }
         // Build the selection clause to exclude the folders by their IDs
         val selectionBuilder = StringBuilder()
         val selectionArgs = mutableListOf<String>()
@@ -52,7 +53,7 @@ object TracksManager {
             selectionArgs.add(ignoreDuration.toString())
         }
         if (ignoreFoldersMap.isNotEmpty()) {
-            ignoreFoldersMap.forEachIndexed { index, folderId ->
+            ignoreFoldersMap.forEach { folderId ->
                 if (selectionBuilder.isNotEmpty()) {
                     selectionBuilder.append(" AND ")
                 }
@@ -65,10 +66,10 @@ object TracksManager {
         val musicResolver = context.contentResolver
         val cursor = musicResolver.query(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-            trackMediaProjection,selection, selectionArgs.toTypedArray(), sortOrder
+            trackMediaProjection, selection, selectionArgs.toTypedArray(), sortOrder
         )
         val mapFolder = LinkedHashMap<Long, FolderList>()
-
+        val map: HashMap<Long, LinkedHashMap<Long, MusicItem>> = HashMap()
         if (cursor != null && cursor.moveToFirst()) {
             val bucketIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.BUCKET_ID)
             val bucketNameColumn =
@@ -84,16 +85,10 @@ object TracksManager {
             val albumIdColumn = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
             val albumColumn = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM)
             val artistIdColumn = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST_ID)
-            val genreColumn = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val genreColumn =
                 cursor.getColumnIndex(MediaStore.Audio.Media.GENRE)
-            } else {
-                null
-            }
-            val genreIdColumn = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val genreIdColumn =
                 cursor.getColumnIndex(MediaStore.Audio.Media.GENRE_ID)
-            } else {
-                null
-            }
             val yearColumn = cursor.getColumnIndex(MediaStore.Audio.Media.YEAR)
 //            val discNumberColumn = cursor.getColumnIndex(MediaStore.Audio.Media.DISC_NUMBER)
             val songNumberColumn = cursor.getColumnIndex(MediaStore.Audio.Media.TRACK)
@@ -137,10 +132,12 @@ object TracksManager {
 //                    discNumber,
                     songNumber
                 )
-
+                // For songs
                 if (isMusic) {
                     tracksHashMap[musicID] = musicItem
                 }
+                // For not songs, example RingTones
+                allTracksHashMap?.set(musicID, musicItem)
                 map.getOrPut(folderId) {
                     LinkedHashMap()
                 }[musicID] = musicItem
@@ -155,44 +152,36 @@ object TracksManager {
         }
 
         mapFolder.forEach { it.value.trackNumber = map[it.key]?.size ?: 0 }
-        list.clear()
-        list.putAll(mapFolder)
+        folderListLinkedHashMap.clear()
+        folderListLinkedHashMap.putAll(mapFolder)
         cursor?.close()
         if (result == null) return
         val bundle = Bundle()
-        val a=System.currentTimeMillis()
-
-        if (needTrack) {
-            val b=System.currentTimeMillis()
-            Log.d("TAG1",(b-a).toString())
-            bundle.putParcelableArrayList("list", ArrayList(tracksHashMap.values))
-
+        if (needTracks) {
+            bundle.putParcelableArrayList("songsList", ArrayList(tracksHashMap.values))
         } else {
-            val c=System.currentTimeMillis()
-            Log.d("TAG2",(c-a).toString())
-            bundle.putParcelableArrayList("list", ArrayList(list.values))
-
+            bundle.putParcelableArrayList("songsList", ArrayList(folderListLinkedHashMap.values))
         }
-
         result.sendResult(bundle)
     }
 
 
     fun getTracksById(
         context: Context,
-        genreId: Uri,
+        uri: Uri,
         tracksHashMap: LinkedHashMap<Long, MusicItem>,
         selection: String?,
         selectionArgs: Array<String>?,
-        sortOrder: String?,
+        sortOrder1: String?,
     ): ArrayList<MusicItem> {
         // Define the columns to retrieve from the media store for the number of tracks
         val trackProjection = arrayOf(
             MediaStore.Audio.Media._ID,
         )
+        val sortOrder=sortOrder1?.ifBlank {  "${MediaStore.Audio.Media.TITLE} ASC" }
         // Create a cursor to query the media store for tracks in the genre
         val trackCursor = context.contentResolver.query(
-            genreId,
+            uri,
             trackProjection,
             selection,
             selectionArgs,
@@ -246,46 +235,39 @@ object TracksManager {
     @UnstableApi
     fun removeMusicById(context: Context, musicId: Long): Boolean {
         val contentResolver = context.contentResolver
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            var uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            uri = ContentUris.withAppendedId(uri, musicId)
-            if (context.checkUriPermission(
-                    uri,
-                    Process.myPid(),
-                    Process.myUid(),
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                contentResolver.delete(uri, null, null)
-                return true
-            } else {
-                if (context is MainActivity) {
-                    val bundle = context.bundle
-                    bundle.putString("action", OperateTypeInActivity.RemoveTrackFromStorage.name)
-                    bundle.putParcelable("uri", uri)
-                    bundle.putLong("musicId", musicId)
-                    val pendingIntent =
-                        MediaStore.createWriteRequest(contentResolver, setOf(uri))
-                    val intentSenderRequest: IntentSenderRequest =
-                        IntentSenderRequest.Builder(pendingIntent.intentSender)
-                            .setFlags(
-                                Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-                                Intent.FLAG_GRANT_READ_URI_PERMISSION
-                            )
-                            .build()
-                    context.modifyMediaLauncher.launch(intentSenderRequest)
-                }
-            }
-            return false
-        } else {
-            val uri =
-                ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, musicId)
+        var uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        uri = ContentUris.withAppendedId(uri, musicId)
+        if (context.checkUriPermission(
+                uri,
+                Process.myPid(),
+                Process.myUid(),
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
             contentResolver.delete(uri, null, null)
             return true
+        } else {
+            if (context is MainActivity) {
+                val bundle = context.bundle
+                bundle.putString("action", OperateTypeInActivity.RemoveTrackFromStorage.name)
+                bundle.putParcelable("uri", uri)
+                bundle.putLong("musicId", musicId)
+                val pendingIntent =
+                    MediaStore.createWriteRequest(contentResolver, setOf(uri))
+                val intentSenderRequest: IntentSenderRequest =
+                    IntentSenderRequest.Builder(pendingIntent.intentSender)
+                        .setFlags(
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
+                        .build()
+                context.modifyMediaLauncher.launch(intentSenderRequest)
+            }
         }
+        return false
     }
 
-    private val trackMediaProjection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+    private val trackMediaProjection =
         arrayOf(
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.ARTIST,
@@ -306,26 +288,6 @@ object TracksManager {
             MediaStore.Audio.Media.BUCKET_DISPLAY_NAME,
             MediaStore.Audio.Media.IS_MUSIC
         )
-    } else {
-        arrayOf(
-            MediaStore.Audio.Media._ID,
-            MediaStore.Audio.Media.ARTIST,
-            MediaStore.Audio.Media.TITLE,
-            MediaStore.Audio.Media.ALBUM,
-            MediaStore.Audio.Media.ALBUM_ID,
-            MediaStore.Audio.Media.ARTIST_ID,
-            MediaStore.Audio.Media.COMPOSER,
-            MediaStore.Audio.Media.YEAR,
-            MediaStore.Audio.Media.DATA,
-            MediaStore.Audio.Media.DURATION,
-            MediaStore.Audio.Media.DISPLAY_NAME,
-//            MediaStore.Audio.Media.DISC_NUMBER,
-            MediaStore.Audio.Media.TRACK,
-            MediaStore.Audio.Media.BUCKET_ID,
-            MediaStore.Audio.Media.BUCKET_DISPLAY_NAME,
-            MediaStore.Audio.Media.IS_MUSIC
-        )
-    }
 
     @UnstableApi
     fun getMusicById(context: Context, musicId: Long): MusicItem? {
@@ -356,16 +318,10 @@ object TracksManager {
 //                val discNumberColumn = cursor.getColumnIndex(MediaStore.Audio.Media.DISC_NUMBER)
                 val songNumberColumn = cursor.getColumnIndex(MediaStore.Audio.Media.TRACK)
 
-                val genreColumn = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val genreColumn =
                     cursor.getColumnIndex(MediaStore.Audio.Media.GENRE)
-                } else {
-                    null
-                }
-                val genreIdColumn = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val genreIdColumn =
                     cursor.getColumnIndex(MediaStore.Audio.Media.GENRE_ID)
-                } else {
-                    null
-                }
 
                 val musicID = cursor.getLong(iDColumn)
                 val path = cursor.getString(dataColumn)
@@ -407,88 +363,4 @@ object TracksManager {
         return musicItem
     }
 
-    // Define content provider URI
-    private val TRACKS_CONTENT_URI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-
-    @OptIn(UnstableApi::class)
-    fun saveTrackInfo(
-        context: Context,
-        trackId: Long,
-        title: String?,
-        artist: String?,
-        album: String?,
-        genre: String?,
-        year: String?,
-    ): Boolean {
-
-        val contentResolver = context.contentResolver
-        val values = ContentValues()
-// https://stackoverflow.com/questions/57804074/how-to-update-metadata-of-audio-file-in-android-q-media-store
-        // Define the track URI using the track ID
-        val trackUri = ContentUris.withAppendedId(TRACKS_CONTENT_URI, trackId)
-        // Update the track information using the content resolver
-//        contentResolver.update(trackUri, values, null, null)
-        // Get the current list of track IDs for the playlist
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-
-            if (context.checkUriPermission(
-                    trackUri,
-                    Process.myPid(),
-                    Process.myUid(),
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                val uri =
-                    ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, trackId)
-                values.put(MediaStore.Audio.Media.IS_PENDING, 1)
-                contentResolver.update(uri, values, null, null)
-                values.clear()
-                values.put(MediaStore.Audio.Media.TITLE, title)
-                values.put(MediaStore.Audio.Media.ARTIST, artist)
-                values.put(MediaStore.Audio.Media.ALBUM, album)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    values.put(MediaStore.Audio.Media.GENRE, genre)
-                }
-                if (!year.isNullOrEmpty()) {
-                    values.put(MediaStore.Audio.Media.YEAR, year.toInt())
-                }
-                contentResolver.update(uri, values, null, null)
-            } else {
-                if (context is MainActivity) {
-                    val bundle = context.bundle
-                    bundle.putString(
-                        "action",
-                        OperateTypeInActivity.EditTrackInfo.name
-                    )
-                    val uri = MediaStore.Audio.Media.getContentUri("external", trackId)
-                    bundle.putParcelable("uri", uri)
-                    values.put(MediaStore.Audio.Media.TITLE, title)
-                    values.put(MediaStore.Audio.Media.ARTIST, artist)
-                    values.put(MediaStore.Audio.Media.ALBUM, album)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        values.put(MediaStore.Audio.Media.GENRE, genre)
-                    }
-                    if (!year.isNullOrEmpty()) {
-                        values.put(MediaStore.Audio.Media.YEAR, year.toInt())
-                    }
-                    bundle.putParcelable("value", values)
-                    bundle.putLong("id", trackId)
-                    val pendingIntent =
-                        MediaStore.createWriteRequest(contentResolver, setOf(trackUri))
-                    val intentSenderRequest: IntentSenderRequest =
-                        IntentSenderRequest.Builder(pendingIntent.intentSender)
-                            .setFlags(
-                                Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-                                Intent.FLAG_GRANT_READ_URI_PERMISSION
-                            )
-                            .build()
-                    context.modifyMediaLauncher.launch(intentSenderRequest)
-                }
-                return false
-            }
-        } else {
-            contentResolver.update(trackUri, values, null, null)
-        }
-        return true
-    }
 }

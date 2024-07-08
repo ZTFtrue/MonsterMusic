@@ -163,7 +163,8 @@ fun TracksSelectPage(
                                 contentDescription = "Save playlist",
                                 modifier = Modifier
                                     .size(30.dp)
-                                    .clip(CircleShape)
+                                    .clip(CircleShape),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }

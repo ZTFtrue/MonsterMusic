@@ -1,31 +1,8 @@
-/***************************************************************************
- *   Copyright (C) 2011 by Paul Lutus                                      *
- *   lutusp@arachnoid.com                                                  *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/
 package com.ztftrue.music.effects;
 
 
 import org.apache.commons.math3.util.FastMath;
 
-/**
- * @author lutusp
- */
-// http://en.wikipedia.org/wiki/Digital_biquad_filter
 @SuppressWarnings("unused")
 final public class BiQuadraticFilter {
 
@@ -39,10 +16,10 @@ final public class BiQuadraticFilter {
     final static int Gain = 7;
     private double a0, a1, a2, b0, b1, b2;
     private double x1, x2, y, y1, y2;
-    public double gain_abs;
+    private double gain_abs;
     private int type;
     BIND_TYPE bindType = BIND_TYPE.Q;
-    private double w1, w2;
+
     enum BIND_TYPE {
         Q,
         BW,
@@ -65,7 +42,6 @@ final public class BiQuadraticFilter {
 
     public void reset() {
         x1 = x2 = y1 = y2 = 0;
-        w1 = w2 = 0;
     }
 
     public double frequency() {
@@ -217,14 +193,11 @@ final public class BiQuadraticFilter {
 
     // perform one filtering step
     public double filter(double x) {
-        double w0 = x - a1 * w1 - a2 * w2;
         y = b0 * x + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
         x2 = x1;
         x1 = x;
         y2 = y1;
         y1 = y;
-        w2 = w1;
-        w1 = w0;
         return (y);
     }
 }

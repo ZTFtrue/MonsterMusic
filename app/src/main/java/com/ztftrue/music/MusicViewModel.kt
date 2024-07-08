@@ -9,6 +9,7 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.MediaControllerCompat
+import android.widget.Toast
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -42,6 +43,7 @@ import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
+import java.util.concurrent.locks.ReentrantLock
 
 
 var SongsPlayList = AnyListBase(-1, PlayListType.Songs)
@@ -52,12 +54,14 @@ class MusicViewModel : ViewModel() {
 
     private val retriever = MediaMetadataRetriever()
     var db: MusicDatabase? = null
-    val refreshList = mutableStateOf(false)
+    val refreshPlayList = mutableStateOf(false)
+    val refreshAlbum = mutableStateOf(false)
+    val refreshArtist = mutableStateOf(false)
+    val refreshGenre = mutableStateOf(false)
     var navController: NavHostController? = null
     var themeSelected = mutableIntStateOf(0)
-    val albumItemsCount = mutableIntStateOf(2)
-    val artistItemsCount = mutableIntStateOf(2)
-    val genreItemsCount = mutableIntStateOf(2)
+//    val albumItemsCount = mutableIntStateOf(2)
+//    val genreItemsCount = mutableIntStateOf(2)
     var mediaController: MediaControllerCompat? = null
     var mediaBrowser: MediaBrowserCompat? = null
 
@@ -104,7 +108,7 @@ class MusicViewModel : ViewModel() {
     var itemDuration: Long = 1
     var lyricsType: LyricsType = LyricsType.TEXT
     var currentCaptionList = mutableStateListOf<ListStringCaption>()
-
+    var isEmbeddedLyrics = mutableStateOf(false)
     var fontSize = mutableIntStateOf(18)
     var textAlign = mutableStateOf(TextAlign.Center)
 
@@ -112,7 +116,7 @@ class MusicViewModel : ViewModel() {
     var sleepTime = mutableLongStateOf(0L)
     var remainTime = mutableLongStateOf(0L)
     var playCompleted = mutableStateOf(false)
-
+    var volume = mutableIntStateOf(100)
     var repeatModel = mutableIntStateOf(Player.REPEAT_MODE_ALL)
     fun reset() {
         if (currentPlay.value != null) {
@@ -135,11 +139,11 @@ class MusicViewModel : ViewModel() {
 
     init {
         val band = ArrayList<EqualizerBand>()
-        for (index in 0 until Utils.kThirdOct.size) {
-            val hz = if (Utils.kThirdOct[index] < 1000) {
-                "${Utils.kThirdOct[index]}"
+        for (index in 0 until Utils.bandsCenter.size) {
+            val hz = if (Utils.bandsCenter[index] < 1000) {
+                "${Utils.bandsCenter[index]}"
             } else {
-                "${Utils.kThirdOct[index] / 1000}k"
+                "${Utils.bandsCenter[index] / 1000}k"
             }
             band.add(EqualizerBand(index, hz, 0))
         }
@@ -152,10 +156,14 @@ class MusicViewModel : ViewModel() {
         }
         return db!!
     }
-    private var lyricsJob: Job? =null
+
+    private val lock = ReentrantLock()
+    private var lyricsJob: Job? = null
     fun dealLyrics(context: Context, currentPlay: MusicItem) {
+        lock.lock()
         currentCaptionList.clear()
-        if(lyricsJob!=null&&lyricsJob?.isActive==true){
+        lyricsType = LyricsType.TEXT
+        if (lyricsJob != null && lyricsJob?.isActive == true) {
             lyricsJob?.cancel()
         }
         lyricsJob = CoroutineScope(Dispatchers.IO).launch {
@@ -228,65 +236,77 @@ class MusicViewModel : ViewModel() {
                 val files = getDb(context).StorageFolderDao().findAll()
                 if (files != null) {
                     outer@ for (storageFolder in files) {
-                        val treeUri = Uri.parse(storageFolder.uri)
-                        if (treeUri != null) {
-                            context.contentResolver.takePersistableUriPermission(
-                                treeUri,
-                                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                            )
-                            val pickedDir = DocumentFile.fromTreeUri(context, treeUri)
-                            val d = pickedDir?.listFiles()
-                            if (d != null) {
-                                for (it in d) {
-                                    if (it.isFile && it.canRead()
-                                    ) {
-                                        val fileNameWithSuffix =
-                                            it.name?.lowercase() ?: ""
-                                        val type =
-                                            if (fileNameWithSuffix.endsWith(".lrc")) {
-                                                LyricsType.LRC
-                                            } else if (fileNameWithSuffix.endsWith(".srt")) {
-                                                LyricsType.SRT
-                                            } else if (fileNameWithSuffix.endsWith(".vtt")) {
-                                                LyricsType.VTT
-                                            } else if (fileNameWithSuffix.endsWith(".txt")) {
-                                                LyricsType.TEXT
-                                            } else {
-                                                continue
-                                            }
-                                        val fileName = try {
-                                            fileNameWithSuffix.substring(
-                                                0,
-                                                fileNameWithSuffix.indexOf(".")
-                                            )
-                                        } catch (e: Exception) {
-                                            ""
-                                        }
-                                        if (fileName.trim()
-                                                .lowercase() == musicName.trim()
-                                                .lowercase()
+                        try {
+                            val treeUri = Uri.parse(storageFolder.uri)
+                            if (treeUri != null) {
+                                context.contentResolver.takePersistableUriPermission(
+                                    treeUri,
+                                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                )
+                                val pickedDir = DocumentFile.fromTreeUri(context, treeUri)
+                                val d = pickedDir?.listFiles()
+                                if (d != null) {
+                                    for (it in d) {
+                                        if (it.isFile && it.canRead()
                                         ) {
-                                            fileLyrics.addAll(
-                                                fileRead(
-                                                    it.uri,
-                                                    context,
-                                                    type
+                                            val fileNameWithSuffix =
+                                                it.name?.lowercase() ?: ""
+                                            val type =
+                                                if (fileNameWithSuffix.endsWith(".lrc")) {
+                                                    LyricsType.LRC
+                                                } else if (fileNameWithSuffix.endsWith(".srt")) {
+                                                    LyricsType.SRT
+                                                } else if (fileNameWithSuffix.endsWith(".vtt")) {
+                                                    LyricsType.VTT
+                                                } else if (fileNameWithSuffix.endsWith(".txt")) {
+                                                    LyricsType.TEXT
+                                                } else {
+                                                    continue
+                                                }
+                                            val fileName = try {
+                                                fileNameWithSuffix.substring(
+                                                    0,
+                                                    fileNameWithSuffix.indexOf(".")
                                                 )
-                                            )
-                                            break@outer
+                                            } catch (e: Exception) {
+                                                ""
+                                            }
+                                            if (fileName.trim()
+                                                    .lowercase() == musicName.trim()
+                                                    .lowercase()
+                                            ) {
+                                                fileLyrics.addAll(
+                                                    fileRead(
+                                                        it.uri,
+                                                        context,
+                                                        type
+                                                    )
+                                                )
+                                                break@outer
+                                            }
                                         }
                                     }
                                 }
                             }
+                        } catch (e: Exception) {
+                            getDb(context).StorageFolderDao().deleteById(storageFolder.id!!)
+                            CoroutineScope(Dispatchers.Main).launch {
+                                Toast.makeText(
+                                    context,
+                                    "There has error, can't read some lyrics. Most of times, this occur after you reinstall app.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         }
+
                     }
-
                 }
-
             }
             if (fileLyrics.isNotEmpty()) {
+                isEmbeddedLyrics.value = false
                 currentCaptionList.addAll(fileLyrics)
             } else if (embeddedLyrics.isNotEmpty()) {
+                isEmbeddedLyrics.value = true
                 currentCaptionList.addAll(embeddedLyrics)
             }
             val duration = currentPlay.duration
@@ -294,6 +314,7 @@ class MusicViewModel : ViewModel() {
             itemDuration =
                 duration / if (currentCaptionList.size == 0) 1 else currentCaptionList.size
         }
+        lock.unlock()
     }
 
     private fun fileRead(

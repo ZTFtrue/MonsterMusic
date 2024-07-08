@@ -79,7 +79,8 @@ object ArtistManager {
     fun getArtistList(
         context: Context,
         list: LinkedHashMap<Long, ArtistList>,
-        result: MediaBrowserServiceCompat.Result<Bundle>?
+        result: MediaBrowserServiceCompat.Result<Bundle>?,
+        sortOrder1: String
     ) {
         val playListProjection = arrayOf(
             MediaStore.Audio.Artists._ID,
@@ -88,13 +89,12 @@ object ArtistManager {
             MediaStore.Audio.Artists.NUMBER_OF_TRACKS,
         )
         val musicResolver = context.contentResolver
-
         val cursor = musicResolver.query(
             MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI,
             playListProjection,
             null,
             null,
-            null
+            sortOrder1.ifBlank { null }
         )
         val playList = LinkedHashMap<Long, ArtistList>()
         if (cursor != null && cursor.moveToFirst()) {
@@ -111,7 +111,7 @@ object ArtistManager {
                 val numberOfAlbums = cursor.getInt(numberOfAlbumsColumn)
                 val artistList = ArtistList(
                     id,
-                    artist?:"Unknown Artist",
+                    artist ?: "Unknown Artist",
                     numberOfTracks,
                     numberOfAlbums
                 )

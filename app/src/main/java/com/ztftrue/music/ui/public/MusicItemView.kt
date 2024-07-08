@@ -1,14 +1,19 @@
 package com.ztftrue.music.ui.public
 
+import android.content.Context
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +24,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -33,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,6 +50,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -57,8 +65,12 @@ import com.ztftrue.music.play.ACTION_AddPlayQueue
 import com.ztftrue.music.play.ACTION_PLAY_MUSIC
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_RemoveFromQueue
+import com.ztftrue.music.play.ACTION_Sort_Queue
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
+import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.sqlData.model.SortFiledData
+import com.ztftrue.music.ui.play.toPx
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
@@ -66,6 +78,9 @@ import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.TracksManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalFoundationApi::class)
@@ -80,11 +95,12 @@ fun MusicItemView(
     selectStatus: Boolean = false,
     selectList: SnapshotStateList<MusicItem>?,
 ) {
-    val id: Int = if (viewModel.playStatus.value && music.id == viewModel.currentPlay.value?.id) {
-        R.drawable.pause
-    } else {
-        R.drawable.play
-    }
+    val playStatusIcon: Int =
+        if (viewModel.playStatus.value && music.id == viewModel.currentPlay.value?.id) {
+            R.drawable.pause
+        } else {
+            R.drawable.play
+        }
     val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
     var showAddPlayListDialog by remember { mutableStateOf(false) }
@@ -107,7 +123,7 @@ fun MusicItemView(
                                 resultData: Bundle?
                             ) {
                                 super.onResult(action, extras, resultData)
-                                viewModel.refreshList.value = !viewModel.refreshList.value
+                                viewModel.refreshPlayList.value = !viewModel.refreshPlayList.value
                             }
                         }
                     )
@@ -149,8 +165,15 @@ fun MusicItemView(
                     }
 
                     OperateType.RemoveFromPlaylist -> {
+                        if (index < musicList.size)
+                            musicList.removeAt(index)
                         val playListPath =
-                            PlaylistManager.removeTrackFromPlayList(context, playList.id, index)
+                            PlaylistManager.modifyTrackFromPlayList(
+                                context,
+                                playList.id,
+                                ArrayList(musicList.toList()),
+                                music.path
+                            )
                         if (!playListPath.isNullOrEmpty()) {
                             MediaScannerConnection.scanFile(
                                 context,
@@ -169,15 +192,13 @@ fun MusicItemView(
                                                     resultData: Bundle?
                                                 ) {
                                                     super.onResult(action, extras, resultData)
-                                                    viewModel.refreshList.value =
-                                                        !viewModel.refreshList.value
+                                                    viewModel.refreshPlayList.value =
+                                                        !viewModel.refreshPlayList.value
                                                 }
                                             }
                                         )
                                     }
                                 })
-
-
                         }
                     }
 
@@ -214,8 +235,9 @@ fun MusicItemView(
                     }
 
                     OperateType.RemoveFromQueue -> {
-                        val indexM = viewModel.musicQueue.indexOfFirst { musicItem -> musicItem.id == music.id }
-                        if(indexM == -1) return@OperateDialog
+                        val indexM =
+                            viewModel.musicQueue.indexOfFirst { musicItem -> musicItem.id == music.id }
+                        if (indexM == -1) return@OperateDialog
                         val bundle = Bundle()
                         bundle.putInt("index", indexM)
                         viewModel.mediaBrowser?.sendCustomAction(
@@ -282,11 +304,15 @@ fun MusicItemView(
             }
         })
     }
+    var offset by remember { mutableFloatStateOf(0f) }
     Row(modifier
-        .padding(0.dp)
-        .height(60.dp)
+        .height(80.dp)
+        .graphicsLayer(
+            translationY = offset,
+        )
         .combinedClickable(
             onClick = {
+                // in select tracks status for add playlist
                 if (selectStatus) {
                     if (selectList?.contains(music) == true) {
                         selectList.remove(music)
@@ -294,22 +320,21 @@ fun MusicItemView(
                         selectList?.add(music)
                     }
                 } else {
-                    if (playList.type != PlayListType.Queue && !(playList.type == viewModel.playListCurrent.value?.type && playList.id == viewModel.playListCurrent.value?.id)) {
-                        if (playList.type != viewModel.playListCurrent.value?.type || viewModel.playListCurrent.value?.id != playList.id) {
-                            viewModel.playListCurrent.value = playList
-                            viewModel.musicQueue.clear()
-                            // TODO need re-design, should use event EVENT_changePlayQueue
-                            // avoid can't switch current play lyrics
-                            viewModel.currentPlayQueueIndex.intValue=-1
-                            viewModel.musicQueue.addAll(musicList)
-                        }
+                    val bundle = Bundle()
+                    if (playList.type != PlayListType.Queue) {
+                        viewModel.playListCurrent.value = playList
+                        viewModel.musicQueue.clear()
+                        viewModel.currentPlayQueueIndex.intValue = -1
+                        viewModel.musicQueue.addAll(musicList)
+                        bundle.putBoolean("switch_queue", true)
+                    } else {
+                        bundle.putBoolean("switch_queue", false)
                     }
                     if (viewModel.playListCurrent.value == null) {
                         viewModel.playListCurrent.value = playList
                         viewModel.currentMusicCover.value = null
                         viewModel.currentPlay.value = music
                     }
-                    val bundle = Bundle()
                     bundle.putParcelable("musicItem", music)
                     bundle.putParcelable("playList", playList)
                     bundle.putParcelableArrayList("musicItems", ArrayList(musicList))
@@ -327,64 +352,235 @@ fun MusicItemView(
                 }
             }
         ), verticalAlignment = Alignment.CenterVertically) {
-        if (selectStatus) {
-            Checkbox(
-                checked = selectList?.contains(music) ?: false,
-                onCheckedChange = { v ->
-                    if (v) {
-                        selectList?.add(music)
-                    } else {
-                        selectList?.remove(music)
-                    }
-                },
-                modifier = Modifier.padding(8.dp)
-            )
-        } else {
-            Image(
-                painter = painterResource(id),
-                contentDescription = "Operate More, will open dialog",
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape),
-                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
-            )
-        }
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.weight(1f)
+            modifier
+                .wrapContentHeight(Alignment.CenterVertically)
+                .padding(top = 10.dp, bottom = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.fillMaxWidth(0.9f)) {
-                Text(
-                    text = music.name,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.horizontalScroll(rememberScrollState(0))
+            if (selectStatus) {
+                Checkbox(
+                    checked = selectList?.contains(music) ?: false,
+                    onCheckedChange = { v ->
+                        if (v) {
+                            selectList?.add(music)
+                        } else {
+                            selectList?.remove(music)
+                        }
+                    },
+                    modifier = Modifier.padding(8.dp)
                 )
-                Text(
-                    text = music.artist,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.horizontalScroll(rememberScrollState(0))
+            } else {
+                Image(
+                    painter = painterResource(playStatusIcon),
+                    contentDescription = "Operate More, will open dialog",
+                    modifier = Modifier
+                        .size(30.dp)
+                        .padding(5.dp)
+                        .clip(CircleShape),
+                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                 )
             }
-            if (!selectStatus) {
-                IconButton(
-                    modifier = Modifier.width(50.dp), onClick = {
-                        showDialog = true
-                    }) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Operate More, will open dialog",
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clip(CircleShape),
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 5.dp, end = 5.dp)
+                ) {
+                    Text(
+                        text = music.name,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.horizontalScroll(rememberScrollState(0))
                     )
+                    Text(
+                        text = music.artist,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.horizontalScroll(rememberScrollState(0))
+                    )
+                }
+                if (playList.type == PlayListType.Queue || playList.type == PlayListType.PlayLists) {
+                    Box(modifier = Modifier
+                        .height(45.dp)
+                        .width(45.dp)
+                        .draggable(
+                            orientation = Orientation.Vertical,
+                            state = rememberDraggableState { delta ->
+                                offset += delta
+                            },
+                            onDragStopped = { _ ->
+                                var targetPosition =
+                                    index + (offset / 80.dp.toPx(context)).toInt()
+                                if (targetPosition < 0) {
+                                    targetPosition = 0
+                                }
+                                if (targetPosition > musicList.size - 1) {
+                                    targetPosition = musicList.size - 1
+                                }
+                                if (targetPosition != index) {
+                                    musicList.remove(music)
+                                    musicList.add(targetPosition, music)
+                                    saveSortResult(
+                                        playList,
+                                        musicList,
+                                        context,
+                                        music,
+                                        viewModel,
+                                        index,
+                                        targetPosition
+                                    )
+                                }
+                                offset = 0f
+
+                            }
+                        )) {
+                        Image(
+                            painter = painterResource(
+                                R.drawable.ic_swipe_vertical
+                            ),
+                            contentDescription = "${music.name} sort",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .padding(5.dp)
+                                .clip(
+                                    CircleShape
+                                ),
+                            colorFilter = ColorFilter.tint(
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        )
+                    }
+                }
+                if (!selectStatus) {
+                    IconButton(
+                        modifier = Modifier
+                            .width(45.dp), onClick = {
+                            showDialog = true
+                        }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Operate More, will open dialog",
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clip(CircleShape),
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
                 }
             }
         }
+    }
+}
 
+fun saveSortResult(
+    playList: AnyListBase,
+    musicList: SnapshotStateList<MusicItem>,
+    context: Context,
+    music: MusicItem,
+    viewModel: MusicViewModel,
+    index: Int,
+    targetIndex: Int
+) {
+    if (playList.type == PlayListType.PlayLists) {
+        val playListPath =
+            PlaylistManager.modifyTrackFromPlayList(
+                context,
+                playList.id,
+                ArrayList(musicList.toList()),
+                music.path
+            )
+        CoroutineScope(Dispatchers.IO).launch {
+            val sortDb =
+                MusicDatabase
+                    .getDatabase(context)
+                    .SortFiledDao()
+            var sortData =
+                sortDb.findSortByType(playList.type.name + "@Tracks")
+            if (sortData != null) {
+                if (sortData.method != "" || sortData.filed != "") {
+                    CoroutineScope(Dispatchers.Main).launch {
+                        Toast
+                            .makeText(
+                                context,
+                                "Already change you sort order to default",
+                                Toast.LENGTH_LONG
+                            )
+                            .show()
+                    }
+                }
+                sortData.method = ""
+                sortData.methodName = ""
+                sortData.filed = ""
+                sortData.filedName = ""
+                sortDb.update(sortData)
+            } else {
+                sortData = SortFiledData(
+                    playList.type.name + "@Tracks",
+                    "", "", "", ""
+                )
+                sortDb.insert(sortData)
+            }
+            if (!playListPath.isNullOrEmpty()) {
+                MediaScannerConnection.scanFile(
+                    context,
+                    arrayOf(playListPath),
+                    arrayOf("*/*"),
+                    object :
+                        MediaScannerConnection.MediaScannerConnectionClient {
+                        override fun onMediaScannerConnected() {}
+                        override fun onScanCompleted(
+                            path: String,
+                            uri: Uri
+                        ) {
+                            viewModel.mediaBrowser?.sendCustomAction(
+                                ACTION_PlayLIST_CHANGE,
+                                null,
+                                object :
+                                    MediaBrowserCompat.CustomActionCallback() {
+                                    override fun onResult(
+                                        action: String?,
+                                        extras: Bundle?,
+                                        resultData: Bundle?
+                                    ) {
+                                        super.onResult(
+                                            action,
+                                            extras,
+                                            resultData
+                                        )
+                                    }
+                                }
+                            )
+                        }
+                    })
+            }
+        }
+    } else if (playList.type == PlayListType.Queue) {
+        val bundle = Bundle();
+        bundle.putInt("index", index)
+        bundle.putInt("targetIndex", targetIndex)
+        viewModel.mediaBrowser?.sendCustomAction(
+            ACTION_Sort_Queue,
+            bundle,
+            object :
+                MediaBrowserCompat.CustomActionCallback() {
+                override fun onResult(
+                    action: String?,
+                    extras: Bundle?,
+                    resultData: Bundle?
+                ) {
+                    super.onResult(
+                        action,
+                        extras,
+                        resultData
+                    )
+                }
+            }
+        )
 
     }
-
 }
 
 @Composable
@@ -600,7 +796,8 @@ fun OperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = stringResource(id = R.string.artist,music.artist), modifier = Modifier.padding(start = 10.dp),
+                                text = stringResource(id = R.string.artist, music.artist),
+                                modifier = Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -623,7 +820,8 @@ fun OperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = stringResource(id = R.string.album,music.album), modifier = Modifier.padding(start = 10.dp),
+                                text = stringResource(id = R.string.album, music.album),
+                                modifier = Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -690,7 +888,10 @@ fun OperateDialog(
                             .padding(8.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
             }

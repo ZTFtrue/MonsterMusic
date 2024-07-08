@@ -78,6 +78,8 @@ fun QueuePage(
                 musicViewModel.currentCaptionList.clear()
             } else if (it == OperateType.SaveQueueToPlayList) {
                 showAddPlayListDialog = true
+            } else if(it== OperateType.QueueSwipeSort){
+
             }
         })
     }
@@ -135,6 +137,7 @@ fun QueuePage(
                         modifier = Modifier
                             .size(20.dp)
                             .clip(CircleShape),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             })

@@ -67,7 +67,6 @@ fun DrawMenu(
     ModalDrawerSheet(
         modifier = Modifier
             .width(drawerWidth)
-            .background(MaterialTheme.colorScheme.onBackground),
     ) {
         Column(
             Modifier

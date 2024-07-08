@@ -6,7 +6,6 @@ import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.BitmapFactory
 import android.media.AudioManager
 import android.media.MediaScannerConnection
 import android.media.MediaScannerConnection.MediaScannerConnectionClient
@@ -47,9 +46,7 @@ import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.play.ACTION_TRACKS_UPDATE
 import com.ztftrue.music.play.EVENT_MEDIA_ITEM_Change
-import com.ztftrue.music.play.EVENT_MEDIA_METADATA_Change
 import com.ztftrue.music.play.EVENT_SLEEP_TIME_Change
-import com.ztftrue.music.play.EVENT_changePlayQueue
 import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
@@ -59,7 +56,7 @@ import com.ztftrue.music.ui.theme.MusicPitchTheme
 import com.ztftrue.music.utils.OperateTypeInActivity
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.model.AnyListBase
-import com.ztftrue.music.utils.trackManager.PlaylistManager.removeTrackFromM3U
+import com.ztftrue.music.utils.trackManager.PlaylistManager.modifyTrackFromM3U
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -106,11 +103,20 @@ class MainActivity : ComponentActivity() {
                     if (u != null && v != null) {
                         resolver.update(u, v, null, null)
                     }
-                } else if (OperateTypeInActivity.RemoveTrackFromPlayList.name == action) {
+                } else if (OperateTypeInActivity.ModifyTrackFromPlayList.name == action) {
                     val playListPath = bundle.getString("playListPath", "")
-                    val trackIndex = bundle.getInt("trackIndex", -1)
-                    if (playListPath.isNotEmpty() && trackIndex != -1) {
-                        removeTrackFromM3U(playListPath, trackIndex)
+                    val uri = bundle.getString("uri", "")
+                    val tracksPath = bundle.getString("tracksPath", "")
+                    val arrayList:ArrayList<MusicItem> =
+                        bundle.getParcelableArrayList("list") ?: ArrayList()
+                    if (playListPath.isNotEmpty()) {
+                        modifyTrackFromM3U(
+                            this@MainActivity,
+                            Uri.parse(uri),
+                            playListPath,
+                            arrayList,
+                            tracksPath
+                        )
                         MediaScannerConnection.scanFile(
                             this@MainActivity,
                             arrayOf<String>(playListPath),
@@ -128,10 +134,10 @@ class MainActivity : ComponentActivity() {
                                                 resultData: Bundle?
                                             ) {
                                                 super.onResult(action, extras, resultData)
-                                                if (ACTION_PlayLIST_CHANGE == action) {
-                                                    musicViewModel.refreshList.value =
-                                                        !musicViewModel.refreshList.value
-                                                }
+//                                                if (ACTION_PlayLIST_CHANGE == action) {
+//                                                    musicViewModel.refreshPlayList.value =
+//                                                        !musicViewModel.refreshPlayList.value
+//                                                }
                                             }
                                         }
                                     )
@@ -157,8 +163,8 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     super.onResult(action, extras, resultData)
                                     if (ACTION_TRACKS_DELETE == action) {
-                                        musicViewModel.refreshList.value =
-                                            !musicViewModel.refreshList.value
+                                        musicViewModel.refreshPlayList.value =
+                                            !musicViewModel.refreshPlayList.value
                                     }
                                 }
                             }
@@ -187,8 +193,8 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     super.onResult(action, extras, resultData)
                                     if (ACTION_TRACKS_UPDATE == action) {
-                                        musicViewModel.refreshList.value =
-                                            !musicViewModel.refreshList.value
+                                        musicViewModel.refreshPlayList.value =
+                                            !musicViewModel.refreshPlayList.value
                                     }
                                 }
                             }
@@ -208,7 +214,8 @@ class MainActivity : ComponentActivity() {
                         ) {
                             super.onResult(action, extras, resultData)
                             if (ACTION_PlayLIST_CHANGE == action) {
-                                musicViewModel.refreshList.value = !musicViewModel.refreshList.value
+                                musicViewModel.refreshPlayList.value =
+                                    !musicViewModel.refreshPlayList.value
                             }
                         }
                     }
@@ -452,6 +459,7 @@ class MainActivity : ComponentActivity() {
         musicViewModel.reset()
         super.onDestroy()
     }
+
     private val lock = ReentrantLock()
     fun getSeek() {
         lock.lock()
@@ -488,10 +496,7 @@ class MainActivity : ComponentActivity() {
         override fun onExtrasChanged(extras: Bundle?) {
             super.onExtrasChanged(extras)
             extras?.let {
-                if (it.getInt("type") == EVENT_changePlayQueue) {
-//                    val playList = it.getParcelable<MusicPlayList>("playList")
-//                    musicViewModel.musicQueue.value = musicViewModel.musicListMap[playList?.id]
-                } else if (it.getInt("type") == EVENT_MEDIA_ITEM_Change) {
+                if (it.getInt("type") == EVENT_MEDIA_ITEM_Change) {
                     // before switch to another music, must clear lyrics
                     val index = it.getInt("index")
                     if (index >= 0 && musicViewModel.musicQueue.size > index && index != musicViewModel.currentPlayQueueIndex.intValue) {
@@ -508,13 +513,6 @@ class MainActivity : ComponentActivity() {
                             musicViewModel.musicQueue[index]
                         )
                     }
-                } else if (it.getInt("type") == EVENT_MEDIA_METADATA_Change) {
-                    val cover = it.getByteArray("cover")
-                    if (cover != null)
-                        musicViewModel.currentMusicCover.value = BitmapFactory.decodeByteArray(
-                            cover, 0,
-                            cover.size
-                        )
                 } else if (it.getInt("type") == EVENT_SLEEP_TIME_Change) {
                     val remainTime = it.getLong("remaining")
                     musicViewModel.remainTime.longValue = remainTime
@@ -667,6 +665,7 @@ class MainActivity : ComponentActivity() {
         // SleepTime wait when play next
         musicViewModel.playCompleted.value =
             resultData.getBoolean("play_completed")
+        musicViewModel.volume.intValue = resultData.getInt("volume",100)
         getSeek()
     }
 

@@ -81,7 +81,8 @@ fun SearchPage(
     var modeList by remember { mutableStateOf(AnyListBase(-1, PlayListType.None)) }
     var keywords by remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
-
+    val configuration = LocalConfiguration.current
+    val width = (configuration.screenWidthDp / 2.5) + 70
     var jobSeek: Job? = null
     val job = CoroutineScope(Dispatchers.IO)
     LaunchedEffect(keywords) {
@@ -217,7 +218,8 @@ fun SearchPage(
                     .padding(it)
             ) {
                 item(1) {
-                    val configuration = LocalConfiguration.current
+
+
                     if (keywords.isNotEmpty() && albumsList.isEmpty() && artistList.isEmpty() && tracksList.isEmpty()) {
                         Text(
                             text = stringResource(R.string.no_music),
@@ -226,10 +228,11 @@ fun SearchPage(
                         )
                     }
                     if (albumsList.isNotEmpty()) {
-                        Text(text =stringResource(R.string.album))
+
+                        Text(text =stringResource(R.string.album,""))
                         Box(
                             modifier = Modifier
-                                .height((configuration.screenWidthDp / musicViewModel.albumItemsCount.intValue + 40).dp)
+                                .height(width.dp)
                                 .background(MaterialTheme.colorScheme.secondary)
                                 .fillMaxWidth()
                         ) {
@@ -249,10 +252,10 @@ fun SearchPage(
                         )
                     }
                     if (artistList.isNotEmpty()) {
-                        Text(text = stringResource(R.string.artist))
+                        Text(text = stringResource(R.string.artist,""))
                         Box(
                             modifier = Modifier
-                                .height((configuration.screenWidthDp / musicViewModel.albumItemsCount.intValue + 40).dp)
+                                .height(width.dp)
                                 .background(MaterialTheme.colorScheme.secondary)
                                 .fillMaxWidth()
                         ) {

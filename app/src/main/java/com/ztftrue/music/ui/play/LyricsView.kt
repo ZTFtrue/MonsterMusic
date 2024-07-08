@@ -4,22 +4,33 @@ import android.content.Context
 import android.content.Intent
 import android.util.TypedValue
 import android.view.MotionEvent
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -64,6 +76,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.zIndex
+import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
@@ -329,148 +343,179 @@ fun LyricsView(
         ) {
             val textToolbar = LocalTextToolbar.current
             val focusManager = LocalFocusManager.current
-
-            SelectionContainer(
-                modifier = Modifier,
-                content = {
-                    val nestedScrollConnection = remember {
-                        object : NestedScrollConnection {
-                            override fun onPreScroll(
-                                available: Offset,
-                                source: NestedScrollSource
-                            ): Offset {
+            ConstraintLayout {
+                val (playIndicator) = createRefs()
+                SelectionContainer(
+                    modifier = Modifier.zIndex(1f),
+                    content = {
+                        val nestedScrollConnection = remember {
+                            object : NestedScrollConnection {
+                                override fun onPreScroll(
+                                    available: Offset,
+                                    source: NestedScrollSource
+                                ): Offset {
 //                                if (textToolbar.status == TextToolbarStatus.Shown) {
-                                try {
-                                    focusManager.clearFocus()
-                                    textToolbar.hide()
-                                } catch (_: Exception) {
+                                    try {
+                                        focusManager.clearFocus()
+                                        textToolbar.hide()
+                                    } catch (_: Exception) {
 
-                                }
+                                    }
 //                                }
-                                return super.onPreScroll(available, source)
+                                    return super.onPreScroll(available, source)
+                                }
                             }
                         }
-                    }
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight()
-                            .nestedScroll(nestedScrollConnection)
-                            .pointerInteropFilter {
-                                when (it.action) {
-                                    MotionEvent.ACTION_DOWN -> {
-                                        if (it.action == MotionEvent.ACTION_DOWN) {
-                                            val a = if (it.y > size.value.height / 2) {
-                                                it.y - fontSize * 3 - 60.dp.toPx(context)
-                                            } else {
-                                                it.y + fontSize * 3
-                                            }
-                                            popupOffset = IntOffset(0, a.toInt())
-                                        }
-                                    }
-
-                                    MotionEvent.ACTION_UP -> {
-                                        if (showMenu) {
-                                            showMenu = false
-                                            isSelected = false
-                                            selectedTag = ""
-                                            word = ""
-                                        }
-                                    }
-                                }
-                                false
-                            }
-                            .motionEventSpy {
-                                if (it.action == MotionEvent.ACTION_DOWN && textToolbar.status == TextToolbarStatus.Shown) {
-                                    textToolbar.hide()
-                                    focusManager.clearFocus()
-                                }
-                            }
-                            .onSizeChanged { sizeIt ->
-                                size.value = sizeIt
-                            }
-                    ) {
-                        items(musicViewModel.currentCaptionList.size) { listIndex ->
-                            key(Unit) {
-                                val tex = musicViewModel.currentCaptionList[listIndex].text
-                                val annotatedString = buildAnnotatedString {
-                                    for ((index, text) in tex.withIndex()) {
-                                        val pattern = Regex("[,:;.\"]")
-                                        val tItem = text.replace(pattern, "")
-                                        pushStringAnnotation("word$tItem$index", tItem)
-                                        withStyle(
-                                            style = SpanStyle(
-                                                textDecoration = if (selectedTag == "$listIndex word$tItem$index") {
-                                                    TextDecoration.Underline
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight()
+                                .nestedScroll(nestedScrollConnection)
+                                .pointerInteropFilter {
+                                    when (it.action) {
+                                        MotionEvent.ACTION_DOWN -> {
+                                            if (it.action == MotionEvent.ACTION_DOWN) {
+                                                val a = if (it.y > size.value.height / 2) {
+                                                    it.y - fontSize * 3 - 60.dp.toPx(context)
                                                 } else {
-                                                    TextDecoration.None
+                                                    it.y + fontSize * 3
                                                 }
-                                            )
-                                        ) {
-                                            append(text)
+                                                popupOffset = IntOffset(0, a.toInt())
+                                            }
                                         }
-                                        pop()
-                                        pushStringAnnotation("space", "")
-                                        append(" ")
-                                        pop()
+
+                                        MotionEvent.ACTION_UP -> {
+                                            if (showMenu) {
+                                                showMenu = false
+                                                isSelected = false
+                                                selectedTag = ""
+                                                word = ""
+                                            }
+                                        }
                                     }
+                                    false
                                 }
-                                ClickableText(
-                                    text = annotatedString,
-                                    style = TextStyle(
-                                        color = if (currentI == listIndex && musicViewModel.autoHighLight.value) {
-                                            MaterialTheme.colorScheme.onTertiaryContainer
-                                        } else {
-                                            MaterialTheme.colorScheme.onBackground
-                                        },
-                                        fontSize = fontSize.sp,
-                                        textAlign = musicViewModel.textAlign.value,
-                                        lineHeight = (fontSize * 1.5).sp,
-                                        textIndent = if (musicViewModel.textAlign.value == TextAlign.Justify || musicViewModel.textAlign.value == TextAlign.Left) {
-                                            TextIndent(fontSize.sp * 2)
-                                        } else {
-                                            TextIndent.None
-                                        }
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(
-                                            if (currentI == listIndex && musicViewModel.autoHighLight.value) MaterialTheme.colorScheme.tertiaryContainer.copy(
-                                                alpha = 0.3f
-                                            ) else MaterialTheme.colorScheme.background
-                                        )
-                                        .padding(
-                                            start = 20.dp,
-                                            end = 20.dp,
-                                            top = 2.dp,
-                                            bottom = 2.dp
-                                        )
-                                ) { offset ->
-                                    if (textToolbar.status == TextToolbarStatus.Shown) {
+                                .motionEventSpy {
+                                    if (it.action == MotionEvent.ACTION_DOWN && textToolbar.status == TextToolbarStatus.Shown) {
                                         textToolbar.hide()
                                         focusManager.clearFocus()
-                                    } else if (showMenu) {
-                                        showMenu = false
-                                    } else {
-                                        val annotations =
-                                            annotatedString.getStringAnnotations(offset, offset)
-                                        annotations.firstOrNull()?.let { itemAnnotations ->
-                                            if (itemAnnotations.tag.startsWith("word")) {
-                                                selectedTag = "$listIndex ${itemAnnotations.tag}"
-                                                word = itemAnnotations.item
-                                                showMenu = true
+                                    }
+                                }
+                                .onSizeChanged { sizeIt ->
+                                    size.value = sizeIt
+                                }
+                        ) {
+                            items(musicViewModel.currentCaptionList.size) { listIndex ->
+                                key(Unit) {
+                                    val tex = musicViewModel.currentCaptionList[listIndex].text
+                                    val annotatedString = buildAnnotatedString {
+                                        for ((index, text) in tex.withIndex()) {
+                                            val pattern = Regex("[,:;.\"]")
+                                            val tItem = text.replace(pattern, "")
+                                            pushStringAnnotation("word$tItem$index", tItem)
+                                            withStyle(
+                                                style = SpanStyle(
+                                                    textDecoration = if (selectedTag == "$listIndex word$tItem$index") {
+                                                        TextDecoration.Underline
+                                                    } else {
+                                                        TextDecoration.None
+                                                    }
+                                                )
+                                            ) {
+                                                append(text)
                                             }
+                                            pop()
+                                            pushStringAnnotation("space", "")
+                                            append(" ")
+                                            pop()
                                         }
                                     }
+                                    ClickableText(
+                                        text = annotatedString,
+                                        style = TextStyle(
+                                            color = if (currentI == listIndex && musicViewModel.autoHighLight.value) {
+                                                MaterialTheme.colorScheme.onTertiaryContainer
+                                            } else {
+                                                MaterialTheme.colorScheme.onBackground
+                                            },
+                                            fontSize = fontSize.sp,
+                                            textAlign = musicViewModel.textAlign.value,
+                                            lineHeight = (fontSize * 1.5).sp,
+                                            textIndent = if (musicViewModel.textAlign.value == TextAlign.Justify || musicViewModel.textAlign.value == TextAlign.Left) {
+                                                TextIndent(fontSize.sp * 2)
+                                            } else {
+                                                TextIndent.None
+                                            }
+                                        ),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(
+                                                if (currentI == listIndex && musicViewModel.autoHighLight.value) MaterialTheme.colorScheme.tertiaryContainer.copy(
+                                                    alpha = 0.3f
+                                                ) else MaterialTheme.colorScheme.background
+                                            )
+                                            .padding(
+                                                start = 20.dp,
+                                                end = 20.dp,
+                                                top = 2.dp,
+                                                bottom = 2.dp
+                                            )
+                                    ) { offset ->
+                                        if (textToolbar.status == TextToolbarStatus.Shown) {
+                                            textToolbar.hide()
+                                            focusManager.clearFocus()
+                                        } else if (showMenu) {
+                                            showMenu = false
+                                        } else {
+                                            val annotations =
+                                                annotatedString.getStringAnnotations(offset, offset)
+                                            annotations.firstOrNull()?.let { itemAnnotations ->
+                                                if (itemAnnotations.tag.startsWith("word")) {
+                                                    selectedTag =
+                                                        "$listIndex ${itemAnnotations.tag}"
+                                                    word = itemAnnotations.item
+                                                    showMenu = true
+                                                }
+                                            }
+                                        }
 
+                                    }
                                 }
-                            }
 
+                            }
                         }
                     }
+                )
+                key(musicViewModel.isEmbeddedLyrics.value) {
+                    if (musicViewModel.isEmbeddedLyrics.value) {
+                        Icon(
+                            imageVector = Icons.Outlined.Info,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            contentDescription = "This is embedded lyrics",
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clip(CircleShape)
+                                .zIndex(2f)
+                                .clickable {
+                                    Toast
+                                        .makeText(
+                                            context,
+                                            "This is embedded lyrics",
+                                            Toast.LENGTH_SHORT
+                                        )
+                                        .show()
+                                }
+                                .constrainAs(playIndicator) {
+                                    top.linkTo(anchor = parent.top, margin = 5.dp)
+                                    start.linkTo(anchor = parent.start, margin = 10.dp)
+                                },
+                        )
+                    }
                 }
-            )
+
+            }
+
         }
     }
 

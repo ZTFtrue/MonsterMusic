@@ -87,6 +87,7 @@
     <string name="tab_cover">Cover</string>
     <string name="tab_lyrics">Lyrics</string>
     <string name="tab_equalizer">Equalizer</string>
+    <string name="effect">Effect</string>
     <string name="theme_follow_system"><![CDATA[Follow System|Dark&Light]]></string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>

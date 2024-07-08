@@ -4,10 +4,14 @@ import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,14 +19,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,9 +44,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
@@ -46,26 +62,38 @@ import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.ACTION_GET_ALBUM_BY_ID
 import com.ztftrue.music.play.ACTION_GET_TRACKS
+import com.ztftrue.music.play.ACTION_SORT
+import com.ztftrue.music.play.PlayUtils
+import com.ztftrue.music.sqlData.MusicDatabase
+import com.ztftrue.music.sqlData.dao.SortFiledDao
 import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.sqlData.model.SortFiledData
 import com.ztftrue.music.ui.home.AlbumGridView
 import com.ztftrue.music.ui.home.AlbumsOperateDialog
 import com.ztftrue.music.ui.home.ArtistsOperateDialog
 import com.ztftrue.music.ui.home.FolderListOperateDialog
 import com.ztftrue.music.ui.home.GenreListOperateDialog
 import com.ztftrue.music.ui.home.PlayListOperateDialog
-import com.ztftrue.music.utils.model.AlbumList
-import com.ztftrue.music.utils.model.AnyListBase
-import com.ztftrue.music.utils.model.ArtistList
-import com.ztftrue.music.utils.trackManager.ArtistManager
-import com.ztftrue.music.utils.model.FolderList
-import com.ztftrue.music.utils.model.GenresList
-import com.ztftrue.music.utils.model.ListBase
-import com.ztftrue.music.utils.model.MusicPlayList
+import com.ztftrue.music.ui.play.toPx
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.enumToStringForPlayListType
+import com.ztftrue.music.utils.model.AlbumList
+import com.ztftrue.music.utils.model.AnyListBase
+import com.ztftrue.music.utils.model.ArtistList
+import com.ztftrue.music.utils.model.FolderList
+import com.ztftrue.music.utils.model.GenresList
+import com.ztftrue.music.utils.model.ListBase
+import com.ztftrue.music.utils.model.MusicPlayList
+import com.ztftrue.music.utils.trackManager.ArtistManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 
 /**
@@ -80,21 +108,297 @@ fun TracksListPage(
     id: Long,
 ) {
     val tracksList = remember { mutableStateListOf<MusicItem>() }
-    val musicPlayList = remember { mutableStateOf(AnyListBase(2,PlayListType.None)) }
+    val musicPlayList = remember { mutableStateOf(AnyListBase(2, PlayListType.None)) }
     val albumsList = remember { mutableStateListOf<AlbumList>() }
+    var refreshCurrentValueList by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    var showOperateDialog by remember { mutableStateOf(false) }
+    var showMoreOperateDialog by remember { mutableStateOf(false) }
+    var showOperatePopup by remember { mutableStateOf(false) }
     var showAddPlayListDialog by remember { mutableStateOf(false) }
     var showCreatePlayListDialog by remember { mutableStateOf(false) }
-    if (showOperateDialog) {
+    var showSortDialog by remember { mutableStateOf(false) }
+    if (showSortDialog) {
+        val sortFiledOptions =
+            PlayUtils.trackSortFiledMap[type.name + "@Tracks"]
+        if (sortFiledOptions.isNullOrEmpty()) {
+            return
+        }
+        val (filedSelected, onFiledOptionSelected) = remember {
+            mutableStateOf("")
+        }
+
+        val (methodSelected, onMethodOptionSelected) = remember {
+            mutableStateOf("")
+        }
+        var sortDb: SortFiledDao?
+
+        LaunchedEffect(key1 = Unit) {
+            CoroutineScope(Dispatchers.IO).launch {
+                sortDb = MusicDatabase.getDatabase(context).SortFiledDao()
+                val sortData1 =
+                    sortDb?.findSortByType(type.name + "@Tracks")
+                if (sortData1 != null) {
+                    val f = sortData1.filedName
+                    val m = sortData1.methodName
+                    onFiledOptionSelected(f)
+                    onMethodOptionSelected(m)
+                }
+            }
+        }
+        Popup(
+            // on below line we are adding
+            // alignment and properties.
+            alignment = Alignment.TopEnd,
+            properties = PopupProperties(),
+            offset = IntOffset(
+                -10.dp.toPx(context),
+                50.dp.toPx(context)
+            ),
+            onDismissRequest = {
+                showSortDialog = false
+            }
+        ) {
+            Column(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(top = 5.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.background,
+                        RoundedCornerShape(10.dp)
+                    )
+                    .border(
+                        1.dp,
+                        color = MaterialTheme.colorScheme.primary,
+                        RoundedCornerShape(10.dp)
+                    )
+            ) {
+                LazyColumn(
+                    contentPadding = PaddingValues(5.dp),
+                    modifier = Modifier
+                ) {
+                    item() {
+                        Row(
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .wrapContentSize()
+                                .clickable {
+
+                                }
+                                .padding(all = Dp(value = 8F))
+                        ) {
+                            Text(
+                                text = "Default",
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            RadioButton(
+                                selected = ("" == filedSelected),
+                                modifier = Modifier
+                                    .wrapContentSize(),
+                                onClick = {
+                                    onFiledOptionSelected("")
+                                    onMethodOptionSelected("")
+                                }
+                            )
+                        }
+                        HorizontalDivider(
+                            modifier = Modifier
+                                .height(1.dp)
+                                .wrapContentSize(align = Alignment.BottomCenter)
+                                .width(140.dp)
+                                .background(color = MaterialTheme.colorScheme.onBackground)
+                        )
+                    }
+                    val filedKeys = sortFiledOptions.keys.toList()
+                    items(filedKeys.size) { i ->
+                        Row(
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .wrapContentSize()
+                                .clickable {
+                                    onFiledOptionSelected(filedKeys[i])
+                                    if (methodSelected.isEmpty() || methodSelected.isBlank()) {
+                                        onMethodOptionSelected(PlayUtils.methodMap.entries.first().key)
+                                    }
+                                }
+                                .padding(all = Dp(value = 8F))
+                        ) {
+                            Text(
+                                text = filedKeys[i],
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            RadioButton(
+                                selected = (filedKeys[i] == filedSelected),
+                                modifier = Modifier
+                                    .wrapContentSize(),
+                                onClick = {
+                                    onFiledOptionSelected(filedKeys[i])
+                                    if (methodSelected.isEmpty() || methodSelected.isBlank()) {
+                                        onMethodOptionSelected(PlayUtils.methodMap.entries.first().key)
+                                    }
+                                }
+                            )
+                        }
+
+                    }
+                    item {
+                        HorizontalDivider(
+                            modifier = Modifier
+                                .height(1.dp)
+                                .wrapContentSize(align = Alignment.BottomCenter)
+                                .width(140.dp)
+                                .background(color = MaterialTheme.colorScheme.onBackground)
+                        )
+                    }
+                    val methodKeys = PlayUtils.methodMap.keys.toList()
+                    items(
+                        methodKeys.size
+                    ) { i ->
+                        Row(
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .wrapContentSize()
+                                .padding(all = Dp(value = 8F))
+                                .clickable {
+                                    onMethodOptionSelected(methodKeys[i])
+                                    if (filedSelected.isEmpty() || filedSelected.isBlank()) {
+                                        onFiledOptionSelected(sortFiledOptions.entries.first().key)
+                                    }
+                                }
+                        ) {
+                            Text(
+                                text = methodKeys[i],
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            RadioButton(
+                                selected = (methodKeys[i] == methodSelected),
+                                modifier = Modifier
+                                    .wrapContentSize(),
+                                onClick = {
+                                    onMethodOptionSelected(methodKeys[i])
+                                    if (filedSelected.isEmpty() || filedSelected.isBlank()) {
+                                        onFiledOptionSelected(sortFiledOptions.entries.first().key)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Row(
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .width(120.dp)
+                ) {
+                    IconButton(
+                        modifier = Modifier.width(50.dp),
+                        onClick = {
+                            showSortDialog = false
+                        }) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close display sort popup",
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(CircleShape),
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    IconButton(
+                        modifier = Modifier.width(50.dp),
+                        onClick = {
+                            showSortDialog = false
+                            runBlocking {
+                                awaitAll(
+                                    async(Dispatchers.IO) {
+                                        sortDb =
+                                            MusicDatabase.getDatabase(context).SortFiledDao()
+                                        var sortData =
+                                            sortDb?.findSortByType(type.name + "@Tracks")
+                                        if (sortData != null) {
+                                            sortData.method =
+                                                PlayUtils.methodMap[methodSelected] ?: ""
+                                            sortData.methodName = methodSelected
+                                            sortData.filed = sortFiledOptions[filedSelected]
+                                                ?: ""
+                                            sortData.filedName = filedSelected
+                                            sortDb?.update(sortData)
+                                        } else {
+                                            sortData = SortFiledData(
+                                                type.name + "@Tracks",
+                                                sortFiledOptions[filedSelected]
+                                                    ?: "",
+                                                PlayUtils.methodMap[methodSelected] ?: "",
+                                                methodSelected,
+                                                filedSelected
+                                            )
+                                            sortDb?.insert(sortData)
+                                        }
+                                    })
+                            }
+                            val bundle = Bundle()
+                            bundle.putString(
+                                "method",
+                                PlayUtils.methodMap[methodSelected] ?: ""
+                            )
+                            bundle.putString(
+                                "filed", sortFiledOptions[filedSelected]
+                                    ?: ""
+                            )
+                            bundle.putString(
+                                "type",
+                                type.name + "@Tracks"
+                            )
+                            musicViewModel.mediaBrowser?.sendCustomAction(
+                                ACTION_SORT,
+                                bundle,
+                                object : MediaBrowserCompat.CustomActionCallback() {
+                                    override fun onResult(
+                                        action: String?,
+                                        extras: Bundle?,
+                                        resultData: Bundle?
+                                    ) {
+                                        super.onResult(action, extras, resultData)
+                                        if (ACTION_SORT == action) {
+                                            refreshCurrentValueList = !refreshCurrentValueList
+                                        }
+                                    }
+                                }
+                            )
+                        }) {
+                        Icon(
+                            imageVector = Icons.Default.Done,
+                            contentDescription = "Close display sort popup and save select",
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(CircleShape),
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+
+            }
+        }
+    }
+    if (showMoreOperateDialog) {
         if (type == PlayListType.Albums) {
             // TODO this can avoid use an error dialog
-            val item = AlbumList(id, "", "", "", "", 0)
+            val item =
+                if (musicPlayList.value is AlbumList) {
+                    val a = (musicPlayList.value as AlbumList)
+                    AlbumList(id, "", a.artist, a.firstYear, a.lastYear, 0)
+                } else {
+                    AlbumList(id, "", "", "", "", 0)
+                }
+
             AlbumsOperateDialog(
                 musicViewModel,
                 playList = item,
                 onDismiss = {
-                    showOperateDialog = false
+                    showMoreOperateDialog = false
                     when (it) {
                         OperateType.AddToPlaylist -> {
                             showAddPlayListDialog = true
@@ -154,7 +458,7 @@ fun TracksListPage(
                 musicViewModel,
                 playList = item,
                 onDismiss = {
-                    showOperateDialog = false
+                    showMoreOperateDialog = false
                     when (it) {
                         OperateType.AddToPlaylist -> {
                             showAddPlayListDialog = true
@@ -172,7 +476,7 @@ fun TracksListPage(
                 musicViewModel,
                 playList = item,
                 onDismiss = {
-                    showOperateDialog = false
+                    showMoreOperateDialog = false
                     when (it) {
                         OperateType.AddToPlaylist -> {
                             showAddPlayListDialog = true
@@ -190,7 +494,7 @@ fun TracksListPage(
                 musicViewModel,
                 playList = item,
                 onDismiss = {
-                    showOperateDialog = false
+                    showMoreOperateDialog = false
                     when (it) {
                         OperateType.AddToPlaylist -> {
                             showAddPlayListDialog = true
@@ -203,12 +507,12 @@ fun TracksListPage(
                 },
             )
         } else if (type == PlayListType.PlayLists) {
-            val item = MusicPlayList( "", id, 0)
+            val item = MusicPlayList("", id, 0)
             PlayListOperateDialog(
                 musicViewModel,
                 playList = item,
                 onDismiss = {
-                    showOperateDialog = false
+                    showMoreOperateDialog = false
                     when (it) {
                         OperateType.AddToPlaylist -> {
                             showAddPlayListDialog = true
@@ -243,9 +547,99 @@ fun TracksListPage(
             }
         })
     }
+    if (showOperatePopup) {
+        Popup(
+            // on below line we are adding
+            // alignment and properties.
+            alignment = Alignment.TopEnd,
+            properties = PopupProperties(),
+            offset = IntOffset(
+                -10.dp.toPx(context),
+                50.dp.toPx(context)
+            ),
+            onDismissRequest = {
+                showOperatePopup = false
+            }
+        ) {
+            val color = MaterialTheme.colorScheme.secondary
+            val configuration = LocalConfiguration.current
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(top = 5.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.background,
+                        RoundedCornerShape(10.dp)
+                    )
+                    .border(
+                        1.dp,
+                        color = MaterialTheme.colorScheme.primary,
+                        RoundedCornerShape(10.dp)
+                    )
+            ) {
+                LazyColumn(
+                    contentPadding = PaddingValues(5.dp),
+                    modifier = Modifier
+                ) {
+                    item {
+                        IconButton(modifier = Modifier.semantics {
+                            contentDescription = "Show more operate"
+                        }, onClick = {
+                            showOperatePopup = false
+                            showMoreOperateDialog = true
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "Show more operate",
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clip(CircleShape),
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
+                    item {
+                        if (!PlayUtils.trackSortFiledMap[type.name + "@Tracks"].isNullOrEmpty()) {
+                            IconButton(
+                                modifier = Modifier.width(50.dp), onClick = {
+                                    showOperatePopup = false
+                                    showSortDialog = true
+                                }) {
+                                Text(
+                                    text = "Sort",
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                        }
 
-    LaunchedEffect(musicViewModel.refreshList.value) {
+                    }
+                }
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.wrapContentSize()
+                ) {
+                    IconButton(
+                        modifier = Modifier.width(50.dp),
+                        onClick = {
+                            showOperatePopup = false
+                        }) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close display set popup",
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(CircleShape),
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
 
+            }
+        }
+    }
+    LaunchedEffect(musicViewModel.refreshPlayList.value, refreshCurrentValueList) {
         val bundle = Bundle()
         bundle.putString("type", type.name)
         bundle.putLong("id", id)
@@ -272,7 +666,7 @@ fun TracksListPage(
                             tracksListResult ?: emptyList()
                         )
                         albumsList.addAll(albumLists ?: emptyList())
-                        if(tracksList.isEmpty()&&albumsList.isEmpty()&&parentListMessage==null){
+                        if (tracksList.isEmpty() && albumsList.isEmpty() && parentListMessage == null) {
                             navController.popBackStack()
                         }
                     }
@@ -288,14 +682,17 @@ fun TracksListPage(
                 TopBar(navController, musicViewModel, content = {
                     IconButton(
                         modifier = Modifier.width(50.dp), onClick = {
-                            showOperateDialog = true
+                            showOperatePopup = true
                         }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Operate More, will open dialog",
+                        Image(
+                            painter = rememberAsyncImagePainter(
+                                R.drawable.apps
+                            ),
+                            contentDescription = "Operate More, will open popup",
                             modifier = Modifier
-                                .size(20.dp)
-                                .clip(CircleShape),
+                                .width(30.dp)
+                                .aspectRatio(1f),
+                            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                         )
                     }
                 })
@@ -345,8 +742,10 @@ fun TracksListPage(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Text(text = "${mListPlay.trackNumber} song${if (mListPlay.trackNumber <= 1) "" else "s"}",
-                                    color = MaterialTheme.colorScheme.onBackground)
+                                Text(
+                                    text = "${mListPlay.trackNumber} song${if (mListPlay.trackNumber <= 1) "" else "s"}",
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
 
                                 if (mListPlay.type == PlayListType.PlayLists) {
                                     IconButton(onClick = {
@@ -363,6 +762,7 @@ fun TracksListPage(
                                             modifier = Modifier
                                                 .size(30.dp)
                                                 .clip(CircleShape),
+                                            tint = MaterialTheme.colorScheme.onBackground
                                         )
                                     }
                                 }
@@ -398,7 +798,7 @@ fun TracksListPage(
                                         text = "${a.albumNumber} album${if (a.albumNumber <= 1) "" else "s"}",
                                         modifier = Modifier
                                             .wrapContentSize(),
-                                                color = MaterialTheme.colorScheme.onBackground
+                                        color = MaterialTheme.colorScheme.onBackground
                                     )
                                 }
                             }
@@ -420,10 +820,11 @@ fun TracksListPage(
             ) {
                 if (albumsList.isNotEmpty()) {
                     val configuration = LocalConfiguration.current
+                    val width = (configuration.screenWidthDp / 2.5) + 70
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height((configuration.screenWidthDp / musicViewModel.albumItemsCount.intValue + 60).dp),
+                            .height(width.dp),
                     ) {
                         AlbumGridView(
                             musicViewModel = musicViewModel,

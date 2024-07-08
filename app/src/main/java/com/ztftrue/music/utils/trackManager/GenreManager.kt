@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.media.MediaBrowserServiceCompat
+import androidx.room.FtsOptions
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.model.GenresList
 import com.ztftrue.music.utils.PlayListType
@@ -12,16 +13,16 @@ object GenreManager {
     fun getGenresList(
         context: Context,
         list: LinkedHashMap<Long, GenresList>,
-        map: HashMap<Long, ArrayList<MusicItem>>,
         tracksHashMap: LinkedHashMap<Long, MusicItem>,
-        result: MediaBrowserServiceCompat.Result<Bundle>?
+        result: MediaBrowserServiceCompat.Result<Bundle>?,
+        sortOrder1: String
     ) {
         val playListProjection = arrayOf(
             MediaStore.Audio.Genres.Members._ID,
             MediaStore.Audio.Genres.NAME,
         )
         val musicResolver = context.contentResolver
-        val sortOrder = "${MediaStore.Audio.Genres.NAME} ASC"
+        val sortOrder =sortOrder1.ifBlank { "${MediaStore.Audio.Genres.NAME} ASC" }
 
         val cursor = musicResolver.query(
             MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,
@@ -40,7 +41,6 @@ object GenreManager {
                 val trackUri = MediaStore.Audio.Genres.Members.getContentUri("external", id)
                 val listT: ArrayList<MusicItem> =
                     TracksManager.getTracksById(context, trackUri, tracksHashMap, null, null, null)
-                map[id] = listT
                 if (listT.size == 0) continue
                 val albumList = GenresList(
                     id,

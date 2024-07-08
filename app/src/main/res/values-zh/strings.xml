@@ -86,7 +86,8 @@
     <string name="tab_folders">文件夹</string>
     <string name="tab_cover">封面</string>
     <string name="tab_lyrics">歌词</string>
-    <string name="tab_equalizer">音效</string>
+    <string name="tab_equalizer">均衡器</string>
+    <string name="effect">音效</string>
     <string name="theme_follow_system">跟随系统</string>
     <string name="theme_light">亮</string>
     <string name="theme_dark">暗</string>

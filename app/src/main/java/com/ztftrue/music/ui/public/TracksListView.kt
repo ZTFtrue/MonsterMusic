@@ -85,7 +85,6 @@ fun TracksListView(
                             musicViewModel,
                             playList,
                             modifier = Modifier
-                                .padding(10.dp)
                                 .fillMaxWidth(),
                             tracksList,
                             selectStatus,
