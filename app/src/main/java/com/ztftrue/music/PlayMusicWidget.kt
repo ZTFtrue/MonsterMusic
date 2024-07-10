@@ -1,31 +1,105 @@
 package com.ztftrue.music
 
-import android.Manifest
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
-import android.content.ComponentName
 import android.content.Context
-import android.content.pm.PackageManager
+import android.content.Intent
 import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
-import android.support.v4.media.MediaMetadataCompat
-import android.support.v4.media.session.MediaControllerCompat
-import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
+import android.util.SizeF
+import android.view.View
+import android.widget.RelativeLayout
 import android.widget.RemoteViews
 import androidx.annotation.OptIn
-import androidx.core.app.ActivityCompat
+import androidx.compose.ui.graphics.Color
 import androidx.media.session.MediaButtonReceiver
 import androidx.media3.common.util.UnstableApi
-import com.ztftrue.music.play.EVENT_MEDIA_ITEM_Change
-import com.ztftrue.music.play.PlayService
+import com.ztftrue.music.utils.Utils.getCover
 
 /**
  * Implementation of App Widget functionality.
  */
 class PlayMusicWidget : AppWidgetProvider() {
     var context: Context? = null
+    override fun onReceive(context: Context?, intent: Intent?) {
+        super.onReceive(context, intent)
+        if (intent != null && intent.action.equals(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+            && intent.getStringExtra("source").equals(context?.packageName)
+        ) {
+            val playStatusChange = intent.getBooleanExtra("playStatusChange", false)
+            val playingStatus = intent.getBooleanExtra("playingStatus", false)
+            val title = intent.getStringExtra("title") ?: ""
+            val author = intent.getStringExtra("author") ?: ""
+            val path = intent.getStringExtra("path")
+            arrayList.forEach {
+                it.value.setImageViewResource(
+                    R.id.pause,
+                    if (playingStatus) R.drawable.pause else R.drawable.play
+                )
+                if (!playStatusChange) {
+                    if (!path.isNullOrEmpty()) {
+                        val cover = getCover(path)
+                        if (cover != null) {
+                            it.value.setImageViewBitmap(R.id.cover, cover)
+                        } else {
+                            it.value.setImageViewResource(
+                                R.id.cover,
+                                R.drawable.songs_thumbnail_cover
+                            )
+                        }
+                    }
+                    it.value.setTextViewText(R.id.title, title)
+                    it.value.setTextViewText(R.id.author, author)
+                }
+
+                val manager = AppWidgetManager.getInstance(context)
+                manager.updateAppWidget(it.key, it.value)
+            }
+        }
+        Log.d("PlayMusicWidget", "onReceive")
+    }
+
+    override fun onAppWidgetOptionsChanged(
+        context: Context?,
+        appWidgetManager: AppWidgetManager?,
+        appWidgetId: Int,
+        newOptions: Bundle?
+    ) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+        val sizes = newOptions?.getParcelableArrayList<SizeF>(
+            AppWidgetManager.OPTION_APPWIDGET_SIZES
+        )
+        // Check that the list of sizes is provided by the launcher.
+        if (sizes.isNullOrEmpty()) {
+            return
+        }
+
+        // Get the min and max sizes
+        val minWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
+        val minHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
+        val maxWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH)
+        val maxHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT)
+        // Map the sizes to the RemoteViews that you want.
+//        val remoteViews = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+//            RemoteViews(sizes.associateWith(::createRemoteViews))
+//        } else {
+//
+//        }
+//        appWidgetManager.updateAppWidget(appWidgetId, remoteViews)
+
+    }
+
+    override fun onDeleted(context: Context?, appWidgetIds: IntArray?) {
+        super.onDeleted(context, appWidgetIds)
+        Log.d("PlayMusicWidget", "onAppWidgetOptionsChanged")
+    }
+
+    override fun onRestored(context: Context?, oldWidgetIds: IntArray?, newWidgetIds: IntArray?) {
+        super.onRestored(context, oldWidgetIds, newWidgetIds)
+        Log.d("PlayMusicWidget", "onRestored")
+    }
 
     @OptIn(UnstableApi::class)
     override fun onUpdate(
@@ -33,6 +107,7 @@ class PlayMusicWidget : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
+        Log.d("PlayMusicWidget", "onUpdate")
         this.context = context
         arrayList.clear()
         // There may be multiple widgets active, so update all of them
@@ -40,35 +115,16 @@ class PlayMusicWidget : AppWidgetProvider() {
             updateAppWidget(context, appWidgetManager, appWidgetId)
         }
         this.context = context
-        if (ActivityCompat.checkSelfPermission(
-                context, Manifest.permission.READ_MEDIA_AUDIO
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-              mediaBrowser = MediaBrowserCompat(
-                context,
-                ComponentName(context, PlayService::class.java),
-                connectionCallbacks,
-                null // optional Bundle
-            )
-            mediaBrowser?.connect()
-        }
+
     }
 
     @OptIn(UnstableApi::class)
     override fun onEnabled(context: Context) {
-        Log.d("TAG", "onEnabled")
+        Log.d("PlayMusicWidget", "onEnabled")
         this.context = context
-        if (ActivityCompat.checkSelfPermission(
-                context, Manifest.permission.READ_MEDIA_AUDIO
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-              mediaBrowser = MediaBrowserCompat(
-                context,
-                ComponentName(context, PlayService::class.java),
-                connectionCallbacks,
-                null // optional Bundle
-            )
-            mediaBrowser?.connect()
+        context.getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit().apply {
+            putBoolean("enable", true)
+            apply()
         }
         // Enter relevant functionality for when the first widget is created
     }
@@ -76,28 +132,32 @@ class PlayMusicWidget : AppWidgetProvider() {
     override fun onDisabled(
         context: Context
     ) {
+        context.getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit().apply {
+            putBoolean("enable", false)
+            apply()
+        }
         this.context = context
-        mediaController = null
-        mediaBrowser?.disconnect()
-        Log.d("TAG", "onDisabled")
+        Log.d("PlayMusicWidget", "onDisabled")
         // Enter relevant functionality for when the last widget is disabled
     }
 
-    var mediaBrowser: MediaBrowserCompat? = null
-    var arrayList = ArrayList<RemoteViews>()
-//    var views:RemoteViews=
+    private var arrayList = HashMap<Int, RemoteViews>()
+
     @OptIn(UnstableApi::class)
     internal fun updateAppWidget(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int
     ) {
-        // Get the layout for the widget and attach an onClick listener to
-        // the button.
-        val views: RemoteViews = RemoteViews(
+        RemoteViews(
             context.packageName,
             R.layout.play_music_widget
-        ).also {
+        ).let {
+            it.setInt(
+                R.id.play_music_widget,
+                "setBackgroundColor",
+                context.resources.getColor(R.color.light_blue_900)
+            )
             it.setOnClickPendingIntent(
                 R.id.preview, MediaButtonReceiver.buildMediaButtonPendingIntent(
                     context,
@@ -116,117 +176,19 @@ class PlayMusicWidget : AppWidgetProvider() {
                     PlaybackStateCompat.ACTION_SKIP_TO_NEXT
                 )
             )
-            arrayList.add(it)
-        }
-        appWidgetManager.updateAppWidget(appWidgetId, views)
-    }
+            val intent = Intent(context, MainActivity::class.java)
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                0,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
 
-    var mediaController: MediaControllerCompat? = null
-    private val connectionCallbacks = object : MediaBrowserCompat.ConnectionCallback() {
-
-        override fun onConnected() {
-            // Get the token for the MediaSession
-            mediaBrowser?.sessionToken.also { token ->
-                // Create a MediaControllerCompat
-                mediaController = token?.let {
-                    MediaControllerCompat(
-                        context, // Context
-                        it
-                    )
-                }
-                val extras = mediaBrowser?.extras
-                if (extras != null) {
-//                    getInitData(extras)
-                }
-//                MediaControllerCompat.setMediaController(context, mediaController)
-                mediaController?.registerCallback(callback)
-            }
+            it.setOnClickPendingIntent(R.id.cover, pendingIntent)
+            appWidgetManager.updateAppWidget(appWidgetId, it)
+            arrayList.put(appWidgetId, it)
         }
 
-        override fun onConnectionSuspended() {
-        }
-
-        override fun onConnectionFailed() {
-            // The Service has refused our connection
-        }
-
-    }
-    val callback = object : MediaControllerCompat.Callback() {
-        override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
-            super.onPlaybackStateChanged(state)
-            if (state != null) {
-                arrayList.forEach() {
-//                    it.setImageViewBitmap()
-                    it.setImageViewResource(R.id.pause, if
-                            (state.state == PlaybackStateCompat.STATE_PLAYING) R.drawable.pause else R.drawable.play)
-                }
-//                playStatus.value = state.state == PlaybackStateCompat.STATE_PLAYING
-//                getSeek()
-            }
-        }
-
-        override fun onExtrasChanged(extras: Bundle?) {
-            super.onExtrasChanged(extras)
-            extras?.let {
-                if (it.getInt("type") == EVENT_MEDIA_ITEM_Change) {
-                    // before switch to another music, must clear lyrics
-//                    val index = it.getInt("index")
-//                    if (index >= 0 && musicViewModel.musicQueue.size > index && index != musicViewModel.currentPlayQueueIndex.intValue) {
-//                        musicViewModel.currentCaptionList.clear()
-//                        musicViewModel.currentMusicCover.value = null
-//                        musicViewModel.currentPlay.value =
-//                            musicViewModel.musicQueue[index]
-//                        musicViewModel.currentPlayQueueIndex.intValue = index
-//                        musicViewModel.sliderPosition.floatValue = 0f
-//                        musicViewModel.currentDuration.longValue =
-//                            musicViewModel.currentPlay.value?.duration ?: 0
-//                        musicViewModel.dealLyrics(
-//                            this@MainActivity,
-//                            musicViewModel.musicQueue[index]
-//                        )
-//                    }
-                }
-            }
-        }
-
-        override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
-            super.onMetadataChanged(metadata)
-        }
-
-        override fun onQueueChanged(queue: MutableList<MediaSessionCompat.QueueItem>?) {
-            super.onQueueChanged(queue)
-        }
-
-        override fun onQueueTitleChanged(title: CharSequence?) {
-            super.onQueueTitleChanged(title)
-        }
-
-        override fun onAudioInfoChanged(info: MediaControllerCompat.PlaybackInfo?) {
-            super.onAudioInfoChanged(info)
-        }
-
-        override fun onRepeatModeChanged(repeatMode: Int) {
-            super.onRepeatModeChanged(repeatMode)
-            when (repeatMode) {
-//                PlaybackStateCompat.REPEAT_MODE_NONE -> {
-//                    musicViewModel.repeatModel.intValue = Player.REPEAT_MODE_OFF
-//                }
-//
-//                PlaybackStateCompat.REPEAT_MODE_ALL -> {
-//                    musicViewModel.repeatModel.intValue = Player.REPEAT_MODE_ALL
-//                }
-//
-//                PlaybackStateCompat.REPEAT_MODE_ONE -> {
-//                    musicViewModel.repeatModel.intValue = Player.REPEAT_MODE_ONE
-//                }
-//
-//                PlaybackStateCompat.REPEAT_MODE_GROUP -> {
-//                }
-//
-//                PlaybackStateCompat.REPEAT_MODE_INVALID -> {
-//                }
-            }
-        }
     }
 }
 

@@ -32,6 +32,7 @@ import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.SharedPreferencesName.LYRICS_SETTINGS
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.Utils.getCover
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.model.Caption
 import com.ztftrue.music.utils.model.EqualizerBand
@@ -52,7 +53,6 @@ var QueuePlayList = AnyListBase(-1, PlayListType.Queue)
 
 class MusicViewModel : ViewModel() {
 
-    private val retriever = MediaMetadataRetriever()
     var db: MusicDatabase? = null
     val refreshPlayList = mutableStateOf(false)
     val refreshAlbum = mutableStateOf(false)
@@ -365,17 +365,7 @@ class MusicViewModel : ViewModel() {
         return arrayList
     }
 
-    fun getCover(path: String): Bitmap? {
-        try {
-            retriever.setDataSource(path)
-            val coverT = retriever.embeddedPicture
-            if (coverT != null) {
-                return BitmapFactory.decodeByteArray(coverT, 0, coverT.size)
-            }
-        } catch (_: Exception) {
-        }
-        return null
-    }
+
 
     fun getCurrentMusicCover(): Bitmap? {
         if (currentMusicCover.value != null) {

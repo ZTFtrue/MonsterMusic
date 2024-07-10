@@ -46,6 +46,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.ui.public.BackButton
+import com.ztftrue.music.utils.Utils.getCover
 import com.ztftrue.music.utils.trackManager.TracksManager
 
 
@@ -79,7 +80,7 @@ fun EditTrackPage(
     LaunchedEffect(Unit) {
         val musicItem = TracksManager.getMusicById(context, musicId)
         if (musicItem != null) {
-            coverBitmap = musicViewModel.getCover(musicItem.path)
+            coverBitmap = getCover(musicItem.path)
             title = musicItem.name
             album = musicItem.album
             artist = musicItem.artist

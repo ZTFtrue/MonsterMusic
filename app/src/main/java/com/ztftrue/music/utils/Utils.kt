@@ -3,6 +3,9 @@ package com.ztftrue.music.utils
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ResolveInfo
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
@@ -230,7 +233,19 @@ object Utils {
         }
         context.startActivity(intent)
     }
+    private val retriever = MediaMetadataRetriever()
 
+    fun getCover(path: String): Bitmap? {
+        try {
+            retriever.setDataSource(path)
+            val coverT = retriever.embeddedPicture
+            if (coverT != null) {
+                return BitmapFactory.decodeByteArray(coverT, 0, coverT.size)
+            }
+        } catch (_: Exception) {
+        }
+        return null
+    }
     @Suppress("unused")
     fun copyFile(sourceFile: File, destinationFile: File) {
         try {

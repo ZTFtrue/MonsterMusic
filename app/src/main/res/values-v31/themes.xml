@@ -13,6 +13,6 @@
     -->
     <style name="Theme.MusicPitch.AppWidgetContainerParent" parent="@android:style/Theme.DeviceDefault.DayNight">
         <item name="appWidgetRadius">@android:dimen/system_app_widget_background_radius</item>
-        <item name="appWidgetInnerRadius">@android:dimen/system_app_widget_inner_radius</item>
+        <item name="appWidgetInnerRadius">0dp</item>
     </style>
 </resources>

@@ -2,6 +2,8 @@ package com.ztftrue.music.play
 
 import android.annotation.SuppressLint
 import android.app.PendingIntent
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -13,10 +15,11 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
+import android.widget.RemoteViews
 import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.media.MediaBrowserServiceCompat
+import androidx.media.session.MediaButtonReceiver
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.BuildConfig
 import androidx.media3.common.C
@@ -36,6 +39,7 @@ import androidx.media3.exoplayer.audio.ForwardingAudioSink
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import com.ztftrue.music.MainActivity
+import com.ztftrue.music.PlayMusicWidget
 import com.ztftrue.music.R
 import com.ztftrue.music.effects.EchoAudioProcessor
 import com.ztftrue.music.effects.EqualizerAudioProcessor
@@ -67,6 +71,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.util.concurrent.locks.ReentrantLock
+
 
 /**
  * playList
@@ -625,10 +630,10 @@ class PlayService : MediaBrowserServiceCompat() {
             sortAction(extras, result)
         } else if (action == ACTION_Volume_CHANGE) {
             if (extras != null) {
-                volumeValue=extras.getInt("volume", 100)
+                volumeValue = extras.getInt("volume", 100)
                 saveVolume(volumeValue)
 //                equalizerAudioProcessor.setVolume(volumeValue)
-                exoPlayer.volume=volumeValue/100f
+                exoPlayer.volume = volumeValue / 100f
             }
             result.sendResult(null)
         }
@@ -1100,6 +1105,26 @@ class PlayService : MediaBrowserServiceCompat() {
                     currentPlayTrack =
                         musicQueue[exoPlayer.currentMediaItemIndex]
                 }
+                getSharedPreferences("Widgets", Context.MODE_PRIVATE).getBoolean("enable", false)
+                    .let {
+                        if (it) {
+                            val intent = Intent(this@PlayService, PlayMusicWidget::class.java)
+                            intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+                            intent.putExtra("source", this@PlayService.packageName)
+                            val ids = AppWidgetManager.getInstance(
+                                application
+                            ).getAppWidgetIds(
+                                ComponentName(
+                                    application,
+                                    PlayMusicWidget::class.java
+                                )
+                            )
+                            intent.putExtra("playStatusChange", true)
+                            intent.putExtra("playingStatus", isPlaying)
+                            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+                            sendBroadcast(intent)
+                        }
+                    }
                 saveCurrentDuration(exoPlayer.currentPosition)
                 notify?.updateNotification(
                     this@PlayService,
@@ -1153,6 +1178,31 @@ class PlayService : MediaBrowserServiceCompat() {
                     bundle.putParcelable("current", currentPlayTrack)
                     bundle.putInt("type", EVENT_MEDIA_ITEM_Change)
                     bundle.putInt("index", exoPlayer.currentMediaItemIndex)
+                    getSharedPreferences("Widgets", Context.MODE_PRIVATE).getBoolean(
+                        "enable",
+                        false
+                    )
+                        .let {
+                            if (it) {
+                                val intent = Intent(this@PlayService, PlayMusicWidget::class.java)
+                                intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+                                intent.putExtra("source", this@PlayService.packageName)
+                                val ids = AppWidgetManager.getInstance(
+                                    application
+                                ).getAppWidgetIds(
+                                    ComponentName(
+                                        application,
+                                        PlayMusicWidget::class.java
+                                    )
+                                )
+                                intent.putExtra("playingStatus", exoPlayer.isPlaying)
+                                intent.putExtra("title", currentPlayTrack?.name ?: "")
+                                intent.putExtra("author", currentPlayTrack?.artist ?: "")
+                                intent.putExtra("path", currentPlayTrack?.path ?: "")
+                                intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+                                sendBroadcast(intent)
+                            }
+                        }
                     mediaSession?.setExtras(bundle)
                     if (needPlayPause) {
                         needPlayPause = false
