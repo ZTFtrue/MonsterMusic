@@ -1143,11 +1143,6 @@ class PlayService : MediaBrowserServiceCompat() {
                 super.onPositionDiscontinuity(oldPosition, newPosition, reason)
                 if (musicQueue.isEmpty()) return
                 updateNotify()
-                Log.i("TAG-onPositionDiscontinuity", reason.toString())
-                Log.i(
-                    "TAG-onPositionDiscontinuity",
-                    "${oldPosition.mediaItem?.mediaId},${newPosition.mediaItem?.mediaId}"
-                )
                 if (oldPosition.mediaItemIndex != newPosition.mediaItemIndex || reason >= 4 || currentPlayTrack?.id != musicQueue[newPosition.mediaItemIndex].id) {
                     saveSelectMusicId(
                         musicQueue[newPosition.mediaItemIndex].id

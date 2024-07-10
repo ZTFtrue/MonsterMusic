@@ -108,4 +108,7 @@
     <string name="join_discord">Join Discord</string>
     <string name="star_share_tip">If you like it, please share it; And, if you have a GitHub account, please give a star to this project.</string>
     <string name="preset">Preset</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
+    <string name="app_widget_description">This is an app widget description</string>
 </resources>
