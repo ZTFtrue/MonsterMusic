@@ -156,6 +156,7 @@ class PlayMusicWidget : AppWidgetProvider() {
 
     @OptIn(UnstableApi::class)
     override fun onEnabled(context: Context) {
+        // TODO send broadcast
         Log.d("PlayMusicWidget", "onEnabled")
         context.getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit().apply {
             putBoolean("enable", true)
