@@ -15,11 +15,9 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.widget.RemoteViews
 import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.media.MediaBrowserServiceCompat
-import androidx.media.session.MediaButtonReceiver
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.BuildConfig
 import androidx.media3.common.C
@@ -30,6 +28,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.audio.SonicAudioProcessor
+import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
@@ -1099,12 +1098,18 @@ class PlayService : MediaBrowserServiceCompat() {
     var errorCount = 0
     private fun playerAddListener() {
         exoPlayer.addListener(@UnstableApi object : Player.Listener {
+            @SuppressLint("ApplySharedPref")
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 super.onIsPlayingChanged(isPlaying)
                 if (musicQueue.isNotEmpty()) {
                     currentPlayTrack =
                         musicQueue[exoPlayer.currentMediaItemIndex]
                 }
+                getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit()
+                    .putBoolean("playingStatus",isPlaying)
+                    .putString("title",currentPlayTrack?.name ?: "")
+                    .putString("author",currentPlayTrack?.artist ?: "")
+                    .putString("path",currentPlayTrack?.path ?: "").commit()
                 getSharedPreferences("Widgets", Context.MODE_PRIVATE).getBoolean("enable", false)
                     .let {
                         if (it) {
@@ -1119,9 +1124,16 @@ class PlayService : MediaBrowserServiceCompat() {
                                     PlayMusicWidget::class.java
                                 )
                             )
-                            intent.putExtra("playStatusChange", true)
+//                            intent.putExtra("playStatusChange", true)
                             intent.putExtra("playingStatus", isPlaying)
+//                            intent.putExtra("playingStatus", exoPlayer.isPlaying)
+                            intent.putExtra("title", currentPlayTrack?.name ?: "")
+                            intent.putExtra("author", currentPlayTrack?.artist ?: "")
+                            intent.putExtra("path", currentPlayTrack?.path ?: "")
                             intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+
+
+
                             sendBroadcast(intent)
                         }
                     }
@@ -1178,6 +1190,11 @@ class PlayService : MediaBrowserServiceCompat() {
                     bundle.putParcelable("current", currentPlayTrack)
                     bundle.putInt("type", EVENT_MEDIA_ITEM_Change)
                     bundle.putInt("index", exoPlayer.currentMediaItemIndex)
+                    getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit()
+                        .putBoolean("playingStatus",exoPlayer.isPlaying)
+                        .putString("title",currentPlayTrack?.name ?: "")
+                        .putString("author",currentPlayTrack?.artist ?: "")
+                        .putString("path",currentPlayTrack?.path ?: "").commit()
                     getSharedPreferences("Widgets", Context.MODE_PRIVATE).getBoolean(
                         "enable",
                         false
@@ -1195,6 +1212,7 @@ class PlayService : MediaBrowserServiceCompat() {
                                         PlayMusicWidget::class.java
                                     )
                                 )
+                                Log.d("TAG",currentPlayTrack?.name?:"");
                                 intent.putExtra("playingStatus", exoPlayer.isPlaying)
                                 intent.putExtra("title", currentPlayTrack?.name ?: "")
                                 intent.putExtra("author", currentPlayTrack?.artist ?: "")

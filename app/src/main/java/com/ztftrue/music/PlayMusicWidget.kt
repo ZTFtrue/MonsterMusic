@@ -3,62 +3,103 @@ package com.ztftrue.music
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.util.SizeF
-import android.view.View
-import android.widget.RelativeLayout
 import android.widget.RemoteViews
 import androidx.annotation.OptIn
-import androidx.compose.ui.graphics.Color
 import androidx.media.session.MediaButtonReceiver
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.utils.Utils.getCover
+
 
 /**
  * Implementation of App Widget functionality.
  */
 class PlayMusicWidget : AppWidgetProvider() {
-    var context: Context? = null
+
+    @OptIn(UnstableApi::class)
     override fun onReceive(context: Context?, intent: Intent?) {
         super.onReceive(context, intent)
-        if (intent != null && intent.action.equals(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
-            && intent.getStringExtra("source").equals(context?.packageName)
+        if (context != null && intent != null && intent.action.equals(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+            && intent.getStringExtra("source").equals(context.packageName)
         ) {
             val playStatusChange = intent.getBooleanExtra("playStatusChange", false)
             val playingStatus = intent.getBooleanExtra("playingStatus", false)
             val title = intent.getStringExtra("title") ?: ""
             val author = intent.getStringExtra("author") ?: ""
             val path = intent.getStringExtra("path")
-            arrayList.forEach {
-                it.value.setImageViewResource(
-                    R.id.pause,
-                    if (playingStatus) R.drawable.pause else R.drawable.play
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val ids = appWidgetManager.getAppWidgetIds(
+                ComponentName(
+                    context,
+                    PlayMusicWidget::class.java
                 )
-                if (!playStatusChange) {
-                    if (!path.isNullOrEmpty()) {
-                        val cover = getCover(path)
-                        if (cover != null) {
-                            it.value.setImageViewBitmap(R.id.cover, cover)
-                        } else {
-                            it.value.setImageViewResource(
-                                R.id.cover,
-                                R.drawable.songs_thumbnail_cover
-                            )
-                        }
-                    }
-                    it.value.setTextViewText(R.id.title, title)
-                    it.value.setTextViewText(R.id.author, author)
-                }
+            )
+            ids.forEach { id ->
+                RemoteViews(
+                    context.packageName,
+                    R.layout.play_music_widget
+                ).let {
+                    it.setInt(
+                        R.id.play_music_widget,
+                        "setBackgroundColor",
+                        context.resources.getColor(R.color.light_blue_900)
+                    )
+                    it.setOnClickPendingIntent(
+                        R.id.preview, MediaButtonReceiver.buildMediaButtonPendingIntent(
+                            context,
+                            PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+                        )
+                    )
+                    it.setOnClickPendingIntent(
+                        R.id.pause, MediaButtonReceiver.buildMediaButtonPendingIntent(
+                            context,
+                            PlaybackStateCompat.ACTION_PLAY_PAUSE
+                        )
+                    )
+                    it.setOnClickPendingIntent(
+                        R.id.next, MediaButtonReceiver.buildMediaButtonPendingIntent(
+                            context,
+                            PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                        )
+                    )
+                    val intent = Intent(context, MainActivity::class.java)
+                    val pendingIntent = PendingIntent.getActivity(
+                        context,
+                        0,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                    it.setImageViewResource(
+                        R.id.pause,
+                        if (playingStatus) R.drawable.pause else R.drawable.play
+                    )
+                    if (!playStatusChange) {
 
-                val manager = AppWidgetManager.getInstance(context)
-                manager.updateAppWidget(it.key, it.value)
+                        if (!path.isNullOrEmpty()) {
+                            val cover = getCover(path)
+                            if (cover != null) {
+                                it.setImageViewBitmap(R.id.cover, cover)
+                            } else {
+                                it.setImageViewResource(
+                                    R.id.cover,
+                                    R.drawable.songs_thumbnail_cover
+                                )
+                            }
+                        }
+                        it.setTextViewText(R.id.title, title)
+                        it.setTextViewText(R.id.author, author)
+                    }
+                    it.setOnClickPendingIntent(R.id.cover, pendingIntent)
+//                    appWidgetManager.updateAppWidget(id, it)
+                }
             }
         }
-        Log.d("PlayMusicWidget", "onReceive")
     }
 
     override fun onAppWidgetOptionsChanged(
@@ -107,21 +148,15 @@ class PlayMusicWidget : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        Log.d("PlayMusicWidget", "onUpdate")
-        this.context = context
-        arrayList.clear()
-        // There may be multiple widgets active, so update all of them
+        //this line replace the original
         for (appWidgetId in appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId)
         }
-        this.context = context
-
     }
 
     @OptIn(UnstableApi::class)
     override fun onEnabled(context: Context) {
         Log.d("PlayMusicWidget", "onEnabled")
-        this.context = context
         context.getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit().apply {
             putBoolean("enable", true)
             apply()
@@ -136,12 +171,9 @@ class PlayMusicWidget : AppWidgetProvider() {
             putBoolean("enable", false)
             apply()
         }
-        this.context = context
         Log.d("PlayMusicWidget", "onDisabled")
-        // Enter relevant functionality for when the last widget is disabled
     }
 
-    private var arrayList = HashMap<Int, RemoteViews>()
 
     @OptIn(UnstableApi::class)
     internal fun updateAppWidget(
@@ -183,10 +215,33 @@ class PlayMusicWidget : AppWidgetProvider() {
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
+            context.getSharedPreferences("Widgets", Context.MODE_PRIVATE)
+                .also { sharedPreferences ->
+                    val playingStatus = sharedPreferences.getBoolean("playingStatus", false)
+                    val title = sharedPreferences.getString("title", "")
+                    val author = sharedPreferences.getString("author", "")
+                    val path = sharedPreferences.getString("path", "")
+                    it.setImageViewResource(
+                        R.id.pause,
+                        if (playingStatus) R.drawable.pause else R.drawable.play
+                    )
+                    if (!path.isNullOrEmpty()) {
+                        val cover = getCover(path)
+                        if (cover != null) {
+                            it.setImageViewBitmap(R.id.cover, cover)
+                        } else {
+                            it.setImageViewResource(
+                                R.id.cover,
+                                R.drawable.songs_thumbnail_cover
+                            )
+                        }
+                    }
+                    it.setTextViewText(R.id.title, title)
+                    it.setTextViewText(R.id.author, author)
+                }
 
             it.setOnClickPendingIntent(R.id.cover, pendingIntent)
             appWidgetManager.updateAppWidget(appWidgetId, it)
-            arrayList.put(appWidgetId, it)
         }
 
     }
