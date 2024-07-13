@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.MediaControllerCompat
@@ -40,10 +39,15 @@ import com.ztftrue.music.utils.model.ListStringCaption
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.io.BufferedReader
 import java.io.File
+import java.io.FileOutputStream
 import java.io.InputStreamReader
+import java.nio.file.Files
 import java.util.concurrent.locks.ReentrantLock
 
 
@@ -60,7 +64,8 @@ class MusicViewModel : ViewModel() {
     val refreshGenre = mutableStateOf(false)
     var navController: NavHostController? = null
     var themeSelected = mutableIntStateOf(0)
-//    val albumItemsCount = mutableIntStateOf(2)
+
+    //    val albumItemsCount = mutableIntStateOf(2)
 //    val genreItemsCount = mutableIntStateOf(2)
     var mediaController: MediaControllerCompat? = null
     var mediaBrowser: MediaBrowserCompat? = null
@@ -366,7 +371,6 @@ class MusicViewModel : ViewModel() {
     }
 
 
-
     fun getCurrentMusicCover(): Bitmap? {
         if (currentMusicCover.value != null) {
             return currentMusicCover.value
@@ -379,20 +383,67 @@ class MusicViewModel : ViewModel() {
         return null
     }
 
-    fun getAlbumCover(id: Long, context: Context): Bitmap? {
-        try {
-            val albumUri = ContentUris.withAppendedId(
-                Uri.parse("content://media/external/audio/albumart"),
-                id
-            )
-            return BitmapFactory.decodeStream(
-                context.contentResolver.openInputStream(
-                    albumUri
-                )
-            )
-        } catch (_: Exception) {
-
+    fun getAlbumCover(id: Long, context: Context): Any? {
+        var result: Any? = null
+        val folder = File(context.externalCacheDir, "album_cover")
+        folder.mkdirs()
+        val coverPath = File(folder, "$id.jpg")
+        if (coverPath.exists()) {
+            return coverPath.path
+        } else {
+//            coverPath.createNewFile()
         }
-        return null
+        runBlocking {
+            awaitAll(
+                async(Dispatchers.IO) {
+                    try {
+                        val albumUri = ContentUris.withAppendedId(
+                            Uri.parse("content://media/external/audio/albumart"),
+                            id
+                        )
+                        val s = context.contentResolver.openInputStream(
+                            albumUri
+                        )
+                        if (s == null) {
+                            val bm =
+                                BitmapFactory.decodeResource(
+                                    context.resources,
+                                    R.drawable.songs_thumbnail_cover
+                                )
+                            val outStream: FileOutputStream = FileOutputStream(coverPath)
+
+                            bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+                            outStream.flush()
+                            outStream.close()
+                            result =
+                                R.drawable.songs_thumbnail_cover
+                        } else {
+                            s.use { input ->
+                                Files.copy(input, coverPath.toPath())
+                            }
+                            result = coverPath.path
+                            s.close()
+                        }
+
+                    } catch (e: Exception) {
+//                        e.printStackTrace()
+                    }
+                }
+            )
+        }
+        if (result == null) {
+            val bm =
+                BitmapFactory.decodeResource(
+                    context.resources,
+                    R.drawable.songs_thumbnail_cover
+                )
+            val outStream: FileOutputStream = FileOutputStream(coverPath)
+
+            bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+            outStream.flush()
+            outStream.close()
+            return R.drawable.songs_thumbnail_cover
+        }
+        return result
     }
 }

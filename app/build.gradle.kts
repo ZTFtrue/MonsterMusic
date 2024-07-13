@@ -116,7 +116,7 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
-
+    implementation ("com.github.bumptech.glide:compose:1.0.0-beta01")
     // https://mvnrepository.com/artifact/pl.edu.icm/JLargeArrays
 //    implementation("pl.edu.icm:JLargeArrays:1.6")
 // https://mvnrepository.com/artifact/commons-io/commons-io
