@@ -133,7 +133,7 @@ object Utils {
     )
     var kThirdBW = doubleArrayOf(
         //15.0, 30.0, 60.0, 120.0, 240.0, 480.0, 960.0, 1920.0, 3840.0, 7680.0
-        60.0,170.0,310.0,600.0,1000.0,3000.0,6000.0,12000.0,14000.0,16000.0
+        60.0, 170.0, 310.0, 600.0, 1000.0, 3000.0, 6000.0, 12000.0, 14000.0, 16000.0
     )
 
     var order = 40
@@ -233,6 +233,7 @@ object Utils {
         }
         context.startActivity(intent)
     }
+
     private val retriever = MediaMetadataRetriever()
 
     fun getCover(path: String): Bitmap? {
@@ -246,6 +247,7 @@ object Utils {
         }
         return null
     }
+
     @Suppress("unused")
     fun copyFile(sourceFile: File, destinationFile: File) {
         try {
@@ -533,5 +535,12 @@ object Utils {
         return resolveInfoList
     }
 
+    fun clearAlbumCoverCache(context: Context) {
+        val folder = File(context.externalCacheDir, "album_cover")
+        folder.mkdirs()
+        folder.listFiles()?.forEach {
+            it.delete()
+        }
+    }
 
 }

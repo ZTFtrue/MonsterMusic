@@ -98,6 +98,7 @@ fun SettingsPage(
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     var expanded by remember { mutableStateOf(false) }
+    var showClearAlbumCache by remember { mutableStateOf(false) }
     var preferEmbedded by remember {
         mutableStateOf(
             context.getSharedPreferences(
@@ -458,10 +459,41 @@ fun SettingsPage(
                             }
                         }
                     }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .padding(0.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+                                showClearAlbumCache = true
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        if (showClearAlbumCache) {
+                            ClearAlbumCoverDialog(musicViewModel = musicViewModel) {
+                                showClearAlbumCache = false
+                            }
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Clear Album Cover Cache",
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+
+                    }
                 }
 
             }
-
         },
     )
 
@@ -1046,3 +1078,91 @@ fun ManageFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
         }
     )
 }
+
+@UnstableApi
+@Composable
+fun ClearAlbumCoverDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
+
+    val context = LocalContext.current
+    val scopeMain = CoroutineScope(Dispatchers.IO)
+
+
+    LaunchedEffect(Unit) {
+
+    }
+    fun onConfirmation() {
+        Utils.clearAlbumCoverCache(context)
+        scopeMain.launch {
+            onDismiss()
+        }
+    }
+
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = true, dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        ),
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(color = MaterialTheme.colorScheme.background),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = "Are you sure you want to clear album cover cache? this will take some time when next open album list.", modifier = Modifier
+                        .padding(2.dp),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(color = MaterialTheme.colorScheme.onBackground)
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    TextButton(
+                        onClick = { onDismiss() },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(0.5f),
+                    ) {
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.onBackground)
+                            .width(1.dp)
+                            .height(50.dp)
+                    )
+                    TextButton(
+                        onClick = {
+                            onConfirmation()
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(),
+
+                        ) {
+                        Text(
+                            stringResource(id = R.string.confirm),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+            }
+        }
+    )
+}
+

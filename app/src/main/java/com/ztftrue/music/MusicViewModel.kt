@@ -39,10 +39,7 @@ import com.ztftrue.music.utils.model.ListStringCaption
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileOutputStream
@@ -393,43 +390,38 @@ class MusicViewModel : ViewModel() {
         } else {
 //            coverPath.createNewFile()
         }
-        runBlocking {
-            awaitAll(
-                async(Dispatchers.IO) {
-                    try {
-                        val albumUri = ContentUris.withAppendedId(
-                            Uri.parse("content://media/external/audio/albumart"),
-                            id
-                        )
-                        val s = context.contentResolver.openInputStream(
-                            albumUri
-                        )
-                        if (s == null) {
-                            val bm =
-                                BitmapFactory.decodeResource(
-                                    context.resources,
-                                    R.drawable.songs_thumbnail_cover
-                                )
-                            val outStream: FileOutputStream = FileOutputStream(coverPath)
 
-                            bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
-                            outStream.flush()
-                            outStream.close()
-                            result =
-                                R.drawable.songs_thumbnail_cover
-                        } else {
-                            s.use { input ->
-                                Files.copy(input, coverPath.toPath())
-                            }
-                            result = coverPath.path
-                            s.close()
-                        }
-
-                    } catch (e: Exception) {
-//                        e.printStackTrace()
-                    }
-                }
+        try {
+            val albumUri = ContentUris.withAppendedId(
+                Uri.parse("content://media/external/audio/albumart"),
+                id
             )
+            val s = context.contentResolver.openInputStream(
+                albumUri
+            )
+            if (s == null) {
+                val bm =
+                    BitmapFactory.decodeResource(
+                        context.resources,
+                        R.drawable.songs_thumbnail_cover
+                    )
+                val outStream = FileOutputStream(coverPath)
+
+                bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+                outStream.flush()
+                outStream.close()
+                result =
+                    R.drawable.songs_thumbnail_cover
+            } else {
+                s.use { input ->
+                    Files.copy(input, coverPath.toPath())
+                }
+                result = coverPath.path
+                s.close()
+            }
+
+        } catch (e: Exception) {
+//                        e.printStackTrace()
         }
         if (result == null) {
             val bm =
@@ -437,7 +429,7 @@ class MusicViewModel : ViewModel() {
                     context.resources,
                     R.drawable.songs_thumbnail_cover
                 )
-            val outStream: FileOutputStream = FileOutputStream(coverPath)
+            val outStream = FileOutputStream(coverPath)
 
             bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
             outStream.flush()
