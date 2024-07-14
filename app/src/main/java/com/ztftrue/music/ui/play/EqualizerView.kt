@@ -71,6 +71,7 @@ import com.ztftrue.music.utils.Utils.equalizerMin
 import com.ztftrue.music.utils.model.EqualizerBand
 import java.math.RoundingMode
 import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 import kotlin.math.roundToInt
 
 @Composable
@@ -99,7 +100,13 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
     val delayTime = remember { mutableFloatStateOf(musicViewModel.delayTime.floatValue) }
     val decay = remember { mutableFloatStateOf(musicViewModel.decay.floatValue) }
     val color = MaterialTheme.colorScheme.onBackground
-    val df = DecimalFormat("#.#")
+    val symbols = DecimalFormatSymbols()
+
+    // Set the decimal separator to dot
+    symbols.decimalSeparator = '.'
+    // Optionally, set the grouping separator to comma
+    symbols.groupingSeparator = ','
+    val df = DecimalFormat("#.#", symbols)
     df.roundingMode = RoundingMode.FLOOR
     LazyColumn(
         state = listState,
