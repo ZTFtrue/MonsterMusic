@@ -178,7 +178,7 @@ public class WaveformSimilarityBasedOverlapAdd implements AudioProcessor {
 			// Calculates correlation value for the mixing position
 			// corresponding
 			// to 'tempOffset'
-			currentCorrelation = (double) calcCrossCorr(pRefMidBuffer, inputBuffer,comparePosition);
+			currentCorrelation = calcCrossCorr(pRefMidBuffer, inputBuffer,comparePosition);
 			// heuristic rule to slightly favor values close to mid of the
 			// range
 			double tmp = (double) (2 * tempOffset - seekLength) / seekLength;

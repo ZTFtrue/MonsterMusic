@@ -2777,7 +2777,7 @@ public class FloatFFT {
         ipph = (ip + 1) / 2;
         nbd = (ido - 1) / 2;
         if (ido != 1) {
-            if (idl1 >= 0) System.arraycopy(in, in_off + 0, out, out_off + 0, idl1);
+            if (idl1 >= 0) System.arraycopy(in, in_off, out, out_off, idl1);
             for (int j = 1; j < ip; j++) {
                 int idx1 = j * l1 * ido;
                 for (int k = 0; k < l1; k++) {

@@ -408,7 +408,7 @@ class MusicViewModel : ViewModel() {
                     )
                 val outStream = FileOutputStream(coverPath)
 
-                bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+                bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
                 outStream.flush()
                 outStream.close()
                 result =
@@ -432,7 +432,7 @@ class MusicViewModel : ViewModel() {
                 )
             val outStream = FileOutputStream(coverPath)
 
-            bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+            bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
             outStream.flush()
             outStream.close()
             return R.drawable.songs_thumbnail_cover

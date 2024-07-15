@@ -9,7 +9,7 @@ import com.ztftrue.music.utils.model.FolderList
 
 object FolderManger {
     fun getMusicFolders(context: Context): HashMap<Long, FolderList> {
-        val contentResolver: ContentResolver = context.getContentResolver()
+        val contentResolver: ContentResolver = context.contentResolver
         val musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         val projection = arrayOf(
             MediaStore.Audio.Media.BUCKET_ID,
@@ -41,6 +41,6 @@ object FolderManger {
             cursor.close()
             return musicFolders
         }
-        return HashMap<Long, FolderList>()
+        return HashMap()
     }
 }

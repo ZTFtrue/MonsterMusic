@@ -196,7 +196,7 @@ public class OptimizedGranulator implements AudioProcessor  {
 		}
 		
 		for (int i = 0; i < bufferSize; i++) {
-			outputBuffer[i] = outputBuffer[i]/(float) 5.0f;
+			outputBuffer[i] = outputBuffer[i]/ 5.0f;
 		}
 		
 		audioEvent.setFloatBuffer(outputBuffer);
@@ -266,7 +266,7 @@ public class OptimizedGranulator implements AudioProcessor  {
 		float ym1, y0, y1, y2;
 	
 		int realCurrentSample = (int) Math.floor(frame);
-		float fractionOffset = (float) (frame - realCurrentSample);
+		float fractionOffset = frame - realCurrentSample;
 
 		if (realCurrentSample >= 0 && realCurrentSample < (audioBufferWatermark - 1)) {
 			realCurrentSample--;

@@ -14,6 +14,4 @@ data class SortFiledData(
     var method: String,
     var methodName:String,
     var filedName:String,
-) : Parcelable {
-
-}
+) : Parcelable

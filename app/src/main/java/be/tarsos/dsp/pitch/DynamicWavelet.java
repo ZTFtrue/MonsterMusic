@@ -166,157 +166,156 @@ public class DynamicWavelet implements PitchDetector{
 		int delta;
 		
 		//TODO: refactor to make this more java, break it up in methods, remove the wile and branching statements...
-		
-		search:
-		while(true){
-			delta = (int) (sampleRate / (Math.pow(2, curLevel)*maxF));
-			if (curSamNb < 2)
-				break;
-			
-			// compute the first maximums and minumums after zero-crossing
-			// store if greater than the min threshold
-			// and if at a greater distance than delta
-			double dv, previousDV = -1000;
-			
-			nbMins = nbMaxs = 0;   
-			int lastMinIndex = -1000000;
-			int lastmaxIndex = -1000000;
-			boolean findMax = false;
-			boolean findMin = false;
-			for (int i = 2; i < curSamNb; i++) {
-				double si = audioBuffer[i] - theDC;
-				double si1 = audioBuffer[i-1] - theDC;
-				
-				if(si1 <= 0 && si > 0) findMax = true;
-				if(si1 >= 0 && si < 0) findMin = true;
-				
-				// min or max ?
-				dv = si - si1;
-				
-				if (previousDV > -1000) {
-					if (findMin && previousDV < 0 && dv >= 0) { 
-					
-						// minimum
-						if (Math.abs(si) >= ampltitudeThreshold) {
-							if (i > lastMinIndex + delta) {
-								mins[nbMins++] = i;
-								lastMinIndex = i;
-								findMin = false;
-							} 
-						} 
-					}
-					
-					if (findMax  && previousDV > 0 && dv <= 0) {
-						// maximum
-						if (Math.abs(si) >= ampltitudeThreshold) {
-							if (i > lastmaxIndex + delta) {
-								maxs[nbMaxs++] = i;
-								lastmaxIndex = i;
-								findMax = false;
-							}
-						}
-					}
-				}
-				previousDV = dv;
-			}
-			
-			if (nbMins == 0 && nbMaxs == 0) {
-				// no best distance !
-				//asLog("dywapitch no mins nor maxs, exiting\n");
-				
-				// if DEBUGG then put "no mins nor maxs, exiting"
-				break;
-			}
-			
-			int d;
-			Arrays.fill(distances, 0);
-			for (int i = 0 ; i < nbMins ; i++) {
-				for (int j = 1; j < differenceLevelsN; j++) {
-					if (i+j < nbMins) {
-						d = Math.abs(mins[i] - mins[i+j]);
-						//asLog("dywapitch i=%ld j=%ld d=%ld\n", i, j, d);
-						distances[d] = distances[d] + 1;
-					}
-				}
-			}
-			
-			int bestDistance = -1;
-			int bestValue = -1;
-			for (int i = 0; i< curSamNb; i++) {
-				int summed = 0;
-				for (int j = -delta ; j <= delta ; j++) {
-					if (i+j >=0 && i+j < curSamNb)
-						summed += distances[i+j];
-				}
-				//asLog("dywapitch i=%ld summed=%ld bestDistance=%ld\n", i, summed, bestDistance);
-				if (summed == bestValue) {
-					if (i == 2*bestDistance)
-						bestDistance = i;
-					
-				} else if (summed > bestValue) {
-					bestValue = summed;
-					bestDistance = i;
-				}
-			}
-			
-			// averaging
-			double distAvg = 0.0;
-			double nbDists = 0;
-			for (int j = -delta ; j <= delta ; j++) {
-				if (bestDistance+j >=0 && bestDistance+j < audioBuffer.length) {
-					int nbDist = distances[bestDistance+j];
-					if (nbDist > 0) {
-						nbDists += nbDist;
-						distAvg += (bestDistance+j)*nbDist;
-					}
-				}
-			}
-			
-			// this is our mode distance !
-			distAvg /= nbDists;
-			//asLog("dywapitch distAvg=%f\n", distAvg);
 
-			// continue the levels ?
-			if (curModeDistance > -1.) {
-				double similarity = Math.abs(distAvg*2 - curModeDistance);
-				if (similarity <= 2*delta) {
-					//if DEBUGG then put "similarity="&similarity&&"delta="&delta&&"ok"
-	 				//asLog("dywapitch similarity=%f OK !\n", similarity);
-					// two consecutive similar mode distances : ok !
-					pitchF = (float) (sampleRate/(Math.pow(2,curLevel-1)*curModeDistance));
-					break;
-				}
-				//if DEBUGG then put "similarity="&similarity&&"delta="&delta&&"not"
-			}
-			
-			// not similar, continue next level
-			curModeDistance = distAvg;
-			
-						
-			curLevel = curLevel + 1;
-			if (curLevel >= maxFLWTlevels) {
-				// put "max levels reached, exiting"
-	 			//asLog("dywapitch max levels reached, exiting\n");
-				break;
-			}
-			
-			// downsample
-			if (curSamNb < 2) {
-	 			//asLog("dywapitch not enough samples, exiting\n");
-				break;
-			}
-			//do not modify original audio buffer, make a copy buffer, if
-			//downsampling is needed (only once).
-			float[] newAudioBuffer = audioBuffer;
-			if(curSamNb == distances.length){
-				newAudioBuffer = new float[curSamNb/2];
-			}
-			for (int i = 0; i < curSamNb/2; i++) {
-				newAudioBuffer[i] = (audioBuffer[2*i] + audioBuffer[2*i + 1])/2.0f;				
-			}
-			audioBuffer = newAudioBuffer;
-			curSamNb /= 2;
-		}		
+        while (true) {
+            delta = (int) (sampleRate / (Math.pow(2, curLevel) * maxF));
+            if (curSamNb < 2)
+                break;
+
+            // compute the first maximums and minumums after zero-crossing
+            // store if greater than the min threshold
+            // and if at a greater distance than delta
+            double dv, previousDV = -1000;
+
+            nbMins = nbMaxs = 0;
+            int lastMinIndex = -1000000;
+            int lastmaxIndex = -1000000;
+            boolean findMax = false;
+            boolean findMin = false;
+            for (int i = 2; i < curSamNb; i++) {
+                double si = audioBuffer[i] - theDC;
+                double si1 = audioBuffer[i - 1] - theDC;
+
+                if (si1 <= 0 && si > 0) findMax = true;
+                if (si1 >= 0 && si < 0) findMin = true;
+
+                // min or max ?
+                dv = si - si1;
+
+                if (previousDV > -1000) {
+                    if (findMin && previousDV < 0 && dv >= 0) {
+
+                        // minimum
+                        if (Math.abs(si) >= ampltitudeThreshold) {
+                            if (i > lastMinIndex + delta) {
+                                mins[nbMins++] = i;
+                                lastMinIndex = i;
+                                findMin = false;
+                            }
+                        }
+                    }
+
+                    if (findMax && previousDV > 0 && dv <= 0) {
+                        // maximum
+                        if (Math.abs(si) >= ampltitudeThreshold) {
+                            if (i > lastmaxIndex + delta) {
+                                maxs[nbMaxs++] = i;
+                                lastmaxIndex = i;
+                                findMax = false;
+                            }
+                        }
+                    }
+                }
+                previousDV = dv;
+            }
+
+            if (nbMins == 0 && nbMaxs == 0) {
+                // no best distance !
+                //asLog("dywapitch no mins nor maxs, exiting\n");
+
+                // if DEBUGG then put "no mins nor maxs, exiting"
+                break;
+            }
+
+            int d;
+            Arrays.fill(distances, 0);
+            for (int i = 0; i < nbMins; i++) {
+                for (int j = 1; j < differenceLevelsN; j++) {
+                    if (i + j < nbMins) {
+                        d = Math.abs(mins[i] - mins[i + j]);
+                        //asLog("dywapitch i=%ld j=%ld d=%ld\n", i, j, d);
+                        distances[d] = distances[d] + 1;
+                    }
+                }
+            }
+
+            int bestDistance = -1;
+            int bestValue = -1;
+            for (int i = 0; i < curSamNb; i++) {
+                int summed = 0;
+                for (int j = -delta; j <= delta; j++) {
+                    if (i + j >= 0 && i + j < curSamNb)
+                        summed += distances[i + j];
+                }
+                //asLog("dywapitch i=%ld summed=%ld bestDistance=%ld\n", i, summed, bestDistance);
+                if (summed == bestValue) {
+                    if (i == 2 * bestDistance)
+                        bestDistance = i;
+
+                } else if (summed > bestValue) {
+                    bestValue = summed;
+                    bestDistance = i;
+                }
+            }
+
+            // averaging
+            double distAvg = 0.0;
+            double nbDists = 0;
+            for (int j = -delta; j <= delta; j++) {
+                if (bestDistance + j >= 0 && bestDistance + j < audioBuffer.length) {
+                    int nbDist = distances[bestDistance + j];
+                    if (nbDist > 0) {
+                        nbDists += nbDist;
+                        distAvg += (bestDistance + j) * nbDist;
+                    }
+                }
+            }
+
+            // this is our mode distance !
+            distAvg /= nbDists;
+            //asLog("dywapitch distAvg=%f\n", distAvg);
+
+            // continue the levels ?
+            if (curModeDistance > -1.) {
+                double similarity = Math.abs(distAvg * 2 - curModeDistance);
+                if (similarity <= 2 * delta) {
+                    //if DEBUGG then put "similarity="&similarity&&"delta="&delta&&"ok"
+                    //asLog("dywapitch similarity=%f OK !\n", similarity);
+                    // two consecutive similar mode distances : ok !
+                    pitchF = (float) (sampleRate / (Math.pow(2, curLevel - 1) * curModeDistance));
+                    break;
+                }
+                //if DEBUGG then put "similarity="&similarity&&"delta="&delta&&"not"
+            }
+
+            // not similar, continue next level
+            curModeDistance = distAvg;
+
+
+            curLevel = curLevel + 1;
+            if (curLevel >= maxFLWTlevels) {
+                // put "max levels reached, exiting"
+                //asLog("dywapitch max levels reached, exiting\n");
+                break;
+            }
+
+            // downsample
+            if (curSamNb < 2) {
+                //asLog("dywapitch not enough samples, exiting\n");
+                break;
+            }
+            //do not modify original audio buffer, make a copy buffer, if
+            //downsampling is needed (only once).
+            float[] newAudioBuffer = audioBuffer;
+            if (curSamNb == distances.length) {
+                newAudioBuffer = new float[curSamNb / 2];
+            }
+            for (int i = 0; i < curSamNb / 2; i++) {
+                newAudioBuffer[i] = (audioBuffer[2 * i] + audioBuffer[2 * i + 1]) / 2.0f;
+            }
+            audioBuffer = newAudioBuffer;
+            curSamNb /= 2;
+        }
 		
 		result.setPitch(pitchF);
 		result.setPitched(-1!=pitchF);

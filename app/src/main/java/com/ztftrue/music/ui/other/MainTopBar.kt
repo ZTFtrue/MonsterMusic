@@ -190,7 +190,7 @@ fun MainTopBar(
                         contentPadding = PaddingValues(5.dp),
                         modifier = Modifier
                     ) {
-                        item(){
+                        item {
                             Row(
                                 horizontalArrangement = Arrangement.End,
                                 verticalAlignment = Alignment.CenterVertically,

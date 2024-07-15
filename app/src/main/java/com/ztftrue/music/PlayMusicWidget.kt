@@ -40,7 +40,7 @@ class PlayMusicWidget : AppWidgetProvider() {
                     PlayMusicWidget::class.java
                 )
             )
-            ids.forEach { id ->
+            ids.forEach { _ ->
                 RemoteViews(
                     context.packageName,
                     R.layout.play_music_widget

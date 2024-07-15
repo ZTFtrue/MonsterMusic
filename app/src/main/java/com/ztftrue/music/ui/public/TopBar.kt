@@ -33,11 +33,11 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -54,7 +54,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -139,7 +138,7 @@ fun TopBar(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     item {
-                        Column( modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.fillMaxWidth()) {
                             Slider(
                                 modifier = Modifier
                                     .semantics { contentDescription = "Slider" },
@@ -156,7 +155,8 @@ fun TopBar(
                                         "volume",
                                         musicViewModel.volume.intValue
                                     )
-                                    musicViewModel.mediaBrowser?.sendCustomAction(      ACTION_Volume_CHANGE,
+                                    musicViewModel.mediaBrowser?.sendCustomAction(
+                                        ACTION_Volume_CHANGE,
                                         bundle,
                                         object : MediaBrowserCompat.CustomActionCallback() {
                                             override fun onResult(
@@ -371,45 +371,73 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                     }
                 }
                 Row {
-                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onBackground)) {
-                        TextField(
-                            value = inputMinutes,
-                            onValueChange = {
-                                if (it.isNotEmpty()) {
-                                    if (it.isDigitsOnly() && !it.contains(".") && it.length < 6 && (it.toLong() > 0)) {
-                                        inputMinutes = it
-                                    }
-                                } else {
-                                    inputMinutes = ""
+                    TextField(
+                        value = inputMinutes,
+                        onValueChange = {
+                            if (it.isNotEmpty()) {
+                                if (it.isDigitsOnly() && !it.contains(".") && it.length < 6 && (it.toLong() > 0)) {
+                                    inputMinutes = it
                                 }
+                            } else {
+                                inputMinutes = ""
+                            }
 
-                            },
-                            label = {
-                                Text(
-                                    text = stringResource(R.string.enter_minutes),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            },
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                imeAction = ImeAction.Done,
-                                keyboardType = KeyboardType.Number
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
+                        },
+                        label = {
+                            Text(
+                                text = stringResource(R.string.enter_minutes),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Done,
+                            keyboardType = KeyboardType.Number
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
 //                            startTimer(inputMinutes.toInt())
-                                }
+                            }
+                        ),
+                        colors = TextFieldDefaults.colors(
+                            errorTextColor = MaterialTheme.colorScheme.primary,
+                            focusedTextColor = MaterialTheme.colorScheme.primary,
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                            focusedContainerColor = MaterialTheme.colorScheme.background,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            errorCursorColor = MaterialTheme.colorScheme.error,
+                            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                            unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                            errorIndicatorColor = MaterialTheme.colorScheme.error,
+                            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
                             ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            suffix = {
-                                Text(
-                                    text = stringResource(id = R.string.minutes),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            },
-                        )
-                    }
+                            errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
+                            ),
+                            errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            errorLabelColor = MaterialTheme.colorScheme.error,
+                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
+                            )
+                        ),
+                        textStyle= MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        suffix = {
+                            Text(
+                                text = stringResource(id = R.string.minutes, ""),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        },
+                    )
                 }
 
                 Row(

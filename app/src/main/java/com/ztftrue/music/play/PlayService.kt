@@ -68,6 +68,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.apache.commons.math3.util.FastMath
 import java.io.File
 import java.util.concurrent.locks.ReentrantLock
 
@@ -130,7 +131,7 @@ class PlayService : MediaBrowserServiceCompat() {
     var musicQueue = java.util.ArrayList<MusicItem>()
     var currentPlayTrack: MusicItem? = null
 
-    var volumeValue: Int = 0
+    private var volumeValue: Int = 0
     private val playListTracksHashMap = java.util.HashMap<Long, java.util.ArrayList<MusicItem>>()
 
     // album tracks
@@ -966,11 +967,11 @@ class PlayService : MediaBrowserServiceCompat() {
                     it.tableId = index + 1L
                     t1.add(MediaItem.fromUri(File(it.path).toUri()))
                 }
-                var needPlay = true;
+                var needPlay = true
                 val currentPosition = if (currentPlayTrack?.id == musicQueue[index].id) {
                     if (exoPlayer.isPlaying) {
                         exoPlayer.pause()
-                        needPlay = false;
+                        needPlay = false
                     }
                     exoPlayer.currentPosition
                 } else {
@@ -1206,7 +1207,7 @@ class PlayService : MediaBrowserServiceCompat() {
                                         PlayMusicWidget::class.java
                                     )
                                 )
-                                Log.d("TAG",currentPlayTrack?.name?:"");
+                                Log.d("TAG",currentPlayTrack?.name?:"")
                                 intent.putExtra("playingStatus", exoPlayer.isPlaying)
                                 intent.putExtra("title", currentPlayTrack?.name ?: "")
                                 intent.putExtra("author", currentPlayTrack?.artist ?: "")
@@ -1404,7 +1405,7 @@ class PlayService : MediaBrowserServiceCompat() {
             }
             if (musicItems != null) {
                 val list = ArrayList<MediaItem>()
-                musicItems.forEachIndexed() { index1, it ->
+                musicItems.forEachIndexed { index1, it ->
                     it.tableId = index1.toLong() + index + 1L
                     list.add(MediaItem.fromUri(File(it.path).toUri()))
                 }
@@ -1460,8 +1461,8 @@ class PlayService : MediaBrowserServiceCompat() {
             val im = exoPlayer.getMediaItemAt(index)
             exoPlayer.removeMediaItem(index)
             exoPlayer.addMediaItem(targetIndex, im)
-            val start = Math.min(index, targetIndex)
-            val end = Math.max(index, targetIndex)
+            val start = FastMath.min(index, targetIndex)
+            val end = FastMath.max(index, targetIndex)
             val changedQueueArray = ArrayList<MusicItem>(end - start + 1)
             for (i in start..end) {
                 musicQueue[i].tableId = i.toLong() + 1
@@ -1797,7 +1798,7 @@ class PlayService : MediaBrowserServiceCompat() {
                                     arrayOf(id.toString()),
                                     "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
                                 )
-                            val m = LinkedHashMap<Long, MusicItem>();
+                            val m = LinkedHashMap<Long, MusicItem>()
                             listT.forEach { itM ->
                                 m[itM.id] = itM
                             }

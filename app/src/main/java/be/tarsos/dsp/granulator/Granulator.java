@@ -259,7 +259,7 @@ public class Granulator implements AudioProcessor  {
 		float ym1, y0, y1, y2;
 	
 		int realCurrentSample = (int) Math.floor(frame);
-		float fractionOffset = (float) (frame - realCurrentSample);
+		float fractionOffset = frame - realCurrentSample;
 
 		if (realCurrentSample >= 0 && realCurrentSample < (audioBufferWatermark - 1)) {
 			realCurrentSample--;

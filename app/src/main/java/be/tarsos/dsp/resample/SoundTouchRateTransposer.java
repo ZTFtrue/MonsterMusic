@@ -74,7 +74,7 @@ public class SoundTouchRateTransposer implements AudioProcessor {
                 	break end;
             }
             if(i < dest.length){
-            	dest[i] = (float)((1.0f - slopeCount) * src[used] + slopeCount * src[used + 1]);
+            	dest[i] = (1.0f - slopeCount) * src[used] + slopeCount * src[used + 1];
             }
             i++;
             slopeCount += rate;
