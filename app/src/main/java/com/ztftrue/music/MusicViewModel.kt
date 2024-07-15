@@ -135,6 +135,7 @@ class MusicViewModel : ViewModel() {
         sliderPosition.floatValue = 0f
         sleepTime.longValue = 0
         remainTime.longValue = 0
+        currentPlayQueueIndex.intValue = -1
         playCompleted.value = false
         repeatModel.intValue = Player.REPEAT_MODE_ALL
     }
