@@ -3,6 +3,9 @@ package com.ztftrue.music.utils
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ResolveInfo
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
@@ -114,24 +117,26 @@ object Utils {
     )
     var bandsCenter = doubleArrayOf(
         31.0, 62.0, 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0, 16000.0
+        //60.0,170.0,310.0,600.0,1000.0,3000.0,6000.0,12000.0,14000.0,16000.0
     )
     var qs = doubleArrayOf(
-        0.707,
-        0.707,
-        0.707,
-        0.707,
-        0.707,
-        0.707,
-        0.707,
-        0.707,
-        0.707,
-        0.707,
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.5,
     )
     var kThirdBW = doubleArrayOf(
-        20.0, 40.0, 80.0, 160.0, 320.0, 640.0, 1280.0, 2560.0, 5120.0, 10240.0
+        //15.0, 30.0, 60.0, 120.0, 240.0, 480.0, 960.0, 1920.0, 3840.0, 7680.0
+        60.0, 170.0, 310.0, 600.0, 1000.0, 3000.0, 6000.0, 12000.0, 14000.0, 16000.0
     )
 
-    var order = 2
+    var order = 40
     var equalizerMax = 13
     var equalizerMin = -13
     var custom = "Custom"
@@ -227,6 +232,20 @@ object Utils {
             intent.setDataAndType(fileUri, minType)
         }
         context.startActivity(intent)
+    }
+
+    private val retriever = MediaMetadataRetriever()
+
+    fun getCover(path: String): Bitmap? {
+        try {
+            retriever.setDataSource(path)
+            val coverT = retriever.embeddedPicture
+            if (coverT != null) {
+                return BitmapFactory.decodeByteArray(coverT, 0, coverT.size)
+            }
+        } catch (_: Exception) {
+        }
+        return null
     }
 
     @Suppress("unused")
@@ -516,5 +535,12 @@ object Utils {
         return resolveInfoList
     }
 
+    fun clearAlbumCoverCache(context: Context) {
+        val folder = File(context.externalCacheDir, "album_cover")
+        folder.mkdirs()
+        folder.listFiles()?.forEach {
+            it.delete()
+        }
+    }
 
 }

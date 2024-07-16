@@ -124,11 +124,11 @@ public class SpectralPeakProcessor implements AudioProcessor {
 		frequencyEstimates = new float[bufferSize / 2];
 
 		dt = (bufferSize - overlap) / (double) sampleRate;
-		cbin = (double) (dt * sampleRate / (double) bufferSize);
+		cbin = dt * sampleRate / (double) bufferSize;
 
-		inv_2pi = (double) (1.0 / (2.0 * Math.PI));
-		inv_deltat = (double) (1.0 / dt);
-		inv_2pideltat = (double) (inv_deltat * inv_2pi);
+		inv_2pi = 1.0 / (2.0 * Math.PI);
+		inv_deltat = 1.0 / dt;
+		inv_2pideltat = inv_deltat * inv_2pi;
 
 		this.sampleRate = sampleRate;
 		
@@ -256,7 +256,7 @@ public class SpectralPeakProcessor implements AudioProcessor {
 			  index++;
 			}		
 			// calculate the noise floor value.
-			noisefloor[i] = (float) (median(noiseFloorBuffer) * (noiseFloorFactor)) ;
+			noisefloor[i] = median(noiseFloorBuffer) * (noiseFloorFactor);
 		}
 		
 		float rampLength = 12.0f;

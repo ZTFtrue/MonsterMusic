@@ -62,7 +62,8 @@ import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
-import coil.compose.rememberAsyncImagePainter
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
@@ -187,7 +188,7 @@ fun AlbumGridView(
 }
 
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalGlideComposeApi::class)
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun AlbumItemView(
@@ -268,10 +269,11 @@ fun AlbumItemView(
         }) {
         ConstraintLayout {
             val (playIndicator) = createRefs()
-            Image(
-                painter = rememberAsyncImagePainter(
-                    musicViewModel.getAlbumCover(item.id, context)
-                        ?: R.drawable.songs_thumbnail_cover
+            GlideImage(
+
+                    model = musicViewModel.getAlbumCover(
+                        item.id,
+                        context
                 ),
                 contentDescription = "Album cover",
                 modifier = Modifier

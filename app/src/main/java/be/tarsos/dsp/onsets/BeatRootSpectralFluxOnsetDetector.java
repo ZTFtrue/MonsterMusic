@@ -147,7 +147,7 @@ public class BeatRootSpectralFluxOnsetDetector implements AudioProcessor, OnsetD
 		//no overlap
 		//FIXME:
 		int durationInFrames = -1000; 
-		totalFrames = (int)(durationInFrames / hopSize) + 4;
+		totalFrames = (durationInFrames / hopSize) + 4;
 		energy = new double[totalFrames*energyOversampleFactor];
 		spectralFlux = new double[totalFrames];
 		

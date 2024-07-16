@@ -83,7 +83,7 @@ class MainActivity : ComponentActivity() {
     @JvmField
     val modifyMediaLauncher =
         registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
-            if (result != null && result.resultCode == RESULT_OK) {
+            if (result.resultCode == RESULT_OK) {
                 val resolver: ContentResolver = contentResolver
                 val action = bundle.getString("action")
                 if (OperateTypeInActivity.DeletePlayList.name == action) {

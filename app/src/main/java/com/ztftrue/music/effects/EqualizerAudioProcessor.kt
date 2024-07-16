@@ -63,7 +63,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         lock.lock()
         if (this.active != active) {
             mCoefficientRightBiQuad.forEachIndexed { index, biQuadraticFilter ->
-                setBand(index, biQuadraticFilter.gainDB.toInt())
+                setBand(index, gainDBArray[index])
             }
             this.active = active
         }
@@ -102,8 +102,10 @@ class EqualizerAudioProcessor : AudioProcessor {
                 tarsosDSPAudioFormat
             )
         mCoefficientRightBiQuad.forEachIndexed { index, biQuadraticFilter ->
-            setBand(index, biQuadraticFilter.gainDB.toInt())
+            setBand(index, gainDBArray[index])
         }
+        leftMax=1.0
+        rightMax=1.0
         return outputAudioFormat!!
 
     }
@@ -143,13 +145,16 @@ class EqualizerAudioProcessor : AudioProcessor {
         inputEnded = true
     }
 
-
+    private var leftMax = 1.0
+    private var rightMax = 1.0
 
     private var changeDb = false
     private fun processData() {
         if (active) {
             lock.lock()
             if (changeDb) {
+                leftMax=1.0
+                rightMax=1.0
                 for (i in 0 until 10) {
                     butterWorthRightBandPass[i].reset()
                     butterWorthLeftBandPass[i].reset()
@@ -182,53 +187,64 @@ class EqualizerAudioProcessor : AudioProcessor {
                             sampleBufferRealLeft.forEachIndexed { index, it ->
                                 var outY: Double = it
                                 var sum = 0.0
-                                butterWorthLeftBandPass.forEachIndexed { index1, filter ->
-                                    // only used for peaking and shelving filters
-                                    sum += gainDBAbsArray[index1] * filter.filter(
-                                        outY
-                                    )
-                                }
+//                                butterWorthLeftBandPass.forEachIndexed { index1, filter ->
+//                                    // only used for peaking and shelving filters
+//                                    sum += gainDBAbsArray[index1] * filter.filter(
+//                                        outY
+//                                    )
+//                                }
 //                                mCoefficientLeftBiQuad.forEachIndexed { index1, filter ->
 //                                    // only used for peaking and shelving filters
 //                                    sum += gainDBAbsArray[index1] * filter.filter(
 //                                        outY
 //                                    )
 //                                }
-                                outY = sum
-//                                mCoefficientLeftBiQuad.forEach { filter ->
-//                                    outY = filter.filter(
-//                                        outY
-//                                    )
-//                                }
-                                sampleBufferRealLeft[index] =
-                                    (if (outY > 1.0) 1.0 else if (outY < -1.0) -1.0 else outY)
+//                                outY = sum
+                                mCoefficientLeftBiQuad.forEach { filter ->
+                                    outY = filter.filter(
+                                        outY
+                                    )
+                                }
+                                leftMax = FastMath.max(leftMax, FastMath.abs(outY))
+                                sampleBufferRealLeft[index] = outY
                             }
+                            if (leftMax > 1.0) {
+                                sampleBufferRealLeft.forEachIndexed { index, it ->
+                                    sampleBufferRealLeft[index] = it / leftMax
+                                }
+                            }
+//                            (if (outY > 1.0) 1.0 else if (outY < -1.0) -1.0 else outY)
                         },
                         async(Dispatchers.IO) {
                             sampleBufferRealRight.forEachIndexed { index, it ->
                                 var outY: Double = it
-                                var sum = 0.0
-                                butterWorthRightBandPass.forEachIndexed { index1, filter ->
-                                    // only used for peaking and shelving filters
-                                    sum += gainDBAbsArray[index1] * filter.filter(
-                                        outY
-                                    )
-                                }
+//                                var sum = 0.0
+//                                butterWorthRightBandPass.forEachIndexed { index1, filter ->
+//                                    // only used for peaking and shelving filters
+//                                    sum += gainDBAbsArray[index1] * filter.filter(
+//                                        outY
+//                                    )
+//                                }
 //                                mCoefficientRightBiQuad.forEachIndexed { index1, filter ->
 //                                    // only used for peaking and shelving filters
 //                                    sum += gainDBAbsArray[index1] * filter.filter(
 //                                        outY
 //                                    )
 //                                }
-                                outY = sum
-//                                mCoefficientRightBiQuad.forEach { filter ->
-//                                    outY = filter.filter(
-//                                        outY
-//                                    )
-//                                }
-                                sampleBufferRealRight[index] =
-                                    (if (outY > 1.0) 1.0 else if (outY < -1.0) -1.0 else outY)
+//                                outY = sum
+                                mCoefficientRightBiQuad.forEach { filter ->
+                                    outY = filter.filter(
+                                        outY
+                                    )
+                                }
+                                rightMax = FastMath.max(rightMax, FastMath.abs(outY))
+                                sampleBufferRealRight[index] = outY
+//                                    (if (outY > 1.0) 1.0 else if (outY < -1.0) -1.0 else outY)
                             }
+                            if (rightMax > 1.0)
+                                sampleBufferRealRight.forEachIndexed { index, it ->
+                                    sampleBufferRealRight[index] = it / rightMax
+                                }
                         }
                     )
                 }
@@ -285,7 +301,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         lock.lock()
         if (outputAudioFormat != null) {
             changeDb = true
-            gainDBAbsArray[index] = FastMath.pow(10.0, (value.toDouble() / 40))
+            gainDBAbsArray[index] = FastMath.pow(10.0, (value.toDouble() / 20))
             gainDBArray[index] = value
             if (outputAudioFormat!!.sampleRate.toDouble() > 0) {
                 butterWorthLeftBandPass[index].bandPass(
@@ -301,21 +317,20 @@ class EqualizerAudioProcessor : AudioProcessor {
                     Utils.kThirdBW[index]
                 )
                 mCoefficientLeftBiQuad[index].configure(
-                    BiQuadraticFilter.BANDPASS,
+                    BiQuadraticFilter.PEAK,
                     Utils.bandsCenter[index],
                     outputAudioFormat!!.sampleRate.toDouble(),
                     Utils.qs[index],
                     value.toDouble(),
                 )
                 mCoefficientRightBiQuad[index].configure(
-                    BiQuadraticFilter.BANDPASS,
+                    BiQuadraticFilter.PEAK,
                     Utils.bandsCenter[index],
                     outputAudioFormat!!.sampleRate.toDouble(),
                     Utils.qs[index],
                     value.toDouble(),
                 )
             }
-
         }
         lock.unlock()
     }

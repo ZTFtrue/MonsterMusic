@@ -117,7 +117,7 @@ public class MFCC implements AudioProcessor {
         centerFrequencies = new int[amountOfMelFilters + 2];
 
         centerFrequencies[0] = Math.round(lowerFilterFreq / sampleRate * samplesPerFrame);
-        centerFrequencies[centerFrequencies.length - 1] = (int) (samplesPerFrame / 2);
+        centerFrequencies[centerFrequencies.length - 1] = samplesPerFrame / 2;
 
         double[] mel = new double[2];
         mel[0] = freqToMel(lowerFilterFreq);
@@ -235,7 +235,7 @@ public class MFCC implements AudioProcessor {
      * @return Mel-Frequency
      */
     protected static float freqToMel(float freq){
-        return (float) (2595 * log10(1 + freq / 700));
+        return 2595 * log10(1 + freq / 700);
     }
     
     /**

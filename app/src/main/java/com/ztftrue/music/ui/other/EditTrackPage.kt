@@ -16,10 +16,10 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,7 +27,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -36,7 +35,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -46,6 +44,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.ui.public.BackButton
+import com.ztftrue.music.utils.Utils.getCover
 import com.ztftrue.music.utils.trackManager.TracksManager
 
 
@@ -54,7 +53,7 @@ import com.ztftrue.music.utils.trackManager.TracksManager
  *  // TODO this is disable,  because cant  updating real file in storage
  */
 @OptIn(
-    ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class,
+    ExperimentalFoundationApi::class,
     ExperimentalMaterial3Api::class
 )
 @UnstableApi
@@ -79,7 +78,7 @@ fun EditTrackPage(
     LaunchedEffect(Unit) {
         val musicItem = TracksManager.getMusicById(context, musicId)
         if (musicItem != null) {
-            coverBitmap = musicViewModel.getCover(musicItem.path)
+            coverBitmap = getCover(musicItem.path)
             title = musicItem.name
             album = musicItem.album
             artist = musicItem.artist
@@ -147,7 +146,6 @@ fun EditTrackPage(
                     )
                 }
                 item {
-                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
                         TextField(
                             enabled = false,
                             value = title,
@@ -175,11 +173,39 @@ fun EditTrackPage(
                             modifier = Modifier
                                 .fillMaxWidth(1f)
                                 .focusRequester(focusRequester),
+                            colors = TextFieldDefaults.colors(
+                                errorTextColor = MaterialTheme.colorScheme.primary,
+                                focusedTextColor = MaterialTheme.colorScheme.primary,
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                errorCursorColor = MaterialTheme.colorScheme.error,
+                                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                                unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                                errorIndicatorColor = MaterialTheme.colorScheme.error,
+                                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                errorLabelColor = MaterialTheme.colorScheme.error,
+                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                )
+                            ),
+                            textStyle= MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
                         )
-                    }
                 }
                 item {
-                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
                         TextField(
                             enabled = false,
                             value = album,
@@ -207,11 +233,39 @@ fun EditTrackPage(
                             modifier = Modifier
                                 .fillMaxWidth(1f)
                                 .focusRequester(focusRequester),
+                            colors = TextFieldDefaults.colors(
+                                errorTextColor = MaterialTheme.colorScheme.primary,
+                                focusedTextColor = MaterialTheme.colorScheme.primary,
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                errorCursorColor = MaterialTheme.colorScheme.error,
+                                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                                unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                                errorIndicatorColor = MaterialTheme.colorScheme.error,
+                                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                errorLabelColor = MaterialTheme.colorScheme.error,
+                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                )
+                            ),
+                            textStyle= MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
                         )
-                    }
                 }
                 item {
-                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
                         TextField(
                             enabled = false,
                             value = artist,
@@ -239,11 +293,39 @@ fun EditTrackPage(
                             modifier = Modifier
                                 .fillMaxWidth(1f)
                                 .focusRequester(focusRequester),
+                            colors = TextFieldDefaults.colors(
+                                errorTextColor = MaterialTheme.colorScheme.primary,
+                                focusedTextColor = MaterialTheme.colorScheme.primary,
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                errorCursorColor = MaterialTheme.colorScheme.error,
+                                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                                unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                                errorIndicatorColor = MaterialTheme.colorScheme.error,
+                                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                errorLabelColor = MaterialTheme.colorScheme.error,
+                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                )
+                            ),
+                            textStyle= MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
                         )
                     }
-                }
                 item {
-                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
                         TextField(
                             enabled = false,
                             value = genre,
@@ -271,11 +353,39 @@ fun EditTrackPage(
                             modifier = Modifier
                                 .fillMaxWidth(1f)
                                 .focusRequester(focusRequester),
+                            colors = TextFieldDefaults.colors(
+                                errorTextColor = MaterialTheme.colorScheme.primary,
+                                focusedTextColor = MaterialTheme.colorScheme.primary,
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                errorCursorColor = MaterialTheme.colorScheme.error,
+                                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                                unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                                errorIndicatorColor = MaterialTheme.colorScheme.error,
+                                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                errorLabelColor = MaterialTheme.colorScheme.error,
+                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                )
+                            ),
+                            textStyle= MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
                         )
-                    }
                 }
                 item {
-                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
                         TextField(
                             enabled = false,
                             value = year,
@@ -303,8 +413,37 @@ fun EditTrackPage(
                             modifier = Modifier
                                 .fillMaxWidth(1f)
                                 .focusRequester(focusRequester),
+                            colors = TextFieldDefaults.colors(
+                                errorTextColor = MaterialTheme.colorScheme.primary,
+                                focusedTextColor = MaterialTheme.colorScheme.primary,
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                errorCursorColor = MaterialTheme.colorScheme.error,
+                                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                                unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                                errorIndicatorColor = MaterialTheme.colorScheme.error,
+                                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                errorLabelColor = MaterialTheme.colorScheme.error,
+                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                )
+                            ),
+                            textStyle= MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
                         )
-                    }
                 }
                 item {
                     Box(

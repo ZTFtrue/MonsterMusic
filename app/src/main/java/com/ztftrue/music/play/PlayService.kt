@@ -2,6 +2,8 @@ package com.ztftrue.music.play
 
 import android.annotation.SuppressLint
 import android.app.PendingIntent
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -13,7 +15,6 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
 import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.media.MediaBrowserServiceCompat
@@ -27,6 +28,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.audio.SonicAudioProcessor
+import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
@@ -36,6 +38,7 @@ import androidx.media3.exoplayer.audio.ForwardingAudioSink
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import com.ztftrue.music.MainActivity
+import com.ztftrue.music.PlayMusicWidget
 import com.ztftrue.music.R
 import com.ztftrue.music.effects.EchoAudioProcessor
 import com.ztftrue.music.effects.EqualizerAudioProcessor
@@ -65,8 +68,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.apache.commons.math3.util.FastMath
 import java.io.File
 import java.util.concurrent.locks.ReentrantLock
+
 
 /**
  * playList
@@ -126,7 +131,7 @@ class PlayService : MediaBrowserServiceCompat() {
     var musicQueue = java.util.ArrayList<MusicItem>()
     var currentPlayTrack: MusicItem? = null
 
-    var volumeValue: Int = 0
+    private var volumeValue: Int = 0
     private val playListTracksHashMap = java.util.HashMap<Long, java.util.ArrayList<MusicItem>>()
 
     // album tracks
@@ -625,10 +630,10 @@ class PlayService : MediaBrowserServiceCompat() {
             sortAction(extras, result)
         } else if (action == ACTION_Volume_CHANGE) {
             if (extras != null) {
-                volumeValue=extras.getInt("volume", 100)
+                volumeValue = extras.getInt("volume", 100)
                 saveVolume(volumeValue)
 //                equalizerAudioProcessor.setVolume(volumeValue)
-                exoPlayer.volume=volumeValue/100f
+                exoPlayer.volume = volumeValue / 100f
             }
             result.sendResult(null)
         }
@@ -962,11 +967,11 @@ class PlayService : MediaBrowserServiceCompat() {
                     it.tableId = index + 1L
                     t1.add(MediaItem.fromUri(File(it.path).toUri()))
                 }
-                var needPlay = true;
+                var needPlay = true
                 val currentPosition = if (currentPlayTrack?.id == musicQueue[index].id) {
                     if (exoPlayer.isPlaying) {
                         exoPlayer.pause()
-                        needPlay = false;
+                        needPlay = false
                     }
                     exoPlayer.currentPosition
                 } else {
@@ -1094,12 +1099,44 @@ class PlayService : MediaBrowserServiceCompat() {
     var errorCount = 0
     private fun playerAddListener() {
         exoPlayer.addListener(@UnstableApi object : Player.Listener {
+            @SuppressLint("ApplySharedPref")
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 super.onIsPlayingChanged(isPlaying)
                 if (musicQueue.isNotEmpty()) {
                     currentPlayTrack =
                         musicQueue[exoPlayer.currentMediaItemIndex]
                 }
+                getSharedPreferences("Widgets", Context.MODE_PRIVATE).getBoolean("enable", false)
+                    .let {
+                        if (it) {
+                            val intent = Intent(this@PlayService, PlayMusicWidget::class.java)
+                            intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+                            intent.putExtra("source", this@PlayService.packageName)
+                            val ids = AppWidgetManager.getInstance(
+                                application
+                            ).getAppWidgetIds(
+                                ComponentName(
+                                    application,
+                                    PlayMusicWidget::class.java
+                                )
+                            )
+//                            intent.putExtra("playStatusChange", true)
+                            intent.putExtra("playingStatus", isPlaying)
+//                            intent.putExtra("playingStatus", exoPlayer.isPlaying)
+                            intent.putExtra("title", currentPlayTrack?.name ?: "")
+                            intent.putExtra("author", currentPlayTrack?.artist ?: "")
+                            intent.putExtra("path", currentPlayTrack?.path ?: "")
+                            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+
+                            getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit()
+                                .putBoolean("playingStatus",isPlaying)
+                                .putString("title",currentPlayTrack?.name ?: "")
+                                .putString("author",currentPlayTrack?.artist ?: "")
+                                .putString("path",currentPlayTrack?.path ?: "").commit()
+
+                            sendBroadcast(intent)
+                        }
+                    }
                 saveCurrentDuration(exoPlayer.currentPosition)
                 notify?.updateNotification(
                     this@PlayService,
@@ -1143,11 +1180,6 @@ class PlayService : MediaBrowserServiceCompat() {
                 super.onPositionDiscontinuity(oldPosition, newPosition, reason)
                 if (musicQueue.isEmpty()) return
                 updateNotify()
-                Log.i("TAG-onPositionDiscontinuity", reason.toString())
-                Log.i(
-                    "TAG-onPositionDiscontinuity",
-                    "${oldPosition.mediaItem?.mediaId},${newPosition.mediaItem?.mediaId}"
-                )
                 if (oldPosition.mediaItemIndex != newPosition.mediaItemIndex || reason >= 4 || currentPlayTrack?.id != musicQueue[newPosition.mediaItemIndex].id) {
                     saveSelectMusicId(
                         musicQueue[newPosition.mediaItemIndex].id
@@ -1158,6 +1190,37 @@ class PlayService : MediaBrowserServiceCompat() {
                     bundle.putParcelable("current", currentPlayTrack)
                     bundle.putInt("type", EVENT_MEDIA_ITEM_Change)
                     bundle.putInt("index", exoPlayer.currentMediaItemIndex)
+                    getSharedPreferences("Widgets", Context.MODE_PRIVATE).getBoolean(
+                        "enable",
+                        false
+                    )
+                        .let {
+                            if (it) {
+                                val intent = Intent(this@PlayService, PlayMusicWidget::class.java)
+                                intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+                                intent.putExtra("source", this@PlayService.packageName)
+                                val ids = AppWidgetManager.getInstance(
+                                    application
+                                ).getAppWidgetIds(
+                                    ComponentName(
+                                        application,
+                                        PlayMusicWidget::class.java
+                                    )
+                                )
+                                Log.d("TAG",currentPlayTrack?.name?:"")
+                                intent.putExtra("playingStatus", exoPlayer.isPlaying)
+                                intent.putExtra("title", currentPlayTrack?.name ?: "")
+                                intent.putExtra("author", currentPlayTrack?.artist ?: "")
+                                intent.putExtra("path", currentPlayTrack?.path ?: "")
+                                intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+                                getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit()
+                                    .putBoolean("playingStatus",exoPlayer.isPlaying)
+                                    .putString("title",currentPlayTrack?.name ?: "")
+                                    .putString("author",currentPlayTrack?.artist ?: "")
+                                    .putString("path",currentPlayTrack?.path ?: "").commit()
+                                sendBroadcast(intent)
+                            }
+                        }
                     mediaSession?.setExtras(bundle)
                     if (needPlayPause) {
                         needPlayPause = false
@@ -1342,7 +1405,7 @@ class PlayService : MediaBrowserServiceCompat() {
             }
             if (musicItems != null) {
                 val list = ArrayList<MediaItem>()
-                musicItems.forEachIndexed() { index1, it ->
+                musicItems.forEachIndexed { index1, it ->
                     it.tableId = index1.toLong() + index + 1L
                     list.add(MediaItem.fromUri(File(it.path).toUri()))
                 }
@@ -1398,8 +1461,8 @@ class PlayService : MediaBrowserServiceCompat() {
             val im = exoPlayer.getMediaItemAt(index)
             exoPlayer.removeMediaItem(index)
             exoPlayer.addMediaItem(targetIndex, im)
-            val start = Math.min(index, targetIndex)
-            val end = Math.max(index, targetIndex)
+            val start = FastMath.min(index, targetIndex)
+            val end = FastMath.max(index, targetIndex)
             val changedQueueArray = ArrayList<MusicItem>(end - start + 1)
             for (i in start..end) {
                 musicQueue[i].tableId = i.toLong() + 1
@@ -1735,7 +1798,7 @@ class PlayService : MediaBrowserServiceCompat() {
                                     arrayOf(id.toString()),
                                     "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
                                 )
-                            val m = LinkedHashMap<Long, MusicItem>();
+                            val m = LinkedHashMap<Long, MusicItem>()
                             listT.forEach { itM ->
                                 m[itM.id] = itM
                             }

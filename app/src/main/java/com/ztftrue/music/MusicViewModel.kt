@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.MediaControllerCompat
@@ -32,6 +31,7 @@ import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.SharedPreferencesName.LYRICS_SETTINGS
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.Utils.getCover
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.model.Caption
 import com.ztftrue.music.utils.model.EqualizerBand
@@ -42,7 +42,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.File
+import java.io.FileOutputStream
 import java.io.InputStreamReader
+import java.nio.file.Files
 import java.util.concurrent.locks.ReentrantLock
 
 
@@ -52,7 +54,6 @@ var QueuePlayList = AnyListBase(-1, PlayListType.Queue)
 
 class MusicViewModel : ViewModel() {
 
-    private val retriever = MediaMetadataRetriever()
     var db: MusicDatabase? = null
     val refreshPlayList = mutableStateOf(false)
     val refreshAlbum = mutableStateOf(false)
@@ -60,7 +61,8 @@ class MusicViewModel : ViewModel() {
     val refreshGenre = mutableStateOf(false)
     var navController: NavHostController? = null
     var themeSelected = mutableIntStateOf(0)
-//    val albumItemsCount = mutableIntStateOf(2)
+
+    //    val albumItemsCount = mutableIntStateOf(2)
 //    val genreItemsCount = mutableIntStateOf(2)
     var mediaController: MediaControllerCompat? = null
     var mediaBrowser: MediaBrowserCompat? = null
@@ -133,6 +135,7 @@ class MusicViewModel : ViewModel() {
         sliderPosition.floatValue = 0f
         sleepTime.longValue = 0
         remainTime.longValue = 0
+        currentPlayQueueIndex.intValue = -1
         playCompleted.value = false
         repeatModel.intValue = Player.REPEAT_MODE_ALL
     }
@@ -365,17 +368,6 @@ class MusicViewModel : ViewModel() {
         return arrayList
     }
 
-    fun getCover(path: String): Bitmap? {
-        try {
-            retriever.setDataSource(path)
-            val coverT = retriever.embeddedPicture
-            if (coverT != null) {
-                return BitmapFactory.decodeByteArray(coverT, 0, coverT.size)
-            }
-        } catch (_: Exception) {
-        }
-        return null
-    }
 
     fun getCurrentMusicCover(): Bitmap? {
         if (currentMusicCover.value != null) {
@@ -389,20 +381,62 @@ class MusicViewModel : ViewModel() {
         return null
     }
 
-    fun getAlbumCover(id: Long, context: Context): Bitmap? {
+    fun getAlbumCover(id: Long, context: Context): Any? {
+        var result: Any? = null
+        val folder = File(context.externalCacheDir, "album_cover")
+        folder.mkdirs()
+        val coverPath = File(folder, "$id.jpg")
+        if (coverPath.exists()) {
+            return coverPath.path
+        } else {
+//            coverPath.createNewFile()
+        }
+
         try {
             val albumUri = ContentUris.withAppendedId(
                 Uri.parse("content://media/external/audio/albumart"),
                 id
             )
-            return BitmapFactory.decodeStream(
-                context.contentResolver.openInputStream(
-                    albumUri
-                )
+            val s = context.contentResolver.openInputStream(
+                albumUri
             )
-        } catch (_: Exception) {
+            if (s == null) {
+                val bm =
+                    BitmapFactory.decodeResource(
+                        context.resources,
+                        R.drawable.songs_thumbnail_cover
+                    )
+                val outStream = FileOutputStream(coverPath)
 
+                bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
+                outStream.flush()
+                outStream.close()
+                result =
+                    R.drawable.songs_thumbnail_cover
+            } else {
+                s.use { input ->
+                    Files.copy(input, coverPath.toPath())
+                }
+                result = coverPath.path
+                s.close()
+            }
+
+        } catch (e: Exception) {
+//                        e.printStackTrace()
         }
-        return null
+        if (result == null) {
+            val bm =
+                BitmapFactory.decodeResource(
+                    context.resources,
+                    R.drawable.songs_thumbnail_cover
+                )
+            val outStream = FileOutputStream(coverPath)
+
+            bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
+            outStream.flush()
+            outStream.close()
+            return R.drawable.songs_thumbnail_cover
+        }
+        return result
     }
 }

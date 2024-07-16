@@ -39,7 +39,7 @@ import com.ztftrue.music.sqlData.model.MusicItem
 @UnstableApi
 @Composable
 fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
-    val currentMusic: MusicItem? = musicViewModel.currentPlay.value
+    var currentMusic by remember { mutableStateOf<MusicItem?>(null) }
     val modifier = remember {
         Modifier.clickable {
             navController.navigate(Router.MusicPlayerView.withArgs()) {
@@ -51,6 +51,7 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
     var paint by remember { mutableStateOf<Bitmap?>(null) }
 
     LaunchedEffect(musicViewModel.currentPlay.value) {
+        currentMusic = musicViewModel.currentPlay.value
         paint = musicViewModel.getCurrentMusicCover()
     }
     if (currentMusic == null) return
@@ -81,14 +82,14 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
                         .width((configuration.screenWidthDp - 220).dp)
                 ) {
                     Text(
-                        text = currentMusic.name,
+                        text = currentMusic?.name?:"",
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.horizontalScroll(
                             rememberScrollState(0)
                         )
                     )
                     Text(
-                        text = currentMusic.artist,
+                        text = currentMusic?.artist?:"",
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.horizontalScroll(rememberScrollState(0))
                     )

@@ -24,7 +24,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -41,7 +40,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -95,7 +93,6 @@ fun CreatePlayListDialog(
                         .background(color = MaterialTheme.colorScheme.primary)
                 )
                 Row {
-                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
                         TextField(
                             value = playListName,
                             onValueChange = {
@@ -123,14 +120,36 @@ fun CreatePlayListDialog(
 //                            Text("")
                             },
                             colors = TextFieldDefaults.colors(
-                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                disabledTextColor = MaterialTheme.colorScheme.onBackground,
-                                unfocusedSupportingTextColor = MaterialTheme.colorScheme.onBackground,
-                                focusedSupportingTextColor = MaterialTheme.colorScheme.onBackground
-                            )
+                                errorTextColor = MaterialTheme.colorScheme.primary,
+                                focusedTextColor = MaterialTheme.colorScheme.primary,
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                errorCursorColor = MaterialTheme.colorScheme.error,
+                                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                                unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                                errorIndicatorColor = MaterialTheme.colorScheme.error,
+                                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                errorLabelColor = MaterialTheme.colorScheme.error,
+                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                )
+                            ),
+                            textStyle= MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
                         )
-                    }
 
                 }
                 Row(
@@ -242,7 +261,6 @@ fun RenamePlayListDialog(
                         .background(color = MaterialTheme.colorScheme.onBackground)
                 )
                 Row {
-                    ProvideTextStyle(TextStyle(color = MaterialTheme.colorScheme.onPrimary)) {
                         TextField(
                             value = playListName,
                             onValueChange = {
@@ -263,8 +281,37 @@ fun RenamePlayListDialog(
                                 .padding(bottom = 16.dp),
                             suffix = {
                             },
+                            colors = TextFieldDefaults.colors(
+                                errorTextColor = MaterialTheme.colorScheme.primary,
+                                focusedTextColor = MaterialTheme.colorScheme.primary,
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                errorCursorColor = MaterialTheme.colorScheme.error,
+                                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                                unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                                errorIndicatorColor = MaterialTheme.colorScheme.error,
+                                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                errorLabelColor = MaterialTheme.colorScheme.error,
+                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                )
+                            ),
+                            textStyle= MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
                         )
-                    }
 
                 }
                 Row(

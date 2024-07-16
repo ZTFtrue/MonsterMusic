@@ -69,8 +69,6 @@ import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.equalizerMax
 import com.ztftrue.music.utils.Utils.equalizerMin
 import com.ztftrue.music.utils.model.EqualizerBand
-import java.math.RoundingMode
-import java.text.DecimalFormat
 import kotlin.math.roundToInt
 
 @Composable
@@ -99,8 +97,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
     val delayTime = remember { mutableFloatStateOf(musicViewModel.delayTime.floatValue) }
     val decay = remember { mutableFloatStateOf(musicViewModel.decay.floatValue) }
     val color = MaterialTheme.colorScheme.onBackground
-    val df = DecimalFormat("#.#")
-    df.roundingMode = RoundingMode.FLOOR
+
     LazyColumn(
         state = listState,
         modifier = Modifier
@@ -151,7 +148,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                         .semantics { contentDescription = "Pitch Slider" },
                     value = pitch.floatValue,
                     onValueChange = {
-                        pitch.floatValue = df.format(it).toFloat()
+                        pitch.floatValue = (it*10f).roundToInt() / 10f
                     },
                     valueRange = 0.5f..2.0f,
                     steps = 15,
@@ -195,7 +192,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                         .semantics { contentDescription = "Speed Slider" },
                     value = speed.floatValue,
                     onValueChange = {
-                        speed.floatValue = df.format(it).toFloat()
+                        speed.floatValue = (it*10f).roundToInt() / 10f
                     },
                     valueRange = 0.5f..2f,
                     steps = 15,
@@ -281,7 +278,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                         .semantics { contentDescription = "Localized Description" },
                     value = delayTime.floatValue,
                     onValueChange = {
-                        delayTime.floatValue = df.format(it).toFloat()
+                        delayTime.floatValue = (it*10f).roundToInt() / 10f
                     },
                     enabled = musicViewModel.enableEcho.value,
                     valueRange = 0.1f..2f,
@@ -306,7 +303,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                         .semantics { contentDescription = "Localized Description" },
                     value = decay.floatValue,
                     onValueChange = {
-                        decay.floatValue = df.format(it).toFloat()
+                        decay.floatValue = (it*10f).roundToInt() / 10f
                     },
                     valueRange = 0f..1f,
                     steps = 10,

@@ -72,6 +72,6 @@ public class GaussWindow extends WindowFunction {
 	}
 
 	protected float value(int length, int index) {
-		return (float) Math.pow(Math.E,	-0.5 * Math.pow((index - (length - 1) / (double) 2)	/ (this.alpha * (length - 1) / (double) 2),(double) 2));
+		return (float) Math.pow(Math.E,	-0.5 * Math.pow((index - (length - 1) / (double) 2)	/ (this.alpha * (length - 1) / (double) 2), 2));
 	}
 }

@@ -157,7 +157,7 @@ public class Resampler {
         this.Y = new float[YSize];
         this.Yp = 0;
 
-        this.Time = (double) this.Xoff; // Current-time pointer for converter
+        this.Time = this.Xoff; // Current-time pointer for converter
     }
 
     public int getFilterWidth() {

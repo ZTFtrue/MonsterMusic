@@ -216,7 +216,7 @@ public class Agent {
 		double conFactor = 1.0 - CONF_FACTOR * err /
 								(err>0? postMargin: -preMargin);
 		if (decayFactor > 0) {
-			double memFactor = 1. - 1. / threshold((double)beatCount,1,decayFactor);
+			double memFactor = 1. - 1. / threshold(beatCount,1,decayFactor);
 			phaseScore = memFactor * phaseScore +
 						 (1.0 - memFactor) * conFactor * e.salience;
 		} else

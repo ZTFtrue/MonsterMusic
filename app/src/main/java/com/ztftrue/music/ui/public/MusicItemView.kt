@@ -558,7 +558,7 @@ fun saveSortResult(
             }
         }
     } else if (playList.type == PlayListType.Queue) {
-        val bundle = Bundle();
+        val bundle = Bundle()
         bundle.putInt("index", index)
         bundle.putInt("targetIndex", targetIndex)
         viewModel.mediaBrowser?.sendCustomAction(
