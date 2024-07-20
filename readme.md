@@ -54,9 +54,6 @@ but some features cannot be used.
 ### Need TODO
 
 - DSP visualize
-- Input View color modify
-- Add feature PlayList\Queue sort by user
-- Add feature Album\Songs sort by Name/Other
 - App Start Flash
 - Composition, Performance optimize
 - Disable eq when can't support the track's encode or make it support.
