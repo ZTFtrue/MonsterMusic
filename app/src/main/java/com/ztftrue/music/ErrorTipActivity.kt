@@ -105,7 +105,8 @@ class ErrorTipActivity : ComponentActivity() {
                             }
                         ) {
                             Text(
-                                text = stringResource(R.string.feedback)
+                                text = stringResource(R.string.feedback),
+                                color = MaterialTheme.colorScheme.onBackground
                             )
                         }
                         Button(
@@ -121,7 +122,8 @@ class ErrorTipActivity : ComponentActivity() {
                             }
                         ) {
                             Text(
-                                text = stringResource(R.string.send_email)
+                                text = stringResource(R.string.send_email),
+                                color = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     }

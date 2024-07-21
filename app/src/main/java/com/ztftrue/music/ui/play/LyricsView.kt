@@ -262,7 +262,7 @@ fun LyricsView(
                                     }
                                 ) {
                                     Text(
-                                        text = resolveInfo.label
+                                        text = resolveInfo.label,color = MaterialTheme.colorScheme.onBackground
                                     )
                                 }
                             }

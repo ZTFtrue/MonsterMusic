@@ -146,304 +146,304 @@ fun EditTrackPage(
                     )
                 }
                 item {
-                        TextField(
-                            enabled = false,
-                            value = title,
-                            onValueChange = {
-                                val newText = it.ifEmpty {
-                                    ""
-                                }
-                                if (title != newText) {
-                                    title = newText
-                                }
-                            },
-                            label = {
-                                Text(stringResource(id = R.string.title))
-                            }, // Placeholder or hint text
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                imeAction = ImeAction.Next,
-                                keyboardType = KeyboardType.Text
+                    TextField(
+                        enabled = false,
+                        value = title,
+                        onValueChange = {
+                            val newText = it.ifEmpty {
+                                ""
+                            }
+                            if (title != newText) {
+                                title = newText
+                            }
+                        },
+                        label = {
+                            Text(stringResource(id = R.string.title),color = MaterialTheme.colorScheme.onBackground)
+                        }, // Placeholder or hint text
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next,
+                            keyboardType = KeyboardType.Text
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                focusRequester.freeFocus()
+                                keyboardController?.hide()
+                            }
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth(1f)
+                            .focusRequester(focusRequester),
+                        colors = TextFieldDefaults.colors(
+                            errorTextColor = MaterialTheme.colorScheme.primary,
+                            focusedTextColor = MaterialTheme.colorScheme.primary,
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                            focusedContainerColor = MaterialTheme.colorScheme.background,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            errorCursorColor = MaterialTheme.colorScheme.error,
+                            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                            unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                            errorIndicatorColor = MaterialTheme.colorScheme.error,
+                            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
                             ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    focusRequester.freeFocus()
-                                    keyboardController?.hide()
-                                }
+                            errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
                             ),
-                            modifier = Modifier
-                                .fillMaxWidth(1f)
-                                .focusRequester(focusRequester),
-                            colors = TextFieldDefaults.colors(
-                                errorTextColor = MaterialTheme.colorScheme.primary,
-                                focusedTextColor = MaterialTheme.colorScheme.primary,
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                unfocusedTextColor = MaterialTheme.colorScheme.primary,
-                                focusedContainerColor = MaterialTheme.colorScheme.background,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                                cursorColor = MaterialTheme.colorScheme.primary,
-                                errorCursorColor = MaterialTheme.colorScheme.error,
-                                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                                unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                                errorIndicatorColor = MaterialTheme.colorScheme.error,
-                                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                ),
-                                errorLeadingIconColor = MaterialTheme.colorScheme.error,
-                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                ),
-                                errorTrailingIconColor = MaterialTheme.colorScheme.error,
-                                focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                errorLabelColor = MaterialTheme.colorScheme.error,
-                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                )
-                            ),
-                            textStyle= MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
-                        )
+                            errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            errorLabelColor = MaterialTheme.colorScheme.error,
+                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
+                            )
+                        ),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                    )
                 }
                 item {
-                        TextField(
-                            enabled = false,
-                            value = album,
-                            onValueChange = {
-                                val newText = it.ifEmpty {
-                                    ""
-                                }
-                                if (album != newText) {
-                                    album = newText
-                                }
-                            },
-                            label = {
-                                Text(stringResource(R.string.album))
-                            }, // Placeholder or hint text
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                imeAction = ImeAction.Next,
-                                keyboardType = KeyboardType.Text
+                    TextField(
+                        enabled = false,
+                        value = album,
+                        onValueChange = {
+                            val newText = it.ifEmpty {
+                                ""
+                            }
+                            if (album != newText) {
+                                album = newText
+                            }
+                        },
+                        label = {
+                            Text(stringResource(R.string.album,""),color = MaterialTheme.colorScheme.onBackground)
+                        }, // Placeholder or hint text
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next,
+                            keyboardType = KeyboardType.Text
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                focusRequester.freeFocus()
+                                keyboardController?.hide()
+                            }
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth(1f)
+                            .focusRequester(focusRequester),
+                        colors = TextFieldDefaults.colors(
+                            errorTextColor = MaterialTheme.colorScheme.primary,
+                            focusedTextColor = MaterialTheme.colorScheme.primary,
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                            focusedContainerColor = MaterialTheme.colorScheme.background,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            errorCursorColor = MaterialTheme.colorScheme.error,
+                            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                            unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                            errorIndicatorColor = MaterialTheme.colorScheme.error,
+                            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
                             ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    focusRequester.freeFocus()
-                                    keyboardController?.hide()
-                                }
+                            errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
                             ),
-                            modifier = Modifier
-                                .fillMaxWidth(1f)
-                                .focusRequester(focusRequester),
-                            colors = TextFieldDefaults.colors(
-                                errorTextColor = MaterialTheme.colorScheme.primary,
-                                focusedTextColor = MaterialTheme.colorScheme.primary,
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                unfocusedTextColor = MaterialTheme.colorScheme.primary,
-                                focusedContainerColor = MaterialTheme.colorScheme.background,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                                cursorColor = MaterialTheme.colorScheme.primary,
-                                errorCursorColor = MaterialTheme.colorScheme.error,
-                                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                                unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                                errorIndicatorColor = MaterialTheme.colorScheme.error,
-                                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                ),
-                                errorLeadingIconColor = MaterialTheme.colorScheme.error,
-                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                ),
-                                errorTrailingIconColor = MaterialTheme.colorScheme.error,
-                                focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                errorLabelColor = MaterialTheme.colorScheme.error,
-                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                )
-                            ),
-                            textStyle= MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
-                        )
+                            errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            errorLabelColor = MaterialTheme.colorScheme.error,
+                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
+                            )
+                        ),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                    )
                 }
                 item {
-                        TextField(
-                            enabled = false,
-                            value = artist,
-                            onValueChange = {
-                                val newText = it.ifEmpty {
-                                    ""
-                                }
-                                if (artist != newText) {
-                                    artist = newText
-                                }
-                            },
-                            label = {
-                                Text(stringResource(id = R.string.artist, ""))
-                            }, // Placeholder or hint text
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                imeAction = ImeAction.Next,
-                                keyboardType = KeyboardType.Text
+                    TextField(
+                        enabled = false,
+                        value = artist,
+                        onValueChange = {
+                            val newText = it.ifEmpty {
+                                ""
+                            }
+                            if (artist != newText) {
+                                artist = newText
+                            }
+                        },
+                        label = {
+                            Text(stringResource(id = R.string.artist, ""),color = MaterialTheme.colorScheme.onBackground)
+                        }, // Placeholder or hint text
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next,
+                            keyboardType = KeyboardType.Text
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                focusRequester.freeFocus()
+                                keyboardController?.hide()
+                            }
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth(1f)
+                            .focusRequester(focusRequester),
+                        colors = TextFieldDefaults.colors(
+                            errorTextColor = MaterialTheme.colorScheme.primary,
+                            focusedTextColor = MaterialTheme.colorScheme.primary,
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                            focusedContainerColor = MaterialTheme.colorScheme.background,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            errorCursorColor = MaterialTheme.colorScheme.error,
+                            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                            unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                            errorIndicatorColor = MaterialTheme.colorScheme.error,
+                            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
                             ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    focusRequester.freeFocus()
-                                    keyboardController?.hide()
-                                }
+                            errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
                             ),
-                            modifier = Modifier
-                                .fillMaxWidth(1f)
-                                .focusRequester(focusRequester),
-                            colors = TextFieldDefaults.colors(
-                                errorTextColor = MaterialTheme.colorScheme.primary,
-                                focusedTextColor = MaterialTheme.colorScheme.primary,
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                unfocusedTextColor = MaterialTheme.colorScheme.primary,
-                                focusedContainerColor = MaterialTheme.colorScheme.background,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                                cursorColor = MaterialTheme.colorScheme.primary,
-                                errorCursorColor = MaterialTheme.colorScheme.error,
-                                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                                unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                                errorIndicatorColor = MaterialTheme.colorScheme.error,
-                                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                ),
-                                errorLeadingIconColor = MaterialTheme.colorScheme.error,
-                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                ),
-                                errorTrailingIconColor = MaterialTheme.colorScheme.error,
-                                focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                errorLabelColor = MaterialTheme.colorScheme.error,
-                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                )
-                            ),
-                            textStyle= MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
-                        )
-                    }
-                item {
-                        TextField(
-                            enabled = false,
-                            value = genre,
-                            onValueChange = {
-                                val newText = it.ifEmpty {
-                                    ""
-                                }
-                                if (genre != newText) {
-                                    genre = newText
-                                }
-                            },
-                            label = {
-                                Text(stringResource(R.string.genre))
-                            }, // Placeholder or hint text
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                imeAction = ImeAction.Next,
-                                keyboardType = KeyboardType.Text
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    focusRequester.freeFocus()
-                                    keyboardController?.hide()
-                                }
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth(1f)
-                                .focusRequester(focusRequester),
-                            colors = TextFieldDefaults.colors(
-                                errorTextColor = MaterialTheme.colorScheme.primary,
-                                focusedTextColor = MaterialTheme.colorScheme.primary,
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                unfocusedTextColor = MaterialTheme.colorScheme.primary,
-                                focusedContainerColor = MaterialTheme.colorScheme.background,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                                cursorColor = MaterialTheme.colorScheme.primary,
-                                errorCursorColor = MaterialTheme.colorScheme.error,
-                                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                                unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                                errorIndicatorColor = MaterialTheme.colorScheme.error,
-                                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                ),
-                                errorLeadingIconColor = MaterialTheme.colorScheme.error,
-                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                ),
-                                errorTrailingIconColor = MaterialTheme.colorScheme.error,
-                                focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                errorLabelColor = MaterialTheme.colorScheme.error,
-                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                )
-                            ),
-                            textStyle= MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
-                        )
+                            errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            errorLabelColor = MaterialTheme.colorScheme.error,
+                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
+                            )
+                        ),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                    )
                 }
                 item {
-                        TextField(
-                            enabled = false,
-                            value = year,
-                            onValueChange = {
-                                val newText = it.ifEmpty {
-                                    "0000"
-                                }
-                                if (year != newText) {
-                                    year = newText
-                                }
-                            },
-                            label = {
-                                Text(stringResource(R.string.year))
-                            }, // Placeholder or hint text
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                imeAction = ImeAction.Next,
-                                keyboardType = KeyboardType.Text
+                    TextField(
+                        enabled = false,
+                        value = genre,
+                        onValueChange = {
+                            val newText = it.ifEmpty {
+                                ""
+                            }
+                            if (genre != newText) {
+                                genre = newText
+                            }
+                        },
+                        label = {
+                            Text(stringResource(R.string.genre),color = MaterialTheme.colorScheme.onBackground)
+                        }, // Placeholder or hint text
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next,
+                            keyboardType = KeyboardType.Text
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                focusRequester.freeFocus()
+                                keyboardController?.hide()
+                            }
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth(1f)
+                            .focusRequester(focusRequester),
+                        colors = TextFieldDefaults.colors(
+                            errorTextColor = MaterialTheme.colorScheme.primary,
+                            focusedTextColor = MaterialTheme.colorScheme.primary,
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                            focusedContainerColor = MaterialTheme.colorScheme.background,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            errorCursorColor = MaterialTheme.colorScheme.error,
+                            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                            unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                            errorIndicatorColor = MaterialTheme.colorScheme.error,
+                            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
                             ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    focusRequester.freeFocus()
-                                    keyboardController?.hide()
-                                }
+                            errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
                             ),
-                            modifier = Modifier
-                                .fillMaxWidth(1f)
-                                .focusRequester(focusRequester),
-                            colors = TextFieldDefaults.colors(
-                                errorTextColor = MaterialTheme.colorScheme.primary,
-                                focusedTextColor = MaterialTheme.colorScheme.primary,
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                unfocusedTextColor = MaterialTheme.colorScheme.primary,
-                                focusedContainerColor = MaterialTheme.colorScheme.background,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                                cursorColor = MaterialTheme.colorScheme.primary,
-                                errorCursorColor = MaterialTheme.colorScheme.error,
-                                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                                unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                                errorIndicatorColor = MaterialTheme.colorScheme.error,
-                                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                ),
-                                errorLeadingIconColor = MaterialTheme.colorScheme.error,
-                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                ),
-                                errorTrailingIconColor = MaterialTheme.colorScheme.error,
-                                focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                errorLabelColor = MaterialTheme.colorScheme.error,
-                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                )
+                            errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            errorLabelColor = MaterialTheme.colorScheme.error,
+                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
+                            )
+                        ),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                    )
+                }
+                item {
+                    TextField(
+                        enabled = false,
+                        value = year,
+                        onValueChange = {
+                            val newText = it.ifEmpty {
+                                "0000"
+                            }
+                            if (year != newText) {
+                                year = newText
+                            }
+                        },
+                        label = {
+                            Text(stringResource(R.string.year),color = MaterialTheme.colorScheme.onBackground)
+                        }, // Placeholder or hint text
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next,
+                            keyboardType = KeyboardType.Text
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                focusRequester.freeFocus()
+                                keyboardController?.hide()
+                            }
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth(1f)
+                            .focusRequester(focusRequester),
+                        colors = TextFieldDefaults.colors(
+                            errorTextColor = MaterialTheme.colorScheme.primary,
+                            focusedTextColor = MaterialTheme.colorScheme.primary,
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                            focusedContainerColor = MaterialTheme.colorScheme.background,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            errorCursorColor = MaterialTheme.colorScheme.error,
+                            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                            unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                            errorIndicatorColor = MaterialTheme.colorScheme.error,
+                            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
                             ),
-                            textStyle= MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
-                        )
+                            errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
+                            ),
+                            errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            errorLabelColor = MaterialTheme.colorScheme.error,
+                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
+                            )
+                        ),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                    )
                 }
                 item {
                     Box(
