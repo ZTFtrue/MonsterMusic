@@ -57,7 +57,8 @@ object PlayUtils {
             "Alphabetical" to MediaStore.Audio.Media.TITLE,
             "Artist" to MediaStore.Audio.Media.ARTIST,
             "Duration" to MediaStore.Audio.Media.DURATION,
-            "Year" to MediaStore.Audio.Media.YEAR
+            "Year" to MediaStore.Audio.Media.YEAR,
+            "Track number" to MediaStore.Audio.Media.TRACK
         ),
         ListTypeTracks.ArtistsTracks to linkedMapOf(
             "Alphabetical" to MediaStore.Audio.Media.TITLE,
