@@ -50,6 +50,7 @@ import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.home.AlbumGridView
 import com.ztftrue.music.ui.home.ArtistsGridView
 import com.ztftrue.music.ui.public.BackButton
+import com.ztftrue.music.ui.public.Bottom
 import com.ztftrue.music.ui.public.TracksListView
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType
@@ -227,7 +228,7 @@ fun SearchPage(
                 }
             }
         },
-//        bottomBar = { Bottom(musicViewModel, navController) },
+        bottomBar = { Bottom(musicViewModel, navController) },
         floatingActionButton = {},
         content = {
             LazyColumn(
