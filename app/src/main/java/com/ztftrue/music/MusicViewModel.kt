@@ -9,10 +9,12 @@ import android.net.Uri
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.widget.Toast
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.text.style.TextAlign
 import androidx.documentfile.provider.DocumentFile
@@ -20,6 +22,7 @@ import androidx.lifecycle.ViewModel
 import androidx.media3.common.Player
 import androidx.navigation.NavHostController
 import com.ztftrue.music.sqlData.MusicDatabase
+import com.ztftrue.music.sqlData.dao.SortFiledDao
 import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
@@ -105,6 +108,7 @@ class MusicViewModel : ViewModel() {
 
     var playStatus = mutableStateOf(false)
     var equalizerBands = mutableStateListOf<EqualizerBand>()
+    var showIndicatorMap = mutableStateMapOf<String, Boolean>()
 
     // lyrics
     var itemDuration: Long = 1

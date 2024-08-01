@@ -50,6 +50,7 @@ import com.ztftrue.music.play.EVENT_SLEEP_TIME_Change
 import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.sqlData.model.SortFiledData
 import com.ztftrue.music.sqlData.model.StorageFolder
 import com.ztftrue.music.ui.home.BaseLayout
 import com.ztftrue.music.ui.theme.MusicPitchTheme
@@ -107,7 +108,7 @@ class MainActivity : ComponentActivity() {
                     val playListPath = bundle.getString("playListPath", "")
                     val uri = bundle.getString("uri", "")
                     val tracksPath = bundle.getString("tracksPath", "")
-                    val arrayList:ArrayList<MusicItem> =
+                    val arrayList: ArrayList<MusicItem> =
                         bundle.getParcelableArrayList("list") ?: ArrayList()
                     if (playListPath.isNotEmpty()) {
                         modifyTrackFromM3U(
@@ -595,6 +596,12 @@ class MainActivity : ComponentActivity() {
     }
 
     fun getInitData(resultData: Bundle) {
+        resultData.getParcelableArrayList<SortFiledData>("showIndicatorList")?.also {
+            it.forEach { sort ->
+                musicViewModel.showIndicatorMap[sort.type.replace("@Tracks", "")] =
+                    sort.filedName == "Alphabetical"
+            }
+        }
         resultData.getParcelableArrayList<MusicItem>("musicQueue")?.also {
             musicViewModel.musicQueue.clear()
             musicViewModel.musicQueue.addAll(it)
@@ -607,6 +614,9 @@ class MainActivity : ComponentActivity() {
             musicViewModel.mainTabList.clear()
             musicViewModel.mainTabList.addAll(it)
         }
+
+
+
         resultData.getSerializable("playListCurrent")?.also {
             musicViewModel.playListCurrent.value = it as AnyListBase
         }
@@ -665,7 +675,7 @@ class MainActivity : ComponentActivity() {
         // SleepTime wait when play next
         musicViewModel.playCompleted.value =
             resultData.getBoolean("play_completed")
-        musicViewModel.volume.intValue = resultData.getInt("volume",100)
+        musicViewModel.volume.intValue = resultData.getInt("volume", 100)
         getSeek()
     }
 

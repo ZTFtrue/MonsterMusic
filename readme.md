@@ -32,7 +32,7 @@ embark on a musical adventure like never before!
 
 Or download the latest APK from the [Releases Section](https://github.com/ZTFtrue/MonsterMusic/releases/latest).
 
-[Discord](https://discord.gg/uMtf4z5F)
+[Join Discord](https://discord.gg/R9YbH9TBbJ)
 
 
 <img alt="equalizer" src="./Picture/equalizer.jpg" width="200px"/><img alt="cover" src="./Picture/cover.jpg" width="200px"/>

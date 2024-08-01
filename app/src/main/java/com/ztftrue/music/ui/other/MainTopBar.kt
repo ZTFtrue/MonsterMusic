@@ -354,6 +354,9 @@ fun MainTopBar(
                                             }
                                         })
                                 }
+                                musicViewModel.showIndicatorMap[PlayListType.Songs.name] =
+                                    filedSelected == "Alphabetical"
+
                                 val bundle = Bundle()
                                 bundle.putString(
                                     "method",

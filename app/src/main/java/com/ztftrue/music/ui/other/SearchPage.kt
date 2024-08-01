@@ -296,7 +296,9 @@ fun SearchPage(
                         Box(modifier = Modifier.height(((tracksList.size + 2) * (60 + 1.2 + 25)).dp)) {
                             TracksListView(
                                 modifier = Modifier,
-                                musicViewModel, modeList, tracksList
+                                musicViewModel, modeList, tracksList, remember {
+                                    mutableStateOf(true)
+                                }
                             )
                         }
                     }

@@ -16,6 +16,7 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.widget.Toast
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.core.net.toUri
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.AudioAttributes
@@ -43,11 +44,13 @@ import com.ztftrue.music.R
 import com.ztftrue.music.effects.EchoAudioProcessor
 import com.ztftrue.music.effects.EqualizerAudioProcessor
 import com.ztftrue.music.sqlData.MusicDatabase
+import com.ztftrue.music.sqlData.dao.SortFiledDao
 import com.ztftrue.music.sqlData.model.Auxr
 import com.ztftrue.music.sqlData.model.CurrentList
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.PlayConfig
+import com.ztftrue.music.sqlData.model.SortFiledData
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.model.AlbumList
@@ -130,7 +133,7 @@ class PlayService : MediaBrowserServiceCompat() {
     private var playListCurrent: AnyListBase? = null
     var musicQueue = java.util.ArrayList<MusicItem>()
     var currentPlayTrack: MusicItem? = null
-
+    var showIndicatorList = ArrayList<SortFiledData>()
     private var volumeValue: Int = 0
     private val playListTracksHashMap = java.util.HashMap<Long, java.util.ArrayList<MusicItem>>()
 
@@ -738,6 +741,17 @@ class PlayService : MediaBrowserServiceCompat() {
                     runBlocking {
                         awaitAll(
                             async {
+                                val sortData1 = db.SortFiledDao().findSortAll()
+                                if (sortData1 != null) {
+                                    showIndicatorList.clear()
+                                    sortData1.forEach {
+                                        if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                            showIndicatorList.add(it)
+                                        }
+                                    }
+                                }
+                            },
+                            async {
                                 val auxTemp = db.AuxDao().findFirstAux()
                                 if (auxTemp == null) {
                                     db.AuxDao().insert(auxr)
@@ -893,6 +907,7 @@ class PlayService : MediaBrowserServiceCompat() {
         bundle.putInt("repeat", exoPlayer.repeatMode)
         bundle.putFloat("position", position ?: exoPlayer.currentPosition.toFloat())
         bundle.putParcelableArrayList("mainTabList", mainTab)
+        bundle.putParcelableArrayList("showIndicatorList", showIndicatorList)
     }
 
     override fun onLoadChildren(
@@ -1129,24 +1144,16 @@ class PlayService : MediaBrowserServiceCompat() {
                             intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
 
                             getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit()
-                                .putBoolean("playingStatus",isPlaying)
-                                .putString("title",currentPlayTrack?.name ?: "")
-                                .putString("author",currentPlayTrack?.artist ?: "")
-                                .putString("path",currentPlayTrack?.path ?: "").commit()
+                                .putBoolean("playingStatus", isPlaying)
+                                .putString("title", currentPlayTrack?.name ?: "")
+                                .putString("author", currentPlayTrack?.artist ?: "")
+                                .putString("path", currentPlayTrack?.path ?: "").commit()
 
                             sendBroadcast(intent)
                         }
                     }
                 saveCurrentDuration(exoPlayer.currentPosition)
-                notify?.updateNotification(
-                    this@PlayService,
-                    currentPlayTrack?.name ?: "",
-                    currentPlayTrack?.artist ?: "",
-                    isPlaying,
-                    exoPlayer.playbackParameters.speed,
-                    exoPlayer.currentPosition,
-                    exoPlayer.duration
-                )
+                updateNotify()
             }
 
             override fun onPlayerError(error: PlaybackException) {
@@ -1207,17 +1214,17 @@ class PlayService : MediaBrowserServiceCompat() {
                                         PlayMusicWidget::class.java
                                     )
                                 )
-                                Log.d("TAG",currentPlayTrack?.name?:"")
+                                Log.d("TAG", currentPlayTrack?.name ?: "")
                                 intent.putExtra("playingStatus", exoPlayer.isPlaying)
                                 intent.putExtra("title", currentPlayTrack?.name ?: "")
                                 intent.putExtra("author", currentPlayTrack?.artist ?: "")
                                 intent.putExtra("path", currentPlayTrack?.path ?: "")
                                 intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
                                 getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit()
-                                    .putBoolean("playingStatus",exoPlayer.isPlaying)
-                                    .putString("title",currentPlayTrack?.name ?: "")
-                                    .putString("author",currentPlayTrack?.artist ?: "")
-                                    .putString("path",currentPlayTrack?.path ?: "").commit()
+                                    .putBoolean("playingStatus", exoPlayer.isPlaying)
+                                    .putString("title", currentPlayTrack?.name ?: "")
+                                    .putString("author", currentPlayTrack?.artist ?: "")
+                                    .putString("path", currentPlayTrack?.path ?: "").commit()
                                 sendBroadcast(intent)
                             }
                         }
@@ -1558,32 +1565,92 @@ class PlayService : MediaBrowserServiceCompat() {
                                 "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
                                 true
                             )
+                            val sortData1 = db.SortFiledDao().findSortAll()
+                            if (sortData1 != null) {
+                                showIndicatorList.clear()
+                                sortData1.forEach {
+                                    if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                        showIndicatorList.add(it)
+                                    }
+                                }
+                            }
                         }
                         return
                     }
 
                     PlayUtils.ListTypeTracks.PlayListsTracks -> {
                         playListTracksHashMap.clear()
-
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val sortData1 = db.SortFiledDao().findSortAll()
+                            if (sortData1 != null) {
+                                showIndicatorList.clear()
+                                sortData1.forEach {
+                                    if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                        showIndicatorList.add(it)
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     PlayUtils.ListTypeTracks.AlbumsTracks -> {
                         albumsListTracksHashMap.clear()
-
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val sortData1 = db.SortFiledDao().findSortAll()
+                            if (sortData1 != null) {
+                                showIndicatorList.clear()
+                                sortData1.forEach {
+                                    if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                        showIndicatorList.add(it)
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     PlayUtils.ListTypeTracks.ArtistsTracks -> {
                         artistsListTracksHashMap.clear()
-
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val sortData1 = db.SortFiledDao().findSortAll()
+                            if (sortData1 != null) {
+                                showIndicatorList.clear()
+                                sortData1.forEach {
+                                    if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                        showIndicatorList.add(it)
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     PlayUtils.ListTypeTracks.GenresTracks -> {
                         genresListTracksHashMap.clear()
-
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val sortData1 = db.SortFiledDao().findSortAll()
+                            if (sortData1 != null) {
+                                showIndicatorList.clear()
+                                sortData1.forEach {
+                                    if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                        showIndicatorList.add(it)
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     PlayUtils.ListTypeTracks.FoldersTracks -> {
                         foldersListTracksHashMap.clear()
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val sortData1 = db.SortFiledDao().findSortAll()
+                            if (sortData1 != null) {
+                                showIndicatorList.clear()
+                                sortData1.forEach {
+                                    if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                        showIndicatorList.add(it)
+                                    }
+                                }
+                            }
+                        }
                     }
 
                 }

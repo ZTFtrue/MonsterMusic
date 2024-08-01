@@ -26,7 +26,7 @@ object TracksManager {
         tracksHashMap: LinkedHashMap<Long, MusicItem>,
         sortOrder1: String,
         needTracks: Boolean = false,
-        allTracksHashMap: LinkedHashMap<Long, MusicItem>?=null,
+        allTracksHashMap: LinkedHashMap<Long, MusicItem>? = null,
     ) {
         tracksHashMap.clear()
         folderListLinkedHashMap.clear()
@@ -178,7 +178,7 @@ object TracksManager {
         val trackProjection = arrayOf(
             MediaStore.Audio.Media._ID,
         )
-        val sortOrder=sortOrder1?.ifBlank {  "${MediaStore.Audio.Media.TITLE} ASC" }
+        val sortOrder = sortOrder1?.ifBlank { "${MediaStore.Audio.Media.TITLE} ASC" }
         // Create a cursor to query the media store for tracks in the genre
         val trackCursor = context.contentResolver.query(
             uri,
@@ -211,13 +211,15 @@ object TracksManager {
         )
         val selection = "${MediaStore.Audio.Media.TITLE} LIKE ?"
         val selectionArgs = arrayOf("%$searchName%")
+        val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
+
         // Create a cursor to query the media store for tracks in the genre
         val trackCursor = context.contentResolver.query(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
             trackProjection,
             selection,
             selectionArgs,
-            null
+            sortOrder
         )
         // Process the cursor and count the number of tracks
         val list = ArrayList<MusicItem>()

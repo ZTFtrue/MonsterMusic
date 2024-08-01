@@ -108,6 +108,7 @@ fun TracksListPage(
     id: Long,
 ) {
     val tracksList = remember { mutableStateListOf<MusicItem>() }
+    val showIndicator = remember { mutableStateOf<Boolean>(false) }
     val musicPlayList = remember { mutableStateOf(AnyListBase(2, PlayListType.None)) }
     val albumsList = remember { mutableStateListOf<AlbumList>() }
     var refreshCurrentValueList by remember { mutableStateOf(false) }
@@ -117,6 +118,9 @@ fun TracksListPage(
     var showAddPlayListDialog by remember { mutableStateOf(false) }
     var showCreatePlayListDialog by remember { mutableStateOf(false) }
     var showSortDialog by remember { mutableStateOf(false) }
+//    LaunchedEffect(key1 = musicViewModel.showIndicatorMap) {
+    showIndicator.value = musicViewModel.showIndicatorMap.getOrDefault(type.toString(), false)
+//    }
     if (showSortDialog) {
         val sortFiledOptions =
             PlayUtils.trackSortFiledMap[type.name + "@Tracks"]
@@ -131,7 +135,6 @@ fun TracksListPage(
             mutableStateOf("")
         }
         var sortDb: SortFiledDao?
-
         LaunchedEffect(key1 = Unit) {
             CoroutineScope(Dispatchers.IO).launch {
                 sortDb = MusicDatabase.getDatabase(context).SortFiledDao()
@@ -339,6 +342,10 @@ fun TracksListPage(
                                         }
                                     })
                             }
+                            musicViewModel.showIndicatorMap[type.name] =
+                                filedSelected == "Alphabetical"
+                            showIndicator.value =
+                                musicViewModel.showIndicatorMap.getOrDefault(type.toString(), false)
                             val bundle = Bundle()
                             bundle.putString(
                                 "method",
@@ -843,7 +850,7 @@ fun TracksListPage(
                 TracksListView(
                     modifier = Modifier
                         .fillMaxSize(),
-                    musicViewModel, musicPlayList.value, tracksList
+                    musicViewModel, musicPlayList.value, tracksList, showIndicator
                 )
             }
 

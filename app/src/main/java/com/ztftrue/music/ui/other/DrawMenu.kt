@@ -286,7 +286,7 @@ fun FeedBackDialog(onDismiss: () -> Unit) {
                                 .clickable {
                                     onConfirmation()
                                     Utils.openBrowser(
-                                        "https://discord.gg/uMtf4z5F",
+                                        "https://discord.gg/R9YbH9TBbJ",
                                         context
                                     )
                                 },
