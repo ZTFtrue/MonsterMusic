@@ -783,112 +783,132 @@ fun TracksListPage(
                             }
                             IconButton(onClick = {
                                 musicViewModel.enableShuffleModel.value = true
-                            }) {
-                                Image(
-                                    painter = painterResource(
-                                        R.drawable.shuffle_model
-                                    ),
-                                    contentDescription = "shuffle model",
-                                    modifier = Modifier
-                                        .width(30.dp)
-                                        .height(30.dp),
-                                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
-                                )
-                            }
-                            when (musicPlayList.value) {
-                                is AlbumList -> {
-                                    val a = musicPlayList.value as AlbumList
-                                    Column {
-                                        Text(
-                                            text = a.artist,
-//                                            modifier = Modifier
-//                                                .wrapContentSize(),
-                                            modifier = Modifier.horizontalScroll(
-                                                rememberScrollState(
-                                                    0
-                                                )
-                                            ),
-                                            maxLines = 1,
-                                            color = MaterialTheme.colorScheme.onBackground
-                                        )
-                                    }
-                                }
-
-                                is ArtistList -> {
-                                    val a = musicPlayList.value as ArtistList
-                                    Column {
-                                        Text(
-                                            text = "${a.albumNumber} album${if (a.albumNumber <= 1) "" else "s"}",
-//                                            modifier = Modifier
-//                                                .wrapContentSize(),
-                                            modifier = Modifier.horizontalScroll(
-                                                rememberScrollState(
-                                                    0
-                                                )
-                                            ),
-                                            maxLines = 1,
-                                            color = MaterialTheme.colorScheme.onBackground
-                                        )
-                                    }
-                                }
-
-                                is GenresList -> {
-                                    val a = musicPlayList.value as GenresList
+//                                val bundle = Bundle()
+//                                viewModel.playListCurrent.value = playList
+//                                viewModel.musicQueue.clear()
+//                                viewModel.currentPlayQueueIndex.intValue = -1
+//                                viewModel.musicQueue.addAll(musicList)
+//                                bundle.putBoolean("switch_queue", true)
+//                                if (viewModel.playListCurrent.value == null) {
+//                                    viewModel.playListCurrent.value = playList
+//                                    viewModel.currentMusicCover.value = null
+//                                    viewModel.currentPlay.value = music
+//                                }
+//                                bundle.putParcelable("musicItem", music)
+//                                bundle.putParcelable("playList", playList)
+//                                bundle.putParcelableArrayList("musicItems", ArrayList(musicList))
+//                                bundle.putInt("index", index)
+//                                viewModel.mediaBrowser?.sendCustomAction(
+//                                    ACTION_PLAY_MUSIC,
+//                                    bundle,
+//                                    null
+//                                )
+                        }) {
+                        Image(
+                            painter = painterResource(
+                                R.drawable.shuffle_model
+                            ),
+                            contentDescription = "shuffle model",
+                            modifier = Modifier
+                                .width(30.dp)
+                                .height(30.dp),
+                            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                        )
+                    }
+                        when (musicPlayList.value) {
+                            is AlbumList -> {
+                                val a = musicPlayList.value as AlbumList
+                                Column {
                                     Text(
-                                        text = "${a.albumNumber} album${if (a.albumNumber <= 1) "" else "s"}",
-//                                        modifier = Modifier
-//                                            .wrapContentSize(),
-                                        modifier = Modifier.horizontalScroll(rememberScrollState(0)),
+                                        text = a.artist,
+//                                            modifier = Modifier
+//                                                .wrapContentSize(),
+                                        modifier = Modifier.horizontalScroll(
+                                            rememberScrollState(
+                                                0
+                                            )
+                                        ),
                                         maxLines = 1,
                                         color = MaterialTheme.colorScheme.onBackground
                                     )
                                 }
                             }
-                        }
 
+                            is ArtistList -> {
+                                val a = musicPlayList.value as ArtistList
+                                Column {
+                                    Text(
+                                        text = "${a.albumNumber} album${if (a.albumNumber <= 1) "" else "s"}",
+//                                            modifier = Modifier
+//                                                .wrapContentSize(),
+                                        modifier = Modifier.horizontalScroll(
+                                            rememberScrollState(
+                                                0
+                                            )
+                                        ),
+                                        maxLines = 1,
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                            }
+
+                            is GenresList -> {
+                                val a = musicPlayList.value as GenresList
+                                Text(
+                                    text = "${a.albumNumber} album${if (a.albumNumber <= 1) "" else "s"}",
+//                                        modifier = Modifier
+//                                            .wrapContentSize(),
+                                    modifier = Modifier.horizontalScroll(rememberScrollState(0)),
+                                    maxLines = 1,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                        }
                     }
+
                 }
             }
+        }
 
 
-        },
-        bottomBar = { Bottom(musicViewModel, navController) },
-        floatingActionButton = {},
-        content = {
-            Column(
+},
+bottomBar = { Bottom(musicViewModel, navController) },
+floatingActionButton = {},
+content = {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(it)
+    ) {
+        if (albumsList.isNotEmpty()) {
+            val configuration = LocalConfiguration.current
+            val width = (configuration.screenWidthDp / 2.5) + 70
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(it)
+                    .fillMaxWidth()
+                    .height(width.dp),
             ) {
-                if (albumsList.isNotEmpty()) {
-                    val configuration = LocalConfiguration.current
-                    val width = (configuration.screenWidthDp / 2.5) + 70
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(width.dp),
-                    ) {
-                        AlbumGridView(
-                            musicViewModel = musicViewModel,
-                            navController = navController,
-                            albumListDefault = albumsList,
-                            scrollDirection = ScrollDirectionType.GRID_HORIZONTAL
-                        )
-                        HorizontalDivider(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(1.dp)
-                                .background(color = MaterialTheme.colorScheme.background)
-                        )
-                    }
-                }
-                TracksListView(
+                AlbumGridView(
+                    musicViewModel = musicViewModel,
+                    navController = navController,
+                    albumListDefault = albumsList,
+                    scrollDirection = ScrollDirectionType.GRID_HORIZONTAL
+                )
+                HorizontalDivider(
                     modifier = Modifier
-                        .fillMaxSize(),
-                    musicViewModel, musicPlayList.value, tracksList, showIndicator
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(color = MaterialTheme.colorScheme.background)
                 )
             }
+        }
+        TracksListView(
+            modifier = Modifier
+                .fillMaxSize(),
+            musicViewModel, musicPlayList.value, tracksList, showIndicator
+        )
+    }
 
-        },
-    )
+},
+)
 }
