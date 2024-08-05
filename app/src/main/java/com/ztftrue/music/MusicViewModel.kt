@@ -9,7 +9,6 @@ import android.net.Uri
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.widget.Toast
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -22,7 +21,6 @@ import androidx.lifecycle.ViewModel
 import androidx.media3.common.Player
 import androidx.navigation.NavHostController
 import com.ztftrue.music.sqlData.MusicDatabase
-import com.ztftrue.music.sqlData.dao.SortFiledDao
 import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
@@ -89,7 +87,7 @@ class MusicViewModel : ViewModel() {
     var delayTime = mutableFloatStateOf(0.5f)
     var decay = mutableFloatStateOf(1f)
     var echoFeedBack = mutableStateOf(false)
-
+    var enableShuffleModel= mutableStateOf(false)
     var pitch = mutableFloatStateOf(1f)
     var speed = mutableFloatStateOf(1f)
     var currentDuration = mutableLongStateOf(0)

@@ -94,6 +94,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
@@ -782,7 +783,8 @@ fun PlayingPage(
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text(
-                            text = stringResource(R.string.manage_dictionary_app), modifier = Modifier
+                            text = stringResource(R.string.manage_dictionary_app),
+                            modifier = Modifier
                                 .padding(2.dp),
                             color = MaterialTheme.colorScheme.onBackground
                         )
@@ -1108,7 +1110,9 @@ fun PlayingPage(
                                     }
                                 }, text = {
                                     Text(
-                                        text = stringResource(id = Utils.translateMap[item.name] ?:R.string.app_name),
+                                        text = stringResource(
+                                            id = Utils.translateMap[item.name] ?: R.string.app_name
+                                        ),
                                         color = MaterialTheme.colorScheme.onBackground,
                                         fontSize = 14.sp,
                                     )
@@ -1217,39 +1221,80 @@ fun PlayingPage(
                             )
                         }
                     }
-                    Row(
-                        Modifier
+                    ConstraintLayout(
+                        modifier = Modifier
                             .fillMaxWidth()
                             .height(60.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        key(Unit) {
-                            Image(
-                                painter = painterResource(
-                                    R.drawable.ic_queue
-                                ),
-                                contentDescription = "Queue Page",
-                                modifier = Modifier
-                                    .clickable {
-                                        navController.navigate(
-                                            Router.QueuePage.route
-                                        ) {
-                                            popUpTo(Router.MainView.route) {
-                                                // Inclusive means the start destination is also popped
-                                                inclusive = false
+                        val (playIndicator) = createRefs()
+                        val (playIndicator2) = createRefs()
+                        val (playIndicator3) = createRefs()
+                        Row(
+                            modifier = Modifier
+                                .constrainAs(playIndicator) {
+                                    bottom.linkTo(anchor = parent.bottom, margin = 0.dp)
+                                    start.linkTo(anchor = parent.start, margin = 0.dp)
+                                    top.linkTo(anchor = parent.top, margin = 0.dp)
+                                }
+                                .height(60.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            key(Unit) {
+                                Image(
+                                    painter = painterResource(
+                                        R.drawable.ic_queue
+                                    ),
+                                    contentDescription = "Queue Page",
+                                    modifier = Modifier
+                                        .clickable {
+                                            navController.navigate(
+                                                Router.QueuePage.route
+                                            ) {
+                                                popUpTo(Router.MainView.route) {
+                                                    // Inclusive means the start destination is also popped
+                                                    inclusive = false
+                                                }
                                             }
                                         }
-                                    }
-                                    .width(50.dp)
-                                    .height(50.dp)
-                                    .padding(10.dp),
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
-                            )
+                                        .width(50.dp)
+                                        .height(50.dp)
+                                        .padding(10.dp),
+                                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                                )
+                            }
+                            key(viewModel.enableShuffleModel.value) {
+                                IconButton(onClick = {
+                                    viewModel.enableShuffleModel.value =
+                                        !viewModel.enableShuffleModel.value
+                                }) {
+                                    Image(
+                                        painter = painterResource(
+                                            R.drawable.shuffle_model
+                                        ),
+                                        contentDescription = "shuffle model",
+                                        modifier = Modifier
+                                            .width(50.dp)
+                                            .height(50.dp)
+                                            .padding(5.dp),
+                                        colorFilter = ColorFilter.tint(
+                                            color = if (viewModel.enableShuffleModel.value) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(
+                                                alpha = 0.5f
+                                            )
+                                        )
+                                    )
+                                }
+                            }
                         }
+
                         Row(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.constrainAs(playIndicator2) {
+                                bottom.linkTo(anchor = parent.bottom, margin = 0.dp)
+                                start.linkTo(anchor = parent.start, margin = 0.dp)
+                                end.linkTo(anchor = parent.end, margin = 0.dp)
+                                top.linkTo(anchor = parent.top, margin = 0.dp)
+                            }
                         ) {
                             Image(
                                 painter = painterResource(R.drawable.skip_previous),
@@ -1345,7 +1390,12 @@ fun PlayingPage(
                                     }
                                     .width(50.dp)
                                     .height(50.dp)
-                                    .padding(10.dp),
+                                    .padding(10.dp)
+                                    .constrainAs(playIndicator3) {
+                                        bottom.linkTo(anchor = parent.bottom, margin = 0.dp)
+                                        end.linkTo(anchor = parent.end, margin = 0.dp)
+                                        top.linkTo(anchor = parent.top, margin = 0.dp)
+                                    },
                                 colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                             )
                         }

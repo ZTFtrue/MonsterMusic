@@ -40,4 +40,13 @@ object SharedPreferencesUtils {
     fun getAutoHighLight(context: Context): Boolean {
         return context.getSharedPreferences("display", Context.MODE_PRIVATE).getBoolean("AutoHighLight", true)
     }
+
+    fun enableShuffle(context: Context,enable:Boolean) {
+          context.getSharedPreferences("queue", Context.MODE_PRIVATE).edit().putBoolean("EnableShuffle", enable).apply()
+    }
+
+    fun getEnableShuffle(context: Context): Boolean {
+        return context.getSharedPreferences("queue", Context.MODE_PRIVATE).getBoolean("EnableShuffle", false)
+    }
+
 }

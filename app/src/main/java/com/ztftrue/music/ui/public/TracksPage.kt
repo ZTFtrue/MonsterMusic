@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -47,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -741,9 +744,11 @@ fun TracksListPage(
 
                             Text(
                                 text = mListPlay.name,
-                                modifier = Modifier
-                                    .wrapContentSize(),
-                                color = MaterialTheme.colorScheme.onBackground
+//                                modifier = Modifier
+//                                    .wrapContentSize(),
+                                color = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.horizontalScroll(rememberScrollState(0)),
+                                maxLines = 1
                             )
                             Row(
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -751,7 +756,9 @@ fun TracksListPage(
                             ) {
                                 Text(
                                     text = "${mListPlay.trackNumber} song${if (mListPlay.trackNumber <= 1) "" else "s"}",
-                                    color = MaterialTheme.colorScheme.onBackground
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    modifier = Modifier.horizontalScroll(rememberScrollState(0)),
+                                    maxLines = 1
                                 )
 
                                 if (mListPlay.type == PlayListType.PlayLists) {
@@ -774,14 +781,34 @@ fun TracksListPage(
                                     }
                                 }
                             }
+                            IconButton(onClick = {
+                                musicViewModel.enableShuffleModel.value = true
+                            }) {
+                                Image(
+                                    painter = painterResource(
+                                        R.drawable.shuffle_model
+                                    ),
+                                    contentDescription = "shuffle model",
+                                    modifier = Modifier
+                                        .width(30.dp)
+                                        .height(30.dp),
+                                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                                )
+                            }
                             when (musicPlayList.value) {
                                 is AlbumList -> {
                                     val a = musicPlayList.value as AlbumList
                                     Column {
                                         Text(
                                             text = a.artist,
-                                            modifier = Modifier
-                                                .wrapContentSize(),
+//                                            modifier = Modifier
+//                                                .wrapContentSize(),
+                                            modifier = Modifier.horizontalScroll(
+                                                rememberScrollState(
+                                                    0
+                                                )
+                                            ),
+                                            maxLines = 1,
                                             color = MaterialTheme.colorScheme.onBackground
                                         )
                                     }
@@ -792,8 +819,14 @@ fun TracksListPage(
                                     Column {
                                         Text(
                                             text = "${a.albumNumber} album${if (a.albumNumber <= 1) "" else "s"}",
-                                            modifier = Modifier
-                                                .wrapContentSize(),
+//                                            modifier = Modifier
+//                                                .wrapContentSize(),
+                                            modifier = Modifier.horizontalScroll(
+                                                rememberScrollState(
+                                                    0
+                                                )
+                                            ),
+                                            maxLines = 1,
                                             color = MaterialTheme.colorScheme.onBackground
                                         )
                                     }
@@ -803,8 +836,10 @@ fun TracksListPage(
                                     val a = musicPlayList.value as GenresList
                                     Text(
                                         text = "${a.albumNumber} album${if (a.albumNumber <= 1) "" else "s"}",
-                                        modifier = Modifier
-                                            .wrapContentSize(),
+//                                        modifier = Modifier
+//                                            .wrapContentSize(),
+                                        modifier = Modifier.horizontalScroll(rememberScrollState(0)),
+                                        maxLines = 1,
                                         color = MaterialTheme.colorScheme.onBackground
                                     )
                                 }

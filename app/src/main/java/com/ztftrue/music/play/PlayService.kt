@@ -16,7 +16,6 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.widget.Toast
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.core.net.toUri
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.AudioAttributes
@@ -44,7 +43,6 @@ import com.ztftrue.music.R
 import com.ztftrue.music.effects.EchoAudioProcessor
 import com.ztftrue.music.effects.EqualizerAudioProcessor
 import com.ztftrue.music.sqlData.MusicDatabase
-import com.ztftrue.music.sqlData.dao.SortFiledDao
 import com.ztftrue.music.sqlData.model.Auxr
 import com.ztftrue.music.sqlData.model.CurrentList
 import com.ztftrue.music.sqlData.model.MainTab
@@ -52,6 +50,8 @@ import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.PlayConfig
 import com.ztftrue.music.sqlData.model.SortFiledData
 import com.ztftrue.music.utils.PlayListType
+import com.ztftrue.music.utils.SharedPreferencesUtils
+import com.ztftrue.music.utils.SharedPreferencesUtils.getEnableShuffle
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.model.AlbumList
 import com.ztftrue.music.utils.model.AnyListBase
@@ -412,27 +412,6 @@ class PlayService : MediaBrowserServiceCompat() {
                     )
                 }
             }
-        } else if (ACTION_PLAY_MUSIC == action) {
-            if (extras != null) {
-                if (notify == null) {
-                    notify = CreateNotification(this@PlayService, mediaSession)
-                }
-                val musicItem = extras.getParcelable<MusicItem>("musicItem")
-                val switchQueue = extras.getBoolean("switch_queue", false)
-                val index = extras.getInt("index")
-                if (musicItem != null) {
-                    if (switchQueue) {
-                        val playList = extras.getParcelable<AnyListBase>("playList")
-                        val musicItems = extras.getParcelableArrayList<MusicItem>("musicItems")
-                        if (playList != null && musicItems != null) {
-                            playMusicSwitchQueue(playList, index, musicItems)
-                        }
-                    } else {
-                        playMusicCurrentQueue(musicItem, index)
-                    }
-                }
-            }
-            result.sendResult(null)
         } else if (ACTION_SEEK_TO == action) {
             if (extras != null) {
                 exoPlayer.seekTo(extras.getLong("position"))
@@ -540,13 +519,38 @@ class PlayService : MediaBrowserServiceCompat() {
                 timeSet(extras, result)
             }
         } else if (ACTION_GET_TRACKS == action) {
+            // get tracks from album/playList/Artist
             getTracksByType(extras, result)
         } else if (ACTION_AddPlayQueue == action) {
+            // add tracks to queue
             addPlayQueue(extras, result)
         } else if (ACTION_RemoveFromQueue == action) {
+            // remove tracks from queue
             removePlayQueue(extras, result)
         } else if (ACTION_Sort_Queue == action) {
             sortPlayQueue(extras, result)
+        } else if (ACTION_PLAY_MUSIC == action) {
+            if (extras != null) {
+                if (notify == null) {
+                    notify = CreateNotification(this@PlayService, mediaSession)
+                }
+                val musicItem = extras.getParcelable<MusicItem>("musicItem")
+                val switchQueue = extras.getBoolean("switch_queue", false)
+                val enableShuffle = extras.getBoolean("enable_shuffle", false)
+                val index = extras.getInt("index")
+                if (musicItem != null) {
+                    if (switchQueue) {
+                        val playList = extras.getParcelable<AnyListBase>("playList")
+                        val musicItems = extras.getParcelableArrayList<MusicItem>("musicItems")
+                        if (playList != null && musicItems != null) {
+                            playMusicSwitchQueue(playList, index, musicItems)
+                        }
+                    } else {
+                        playMusicCurrentQueue(musicItem, index)
+                    }
+                }
+            }
+            result.sendResult(null)
         } else if (ACTION_PlayLIST_CHANGE == action) {
             playListLinkedHashMap.clear()
             playListTracksHashMap.clear()
@@ -784,7 +788,12 @@ class PlayService : MediaBrowserServiceCompat() {
                                 }
                             },
                             async {
-                                val queue = db.QueueDao().findQueue()
+                                val queue = if (getEnableShuffle(this@PlayService)) {
+                                    // don't need to check shuffle, should not no shuffle, on first time
+                                    db.QueueDao().findQueueShuffle()
+                                } else {
+                                    db.QueueDao().findQueue()
+                                }
                                 musicQueue.clear()
                                 if (!queue.isNullOrEmpty()) {
                                     val idCurrent = getCurrentPlayId()
@@ -969,17 +978,15 @@ class PlayService : MediaBrowserServiceCompat() {
     }
 
     private fun playMusicSwitchQueue(
-        playList: AnyListBase, index: Int, musicItems: ArrayList<MusicItem>
+        playList: AnyListBase, index: Int, musicItems: ArrayList<MusicItem>,enableShuffleMode: Boolean=false
     ) {
-        CoroutineScope(Job() + Dispatchers.Main).launch {
+        CoroutineScope(Dispatchers.Main).launch {
             playListCurrent = playList
             musicQueue.clear()
             musicQueue.addAll(musicItems)
             if (musicQueue.isNotEmpty()) {
                 val t1 = ArrayList<MediaItem>()
-
-                musicQueue.forEachIndexed { index, it ->
-                    it.tableId = index + 1L
+                musicQueue.forEachIndexed { _, it ->
                     t1.add(MediaItem.fromUri(File(it.path).toUri()))
                 }
                 var needPlay = true
@@ -992,6 +999,7 @@ class PlayService : MediaBrowserServiceCompat() {
                 } else {
                     0
                 }
+                SharedPreferencesUtils.enableShuffle(this@PlayService,enableShuffleMode)
                 exoPlayer.clearMediaItems()
                 exoPlayer.setMediaItems(t1)
                 CoroutineScope(Dispatchers.IO).launch {
@@ -1073,6 +1081,8 @@ class PlayService : MediaBrowserServiceCompat() {
             .setTrackSelector(trackSelector)
             .setHandleAudioBecomingNoisy(true)
             .build()
+//        exoPlayer.shuffleModeEnabled=true;
+//        exoPlayer.setShuffleOrder()
         exoPlayer.playWhenReady = true
         exoPlayer.repeatMode = config?.repeatModel ?: Player.REPEAT_MODE_ALL
         exoPlayer.setAudioAttributes(
