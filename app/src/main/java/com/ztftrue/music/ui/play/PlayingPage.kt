@@ -105,6 +105,8 @@ import com.ztftrue.music.play.ACTION_AddPlayQueue
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_RemoveFromQueue
 import com.ztftrue.music.play.ACTION_SEEK_TO
+import com.ztftrue.music.play.ACTION_SHUFFLE_PLAY_QUEUE
+import com.ztftrue.music.play.ACTION_SWITCH_SHUFFLE
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MusicItem
@@ -143,7 +145,7 @@ data class PlayingViewTab(
 @Composable
 fun PlayingPage(
     navController: NavHostController,
-    viewModel: MusicViewModel,
+    musicViewModel: MusicViewModel,
 ) {
     val context = LocalContext.current
     val playViewTab: Array<PlayingViewTab> = arrayOf(
@@ -155,8 +157,8 @@ fun PlayingPage(
     var showDialog by remember { mutableStateOf(false) }
     var showAddPlayListDialog by remember { mutableStateOf(false) }
     var showCreatePlayListDialog by remember { mutableStateOf(false) }
-    val repeatModel = remember { mutableIntStateOf(viewModel.repeatModel.intValue) }
-    var music: MusicItem? = viewModel.currentPlay.value
+    val repeatModel = remember { mutableIntStateOf(musicViewModel.repeatModel.intValue) }
+    var music: MusicItem? = musicViewModel.currentPlay.value
     var showDeleteTip by remember { mutableStateOf(false) }
     LaunchedEffect(music) {
         if (music == null) {
@@ -166,13 +168,13 @@ fun PlayingPage(
 
     if (showDeleteTip && music != null) {
 
-        DeleteTip(viewModel, music.name, onDismiss = {
+        DeleteTip(musicViewModel, music.name, onDismiss = {
             showDeleteTip = false
             if (it) {
                 if (TracksManager.removeMusicById(context, music!!.id)) {
                     val bundle = Bundle()
                     bundle.putLong("id", music!!.id)
-                    viewModel.mediaBrowser?.sendCustomAction(
+                    musicViewModel.mediaBrowser?.sendCustomAction(
                         ACTION_TRACKS_DELETE,
                         bundle,
                         object : MediaBrowserCompat.CustomActionCallback() {
@@ -182,7 +184,8 @@ fun PlayingPage(
                                 resultData: Bundle?
                             ) {
                                 super.onResult(action, extras, resultData)
-                                viewModel.refreshPlayList.value = !viewModel.refreshPlayList.value
+                                musicViewModel.refreshPlayList.value =
+                                    !musicViewModel.refreshPlayList.value
                                 navController.popBackStack()
                             }
                         }
@@ -193,20 +196,20 @@ fun PlayingPage(
         })
     }
     if (showDialog) {
-        music = viewModel.currentPlay.value
+        music = musicViewModel.currentPlay.value
         if (music != null) {
             OperateDialog(
-                viewModel,
+                musicViewModel,
                 music = music,
                 null,
                 onDismiss = { operateType ->
                     showDialog = false
                     when (operateType) {
                         OperateType.AddToQueue -> {
-                            viewModel.musicQueue.add(music)
+                            musicViewModel.musicQueue.add(music)
                             val bundle = Bundle()
                             bundle.putParcelable("musicItem", music)
-                            viewModel.mediaBrowser?.sendCustomAction(
+                            musicViewModel.mediaBrowser?.sendCustomAction(
                                 ACTION_AddPlayQueue,
                                 bundle,
                                 null
@@ -214,14 +217,17 @@ fun PlayingPage(
                         }
 
                         OperateType.PlayNext -> {
-                            viewModel.musicQueue.add(
-                                viewModel.currentPlayQueueIndex.intValue + 1,
+                            musicViewModel.musicQueue.add(
+                                musicViewModel.currentPlayQueueIndex.intValue + 1,
                                 music
                             )
                             val bundle = Bundle()
                             bundle.putParcelable("musicItem", music)
-                            bundle.putInt("index", viewModel.currentPlayQueueIndex.intValue + 1)
-                            viewModel.mediaBrowser?.sendCustomAction(
+                            bundle.putInt(
+                                "index",
+                                musicViewModel.currentPlayQueueIndex.intValue + 1
+                            )
+                            musicViewModel.mediaBrowser?.sendCustomAction(
                                 ACTION_AddPlayQueue,
                                 bundle,
                                 null
@@ -242,7 +248,7 @@ fun PlayingPage(
 
                         OperateType.Artist -> {
 
-                            viewModel.navController?.navigate(
+                            musicViewModel.navController?.navigate(
                                 Router.PlayListView.withArgs(
                                     "${music.artistId}",
                                     enumToStringForPlayListType(PlayListType.Artists)
@@ -256,7 +262,7 @@ fun PlayingPage(
                         }
 
                         OperateType.Album -> {
-                            viewModel.navController?.navigate(
+                            musicViewModel.navController?.navigate(
                                 Router.PlayListView.withArgs(
                                     "${music.albumId}",
                                     enumToStringForPlayListType(PlayListType.Albums)
@@ -270,11 +276,11 @@ fun PlayingPage(
                         }
 
                         OperateType.RemoveFromQueue -> {
-                            val index = viewModel.musicQueue.indexOfFirst { it.id == music.id }
+                            val index = musicViewModel.musicQueue.indexOfFirst { it.id == music.id }
                             if (index == -1) return@OperateDialog
                             val bundle = Bundle()
                             bundle.putInt("index", index)
-                            viewModel.mediaBrowser?.sendCustomAction(
+                            musicViewModel.mediaBrowser?.sendCustomAction(
                                 ACTION_RemoveFromQueue,
                                 bundle,
                                 object : MediaBrowserCompat.CustomActionCallback() {
@@ -285,16 +291,16 @@ fun PlayingPage(
                                     ) {
                                         super.onResult(action, extras, resultData)
                                         if (ACTION_RemoveFromQueue == action && resultData == null) {
-                                            viewModel.currentPlay.value = null
+                                            musicViewModel.currentPlay.value = null
                                         }
                                     }
                                 }
                             )
-                            viewModel.musicQueue.removeAt(index)
+                            musicViewModel.musicQueue.removeAt(index)
                         }
 
                         OperateType.EditMusicInfo -> {
-                            viewModel.navController?.navigate(Router.EditTrackPage.withArgs("${music.id}"))
+                            musicViewModel.navController?.navigate(Router.EditTrackPage.withArgs("${music.id}"))
                         }
 
                         OperateType.DeleteFromStorage -> {
@@ -316,14 +322,14 @@ fun PlayingPage(
     }
     if (showAddPlayListDialog) {
         if (music != null) {
-            AddMusicToPlayListDialog(viewModel, music, onDismiss = {
+            AddMusicToPlayListDialog(musicViewModel, music, onDismiss = {
                 showAddPlayListDialog = false
                 if (it != null) {
                     if (it == -1L) {
                         showCreatePlayListDialog = true
                     } else {
                         PlaylistManager.addMusicToPlaylist(context, it, music.id)
-                        viewModel.mediaBrowser?.sendCustomAction(
+                        musicViewModel.mediaBrowser?.sendCustomAction(
                             ACTION_PlayLIST_CHANGE, null, null
                         )
                     }
@@ -332,11 +338,11 @@ fun PlayingPage(
         }
     }
     if (showCreatePlayListDialog) {
-        CreatePlayListDialog(viewModel, onDismiss = {
+        CreatePlayListDialog(musicViewModel, onDismiss = {
             showCreatePlayListDialog = false
             if (!it.isNullOrEmpty()) {
                 if (music != null) {
-                    Utils.createPlayListAddTrack(it, context, music, viewModel)
+                    Utils.createPlayListAddTrack(it, context, music, musicViewModel)
                 }
             }
         })
@@ -391,7 +397,7 @@ fun PlayingPage(
                         IconButton(
                             modifier = Modifier.width(50.dp),
                             onClick = {
-                                viewModel.textAlign.value =
+                                musicViewModel.textAlign.value =
                                     TextAlign.Left
                                 SharedPreferencesUtils.saveDisplayAlign(
                                     context,
@@ -407,7 +413,7 @@ fun PlayingPage(
                                     .width(24.dp)
                                     .height(24.dp)
                                     .drawBehind {
-                                        if (viewModel.textAlign.value == TextAlign.Left) {
+                                        if (musicViewModel.textAlign.value == TextAlign.Left) {
                                             drawRect(
                                                 color = color,
                                                 topLeft = Offset(
@@ -430,7 +436,7 @@ fun PlayingPage(
                         IconButton(
                             modifier = Modifier.width(50.dp),
                             onClick = {
-                                viewModel.textAlign.value =
+                                musicViewModel.textAlign.value =
                                     TextAlign.Center
                                 SharedPreferencesUtils.saveDisplayAlign(
                                     context,
@@ -446,7 +452,7 @@ fun PlayingPage(
                                     .width(24.dp)
                                     .height(24.dp)
                                     .drawBehind {
-                                        if (viewModel.textAlign.value == TextAlign.Center) {
+                                        if (musicViewModel.textAlign.value == TextAlign.Center) {
                                             drawRect(
                                                 color = color,
                                                 topLeft = Offset(
@@ -469,7 +475,7 @@ fun PlayingPage(
                         IconButton(
                             modifier = Modifier.width(50.dp),
                             onClick = {
-                                viewModel.textAlign.value =
+                                musicViewModel.textAlign.value =
                                     TextAlign.Right
                                 SharedPreferencesUtils.saveDisplayAlign(
                                     context,
@@ -485,7 +491,7 @@ fun PlayingPage(
                                     .width(24.dp)
                                     .height(24.dp)
                                     .drawBehind {
-                                        if (viewModel.textAlign.value == TextAlign.Right) {
+                                        if (musicViewModel.textAlign.value == TextAlign.Right) {
                                             drawRect(
                                                 color = color,
                                                 topLeft = Offset(
@@ -508,7 +514,7 @@ fun PlayingPage(
                         IconButton(
                             modifier = Modifier.width(50.dp),
                             onClick = {
-                                viewModel.textAlign.value =
+                                musicViewModel.textAlign.value =
                                     TextAlign.Justify
                                 SharedPreferencesUtils.saveDisplayAlign(
                                     context,
@@ -524,7 +530,7 @@ fun PlayingPage(
                                     .width(24.dp)
                                     .height(24.dp)
                                     .drawBehind {
-                                        if (viewModel.textAlign.value == TextAlign.Justify)
+                                        if (musicViewModel.textAlign.value == TextAlign.Justify)
                                             drawRect(
                                                 color = color,
                                                 topLeft = Offset(
@@ -547,10 +553,10 @@ fun PlayingPage(
                         IconButton(
                             modifier = Modifier.width(50.dp),
                             onClick = {
-                                viewModel.fontSize.intValue -= 1
+                                musicViewModel.fontSize.intValue -= 1
                                 SharedPreferencesUtils.saveFontSize(
                                     context,
-                                    viewModel.fontSize.intValue
+                                    musicViewModel.fontSize.intValue
                                 )
                             }) {
                             Image(
@@ -569,10 +575,10 @@ fun PlayingPage(
                         IconButton(
                             modifier = Modifier.width(50.dp),
                             onClick = {
-                                viewModel.fontSize.intValue += 1
+                                musicViewModel.fontSize.intValue += 1
                                 SharedPreferencesUtils.saveFontSize(
                                     context,
-                                    viewModel.fontSize.intValue
+                                    musicViewModel.fontSize.intValue
                                 )
                             }) {
                             Image(
@@ -600,11 +606,11 @@ fun PlayingPage(
                                         )
                                         .show()
                                 }) {
-                                    viewModel.autoScroll.value =
-                                        !viewModel.autoScroll.value
+                                    musicViewModel.autoScroll.value =
+                                        !musicViewModel.autoScroll.value
                                     SharedPreferencesUtils.saveAutoScroll(
                                         context,
-                                        viewModel.autoScroll.value
+                                        musicViewModel.autoScroll.value
                                     )
                                 }
                                 .padding(0.dp)
@@ -623,12 +629,12 @@ fun PlayingPage(
                                     TextUnitType.Sp
                                 ),
                             )
-                            Switch(checked = viewModel.autoScroll.value,
+                            Switch(checked = musicViewModel.autoScroll.value,
                                 modifier = Modifier
                                     .scale(0.5f)
                                     .padding(0.dp),
                                 onCheckedChange = {
-                                    viewModel.autoScroll.value = it
+                                    musicViewModel.autoScroll.value = it
                                     SharedPreferencesUtils.saveAutoScroll(
                                         context,
                                         it
@@ -650,11 +656,11 @@ fun PlayingPage(
                                         )
                                         .show()
                                 }) {
-                                    viewModel.autoHighLight.value =
-                                        !viewModel.autoHighLight.value
+                                    musicViewModel.autoHighLight.value =
+                                        !musicViewModel.autoHighLight.value
                                     SharedPreferencesUtils.saveAutoHighLight(
                                         context,
-                                        viewModel.autoHighLight.value
+                                        musicViewModel.autoHighLight.value
                                     )
                                 }
                                 .padding(0.dp)
@@ -673,12 +679,12 @@ fun PlayingPage(
                                     TextUnitType.Sp
                                 ),
                             )
-                            Switch(checked = viewModel.autoHighLight.value,
+                            Switch(checked = musicViewModel.autoHighLight.value,
                                 modifier = Modifier
                                     .scale(0.5f)
                                     .padding(0.dp),
                                 onCheckedChange = {
-                                    viewModel.autoHighLight.value = it
+                                    musicViewModel.autoHighLight.value = it
                                     SharedPreferencesUtils.saveAutoHighLight(
                                         context,
                                         it
@@ -736,10 +742,10 @@ fun PlayingPage(
     }
     LaunchedEffect(Unit) {
         val hashMap = HashMap<String, DictionaryApp>()
-        viewModel.dictionaryAppList.forEach {
+        musicViewModel.dictionaryAppList.forEach {
             hashMap[it.packageName] = it
         }
-        list.addAll(viewModel.dictionaryAppList)
+        list.addAll(musicViewModel.dictionaryAppList)
         Utils.getAllDictionaryActivity(context)
             .forEachIndexed { index, it ->
                 if (hashMap[it.activityInfo.packageName] == null) {
@@ -985,13 +991,13 @@ fun PlayingPage(
                                         item.id = index
                                     }
                                     CoroutineScope(Dispatchers.IO).launch {
-                                        viewModel.getDb(context).DictionaryAppDao()
+                                        musicViewModel.getDb(context).DictionaryAppDao()
                                             .deleteAll()
-                                        viewModel.getDb(context).DictionaryAppDao()
+                                        musicViewModel.getDb(context).DictionaryAppDao()
                                             .insertAll(result)
                                     }
-                                    viewModel.dictionaryAppList.clear()
-                                    viewModel.dictionaryAppList.addAll(
+                                    musicViewModel.dictionaryAppList.clear()
+                                    musicViewModel.dictionaryAppList.addAll(
                                         result
                                     )
                                     popupWindowDictionary = false
@@ -1024,7 +1030,7 @@ fun PlayingPage(
             topBar = {
                 Column(Modifier.fillMaxWidth()) {
                     key(Unit, pagerTabState.currentPage) {
-                        TopBar(navController, viewModel, content = {
+                        TopBar(navController, musicViewModel, content = {
                             if (playViewTab[pagerTabState.currentPage].id == LyricsID) {
                                 IconButton(
                                     modifier = Modifier.width(50.dp), onClick = {
@@ -1061,13 +1067,13 @@ fun PlayingPage(
                             }
                         })
                     }
-                    key(viewModel.currentPlay.value) {
+                    key(musicViewModel.currentPlay.value) {
                         Column(
                             Modifier
                                 .fillMaxWidth()
                                 .padding(start = 10.dp, end = 10.dp)
                         ) {
-                            viewModel.currentPlay.value?.let { it1 ->
+                            musicViewModel.currentPlay.value?.let { it1 ->
                                 Text(
                                     text = it1.name,
                                     modifier = Modifier
@@ -1139,15 +1145,15 @@ fun PlayingPage(
                     ) { id ->
                         when (playViewTab[id].id) {
                             CoverID -> {
-                                CoverView(viewModel)
+                                CoverView(musicViewModel)
                             }
 
                             LyricsID -> {
-                                LyricsView(viewModel)
+                                LyricsView(musicViewModel)
                             }
 
                             EffectID -> {
-                                EqualizerView(viewModel)
+                                EqualizerView(musicViewModel)
                             }
                         }
 
@@ -1162,14 +1168,14 @@ fun PlayingPage(
                         .padding(10.dp)
                         .background(MaterialTheme.colorScheme.surface)
                 ) {
-                    if (viewModel.currentDuration.longValue > 0) {
+                    if (musicViewModel.currentDuration.longValue > 0) {
                         Slider(
                             modifier = Modifier
                                 .semantics { contentDescription = "Slider" }
                                 .motionEventSpy {
                                     when (it.action) {
                                         MotionEvent.ACTION_DOWN -> {
-                                            viewModel.sliderTouching = true
+                                            musicViewModel.sliderTouching = true
                                         }
 
                                         MotionEvent.ACTION_MOVE -> {
@@ -1179,25 +1185,25 @@ fun PlayingPage(
                                         }
                                     }
                                 },
-                            value = viewModel.sliderPosition.floatValue,
+                            value = musicViewModel.sliderPosition.floatValue,
                             onValueChange = {
-                                viewModel.sliderPosition.floatValue =
+                                musicViewModel.sliderPosition.floatValue =
                                     it.roundToLong().toFloat()
                             },
-                            valueRange = 0f..viewModel.currentDuration.longValue.toFloat(),
+                            valueRange = 0f..musicViewModel.currentDuration.longValue.toFloat(),
                             steps = 100,
                             onValueChangeFinished = {
                                 val bundle = Bundle()
                                 bundle.putLong(
                                     "position",
-                                    viewModel.sliderPosition.floatValue.toLong()
+                                    musicViewModel.sliderPosition.floatValue.toLong()
                                 )
-                                viewModel.mediaBrowser?.sendCustomAction(
+                                musicViewModel.mediaBrowser?.sendCustomAction(
                                     ACTION_SEEK_TO,
                                     bundle,
                                     null
                                 )
-                                viewModel.sliderTouching = false
+                                musicViewModel.sliderTouching = false
                             },
                         )
                         Row(
@@ -1205,16 +1211,16 @@ fun PlayingPage(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = Utils.formatTime(viewModel.sliderPosition.floatValue.toLong()),
+                                text = Utils.formatTime(musicViewModel.sliderPosition.floatValue.toLong()),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Text(
-                                text = Utils.formatTime(viewModel.currentDuration.longValue),
+                                text = Utils.formatTime(musicViewModel.currentDuration.longValue),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     } else {
-                        if (viewModel.currentPlay.value != null) {
+                        if (musicViewModel.currentPlay.value != null) {
                             Text(
                                 text = stringResource(R.string.get_duration_failed),
                                 color = MaterialTheme.colorScheme.onBackground
@@ -1239,33 +1245,59 @@ fun PlayingPage(
                                 .height(60.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            key(Unit) {
-                                Image(
-                                    painter = painterResource(
-                                        R.drawable.ic_queue
-                                    ),
-                                    contentDescription = "Queue Page",
-                                    modifier = Modifier
-                                        .clickable {
-                                            navController.navigate(
-                                                Router.QueuePage.route
+                            key(musicViewModel.enableShuffleModel.value) {
+                                IconButton(onClick = {
+                                    musicViewModel.enableShuffleModel.value =
+                                        !musicViewModel.enableShuffleModel.value
+                                    val bundle = Bundle()
+                                    bundle.putBoolean(
+                                        "enable",
+                                        musicViewModel.enableShuffleModel.value
+                                    )
+                                    musicViewModel.mediaBrowser?.sendCustomAction(
+                                        ACTION_SWITCH_SHUFFLE,
+                                        bundle,
+                                        object : MediaBrowserCompat.CustomActionCallback() {
+                                            override fun onResult(
+                                                action: String?,
+                                                extras: Bundle?,
+                                                resultData: Bundle?
                                             ) {
-                                                popUpTo(Router.MainView.route) {
-                                                    // Inclusive means the start destination is also popped
-                                                    inclusive = false
+                                                super.onResult(action, extras, resultData)
+                                                if (ACTION_SWITCH_SHUFFLE == action && resultData != null) {
+                                                    val qList =
+                                                        resultData.getParcelableArrayList<MusicItem>(
+                                                            "list"
+                                                        )
+                                                    val qIndex = resultData.getInt("index", -1)
+                                                    if (qList != null && qIndex != -1) {
+                                                        musicViewModel.musicQueue.clear()
+                                                        musicViewModel.musicQueue.addAll(qList)
+                                                        if (musicViewModel.currentPlayQueueIndex.intValue == -1) {
+                                                            musicViewModel.currentPlayQueueIndex.intValue =
+                                                                qIndex
+                                                            musicViewModel.currentPlay.value =
+                                                                musicViewModel.musicQueue[qIndex]
+                                                            musicViewModel.currentCaptionList.clear()
+                                                            musicViewModel.currentMusicCover.value =
+                                                                null
+                                                            musicViewModel.currentPlay.value =
+                                                                musicViewModel.musicQueue[qIndex]
+                                                            musicViewModel.sliderPosition.floatValue =
+                                                                0f
+                                                            musicViewModel.currentDuration.longValue =
+                                                                musicViewModel.currentPlay.value?.duration
+                                                                    ?: 0
+                                                            musicViewModel.dealLyrics(
+                                                                context,
+                                                                musicViewModel.musicQueue[qIndex]
+                                                            )
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
-                                        .width(50.dp)
-                                        .height(50.dp)
-                                        .padding(10.dp),
-                                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
-                                )
-                            }
-                            key(viewModel.enableShuffleModel.value) {
-                                IconButton(onClick = {
-                                    viewModel.enableShuffleModel.value =
-                                        !viewModel.enableShuffleModel.value
+                                    )
                                 }) {
                                     Image(
                                         painter = painterResource(
@@ -1277,7 +1309,7 @@ fun PlayingPage(
                                             .height(50.dp)
                                             .padding(5.dp),
                                         colorFilter = ColorFilter.tint(
-                                            color = if (viewModel.enableShuffleModel.value) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(
+                                            color = if (musicViewModel.enableShuffleModel.value) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(
                                                 alpha = 0.5f
                                             )
                                         )
@@ -1301,7 +1333,7 @@ fun PlayingPage(
                                 contentDescription = "skip previous",
                                 modifier = Modifier
                                     .clickable {
-                                        viewModel.mediaController?.transportControls?.skipToPrevious()
+                                        musicViewModel.mediaController?.transportControls?.skipToPrevious()
                                     }
                                     .width(50.dp)
                                     .height(50.dp)
@@ -1310,7 +1342,7 @@ fun PlayingPage(
                             )
                             Image(
                                 painter = painterResource(
-                                    if (viewModel.playStatus.value) {
+                                    if (musicViewModel.playStatus.value) {
                                         R.drawable.pause
                                     } else {
                                         R.drawable.play
@@ -1320,11 +1352,11 @@ fun PlayingPage(
                                 modifier = Modifier
                                     .clickable {
                                         val pbState =
-                                            viewModel.mediaController?.playbackState?.state
+                                            musicViewModel.mediaController?.playbackState?.state
                                         if (pbState == PlaybackStateCompat.STATE_PLAYING) {
-                                            viewModel.mediaController?.transportControls?.pause()
+                                            musicViewModel.mediaController?.transportControls?.pause()
                                         } else {
-                                            viewModel.mediaController?.transportControls?.play()
+                                            musicViewModel.mediaController?.transportControls?.play()
                                         }
                                     }
                                     .width(60.dp)
@@ -1337,7 +1369,7 @@ fun PlayingPage(
                                 contentDescription = "skip next",
                                 modifier = Modifier
                                     .clickable {
-                                        viewModel.mediaController?.transportControls?.skipToNext()
+                                        musicViewModel.mediaController?.transportControls?.skipToNext()
                                     }
                                     .width(50.dp)
                                     .height(50.dp)
@@ -1368,21 +1400,21 @@ fun PlayingPage(
                                         when (repeatModel.intValue) {
                                             Player.REPEAT_MODE_ALL -> {
                                                 repeatModel.intValue = Player.REPEAT_MODE_ONE
-                                                viewModel.mediaController?.transportControls?.setRepeatMode(
+                                                musicViewModel.mediaController?.transportControls?.setRepeatMode(
                                                     PlaybackStateCompat.REPEAT_MODE_ONE
                                                 )
                                             }
 
                                             Player.REPEAT_MODE_ONE -> {
                                                 repeatModel.intValue = Player.REPEAT_MODE_OFF
-                                                viewModel.mediaController?.transportControls?.setRepeatMode(
+                                                musicViewModel.mediaController?.transportControls?.setRepeatMode(
                                                     PlaybackStateCompat.REPEAT_MODE_NONE
                                                 )
                                             }
 
                                             else -> {
                                                 repeatModel.intValue = Player.REPEAT_MODE_ALL
-                                                viewModel.mediaController?.transportControls?.setRepeatMode(
+                                                musicViewModel.mediaController?.transportControls?.setRepeatMode(
                                                     PlaybackStateCompat.REPEAT_MODE_ALL
                                                 )
                                             }

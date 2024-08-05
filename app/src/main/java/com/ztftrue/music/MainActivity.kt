@@ -55,6 +55,7 @@ import com.ztftrue.music.sqlData.model.StorageFolder
 import com.ztftrue.music.ui.home.BaseLayout
 import com.ztftrue.music.ui.theme.MusicPitchTheme
 import com.ztftrue.music.utils.OperateTypeInActivity
+import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.trackManager.PlaylistManager.modifyTrackFromM3U
@@ -566,6 +567,9 @@ class MainActivity : ComponentActivity() {
     private val connectionCallbacks = object : MediaBrowserCompat.ConnectionCallback() {
 
         override fun onConnected() {
+            SharedPreferencesUtils.getEnableShuffle(this@MainActivity).also {
+                musicViewModel.enableShuffleModel.value = it
+            }
             // Get the token for the MediaSession
             mediaBrowser?.sessionToken.also { token ->
                 // Create a MediaControllerCompat

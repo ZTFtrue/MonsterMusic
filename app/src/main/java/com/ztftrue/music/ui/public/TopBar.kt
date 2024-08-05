@@ -5,6 +5,7 @@ import android.support.v4.media.MediaBrowserCompat
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -202,6 +203,31 @@ fun TopBar(
         },
         title = {},
         actions = {
+            IconButton(
+                modifier = Modifier
+                    .semantics {
+                        contentDescription = "Queue Page"
+                    },
+                onClick = {
+                    navController.navigate(
+                        Router.QueuePage.route
+                    ) {
+                        popUpTo(Router.MainView.route) {
+                            // Inclusive means the start destination is also popped
+                            inclusive = false
+                        }
+                    }
+                }) {
+                Image(
+                    painter = painterResource(
+                        R.drawable.ic_queue
+                    ),
+                    contentDescription = "Queue Page",
+                    modifier = Modifier
+                        .size(30.dp),
+                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                )
+            }
             IconButton(
                 modifier = Modifier
                     .semantics {
@@ -427,7 +453,7 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                 alpha = 0.38f
                             )
                         ),
-                        textStyle= MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),

@@ -330,6 +330,7 @@ fun MusicItemView(
                     } else {
                         bundle.putBoolean("switch_queue", false)
                     }
+                    viewModel.enableShuffleModel.value = false
                     if (viewModel.playListCurrent.value == null) {
                         viewModel.playListCurrent.value = playList
                         viewModel.currentMusicCover.value = null
