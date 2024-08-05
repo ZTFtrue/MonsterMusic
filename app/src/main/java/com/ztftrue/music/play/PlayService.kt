@@ -680,7 +680,6 @@ class PlayService : MediaBrowserServiceCompat() {
                 val id = extras.getLong("id")
                 tracksLinkedHashMap.remove(id)
                 clearCacheData()
-                return
             }
             result.sendResult(null)
         } else if (ACTION_TRACKS_UPDATE == action) {
