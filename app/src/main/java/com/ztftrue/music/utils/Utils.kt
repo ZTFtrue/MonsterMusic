@@ -1,5 +1,6 @@
 package com.ztftrue.music.utils
 
+import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ResolveInfo
@@ -9,8 +10,10 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.support.v4.media.MediaBrowserCompat
 import android.text.TextUtils
+import android.util.Log
 import android.util.Size
 import android.widget.Toast
 import androidx.core.content.FileProvider
@@ -237,25 +240,27 @@ object Utils {
         context.startActivity(intent)
     }
 
-    private val retriever = MediaMetadataRetriever()
 
-    fun getCover(path: String, context: Context): Bitmap? {
+    fun getCover(context: Context, musicId: Long): Bitmap? {
         try {
-            val f = File(path).toUri()
-            var thumbnail =
-                context.contentResolver.loadThumbnail(f, Size(512, 512), null);
+            var uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            uri = ContentUris.withAppendedId(uri, musicId)
+            val thumbnail =
+                context.contentResolver.loadThumbnail(uri, Size(512, 512), null);
+            return thumbnail
         } catch (e: IOException) {
             e.printStackTrace();
         }
-        try {
-            retriever.setDataSource(path)
-            val coverT = retriever.embeddedPicture
-
-            if (coverT != null) {
-                return BitmapFactory.decodeByteArray(coverT, 0, coverT.size)
-            }
-        } catch (_: Exception) {
-        }
+//        private val retriever = MediaMetadataRetriever()
+//        try {
+//            retriever.setDataSource(path)
+//            val coverT = retriever.embeddedPicture
+//
+//            if (coverT != null) {
+//                return BitmapFactory.decodeByteArray(coverT, 0, coverT.size)
+//            }
+//        } catch (_: Exception) {
+//        }
         return null
     }
 

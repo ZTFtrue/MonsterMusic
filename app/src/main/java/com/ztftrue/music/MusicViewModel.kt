@@ -63,7 +63,8 @@ class MusicViewModel : ViewModel() {
     val refreshFolder = mutableStateOf(false)
     var navController: NavHostController? = null
     var themeSelected = mutableIntStateOf(0)
-    var editTrackEnable= mutableStateOf(false)
+    var editTrackEnable = mutableStateOf(false)
+
     //    val albumItemsCount = mutableIntStateOf(2)
 //    val genreItemsCount = mutableIntStateOf(2)
     var mediaController: MediaControllerCompat? = null
@@ -88,7 +89,7 @@ class MusicViewModel : ViewModel() {
     var delayTime = mutableFloatStateOf(0.5f)
     var decay = mutableFloatStateOf(1f)
     var echoFeedBack = mutableStateOf(false)
-    var enableShuffleModel= mutableStateOf(false)
+    var enableShuffleModel = mutableStateOf(false)
     var pitch = mutableFloatStateOf(1f)
     var speed = mutableFloatStateOf(1f)
     var currentDuration = mutableLongStateOf(0)
@@ -378,7 +379,7 @@ class MusicViewModel : ViewModel() {
         }
         val v = currentPlay.value
         if (v != null) {
-            currentMusicCover.value = getCover(v.path, context )
+            currentMusicCover.value = getCover(context, v.id)
             return currentMusicCover.value
         }
         return null

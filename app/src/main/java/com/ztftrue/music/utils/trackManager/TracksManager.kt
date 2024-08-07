@@ -183,7 +183,7 @@ object TracksManager {
         if (needTracks) {
             bundle.putParcelableArrayList("songsList", ArrayList(tracksHashMap.values))
         } else {
-            bundle.putParcelableArrayList("songsList", ArrayList(folderListLinkedHashMap.values))
+            bundle.putParcelableArrayList("list", ArrayList(folderListLinkedHashMap.values))
         }
         result.sendResult(bundle)
     }

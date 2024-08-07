@@ -112,7 +112,7 @@ fun EditTrackPage(
         val musicItem = TracksManager.getMusicById(context, musicId)
         if (musicItem != null) {
             musicPath = musicItem.path
-            coverBitmap.value = getCover(musicItem.path, context)
+            coverBitmap.value = getCover(context, musicId)
             title = musicItem.name
             album = musicItem.album
             artist = musicItem.artist
@@ -219,9 +219,10 @@ fun EditTrackPage(
 
         content = { padding ->
 
-            ConstraintLayout(modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
+            ConstraintLayout(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
             ) {
                 val (list, progress) = createRefs()
                 LazyColumn(
