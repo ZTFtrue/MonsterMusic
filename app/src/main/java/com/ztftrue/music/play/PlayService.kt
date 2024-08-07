@@ -695,6 +695,30 @@ class PlayService : MediaBrowserServiceCompat() {
                 clearCacheData()
                 val bundle = Bundle()
                 bundle.putParcelableArrayList("list", ArrayList(tracksLinkedHashMap.values))
+                if (musicTrack != null) {
+                    musicQueue.forEach {
+                        if (it.id == id) {
+                            it.name = musicTrack.name
+                            it.path = musicTrack.path
+                            it.duration = musicTrack.duration
+                            it.displayName = musicTrack.displayName
+                            it.album = musicTrack.album
+                            it.albumId = musicTrack.albumId
+                            it.artist = musicTrack.artist
+                            it.artistId = musicTrack.artistId
+                            it.genre = musicTrack.genre
+                            it.genreId = musicTrack.genreId
+                            it.year = musicTrack.year
+                            it.songNumber = musicTrack.songNumber
+//                            it.isFavorite = musicTrack.isFavorite
+                            bundle.putParcelable("item", musicTrack)
+                            CoroutineScope(Dispatchers.IO).launch {
+                                db.QueueDao().update(it)
+                            }
+                        }
+                    }
+
+                }
                 result.sendResult(bundle)
                 return
             } else {

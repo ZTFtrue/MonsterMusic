@@ -66,6 +66,9 @@ import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.utils.Utils.getCover
 import com.ztftrue.music.utils.trackManager.TracksManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 
 /**
@@ -169,6 +172,25 @@ fun EditTrackPage(
                                 )?.also {
                                     musicViewModel.songsList.clear()
                                     musicViewModel.songsList.addAll(it)
+                                }
+                                resultData.getParcelable<MusicItem>("item")?.also {
+                                    musicViewModel.currentPlay.value = it
+                                    musicViewModel.musicQueue.forEach { mIt ->
+                                        if (mIt.id == it.id) {
+                                            mIt.name = it.name
+                                            mIt.path = it.path
+                                            mIt.duration = it.duration
+                                            mIt.displayName = it.displayName
+                                            mIt.album = it.album
+                                            mIt.albumId = it.albumId
+                                            mIt.artist = it.artist
+                                            mIt.artistId = it.artistId
+                                            mIt.genre = it.genre
+                                            mIt.genreId = it.genreId
+                                            mIt.year = it.year
+                                            mIt.songNumber = it.songNumber
+                                        }
+                                    }
                                 }
                             }
 //                        musicViewModel..value =
