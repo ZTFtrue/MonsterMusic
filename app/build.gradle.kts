@@ -70,6 +70,7 @@ android {
     buildFeatures {
         compose = true
         viewBinding = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.3"
@@ -128,7 +129,7 @@ dependencies {
     implementation("org.apache.commons:commons-math3:3.6.1")
 //    implementation("be.tarsos.dsp:core:2.5")
 // https://mvnrepository.com/artifact/org.bitbucket.ijabz/jaudiotagger
-    implementation("org.bitbucket.ijabz:jaudiotagger:7b004a1")
+//    implementation("net.jthink:jaudiotagger:3.0.1")
 
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.collection:collection-ktx:1.4.1")

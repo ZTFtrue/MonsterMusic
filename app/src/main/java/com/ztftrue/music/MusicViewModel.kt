@@ -60,9 +60,10 @@ class MusicViewModel : ViewModel() {
     val refreshAlbum = mutableStateOf(false)
     val refreshArtist = mutableStateOf(false)
     val refreshGenre = mutableStateOf(false)
+    val refreshFolder = mutableStateOf(false)
     var navController: NavHostController? = null
     var themeSelected = mutableIntStateOf(0)
-
+    var editTrackEnable= mutableStateOf(false)
     //    val albumItemsCount = mutableIntStateOf(2)
 //    val genreItemsCount = mutableIntStateOf(2)
     var mediaController: MediaControllerCompat? = null
@@ -371,13 +372,13 @@ class MusicViewModel : ViewModel() {
     }
 
 
-    fun getCurrentMusicCover(): Bitmap? {
+    fun getCurrentMusicCover(context: Context): Bitmap? {
         if (currentMusicCover.value != null) {
             return currentMusicCover.value
         }
         val v = currentPlay.value
         if (v != null) {
-            currentMusicCover.value = getCover(v.path)
+            currentMusicCover.value = getCover(v.path, context )
             return currentMusicCover.value
         }
         return null
@@ -393,7 +394,6 @@ class MusicViewModel : ViewModel() {
         } else {
 //            coverPath.createNewFile()
         }
-
         try {
             val albumUri = ContentUris.withAppendedId(
                 Uri.parse("content://media/external/audio/albumart"),

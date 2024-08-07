@@ -683,6 +683,7 @@ class PlayService : MediaBrowserServiceCompat() {
             }
             result.sendResult(null)
         } else if (ACTION_TRACKS_UPDATE == action) {
+            result.detach()
             if (extras != null) {
                 val id = extras.getLong("id")
                 val musicTrack = TracksManager.getMusicById(this@PlayService, id)
@@ -692,10 +693,13 @@ class PlayService : MediaBrowserServiceCompat() {
                     tracksLinkedHashMap.remove(id)
                 }
                 clearCacheData()
-                result.sendResult(null)
+                val bundle = Bundle()
+                bundle.putParcelableArrayList("list", ArrayList(tracksLinkedHashMap.values))
+                result.sendResult(bundle)
                 return
+            } else {
+                result.sendResult(null)
             }
-            result.sendResult(null)
         } else if ("com.ztftrue.music.ACTION_EXIT" == action) {
             //initially, i thought app need to notify system this service can stop.
             // then app can be stop. but i found this cant work, sometimes, it make a bug.

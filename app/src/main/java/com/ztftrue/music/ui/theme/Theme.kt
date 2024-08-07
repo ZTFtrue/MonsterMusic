@@ -118,7 +118,7 @@ fun MusicPitchTheme(
         } else if (musicViewModel.themeSelected.intValue == 2) {
             colorScheme.value = DarkColorScheme
         } else if (musicViewModel.themeSelected.intValue == 3) {
-            val bitmap = musicViewModel.getCurrentMusicCover()
+            val bitmap = musicViewModel.getCurrentMusicCover(context)
             if (bitmap != null) {
                 Palette.from(bitmap).generate { palette -> // 从 Palette 中获取颜色信息
                     if (palette != null) {

@@ -6,6 +6,8 @@ import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.media.AudioManager
 import android.media.MediaScannerConnection
 import android.media.MediaScannerConnection.MediaScannerConnectionClient
@@ -32,6 +34,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -65,6 +69,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.locks.ReentrantLock
@@ -174,35 +179,7 @@ class MainActivity : ComponentActivity() {
                     }
                     return@registerForActivityResult
                 } else if (OperateTypeInActivity.EditTrackInfo.name == action) {
-                    val u = bundle.getParcelable<Uri>("uri")
-                    val v = bundle.getParcelable<ContentValues>("value")
-                    val id = bundle.getLong("id")
-                    if (u != null && v != null) {
-                        // TODO this is disable,  because cant  updating real file in storage
-//                        values.put(MediaStore.Audio.Media.IS_PENDING, 1)
-//                        contentResolver.update(uri, values, null, null)
-                        resolver.update(u, v, null, null)
-                        val bundleTemp = Bundle()
-                        bundleTemp.putLong("id", id)
-                        musicViewModel.mediaBrowser?.sendCustomAction(
-                            ACTION_TRACKS_UPDATE,
-                            bundleTemp,
-                            object : MediaBrowserCompat.CustomActionCallback() {
-                                override fun onResult(
-                                    action: String?,
-                                    extras: Bundle?,
-                                    resultData: Bundle?
-                                ) {
-                                    super.onResult(action, extras, resultData)
-                                    if (ACTION_TRACKS_UPDATE == action) {
-                                        musicViewModel.refreshPlayList.value =
-                                            !musicViewModel.refreshPlayList.value
-                                    }
-                                }
-                            }
-                        )
-                    }
-
+                    musicViewModel.editTrackEnable.value = true
                 }
 
                 musicViewModel.mediaBrowser?.sendCustomAction(
@@ -280,6 +257,47 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+    private val coverImagePickerLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == RESULT_OK) {
+                if (result.data != null) {
+                    val selectedFileUri: Uri? = result.data!!.data
+                    if (selectedFileUri != null) {
+                        val inputStream =
+                            this@MainActivity.contentResolver.openInputStream(selectedFileUri)
+                        val outputStream = ByteArrayOutputStream()
+                        if (inputStream != null) {
+                            try {
+                                coverBitmap?.value = BitmapFactory.decodeStream(inputStream)
+//                                val cache=File(externalCacheDir,"cache1.jpg")
+//                                if(cache.exists()){
+//                                    cache.delete()
+//                                }
+//                                cache.createNewFile()
+//                                coverBitmap?.value!!.compress(Bitmap.CompressFormat.JPEG, 90, FileOutputStream(cache))
+//                                coverBitmap?.value = BitmapFactory.decodeFile(cache.absolutePath)
+//                           Bitmap.createBitmap(coverBitmap.value!!.width,coverBitmap.value!!.height,Bitmap.Config.ARGB_8888)
+//                                    .compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+//                                BitmapFactory.decodeByteArray(
+//                                    outputStream.toByteArray(),
+//                                    0,
+//                                    outputStream.size()
+//                                )
+                                inputStream.close()
+                                outputStream.close()
+                            } catch (e: Exception) {
+                                inputStream.close()
+                                outputStream.close()
+                                e.printStackTrace()
+                            }
+                        }
+                    }
+                }
+            }
+        }
     val folderPickerLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
@@ -323,6 +341,16 @@ class MainActivity : ComponentActivity() {
 //        intent.addCategory(Intent.CATEGORY_OPENABLE)
 //        intent.type = "text/plain|application/octet-stream";
         filePickerLauncher.launch(intent)
+    }
+
+    private var coverBitmap: MutableState<Bitmap?>? = null
+    fun openImagePicker(bitmap: MutableState<Bitmap?>) {
+        coverBitmap = bitmap
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        intent.type = "image/*" // Specify the MIME type for text files
+//        intent.addCategory(Intent.CATEGORY_OPENABLE)
+//        intent.type = "text/plain|application/octet-stream";
+        coverImagePickerLauncher.launch(intent)
     }
 
     @OptIn(ExperimentalFoundationApi::class)

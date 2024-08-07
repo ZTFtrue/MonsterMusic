@@ -24,29 +24,50 @@ object SharedPreferencesUtils {
         return TextAlign.values().firstOrNull { it.toString() == t.toString() }
             ?: TextAlign.Center
     }
+
     fun saveAutoScroll(context: Context, autoScroll: Boolean) {
         context.getSharedPreferences("display", Context.MODE_PRIVATE).edit()
             .putBoolean("AutoScroll", autoScroll).apply()
     }
 
     fun getAutoScroll(context: Context): Boolean {
-        return context.getSharedPreferences("display", Context.MODE_PRIVATE).getBoolean("AutoScroll", true)
+        return context.getSharedPreferences("display", Context.MODE_PRIVATE)
+            .getBoolean("AutoScroll", true)
     }
+
     fun saveAutoHighLight(context: Context, autoHighLight: Boolean) {
         context.getSharedPreferences("display", Context.MODE_PRIVATE).edit()
             .putBoolean("AutoHighLight", autoHighLight).apply()
     }
 
     fun getAutoHighLight(context: Context): Boolean {
-        return context.getSharedPreferences("display", Context.MODE_PRIVATE).getBoolean("AutoHighLight", true)
+        return context.getSharedPreferences("display", Context.MODE_PRIVATE)
+            .getBoolean("AutoHighLight", true)
     }
 
-    fun enableShuffle(context: Context,enable:Boolean) {
-          context.getSharedPreferences("queue", Context.MODE_PRIVATE).edit().putBoolean("EnableShuffle", enable).apply()
+    fun enableShuffle(context: Context, enable: Boolean) {
+        context.getSharedPreferences("queue", Context.MODE_PRIVATE).edit()
+            .putBoolean("EnableShuffle", enable).apply()
     }
 
     fun getEnableShuffle(context: Context): Boolean {
-        return context.getSharedPreferences("queue", Context.MODE_PRIVATE).getBoolean("EnableShuffle", false)
+        return context.getSharedPreferences("queue", Context.MODE_PRIVATE)
+            .getBoolean("EnableShuffle", false)
     }
 
+    fun setCoverImage(context: Context, path: String) {
+        context.getSharedPreferences("cover", Context.MODE_PRIVATE).edit().putString("image", path)
+            .apply()
+    }
+    fun getCoverImage(context: Context): String {
+        return context.getSharedPreferences("cover", Context.MODE_PRIVATE).getString("image", "")
+            ?: ""
+    }
+    fun setAlwaysShowCover(context: Context, always: Boolean) {
+        context.getSharedPreferences("cover", Context.MODE_PRIVATE).edit().putBoolean("always", always)
+            .apply()
+    }
+    fun getAlwaysShowCover(context: Context ):Boolean {
+        return context.getSharedPreferences("cover", Context.MODE_PRIVATE).getBoolean("always", false)
+    }
 }

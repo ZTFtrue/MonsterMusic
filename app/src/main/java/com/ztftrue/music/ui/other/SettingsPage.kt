@@ -73,6 +73,7 @@ import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.ui.public.BackTopBar
 import com.ztftrue.music.utils.LyricsSettings.FIRST_EMBEDDED_LYRICS
 import com.ztftrue.music.utils.SharedPreferencesName.LYRICS_SETTINGS
+import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.openBrowser
 import com.ztftrue.music.utils.model.FolderList
@@ -1370,6 +1371,156 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                                             }
                                         }
                                 )
+                            }
+                        }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    TextButton(
+                        onClick = { onDismiss() },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(0.5f),
+                    ) {
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.onBackground)
+                            .width(1.dp)
+                            .height(50.dp)
+                    )
+                    TextButton(
+                        onClick = {
+                            onConfirmation()
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(),
+
+                        ) {
+                        Text(
+                            stringResource(id = R.string.confirm),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+            }
+        }
+    )
+}
+
+
+@UnstableApi
+@Composable
+fun SetCoverImageDialog(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val coroutineScope = CoroutineScope(Dispatchers.IO)
+    var alwaysShow by remember { mutableStateOf(false) }
+    var coverPath by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            coverPath = SharedPreferencesUtils.getCoverImage(context)
+            alwaysShow = SharedPreferencesUtils.getAlwaysShowCover(context)
+        }
+    }
+    @SuppressLint("ApplySharedPref")
+    fun onConfirmation() {
+        coroutineScope.launch {
+            SharedPreferencesUtils.setCoverImage(context, coverPath)
+            SharedPreferencesUtils.setAlwaysShowCover(context, alwaysShow)
+            onDismiss()
+        }
+    }
+
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = true, dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        ),
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(color = MaterialTheme.colorScheme.background),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(color = MaterialTheme.colorScheme.background),
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(color = MaterialTheme.colorScheme.onBackground)
+                    )
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        start = 10.dp, end = 10.dp
+                                    ),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            )
+                            {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Just for none cover",
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                                Checkbox(
+                                    checked = alwaysShow,
+                                    onCheckedChange = { v ->
+                                        alwaysShow = v
+                                    },
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .semantics {
+                                            contentDescription = if (alwaysShow) {
+                                                "Always Show"
+                                            } else {
+                                                "Just for none cover"
+                                            }
+                                        }
+                                )
+                            }
+                        }
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        start = 10.dp, end = 10.dp
+                                    ),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            )
+                            {
+                                Text(
+                                    text = "Cover Path",
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+
                             }
                         }
                     }

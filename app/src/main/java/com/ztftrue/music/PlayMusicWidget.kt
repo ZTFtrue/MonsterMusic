@@ -82,7 +82,7 @@ class PlayMusicWidget : AppWidgetProvider() {
                     if (!playStatusChange) {
 
                         if (!path.isNullOrEmpty()) {
-                            val cover = getCover(path)
+                            val cover = getCover(path, context)
                             if (cover != null) {
                                 it.setImageViewBitmap(R.id.cover, cover)
                             } else {
@@ -227,7 +227,7 @@ class PlayMusicWidget : AppWidgetProvider() {
                         if (playingStatus) R.drawable.pause else R.drawable.play
                     )
                     if (!path.isNullOrEmpty()) {
-                        val cover = getCover(path)
+                        val cover = getCover(path,context)
                         if (cover != null) {
                             it.setImageViewBitmap(R.id.cover, cover)
                         } else {

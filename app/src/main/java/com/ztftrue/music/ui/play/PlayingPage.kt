@@ -1232,9 +1232,7 @@ fun PlayingPage(
                             .fillMaxWidth()
                             .height(60.dp),
                     ) {
-                        val (playIndicator) = createRefs()
-                        val (playIndicator2) = createRefs()
-                        val (playIndicator3) = createRefs()
+                        val (playIndicator,playIndicator2,playIndicator3) = createRefs()
                         Row(
                             modifier = Modifier
                                 .constrainAs(playIndicator) {

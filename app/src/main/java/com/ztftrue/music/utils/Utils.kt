@@ -7,11 +7,14 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.text.TextUtils
+import android.util.Size
 import android.widget.Toast
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.ACTION_AddPlayQueue
@@ -236,10 +239,18 @@ object Utils {
 
     private val retriever = MediaMetadataRetriever()
 
-    fun getCover(path: String): Bitmap? {
+    fun getCover(path: String, context: Context): Bitmap? {
+        try {
+            val f = File(path).toUri()
+            var thumbnail =
+                context.contentResolver.loadThumbnail(f, Size(512, 512), null);
+        } catch (e: IOException) {
+            e.printStackTrace();
+        }
         try {
             retriever.setDataSource(path)
             val coverT = retriever.embeddedPicture
+
             if (coverT != null) {
                 return BitmapFactory.decodeByteArray(coverT, 0, coverT.size)
             }

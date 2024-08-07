@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
@@ -49,10 +50,10 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
         }
     }
     var paint by remember { mutableStateOf<Bitmap?>(null) }
-
+    val context = LocalContext.current
     LaunchedEffect(musicViewModel.currentPlay.value) {
         currentMusic = musicViewModel.currentPlay.value
-        paint = musicViewModel.getCurrentMusicCover()
+        paint = musicViewModel.getCurrentMusicCover(context)
     }
     if (currentMusic == null) return
     Row(
@@ -82,14 +83,14 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
                         .width((configuration.screenWidthDp - 220).dp)
                 ) {
                     Text(
-                        text = currentMusic?.name?:"",
+                        text = currentMusic?.name ?: "",
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.horizontalScroll(
                             rememberScrollState(0)
                         )
                     )
                     Text(
-                        text = currentMusic?.artist?:"",
+                        text = currentMusic?.artist ?: "",
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.horizontalScroll(rememberScrollState(0))
                     )
