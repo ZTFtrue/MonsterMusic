@@ -704,8 +704,8 @@ class PlayService : MediaBrowserServiceCompat() {
                                     it.priority -= 1
                                 }
                             }
-                            db.QueueDao().deleteById(tId)
-                            db.QueueDao().insertAllOrReplace(musicQueue)
+                            db.QueueDao().deleteAllQueue( )
+                            db.QueueDao().insertAll(musicQueue)
                             db.CurrentListDao().delete()
                         }
                     }
