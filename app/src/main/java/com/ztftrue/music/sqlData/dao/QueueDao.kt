@@ -34,7 +34,6 @@ interface QueueDao {
     @Query("DELETE FROM queue")
     fun deleteAllQueue()
 
-    // TODO can't work
-    @Query("DELETE FROM queue WHERE id = :id")
-    fun deleteById(id: Long)
+    @Query("DELETE FROM queue WHERE tableId = :id")
+    fun deleteByTableId(id: Long)
 }
