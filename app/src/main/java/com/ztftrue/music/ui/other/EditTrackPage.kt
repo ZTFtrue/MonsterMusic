@@ -5,8 +5,6 @@ import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,7 +41,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -66,9 +63,6 @@ import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.utils.Utils.getCover
 import com.ztftrue.music.utils.trackManager.TracksManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 
 /**
@@ -174,7 +168,9 @@ fun EditTrackPage(
                                     musicViewModel.songsList.addAll(it)
                                 }
                                 resultData.getParcelable<MusicItem>("item")?.also {
-                                    musicViewModel.currentPlay.value = it
+                                    if (musicViewModel.currentPlay.value?.id != it.id) {
+                                        musicViewModel.currentPlay.value = it
+                                    }
                                     musicViewModel.musicQueue.forEach { mIt ->
                                         if (mIt.id == it.id) {
                                             mIt.name = it.name

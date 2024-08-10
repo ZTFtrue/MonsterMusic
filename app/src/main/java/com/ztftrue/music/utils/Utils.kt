@@ -5,19 +5,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ResolveInfo
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.media.MediaMetadataRetriever
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v4.media.MediaBrowserCompat
 import android.text.TextUtils
-import android.util.Log
 import android.util.Size
 import android.widget.Toast
 import androidx.core.content.FileProvider
-import androidx.core.net.toUri
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.ACTION_AddPlayQueue
@@ -534,6 +529,45 @@ object Utils {
         )
     }
 
+    fun deleteTrackUpdate(musicViewModel: MusicViewModel, resultData: Bundle?) {
+        musicViewModel.refreshPlayList.value =
+            !musicViewModel.refreshPlayList.value
+        musicViewModel.refreshAlbum.value =
+            !musicViewModel.refreshAlbum.value
+        musicViewModel.refreshArtist.value =
+            !musicViewModel.refreshArtist.value
+        musicViewModel.refreshGenre.value =
+            !musicViewModel.refreshGenre.value
+        musicViewModel.refreshFolder.value =
+            !musicViewModel.refreshFolder.value
+        musicViewModel.playListCurrent.value = null
+        if (resultData != null) {
+            resultData.getParcelableArrayList<MusicItem>(
+                "songsList"
+            )?.also {
+                musicViewModel.songsList.clear()
+                musicViewModel.songsList.addAll(it)
+            }
+            resultData.getLong("id", -1).also {
+                if(it == -1L)return
+                musicViewModel.musicQueue.removeAll { mIt ->
+                    mIt.id == it
+                }
+                if(it == musicViewModel.currentPlay.value?.id){
+                    musicViewModel.currentPlayQueueIndex.intValue=-1
+                    musicViewModel.currentPlay.value = null
+                }else{
+                    resultData.getInt(
+                        "playIndex"
+                    )?.also {
+                        if (it > -1)
+                            musicViewModel.currentPlayQueueIndex.intValue = it
+                    }
+                }
+            }
+
+        }
+    }
 
     fun getAllDictionaryActivity(context: Context): List<ResolveInfo> {
         val shareIntent = Intent(Intent.ACTION_PROCESS_TEXT)

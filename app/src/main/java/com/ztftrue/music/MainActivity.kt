@@ -35,7 +35,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,7 +47,6 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
-import com.ztftrue.music.play.ACTION_TRACKS_UPDATE
 import com.ztftrue.music.play.EVENT_MEDIA_ITEM_Change
 import com.ztftrue.music.play.EVENT_SLEEP_TIME_Change
 import com.ztftrue.music.play.PlayService
@@ -61,6 +59,7 @@ import com.ztftrue.music.ui.theme.MusicPitchTheme
 import com.ztftrue.music.utils.OperateTypeInActivity
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.Utils.deleteTrackUpdate
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.trackManager.PlaylistManager.modifyTrackFromM3U
 import kotlinx.coroutines.CoroutineScope
@@ -170,8 +169,7 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     super.onResult(action, extras, resultData)
                                     if (ACTION_TRACKS_DELETE == action) {
-                                        musicViewModel.refreshPlayList.value =
-                                            !musicViewModel.refreshPlayList.value
+                                        deleteTrackUpdate(musicViewModel, resultData)
                                     }
                                 }
                             }

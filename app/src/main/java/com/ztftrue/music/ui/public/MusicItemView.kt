@@ -74,6 +74,7 @@ import com.ztftrue.music.ui.play.toPx
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.Utils.deleteTrackUpdate
 import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.trackManager.PlaylistManager
@@ -123,7 +124,9 @@ fun MusicItemView(
                                 resultData: Bundle?
                             ) {
                                 super.onResult(action, extras, resultData)
-                                viewModel.refreshPlayList.value = !viewModel.refreshPlayList.value
+                                if (ACTION_TRACKS_DELETE == action) {
+                                    deleteTrackUpdate(viewModel, resultData)
+                                }
                             }
                         }
                     )
@@ -251,7 +254,10 @@ fun MusicItemView(
                                 ) {
                                     super.onResult(action, extras, resultData)
                                     if (ACTION_RemoveFromQueue == action && resultData == null) {
-                                        viewModel.currentPlay.value = null
+                                        if( viewModel.currentPlay.value?.id==music.id){
+                                            viewModel.currentPlayQueueIndex.intValue = (index)%(viewModel.musicQueue.size+1)
+                                            viewModel.currentPlay.value = viewModel.musicQueue[viewModel.currentPlayQueueIndex.intValue]
+                                        }
                                     }
                                 }
                             }

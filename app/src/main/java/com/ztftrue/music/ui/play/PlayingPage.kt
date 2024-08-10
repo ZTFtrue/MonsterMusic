@@ -105,7 +105,6 @@ import com.ztftrue.music.play.ACTION_AddPlayQueue
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_RemoveFromQueue
 import com.ztftrue.music.play.ACTION_SEEK_TO
-import com.ztftrue.music.play.ACTION_SHUFFLE_PLAY_QUEUE
 import com.ztftrue.music.play.ACTION_SWITCH_SHUFFLE
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.sqlData.model.DictionaryApp
@@ -119,6 +118,7 @@ import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.Utils.deleteTrackUpdate
 import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.TracksManager
@@ -184,8 +184,9 @@ fun PlayingPage(
                                 resultData: Bundle?
                             ) {
                                 super.onResult(action, extras, resultData)
-                                musicViewModel.refreshPlayList.value =
-                                    !musicViewModel.refreshPlayList.value
+                                if (ACTION_TRACKS_DELETE == action) {
+                                    deleteTrackUpdate(musicViewModel, resultData)
+                                }
                                 navController.popBackStack()
                             }
                         }
@@ -290,8 +291,11 @@ fun PlayingPage(
                                         resultData: Bundle?
                                     ) {
                                         super.onResult(action, extras, resultData)
-                                        if (ACTION_RemoveFromQueue == action && resultData == null) {
-                                            musicViewModel.currentPlay.value = null
+                                        if (ACTION_RemoveFromQueue == action) {
+                                            if( musicViewModel.currentPlay.value?.id==music.id){
+                                                musicViewModel.currentPlayQueueIndex.intValue = (index)%(musicViewModel.musicQueue.size+1)
+                                                musicViewModel.currentPlay.value = musicViewModel.musicQueue[musicViewModel.currentPlayQueueIndex.intValue]
+                                            }
                                         }
                                     }
                                 }

@@ -37,6 +37,8 @@ import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.ForwardingAudioSink
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.PlayMusicWidget
 import com.ztftrue.music.R
@@ -680,6 +682,46 @@ class PlayService : MediaBrowserServiceCompat() {
                 val id = extras.getLong("id")
                 tracksLinkedHashMap.remove(id)
                 clearCacheData()
+                var i = -1
+                for ((index, it) in musicQueue.withIndex()) {
+                    if (it.id == id) {
+                        i = index
+                        break
+                    }
+                }
+                val bundle = Bundle()
+                if (i > -1) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val tId = musicQueue[i].tableId
+                        val priority = musicQueue[i].priority
+                        if (tId != null) {
+                            musicQueue.removeAt(i)
+                            musicQueue.forEach {
+                                if (it.tableId!! > tId) {
+                                    it.tableId = it.tableId!! - 1
+                                }
+                                if (it.priority > priority && it.priority > 0) {
+                                    it.priority -= 1
+                                }
+                            }
+                            db.QueueDao().deleteById(tId)
+                            db.QueueDao().insertAllOrReplace(musicQueue)
+                            db.CurrentListDao().delete()
+                        }
+                    }
+                    CoroutineScope(Dispatchers.Main).launch {
+                        exoPlayer.removeMediaItem(i)
+                        bundle.putInt("playIndex", exoPlayer.currentMediaItemIndex)
+                    }
+                }
+                playListCurrent = null
+
+                bundle.putParcelableArrayList("songsList", ArrayList(tracksLinkedHashMap.values))
+
+                bundle.putLong("id", id)
+                bundle.putParcelableArrayList("queue", musicQueue)
+                result.sendResult(bundle)
+                return
             }
             result.sendResult(null)
         } else if (ACTION_TRACKS_UPDATE == action) {
@@ -696,7 +738,7 @@ class PlayService : MediaBrowserServiceCompat() {
                 val bundle = Bundle()
                 bundle.putParcelableArrayList("list", ArrayList(tracksLinkedHashMap.values))
                 if (musicTrack != null) {
-                    musicQueue.forEach {
+                    for (it in musicQueue) {
                         if (it.id == id) {
                             it.name = musicTrack.name
                             it.path = musicTrack.path
@@ -710,14 +752,13 @@ class PlayService : MediaBrowserServiceCompat() {
                             it.genreId = musicTrack.genreId
                             it.year = musicTrack.year
                             it.songNumber = musicTrack.songNumber
-//                            it.isFavorite = musicTrack.isFavorite
                             bundle.putParcelable("item", musicTrack)
                             CoroutineScope(Dispatchers.IO).launch {
                                 db.QueueDao().update(it)
                             }
+                            break
                         }
                     }
-
                 }
                 result.sendResult(bundle)
                 return
@@ -1615,50 +1656,83 @@ class PlayService : MediaBrowserServiceCompat() {
 
     private fun addPlayQueue(extras: Bundle?, result: Result<Bundle>) {
         if (extras != null) {
-            val musicItem = extras.getParcelable<MusicItem>("musicItem")
+            var musicItem = extras.getParcelable<MusicItem>("musicItem")
             var musicItems = extras.getParcelableArrayList<MusicItem>("musicItems")
             val index = extras.getInt("index", musicQueue.size)
+            val gson = Gson()
+            val musicItemListType = object : TypeToken<ArrayList<MusicItem?>?>() {}.type
+            musicItems = if (musicItems != null) {
+                gson.fromJson(gson.toJson(musicItems), musicItemListType)
+            } else null
+            if (musicItem != null) {
+                musicItem = gson.fromJson(gson.toJson(musicItem), MusicItem::class.java)
+            }
             if (musicItems == null && musicItem != null) {
                 musicItems = ArrayList<MusicItem>()
                 musicItems.add(musicItem)
+            }
+            val enableShuffle = SharedPreferencesUtils.getEnableShuffle(this@PlayService)
+            // check this queue had shuffle
+            val histShuffle = if (musicQueue.isEmpty()) {
+                false
+            } else {
+                musicQueue[0].priority > 0
             }
             if (musicItems != null) {
                 val list = ArrayList<MediaItem>()
                 musicItems.forEachIndexed { index1, it ->
                     it.tableId = index1.toLong() + index + 1L
+                    if (histShuffle) {
+                        it.priority = index1 + index + 1
+                    }
                     list.add(MediaItem.fromUri(File(it.path).toUri()))
                 }
+//                musicQueue.forEachIndexed() { index1, it ->
+//                    if (it.tableId!! >= index.toLong()) {
+//                        it.tableId =  it.tableId!! + 1L + index
+//                    }
+//                    if(it.priority >= index){
+//                        it.priority = it.priority  + index + 1
+//                    }
+//                }
+
                 playListCurrent = null
                 CoroutineScope(Dispatchers.IO).launch {
                     db.CurrentListDao().delete()
                 }
                 if (index == musicQueue.size) {
                     musicQueue.addAll(musicItems)
-//                    if(BuildConfig.DEBUG){
-//                        for (i in 1 until musicQueue.size){
-//                            if(musicQueue[i-1].tableId==musicQueue[i].tableId){
-//                                Log.e("TAG-tableId","tableId equals")
-//                            }
-//                        }
-//                    }
                     CoroutineScope(Dispatchers.IO).launch {
                         db.QueueDao().insertAll(musicItems)
                     }
                 } else {
-                    musicQueue.addAll(index, musicItems)
-                    for (i in index until musicQueue.size) {
-                        musicQueue[i].tableId = index.toLong() + 1L
-                    }
-//                    if(BuildConfig.DEBUG){
-//                        for (i in 1 until musicQueue.size){
-//                            if(musicQueue[i-1].tableId==musicQueue[i].tableId){
-//                                Log.e("TAG-tableId","tableId equals")
-//                            }
-//                        }
-//                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        db.QueueDao().deleteAllQueue()
-                        db.QueueDao().insertAll(musicQueue)
+                    if (enableShuffle) {
+                        val pList = ArrayList<MusicItem>(musicQueue)
+                        pList.addAll(index, musicItems)
+                        for (i in index until pList.size) {
+                            pList[i].priority = i + 1
+                        }
+                        val tList = ArrayList<MusicItem>(musicQueue)
+                        tList.sortBy { it.tableId }
+                        tList.addAll(index, musicItems)
+                        for (i in index until pList.size) {
+                            tList[i].tableId = i + 1L
+                        }
+                        musicQueue.clear()
+                        musicQueue.addAll(pList)
+                        CoroutineScope(Dispatchers.IO).launch {
+                            db.QueueDao().deleteAllQueue()
+                            db.QueueDao().insertAll(tList)
+                        }
+                    } else {
+                        musicQueue.addAll(index, musicItems)
+                        for (i in index until musicQueue.size) {
+                            musicQueue[i].tableId = i + 1L
+                        }
+                        CoroutineScope(Dispatchers.IO).launch {
+                            db.QueueDao().deleteAllQueue()
+                            db.QueueDao().insertAll(musicQueue)
+                        }
                     }
                 }
                 if (!exoPlayer.isPlaying) {
@@ -1709,34 +1783,28 @@ class PlayService : MediaBrowserServiceCompat() {
         if (extras != null) {
             val index = extras.getInt("index")
             if (index < musicQueue.size) {
-                exoPlayer.removeMediaItem(index)
+
+                val musicItem = musicQueue[index]
                 musicQueue.removeAt(index)
-                musicQueue.forEach {
-                    it.tableId = null
-                }
                 CoroutineScope(Dispatchers.IO).launch {
-                    db.QueueDao().deleteAllQueue()
+                    val tId = musicItem.tableId!!
+                    val priority = musicItem.priority
+//                    db.QueueDao().deleteAllQueue()
                     if (musicQueue.isNotEmpty())
-                        db.QueueDao().insertAll(musicQueue)
+                        musicQueue.forEach {
+                            if (it.tableId!! >= tId) {
+                                it.tableId = it.tableId!! - 1
+                            }
+                            if (it.priority >= priority && it.priority > 0) {
+                                it.priority -= 1
+                            }
+                        }
+                    db.QueueDao().deleteAllQueue( )
+                    db.QueueDao().insertAll(musicQueue)
+                    db.CurrentListDao().delete()
                 }
-                playListCurrent = if (playListCurrent?.type == PlayListType.None) {
-                    // Search page id = id-1, avoid new's id equal this
-                    AnyListBase(playListCurrent!!.id + 1, PlayListType.None)
-                } else {
-                    // Search page default id is -1
-                    AnyListBase(3, PlayListType.None)
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    var c = db.CurrentListDao().findCurrentList()
-                    if (c == null) {
-                        c = CurrentList(null, playListCurrent?.id ?: -1, PlayListType.None.name)
-                        db.CurrentListDao().insert(c)
-                    } else {
-                        c.listID = playListCurrent?.id ?: -1
-                        c.type = PlayListType.None.name
-                        db.CurrentListDao().update(c)
-                    }
-                }
+                playListCurrent = null
+                exoPlayer.removeMediaItem(index)
                 if (musicQueue.isNotEmpty()) {
                     val currentIndex = exoPlayer.currentMediaItemIndex
                     CoroutineScope(Dispatchers.IO).launch {
