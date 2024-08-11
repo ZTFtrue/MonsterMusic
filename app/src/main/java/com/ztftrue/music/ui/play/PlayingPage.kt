@@ -293,6 +293,7 @@ fun PlayingPage(
                                         super.onResult(action, extras, resultData)
                                         if (ACTION_RemoveFromQueue == action) {
                                             if( musicViewModel.currentPlay.value?.id==music.id){
+                                                musicViewModel.currentMusicCover.value = null
                                                 musicViewModel.currentPlayQueueIndex.intValue = (index)%(musicViewModel.musicQueue.size+1)
                                                 musicViewModel.currentPlay.value = musicViewModel.musicQueue[musicViewModel.currentPlayQueueIndex.intValue]
                                             }

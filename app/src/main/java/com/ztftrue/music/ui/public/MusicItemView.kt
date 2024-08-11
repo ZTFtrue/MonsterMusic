@@ -254,9 +254,12 @@ fun MusicItemView(
                                 ) {
                                     super.onResult(action, extras, resultData)
                                     if (ACTION_RemoveFromQueue == action && resultData == null) {
-                                        if( viewModel.currentPlay.value?.id==music.id){
-                                            viewModel.currentPlayQueueIndex.intValue = (index)%(viewModel.musicQueue.size+1)
-                                            viewModel.currentPlay.value = viewModel.musicQueue[viewModel.currentPlayQueueIndex.intValue]
+                                        if (viewModel.currentPlay.value?.id == music.id) {
+                                            viewModel.currentMusicCover.value = null
+                                            viewModel.currentPlayQueueIndex.intValue =
+                                                (index) % (viewModel.musicQueue.size + 1)
+                                            viewModel.currentPlay.value =
+                                                viewModel.musicQueue[viewModel.currentPlayQueueIndex.intValue]
                                         }
                                     }
                                 }
