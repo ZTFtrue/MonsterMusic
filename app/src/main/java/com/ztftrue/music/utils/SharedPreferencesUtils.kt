@@ -1,5 +1,6 @@
 package com.ztftrue.music.utils
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.ui.text.style.TextAlign
 
@@ -69,5 +70,48 @@ object SharedPreferencesUtils {
     }
     fun getAlwaysShowCover(context: Context ):Boolean {
         return context.getSharedPreferences("cover", Context.MODE_PRIVATE).getBoolean("always", false)
+    }
+      fun saveSelectMusicId(context: Context,id: Long) {
+        context.getSharedPreferences(
+            "SelectedPlayTrack",
+            Context.MODE_PRIVATE
+        ).edit().putLong("SelectedPlayTrack", id).apply()
+    }
+
+      fun getCurrentPlayId(context: Context): Long {
+        return context.getSharedPreferences(
+            "SelectedPlayTrack",
+            Context.MODE_PRIVATE
+        ).getLong("SelectedPlayTrack", -1)
+    }
+
+    @SuppressLint("ApplySharedPref")
+      fun saveCurrentDuration(context: Context,duration: Long) {
+        context.getSharedPreferences(
+            "SelectedPlayTrack",
+            Context.MODE_PRIVATE
+        ).edit().putLong("CurrentPosition", duration).commit()
+    }
+
+    @SuppressLint("ApplySharedPref")
+      fun saveVolume(context: Context,volume: Int) {
+        context.getSharedPreferences(
+            "volume",
+            Context.MODE_PRIVATE
+        ).edit().putInt("volume", volume).commit()
+    }
+
+      fun getVolume(context: Context): Int {
+        return context.getSharedPreferences(
+            "volume",
+            Context.MODE_PRIVATE
+        ).getInt("volume", 100)
+    }
+
+      fun getCurrentPosition(context: Context): Long {
+        return context.getSharedPreferences(
+            "SelectedPlayTrack",
+            Context.MODE_PRIVATE
+        ).getLong("CurrentPosition", 0)
     }
 }
