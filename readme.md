@@ -1,5 +1,7 @@
 # MonsterMusic
 
+[Join Discord](https://discord.gg/R9YbH9TBbJ)
+
 ## This is a local music player on Android platform
 
 [MonsterMusic] is open source, free. Enjoy all the features without any cost!
@@ -32,7 +34,7 @@ embark on a musical adventure like never before!
 
 Or download the latest APK from the [Releases Section](https://github.com/ZTFtrue/MonsterMusic/releases/latest).
 
-[Join Discord](https://discord.gg/R9YbH9TBbJ)
+
 
 
 <img alt="equalizer" src="./Picture/equalizer.jpg" width="200px"/><img alt="cover" src="./Picture/cover.jpg" width="200px"/>
@@ -66,3 +68,10 @@ The copyright of these pictures (large_cover.jpg,launcher_image.jpg,songs_thumbn
 belongs to me and you can use them for free, but need to indicate the source.
 
 Other Icons from: <https://fonts.google.com/icons>.
+
+## Contribute translate
+
+[crowdin](https://crowdin.com/project/monstermusic/invite?h=d58c9ddb1dea6fafb617327d66a529b52178797)
+
+Thanks: @`Libervole`
+
