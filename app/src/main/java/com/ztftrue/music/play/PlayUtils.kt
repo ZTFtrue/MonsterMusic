@@ -1,8 +1,21 @@
 package com.ztftrue.music.play
 
+import android.content.Context
+import android.os.Bundle
 import android.provider.MediaStore
+import androidx.core.net.toUri
+import androidx.media.MediaBrowserServiceCompat.Result
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
+import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.MainTab
+import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.PlayListType
+import com.ztftrue.music.utils.SharedPreferencesUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.io.File
 
 object PlayUtils {
 
@@ -43,11 +56,11 @@ object PlayUtils {
     )
 
     object ListTypeTracks {
-        val PlayListsTracks = "PlayLists@Tracks"
-        val AlbumsTracks = "Albums@Tracks"
-        val ArtistsTracks = "Artists@Tracks"
-        val GenresTracks = "Genres@Tracks"
-        val FoldersTracks = "Folders@Tracks"
+        const val PlayListsTracks = "PlayLists@Tracks"
+        const val AlbumsTracks = "Albums@Tracks"
+        const val ArtistsTracks = "Artists@Tracks"
+        const val GenresTracks = "Genres@Tracks"
+        const val FoldersTracks = "Folders@Tracks"
     }
 
     // for tracks in album or artist etc. child
@@ -57,7 +70,8 @@ object PlayUtils {
             "Alphabetical" to MediaStore.Audio.Media.TITLE,
             "Artist" to MediaStore.Audio.Media.ARTIST,
             "Duration" to MediaStore.Audio.Media.DURATION,
-            "Year" to MediaStore.Audio.Media.YEAR
+            "Year" to MediaStore.Audio.Media.YEAR,
+            "Track number" to MediaStore.Audio.Media.TRACK
         ),
         ListTypeTracks.ArtistsTracks to linkedMapOf(
             "Alphabetical" to MediaStore.Audio.Media.TITLE,
@@ -139,4 +153,181 @@ object PlayUtils {
         )
     }
 
+    fun shuffleModelSwitch(
+        extras: Bundle, result: Result<Bundle>,
+        musicQueue: ArrayList<MusicItem>,
+        currentPlayTrack: MusicItem?,
+        exoPlayer: ExoPlayer,
+        context: Context,
+        db: MusicDatabase
+    ) {
+
+        var index = 0
+        val enable = extras.getBoolean("enable", false)
+        if (enable) {
+            if (musicQueue.size > 0) {
+                if (musicQueue[0].priority == 0) {
+                    val dbArrayList = ArrayList<MusicItem>()
+                    dbArrayList.addAll(musicQueue)
+                    musicQueue.shuffle()
+                    val t1 = ArrayList<MediaItem>()
+                    if (musicQueue.isNotEmpty()) {
+                        musicQueue.forEachIndexed { i, it ->
+                            it.priority = i + 1
+                            if (it.id == currentPlayTrack?.id) {
+                                index = i
+                            }
+                            t1.add(MediaItem.fromUri(File(it.path).toUri()))
+                        }
+                        CoroutineScope(Dispatchers.IO).launch {
+                            db.QueueDao().updateList(dbArrayList)
+                        }
+                        CoroutineScope(Dispatchers.Main).launch {
+                            exoPlayer.pause()
+                            val cp = exoPlayer.currentPosition
+                            exoPlayer.clearMediaItems()
+                            exoPlayer.setMediaItems(t1)
+                            exoPlayer.seekToDefaultPosition(index)
+                            exoPlayer.seekTo(cp)
+                            exoPlayer.playWhenReady = true
+                            exoPlayer.prepare()
+                        }
+                    }
+                } else {
+                    musicQueue.sortBy { it.priority }
+                    val t1 = ArrayList<MediaItem>()
+                    if (musicQueue.isNotEmpty()) {
+                        musicQueue.forEachIndexed { i, it ->
+                            if (it.id == currentPlayTrack?.id) {
+                                index = i
+                            }
+                            t1.add(MediaItem.fromUri(File(it.path).toUri()))
+                        }
+                        CoroutineScope(Dispatchers.Main).launch {
+                            exoPlayer.pause()
+                            val cp = exoPlayer.currentPosition
+                            exoPlayer.clearMediaItems()
+                            exoPlayer.setMediaItems(t1)
+                            exoPlayer.seekToDefaultPosition(index)
+                            exoPlayer.seekTo(cp)
+                            exoPlayer.playWhenReady = true
+                            exoPlayer.prepare()
+                        }
+                    }
+                }
+            }
+            SharedPreferencesUtils.enableShuffle(context, true)
+        } else {
+            musicQueue.sortBy { it.tableId }
+            val t1 = ArrayList<MediaItem>()
+            if (musicQueue.isNotEmpty()) {
+                musicQueue.forEachIndexed { i, it ->
+                    if (it.id == currentPlayTrack?.id) {
+                        index = i
+                    }
+                    t1.add(MediaItem.fromUri(File(it.path).toUri()))
+                }
+                CoroutineScope(Dispatchers.Main).launch {
+                    exoPlayer.pause()
+                    val cp = exoPlayer.currentPosition
+                    exoPlayer.clearMediaItems()
+                    exoPlayer.setMediaItems(t1)
+                    exoPlayer.seekToDefaultPosition(index)
+                    exoPlayer.seekTo(cp)
+                    exoPlayer.playWhenReady = true
+                    exoPlayer.prepare()
+                }
+            }
+        }
+        SharedPreferencesUtils.enableShuffle(context, enable)
+        val bundle = Bundle()
+        bundle.putParcelableArrayList("list", musicQueue)
+        bundle.putInt("index", index)
+        result.sendResult(bundle)
+    }
+
+    fun trackDelete(
+        extras: Bundle, result: Result<Bundle>,
+        musicQueue: ArrayList<MusicItem>,
+        exoPlayer: ExoPlayer,
+        db: MusicDatabase,
+        tracksLinkedHashMap: LinkedHashMap<Long, MusicItem>
+    ): Boolean {
+        val id = extras.getLong("id")
+        tracksLinkedHashMap.remove(id)
+        val i = getItemInQueueIndex(musicQueue, id)
+        val bundle = Bundle()
+        if (i > -1) {
+            musicQueue.removeAt(i)
+            changePriorityTableId(musicQueue, musicQueue[i], db)
+            CoroutineScope(Dispatchers.Main).launch {
+                exoPlayer.removeMediaItem(i)
+            }
+            bundle.putInt("playIndex", exoPlayer.currentMediaItemIndex)
+        }
+        bundle.putParcelableArrayList("songsList", ArrayList(tracksLinkedHashMap.values))
+        bundle.putLong("id", id)
+        bundle.putParcelableArrayList("queue", musicQueue)
+        result.sendResult(bundle)
+        return i > -1
+    }
+
+    fun removePlayQueue(
+        extras: Bundle?, result: Result<Bundle>, musicQueue: ArrayList<MusicItem>,
+        exoPlayer: ExoPlayer, db: MusicDatabase, context: Context
+    ) {
+        if (extras != null) {
+            val index = extras.getInt("index")
+            if (index < musicQueue.size) {
+                val musicItem = musicQueue[index]
+                musicQueue.removeAt(index)
+                changePriorityTableId(musicQueue, musicItem, db)
+                exoPlayer.removeMediaItem(index)
+                if (musicQueue.isNotEmpty()) {
+                    val currentIndex = exoPlayer.currentMediaItemIndex
+                    CoroutineScope(Dispatchers.IO).launch {
+                        SharedPreferencesUtils.saveSelectMusicId(
+                            context,
+                            musicQueue[currentIndex].id
+                        )
+                    }
+                    result.sendResult(null)
+                    return
+                }
+            }
+        }
+        result.sendResult(null)
+    }
+
+    private fun changePriorityTableId(
+        musicQueue: ArrayList<MusicItem>,
+        musicItem: MusicItem,
+        db: MusicDatabase
+    ) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val tId = musicItem.tableId!!
+            val priority = musicItem.priority
+            if (musicQueue.isNotEmpty())
+                musicQueue.forEach {
+                    if (it.tableId!! >= tId) {
+                        it.tableId = it.tableId!! - 1
+                    }
+                    if (it.priority >= priority && it.priority > 0) {
+                        it.priority -= 1
+                    }
+                }
+            db.QueueDao().deleteAllQueue()
+            db.QueueDao().insertAll(musicQueue)
+            db.CurrentListDao().delete()
+        }
+    }
+
+    private fun getItemInQueueIndex(musicQueue: ArrayList<MusicItem>, id: Long): Int {
+        for ((index, it) in musicQueue.withIndex()) {
+            if (it.id == id) {
+                return index
+            }
+        }
+        return -1
+    }
 }

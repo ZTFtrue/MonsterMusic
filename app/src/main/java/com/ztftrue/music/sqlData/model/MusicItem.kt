@@ -24,6 +24,7 @@ data class MusicItem(
     var year: Int,
 //    var discNumber:Int,
     var songNumber:Int,
+    // for random
     var priority: Int = 0,
     var isFavorite: Boolean = false,
 ) : Parcelable {

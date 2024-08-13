@@ -16,6 +16,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -43,6 +44,8 @@ fun MainView(
     activity: MainActivity,
     navController: NavHostController,
 ) {
+    val showIndicator = remember { mutableStateOf<Boolean>(false) }
+
     val tabList = remember {
         mutableStateListOf<MainTab>()
     }
@@ -50,10 +53,13 @@ fun MainView(
         tabList.clear()
         tabList.addAll(musicViewModel.mainTabList)
     }
-
+//    LaunchedEffect(key1 = musicViewModel.showIndicatorMap) {
+        showIndicator.value =
+            musicViewModel.showIndicatorMap.getOrDefault(PlayListType.Songs.toString(), false)
+//    }
     val pagerState = rememberPagerState { tabList.size }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-
+    val queueD = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     BackHandler(enabled = drawerState.isOpen) {
         if (drawerState.isOpen) {
@@ -107,7 +113,8 @@ fun MainView(
                                     Modifier.fillMaxHeight(),
                                     musicViewModel,
                                     SongsPlayList,
-                                    musicViewModel.songsList
+                                    musicViewModel.songsList,
+                                    showIndicator
                                 )
                             }
 
@@ -124,7 +131,8 @@ fun MainView(
                                     Modifier.fillMaxHeight(),
                                     musicViewModel,
                                     QueuePlayList,
-                                    tracksList = musicViewModel.musicQueue
+                                    tracksList = musicViewModel.musicQueue,
+                                    queueD
                                 )
                             }
 

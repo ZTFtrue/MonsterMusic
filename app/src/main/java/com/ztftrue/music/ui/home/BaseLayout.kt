@@ -41,7 +41,7 @@ fun BaseLayout(
             route = Router.MusicPlayerView.route,
         ) { _ ->
             key(Unit) {
-                PlayingPage(navController, viewModel = musicViewModel)
+                PlayingPage(navController, musicViewModel = musicViewModel)
             }
         }
         composable(

@@ -1,5 +1,6 @@
 package com.ztftrue.music.ui.other
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -72,6 +73,7 @@ import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.ui.public.BackTopBar
 import com.ztftrue.music.utils.LyricsSettings.FIRST_EMBEDDED_LYRICS
 import com.ztftrue.music.utils.SharedPreferencesName.LYRICS_SETTINGS
+import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.openBrowser
 import com.ztftrue.music.utils.model.FolderList
@@ -135,6 +137,7 @@ fun SettingsPage(
                     var showDialog by remember { mutableStateOf(false) }
                     var showManageFolderDialog by remember { mutableStateOf(false) }
                     var showAboutDialog by remember { mutableStateOf(false) }
+                    var showSetListIndicatorDialog by remember { mutableStateOf(false) }
 
                     Box(
                         modifier = Modifier
@@ -238,6 +241,59 @@ fun SettingsPage(
                                     )
                                 }
                                 .clickable {
+                                    showSetListIndicatorDialog = !showSetListIndicatorDialog
+                                },
+                        ) {
+
+                            if (showSetListIndicatorDialog) {
+                                SetListIndicatorDialog(
+                                    onDismiss = {
+                                        showSetListIndicatorDialog = false
+                                    })
+                            }
+                            Text(
+                                text = "Set list indicator",
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+
+
+                        }
+
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .padding(0.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
+                                .clickable {
                                     showManageFolderDialog = !showManageFolderDialog
                                 },
                         ) {
@@ -287,87 +343,97 @@ fun SettingsPage(
                             CompositionLocalProvider(
                                 LocalContentColor provides MaterialTheme.colorScheme.onBackground
                             ) {
-                                    OutlinedTextField(
-                                        value = durationValue,
-                                        onValueChange = { s ->
-                                            val newText = s.ifEmpty {
-                                                "0"
-                                            }
-
-                                            if (!newText.contains(".") && newText.toLongOrNull() != null) {
-                                                durationValue = newText
-                                            }
-                                        },
-                                        keyboardOptions = KeyboardOptions.Default.copy(
-                                            imeAction = ImeAction.Done,
-                                            keyboardType = KeyboardType.Number
-                                        ),
-                                        keyboardActions = KeyboardActions(
-                                            onDone = {
-                                                val sharedPreferences =
-                                                    context.getSharedPreferences(
-                                                        "scan_config",
-                                                        Context.MODE_PRIVATE
-                                                    )
-                                                // -1 don't ignore any,0 ignore duration less than or equal 0s,
-                                                sharedPreferences.edit().putLong(
-                                                    "ignore_duration",
-                                                    durationValue.toLong()
-                                                ).apply()
-                                                Toast.makeText(
-                                                    context,
-                                                    context.getString(
-                                                        R.string.ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect,
-                                                        durationValue
-                                                    ),
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                                focusRequester.freeFocus()
-                                                keyboardController?.hide()
-                                            }
-                                        ),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .focusRequester(focusRequester)
-                                            .background(MaterialTheme.colorScheme.primary),
-                                        colors = TextFieldDefaults.colors(
-                                            errorTextColor = MaterialTheme.colorScheme.primary,
-                                            focusedTextColor = MaterialTheme.colorScheme.primary,
-                                            disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                            unfocusedTextColor = MaterialTheme.colorScheme.primary,
-                                            focusedContainerColor = MaterialTheme.colorScheme.background,
-                                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                                            cursorColor = MaterialTheme.colorScheme.primary,
-                                            errorCursorColor = MaterialTheme.colorScheme.error,
-                                            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                                            unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                            disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                                            errorIndicatorColor = MaterialTheme.colorScheme.error,
-                                            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                                alpha = 0.38f
-                                            ),
-                                            errorLeadingIconColor = MaterialTheme.colorScheme.error,
-                                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                                alpha = 0.38f
-                                            ),
-                                            errorTrailingIconColor = MaterialTheme.colorScheme.error,
-                                            focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                            disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                            errorLabelColor = MaterialTheme.colorScheme.error,
-                                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
-                                                alpha = 0.38f
-                                            )
-                                        ),
-                                        textStyle= MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
-                                        suffix = {
-                                            Text(
-                                                text = "s",
-                                                Modifier.padding(start = 10.dp),
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            )
+                                OutlinedTextField(
+                                    value = durationValue,
+                                    onValueChange = { s ->
+                                        val newText = s.ifEmpty {
+                                            "0"
                                         }
-                                    )
+
+                                        if (!newText.contains(".") && newText.toLongOrNull() != null) {
+                                            durationValue = newText
+                                        }
+                                    },
+                                    keyboardOptions = KeyboardOptions.Default.copy(
+                                        imeAction = ImeAction.Done,
+                                        keyboardType = KeyboardType.Number
+                                    ),
+                                    keyboardActions = KeyboardActions(
+                                        onDone = {
+                                            val sharedPreferences =
+                                                context.getSharedPreferences(
+                                                    "scan_config",
+                                                    Context.MODE_PRIVATE
+                                                )
+                                            // -1 don't ignore any,0 ignore duration less than or equal 0s,
+                                            sharedPreferences.edit().putLong(
+                                                "ignore_duration",
+                                                durationValue.toLong()
+                                            ).apply()
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(
+                                                    R.string.ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect,
+                                                    durationValue
+                                                ),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            focusRequester.freeFocus()
+                                            keyboardController?.hide()
+                                        }
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .focusRequester(focusRequester)
+                                        .background(MaterialTheme.colorScheme.primary),
+                                    colors = TextFieldDefaults.colors(
+                                        errorTextColor = MaterialTheme.colorScheme.primary,
+                                        focusedTextColor = MaterialTheme.colorScheme.primary,
+                                        disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.38f
+                                        ),
+                                        unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                                        focusedContainerColor = MaterialTheme.colorScheme.background,
+                                        unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                        cursorColor = MaterialTheme.colorScheme.primary,
+                                        errorCursorColor = MaterialTheme.colorScheme.error,
+                                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                                        unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.38f
+                                        ),
+                                        disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.12f
+                                        ),
+                                        errorIndicatorColor = MaterialTheme.colorScheme.error,
+                                        disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.38f
+                                        ),
+                                        errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                                        disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.38f
+                                        ),
+                                        errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.38f
+                                        ),
+                                        disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.38f
+                                        ),
+                                        errorLabelColor = MaterialTheme.colorScheme.error,
+                                        disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.38f
+                                        )
+                                    ),
+                                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                                    suffix = {
+                                        Text(
+                                            text = "s",
+                                            Modifier.padding(start = 10.dp),
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                )
                             }
                         }
 
@@ -1131,7 +1197,8 @@ fun ClearAlbumCoverDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit)
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Are you sure you want to clear album cover cache? this will take some time when next open album list.", modifier = Modifier
+                    text = "Are you sure you want to clear album cover cache? this will take some time when next open album list.",
+                    modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -1184,3 +1251,319 @@ fun ClearAlbumCoverDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit)
     )
 }
 
+@UnstableApi
+@Composable
+fun SetListIndicatorDialog(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val coroutineScope = CoroutineScope(Dispatchers.IO)
+    var showSlideIndicator by remember { mutableStateOf(false) }
+    var showTopIndicator by remember { mutableStateOf(false) }
+    val sharedPreferences =
+        context.getSharedPreferences("list_indicator_config", Context.MODE_PRIVATE)
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            showSlideIndicator = sharedPreferences.getBoolean("show_slide_indicator", true)
+            showTopIndicator = sharedPreferences.getBoolean("show_top_indicator", true)
+        }
+    }
+    @SuppressLint("ApplySharedPref")
+    fun onConfirmation() {
+        coroutineScope.launch {
+            sharedPreferences.edit()
+                .putBoolean("show_slide_indicator", showSlideIndicator)
+                .putBoolean("show_top_indicator", showTopIndicator).apply()
+            onDismiss()
+        }
+    }
+
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = true, dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        ),
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(color = MaterialTheme.colorScheme.background),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(color = MaterialTheme.colorScheme.background),
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(color = MaterialTheme.colorScheme.onBackground)
+                    )
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        start = 10.dp, end = 10.dp
+                                    ),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            )
+                            {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Show slide indicator",
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                                Checkbox(
+                                    checked = showSlideIndicator,
+                                    onCheckedChange = { v ->
+                                        showSlideIndicator = v
+                                    },
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .semantics {
+                                            contentDescription = if (showSlideIndicator) {
+                                                "Show slide indicator"
+                                            } else {
+                                                "Hide slide indicator"
+                                            }
+                                        }
+                                )
+                            }
+                        }
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        start = 10.dp, end = 10.dp
+                                    ),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            )
+                            {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Show top indicator",
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                                Checkbox(
+                                    checked = showTopIndicator,
+                                    onCheckedChange = { v ->
+                                        showTopIndicator = v
+                                    },
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .semantics {
+                                            contentDescription = if (showTopIndicator) {
+                                                "Show top indicator"
+                                            } else {
+                                                "Hide top indicator"
+                                            }
+                                        }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    TextButton(
+                        onClick = { onDismiss() },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(0.5f),
+                    ) {
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.onBackground)
+                            .width(1.dp)
+                            .height(50.dp)
+                    )
+                    TextButton(
+                        onClick = {
+                            onConfirmation()
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(),
+
+                        ) {
+                        Text(
+                            stringResource(id = R.string.confirm),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+            }
+        }
+    )
+}
+
+
+@UnstableApi
+@Composable
+fun SetCoverImageDialog(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val coroutineScope = CoroutineScope(Dispatchers.IO)
+    var alwaysShow by remember { mutableStateOf(false) }
+    var coverPath by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            coverPath = SharedPreferencesUtils.getCoverImage(context)
+            alwaysShow = SharedPreferencesUtils.getAlwaysShowCover(context)
+        }
+    }
+    @SuppressLint("ApplySharedPref")
+    fun onConfirmation() {
+        coroutineScope.launch {
+            SharedPreferencesUtils.setCoverImage(context, coverPath)
+            SharedPreferencesUtils.setAlwaysShowCover(context, alwaysShow)
+            onDismiss()
+        }
+    }
+
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = true, dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        ),
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(color = MaterialTheme.colorScheme.background),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(color = MaterialTheme.colorScheme.background),
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(color = MaterialTheme.colorScheme.onBackground)
+                    )
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        start = 10.dp, end = 10.dp
+                                    ),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            )
+                            {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Just for none cover",
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                                Checkbox(
+                                    checked = alwaysShow,
+                                    onCheckedChange = { v ->
+                                        alwaysShow = v
+                                    },
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .semantics {
+                                            contentDescription = if (alwaysShow) {
+                                                "Always Show"
+                                            } else {
+                                                "Just for none cover"
+                                            }
+                                        }
+                                )
+                            }
+                        }
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        start = 10.dp, end = 10.dp
+                                    ),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            )
+                            {
+                                Text(
+                                    text = "Cover Path",
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+
+                            }
+                        }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    TextButton(
+                        onClick = { onDismiss() },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(0.5f),
+                    ) {
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.onBackground)
+                            .width(1.dp)
+                            .height(50.dp)
+                    )
+                    TextButton(
+                        onClick = {
+                            onConfirmation()
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(),
+
+                        ) {
+                        Text(
+                            stringResource(id = R.string.confirm),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+            }
+        }
+    )
+}

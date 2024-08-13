@@ -75,7 +75,7 @@ fun FolderListView(
 
     val folderList = remember { mutableStateListOf<FolderList>() }
     val listState = rememberLazyListState()
-    LaunchedEffect(Unit) {
+    LaunchedEffect(Unit, musicViewModel.refreshFolder.value ) {
         musicViewModel.mediaBrowser?.sendCustomAction(
             type.name,
             null,

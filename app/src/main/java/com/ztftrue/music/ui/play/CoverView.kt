@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
@@ -38,10 +39,10 @@ import com.ztftrue.music.R
 fun CoverView(musicViewModel: MusicViewModel) {
     val listState = rememberLazyListState()
     var paint by remember { mutableStateOf<Bitmap?>(null) }
-
+    val context = LocalContext.current
     val showOtherMessage = remember { mutableStateOf(false) }
     LaunchedEffect(musicViewModel.currentPlay.value) {
-        paint = musicViewModel.getCurrentMusicCover()
+        paint = musicViewModel.getCurrentMusicCover(context)
     }
     LazyColumn(
         state = listState,

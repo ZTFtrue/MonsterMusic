@@ -33,6 +33,7 @@ class PlayMusicWidget : AppWidgetProvider() {
             val title = intent.getStringExtra("title") ?: ""
             val author = intent.getStringExtra("author") ?: ""
             val path = intent.getStringExtra("path")
+            val id = intent.getLongExtra("id", 0L)
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val ids = appWidgetManager.getAppWidgetIds(
                 ComponentName(
@@ -82,7 +83,7 @@ class PlayMusicWidget : AppWidgetProvider() {
                     if (!playStatusChange) {
 
                         if (!path.isNullOrEmpty()) {
-                            val cover = getCover(path)
+                            val cover = getCover(context, id)
                             if (cover != null) {
                                 it.setImageViewBitmap(R.id.cover, cover)
                             } else {
@@ -222,12 +223,13 @@ class PlayMusicWidget : AppWidgetProvider() {
                     val title = sharedPreferences.getString("title", "")
                     val author = sharedPreferences.getString("author", "")
                     val path = sharedPreferences.getString("path", "")
+                    val id = sharedPreferences.getLong("id", 0L)
                     it.setImageViewResource(
                         R.id.pause,
                         if (playingStatus) R.drawable.pause else R.drawable.play
                     )
                     if (!path.isNullOrEmpty()) {
-                        val cover = getCover(path)
+                        val cover = getCover(context, id)
                         if (cover != null) {
                             it.setImageViewBitmap(R.id.cover, cover)
                         } else {

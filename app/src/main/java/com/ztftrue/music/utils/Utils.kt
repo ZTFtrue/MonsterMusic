@@ -1,15 +1,16 @@
 package com.ztftrue.music.utils
 
+import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ResolveInfo
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.support.v4.media.MediaBrowserCompat
 import android.text.TextUtils
+import android.util.Size
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.ztftrue.music.MusicViewModel
@@ -234,17 +235,27 @@ object Utils {
         context.startActivity(intent)
     }
 
-    private val retriever = MediaMetadataRetriever()
 
-    fun getCover(path: String): Bitmap? {
+    fun getCover(context: Context, musicId: Long): Bitmap? {
         try {
-            retriever.setDataSource(path)
-            val coverT = retriever.embeddedPicture
-            if (coverT != null) {
-                return BitmapFactory.decodeByteArray(coverT, 0, coverT.size)
-            }
-        } catch (_: Exception) {
+            var uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            uri = ContentUris.withAppendedId(uri, musicId)
+            val thumbnail =
+                context.contentResolver.loadThumbnail(uri, Size(512, 512), null);
+            return thumbnail
+        } catch (e: IOException) {
+            e.printStackTrace();
         }
+//        private val retriever = MediaMetadataRetriever()
+//        try {
+//            retriever.setDataSource(path)
+//            val coverT = retriever.embeddedPicture
+//
+//            if (coverT != null) {
+//                return BitmapFactory.decodeByteArray(coverT, 0, coverT.size)
+//            }
+//        } catch (_: Exception) {
+//        }
         return null
     }
 
@@ -518,6 +529,45 @@ object Utils {
         )
     }
 
+    fun deleteTrackUpdate(musicViewModel: MusicViewModel, resultData: Bundle?) {
+        musicViewModel.refreshPlayList.value =
+            !musicViewModel.refreshPlayList.value
+        musicViewModel.refreshAlbum.value =
+            !musicViewModel.refreshAlbum.value
+        musicViewModel.refreshArtist.value =
+            !musicViewModel.refreshArtist.value
+        musicViewModel.refreshGenre.value =
+            !musicViewModel.refreshGenre.value
+        musicViewModel.refreshFolder.value =
+            !musicViewModel.refreshFolder.value
+        musicViewModel.playListCurrent.value = null
+        if (resultData != null) {
+            resultData.getParcelableArrayList<MusicItem>(
+                "songsList"
+            )?.also {
+                musicViewModel.songsList.clear()
+                musicViewModel.songsList.addAll(it)
+            }
+            resultData.getLong("id", -1).also {
+                if(it == -1L)return
+                musicViewModel.musicQueue.removeAll { mIt ->
+                    mIt.id == it
+                }
+                if(it == musicViewModel.currentPlay.value?.id){
+                    musicViewModel.currentPlayQueueIndex.intValue=-1
+                    musicViewModel.currentPlay.value = null
+                }else{
+                    resultData.getInt(
+                        "playIndex"
+                    )?.also {
+                        if (it > -1)
+                            musicViewModel.currentPlayQueueIndex.intValue = it
+                    }
+                }
+            }
+
+        }
+    }
 
     fun getAllDictionaryActivity(context: Context): List<ResolveInfo> {
         val shareIntent = Intent(Intent.ACTION_PROCESS_TEXT)

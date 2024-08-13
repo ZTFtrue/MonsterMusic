@@ -153,7 +153,9 @@ fun QueuePage(
                 TracksListView(
                     modifier = Modifier
                         .fillMaxSize(),
-                    musicViewModel, QueuePlayList, musicList
+                    musicViewModel, QueuePlayList, musicList, remember {
+                        mutableStateOf(false)
+                    }
                 )
             }
 

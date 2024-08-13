@@ -102,7 +102,7 @@ fun DrawMenu(
                 )
                 Image(
                     painter = rememberAsyncImagePainter(
-                        musicViewModel.getCurrentMusicCover()
+                        musicViewModel.getCurrentMusicCover(context = LocalContext.current)
                             ?: R.drawable.songs_thumbnail_cover
                     ),
                     contentDescription = "Album cover",
@@ -286,7 +286,7 @@ fun FeedBackDialog(onDismiss: () -> Unit) {
                                 .clickable {
                                     onConfirmation()
                                     Utils.openBrowser(
-                                        "https://discord.gg/uMtf4z5F",
+                                        "https://discord.gg/R9YbH9TBbJ",
                                         context
                                     )
                                 },

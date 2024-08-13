@@ -6,6 +6,8 @@ import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.media.AudioManager
 import android.media.MediaScannerConnection
 import android.media.MediaScannerConnection.MediaScannerConnectionClient
@@ -32,6 +34,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,17 +47,19 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
-import com.ztftrue.music.play.ACTION_TRACKS_UPDATE
 import com.ztftrue.music.play.EVENT_MEDIA_ITEM_Change
 import com.ztftrue.music.play.EVENT_SLEEP_TIME_Change
 import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.sqlData.model.SortFiledData
 import com.ztftrue.music.sqlData.model.StorageFolder
 import com.ztftrue.music.ui.home.BaseLayout
 import com.ztftrue.music.ui.theme.MusicPitchTheme
 import com.ztftrue.music.utils.OperateTypeInActivity
+import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.Utils.deleteTrackUpdate
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.trackManager.PlaylistManager.modifyTrackFromM3U
 import kotlinx.coroutines.CoroutineScope
@@ -63,6 +68,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.locks.ReentrantLock
@@ -107,7 +113,7 @@ class MainActivity : ComponentActivity() {
                     val playListPath = bundle.getString("playListPath", "")
                     val uri = bundle.getString("uri", "")
                     val tracksPath = bundle.getString("tracksPath", "")
-                    val arrayList:ArrayList<MusicItem> =
+                    val arrayList: ArrayList<MusicItem> =
                         bundle.getParcelableArrayList("list") ?: ArrayList()
                     if (playListPath.isNotEmpty()) {
                         modifyTrackFromM3U(
@@ -163,8 +169,7 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     super.onResult(action, extras, resultData)
                                     if (ACTION_TRACKS_DELETE == action) {
-                                        musicViewModel.refreshPlayList.value =
-                                            !musicViewModel.refreshPlayList.value
+                                        deleteTrackUpdate(musicViewModel, resultData)
                                     }
                                 }
                             }
@@ -172,35 +177,7 @@ class MainActivity : ComponentActivity() {
                     }
                     return@registerForActivityResult
                 } else if (OperateTypeInActivity.EditTrackInfo.name == action) {
-                    val u = bundle.getParcelable<Uri>("uri")
-                    val v = bundle.getParcelable<ContentValues>("value")
-                    val id = bundle.getLong("id")
-                    if (u != null && v != null) {
-                        // TODO this is disable,  because cant  updating real file in storage
-//                        values.put(MediaStore.Audio.Media.IS_PENDING, 1)
-//                        contentResolver.update(uri, values, null, null)
-                        resolver.update(u, v, null, null)
-                        val bundleTemp = Bundle()
-                        bundleTemp.putLong("id", id)
-                        musicViewModel.mediaBrowser?.sendCustomAction(
-                            ACTION_TRACKS_UPDATE,
-                            bundleTemp,
-                            object : MediaBrowserCompat.CustomActionCallback() {
-                                override fun onResult(
-                                    action: String?,
-                                    extras: Bundle?,
-                                    resultData: Bundle?
-                                ) {
-                                    super.onResult(action, extras, resultData)
-                                    if (ACTION_TRACKS_UPDATE == action) {
-                                        musicViewModel.refreshPlayList.value =
-                                            !musicViewModel.refreshPlayList.value
-                                    }
-                                }
-                            }
-                        )
-                    }
-
+                    musicViewModel.editTrackEnable.value = true
                 }
 
                 musicViewModel.mediaBrowser?.sendCustomAction(
@@ -278,6 +255,47 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+    private val coverImagePickerLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == RESULT_OK) {
+                if (result.data != null) {
+                    val selectedFileUri: Uri? = result.data!!.data
+                    if (selectedFileUri != null) {
+                        val inputStream =
+                            this@MainActivity.contentResolver.openInputStream(selectedFileUri)
+                        val outputStream = ByteArrayOutputStream()
+                        if (inputStream != null) {
+                            try {
+                                coverBitmap?.value = BitmapFactory.decodeStream(inputStream)
+//                                val cache=File(externalCacheDir,"cache1.jpg")
+//                                if(cache.exists()){
+//                                    cache.delete()
+//                                }
+//                                cache.createNewFile()
+//                                coverBitmap?.value!!.compress(Bitmap.CompressFormat.JPEG, 90, FileOutputStream(cache))
+//                                coverBitmap?.value = BitmapFactory.decodeFile(cache.absolutePath)
+//                           Bitmap.createBitmap(coverBitmap.value!!.width,coverBitmap.value!!.height,Bitmap.Config.ARGB_8888)
+//                                    .compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+//                                BitmapFactory.decodeByteArray(
+//                                    outputStream.toByteArray(),
+//                                    0,
+//                                    outputStream.size()
+//                                )
+                                inputStream.close()
+                                outputStream.close()
+                            } catch (e: Exception) {
+                                inputStream.close()
+                                outputStream.close()
+                                e.printStackTrace()
+                            }
+                        }
+                    }
+                }
+            }
+        }
     val folderPickerLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
@@ -321,6 +339,16 @@ class MainActivity : ComponentActivity() {
 //        intent.addCategory(Intent.CATEGORY_OPENABLE)
 //        intent.type = "text/plain|application/octet-stream";
         filePickerLauncher.launch(intent)
+    }
+
+    private var coverBitmap: MutableState<Bitmap?>? = null
+    fun openImagePicker(bitmap: MutableState<Bitmap?>) {
+        coverBitmap = bitmap
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        intent.type = "image/*" // Specify the MIME type for text files
+//        intent.addCategory(Intent.CATEGORY_OPENABLE)
+//        intent.type = "text/plain|application/octet-stream";
+        coverImagePickerLauncher.launch(intent)
     }
 
     @OptIn(ExperimentalFoundationApi::class)
@@ -565,6 +593,9 @@ class MainActivity : ComponentActivity() {
     private val connectionCallbacks = object : MediaBrowserCompat.ConnectionCallback() {
 
         override fun onConnected() {
+            SharedPreferencesUtils.getEnableShuffle(this@MainActivity).also {
+                musicViewModel.enableShuffleModel.value = it
+            }
             // Get the token for the MediaSession
             mediaBrowser?.sessionToken.also { token ->
                 // Create a MediaControllerCompat
@@ -595,6 +626,12 @@ class MainActivity : ComponentActivity() {
     }
 
     fun getInitData(resultData: Bundle) {
+        resultData.getParcelableArrayList<SortFiledData>("showIndicatorList")?.also {
+            it.forEach { sort ->
+                musicViewModel.showIndicatorMap[sort.type.replace("@Tracks", "")] =
+                    sort.filedName == "Alphabetical"
+            }
+        }
         resultData.getParcelableArrayList<MusicItem>("musicQueue")?.also {
             musicViewModel.musicQueue.clear()
             musicViewModel.musicQueue.addAll(it)
@@ -607,6 +644,9 @@ class MainActivity : ComponentActivity() {
             musicViewModel.mainTabList.clear()
             musicViewModel.mainTabList.addAll(it)
         }
+
+
+
         resultData.getSerializable("playListCurrent")?.also {
             musicViewModel.playListCurrent.value = it as AnyListBase
         }
@@ -665,7 +705,7 @@ class MainActivity : ComponentActivity() {
         // SleepTime wait when play next
         musicViewModel.playCompleted.value =
             resultData.getBoolean("play_completed")
-        musicViewModel.volume.intValue = resultData.getInt("volume",100)
+        musicViewModel.volume.intValue = resultData.getInt("volume", 100)
         getSeek()
     }
 
