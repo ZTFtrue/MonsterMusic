@@ -386,24 +386,49 @@ class MusicViewModel : ViewModel() {
     }
 
     fun getAlbumCover(id: Long, context: Context): Any? {
-        var result: Any? = null
-        val folder = File(context.externalCacheDir, "album_cover")
-        folder.mkdirs()
-        val coverPath = File(folder, "$id.jpg")
-        if (coverPath.exists()) {
-            return coverPath.path
-        } else {
-//            coverPath.createNewFile()
-        }
         try {
-            val albumUri = ContentUris.withAppendedId(
-                Uri.parse("content://media/external/audio/albumart"),
-                id
-            )
-            val s = context.contentResolver.openInputStream(
-                albumUri
-            )
-            if (s == null) {
+            var result: Any? = null
+            val folder = File(context.externalCacheDir, "album_cover")
+            folder.mkdirs()
+            val coverPath = File(folder, "$id.jpg")
+            if (coverPath.exists()) {
+                return coverPath.path
+            } else {
+    //            coverPath.createNewFile()
+            }
+            try {
+                val albumUri = ContentUris.withAppendedId(
+                    Uri.parse("content://media/external/audio/albumart"),
+                    id
+                )
+                val s = context.contentResolver.openInputStream(
+                    albumUri
+                )
+                if (s == null) {
+                    val bm =
+                        BitmapFactory.decodeResource(
+                            context.resources,
+                            R.drawable.songs_thumbnail_cover
+                        )
+                    val outStream = FileOutputStream(coverPath)
+
+                    bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
+                    outStream.flush()
+                    outStream.close()
+                    result =
+                        R.drawable.songs_thumbnail_cover
+                } else {
+                    s.use { input ->
+                        Files.copy(input, coverPath.toPath())
+                    }
+                    result = coverPath.path
+                    s.close()
+                }
+
+            } catch (e: Exception) {
+    //                        e.printStackTrace()
+            }
+            if (result == null) {
                 val bm =
                     BitmapFactory.decodeResource(
                         context.resources,
@@ -414,32 +439,12 @@ class MusicViewModel : ViewModel() {
                 bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
                 outStream.flush()
                 outStream.close()
-                result =
-                    R.drawable.songs_thumbnail_cover
-            } else {
-                s.use { input ->
-                    Files.copy(input, coverPath.toPath())
-                }
-                result = coverPath.path
-                s.close()
+                return R.drawable.songs_thumbnail_cover
             }
+            return result
+        } catch (_: Exception) {
 
-        } catch (e: Exception) {
-//                        e.printStackTrace()
         }
-        if (result == null) {
-            val bm =
-                BitmapFactory.decodeResource(
-                    context.resources,
-                    R.drawable.songs_thumbnail_cover
-                )
-            val outStream = FileOutputStream(coverPath)
-
-            bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
-            outStream.flush()
-            outStream.close()
-            return R.drawable.songs_thumbnail_cover
-        }
-        return result
+        return R.drawable.songs_thumbnail_cover
     }
 }
