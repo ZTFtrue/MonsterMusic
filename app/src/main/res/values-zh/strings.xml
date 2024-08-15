@@ -19,7 +19,7 @@
     <string name="album">专辑: %1$s</string>
     <string name="cover">封面</string>
     <string name="operate">操作</string>
-    <string name="add_to_queue">添加到队列</string>
+    <string name="add_to_queue">添加到播放列表</string>
     <string name="play_next">播放下一首</string>
     <string name="add_to_playlist">添加到歌单</string>
     <string name="pitch">"音调: "</string>
@@ -45,13 +45,13 @@
     <string name="no_music">没有歌曲</string>
     <string name="minutes">%1$s\n 分钟</string>
     <string name="play_completed_last_song">等待歌曲播放结束</string>
-    <string name="clear_current_queue">清除当前队列</string>
-    <string name="save_current_queue_to_playlist">保存当前队列到歌单</string>
-    <string name="operate_current_queue">修改当前队列</string>
+    <string name="clear_current_queue">清除播放列表</string>
+    <string name="save_current_queue_to_playlist">保存播放列表到歌单</string>
+    <string name="operate_current_queue">修改播放列表</string>
     <string name="delete_from_storage">从存储中删除</string>
     <string name="music_info">歌曲信息</string>
     <string name="remove_from_current_playlist">从歌单中移除移除</string>
-    <string name="remove_from_queue">从队列中移除</string>
+    <string name="remove_from_queue">从播放列表中移除</string>
     <string name="add_new_playlist">添加新的歌单</string>
     <string name="sourcecode">源代码</string>
     <string name="confirm">确定</string>
@@ -79,7 +79,7 @@
     <string name="search">搜索</string>
     <string name="tab_songs">歌曲</string>
     <string name="tab_playLists">歌单</string>
-    <string name="tab_queue">当前队列</string>
+    <string name="tab_queue">播放列表</string>
     <string name="tab_albums">专辑</string>
     <string name="tab_artists">艺术家</string>
     <string name="tab_genres">流派</string>
