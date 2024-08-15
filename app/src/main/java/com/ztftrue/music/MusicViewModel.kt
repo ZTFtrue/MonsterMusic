@@ -386,17 +386,16 @@ class MusicViewModel : ViewModel() {
     }
 
     fun getAlbumCover(id: Long, context: Context): Any? {
-        try {
-            var result: Any? = null
-            val folder = File(context.externalCacheDir, "album_cover")
-            folder.mkdirs()
-            val coverPath = File(folder, "$id.jpg")
-            if (coverPath.exists()) {
-                return coverPath.path
-            } else {
+        var result: Any? = null
+        val folder = File(context.externalCacheDir, "album_cover")
+        folder.mkdirs()
+        val coverPath = File(folder, "$id.jpg")
+        if (coverPath.exists()) {
+            return coverPath.path
+        } else {
 //            coverPath.createNewFile()
-            }
-
+        }
+        try {
             val albumUri = ContentUris.withAppendedId(
                 Uri.parse("content://media/external/audio/albumart"),
                 id
@@ -424,23 +423,23 @@ class MusicViewModel : ViewModel() {
                 result = coverPath.path
                 s.close()
             }
-            if (result == null) {
-                val bm =
-                    BitmapFactory.decodeResource(
-                        context.resources,
-                        R.drawable.songs_thumbnail_cover
-                    )
-                val outStream = FileOutputStream(coverPath)
 
-                bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
-                outStream.flush()
-                outStream.close()
-                return R.drawable.songs_thumbnail_cover
-            }
-            return result
         } catch (e: Exception) {
 //                        e.printStackTrace()
         }
-        return null
+        if (result == null) {
+            val bm =
+                BitmapFactory.decodeResource(
+                    context.resources,
+                    R.drawable.songs_thumbnail_cover
+                )
+            val outStream = FileOutputStream(coverPath)
+
+            bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
+            outStream.flush()
+            outStream.close()
+            return R.drawable.songs_thumbnail_cover
+        }
+        return result
     }
 }
