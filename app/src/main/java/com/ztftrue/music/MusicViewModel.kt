@@ -387,7 +387,7 @@ class MusicViewModel : ViewModel() {
 
     fun getAlbumCover(id: Long, context: Context): Any? {
         try {
-            var result: Any? = null
+            val result: Any?
             val folder = File(context.externalCacheDir, "album_cover")
             folder.mkdirs()
             val coverPath = File(folder, "$id.jpg")
