@@ -3,7 +3,6 @@ package com.ztftrue.music.ui.other
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
@@ -70,7 +69,6 @@ import com.ztftrue.music.utils.trackManager.TracksManager
  *  // TODO this is disable,  because cant  updating real file in storage
  */
 @OptIn(
-    ExperimentalFoundationApi::class,
     ExperimentalMaterial3Api::class
 )
 @UnstableApi
@@ -109,7 +107,7 @@ fun EditTrackPage(
         val musicItem = TracksManager.getMusicById(context, musicId)
         if (musicItem != null) {
             musicPath = musicItem.path
-            coverBitmap.value = getCover(context, musicId)
+            coverBitmap.value = getCover(context, musicId, musicPath)
             title = musicItem.name
             album = musicItem.album
             artist = musicItem.artist
