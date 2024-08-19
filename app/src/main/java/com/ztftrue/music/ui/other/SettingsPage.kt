@@ -21,11 +21,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -70,6 +74,7 @@ import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.sqlData.model.MainTab
+import com.ztftrue.music.sqlData.model.StorageFolder
 import com.ztftrue.music.ui.public.BackTopBar
 import com.ztftrue.music.utils.LyricsSettings.FIRST_EMBEDDED_LYRICS
 import com.ztftrue.music.utils.SharedPreferencesName.LYRICS_SETTINGS
@@ -136,6 +141,7 @@ fun SettingsPage(
                     val color = MaterialTheme.colorScheme.onBackground
                     var showDialog by remember { mutableStateOf(false) }
                     var showManageFolderDialog by remember { mutableStateOf(false) }
+                    var showLyricsFolderDialog by remember { mutableStateOf(false) }
                     var showAboutDialog by remember { mutableStateOf(false) }
                     var showSetListIndicatorDialog by remember { mutableStateOf(false) }
 
@@ -275,7 +281,102 @@ fun SettingsPage(
                                 )
                             }
                             .clickable {
+                               Utils.setLyricsFolder(context)
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
+                                ,
+                        ) {
+                            Text(
+                                text = "Add lyrics folder",
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .padding(0.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+                                showLyricsFolderDialog = !showLyricsFolderDialog
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
+                                .clickable {
+                                    showLyricsFolderDialog = !showLyricsFolderDialog
+                                },
+                        ) {
 
+                            if (showLyricsFolderDialog) {
+                                ManageLyricsFolderDialog(
+                                    musicViewModel,
+                                    onDismiss = {
+                                        showLyricsFolderDialog = false
+                                    })
+                            }
+                            Text(
+                                text = "Manage lyrics folders",
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+
+
+                        }
+
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .padding(0.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+                                showManageFolderDialog = !showManageFolderDialog
                             },
                         contentAlignment = Alignment.CenterStart
                     ) {
@@ -982,6 +1083,160 @@ fun AboutDialog(onDismiss: () -> Unit) {
                     ) {
                         Text(
                             stringResource(id = R.string.confirm),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+            }
+        }
+    )
+}
+
+@UnstableApi
+@Composable
+fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
+
+    val context = LocalContext.current
+    val scopeMain = CoroutineScope(Dispatchers.IO)
+
+    val folderList = remember { mutableStateListOf<StorageFolder>() }
+
+    LaunchedEffect(Unit) {
+        scopeMain.launch {
+            val files = musicViewModel.getDb(context).StorageFolderDao().findAll()
+            if (files != null) {
+                folderList.addAll(files)
+            }
+        }
+    }
+    fun onConfirmation() {
+
+        scopeMain.launch {
+            onDismiss()
+        }
+    }
+
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = true, dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        ),
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .background(color = MaterialTheme.colorScheme.background),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(color = MaterialTheme.colorScheme.background),
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(color = MaterialTheme.colorScheme.onBackground)
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    )
+                    {
+                        Text(
+                            text = stringResource(R.string.check_to_not_ignore_the_folder_you_need_restart_the_app_to_take_effect),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                        items(folderList.size) {
+                            val item = folderList[it]
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        start = 10.dp, end = 10.dp
+                                    ),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            )
+                            {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = item.uri,
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                                IconButton(
+                                    modifier = Modifier.width(50.dp),
+                                    onClick = {
+                                        scopeMain.launch {
+                                            item.id?.let { it1 ->
+                                                musicViewModel.getDb(context).StorageFolderDao()
+                                                    .deleteById(
+                                                        it1
+                                                    )
+                                            }
+                                            folderList.removeAt(it)
+                                        }
+                                    }) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Delete,
+                                        contentDescription = "Remove folder",
+                                        modifier = Modifier
+                                            .size(30.dp)
+                                            .clip(CircleShape),
+                                        tint = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+//                    TextButton(
+//                        onClick = { onDismiss() },
+//                        modifier = Modifier
+//                            .padding(8.dp)
+//                            .fillMaxWidth(0.5f),
+//                    ) {
+//                        Text(
+//                            "Add",
+//                            color = MaterialTheme.colorScheme.onBackground
+//                        )
+//                    }
+//                    HorizontalDivider(
+//                        modifier = Modifier
+//                            .background(MaterialTheme.colorScheme.onBackground)
+//                            .width(1.dp)
+//                            .height(50.dp)
+//                    )
+                    TextButton(
+                        onClick = {
+                            onConfirmation()
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(),
+
+                        ) {
+                        Text(
+                            "Close",
                             color = MaterialTheme.colorScheme.onBackground
                         )
                     }

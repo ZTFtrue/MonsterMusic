@@ -1052,8 +1052,6 @@ fun PlayingPage(
                                         colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                                     )
                                 }
-
-
                             }
 
 
