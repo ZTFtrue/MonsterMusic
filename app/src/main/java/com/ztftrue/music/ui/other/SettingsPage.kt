@@ -281,7 +281,7 @@ fun SettingsPage(
                                 )
                             }
                             .clickable {
-                               Utils.setLyricsFolder(context)
+                                Utils.setLyricsFolder(context)
                             },
                         contentAlignment = Alignment.CenterStart
                     ) {
@@ -298,8 +298,7 @@ fun SettingsPage(
                                         end = Offset(size.width, size.height - 1.dp.toPx()),
                                         strokeWidth = 1.dp.toPx()
                                     )
-                                }
-                                ,
+                                },
                         ) {
                             Text(
                                 text = "Add lyrics folder",
@@ -1153,10 +1152,7 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
                         verticalAlignment = Alignment.CenterVertically
                     )
                     {
-                        Text(
-                            text = stringResource(R.string.check_to_not_ignore_the_folder_you_need_restart_the_app_to_take_effect),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
+
                     }
                     LazyColumn(modifier = Modifier.fillMaxWidth()) {
                         items(folderList.size) {
@@ -1171,7 +1167,10 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
                                 verticalAlignment = Alignment.CenterVertically
                             )
                             {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f)
+                                ) {
                                     Text(
                                         text = item.uri,
                                         color = MaterialTheme.colorScheme.onBackground
