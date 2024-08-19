@@ -186,126 +186,122 @@ class MusicViewModel : ViewModel() {
             folder?.mkdirs()
             val id = currentPlay.name.replace(regexPattern, "_")
             val path = "${context.getExternalFilesDir(folderPath)?.absolutePath}/$id"
-            val text = File("$path.txt")
             val firstEmbeddedLyrics =
                 context.getSharedPreferences(LYRICS_SETTINGS, Context.MODE_PRIVATE)
                     .getBoolean(FIRST_EMBEDDED_LYRICS, false)
             val embeddedLyrics = arrayListOf<ListStringCaption>()
             val fileLyrics = arrayListOf<ListStringCaption>()
-            embeddedLyrics.addAll(CaptionUtils.getEmbeddedLyrics(currentPlay.path, context))
+//            embeddedLyrics.addAll(CaptionUtils.getEmbeddedLyrics(currentPlay.path, context))
             if (firstEmbeddedLyrics && embeddedLyrics.isNotEmpty()) {
                 lyricsType = LyricsType.TEXT
-            } else if (text.exists()) {
-                lyricsType = LyricsType.TEXT
-                fileLyrics.addAll(
-                    readCaptions(
-                        text.bufferedReader(),
-                        LyricsType.TEXT,
-                        context
-                    )
-                )
-            } else if (File("$path.lrc").exists()) {
-                lyricsType = LyricsType.LRC
-                fileLyrics.addAll(
-                    readCaptions(
-                        File("$path.lrc").bufferedReader(),
-                        LyricsType.LRC,
-                        context
-                    )
-                )
-            } else if (File("$path.srt").exists()) {
-                lyricsType = LyricsType.SRT
-                fileLyrics.addAll(
-                    readCaptions(
-                        File("$path.srt").bufferedReader(),
-                        LyricsType.SRT,
-                        context
-                    )
-                )
-            } else if (File("$path.vtt").exists()) {
-                lyricsType = LyricsType.VTT
-                fileLyrics.addAll(
-                    readCaptions(
-                        File("$path.vtt").bufferedReader(),
-                        LyricsType.VTT,
-                        context
-                    )
-                )
             } else {
-                val musicName: String = try {
-                    currentPlay.path.substring(
-                        currentPlay.path.lastIndexOf("/") + 1,
-                        currentPlay.path.lastIndexOf(".")
+                // import lyrics
+                val fileInternal = Utils.checkLyrics(path)
+                if (fileInternal != null) {
+                    lyricsType = fileInternal.type
+                    fileLyrics.addAll(
+                        readCaptions(
+                            File(fileInternal.path).bufferedReader(),
+                            fileInternal.type,
+                            context
+                        )
                     )
-                } catch (e: Exception) {
-                    ""
                 }
-                val files = getDb(context).StorageFolderDao().findAll()
-                if (files != null) {
-                    outer@ for (storageFolder in files) {
-                        try {
-                            val treeUri = Uri.parse(storageFolder.uri)
-                            if (treeUri != null) {
-                                context.contentResolver.takePersistableUriPermission(
-                                    treeUri,
-                                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                                )
-                                val pickedDir = DocumentFile.fromTreeUri(context, treeUri)
-                                val d = pickedDir?.listFiles()
-                                if (d != null) {
-                                    for (it in d) {
-                                        if (it.isFile && it.canRead()
-                                        ) {
-                                            val fileNameWithSuffix =
-                                                it.name?.lowercase() ?: ""
-                                            val type =
-                                                if (fileNameWithSuffix.endsWith(".lrc")) {
-                                                    LyricsType.LRC
-                                                } else if (fileNameWithSuffix.endsWith(".srt")) {
-                                                    LyricsType.SRT
-                                                } else if (fileNameWithSuffix.endsWith(".vtt")) {
-                                                    LyricsType.VTT
-                                                } else if (fileNameWithSuffix.endsWith(".txt")) {
-                                                    LyricsType.TEXT
-                                                } else {
-                                                    continue
-                                                }
-                                            val fileName = try {
-                                                fileNameWithSuffix.substring(
-                                                    0,
-                                                    fileNameWithSuffix.indexOf(".")
-                                                )
-                                            } catch (e: Exception) {
-                                                ""
-                                            }
-                                            if (fileName.trim()
-                                                    .lowercase() == musicName.trim()
-                                                    .lowercase()
+                // Same as tracks file
+                if (fileLyrics.isEmpty()) {
+                    val fileR = Utils.checkLyrics(
+                        currentPlay.path.substring(
+                            0,
+                            currentPlay.path.lastIndexOf("."),
+                        )
+                    )
+                    if (fileR != null) {
+                        lyricsType = fileR.type
+                        fileLyrics.addAll(
+                            readCaptions(
+                                File(fileR.path).bufferedReader(),
+                                fileR.type,
+                                context
+                            )
+                        )
+                    }
+                }
+                if (fileLyrics.isEmpty()) {
+                    val musicName: String = try {
+                        currentPlay.path.substring(
+                            currentPlay.path.lastIndexOf("/") + 1,
+                            currentPlay.path.lastIndexOf(".")
+                        )
+                    } catch (e: Exception) {
+                        ""
+                    }
+                    val files = getDb(context).StorageFolderDao().findAll()
+                    if (files != null) {
+                        outer@ for (storageFolder in files) {
+                            try {
+                                val treeUri = Uri.parse(storageFolder.uri)
+                                if (treeUri != null) {
+                                    context.contentResolver.takePersistableUriPermission(
+                                        treeUri,
+                                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                    )
+                                    val pickedDir = DocumentFile.fromTreeUri(context, treeUri)
+                                    val d = pickedDir?.listFiles()
+                                    if (d != null) {
+                                        for (it in d) {
+                                            if (it.isFile && it.canRead()
                                             ) {
-                                                fileLyrics.addAll(
-                                                    fileRead(
-                                                        it.uri,
-                                                        context,
-                                                        type
+                                                val fileNameWithSuffix =
+                                                    it.name?.lowercase() ?: ""
+                                                val type =
+                                                    if (fileNameWithSuffix.endsWith(".lrc")) {
+                                                        LyricsType.LRC
+                                                    } else if (fileNameWithSuffix.endsWith(".srt")) {
+                                                        LyricsType.SRT
+                                                    } else if (fileNameWithSuffix.endsWith(".vtt")) {
+                                                        LyricsType.VTT
+                                                    } else if (fileNameWithSuffix.endsWith(".txt")) {
+                                                        LyricsType.TEXT
+                                                    } else {
+                                                        continue
+                                                    }
+                                                val fileName = try {
+                                                    fileNameWithSuffix.substring(
+                                                        0,
+                                                        fileNameWithSuffix.indexOf(".")
                                                     )
-                                                )
-                                                break@outer
+                                                } catch (e: Exception) {
+                                                    ""
+                                                }
+                                                if (fileName.trim()
+                                                        .lowercase() == musicName.trim()
+                                                        .lowercase()
+                                                ) {
+                                                    fileLyrics.addAll(
+                                                        fileRead(
+                                                            it.uri,
+                                                            context,
+                                                            type
+                                                        )
+                                                    )
+                                                    break@outer
+                                                }
                                             }
                                         }
                                     }
                                 }
+                            } catch (e: Exception) {
+                                getDb(context).StorageFolderDao().deleteById(storageFolder.id!!)
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    Toast.makeText(
+                                        context,
+                                        "There has error, can't read some lyrics. Most of times, this occur after you reinstall app.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                             }
-                        } catch (e: Exception) {
-                            getDb(context).StorageFolderDao().deleteById(storageFolder.id!!)
-                            CoroutineScope(Dispatchers.Main).launch {
-                                Toast.makeText(
-                                    context,
-                                    "There has error, can't read some lyrics. Most of times, this occur after you reinstall app.",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
 
+                        }
                     }
                 }
             }
@@ -379,7 +375,7 @@ class MusicViewModel : ViewModel() {
         }
         val v = currentPlay.value
         if (v != null) {
-            currentMusicCover.value = getCover(context, v.id,v.path)
+            currentMusicCover.value = getCover(context, v.id, v.path)
             return currentMusicCover.value
         }
         return null
@@ -394,7 +390,7 @@ class MusicViewModel : ViewModel() {
             if (coverPath.exists()) {
                 return coverPath.path
             } else {
-    //            coverPath.createNewFile()
+                //            coverPath.createNewFile()
             }
             try {
                 val albumUri = ContentUris.withAppendedId(
@@ -426,7 +422,7 @@ class MusicViewModel : ViewModel() {
                 }
 
             } catch (e: Exception) {
-    //                        e.printStackTrace()
+                //                        e.printStackTrace()
             }
             if (result == null) {
                 val bm =

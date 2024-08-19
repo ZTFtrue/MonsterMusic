@@ -240,7 +240,7 @@ object CaptionUtils {
         // time
         val s = line.replace("\r", "")
         val pattern: Pattern = Pattern.compile("\\[([0-9]+:[0-9]+\\.[0-9]+)](.*)")
-        val matcher: Matcher = pattern.matcher(s)
+        val matcher: Matcher = pattern.matcher(s.replace("\ufeff", ""))
         if (matcher.matches()) {
             val timeStr = matcher.group(1)
             val text = matcher.group(2)

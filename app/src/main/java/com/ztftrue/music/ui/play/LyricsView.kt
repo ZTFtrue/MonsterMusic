@@ -73,7 +73,6 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.media3.common.util.UnstableApi
-import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.utils.LyricsType
@@ -82,7 +81,6 @@ import com.ztftrue.music.utils.model.ListStringCaption
 import com.ztftrue.music.utils.textToolbar.CustomTextToolbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.File
 
 
 const val Lyrics = "lyrics"
@@ -256,7 +254,8 @@ fun LyricsView(
                                     }
                                 ) {
                                     Text(
-                                        text = resolveInfo.label,color = MaterialTheme.colorScheme.onBackground
+                                        text = resolveInfo.label,
+                                        color = MaterialTheme.colorScheme.onBackground
                                     )
                                 }
                             }
@@ -279,36 +278,7 @@ fun LyricsView(
                     .fillMaxWidth()
                     .padding(2.dp)
                     .clickable {
-                        if (musicViewModel.currentPlay.value != null) {
-                            val regexPattern = Regex("[<>\"/~'{}?,+=)(^&*%!@#\$]")
-                            val artistsFolder = musicViewModel.currentPlay.value?.artist
-                                ?.replace(
-                                    regexPattern,
-                                    "_"
-                                )
-                            val folderPath = "$Lyrics/$artistsFolder"
-                            val folder = context.getExternalFilesDir(
-                                folderPath
-                            )
-                            folder?.mkdirs()
-                            val id =
-                                musicViewModel.currentPlay.value?.name?.replace(regexPattern, "_")
-                            val pathLyrics: String =
-                                context.getExternalFilesDir(folderPath)?.absolutePath + "/$id.lrc"
-                            val path: String =
-                                context.getExternalFilesDir(folderPath)?.absolutePath + "/$id.txt"
-                            val lyrics = File(pathLyrics)
-                            val text = File(path)
-                            if (lyrics.exists()) {
-                                Utils.openFile(lyrics.path, context = context)
-                            } else if (text.exists()) {
-                                Utils.openFile(text.path, context = context)
-                            } else {
-                                val tempPath: String =
-                                    context.getExternalFilesDir(folderPath)?.absolutePath + "/$id."
-                                (context as MainActivity).openFilePicker(tempPath)
-                            }
-                        }
+                        Utils.setLyricsFile(musicViewModel, context)
                     }
             )
             Text(
@@ -320,8 +290,7 @@ fun LyricsView(
                     .fillMaxWidth()
                     .padding(2.dp)
                     .clickable {
-                        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-                        (context as MainActivity).folderPickerLauncher.launch(intent)
+                        Utils.setLyricsFolder(context)
                     }
             )
         }

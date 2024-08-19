@@ -11,7 +11,10 @@ import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.text.TextUtils
 import android.widget.Toast
+import androidx.annotation.OptIn
 import androidx.core.content.FileProvider
+import androidx.media3.common.util.UnstableApi
+import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.ACTION_AddPlayQueue
@@ -19,6 +22,7 @@ import com.ztftrue.music.play.ACTION_GET_TRACKS
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.ui.play.Lyrics
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import kotlinx.coroutines.CoroutineScope
@@ -90,6 +94,7 @@ enum class ScrollDirectionType {
     LIST_VERTICAL,
 }
 
+data class CheckLyricsData(val path: String, val type: LyricsType)
 
 @Suppress("deprecation")
 object Utils {
@@ -589,4 +594,56 @@ object Utils {
         }
     }
 
+    @OptIn(UnstableApi::class)
+    fun setLyricsFolder(context: Context) {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        (context as MainActivity).folderPickerLauncher.launch(intent)
+    }
+
+    @OptIn(UnstableApi::class)
+    fun setLyricsFile(musicViewModel: MusicViewModel, context: Context) {
+        if (musicViewModel.currentPlay.value != null) {
+            val regexPattern = Regex("[<>\"/~'{}?,+=)(^&*%!@#\$]")
+            val artistsFolder = musicViewModel.currentPlay.value?.artist
+                ?.replace(
+                    regexPattern,
+                    "_"
+                )
+            val folderPath = "$Lyrics/$artistsFolder"
+            val folder = context.getExternalFilesDir(
+                folderPath
+            )
+            folder?.mkdirs()
+            val id =
+                musicViewModel.currentPlay.value?.name?.replace(regexPattern, "_")
+            val pathLyrics: String =
+                context.getExternalFilesDir(folderPath)?.absolutePath + "/$id.lrc"
+            val path: String =
+                context.getExternalFilesDir(folderPath)?.absolutePath + "/$id.txt"
+            val lyrics = File(pathLyrics)
+            val text = File(path)
+            if (lyrics.exists()) {
+                Utils.openFile(lyrics.path, context = context)
+            } else if (text.exists()) {
+                Utils.openFile(text.path, context = context)
+            } else {
+                val tempPath: String =
+                    context.getExternalFilesDir(folderPath)?.absolutePath + "/$id."
+                (context as MainActivity).openFilePicker(tempPath)
+            }
+        }
+    }
+
+    fun checkLyrics(path: String): CheckLyricsData? {
+        if (File("$path.lrc").exists()) {
+            return CheckLyricsData("$path.lrc", LyricsType.LRC)
+        } else if (File("$path.txt").exists()) {
+            return CheckLyricsData("$path.txt", LyricsType.TEXT)
+        } else if (File("$path.srt").exists()) {
+            return CheckLyricsData("$path.srt", LyricsType.SRT)
+        } else if (File("$path.vtt").exists()) {
+            return CheckLyricsData("$path.vtt", LyricsType.VTT)
+        }
+        return null
+    }
 }
