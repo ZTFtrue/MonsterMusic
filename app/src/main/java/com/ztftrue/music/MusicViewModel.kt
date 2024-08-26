@@ -21,7 +21,9 @@ import androidx.lifecycle.ViewModel
 import androidx.media3.common.Player
 import androidx.navigation.NavHostController
 import com.ztftrue.music.sqlData.MusicDatabase
+import com.ztftrue.music.sqlData.model.ARTIST_TYPE
 import com.ztftrue.music.sqlData.model.DictionaryApp
+import com.ztftrue.music.sqlData.model.GENRE_TYPE
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.play.Lyrics
@@ -29,7 +31,6 @@ import com.ztftrue.music.utils.CaptionUtils
 import com.ztftrue.music.utils.LyricsSettings.FIRST_EMBEDDED_LYRICS
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.PlayListType
-import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.SharedPreferencesName.LYRICS_SETTINGS
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.getCover
@@ -70,9 +71,9 @@ class MusicViewModel : ViewModel() {
     var mediaController: MediaControllerCompat? = null
     var mediaBrowser: MediaBrowserCompat? = null
 
-    val albumScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
-    val artistScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
-    val genreScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
+//    val albumScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
+//    val artistScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
+//    val genreScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
 
     // 当前播放的列表，应该换数据结构存储，每个列表设置变量 播放状态，album和 genres 也是，艺术家跳转到 album， 然后在下一步处理
     // 每次播放仅设置当前列表的状态
@@ -109,6 +110,9 @@ class MusicViewModel : ViewModel() {
     var playStatus = mutableStateOf(false)
     var equalizerBands = mutableStateListOf<EqualizerBand>()
     var showIndicatorMap = mutableStateMapOf<String, Boolean>()
+
+    var artistCover = mutableStateMapOf<String, Uri>()
+    var genreCover = mutableStateMapOf<String, Uri>()
 
     // lyrics
     var itemDuration: Long = 1
@@ -191,7 +195,7 @@ class MusicViewModel : ViewModel() {
                     .getBoolean(FIRST_EMBEDDED_LYRICS, false)
             val embeddedLyrics = arrayListOf<ListStringCaption>()
             val fileLyrics = arrayListOf<ListStringCaption>()
-//            embeddedLyrics.addAll(CaptionUtils.getEmbeddedLyrics(currentPlay.path, context))
+            embeddedLyrics.addAll(CaptionUtils.getEmbeddedLyrics(currentPlay.path, context))
             if (firstEmbeddedLyrics && embeddedLyrics.isNotEmpty()) {
                 lyricsType = LyricsType.TEXT
             } else {
@@ -328,9 +332,14 @@ class MusicViewModel : ViewModel() {
         lyricsType = captionType
         val inputStream =
             context.contentResolver.openInputStream(uri)
+        val i = InputStreamReader(inputStream)
         val reader =
-            BufferedReader(InputStreamReader(inputStream))
-        return readCaptions(reader, lyricsType, context)
+            BufferedReader(i)
+        val r = readCaptions(reader, lyricsType, context)
+        reader.close()
+        i.close()
+        inputStream?.close()
+        return r
     }
 
     private fun readCaptions(
@@ -443,4 +452,80 @@ class MusicViewModel : ViewModel() {
         }
         return R.drawable.songs_thumbnail_cover
     }
+
+    fun prepareArtistAndGenreCover(context: Context) {
+        if (genreCover.isEmpty()) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val files = getDb(context).StorageFolderDao().findAllByType(GENRE_TYPE)
+                outer@ for (storageFolder in files) {
+                    try {
+                        val treeUri = Uri.parse(storageFolder.uri)
+                        if (treeUri != null) {
+                            context.contentResolver.takePersistableUriPermission(
+                                treeUri,
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                            )
+                            val pickedDir = DocumentFile.fromTreeUri(context, treeUri)
+                            val d = pickedDir?.listFiles()
+                            if (d != null) {
+                                for (it in d) {
+                                    if (it.isFile && it.canRead() && it.name != null
+                                        && (it.name?.endsWith(".jpg") == true
+                                                || it.name?.endsWith(".jpeg") == true
+                                                || it.name?.endsWith(".png") == true)
+                                    ) {
+
+                                        genreCover[it.name!!.lowercase().replace(".jpg", "")
+                                            .replace(".jpeg", "")
+                                            .replace(".png", "")
+                                            .trimIndent().trimEnd()] = it.uri
+                                    }
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+        }
+
+        if (artistCover.isEmpty()) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val files = getDb(context).StorageFolderDao().findAllByType(ARTIST_TYPE)
+                outer@ for (storageFolder in files) {
+                    try {
+                        val treeUri = Uri.parse(storageFolder.uri)
+                        if (treeUri != null) {
+                            context.contentResolver.takePersistableUriPermission(
+                                treeUri,
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                            )
+                            val pickedDir = DocumentFile.fromTreeUri(context, treeUri)
+                            val d = pickedDir?.listFiles()
+                            if (d != null) {
+                                for (it in d) {
+                                    if (it.isFile && it.canRead() && it.name != null
+                                        && (it.name?.endsWith(".jpg") == true
+                                                || it.name?.endsWith(".jpeg") == true
+                                                || it.name?.endsWith(".png") == true)
+                                    ) {
+                                        artistCover[it.name!!.lowercase().replace(".jpg", "")
+                                            .replace(".jpeg", "")
+                                            .replace(".png", "")
+                                            .trimIndent().trimEnd()] = it.uri
+                                    }
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+        }
+
+    }
+
+
 }

@@ -724,7 +724,15 @@ fun TracksListPage(
                                     }
 
                                     is ArtistList -> {
-                                        R.drawable.songs_thumbnail_cover
+                                        val artistList = musicPlayList.value as ArtistList
+                                        musicViewModel.artistCover[artistList.name.lowercase()
+                                            .trim()] ?: R.drawable.ic_artist
+                                    }
+
+                                    is GenresList -> {
+                                        val genresList = musicPlayList.value as GenresList
+                                        musicViewModel.genreCover[genresList.name.lowercase()
+                                            .trim()] ?: R.drawable.ic_genres
                                     }
 
                                     else -> {

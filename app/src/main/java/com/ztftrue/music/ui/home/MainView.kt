@@ -1,5 +1,6 @@
 package com.ztftrue.music.ui.home
 
+import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -20,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.media3.common.util.UnstableApi
@@ -57,9 +59,14 @@ fun MainView(
         showIndicator.value =
             musicViewModel.showIndicatorMap.getOrDefault(PlayListType.Songs.toString(), false)
 //    }
+    val context = LocalContext.current
     val pagerState = rememberPagerState { tabList.size }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val queueD = remember { mutableStateOf(false) }
+    val sharedPreferences =
+        context.getSharedPreferences("list_indicator_config", Context.MODE_PRIVATE)
+    val queueD = remember {
+        mutableStateOf(sharedPreferences.getBoolean("show_queue_indicator", false))
+    }
     val scope = rememberCoroutineScope()
     BackHandler(enabled = drawerState.isOpen) {
         if (drawerState.isOpen) {

@@ -558,15 +558,21 @@ class PlayService : MediaBrowserServiceCompat() {
                 if (notify == null) {
                     notify = CreateNotification(this@PlayService, mediaSession)
                 }
-                val musicItem = extras.getParcelable<MusicItem>("musicItem")
+                val gson = Gson()
+                var musicItem = extras.getParcelable<MusicItem>("musicItem")
                 val switchQueue = extras.getBoolean("switch_queue", false)
                 val index = extras.getInt("index")
                 if (musicItem != null) {
+                    musicItem = gson.fromJson(gson.toJson(musicItem), MusicItem::class.java)
                     if (switchQueue) {
                         val playList = extras.getParcelable<AnyListBase>("playList")
-                        val musicItems = extras.getParcelableArrayList<MusicItem>("musicItems")
+                        var musicItems = extras.getParcelableArrayList<MusicItem>("musicItems")
                         if (playList != null && musicItems != null) {
-                            playMusicSwitchQueue(playList, index, musicItems)
+                            val musicItemListType =
+                                object : TypeToken<ArrayList<MusicItem?>?>() {}.type
+                            musicItems =
+                                gson.fromJson(gson.toJson(musicItems), musicItemListType)
+                            musicItems?.let { playMusicSwitchQueue(playList, index, it) }
                         }
                     } else {
                         playMusicCurrentQueue(musicItem, index)

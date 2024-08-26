@@ -50,6 +50,8 @@ import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.play.EVENT_MEDIA_ITEM_Change
 import com.ztftrue.music.play.EVENT_SLEEP_TIME_Change
 import com.ztftrue.music.play.PlayService
+import com.ztftrue.music.sqlData.model.ARTIST_TYPE
+import com.ztftrue.music.sqlData.model.GENRE_TYPE
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.SortFiledData
@@ -320,6 +322,48 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    val genreFolderPickerLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val treeUri = result.data?.data
+                if (treeUri != null) {
+                    contentResolver.takePersistableUriPermission(
+                        treeUri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    )
+                    CoroutineScope(Dispatchers.IO).launch {
+                        musicViewModel.getDb(this@MainActivity).StorageFolderDao().insert(
+                            StorageFolder(null, treeUri.toString(), GENRE_TYPE)
+                        )
+                        musicViewModel.genreCover.clear()
+                        musicViewModel.prepareArtistAndGenreCover(this@MainActivity)
+                    }
+                }
+            }
+        }
+    val artistFolderPickerLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val treeUri = result.data?.data
+                if (treeUri != null) {
+                    contentResolver.takePersistableUriPermission(
+                        treeUri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    )
+                    CoroutineScope(Dispatchers.IO).launch {
+                        musicViewModel.getDb(this@MainActivity).StorageFolderDao().insert(
+                            StorageFolder(null, treeUri.toString(), ARTIST_TYPE)
+                        )
+                        musicViewModel.artistCover.clear()
+                        musicViewModel.prepareArtistAndGenreCover(this@MainActivity)
+                    }
+                }
+            }
+        }
 
     private fun openAppSettings() {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
@@ -404,7 +448,9 @@ class MainActivity : ComponentActivity() {
         compatSplashScreen = installSplashScreen()
         compatSplashScreen?.setKeepOnScreenCondition { musicViewModel.mainTabList.isEmpty() }
         Utils.initSettingsData(musicViewModel, this)
+        musicViewModel.prepareArtistAndGenreCover(this@MainActivity)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+
             if (ActivityCompat.checkSelfPermission(
                     this@MainActivity, Manifest.permission.READ_EXTERNAL_STORAGE
                 ) == PackageManager.PERMISSION_GRANTED
@@ -626,11 +672,9 @@ class MainActivity : ComponentActivity() {
     }
 
     fun getInitData(resultData: Bundle) {
-        resultData.getParcelableArrayList<SortFiledData>("showIndicatorList")?.also {
-            it.forEach { sort ->
-                musicViewModel.showIndicatorMap[sort.type.replace("@Tracks", "")] =
-                    sort.filedName == "Alphabetical"
-            }
+        resultData.getParcelableArrayList<SortFiledData>("showIndicatorList")?.onEach { sort ->
+            musicViewModel.showIndicatorMap[sort.type.replace("@Tracks", "")] =
+                sort.filedName == "Alphabetical"
         }
         resultData.getParcelableArrayList<MusicItem>("musicQueue")?.also {
             musicViewModel.musicQueue.clear()

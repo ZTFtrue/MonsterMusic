@@ -599,7 +599,16 @@ object Utils {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
         (context as MainActivity).folderPickerLauncher.launch(intent)
     }
-
+    @OptIn(UnstableApi::class)
+    fun setArtistFolder(context: Context) {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        (context as MainActivity).artistFolderPickerLauncher.launch(intent)
+    }
+    @OptIn(UnstableApi::class)
+    fun setGenreFolder(context: Context) {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        (context as MainActivity).genreFolderPickerLauncher.launch(intent)
+    }
     @OptIn(UnstableApi::class)
     fun setLyricsFile(musicViewModel: MusicViewModel, context: Context) {
         if (musicViewModel.currentPlay.value != null) {

@@ -60,25 +60,31 @@ object SharedPreferencesUtils {
         context.getSharedPreferences("cover", Context.MODE_PRIVATE).edit().putString("image", path)
             .apply()
     }
+
     fun getCoverImage(context: Context): String {
         return context.getSharedPreferences("cover", Context.MODE_PRIVATE).getString("image", "")
             ?: ""
     }
+
     fun setAlwaysShowCover(context: Context, always: Boolean) {
-        context.getSharedPreferences("cover", Context.MODE_PRIVATE).edit().putBoolean("always", always)
+        context.getSharedPreferences("cover", Context.MODE_PRIVATE).edit()
+            .putBoolean("always", always)
             .apply()
     }
-    fun getAlwaysShowCover(context: Context ):Boolean {
-        return context.getSharedPreferences("cover", Context.MODE_PRIVATE).getBoolean("always", false)
+
+    fun getAlwaysShowCover(context: Context): Boolean {
+        return context.getSharedPreferences("cover", Context.MODE_PRIVATE)
+            .getBoolean("always", false)
     }
-      fun saveSelectMusicId(context: Context,id: Long) {
+
+    fun saveSelectMusicId(context: Context, id: Long) {
         context.getSharedPreferences(
             "SelectedPlayTrack",
             Context.MODE_PRIVATE
         ).edit().putLong("SelectedPlayTrack", id).apply()
     }
 
-      fun getCurrentPlayId(context: Context): Long {
+    fun getCurrentPlayId(context: Context): Long {
         return context.getSharedPreferences(
             "SelectedPlayTrack",
             Context.MODE_PRIVATE
@@ -86,7 +92,7 @@ object SharedPreferencesUtils {
     }
 
     @SuppressLint("ApplySharedPref")
-      fun saveCurrentDuration(context: Context,duration: Long) {
+    fun saveCurrentDuration(context: Context, duration: Long) {
         context.getSharedPreferences(
             "SelectedPlayTrack",
             Context.MODE_PRIVATE
@@ -94,24 +100,25 @@ object SharedPreferencesUtils {
     }
 
     @SuppressLint("ApplySharedPref")
-      fun saveVolume(context: Context,volume: Int) {
+    fun saveVolume(context: Context, volume: Int) {
         context.getSharedPreferences(
             "volume",
             Context.MODE_PRIVATE
         ).edit().putInt("volume", volume).commit()
     }
 
-      fun getVolume(context: Context): Int {
+    fun getVolume(context: Context): Int {
         return context.getSharedPreferences(
             "volume",
             Context.MODE_PRIVATE
         ).getInt("volume", 100)
     }
 
-      fun getCurrentPosition(context: Context): Long {
+    fun getCurrentPosition(context: Context): Long {
         return context.getSharedPreferences(
             "SelectedPlayTrack",
             Context.MODE_PRIVATE
         ).getLong("CurrentPosition", 0)
     }
+
 }

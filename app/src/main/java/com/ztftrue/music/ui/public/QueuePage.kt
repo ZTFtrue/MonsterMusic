@@ -1,5 +1,6 @@
 package com.ztftrue.music.ui.public
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -64,6 +65,11 @@ fun QueuePage(
     var showDialog by remember { mutableStateOf(false) }
     var showAddPlayListDialog by remember { mutableStateOf(false) }
     var showCreatePlayListDialog by remember { mutableStateOf(false) }
+    val sharedPreferences =
+        context.getSharedPreferences("list_indicator_config", Context.MODE_PRIVATE)
+    val showIndicator = remember {
+        mutableStateOf(sharedPreferences.getBoolean("show_queue_indicator", false))
+    }
 
     if (showDialog) {
         QueueOperateDialog(onDismiss = {
@@ -78,7 +84,7 @@ fun QueuePage(
                 musicViewModel.currentCaptionList.clear()
             } else if (it == OperateType.SaveQueueToPlayList) {
                 showAddPlayListDialog = true
-            } else if(it== OperateType.QueueSwipeSort){
+            } else if (it == OperateType.QueueSwipeSort) {
 
             }
         })
@@ -117,7 +123,11 @@ fun QueuePage(
                         ACTION_PlayLIST_CHANGE, null, null
                     )
                 } else {
-                    Toast.makeText(context,    context.getString(R.string.create_failed), Toast.LENGTH_SHORT)
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.create_failed),
+                        Toast.LENGTH_SHORT
+                    )
                         .show()
                 }
             }
@@ -153,9 +163,7 @@ fun QueuePage(
                 TracksListView(
                     modifier = Modifier
                         .fillMaxSize(),
-                    musicViewModel, QueuePlayList, musicList, remember {
-                        mutableStateOf(false)
-                    }
+                    musicViewModel, QueuePlayList, musicList, showIndicator
                 )
             }
 
@@ -266,7 +274,10 @@ fun QueueOperateDialog(
                             .padding(8.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
             }

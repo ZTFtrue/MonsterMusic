@@ -1,8 +1,6 @@
 package com.ztftrue.music.ui.public
 
 import android.content.Context
-import android.os.Bundle
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -21,8 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -30,19 +26,13 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -61,21 +51,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.core.text.isDigitsOnly
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.play.ACTION_SET_SLEEP_TIME
 import com.ztftrue.music.sqlData.model.MusicItem
-import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.model.ItemFilterModel
 import kotlinx.coroutines.launch
@@ -95,7 +80,8 @@ fun TracksListView(
     tracksList: SnapshotStateList<MusicItem>,
     showIndicator: MutableState<Boolean>,
     selectStatus: Boolean = false,
-    selectList: SnapshotStateList<MusicItem>? = null
+    selectList: SnapshotStateList<MusicItem>? = null,
+    header: @Composable (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     var showSlideIndicator by remember { mutableStateOf(false) }
@@ -139,7 +125,7 @@ fun TracksListView(
         })
     }
     key(tracksList, itemFilterList, showSlideIndicator, showTopIndicator) {
-        if (tracksList.size == 0) {
+        if (tracksList.size == 0&&header==null) {
             Text(
                 text = stringResource(R.string.no_music),
                 color = MaterialTheme.colorScheme.onBackground,
@@ -196,6 +182,11 @@ fun TracksListView(
                             state = listState, modifier = Modifier
                                 .fillMaxSize()
                         ) {
+                            item {
+                                if (header != null) {
+                                    header()
+                                }
+                            }
                             items(tracksList.size) { index ->
                                 val music = tracksList[index]
                                 if (showTopIndicator) {
