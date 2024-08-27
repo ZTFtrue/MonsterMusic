@@ -30,23 +30,20 @@ embark on a musical adventure like never before!
 [<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png"
      alt="Get it on IzzyOnDroid"
      height="80">](https://apt.izzysoft.de/fdroid/index/apk/com.ztftrue.music)
-     
 
 Or download the latest APK from the [Releases Section](https://github.com/ZTFtrue/MonsterMusic/releases/latest).
-
-
-
 
 <img alt="equalizer" src="./Picture/equalizer.jpg" width="200px"/><img alt="cover" src="./Picture/cover.jpg" width="200px"/>
 <img alt="settings" src="./Picture/settings.jpg" width="200px"/><img alt="albums" src="./Picture/albums.jpg" width="200px"/>
 <img alt="songs" src="./Picture/songs.jpg" width="200px"/><img alt="songs" src="./Picture/songs.jpg" width="200px"/>
-<img alt="dic" src="./Picture/dic.png" width="200px"/><img alt="lyrics" src="./Picture/lyrics.png" width="200px"/>
+<img alt="dic" src="./Picture/dic.png" width="200px"/><img alt="lyrics" src="./Picture/lyrics.png" width="200px"/><img alt="songs" src="./Picture/artist.png" width="200px"/>
+<img alt="songs" src="./Picture/genre.png" width="200px"/><img alt="songs" src="./Picture/index.jpg" width="200px"/>
 
 <video width="320px" controls>
   <source src="./Picture/MonstrMusicExample.mp4" type="video/mp4">
 </video>
 
-Songs from: https://helpguide.sony.net/high-res/sample1/v1/en/index.html
+Songs from: <https://helpguide.sony.net/high-res/sample1/v1/en/index.html>
 
 It does not support Android 10 and below, but you can compile(need modify code) it to support it,
 but some features cannot be used.
@@ -74,4 +71,3 @@ Other Icons from: <https://fonts.google.com/icons>.
 [crowdin](https://crowdin.com/project/monstermusic/invite?h=d58c9ddb1dea6fafb617327d66a529b52178797)
 
 Thanks: @`Libervole`
-
