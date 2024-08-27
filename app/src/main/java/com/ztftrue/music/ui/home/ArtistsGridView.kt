@@ -1,5 +1,6 @@
 package com.ztftrue.music.ui.home
 
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -72,6 +73,7 @@ import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.ArtistList
+import java.io.File
 
 
 @Composable
@@ -252,31 +254,33 @@ fun ArtistItemView(
                 navigatorExtras = ListParameter(item.id, type)
             )
         }) {
+
+        val fileR = Utils.checkLyrics(
+            item.name + ".jpg"
+        )
+        if (fileR != null) {
+//            lyricsType = fileR.type
+//            fileLyrics.addAll(
+//                readCaptions(
+//                    File(fileR.path).bufferedReader(),
+//                    fileR.type,
+//                    context
+//                )
+//            )
+        }
         ConstraintLayout {
             val (playIndicator) = createRefs()
+            val model: Any? = musicViewModel.artistCover[item.name.lowercase().trim()]
             Image(
                 painter = rememberAsyncImagePainter(
-//                    try {
-//                        val albumUri = ContentUris.withAppendedId(
-//                            Uri.parse("content://media/external/audio/artist"),
-//                            item.id
-//                        )
-//                        BitmapFactory.decodeStream(
-//                            context.contentResolver.openInputStream(
-//                                albumUri
-//                            )
-//                        )
-//                    } catch (e: Exception) {
-//                        R.drawable.ic_artist
-//                    }
-                    R.drawable.ic_artist
+                    model ?: R.drawable.ic_artist
                 ),
                 contentDescription = "Album cover",
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.primaryContainer)
                     .aspectRatio(1f),
-                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimaryContainer)
+                colorFilter = if (model == null) ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimaryContainer) else null
             )
             if (item.id == musicViewModel.playListCurrent.value?.id && item.type == musicViewModel.playListCurrent.value?.type) {
                 Image(
@@ -470,7 +474,10 @@ fun ArtistsOperateDialog(
                             .padding(8.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
             }

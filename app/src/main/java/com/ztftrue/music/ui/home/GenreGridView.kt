@@ -60,6 +60,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.navigation.NavHostController
+import coil.compose.rememberAsyncImagePainter
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
@@ -138,7 +139,7 @@ fun GenreGridView(
                     Box(
                         modifier = Modifier
                             .padding(5.dp)
-                            .width( width.dp)
+                            .width(width.dp)
                     ) {
                         GenreItemView(
                             item,
@@ -245,17 +246,18 @@ fun GenreItemView(
     ) {
         ConstraintLayout {
             val (playIndicator) = createRefs()
+            val model: Any? = musicViewModel.genreCover[item.name.lowercase().trim()]
             Image(
-                painter = painterResource(
-                    id = R.drawable.ic_genres
+                painter = rememberAsyncImagePainter(
+                    model ?: R.drawable.ic_genres
                 ),
-                contentDescription = "Album cover",
+                contentDescription = "Genre cover",
                 modifier = Modifier
                     .zIndex(0f)
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.primaryContainer)
                     .aspectRatio(1f),
-                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimaryContainer)
+                colorFilter = if (model == null) ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimaryContainer) else null
             )
             if (item.id == musicViewModel.playListCurrent.value?.id && item.type == musicViewModel.playListCurrent.value?.type) {
                 Image(
@@ -450,7 +452,10 @@ fun GenreListOperateDialog(
                             .padding(8.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
             }

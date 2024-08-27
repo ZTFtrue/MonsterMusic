@@ -301,7 +301,88 @@ fun SettingsPage(
                                 },
                         ) {
                             Text(
-                                text = "Add lyrics folder",
+                                text = "Add lyrics folders",
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .padding(0.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+                                Utils.setArtistFolder(context)
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                },
+                        ) {
+                            Text(
+                                text = "Set artist folder(.jpg/jpeg/png)",
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .padding(0.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+                                Utils.setGenreFolder(context)
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                },
+                        ) {
+                            Text(
+                                text = "Set genre folder(.jpg/jpeg/png)",
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -356,8 +437,6 @@ fun SettingsPage(
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
-
-
                         }
 
                     }
@@ -1512,12 +1591,14 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
     val coroutineScope = CoroutineScope(Dispatchers.IO)
     var showSlideIndicator by remember { mutableStateOf(false) }
     var showTopIndicator by remember { mutableStateOf(false) }
+    var showQueueIndicator by remember { mutableStateOf(false) }
     val sharedPreferences =
         context.getSharedPreferences("list_indicator_config", Context.MODE_PRIVATE)
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             showSlideIndicator = sharedPreferences.getBoolean("show_slide_indicator", true)
             showTopIndicator = sharedPreferences.getBoolean("show_top_indicator", true)
+            showQueueIndicator = sharedPreferences.getBoolean("show_queue_indicator", false)
         }
     }
     @SuppressLint("ApplySharedPref")
@@ -1525,7 +1606,9 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
         coroutineScope.launch {
             sharedPreferences.edit()
                 .putBoolean("show_slide_indicator", showSlideIndicator)
-                .putBoolean("show_top_indicator", showTopIndicator).apply()
+                .putBoolean("show_top_indicator", showTopIndicator)
+                .putBoolean("show_queue_indicator", showQueueIndicator)
+                .apply()
             onDismiss()
         }
     }
@@ -1622,6 +1705,40 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                                                 "Show top indicator"
                                             } else {
                                                 "Hide top indicator"
+                                            }
+                                        }
+                                )
+                            }
+                        }
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        start = 10.dp, end = 10.dp
+                                    ),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            )
+                            {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Show indicator in queue",
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                                Checkbox(
+                                    checked = showQueueIndicator,
+                                    onCheckedChange = { v ->
+                                        showQueueIndicator = v
+                                    },
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .semantics {
+                                            contentDescription = if (showQueueIndicator) {
+                                                "Show indicator in queue"
+                                            } else {
+                                                "Hide indicator in queue"
                                             }
                                         }
                                 )

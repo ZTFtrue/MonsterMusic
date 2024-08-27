@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -37,6 +36,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -84,6 +84,25 @@ fun SearchPage(
     val width = (configuration.screenWidthDp / 2.5) + 70
     var jobSeek: Job? = null
     val job = CoroutineScope(Dispatchers.IO)
+    val rootView = LocalView.current
+    var keyboardHeight by remember { mutableStateOf(0) }
+    var localViewHeight by remember { mutableStateOf(rootView.height) }
+//    DisposableEffect(rootView) {
+//        val listener = ViewTreeObserver.OnGlobalLayoutListener {
+//            val rect = Rect()
+//            rootView.getWindowVisibleDisplayFrame(rect)
+//            val screenHeight = rootView.height
+//            val keypadHeight = screenHeight - rect.bottom
+//            keyboardHeight = if (keypadHeight > screenHeight * 0.15) keypadHeight else 0
+//            localViewHeight=rect.height()
+//        }
+//
+//        rootView.viewTreeObserver.addOnGlobalLayoutListener(listener)
+//
+//        onDispose {
+//            rootView.viewTreeObserver.removeOnGlobalLayoutListener(listener)
+//        }
+//    }
     LaunchedEffect(keywords) {
         jobSeek?.cancel()
         if (keywords.isNotEmpty()) {
@@ -148,7 +167,9 @@ fun SearchPage(
 //        focusRequester.requestFocus()
 //    }
     Scaffold(
-        modifier = Modifier.padding(all = 0.dp),
+        modifier = Modifier
+            .padding(all = 0.dp)
+            .fillMaxSize(),
         topBar = {
             Column {
                 Row(
@@ -162,67 +183,77 @@ fun SearchPage(
                         CompositionLocalProvider(
                             LocalContentColor provides MaterialTheme.colorScheme.onBackground
                         ) {
-                                OutlinedTextField(
-                                    value = keywords,
-                                    onValueChange = {
-                                        val newText = it.ifEmpty {
-                                            ""
-                                        }
-                                        if (keywords != newText) {
-                                            keywords = newText
-                                        }
-                                    },
-                                    placeholder = {
-                                        Text(stringResource(R.string.enter_text_to_search))
-                                    }, // Placeholder or hint text
-                                    keyboardOptions = KeyboardOptions.Default.copy(
-                                        imeAction = ImeAction.Done,
-                                        keyboardType = KeyboardType.Text
-                                    ),
-                                    keyboardActions = KeyboardActions(
-                                        onDone = {
-                                            focusRequester.freeFocus()
-                                            keyboardController?.hide()
-                                        }
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .focusRequester(focusRequester)
-                                        .background(MaterialTheme.colorScheme.primary),
-                                    suffix = {
+                            OutlinedTextField(
+                                value = keywords,
+                                onValueChange = {
+                                    val newText = it.ifEmpty {
+                                        ""
+                                    }
+                                    if (keywords != newText) {
+                                        keywords = newText
+                                    }
+                                },
+                                placeholder = {
+                                    Text(stringResource(R.string.enter_text_to_search))
+                                }, // Placeholder or hint text
+                                keyboardOptions = KeyboardOptions.Default.copy(
+                                    imeAction = ImeAction.Done,
+                                    keyboardType = KeyboardType.Text
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        focusRequester.freeFocus()
+                                        keyboardController?.hide()
+                                    }
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .focusRequester(focusRequester)
+                                    .background(MaterialTheme.colorScheme.primary),
+                                suffix = {
 
-                                    },
-                                    colors = TextFieldDefaults.colors(
-                                        errorTextColor = MaterialTheme.colorScheme.primary,
-                                        focusedTextColor = MaterialTheme.colorScheme.primary,
-                                        disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                        unfocusedTextColor = MaterialTheme.colorScheme.primary,
-                                        focusedContainerColor = MaterialTheme.colorScheme.background,
-                                        unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                                        cursorColor = MaterialTheme.colorScheme.primary,
-                                        errorCursorColor = MaterialTheme.colorScheme.error,
-                                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                                        unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                        disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                                        errorIndicatorColor = MaterialTheme.colorScheme.error,
-                                        disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        errorLeadingIconColor = MaterialTheme.colorScheme.error,
-                                        disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        errorTrailingIconColor = MaterialTheme.colorScheme.error,
-                                        focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                        disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                        errorLabelColor = MaterialTheme.colorScheme.error,
-                                        disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        )
+                                },
+                                colors = TextFieldDefaults.colors(
+                                    errorTextColor = MaterialTheme.colorScheme.primary,
+                                    focusedTextColor = MaterialTheme.colorScheme.primary,
+                                    disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
                                     ),
-                                    textStyle= MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
-                                )
+                                    unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                                    focusedContainerColor = MaterialTheme.colorScheme.background,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                    cursorColor = MaterialTheme.colorScheme.primary,
+                                    errorCursorColor = MaterialTheme.colorScheme.error,
+                                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                                    unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    ),
+                                    disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.12f
+                                    ),
+                                    errorIndicatorColor = MaterialTheme.colorScheme.error,
+                                    disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    ),
+                                    errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    ),
+                                    errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    ),
+                                    disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    ),
+                                    errorLabelColor = MaterialTheme.colorScheme.error,
+                                    disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    )
+                                ),
+                                textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                            )
                         }
                     }
                 }
@@ -231,24 +262,31 @@ fun SearchPage(
         bottomBar = { Bottom(musicViewModel, navController) },
         floatingActionButton = {},
         content = {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(it)
-            ) {
-                item(1) {
-
-
-                    if (keywords.isNotEmpty() && albumsList.isEmpty() && artistList.isEmpty() && tracksList.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.no_music),
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.horizontalScroll(rememberScrollState(0))
-                        )
+            if (keywords.isNotEmpty() && albumsList.isEmpty() && artistList.isEmpty() && tracksList.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.no_music),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier
+                        .horizontalScroll(rememberScrollState(0))
+                        .padding(it)
+                )
+            }
+            var height = localViewHeight
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .padding(it)) {
+                TracksListView(
+                    modifier = Modifier,
+                    musicViewModel, modeList, tracksList, remember {
+                        mutableStateOf(true)
                     }
+                ) {
                     if (albumsList.isNotEmpty()) {
-
-                        Text(text =stringResource(R.string.album,""))
+                        height -= width.toInt()
+                        Text(
+                            text = stringResource(R.string.album, ""),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                         Box(
                             modifier = Modifier
                                 .height(width.dp)
@@ -271,7 +309,11 @@ fun SearchPage(
                         )
                     }
                     if (artistList.isNotEmpty()) {
-                        Text(text = stringResource(R.string.artist,""))
+                        height -= width.toInt()
+                        Text(
+                            text = stringResource(R.string.artist, ""),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                         Box(
                             modifier = Modifier
                                 .height(width.dp)
@@ -292,21 +334,8 @@ fun SearchPage(
                                 .background(color = MaterialTheme.colorScheme.onBackground)
                         )
                     }
-                    if (tracksList.isNotEmpty()) {
-                        // TODO why this? (tracksList.size+2) * (60 + 1.2 +25))
-                        Box(modifier = Modifier.height(((tracksList.size + 2) * (60 + 1.2 + 25)).dp)) {
-                            TracksListView(
-                                modifier = Modifier,
-                                musicViewModel, modeList, tracksList, remember {
-                                    mutableStateOf(true)
-                                }
-                            )
-                        }
-                    }
                 }
-
             }
-
         },
     )
 }
