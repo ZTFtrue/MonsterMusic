@@ -24,6 +24,7 @@ import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
 import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.GENRE_TYPE
+import com.ztftrue.music.sqlData.model.LYRICS_TYPE
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.play.Lyrics
@@ -239,7 +240,7 @@ class MusicViewModel : ViewModel() {
                     } catch (e: Exception) {
                         ""
                     }
-                    val files = getDb(context).StorageFolderDao().findAll()
+                    val files = getDb(context).StorageFolderDao().findAllByType(LYRICS_TYPE)
                     if (files != null) {
                         outer@ for (storageFolder in files) {
                             try {
