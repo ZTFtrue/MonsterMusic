@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -85,8 +86,7 @@ fun SearchPage(
     var jobSeek: Job? = null
     val job = CoroutineScope(Dispatchers.IO)
     val rootView = LocalView.current
-    var keyboardHeight by remember { mutableStateOf(0) }
-    var localViewHeight by remember { mutableStateOf(rootView.height) }
+    val localViewHeight by remember { mutableIntStateOf(rootView.height) }
 //    DisposableEffect(rootView) {
 //        val listener = ViewTreeObserver.OnGlobalLayoutListener {
 //            val rect = Rect()

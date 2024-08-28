@@ -171,7 +171,7 @@ fun MainTopBar(
                     showSortDialog = false
                 }
             ) {
-                val configuration = LocalConfiguration.current
+                LocalConfiguration.current
                 Column(
                     modifier = Modifier
                         .wrapContentSize()
