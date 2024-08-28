@@ -16,8 +16,8 @@ interface StorageFolderDao {
     @Query("SELECT * FROM storage_folder ORDER BY id ASC LIMIT 1")
     fun findFirstFolder(): StorageFolder?
 
-    @Query("SELECT * FROM storage_folder where type = 0 ORDER BY id ASC")
-    fun findAll(): List<StorageFolder>?
+    @Query("SELECT * FROM storage_folder")
+    fun findAll(): List<StorageFolder>
 
     @Query("SELECT * FROM storage_folder where type = :type ORDER BY id ASC")
     fun findAllByType(type: Int): List<StorageFolder>

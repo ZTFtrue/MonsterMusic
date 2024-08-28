@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -73,12 +75,13 @@ import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
+import com.ztftrue.music.sqlData.model.ARTIST_TYPE
+import com.ztftrue.music.sqlData.model.LYRICS_TYPE
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.StorageFolder
 import com.ztftrue.music.ui.public.BackTopBar
 import com.ztftrue.music.utils.LyricsSettings.FIRST_EMBEDDED_LYRICS
 import com.ztftrue.music.utils.SharedPreferencesName.LYRICS_SETTINGS
-import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.openBrowser
 import com.ztftrue.music.utils.model.FolderList
@@ -342,7 +345,7 @@ fun SettingsPage(
                                 },
                         ) {
                             Text(
-                                text = "Set artist folder(.jpg/jpeg/png)",
+                                text = "Set artist folder(artist_name.jpg/jpeg/png)",
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -382,7 +385,7 @@ fun SettingsPage(
                                 },
                         ) {
                             Text(
-                                text = "Set genre folder(.jpg/jpeg/png)",
+                                text = "Set genre folder(genre_name.jpg/jpeg/png)",
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -1182,9 +1185,7 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
     LaunchedEffect(Unit) {
         scopeMain.launch {
             val files = musicViewModel.getDb(context).StorageFolderDao().findAll()
-            if (files != null) {
-                folderList.addAll(files)
-            }
+            folderList.addAll(files)
         }
     }
     fun onConfirmation() {
@@ -1251,8 +1252,20 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
                                     modifier = Modifier.weight(1f)
                                 ) {
                                     Text(
+                                        text = if (item.type == LYRICS_TYPE) "Lyrics" else if (item.type == ARTIST_TYPE) "Artist" else "Genre",
+                                        color = MaterialTheme.colorScheme.onBackground,
+                                        modifier = Modifier.horizontalScroll(rememberScrollState(0))
+                                    )
+                                    HorizontalDivider(
+                                        modifier = Modifier
+                                            .width(1.dp)
+                                            .fillMaxWidth(0.1f)
+                                            .height(50.dp)
+                                    )
+                                    Text(
                                         text = item.uri,
-                                        color = MaterialTheme.colorScheme.onBackground
+                                        color = MaterialTheme.colorScheme.onBackground,
+                                        modifier = Modifier.horizontalScroll(rememberScrollState(0))
                                     )
                                 }
                                 IconButton(
@@ -1742,156 +1755,6 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                                             }
                                         }
                                 )
-                            }
-                        }
-                    }
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    TextButton(
-                        onClick = { onDismiss() },
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .fillMaxWidth(0.5f),
-                    ) {
-                        Text(
-                            stringResource(R.string.cancel),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                    HorizontalDivider(
-                        modifier = Modifier
-                            .background(MaterialTheme.colorScheme.onBackground)
-                            .width(1.dp)
-                            .height(50.dp)
-                    )
-                    TextButton(
-                        onClick = {
-                            onConfirmation()
-                        },
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .fillMaxWidth(),
-
-                        ) {
-                        Text(
-                            stringResource(id = R.string.confirm),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                }
-            }
-        }
-    )
-}
-
-
-@UnstableApi
-@Composable
-fun SetCoverImageDialog(onDismiss: () -> Unit) {
-    val context = LocalContext.current
-    val coroutineScope = CoroutineScope(Dispatchers.IO)
-    var alwaysShow by remember { mutableStateOf(false) }
-    var coverPath by remember { mutableStateOf("") }
-
-    LaunchedEffect(Unit) {
-        coroutineScope.launch {
-            coverPath = SharedPreferencesUtils.getCoverImage(context)
-            alwaysShow = SharedPreferencesUtils.getAlwaysShowCover(context)
-        }
-    }
-    @SuppressLint("ApplySharedPref")
-    fun onConfirmation() {
-        coroutineScope.launch {
-            SharedPreferencesUtils.setCoverImage(context, coverPath)
-            SharedPreferencesUtils.setAlwaysShowCover(context, alwaysShow)
-            onDismiss()
-        }
-    }
-
-
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = true, dismissOnBackPress = true,
-            dismissOnClickOutside = true
-        ),
-        content = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(color = MaterialTheme.colorScheme.background),
-                verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(color = MaterialTheme.colorScheme.background),
-                    verticalArrangement = Arrangement.Top,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    HorizontalDivider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(1.dp)
-                            .background(color = MaterialTheme.colorScheme.onBackground)
-                    )
-                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                        item {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(
-                                        start = 10.dp, end = 10.dp
-                                    ),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            )
-                            {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = "Just for none cover",
-                                        color = MaterialTheme.colorScheme.onBackground
-                                    )
-                                }
-                                Checkbox(
-                                    checked = alwaysShow,
-                                    onCheckedChange = { v ->
-                                        alwaysShow = v
-                                    },
-                                    modifier = Modifier
-                                        .padding(8.dp)
-                                        .semantics {
-                                            contentDescription = if (alwaysShow) {
-                                                "Always Show"
-                                            } else {
-                                                "Just for none cover"
-                                            }
-                                        }
-                                )
-                            }
-                        }
-                        item {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(
-                                        start = 10.dp, end = 10.dp
-                                    ),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            )
-                            {
-                                Text(
-                                    text = "Cover Path",
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-
                             }
                         }
                     }
