@@ -112,7 +112,7 @@ fun TracksListPage(
     id: Long,
 ) {
     val tracksList = remember { mutableStateListOf<MusicItem>() }
-    val showIndicator = remember { mutableStateOf<Boolean>(false) }
+    val showIndicator = remember { mutableStateOf(false) }
     val musicPlayList = remember { mutableStateOf(AnyListBase(2, PlayListType.None)) }
     val albumsList = remember { mutableStateListOf<AlbumList>() }
     var refreshCurrentValueList by remember { mutableStateOf(false) }
@@ -551,7 +551,7 @@ fun TracksListPage(
         })
     }
     if (showCreatePlayListDialog) {
-        CreatePlayListDialog(musicViewModel, onDismiss = {
+        CreatePlayListDialog(onDismiss = {
             showCreatePlayListDialog = false
             if (it != null) {
                 Utils.createPlayListAddTracks(it, context, type, id, musicViewModel)
@@ -941,9 +941,8 @@ fun TracksListPage(
                     }
                 }
                 TracksListView(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    musicViewModel, musicPlayList.value, tracksList, showIndicator
+                    musicViewModel,
+                    musicPlayList.value, tracksList, showIndicator
                 )
             }
 

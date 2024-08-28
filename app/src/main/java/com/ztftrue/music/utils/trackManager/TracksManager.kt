@@ -1,7 +1,6 @@
 package com.ztftrue.music.utils.trackManager
 
 import android.content.ContentUris
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -15,9 +14,6 @@ import android.os.Process
 import android.provider.MediaStore
 import androidx.activity.result.IntentSenderRequest
 import androidx.annotation.OptIn
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.ui.Modifier
 import androidx.core.text.isDigitsOnly
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.util.UnstableApi
@@ -37,7 +33,6 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.io.InputStream
 
 
 object TracksManager {
@@ -422,7 +417,7 @@ object TracksManager {
                 year,
                 bitmap,
                 lyrics
-            );
+            )
             return true
         } else {
             if (context is MainActivity) {
@@ -556,9 +551,9 @@ object TracksManager {
             val f = AudioFileIO.read(cacheFile)
             val tag: Tag = f.tag
             if (bitmap != null) {
-                val byteArrayOutputStream = ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
-                val imageData: ByteArray = byteArrayOutputStream.toByteArray();
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
+                val imageData: ByteArray = byteArrayOutputStream.toByteArray()
                 val artwork = ArtworkFactory.getNew()
                 artwork.binaryData = imageData
                 artwork.mimeType = "image/jpeg"

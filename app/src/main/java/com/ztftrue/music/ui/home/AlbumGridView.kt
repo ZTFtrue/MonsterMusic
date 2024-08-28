@@ -246,7 +246,7 @@ fun AlbumItemView(
         })
     }
     if (showCreatePlayListDialog) {
-        CreatePlayListDialog(musicViewModel, onDismiss = {
+        CreatePlayListDialog(onDismiss = {
             showCreatePlayListDialog = false
             if (it != null) {
                 Utils.createPlayListAddTracks(it, context, type, item.id, musicViewModel)

@@ -5,7 +5,6 @@ import android.support.v4.media.MediaBrowserCompat
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -114,7 +113,6 @@ fun TopBar(
                 popupVolumeWindow = false
             }
         ) {
-            val color = MaterialTheme.colorScheme.secondary
             val configuration = LocalConfiguration.current
             Column(
                 modifier = Modifier

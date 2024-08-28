@@ -276,8 +276,8 @@ fun SearchPage(
                 .fillMaxSize()
                 .padding(it)) {
                 TracksListView(
-                    modifier = Modifier,
-                    musicViewModel, modeList, tracksList, remember {
+                    musicViewModel,
+                    modeList, tracksList, remember {
                         mutableStateOf(true)
                     }
                 ) {

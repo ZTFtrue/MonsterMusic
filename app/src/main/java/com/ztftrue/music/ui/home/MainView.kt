@@ -117,7 +117,6 @@ fun MainView(
                         when (tabList[page].type) {
                             PlayListType.Songs -> {
                                 TracksListView(
-                                    Modifier.fillMaxHeight(),
                                     musicViewModel,
                                     SongsPlayList,
                                     musicViewModel.songsList,
@@ -135,7 +134,6 @@ fun MainView(
 
                             PlayListType.Queue -> {
                                 TracksListView(
-                                    Modifier.fillMaxHeight(),
                                     musicViewModel,
                                     QueuePlayList,
                                     tracksList = musicViewModel.musicQueue,

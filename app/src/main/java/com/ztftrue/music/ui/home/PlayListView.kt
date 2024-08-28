@@ -181,7 +181,7 @@ fun PlayListItemView(
         })
     }
     if (showCreatePlayListDialog) {
-        CreatePlayListDialog(musicViewModel, onDismiss = {
+        CreatePlayListDialog(onDismiss = {
             showCreatePlayListDialog = false
             if (it != null) {
                 Utils.createPlayListAddTracks(it, context, type, item.id, musicViewModel)
@@ -189,7 +189,7 @@ fun PlayListItemView(
         })
     }
     if (showRenameDialog) {
-        RenamePlayListDialog(musicViewModel, onDismiss = {
+        RenamePlayListDialog(onDismiss = {
             showRenameDialog = false
             if (!it.isNullOrEmpty()) {
                 if (PlaylistManager.renamePlaylist(context, item.id, it)) {
@@ -213,7 +213,7 @@ fun PlayListItemView(
         })
     }
     if (showDeleteTip) {
-        DeleteTip(musicViewModel, item.name, onDismiss = {
+        DeleteTip(item.name, onDismiss = {
             showDeleteTip = false
             if (it) {
                 if (PlaylistManager.deletePlaylist(context, item.id)) {

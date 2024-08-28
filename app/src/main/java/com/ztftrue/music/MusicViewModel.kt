@@ -241,72 +241,70 @@ class MusicViewModel : ViewModel() {
                         ""
                     }
                     val files = getDb(context).StorageFolderDao().findAllByType(LYRICS_TYPE)
-                    if (files != null) {
-                        outer@ for (storageFolder in files) {
-                            try {
-                                val treeUri = Uri.parse(storageFolder.uri)
-                                if (treeUri != null) {
-                                    context.contentResolver.takePersistableUriPermission(
-                                        treeUri,
-                                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                                    )
-                                    val pickedDir = DocumentFile.fromTreeUri(context, treeUri)
-                                    val d = pickedDir?.listFiles()
-                                    if (d != null) {
-                                        for (it in d) {
-                                            if (it.isFile && it.canRead()
+                    outer@ for (storageFolder in files) {
+                        try {
+                            val treeUri = Uri.parse(storageFolder.uri)
+                            if (treeUri != null) {
+                                context.contentResolver.takePersistableUriPermission(
+                                    treeUri,
+                                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                )
+                                val pickedDir = DocumentFile.fromTreeUri(context, treeUri)
+                                val d = pickedDir?.listFiles()
+                                if (d != null) {
+                                    for (it in d) {
+                                        if (it.isFile && it.canRead()
+                                        ) {
+                                            val fileNameWithSuffix =
+                                                it.name?.lowercase() ?: ""
+                                            val type =
+                                                if (fileNameWithSuffix.endsWith(".lrc")) {
+                                                    LyricsType.LRC
+                                                } else if (fileNameWithSuffix.endsWith(".srt")) {
+                                                    LyricsType.SRT
+                                                } else if (fileNameWithSuffix.endsWith(".vtt")) {
+                                                    LyricsType.VTT
+                                                } else if (fileNameWithSuffix.endsWith(".txt")) {
+                                                    LyricsType.TEXT
+                                                } else {
+                                                    continue
+                                                }
+                                            val fileName = try {
+                                                fileNameWithSuffix.substring(
+                                                    0,
+                                                    fileNameWithSuffix.indexOf(".")
+                                                )
+                                            } catch (e: Exception) {
+                                                ""
+                                            }
+                                            if (fileName.trim()
+                                                    .lowercase() == musicName.trim()
+                                                    .lowercase()
                                             ) {
-                                                val fileNameWithSuffix =
-                                                    it.name?.lowercase() ?: ""
-                                                val type =
-                                                    if (fileNameWithSuffix.endsWith(".lrc")) {
-                                                        LyricsType.LRC
-                                                    } else if (fileNameWithSuffix.endsWith(".srt")) {
-                                                        LyricsType.SRT
-                                                    } else if (fileNameWithSuffix.endsWith(".vtt")) {
-                                                        LyricsType.VTT
-                                                    } else if (fileNameWithSuffix.endsWith(".txt")) {
-                                                        LyricsType.TEXT
-                                                    } else {
-                                                        continue
-                                                    }
-                                                val fileName = try {
-                                                    fileNameWithSuffix.substring(
-                                                        0,
-                                                        fileNameWithSuffix.indexOf(".")
+                                                fileLyrics.addAll(
+                                                    fileRead(
+                                                        it.uri,
+                                                        context,
+                                                        type
                                                     )
-                                                } catch (e: Exception) {
-                                                    ""
-                                                }
-                                                if (fileName.trim()
-                                                        .lowercase() == musicName.trim()
-                                                        .lowercase()
-                                                ) {
-                                                    fileLyrics.addAll(
-                                                        fileRead(
-                                                            it.uri,
-                                                            context,
-                                                            type
-                                                        )
-                                                    )
-                                                    break@outer
-                                                }
+                                                )
+                                                break@outer
                                             }
                                         }
                                     }
                                 }
-                            } catch (e: Exception) {
-                                getDb(context).StorageFolderDao().deleteById(storageFolder.id!!)
-                                CoroutineScope(Dispatchers.Main).launch {
-                                    Toast.makeText(
-                                        context,
-                                        "There has error, can't read some lyrics. Most of times, this occur after you reinstall app.",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
                             }
-
+                        } catch (e: Exception) {
+                            getDb(context).StorageFolderDao().deleteById(storageFolder.id!!)
+                            CoroutineScope(Dispatchers.Main).launch {
+                                Toast.makeText(
+                                    context,
+                                    "There has error, can't read some lyrics. Most of times, this occur after you reinstall app.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         }
+
                     }
                 }
             }

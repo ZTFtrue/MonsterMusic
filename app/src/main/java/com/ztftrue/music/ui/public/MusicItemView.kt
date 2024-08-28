@@ -108,7 +108,7 @@ fun MusicItemView(
     var showCreatePlayListDialog by remember { mutableStateOf(false) }
     var showDeleteTip by remember { mutableStateOf(false) }
     if (showDeleteTip) {
-        DeleteTip(viewModel, music.name, onDismiss = {
+        DeleteTip(music.name, onDismiss = {
             showDeleteTip = false
             if (it) {
                 if (TracksManager.removeMusicById(context, music.id)) {
@@ -306,7 +306,7 @@ fun MusicItemView(
         })
     }
     if (showCreatePlayListDialog) {
-        CreatePlayListDialog(viewModel, onDismiss = {
+        CreatePlayListDialog(onDismiss = {
             showCreatePlayListDialog = false
             if (!it.isNullOrEmpty()) {
                 Utils.createPlayListAddTrack(it, context, music, viewModel)

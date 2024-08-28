@@ -53,7 +53,6 @@ import com.ztftrue.music.utils.model.MusicPlayList
 
 @Composable
 fun CreatePlayListDialog(
-    musicViewModel: MusicViewModel,
     onDismiss: (value: String?) -> Unit
 ) {
     var playListName by remember { mutableStateOf("") }
@@ -221,7 +220,6 @@ fun CreatePlayListDialog(
 
 @Composable
 fun RenamePlayListDialog(
-    musicViewModel: MusicViewModel,
     onDismiss: (value: String?) -> Unit
 ) {
     var playListName by remember { mutableStateOf("") }
@@ -382,7 +380,6 @@ fun RenamePlayListDialog(
 
 @Composable
 fun DeleteTip(
-    musicViewModel: MusicViewModel,
     titleTip: String,
     onDismiss: (value: Boolean) -> Unit
 ) {

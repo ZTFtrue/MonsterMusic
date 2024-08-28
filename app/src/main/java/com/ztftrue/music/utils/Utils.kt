@@ -219,7 +219,7 @@ object Utils {
     }
 
 
-    fun openFile(path: String, minType: String = "text/plain", context: Context) {
+    private fun openFile(path: String, minType: String = "text/plain", context: Context) {
         val fileUri: Uri
         val outputImage = File(path)
         fileUri =
@@ -560,9 +560,9 @@ object Utils {
                 } else {
                     resultData.getInt(
                         "playIndex"
-                    )?.also {
-                        if (it > -1)
-                            musicViewModel.currentPlayQueueIndex.intValue = it
+                    ).also { indexPlay ->
+                        if (indexPlay > -1)
+                            musicViewModel.currentPlayQueueIndex.intValue = indexPlay
                     }
                 }
             }
@@ -632,9 +632,9 @@ object Utils {
             val lyrics = File(pathLyrics)
             val text = File(path)
             if (lyrics.exists()) {
-                Utils.openFile(lyrics.path, context = context)
+                openFile(lyrics.path, context = context)
             } else if (text.exists()) {
-                Utils.openFile(text.path, context = context)
+                openFile(text.path, context = context)
             } else {
                 val tempPath: String =
                     context.getExternalFilesDir(folderPath)?.absolutePath + "/$id."

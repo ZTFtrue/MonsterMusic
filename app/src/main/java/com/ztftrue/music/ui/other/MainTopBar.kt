@@ -120,7 +120,7 @@ fun MainTopBar(
             })
         }
         if (showCreatePlayListDialog) {
-            CreatePlayListDialog(musicViewModel, onDismiss = {
+            CreatePlayListDialog(onDismiss = {
                 showCreatePlayListDialog = false
                 if (!it.isNullOrEmpty()) {
                     navController.navigate(
@@ -488,7 +488,6 @@ fun MainTopBar(
         }
         if (showCreatePlayListDialogForQueue) {
             CreatePlayListDialog(
-                musicViewModel,
                 onDismiss = { playListName ->
                     showCreatePlayListDialogForQueue = false
                     if (!playListName.isNullOrEmpty()) {

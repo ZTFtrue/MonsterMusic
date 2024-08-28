@@ -58,7 +58,7 @@ fun TracksSelectPage(
     playListName: String?,
     playListId: Long?
 ) {
-    val showIndicator = remember { mutableStateOf<Boolean>(false) }
+    val showIndicator = remember { mutableStateOf(false) }
     LaunchedEffect(key1 = musicViewModel.showIndicatorMap) {
         showIndicator.value =
             musicViewModel.showIndicatorMap.getOrDefault(PlayListType.Songs.toString(), false)
@@ -192,11 +192,9 @@ fun TracksSelectPage(
                         .background(color = MaterialTheme.colorScheme.onBackground)
                 )
                 TracksListView(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    musicViewModel, AnyListBase(0, PlayListType.None), musicList,
-                    showIndicator =showIndicator , selectStatus = true,
-                    selectList = selectList
+                    musicViewModel,
+                    AnyListBase(0, PlayListType.None), musicList, showIndicator =showIndicator,
+                    selectStatus = true, selectList = selectList
                 )
             }
 
