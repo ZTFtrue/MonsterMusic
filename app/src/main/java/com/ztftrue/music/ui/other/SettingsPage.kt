@@ -345,7 +345,7 @@ fun SettingsPage(
                                 },
                         ) {
                             Text(
-                                text = "Set artist folder(.jpg/jpeg/png)",
+                                text = "Set artist folder(artist_name.jpg/jpeg/png)",
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -385,7 +385,7 @@ fun SettingsPage(
                                 },
                         ) {
                             Text(
-                                text = "Set genre folder(.jpg/jpeg/png)",
+                                text = "Set genre folder(genre_name.jpg/jpeg/png)",
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
