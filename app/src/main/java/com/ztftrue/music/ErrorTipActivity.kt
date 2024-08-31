@@ -36,6 +36,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.ui.theme.MusicPitchTheme
+import kotlin.system.exitProcess
 
 
 class ErrorTipActivity : ComponentActivity() {
@@ -59,12 +60,14 @@ class ErrorTipActivity : ComponentActivity() {
         LaunchedEffect(Unit) {
             try {
                 errorMessage = intent.getStringExtra("error") ?: ""
+                errorMessage=errorMessage+"\n\nVERSION_CODE   "+BuildConfig.VERSION_CODE
             } catch (e: Exception) {
                 Log.e("ERROR", e.toString())
             }
         }
         BackHandler(enabled = true) {
             finish()
+            exitProcess(0)
         }
         Surface(
             modifier = Modifier
