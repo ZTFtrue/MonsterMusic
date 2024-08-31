@@ -19,7 +19,6 @@ import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.AudioAttributes
-import androidx.media3.common.BuildConfig
 import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
@@ -39,6 +38,7 @@ import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.ztftrue.music.BuildConfig
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.PlayMusicWidget
 import com.ztftrue.music.R
