@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.media.MediaBrowserServiceCompat
-import androidx.room.FtsOptions
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.model.GenresList
 import com.ztftrue.music.utils.PlayListType

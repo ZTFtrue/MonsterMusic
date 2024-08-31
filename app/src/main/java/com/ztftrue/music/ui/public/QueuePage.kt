@@ -109,7 +109,7 @@ fun QueuePage(
         }
     }
     if (showCreatePlayListDialog) {
-        CreatePlayListDialog(musicViewModel, onDismiss = { playListName ->
+        CreatePlayListDialog(onDismiss = { playListName ->
             showCreatePlayListDialog = false
             if (!playListName.isNullOrEmpty()) {
                 val ids = ArrayList<Long>(musicList.size)
@@ -161,9 +161,8 @@ fun QueuePage(
                     .padding(it)
             ) {
                 TracksListView(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    musicViewModel, QueuePlayList, musicList, showIndicator
+                    musicViewModel,
+                    QueuePlayList, musicList, showIndicator
                 )
             }
 

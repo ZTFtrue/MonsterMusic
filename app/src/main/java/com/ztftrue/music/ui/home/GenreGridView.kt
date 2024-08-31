@@ -222,7 +222,7 @@ fun GenreItemView(
         })
     }
     if (showCreatePlayListDialog) {
-        CreatePlayListDialog(musicViewModel, onDismiss = {
+        CreatePlayListDialog(onDismiss = {
             showCreatePlayListDialog = false
             if (it != null) {
                 createPlayListAddTracks(it, context, type, item.id, musicViewModel)

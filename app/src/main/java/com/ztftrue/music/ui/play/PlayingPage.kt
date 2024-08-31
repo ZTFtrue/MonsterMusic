@@ -168,7 +168,7 @@ fun PlayingPage(
 
     if (showDeleteTip && music != null) {
 
-        DeleteTip(musicViewModel, music.name, onDismiss = {
+        DeleteTip(music.name, onDismiss = {
             showDeleteTip = false
             if (it) {
                 if (TracksManager.removeMusicById(context, music!!.id)) {
@@ -343,7 +343,7 @@ fun PlayingPage(
         }
     }
     if (showCreatePlayListDialog) {
-        CreatePlayListDialog(musicViewModel, onDismiss = {
+        CreatePlayListDialog(onDismiss = {
             showCreatePlayListDialog = false
             if (!it.isNullOrEmpty()) {
                 if (music != null) {

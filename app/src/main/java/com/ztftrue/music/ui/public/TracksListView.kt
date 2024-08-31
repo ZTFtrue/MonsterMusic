@@ -74,14 +74,13 @@ import kotlinx.coroutines.launch
 @UnstableApi
 @Composable
 fun TracksListView(
-    modifier: Modifier = Modifier,
     musicViewModel: MusicViewModel,
     playList: AnyListBase,
     tracksList: SnapshotStateList<MusicItem>,
     showIndicator: MutableState<Boolean>,
     selectStatus: Boolean = false,
     selectList: SnapshotStateList<MusicItem>? = null,
-    header: @Composable (() -> Unit)? = null,
+    header: @Composable() (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     var showSlideIndicator by remember { mutableStateOf(false) }

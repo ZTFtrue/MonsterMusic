@@ -482,7 +482,6 @@ fun SettingsPage(
 
                             if (showManageFolderDialog) {
                                 ManageFolderDialog(
-                                    musicViewModel,
                                     onDismiss = {
                                         showManageFolderDialog = false
                                     })
@@ -744,7 +743,7 @@ fun SettingsPage(
                         contentAlignment = Alignment.CenterStart
                     ) {
                         if (showClearAlbumCache) {
-                            ClearAlbumCoverDialog(musicViewModel = musicViewModel) {
+                            ClearAlbumCoverDialog {
                                 showClearAlbumCache = false
                             }
                         }
@@ -1339,7 +1338,7 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
 
 @UnstableApi
 @Composable
-fun ManageFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
+fun ManageFolderDialog(onDismiss: () -> Unit) {
 
     val context = LocalContext.current
     val scopeMain = CoroutineScope(Dispatchers.IO)
@@ -1511,7 +1510,7 @@ fun ManageFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 
 @UnstableApi
 @Composable
-fun ClearAlbumCoverDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
+fun ClearAlbumCoverDialog(onDismiss: () -> Unit) {
 
     val context = LocalContext.current
     val scopeMain = CoroutineScope(Dispatchers.IO)

@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
@@ -110,19 +111,23 @@ class PlayMusicWidget : AppWidgetProvider() {
         newOptions: Bundle?
     ) {
         super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
-        val sizes = newOptions?.getParcelableArrayList<SizeF>(
-            AppWidgetManager.OPTION_APPWIDGET_SIZES
-        )
+        val sizes = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            newOptions?.getParcelableArrayList<SizeF>(
+                AppWidgetManager.OPTION_APPWIDGET_SIZES
+            )
+        } else {
+            TODO("VERSION.SDK_INT < S")
+        }
         // Check that the list of sizes is provided by the launcher.
         if (sizes.isNullOrEmpty()) {
             return
         }
 
         // Get the min and max sizes
-        val minWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
-        val minHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
-        val maxWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH)
-        val maxHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT)
+        val minWidth = newOptions?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
+        val minHeight = newOptions?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
+        val maxWidth = newOptions?.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH)
+        val maxHeight = newOptions?.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT)
         // Map the sizes to the RemoteViews that you want.
 //        val remoteViews = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 //            RemoteViews(sizes.associateWith(::createRemoteViews))

@@ -1,6 +1,5 @@
 package com.ztftrue.music.ui.home
 
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -73,7 +72,6 @@ import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.ArtistList
-import java.io.File
 
 
 @Composable
@@ -232,7 +230,7 @@ fun ArtistItemView(
         })
     }
     if (showCreatePlayListDialog) {
-        CreatePlayListDialog(musicViewModel, onDismiss = {
+        CreatePlayListDialog(onDismiss = {
             showCreatePlayListDialog = false
             if (it != null) {
                 Utils.createPlayListAddTracks(it, context, type, item.id, musicViewModel)
