@@ -373,6 +373,7 @@ class MusicViewModel : ViewModel() {
             )
             arrayList.add(an)
         }
+        bufferedReader.close()
         return arrayList
     }
 
@@ -419,6 +420,7 @@ class MusicViewModel : ViewModel() {
                     bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
                     outStream.flush()
                     outStream.close()
+                    bm.recycle()
                     result =
                         R.drawable.songs_thumbnail_cover
                 } else {
@@ -439,10 +441,10 @@ class MusicViewModel : ViewModel() {
                         R.drawable.songs_thumbnail_cover
                     )
                 val outStream = FileOutputStream(coverPath)
-
                 bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
                 outStream.flush()
                 outStream.close()
+                bm.recycle()
                 return R.drawable.songs_thumbnail_cover
             }
             return result
