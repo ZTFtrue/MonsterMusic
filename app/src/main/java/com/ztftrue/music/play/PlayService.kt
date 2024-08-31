@@ -770,49 +770,60 @@ class PlayService : MediaBrowserServiceCompat() {
         val index = 0
 //        val musicItem = extras.getParcelable<MusicItem>("musicItem")
         val playList = extras.getParcelable<AnyListBase>("playList")
-        val musicItems = extras.getParcelableArrayList<MusicItem>("musicItems")
+        var musicItems = extras.getParcelableArrayList<MusicItem>("musicItems")
         if (playList != null && musicItems != null) {
-            musicItems.forEachIndexed { i, item ->
-                item.tableId = i + 1L
-            }
-            val dbArrayList = ArrayList<MusicItem>()
-            dbArrayList.addAll(musicItems)
-            musicItems.shuffle()
-            playListCurrent = playList
-            musicQueue.clear()
-            musicQueue.addAll(musicItems)
-            val t1 = ArrayList<MediaItem>()
-            if (musicQueue.isNotEmpty()) {
-                musicQueue.forEachIndexed { i, it ->
-                    it.priority = i + 1
-                    t1.add(MediaItem.fromUri(File(it.path).toUri()))
+            val gson = Gson()
+            val musicItemListType =
+                object : TypeToken<ArrayList<MusicItem?>?>() {}.type
+            musicItems =
+                gson.fromJson(gson.toJson(musicItems), musicItemListType)
+            musicItems?.let {
+                musicItems.forEachIndexed { i, item ->
+                    item.tableId = i + 1L
                 }
-                val bundle = Bundle()
-                bundle.putParcelableArrayList("list", musicQueue)
-                result.sendResult(bundle)
-                CoroutineScope(Dispatchers.IO).launch {
-                    var currentList = db.CurrentListDao().findCurrentList()
-                    if (currentList == null) {
-                        currentList = CurrentList(null, playList.id, playList.type.name)
-                        db.CurrentListDao().insert(currentList)
-                    } else {
-                        currentList.listID = playList.id
-                        currentList.type = playList.type.name
-                        db.CurrentListDao().update(currentList)
+                val dbArrayList = ArrayList<MusicItem>()
+                dbArrayList.addAll(musicItems)
+                musicItems.shuffle()
+                playListCurrent = playList
+                musicQueue.clear()
+                musicQueue.addAll(musicItems)
+                val t1 = ArrayList<MediaItem>()
+                if (musicQueue.isNotEmpty()) {
+                    musicQueue.forEachIndexed { i, it ->
+                        it.priority = i + 1
+                        t1.add(MediaItem.fromUri(File(it.path).toUri()))
                     }
-                    db.QueueDao().deleteAllQueue()
-                    db.QueueDao().insertAll(dbArrayList)
-                    SharedPreferencesUtils.saveSelectMusicId(this@PlayService, musicItems[index].id)
-                    SharedPreferencesUtils.enableShuffle(this@PlayService, true)
+                    val bundle = Bundle()
+                    bundle.putParcelableArrayList("list", musicQueue)
+                    result.sendResult(bundle)
+                    CoroutineScope(Dispatchers.IO).launch {
+                        var currentList = db.CurrentListDao().findCurrentList()
+                        if (currentList == null) {
+                            currentList = CurrentList(null, playList.id, playList.type.name)
+                            db.CurrentListDao().insert(currentList)
+                        } else {
+                            currentList.listID = playList.id
+                            currentList.type = playList.type.name
+                            db.CurrentListDao().update(currentList)
+                        }
+                        db.QueueDao().deleteAllQueue()
+                        db.QueueDao().insertAll(dbArrayList)
+                        SharedPreferencesUtils.saveSelectMusicId(
+                            this@PlayService,
+                            musicItems[index].id
+                        )
+                        SharedPreferencesUtils.enableShuffle(this@PlayService, true)
+                    }
+                    CoroutineScope(Dispatchers.Main).launch {
+                        exoPlayer.clearMediaItems()
+                        exoPlayer.setMediaItems(t1)
+                        exoPlayer.seekToDefaultPosition(index)
+                        exoPlayer.seekTo(0)
+                        exoPlayer.playWhenReady = true
+                        exoPlayer.prepare()
+                    }
                 }
-                CoroutineScope(Dispatchers.Main).launch {
-                    exoPlayer.clearMediaItems()
-                    exoPlayer.setMediaItems(t1)
-                    exoPlayer.seekToDefaultPosition(index)
-                    exoPlayer.seekTo(0)
-                    exoPlayer.playWhenReady = true
-                    exoPlayer.prepare()
-                }
+
             }
         } else {
             result.sendResult(null)
