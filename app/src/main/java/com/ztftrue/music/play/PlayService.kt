@@ -27,7 +27,6 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.audio.SonicAudioProcessor
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
@@ -1288,9 +1287,11 @@ class PlayService : MediaBrowserServiceCompat() {
             @SuppressLint("ApplySharedPref")
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 super.onIsPlayingChanged(isPlaying)
-                if (musicQueue.isNotEmpty()) {
+                if (musicQueue.isNotEmpty() && exoPlayer.currentMediaItemIndex < musicQueue.size) {
                     currentPlayTrack =
                         musicQueue[exoPlayer.currentMediaItemIndex]
+                } else {
+                    currentPlayTrack = null
                 }
                 getSharedPreferences("Widgets", Context.MODE_PRIVATE).getBoolean(
                     "enable",
@@ -1317,14 +1318,11 @@ class PlayService : MediaBrowserServiceCompat() {
                             intent.putExtra("path", currentPlayTrack?.path ?: "")
                             intent.putExtra("id", currentPlayTrack?.id ?: 0L)
                             intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-
-                            getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit()
-                                .putBoolean("playingStatus", isPlaying)
-                                .putString("title", currentPlayTrack?.name ?: "")
-                                .putLong("title", currentPlayTrack?.id ?: 0L)
-                                .putString("author", currentPlayTrack?.artist ?: "")
-                                .putString("path", currentPlayTrack?.path ?: "").commit()
-
+                            SharedPreferencesUtils.setWidgetData(
+                                this@PlayService,
+                                isPlaying,
+                                currentPlayTrack
+                            )
                             sendBroadcast(intent)
                         }
                     }
@@ -1364,7 +1362,7 @@ class PlayService : MediaBrowserServiceCompat() {
                 reason: Int
             ) {
                 super.onPositionDiscontinuity(oldPosition, newPosition, reason)
-                if (musicQueue.isEmpty()) return
+                if (musicQueue.isEmpty()||newPosition.mediaItemIndex>=musicQueue.size) return
 
                 if (oldPosition.mediaItemIndex != newPosition.mediaItemIndex || reason >= 4 || currentPlayTrack?.id != musicQueue[newPosition.mediaItemIndex].id) {
                     SharedPreferencesUtils.saveSelectMusicId(
@@ -1395,19 +1393,17 @@ class PlayService : MediaBrowserServiceCompat() {
                                         PlayMusicWidget::class.java
                                     )
                                 )
-                                Log.d("TAG", currentPlayTrack?.name ?: "")
                                 intent.putExtra("playingStatus", exoPlayer.isPlaying)
                                 intent.putExtra("title", currentPlayTrack?.name ?: "")
                                 intent.putExtra("author", currentPlayTrack?.artist ?: "")
                                 intent.putExtra("path", currentPlayTrack?.path ?: "")
                                 intent.putExtra("id", currentPlayTrack?.id ?: 0L)
                                 intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-                                getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit()
-                                    .putBoolean("playingStatus", exoPlayer.isPlaying)
-                                    .putString("title", currentPlayTrack?.name ?: "")
-                                    .putLong("id", currentPlayTrack?.id ?: 0L)
-                                    .putString("author", currentPlayTrack?.artist ?: "")
-                                    .putString("path", currentPlayTrack?.path ?: "").commit()
+                                SharedPreferencesUtils.setWidgetData(
+                                    this@PlayService,
+                                    exoPlayer.isPlaying,
+                                    currentPlayTrack
+                                )
                                 sendBroadcast(intent)
                             }
                         }
