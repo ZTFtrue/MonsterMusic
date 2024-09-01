@@ -1287,9 +1287,11 @@ class PlayService : MediaBrowserServiceCompat() {
             @SuppressLint("ApplySharedPref")
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 super.onIsPlayingChanged(isPlaying)
-                if (musicQueue.isNotEmpty()) {
+                if (musicQueue.isNotEmpty() && exoPlayer.currentMediaItemIndex < musicQueue.size) {
                     currentPlayTrack =
                         musicQueue[exoPlayer.currentMediaItemIndex]
+                } else {
+                    currentPlayTrack = null
                 }
                 getSharedPreferences("Widgets", Context.MODE_PRIVATE).getBoolean(
                     "enable",
@@ -1316,7 +1318,11 @@ class PlayService : MediaBrowserServiceCompat() {
                             intent.putExtra("path", currentPlayTrack?.path ?: "")
                             intent.putExtra("id", currentPlayTrack?.id ?: 0L)
                             intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-                            SharedPreferencesUtils.setWidgetData(this@PlayService,isPlaying, currentPlayTrack)
+                            SharedPreferencesUtils.setWidgetData(
+                                this@PlayService,
+                                isPlaying,
+                                currentPlayTrack
+                            )
                             sendBroadcast(intent)
                         }
                     }
@@ -1393,7 +1399,11 @@ class PlayService : MediaBrowserServiceCompat() {
                                 intent.putExtra("path", currentPlayTrack?.path ?: "")
                                 intent.putExtra("id", currentPlayTrack?.id ?: 0L)
                                 intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-                                SharedPreferencesUtils.setWidgetData(this@PlayService, exoPlayer.isPlaying, currentPlayTrack)
+                                SharedPreferencesUtils.setWidgetData(
+                                    this@PlayService,
+                                    exoPlayer.isPlaying,
+                                    currentPlayTrack
+                                )
                                 sendBroadcast(intent)
                             }
                         }
