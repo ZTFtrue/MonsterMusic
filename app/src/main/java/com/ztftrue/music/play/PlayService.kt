@@ -1362,7 +1362,7 @@ class PlayService : MediaBrowserServiceCompat() {
                 reason: Int
             ) {
                 super.onPositionDiscontinuity(oldPosition, newPosition, reason)
-                if (musicQueue.isEmpty()) return
+                if (musicQueue.isEmpty()||newPosition.mediaItemIndex>=musicQueue.size) return
 
                 if (oldPosition.mediaItemIndex != newPosition.mediaItemIndex || reason >= 4 || currentPlayTrack?.id != musicQueue[newPosition.mediaItemIndex].id) {
                     SharedPreferencesUtils.saveSelectMusicId(
