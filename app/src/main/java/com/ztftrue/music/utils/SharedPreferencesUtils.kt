@@ -3,6 +3,7 @@ package com.ztftrue.music.utils
 import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.ui.text.style.TextAlign
+import com.ztftrue.music.sqlData.model.MusicItem
 
 object SharedPreferencesUtils {
     fun saveFontSize(context: Context, fontSize: Int) {
@@ -56,27 +57,6 @@ object SharedPreferencesUtils {
             .getBoolean("EnableShuffle", false)
     }
 
-    fun setCoverImage(context: Context, path: String) {
-        context.getSharedPreferences("cover", Context.MODE_PRIVATE).edit().putString("image", path)
-            .apply()
-    }
-
-    fun getCoverImage(context: Context): String {
-        return context.getSharedPreferences("cover", Context.MODE_PRIVATE).getString("image", "")
-            ?: ""
-    }
-
-    fun setAlwaysShowCover(context: Context, always: Boolean) {
-        context.getSharedPreferences("cover", Context.MODE_PRIVATE).edit()
-            .putBoolean("always", always)
-            .apply()
-    }
-
-    fun getAlwaysShowCover(context: Context): Boolean {
-        return context.getSharedPreferences("cover", Context.MODE_PRIVATE)
-            .getBoolean("always", false)
-    }
-
     fun saveSelectMusicId(context: Context, id: Long) {
         context.getSharedPreferences(
             "SelectedPlayTrack",
@@ -120,5 +100,12 @@ object SharedPreferencesUtils {
             Context.MODE_PRIVATE
         ).getLong("CurrentPosition", 0)
     }
-
+    fun setWidgetData(context: Context,isPlaying:Boolean,currentPlayTrack:MusicItem?) {
+        context.getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit()
+            .putBoolean("playingStatus", isPlaying)
+            .putString("title", currentPlayTrack?.name ?: "")
+            .putLong("id", currentPlayTrack?.id ?: 0L)
+            .putString("author", currentPlayTrack?.artist ?: "")
+            .putString("path", currentPlayTrack?.path ?: "").commit()
+    }
 }
