@@ -253,7 +253,7 @@ object Utils {
             retriever.setDataSource(path)
             val coverT = retriever.embeddedPicture
             if (coverT != null) {
-                return BitmapFactory.decodeByteArray(coverT, 0, coverT.size)
+                return Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(coverT, 0, coverT.size),512,512,false)
             }
         } catch (_: Exception) {
         }
