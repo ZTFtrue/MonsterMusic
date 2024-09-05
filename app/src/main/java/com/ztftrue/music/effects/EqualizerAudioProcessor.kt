@@ -1,5 +1,6 @@
 package com.ztftrue.music.effects
 
+import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
@@ -32,7 +33,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     private lateinit var sampleBufferRealRight: DoubleArray
 
     private var bufferSize = 2048
-    private var outputBuffer: ByteBuffer
+    private var outputBuffer: ByteBuffer = EMPTY_BUFFER
     private lateinit var dataBuffer: ByteBuffer
     private var inputEnded = false
     private val gainDBAbsArray: DoubleArray =
@@ -104,8 +105,8 @@ class EqualizerAudioProcessor : AudioProcessor {
         mCoefficientRightBiQuad.forEachIndexed { index, biQuadraticFilter ->
             setBand(index, gainDBArray[index])
         }
-        leftMax=1.0
-        rightMax=1.0
+        leftMax = 1.0
+        rightMax = 1.0
         return outputAudioFormat!!
 
     }
@@ -122,18 +123,9 @@ class EqualizerAudioProcessor : AudioProcessor {
         if (!inputBuffer.hasRemaining()) {
             return
         }
-        inputBuffer.order(ByteOrder.nativeOrder())
-
         dataBuffer.put(inputBuffer)
     }
 
-    override fun getOutput(): ByteBuffer {
-        processData()
-        val outputBuffer: ByteBuffer = this.outputBuffer
-        this.outputBuffer = EMPTY_BUFFER
-        outputBuffer.flip()
-        return outputBuffer
-    }
 
     override fun queueEndOfStream() {
         // TODO
@@ -145,16 +137,32 @@ class EqualizerAudioProcessor : AudioProcessor {
         inputEnded = true
     }
 
+    val BYTES_PER_SAMPLE: Int = 2
+
     private var leftMax = 1.0
     private var rightMax = 1.0
+    fun getOutputSize(): Int {
+        return outputAudioFormat!!.sampleRate * outputAudioFormat!!.channelCount * BYTES_PER_SAMPLE
+    }
 
     private var changeDb = false
+    override fun getOutput(): ByteBuffer {
+        processData()
+//        if (outputBuffer.position() == 0) {
+//            return EMPTY_BUFFER;
+//        }
+        val outputBuffer: ByteBuffer = this.outputBuffer
+        this.outputBuffer = EMPTY_BUFFER
+        outputBuffer.flip()
+        return outputBuffer
+    }
+
     private fun processData() {
         if (active) {
             lock.lock()
             if (changeDb) {
-                leftMax=1.0
-                rightMax=1.0
+                leftMax = 1.0
+                rightMax = 1.0
                 for (i in 0 until 10) {
                     butterWorthRightBandPass[i].reset()
                     butterWorthLeftBandPass[i].reset()
@@ -265,16 +273,35 @@ class EqualizerAudioProcessor : AudioProcessor {
             }
             lock.unlock()
         } else {
-            dataBuffer.flip()
-            val processedBuffer = ByteBuffer.allocate(dataBuffer.limit())
-            val a = dataBuffer.array()
-            a.forEachIndexed { i, t ->
-                a[i] = ((t)).toInt().toByte()
+//            if (dataBuffer.position() >= bufferSize) {
+//            if (this.outputBuffer == EMPTY_BUFFER) {
+//                this.outputBuffer = ByteBuffer.allocate(bufferSize)
+//            } else {
+//                this.outputBuffer.clear()
+//            }
+//            val processedBuffer: ByteBuffer = ByteBuffer.allocate(bufferSize)
+//            if (dataBuffer.remaining() > bufferSize) {
+//                dataBuffer.limit(bufferSize);
+//            }
+//            dataBuffer.flip()
+//            // 如果 bufferSize 超过 dataBuffer 中的剩余数据量，避免设置过大的限制
+////                dataBuffer.limit(bufferSize)
+//            processedBuffer.put(dataBuffer)
+//            processedBuffer.order(ByteOrder.nativeOrder())
+//            dataBuffer.compact()
+//            this.outputBuffer = processedBuffer
+            if (dataBuffer.position() >= 1024) {
+                dataBuffer.flip()
+                val processedBuffer: ByteBuffer = ByteBuffer.allocate(1024)
+                processedBuffer.put(dataBuffer.array(), 0, 1024)
+                dataBuffer.position(1024)
+                dataBuffer.compact()
+                processedBuffer.order(ByteOrder.nativeOrder())
+                this.outputBuffer = processedBuffer
             }
-            processedBuffer.put(a, 0, dataBuffer.limit())
-            dataBuffer.clear()
-            processedBuffer.order(ByteOrder.nativeOrder())
-            this.outputBuffer = processedBuffer
+
+//            }
+
         }
     }
 
@@ -283,7 +310,9 @@ class EqualizerAudioProcessor : AudioProcessor {
     }
 
     override fun flush() {
-        outputBuffer = EMPTY_BUFFER
+        if (outputBuffer != EMPTY_BUFFER) {
+            outputBuffer.clear()
+        }
         dataBuffer.clear()
         inputEnded = false
     }
@@ -293,6 +322,8 @@ class EqualizerAudioProcessor : AudioProcessor {
         outputAudioFormat = AudioProcessor.AudioFormat.NOT_SET
         outputAudioFormat = AudioProcessor.AudioFormat.NOT_SET
         pendingOutputSampleRate = SAMPLE_RATE_NO_CHANGE
+        outputBuffer.clear()
+        outputBuffer = EMPTY_BUFFER
         inputEnded = false
     }
 

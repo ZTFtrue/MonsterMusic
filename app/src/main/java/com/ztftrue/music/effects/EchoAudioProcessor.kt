@@ -167,8 +167,9 @@ class EchoAudioProcessor : AudioProcessor {
             }
         } else {
             dataBuffer.flip()
-            val processedBuffer = ByteBuffer.allocate(dataBuffer.limit())
-            processedBuffer.put(dataBuffer.array(), 0, dataBuffer.limit())
+            dataBuffer.position(0)
+            val processedBuffer: ByteBuffer = ByteBuffer.allocate(dataBuffer.limit())
+            processedBuffer.put(dataBuffer)
             dataBuffer.clear()
             processedBuffer.order(ByteOrder.nativeOrder())
             this.outputBuffer = processedBuffer
