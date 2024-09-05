@@ -1,6 +1,5 @@
 package com.ztftrue.music.effects
 
-import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
@@ -172,29 +171,32 @@ class EqualizerAudioProcessor : AudioProcessor {
                 changeDb = false
             }
             if (dataBuffer.position() >= bufferSize) {
-                // limit  设置为当前位置 (position) , position 设置为 0
                 dataBuffer.flip()
-                val processedBuffer = ByteBuffer.allocate(bufferSize)
-                processedBuffer.put(dataBuffer.array(), 0, bufferSize)
-                processedBuffer.flip()
-                dataBuffer.position(bufferSize)
-                dataBuffer.compact()
-                val floatArray = FloatArray(bufferSize / r)
-                converter.toFloatArray(processedBuffer.array(), floatArray)
-                var ind = 0
-                // TODO need support more channel count
-                for (i in floatArray.indices step outputAudioFormat!!.channelCount) {
-                    sampleBufferRealLeft[ind] = floatArray[i].toDouble()
-                    sampleBufferRealRight[ind] = floatArray[i + 1].toDouble()
-                    ind += 1
-                }
-                runBlocking {
-                    awaitAll(
-                        async(Dispatchers.IO) {
-                            // https://stackoverflow.com/questions/24003887/how-properly-implement-equalization-using-band-pass-filer
-                            sampleBufferRealLeft.forEachIndexed { index, it ->
-                                var outY: Double = it
-                                var sum = 0.0
+                if (dataBuffer.hasRemaining()) {
+                    val dataRemaining = dataBuffer.remaining() // 获取 dataBuffer 中剩余的有效数据量
+                    val readSize =
+                        if (dataRemaining > bufferSize) bufferSize else dataRemaining // 确定实际读取量
+                    val processedBuffer = ByteBuffer.allocate(readSize)
+                    val oldLimit = dataBuffer.limit() // 记录旧的 limit
+                    dataBuffer.limit(dataBuffer.position() + readSize) // 设置新 limit 来控制读取量
+                    processedBuffer.put(dataBuffer)
+                    dataBuffer.limit(oldLimit)
+                    val floatArray = FloatArray(bufferSize / r)
+                    converter.toFloatArray(processedBuffer.array(), floatArray)
+                    var ind = 0
+                    // TODO need support more channel count
+                    for (i in floatArray.indices step outputAudioFormat!!.channelCount) {
+                        sampleBufferRealLeft[ind] = floatArray[i].toDouble()
+                        sampleBufferRealRight[ind] = floatArray[i + 1].toDouble()
+                        ind += 1
+                    }
+                    runBlocking {
+                        awaitAll(
+                            async(Dispatchers.IO) {
+                                // https://stackoverflow.com/questions/24003887/how-properly-implement-equalization-using-band-pass-filer
+                                sampleBufferRealLeft.forEachIndexed { index, it ->
+                                    var outY: Double = it
+                                    var sum = 0.0
 //                                butterWorthLeftBandPass.forEachIndexed { index1, filter ->
 //                                    // only used for peaking and shelving filters
 //                                    sum += gainDBAbsArray[index1] * filter.filter(
@@ -208,24 +210,24 @@ class EqualizerAudioProcessor : AudioProcessor {
 //                                    )
 //                                }
 //                                outY = sum
-                                mCoefficientLeftBiQuad.forEach { filter ->
-                                    outY = filter.filter(
-                                        outY
-                                    )
+                                    mCoefficientLeftBiQuad.forEach { filter ->
+                                        outY = filter.filter(
+                                            outY
+                                        )
+                                    }
+                                    leftMax = FastMath.max(leftMax, FastMath.abs(outY))
+                                    sampleBufferRealLeft[index] = outY
                                 }
-                                leftMax = FastMath.max(leftMax, FastMath.abs(outY))
-                                sampleBufferRealLeft[index] = outY
-                            }
-                            if (leftMax > 1.0) {
-                                sampleBufferRealLeft.forEachIndexed { index, it ->
-                                    sampleBufferRealLeft[index] = it / leftMax
+                                if (leftMax > 1.0) {
+                                    sampleBufferRealLeft.forEachIndexed { index, it ->
+                                        sampleBufferRealLeft[index] = it / leftMax
+                                    }
                                 }
-                            }
 //                            (if (outY > 1.0) 1.0 else if (outY < -1.0) -1.0 else outY)
-                        },
-                        async(Dispatchers.IO) {
-                            sampleBufferRealRight.forEachIndexed { index, it ->
-                                var outY: Double = it
+                            },
+                            async(Dispatchers.IO) {
+                                sampleBufferRealRight.forEachIndexed { index, it ->
+                                    var outY: Double = it
 //                                var sum = 0.0
 //                                butterWorthRightBandPass.forEachIndexed { index1, filter ->
 //                                    // only used for peaking and shelving filters
@@ -240,68 +242,55 @@ class EqualizerAudioProcessor : AudioProcessor {
 //                                    )
 //                                }
 //                                outY = sum
-                                mCoefficientRightBiQuad.forEach { filter ->
-                                    outY = filter.filter(
-                                        outY
-                                    )
-                                }
-                                rightMax = FastMath.max(rightMax, FastMath.abs(outY))
-                                sampleBufferRealRight[index] = outY
+                                    mCoefficientRightBiQuad.forEach { filter ->
+                                        outY = filter.filter(
+                                            outY
+                                        )
+                                    }
+                                    rightMax = FastMath.max(rightMax, FastMath.abs(outY))
+                                    sampleBufferRealRight[index] = outY
 //                                    (if (outY > 1.0) 1.0 else if (outY < -1.0) -1.0 else outY)
-                            }
-                            if (rightMax > 1.0)
-                                sampleBufferRealRight.forEachIndexed { index, it ->
-                                    sampleBufferRealRight[index] = it / rightMax
                                 }
-                        }
-                    )
+                                if (rightMax > 1.0)
+                                    sampleBufferRealRight.forEachIndexed { index, it ->
+                                        sampleBufferRealRight[index] = it / rightMax
+                                    }
+                            }
+                        )
+                    }
+                    val outDoubleArray = FloatArray(sampleBufferRealLeft.size * 2)
+                    var pI = 0
+                    // TODO need support more channel count
+                    for (i in floatArray.indices step outputAudioFormat!!.channelCount) {
+                        outDoubleArray[i] = sampleBufferRealLeft[pI].toFloat()
+                        outDoubleArray[i + 1] = sampleBufferRealRight[pI].toFloat()
+                        pI += 1
+                    }
+                    val outB = ByteArray(bufferSize)
+                    converter.toByteArray(outDoubleArray, outB)
+                    val processedResultBuffer = ByteBuffer.wrap(outB)
+                    processedResultBuffer.position(bufferSize)
+                    processedResultBuffer.order(ByteOrder.nativeOrder())
+                    this.outputBuffer = processedResultBuffer
                 }
-                val outDoubleArray = FloatArray(sampleBufferRealLeft.size * 2)
-                var pI = 0
-                // TODO need support more channel count
-                for (i in floatArray.indices step outputAudioFormat!!.channelCount) {
-                    outDoubleArray[i] = sampleBufferRealLeft[pI].toFloat()
-                    outDoubleArray[i + 1] = sampleBufferRealRight[pI].toFloat()
-                    pI += 1
-                }
-                val outB = ByteArray(bufferSize)
-                converter.toByteArray(outDoubleArray, outB)
-                val processedResultBuffer = ByteBuffer.wrap(outB)
-                processedResultBuffer.position(bufferSize)
-                processedResultBuffer.order(ByteOrder.nativeOrder())
-                this.outputBuffer = processedResultBuffer
+                dataBuffer.compact()
             }
             lock.unlock()
         } else {
-//            if (dataBuffer.position() >= bufferSize) {
-//            if (this.outputBuffer == EMPTY_BUFFER) {
-//                this.outputBuffer = ByteBuffer.allocate(bufferSize)
-//            } else {
-//                this.outputBuffer.clear()
-//            }
-//            val processedBuffer: ByteBuffer = ByteBuffer.allocate(bufferSize)
-//            if (dataBuffer.remaining() > bufferSize) {
-//                dataBuffer.limit(bufferSize);
-//            }
-//            dataBuffer.flip()
-//            // 如果 bufferSize 超过 dataBuffer 中的剩余数据量，避免设置过大的限制
-////                dataBuffer.limit(bufferSize)
-//            processedBuffer.put(dataBuffer)
-//            processedBuffer.order(ByteOrder.nativeOrder())
-//            dataBuffer.compact()
-//            this.outputBuffer = processedBuffer
-            if (dataBuffer.position() >= 1024) {
-                dataBuffer.flip()
-                val processedBuffer: ByteBuffer = ByteBuffer.allocate(1024)
-                processedBuffer.put(dataBuffer.array(), 0, 1024)
-                dataBuffer.position(1024)
-                dataBuffer.compact()
+            dataBuffer.flip()
+            if (dataBuffer.hasRemaining()) {
+                val dataRemaining = dataBuffer.remaining() // 获取 dataBuffer 中剩余的有效数据量
+                val readSize =
+                    if (dataRemaining > bufferSize) bufferSize else dataRemaining // 确定实际读取量
+                val processedBuffer: ByteBuffer = ByteBuffer.allocate(readSize)
+                val oldLimit = dataBuffer.limit() // 记录旧的 limit
+                dataBuffer.limit(dataBuffer.position() + readSize) // 设置新 limit 来控制读取量
+                processedBuffer.put(dataBuffer)
+                dataBuffer.limit(oldLimit)
                 processedBuffer.order(ByteOrder.nativeOrder())
                 this.outputBuffer = processedBuffer
             }
-
-//            }
-
+            dataBuffer.compact()
         }
     }
 
