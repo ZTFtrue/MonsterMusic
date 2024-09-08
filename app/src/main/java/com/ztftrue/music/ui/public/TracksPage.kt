@@ -572,8 +572,6 @@ fun TracksListPage(
                 showOperatePopup = false
             }
         ) {
-            val color = MaterialTheme.colorScheme.secondary
-            val configuration = LocalConfiguration.current
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
@@ -748,13 +746,11 @@ fun TracksListPage(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 10.dp, end = 10.dp, top = 10.dp, bottom = 10.dp)
+                                .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 10.dp)
                         ) {
 
                             Text(
                                 text = mListPlay.name,
-//                                modifier = Modifier
-//                                    .wrapContentSize(),
                                 color = MaterialTheme.colorScheme.onBackground,
                                 modifier = Modifier.horizontalScroll(rememberScrollState(0)),
                                 maxLines = 1
@@ -859,6 +855,18 @@ fun TracksListPage(
                                     Column {
                                         Text(
                                             text = a.artist,
+//                                            modifier = Modifier
+//                                                .wrapContentSize(),
+                                            modifier = Modifier.horizontalScroll(
+                                                rememberScrollState(
+                                                    0
+                                                )
+                                            ),
+                                            maxLines = 1,
+                                            color = MaterialTheme.colorScheme.onBackground
+                                        )
+                                        Text(
+                                            text = "Year : ${a.firstYear}${if (a.firstYear == a.lastYear) "" else " ~ ${a.lastYear}"}",
 //                                            modifier = Modifier
 //                                                .wrapContentSize(),
                                             modifier = Modifier.horizontalScroll(
