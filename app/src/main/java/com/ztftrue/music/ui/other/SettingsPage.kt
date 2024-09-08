@@ -28,6 +28,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -61,12 +62,14 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -521,18 +524,19 @@ fun SettingsPage(
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
+                            Text(
+                                text = "-1 don't ignore any,0 ignore duration less than or equal 0s",
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
                             CompositionLocalProvider(
                                 LocalContentColor provides MaterialTheme.colorScheme.onBackground
                             ) {
                                 OutlinedTextField(
                                     value = durationValue,
                                     onValueChange = { s ->
-                                        val newText = s.ifEmpty {
-                                            "0"
-                                        }
-
-                                        if (!newText.contains(".") && newText.toLongOrNull() != null) {
-                                            durationValue = newText
+                                        if (!s.contains(".") && s.toLongOrNull() != null) {
+                                            durationValue = s
                                         }
                                     },
                                     keyboardOptions = KeyboardOptions.Default.copy(
@@ -541,26 +545,11 @@ fun SettingsPage(
                                     ),
                                     keyboardActions = KeyboardActions(
                                         onDone = {
-                                            val sharedPreferences =
-                                                context.getSharedPreferences(
-                                                    "scan_config",
-                                                    Context.MODE_PRIVATE
-                                                )
-                                            // -1 don't ignore any,0 ignore duration less than or equal 0s,
-                                            sharedPreferences.edit().putLong(
-                                                "ignore_duration",
-                                                durationValue.toLong()
-                                            ).apply()
-                                            Toast.makeText(
-                                                context,
-                                                context.getString(
-                                                    R.string.ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect,
-                                                    durationValue
-                                                ),
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                            focusRequester.freeFocus()
-                                            keyboardController?.hide()
+                                            saveIgnoreDuration(
+                                                durationValue, context,
+                                                focusRequester,
+                                                keyboardController
+                                            )
                                         }
                                     ),
                                     modifier = Modifier
@@ -608,11 +597,29 @@ fun SettingsPage(
                                     ),
                                     textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
                                     suffix = {
-                                        Text(
-                                            text = "s",
-                                            Modifier.padding(start = 10.dp),
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
+                                        Row {
+                                            Text(
+                                                text = "s",
+                                                Modifier.padding(start = 10.dp),
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                            ElevatedButton(
+                                                onClick = {
+                                                    saveIgnoreDuration(
+                                                        durationValue, context,
+                                                        focusRequester,
+                                                        keyboardController
+                                                    )
+                                                },
+                                                modifier = Modifier
+                                            ) {
+                                                Text(
+                                                    text = "Save",
+                                                    textAlign = TextAlign.Center,
+                                                    color = MaterialTheme.colorScheme.onBackground
+                                                )
+                                            }
+                                        }
                                     }
                                 )
                             }
@@ -765,6 +772,36 @@ fun SettingsPage(
 
 }
 
+fun saveIgnoreDuration(
+    durationValue: String,
+    context: Context,
+    focusRequester: FocusRequester,
+    keyboardController: SoftwareKeyboardController?
+) {
+    if (durationValue.isEmpty()) {
+        return
+    }
+    val sharedPreferences =
+        context.getSharedPreferences(
+            "scan_config",
+            Context.MODE_PRIVATE
+        )
+    // -1 don't ignore any,0 ignore duration less than or equal 0s,
+    sharedPreferences.edit().putLong(
+        "ignore_duration",
+        durationValue.toLong()
+    ).apply()
+    Toast.makeText(
+        context,
+        context.getString(
+            R.string.ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect,
+            durationValue
+        ),
+        Toast.LENGTH_SHORT
+    ).show()
+    focusRequester.freeFocus()
+    keyboardController?.hide()
+}
 
 @UnstableApi
 @Composable
