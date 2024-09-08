@@ -2,6 +2,7 @@ package com.ztftrue.music.utils
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.ztftrue.music.R
 import com.ztftrue.music.utils.model.Caption
 import com.ztftrue.music.utils.model.ListStringCaption
@@ -137,13 +138,21 @@ object CaptionUtils {
         return arrayList
     }
 
-    fun getEmbeddedLyrics(path: String, context: Context): ArrayList<ListStringCaption> {
+    fun getEmbeddedLyrics(path: String, context: Context,tags: SnapshotStateMap<String, String>): ArrayList<ListStringCaption> {
         val audioFile = File(path)
         val arrayList = arrayListOf<ListStringCaption>()
 
         try {
             val f = AudioFileIO.read(audioFile)
             val tag: Tag = f.tag
+//            tag.fields.forEach {
+//                if (it.id == FieldKey.LYRICS.name) {
+//
+//                }
+//
+//            }
+            tags[ FieldKey.COMMENT.name] = tag.getFirst(FieldKey.COMMENT)
+            tags[FieldKey.YEAR.name] = tag.getFirst(FieldKey.YEAR)
             val lyrics: String = tag.getFirst(FieldKey.LYRICS)
             if (lyrics.trim().isNotEmpty()) {
                 lyrics.split("\n").forEach {

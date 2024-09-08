@@ -169,6 +169,7 @@ class MusicViewModel : ViewModel() {
         return db!!
     }
 
+    val tags = mutableStateMapOf<String, String>()
     private val lock = ReentrantLock()
     private var lyricsJob: Job? = null
     fun dealLyrics(context: Context, currentPlay: MusicItem) {
@@ -196,7 +197,8 @@ class MusicViewModel : ViewModel() {
                     .getBoolean(FIRST_EMBEDDED_LYRICS, false)
             val embeddedLyrics = arrayListOf<ListStringCaption>()
             val fileLyrics = arrayListOf<ListStringCaption>()
-            embeddedLyrics.addAll(CaptionUtils.getEmbeddedLyrics(currentPlay.path, context))
+            tags.clear()
+            embeddedLyrics.addAll(CaptionUtils.getEmbeddedLyrics(currentPlay.path, context, tags))
             if (firstEmbeddedLyrics && embeddedLyrics.isNotEmpty()) {
                 lyricsType = LyricsType.TEXT
             } else {

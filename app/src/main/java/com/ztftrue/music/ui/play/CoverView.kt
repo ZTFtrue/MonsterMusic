@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
+import org.jaudiotagger.tag.FieldKey
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -92,6 +93,24 @@ fun CoverView(musicViewModel: MusicViewModel) {
                         )
                         Text(
                             text = stringResource(R.string.album, it1.album), modifier =
+                            Modifier
+                                .padding(top = 10.dp)
+                                .horizontalScroll(rememberScrollState(0))
+                                .fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.onBackground,// Set the text color here
+                            fontSize = MaterialTheme.typography.titleSmall.fontSize
+                        )
+                        Text(
+                            text = "Comment: ${musicViewModel.tags[FieldKey.COMMENT.name]?:""}", modifier =
+                            Modifier
+                                .padding(top = 10.dp)
+                                .horizontalScroll(rememberScrollState(0))
+                                .fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.onBackground,// Set the text color here
+                            fontSize = MaterialTheme.typography.titleSmall.fontSize
+                        )
+                        Text(
+                            text = "Year: ${musicViewModel.tags[FieldKey.YEAR.name]?:""}", modifier =
                             Modifier
                                 .padding(top = 10.dp)
                                 .horizontalScroll(rememberScrollState(0))
