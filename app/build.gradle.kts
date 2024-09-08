@@ -48,7 +48,22 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            applicationVariants.all {
+                outputs.all {
+                    val variantOutput = this
+                    if (variantOutput is com.android.build.gradle.internal.api.ApkVariantOutputImpl) {
+                        tasks.named("mergeReleaseArtProfile").configure {
+                            doLast {
+                                copy {
+                                    from("$buildDir/outputs/mapping/release/mapping.txt")
+                                    into(variantOutput.outputFile.parent)
+                                    rename { "mapping.txt" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
         getByName("debug") {
             isMinifyEnabled = false
