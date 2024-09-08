@@ -859,21 +859,20 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(
-                    text = stringResource(R.string.manage_tab_items), modifier = Modifier
-                        .padding(2.dp),
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-
                 HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
                         .background(color = MaterialTheme.colorScheme.onBackground)
                 )
-
-
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    item() {
+                        Text(
+                            text = stringResource(R.string.manage_tab_items), modifier = Modifier
+                                .padding(2.dp),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
                     items(size) {
                         val item = mainTabList[it]
                         Row(
@@ -980,44 +979,47 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                             )
                         }
                     }
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    TextButton(
-                        onClick = { onDismiss() },
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .fillMaxWidth(0.5f),
-                    ) {
-                        Text(
-                            stringResource(R.string.cancel),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                    HorizontalDivider(
-                        modifier = Modifier
-                            .background(MaterialTheme.colorScheme.onBackground)
-                            .width(1.dp)
-                            .height(50.dp)
-                    )
-                    TextButton(
-                        onClick = {
-                            onConfirmation()
-                        },
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .fillMaxWidth(),
-
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
                         ) {
-                        Text(
-                            stringResource(id = R.string.confirm),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
+                            TextButton(
+                                onClick = { onDismiss() },
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .fillMaxWidth(0.5f),
+                            ) {
+                                Text(
+                                    stringResource(R.string.cancel),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                            HorizontalDivider(
+                                modifier = Modifier
+                                    .background(MaterialTheme.colorScheme.onBackground)
+                                    .width(1.dp)
+                                    .height(50.dp)
+                            )
+                            TextButton(
+                                onClick = {
+                                    onConfirmation()
+                                },
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .fillMaxWidth(),
+
+                                ) {
+                                Text(
+                                    stringResource(id = R.string.confirm),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                        }
                     }
                 }
+
             }
         }
     )
