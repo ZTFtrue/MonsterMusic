@@ -9,6 +9,8 @@ import android.net.Uri
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -97,6 +99,9 @@ class MusicViewModel : ViewModel() {
     var currentDuration = mutableLongStateOf(0)
 
     var mainTabList = mutableStateListOf<MainTab>()
+
+    @OptIn(ExperimentalFoundationApi::class)
+    var currentPageState: PagerState? = null
 
     var sliderPosition = mutableFloatStateOf(0F)
     var sliderTouching = false
@@ -472,7 +477,7 @@ class MusicViewModel : ViewModel() {
                             val d = pickedDir?.listFiles()
                             if (d != null) {
                                 for (it in d) {
-                                    if (it.isFile && it.canRead() && it.name != null
+                                    if (it != null && it.isFile && it.canRead() && it.name != null
                                         && (it.name?.endsWith(".jpg") == true
                                                 || it.name?.endsWith(".jpeg") == true
                                                 || it.name?.endsWith(".png") == true)
@@ -508,7 +513,7 @@ class MusicViewModel : ViewModel() {
                             val d = pickedDir?.listFiles()
                             if (d != null) {
                                 for (it in d) {
-                                    if (it.isFile && it.canRead() && it.name != null
+                                    if (it != null && it.isFile && it.canRead() && it.name != null
                                         && (it.name?.endsWith(".jpg") == true
                                                 || it.name?.endsWith(".jpeg") == true
                                                 || it.name?.endsWith(".png") == true)

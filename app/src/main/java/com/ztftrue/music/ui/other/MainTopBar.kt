@@ -232,7 +232,7 @@ fun MainTopBar(
                                     .wrapContentSize()
                                     .clickable {
                                         onFiledOptionSelected(filedKeys[i])
-                                        if(methodSelected.isEmpty()||methodSelected.isBlank()){
+                                        if (methodSelected.isEmpty() || methodSelected.isBlank()) {
                                             onMethodOptionSelected(PlayUtils.methodMap.entries.first().key)
                                         }
                                     }
@@ -248,7 +248,7 @@ fun MainTopBar(
                                         .wrapContentSize(),
                                     onClick = {
                                         onFiledOptionSelected(filedKeys[i])
-                                        if(methodSelected.isEmpty()||methodSelected.isBlank()){
+                                        if (methodSelected.isEmpty() || methodSelected.isBlank()) {
                                             onMethodOptionSelected(PlayUtils.methodMap.entries.first().key)
                                         }
                                     }
@@ -277,7 +277,7 @@ fun MainTopBar(
                                     .padding(all = Dp(value = 8F))
                                     .clickable {
                                         onMethodOptionSelected(methodKeys[i])
-                                        if(filedSelected.isEmpty()||filedSelected.isBlank()){
+                                        if (filedSelected.isEmpty() || filedSelected.isBlank()) {
                                             onFiledOptionSelected(sortFiledOptions.entries.first().key)
                                         }
 
@@ -293,7 +293,7 @@ fun MainTopBar(
                                         .wrapContentSize(),
                                     onClick = {
                                         onMethodOptionSelected(methodKeys[i])
-                                        if(filedSelected.isEmpty()||filedSelected.isBlank()){
+                                        if (filedSelected.isEmpty() || filedSelected.isBlank()) {
                                             onFiledOptionSelected(sortFiledOptions.entries.first().key)
                                         }
                                     }
@@ -387,22 +387,22 @@ fun MainTopBar(
                                                             !musicViewModel.refreshPlayList.value
                                                     }
 
-                                                    PlayListType.Albums.name  -> {
+                                                    PlayListType.Albums.name -> {
                                                         musicViewModel.refreshAlbum.value =
                                                             !musicViewModel.refreshAlbum.value
                                                     }
 
-                                                    PlayListType.Artists.name  -> {
+                                                    PlayListType.Artists.name -> {
                                                         musicViewModel.refreshArtist.value =
                                                             !musicViewModel.refreshArtist.value
                                                     }
 
-                                                    PlayListType.Genres.name  -> {
+                                                    PlayListType.Genres.name -> {
                                                         musicViewModel.refreshGenre.value =
                                                             !musicViewModel.refreshGenre.value
                                                     }
 
-                                                    PlayListType.Songs.name  -> {
+                                                    PlayListType.Songs.name -> {
                                                         resultData?.getParcelableArrayList<MusicItem>(
                                                             "songsList"
                                                         )?.also {
@@ -624,12 +624,16 @@ fun MainTopBar(
                         }
                     }
                 }) {
-                    Icon(Icons.Filled.Menu, contentDescription = "menu",tint = MaterialTheme.colorScheme.onBackground)
+                    Icon(
+                        Icons.Filled.Menu,
+                        contentDescription = "menu",
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
                 }
             },
             title = { },
             actions = {
-                if (musicViewModel.mainTabList[pagerState.currentPage].type != PlayListType.Folders) {
+                if (musicViewModel.mainTabList.size > pagerState.currentPage && musicViewModel.mainTabList[pagerState.currentPage].type != PlayListType.Folders) {
                     IconButton(
                         modifier = Modifier.width(50.dp), onClick = {
                             if (musicViewModel.mainTabList[pagerState.currentPage].type != PlayListType.Queue) {
@@ -682,45 +686,48 @@ fun MainTopBar(
                     )
                 }
             })
-        ScrollableTabRow(
-            selectedTabIndex = pagerState.currentPage,
-            modifier = Modifier.fillMaxWidth(),
-            indicator = { tabPositions ->
-                if (tabPositions.isNotEmpty()) {
-                    TabRowDefaults.SecondaryIndicator(
-                        Modifier
-                            .height(3.0.dp)
-                            .tabIndicatorOffset(tabPositions[pagerState.currentPage]),
-                        height = 3.0.dp,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                } else {
-                    TabRowDefaults.SecondaryIndicator(
-                        Modifier.height(3.0.dp),
-                        height = 3.0.dp,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-            },
-        ) {
-            musicViewModel.mainTabList.forEachIndexed { index, item ->
-                Tab(
-                    selected = pagerState.currentPage == index,
-                    onClick = {
-                        scope.launch {
-                            pagerState.animateScrollToPage(index)
-                        }
-                    },
-                    text = {
-                        Text(
-                            text = stringResource(
-                                id = Utils.translateMap[item.name] ?: R.string.app_name
-                            ),
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = 14.sp,
+        if(musicViewModel.mainTabList.size > pagerState.currentPage){
+            ScrollableTabRow(
+                selectedTabIndex = pagerState.currentPage,
+                modifier = Modifier.fillMaxWidth(),
+                indicator = { tabPositions ->
+                    if (tabPositions.isNotEmpty()) {
+                        TabRowDefaults.SecondaryIndicator(
+                            Modifier
+                                .height(3.0.dp)
+                                .tabIndicatorOffset(tabPositions[pagerState.currentPage]),
+                            height = 3.0.dp,
+                            color = MaterialTheme.colorScheme.onBackground
                         )
-                    })
+                    } else {
+                        TabRowDefaults.SecondaryIndicator(
+                            Modifier.height(3.0.dp),
+                            height = 3.0.dp,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                },
+            ) {
+                musicViewModel.mainTabList.forEachIndexed { index, item ->
+                    Tab(
+                        selected = pagerState.currentPage == index,
+                        onClick = {
+                            scope.launch {
+                                pagerState.animateScrollToPage(index)
+                            }
+                        },
+                        text = {
+                            Text(
+                                text = stringResource(
+                                    id = Utils.translateMap[item.name] ?: R.string.app_name
+                                ),
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontSize = 14.sp,
+                            )
+                        })
+                }
             }
+
         }
 
     }

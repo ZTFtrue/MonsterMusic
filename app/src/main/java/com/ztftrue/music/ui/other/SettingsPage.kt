@@ -1,8 +1,11 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.ztftrue.music.ui.other
 
 import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -92,6 +95,7 @@ import com.ztftrue.music.utils.trackManager.FolderManger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import okhttp3.internal.toLongOrDefault
 
 
@@ -803,6 +807,7 @@ fun saveIgnoreDuration(
     keyboardController?.hide()
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @UnstableApi
 @Composable
 fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
@@ -824,6 +829,10 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
     }
     fun onConfirmation() {
         musicViewModel.mainTabList.clear()
+        if (mainTabList.size == 0) {
+            Toast.makeText(context, "Must has at least one tab", Toast.LENGTH_SHORT).show()
+            return
+        }
         mainTabList.forEach {
             if (it.isShow) {
                 musicViewModel.mainTabList.add(it)
