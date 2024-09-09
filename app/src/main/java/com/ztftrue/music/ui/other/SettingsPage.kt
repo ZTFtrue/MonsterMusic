@@ -524,11 +524,6 @@ fun SettingsPage(
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
-                            Text(
-                                text = "-1 don't ignore any,0 ignore duration less than or equal 0s",
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
 
                             OutlinedTextField(
                                 value = durationValue,
