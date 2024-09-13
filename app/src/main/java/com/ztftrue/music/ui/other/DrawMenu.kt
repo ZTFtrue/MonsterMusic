@@ -64,6 +64,7 @@ fun DrawMenu(
     val drawerWidth = 240.dp
     val scope = rememberCoroutineScope()
     val color = MaterialTheme.colorScheme.onBackground
+    val context = LocalContext.current
     ModalDrawerSheet(
         modifier = Modifier
             .width(drawerWidth)
@@ -102,7 +103,7 @@ fun DrawMenu(
                 )
                 Image(
                     painter = rememberAsyncImagePainter(
-                        musicViewModel.getCurrentMusicCover(context = LocalContext.current)
+                        musicViewModel.getCurrentMusicCover(context = context)
                             ?: R.drawable.songs_thumbnail_cover
                     ),
                     contentDescription = "Album cover",
@@ -189,6 +190,33 @@ fun DrawMenu(
                     text = stringResource(R.string.feedback),
                     Modifier.padding(start = 10.dp),
                     color = MaterialTheme.colorScheme.onBackground,
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .padding(0.dp)
+                    .drawBehind {
+                        drawLine(
+                            color = color,
+                            start = Offset(0f, size.height - 1.dp.toPx()),
+                            end = Offset(size.width, size.height - 1.dp.toPx()),
+                            strokeWidth = 1.dp.toPx()
+                        )
+                    }
+                    .clickable {
+                        Utils.openBrowser(
+                            "https://discord.gg/R9YbH9TBbJ",
+                            context
+                        )
+                    },
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text(
+                    text = stringResource(R.string.join_discord),
+                    Modifier.padding(start = 10.dp),
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
             Box(
@@ -286,34 +314,6 @@ fun FeedBackDialog(onDismiss: () -> Unit) {
                                 .clickable {
                                     onConfirmation()
                                     Utils.openBrowser(
-                                        "https://discord.gg/R9YbH9TBbJ",
-                                        context
-                                    )
-                                },
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            Text(
-                                text = stringResource(R.string.join_discord),
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
-                                }
-                                .clickable {
-                                    onConfirmation()
-                                    Utils.openBrowser(
                                         "https://github.com/ZTFtrue/MonsterMusic/issues",
                                         context
                                     )
@@ -350,7 +350,8 @@ fun FeedBackDialog(onDismiss: () -> Unit) {
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = stringResource(R.string.send_email), Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.send_email),
+                                Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -369,7 +370,10 @@ fun FeedBackDialog(onDismiss: () -> Unit) {
                             .padding(8.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
             }
