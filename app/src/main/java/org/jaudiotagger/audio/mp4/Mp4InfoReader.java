@@ -79,11 +79,7 @@ public class Mp4InfoReader
             return false;
         }
         boxHeader = Mp4BoxHeader.seekWithinLevel(mvhdBuffer, Mp4AtomIdentifier.VMHD.getFieldName());
-        if (boxHeader != null)
-        {
-            return true;
-        }
-        return false;
+        return boxHeader != null;
     }
 
     public GenericAudioHeader read(RandomAccessFile raf) throws CannotReadException, IOException
@@ -298,7 +294,7 @@ public class Mp4InfoReader
         {
             Mp4StcoBox stco = new Mp4StcoBox(boxHeader, mvhdBuffer);
             info.setAudioDataStartPosition((long)stco.getFirstOffSet());
-            info.setAudioDataEndPosition((long)fc.size());
+            info.setAudioDataEndPosition(fc.size());
             info.setAudioDataLength(fc.size() - stco.getFirstOffSet());
         }
 

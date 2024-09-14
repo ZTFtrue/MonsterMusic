@@ -18,7 +18,7 @@ import java.util.List;
  */
 public class AiffTag implements Tag, Id3SupportingTag
 {
-    private List<ChunkSummary> chunkSummaryList = new ArrayList<ChunkSummary>();
+    private final List<ChunkSummary> chunkSummaryList = new ArrayList<ChunkSummary>();
 
     public void addChunkSummary(ChunkSummary cs)
     {

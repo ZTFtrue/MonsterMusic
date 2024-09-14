@@ -165,8 +165,8 @@ public enum Mp4AtomIdentifier
     XML$20("xml$20", "a tool by which vendors can add XML formatted information"),
     YRRC("yrrc", "Year when media was recorded (user-data)"),
     ;
-    private String fieldName;
-    private String description;
+    private final String fieldName;
+    private final String description;
 
     Mp4AtomIdentifier(String fieldName, String description)
     {

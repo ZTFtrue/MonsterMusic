@@ -866,7 +866,7 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                         .background(color = MaterialTheme.colorScheme.onBackground)
                 )
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                    item() {
+                    item {
                         Text(
                             text = stringResource(R.string.manage_tab_items), modifier = Modifier
                                 .padding(2.dp),

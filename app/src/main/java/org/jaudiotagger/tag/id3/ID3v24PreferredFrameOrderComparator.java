@@ -12,7 +12,7 @@ import static org.jaudiotagger.tag.id3.ID3v24Frames.*;
 public class ID3v24PreferredFrameOrderComparator implements Comparator<String>
 {
     private static ID3v24PreferredFrameOrderComparator comparator;
-    private static List frameIdsInPreferredOrder = new ArrayList<String>();
+    private static final List frameIdsInPreferredOrder = new ArrayList<String>();
 
     static
     {

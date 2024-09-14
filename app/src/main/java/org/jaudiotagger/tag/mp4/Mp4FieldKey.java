@@ -228,11 +228,11 @@ public enum Mp4FieldKey
     WORK_TYPE("com.apple.iTunes","WORK_TYPE",  TEXT, Tagger.JAIKOZ),
     ;
     private Tagger tagger;
-    private String fieldName;
-    private Mp4TagFieldSubType subclassType;
+    private final String fieldName;
+    private final Mp4TagFieldSubType subclassType;
     private String issuer;
     private String identifier;
-    private Mp4FieldType fieldType;
+    private final Mp4FieldType fieldType;
     private int fieldLength;
 
     /**

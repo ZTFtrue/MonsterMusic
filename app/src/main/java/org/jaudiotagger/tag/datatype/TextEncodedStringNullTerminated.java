@@ -183,7 +183,7 @@ public class TextEncodedStringNullTerminated extends AbstractString
             CoderResult coderResult = decoder.decode(inBuffer, outBuffer, true);
             if (coderResult.isError())
             {
-                logger.warning("Problem decoding text encoded null terminated string:" + coderResult.toString());
+                logger.warning("Problem decoding text encoded null terminated string:" + coderResult);
             }
             decoder.flush(outBuffer);
             outBuffer.flip();

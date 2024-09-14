@@ -42,7 +42,7 @@ class PlayMusicWidget : AppWidgetProvider() {
 //                    PlayMusicWidget::class.java
 //                )
 //            )
-            hashMap.forEach() { (id1, it) ->
+            hashMap.forEach { (id1, it) ->
 //                    it.setInt(
 //                        R.id.play_music_widget,
 //                        "setBackgroundColor",

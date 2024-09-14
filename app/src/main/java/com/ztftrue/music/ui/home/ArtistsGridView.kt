@@ -252,20 +252,6 @@ fun ArtistItemView(
                 navigatorExtras = ListParameter(item.id, type)
             )
         }) {
-
-        val fileR = Utils.checkLyrics(
-            item.name + ".jpg"
-        )
-        if (fileR != null) {
-//            lyricsType = fileR.type
-//            fileLyrics.addAll(
-//                readCaptions(
-//                    File(fileR.path).bufferedReader(),
-//                    fileR.type,
-//                    context
-//                )
-//            )
-        }
         ConstraintLayout {
             val (playIndicator) = createRefs()
             val model: Any? = musicViewModel.artistCover[item.name.lowercase().trim()]

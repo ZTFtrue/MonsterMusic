@@ -535,8 +535,6 @@ fun MainTopBar(
                     showOperateDialog = false
                 }
             ) {
-                val color = MaterialTheme.colorScheme.secondary
-                val configuration = LocalConfiguration.current
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier

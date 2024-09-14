@@ -67,12 +67,12 @@ public class ID3v1Iterator implements Iterator
     /**
      *
      */
-    private ID3v1Tag id3v1tag;
+    private final ID3v1Tag id3v1tag;
 
     /**
      *
      */
-    private int lastIndex = 0;
+    private final int lastIndex = 0;
 
     /**
      * Creates a new ID3v1Iterator datatype.

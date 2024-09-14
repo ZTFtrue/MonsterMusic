@@ -25,6 +25,7 @@ import org.jaudiotagger.audio.ogg.util.VorbisHeader;
 import org.jaudiotagger.logging.ErrorMessage;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
 /**
@@ -91,7 +92,7 @@ public class VorbisCommentReader
         b = new byte[vendorStringLength];
         System.arraycopy(rawdata, pos, b, 0, vendorStringLength);
         pos += vendorStringLength;
-        tag.setVendor(new String(b, VorbisHeader.CHARSET_UTF_8));
+        tag.setVendor(new String(b, StandardCharsets.UTF_8));
         logger.config("Vendor is:"+tag.getVendor());
         
         b = new byte[FIELD_USER_COMMENT_LIST_LENGTH];

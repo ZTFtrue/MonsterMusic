@@ -47,7 +47,7 @@ fun MainView(
     activity: MainActivity,
     navController: NavHostController,
 ) {
-    val showIndicator = remember { mutableStateOf<Boolean>(false) }
+    val showIndicator = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 

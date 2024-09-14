@@ -871,11 +871,10 @@ public class ID3v1Tag extends AbstractID3v1Tag implements Tag
      */
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof ID3v1Tag))
+        if (!(obj instanceof ID3v1Tag object))
         {
             return false;
         }
-        ID3v1Tag object = (ID3v1Tag) obj;
         if (!this.album.equals(object.album))
         {
             return false;

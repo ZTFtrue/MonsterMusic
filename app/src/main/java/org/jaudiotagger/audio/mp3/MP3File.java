@@ -66,7 +66,7 @@ public class MP3File extends AudioFile
     /**
      * The Lyrics3 tag that this file contains.
      */
-    private AbstractLyrics3 lyrics3tag = null;
+    private final AbstractLyrics3 lyrics3tag = null;
 
 
     /**

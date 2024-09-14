@@ -28,8 +28,8 @@ public class EventTimingCode extends AbstractDataType implements Cloneable
 {
 
     private static final int SIZE = 5;
-    private NumberHashMap type = new NumberHashMap(DataTypes.OBJ_TYPE_OF_EVENT, null, 1);
-    private NumberFixedLength timestamp = new NumberFixedLength(DataTypes.OBJ_DATETIME, null, 4);
+    private final NumberHashMap type = new NumberHashMap(DataTypes.OBJ_TYPE_OF_EVENT, null, 1);
+    private final NumberFixedLength timestamp = new NumberFixedLength(DataTypes.OBJ_DATETIME, null, 4);
 
     public EventTimingCode(final EventTimingCode copy) {
         super(copy);
@@ -127,8 +127,7 @@ public class EventTimingCode extends AbstractDataType implements Cloneable
         if (!super.equals(o)) return false;
 
         final EventTimingCode that = (EventTimingCode) o;
-        if (this.getType() != that.getType() || this.getTimestamp() != that.getTimestamp()) return false;
-        return true;
+        return this.getType() == that.getType() && this.getTimestamp() == that.getTimestamp();
     }
 
     @Override
@@ -141,7 +140,7 @@ public class EventTimingCode extends AbstractDataType implements Cloneable
 
     @Override
     public String toString() {
-        return "" + getType() + " (\"" + EventTimingTypes.getInstanceOf().getValueForId(getType()) + "\"), " + getTimestamp();
+        return getType() + " (\"" + EventTimingTypes.getInstanceOf().getValueForId(getType()) + "\"), " + getTimestamp();
     }
 
     @Override

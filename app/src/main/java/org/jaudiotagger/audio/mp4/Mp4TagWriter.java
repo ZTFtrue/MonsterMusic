@@ -103,7 +103,7 @@ public class Mp4TagWriter
     // Logger Object
     public static Logger logger = Logger.getLogger("org.jaudiotagger.tag.mp4");
 
-    private Mp4TagCreator tc = new Mp4TagCreator();
+    private final Mp4TagCreator tc = new Mp4TagCreator();
 
 
     /**

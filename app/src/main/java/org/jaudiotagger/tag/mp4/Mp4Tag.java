@@ -496,13 +496,11 @@ public class Mp4Tag extends AbstractTag
             if(trackTotal.length()==0)
             {
                 super.deleteField(mp4FieldName);
-                return;
             }
             else
             {
                 Mp4TrackField field = (Mp4TrackField)this.getFirstField(FieldKey.TRACK_TOTAL);
                 field.setTrackNo(0);
-                return;
             }
         }
         else if (genericKey == FieldKey.TRACK_TOTAL)
@@ -511,13 +509,11 @@ public class Mp4Tag extends AbstractTag
             if(track.length()==0)
             {
                 super.deleteField(mp4FieldName);
-                return;
             }
             else
             {
                 Mp4TrackField field = (Mp4TrackField)this.getFirstField(FieldKey.TRACK);
                 field.setTrackTotal(0);
-                return;
             }
         }
         else if (genericKey == FieldKey.DISC_NO)
@@ -526,13 +522,11 @@ public class Mp4Tag extends AbstractTag
             if(discTotal.length()==0)
             {
                 super.deleteField(mp4FieldName);
-                return;
             }
             else
             {
                 Mp4DiscNoField field = (Mp4DiscNoField)this.getFirstField(FieldKey.DISC_TOTAL);
                 field.setDiscNo(0);
-                return;
             }
         }
         else if (genericKey == FieldKey.DISC_TOTAL)
@@ -541,13 +535,11 @@ public class Mp4Tag extends AbstractTag
             if(discno.length()==0)
             {
                 super.deleteField(mp4FieldName);
-                return;
             }
             else
             {
                 Mp4DiscNoField field = (Mp4DiscNoField)this.getFirstField(FieldKey.DISC_NO);
                 field.setDiscTotal(0);
-                return;
             }
         }
         else if(genericKey == FieldKey.GENRE)

@@ -19,11 +19,10 @@ public enum WavChunkType
     CORRUPT_LIST("iLIS", "List chunk, wraps round other chunks"),
     CORRUPT_ID3_LATE("d3 \u0000", "Stores metadata in ID3 chunk"),
     CORRUPT_ID3_EARLY("\u0000id3", "Stores metadata in ID3 chunk");
-    ;
 
     private static final Map<String, WavChunkType> CODE_TYPE_MAP = new HashMap<String, WavChunkType>();
-    private String code;
-    private String description;
+    private final String code;
+    private final String description;
 
     /**
      * Get {@link WavChunkType} for code (e.g. "SSND").

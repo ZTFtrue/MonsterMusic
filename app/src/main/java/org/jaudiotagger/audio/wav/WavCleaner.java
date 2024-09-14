@@ -24,8 +24,8 @@ public class WavCleaner
     // Logger Object
     public static Logger logger = Logger.getLogger("org.jaudiotagger.audio.wav");
 
-    private Path path;
-    private String loggingName;
+    private final Path path;
+    private final String loggingName;
 
     public WavCleaner(Path path)
     {

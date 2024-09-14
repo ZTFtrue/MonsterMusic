@@ -111,12 +111,12 @@ public class TagOptionSingleton
     /**
      *
      */
-    private static HashMap<String, TagOptionSingleton> tagOptionTable = new HashMap<String, TagOptionSingleton>();
+    private static final HashMap<String, TagOptionSingleton> tagOptionTable = new HashMap<String, TagOptionSingleton>();
 
     /**
      *
      */
-    private static String DEFAULT = "default";
+    private static final String DEFAULT = "default";
 
     /**
      *

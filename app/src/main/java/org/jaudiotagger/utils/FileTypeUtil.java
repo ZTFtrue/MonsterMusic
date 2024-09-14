@@ -26,8 +26,8 @@ public class FileTypeUtil {
 	private static final Integer[] mp3v1Sig_4 = { 0xFF, 0xFB };
 	private static final Integer[] mp4Sig = { 0x00, 0x00, 0x00, null, 0x66, 0x74, 0x79, 0x70 };
 
-	private static Map<String, Integer[]> signatureMap;
-	private static Map<String, String> extensionMap;
+	private static final Map<String, Integer[]> signatureMap;
+	private static final Map<String, String> extensionMap;
 
 	static {
 		signatureMap = new HashMap<String, Integer[]>();

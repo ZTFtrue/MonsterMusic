@@ -68,11 +68,10 @@ public class StringFixedLength extends AbstractString
      */
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof StringFixedLength))
+        if (!(obj instanceof StringFixedLength object))
         {
             return false;
         }
-        StringFixedLength object = (StringFixedLength) obj;
         return this.size == object.size && super.equals(obj);
     }
 

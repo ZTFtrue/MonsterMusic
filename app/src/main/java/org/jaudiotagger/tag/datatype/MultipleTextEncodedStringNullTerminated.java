@@ -161,7 +161,7 @@ public class MultipleTextEncodedStringNullTerminated extends AbstractDataType
      */
     public static class Values
     {
-        private List<String> valueList = new ArrayList<String>();
+        private final List<String> valueList = new ArrayList<String>();
 
         public Values()
         {

@@ -46,7 +46,7 @@ public class OggVorbisTagReader
     // Logger Object
     public static Logger logger = Logger.getLogger("org.jaudiotagger.audio.ogg");
 
-    private VorbisCommentReader vorbisCommentReader;
+    private final VorbisCommentReader vorbisCommentReader;
 
     public OggVorbisTagReader()
     {
@@ -587,11 +587,11 @@ public class OggVorbisTagReader
      */
     public static class OggVorbisHeaderSizes
     {
-        private long commentHeaderStartPosition;
-        private long setupHeaderStartPosition;
-        private int commentHeaderSize;
-        private int setupHeaderSize;
-        private List<OggPageHeader.PacketStartAndLength> packetList;
+        private final long commentHeaderStartPosition;
+        private final long setupHeaderStartPosition;
+        private final int commentHeaderSize;
+        private final int setupHeaderSize;
+        private final List<OggPageHeader.PacketStartAndLength> packetList;
 
         OggVorbisHeaderSizes(long commentHeaderStartPosition, long setupHeaderStartPosition, int commentHeaderSize, int setupHeaderSize, List<OggPageHeader.PacketStartAndLength> packetList)
         {

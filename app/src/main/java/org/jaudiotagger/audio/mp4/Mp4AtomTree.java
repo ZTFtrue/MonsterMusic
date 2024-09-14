@@ -45,12 +45,12 @@ public class Mp4AtomTree
     private DefaultMutableTreeNode udtaNode;
     private DefaultMutableTreeNode hdlrWithinMdiaNode;
     private DefaultMutableTreeNode hdlrWithinMetaNode;
-    private List<DefaultMutableTreeNode> stcoNodes = new ArrayList<DefaultMutableTreeNode>();
-    private List<DefaultMutableTreeNode> freeNodes = new ArrayList<DefaultMutableTreeNode>();
-    private List<DefaultMutableTreeNode> mdatNodes = new ArrayList<DefaultMutableTreeNode>();
-    private List<DefaultMutableTreeNode> trakNodes = new ArrayList<DefaultMutableTreeNode>();
+    private final List<DefaultMutableTreeNode> stcoNodes = new ArrayList<DefaultMutableTreeNode>();
+    private final List<DefaultMutableTreeNode> freeNodes = new ArrayList<DefaultMutableTreeNode>();
+    private final List<DefaultMutableTreeNode> mdatNodes = new ArrayList<DefaultMutableTreeNode>();
+    private final List<DefaultMutableTreeNode> trakNodes = new ArrayList<DefaultMutableTreeNode>();
 
-    private List<Mp4StcoBox> stcos = new ArrayList<Mp4StcoBox>();
+    private final List<Mp4StcoBox> stcos = new ArrayList<Mp4StcoBox>();
     private ByteBuffer moovBuffer; //Contains all the data under moov
     private Mp4BoxHeader moovHeader;
 

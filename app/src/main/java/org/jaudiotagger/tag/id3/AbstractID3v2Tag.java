@@ -140,11 +140,7 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
         byte[] tagIdentifier = new byte[FIELD_TAGID_LENGTH];
         raf.read(tagIdentifier);
         raf.seek(start);
-        if (!(Arrays.equals(tagIdentifier, TAG_ID)))
-        {
-            return false;
-        }
-        return true;
+        return Arrays.equals(tagIdentifier, TAG_ID);
     }
 
     private static boolean isID3V2Header(FileChannel fc) throws IOException
@@ -556,7 +552,6 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
         {
             oldBody.setTotal(newBody.getTotalAsText());
         }
-        return;
     }
 
     /**
@@ -634,9 +629,8 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
                 return;
             }
             //e.g TIPL IPLS, TMCL
-            else if (newFrame.getBody() instanceof AbstractFrameBodyPairs)
+            else if (newFrame.getBody() instanceof AbstractFrameBodyPairs frameBody)
             {
-                AbstractFrameBodyPairs frameBody = (AbstractFrameBodyPairs) newFrame.getBody();
                 AbstractFrameBodyPairs existingFrameBody = (AbstractFrameBodyPairs) nextFrame.getBody();
                 existingFrameBody.addPair(frameBody.getText());
                 return;
@@ -702,9 +696,8 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
          * If the frame is a TXXX frame then we add an extra string to the existing frame
          * if same description otherwise we create a new frame
          */
-        if (frame.getBody() instanceof FrameBodyTXXX)
+        if (frame.getBody() instanceof FrameBodyTXXX frameBody)
         {
-            FrameBodyTXXX frameBody = (FrameBodyTXXX) frame.getBody();
             boolean match = false;
             Iterator<TagField> i = mergedList.listIterator();
             while (i.hasNext())
@@ -722,9 +715,8 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
                 addNewFrameToMap(list, frameMap, existingFrame, frame);
             }
         }
-        else if (frame.getBody() instanceof FrameBodyWXXX)
+        else if (frame.getBody() instanceof FrameBodyWXXX frameBody)
         {
-            FrameBodyWXXX frameBody = (FrameBodyWXXX) frame.getBody();
             boolean match = false;
             Iterator<TagField> i = mergedList.listIterator();
             while (i.hasNext())
@@ -742,21 +734,18 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
                 addNewFrameToMap(list, frameMap, existingFrame, frame);
             }
         }
-        else if (frame.getBody() instanceof AbstractFrameBodyTextInfo)
+        else if (frame.getBody() instanceof AbstractFrameBodyTextInfo frameBody)
         {
-            AbstractFrameBodyTextInfo frameBody = (AbstractFrameBodyTextInfo) frame.getBody();
             AbstractFrameBodyTextInfo existingFrameBody = (AbstractFrameBodyTextInfo) existingFrame.getBody();
             existingFrameBody.addTextValue(frameBody.getText());
         }
-        else if (frame.getBody() instanceof AbstractFrameBodyPairs)
+        else if (frame.getBody() instanceof AbstractFrameBodyPairs frameBody)
         {
-            AbstractFrameBodyPairs frameBody = (AbstractFrameBodyPairs) frame.getBody();
             AbstractFrameBodyPairs existingFrameBody = (AbstractFrameBodyPairs) existingFrame.getBody();
             existingFrameBody.addPair(frameBody.getText());
         }
-        else if (frame.getBody() instanceof AbstractFrameBodyNumberTotal)
+        else if (frame.getBody() instanceof AbstractFrameBodyNumberTotal frameBody)
         {
-            AbstractFrameBodyNumberTotal frameBody = (AbstractFrameBodyNumberTotal) frame.getBody();
             AbstractFrameBodyNumberTotal existingFrameBody = (AbstractFrameBodyNumberTotal) existingFrame.getBody();
 
             if (frameBody.getNumber() != null && frameBody.getNumber() > 0)
@@ -788,9 +777,8 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
             throw new FieldDataInvalidException("Field " + field + " is not of type AbstractID3v2Frame nor AggregatedFrame");
         }
 
-        if (field instanceof AbstractID3v2Frame)
+        if (field instanceof AbstractID3v2Frame newFrame)
         {
-            AbstractID3v2Frame newFrame = (AbstractID3v2Frame) field;
 
             Object obj = frameMap.get(field.getId());
 
@@ -842,9 +830,8 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
             throw new FieldDataInvalidException("Field " + field + " is not of type AbstractID3v2Frame or AggregatedFrame");
         }
 
-        if (field instanceof AbstractID3v2Frame)
+        if (field instanceof AbstractID3v2Frame frame)
         {
-            AbstractID3v2Frame frame = (AbstractID3v2Frame) field;
 
             Object o = frameMap.get(field.getId());
 
@@ -982,11 +969,10 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
      */
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof AbstractID3v2Tag))
+        if (!(obj instanceof AbstractID3v2Tag object))
         {
             return false;
         }
-        AbstractID3v2Tag object = (AbstractID3v2Tag) obj;
         return this.frameMap.equals(object.frameMap) && super.equals(obj);
     }
 
@@ -1738,9 +1724,8 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
                 frame = (AbstractID3v2Frame) o;
                 size += frame.getSize();
             }
-            else if (o instanceof AggregatedFrame)
+            else if (o instanceof AggregatedFrame af)
             {
-                AggregatedFrame af = (AggregatedFrame) o;
                 for (AbstractID3v2Frame next : af.frames)
                 {
                     size += next.getSize();
@@ -1799,9 +1784,8 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
                 frame.setLoggingFilename(getLoggingFilename());
                 frame.write(bodyBuffer);
             }
-            else if (o instanceof AggregatedFrame)
+            else if (o instanceof AggregatedFrame ag)
             {
-                AggregatedFrame ag = (AggregatedFrame) o;
                 for (AbstractID3v2Frame next : ag.getFrames())
                 {
                     next.setLoggingFilename(getLoggingFilename());
@@ -2157,12 +2141,10 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
             while (true)
             {
                 TagField next = it.next();
-                if (next instanceof AbstractID3v2Frame)
+                if (next instanceof AbstractID3v2Frame frame)
                 {
-                    AbstractID3v2Frame frame = (AbstractID3v2Frame) next;
-                    if ((frame.getBody() instanceof AbstractFrameBodyTextInfo) && !(frame.getBody() instanceof FrameBodyTXXX))
+                    if ((frame.getBody() instanceof AbstractFrameBodyTextInfo frameBody) && !(frame.getBody() instanceof FrameBodyTXXX))
                     {
-                        AbstractFrameBodyTextInfo frameBody = (AbstractFrameBodyTextInfo) frame.getBody();
                         count += frameBody.getNumberOfValues();
                         continue;
                     }
@@ -2324,16 +2306,7 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
         if (frame.getBody() instanceof FrameBodyUFID)
         {
             ((FrameBodyUFID) frame.getBody()).setOwner(formatKey.getSubId());
-            try
-            {
-                ((FrameBodyUFID) frame.getBody()).setUniqueIdentifier(value.getBytes("ISO-8859-1"));
-            }
-            catch (UnsupportedEncodingException uee)
-            {
-                //This will never happen because we are using a charset supported on all platforms
-                //but just in case
-                throw new RuntimeException("When encoding UFID charset ISO-8859-1 was deemed unsupported");
-            }
+            ((FrameBodyUFID) frame.getBody()).setUniqueIdentifier(value.getBytes(StandardCharsets.ISO_8859_1));
         }
         else if (frame.getBody() instanceof FrameBodyTXXX)
         {
@@ -2533,9 +2506,8 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
                 AbstractID3v2Frame frame = (AbstractID3v2Frame) next;
                 if (frame != null)
                 {
-                    if (frame.getBody() instanceof AbstractFrameBodyTextInfo)
+                    if (frame.getBody() instanceof AbstractFrameBodyTextInfo fb)
                     {
-                        AbstractFrameBodyTextInfo fb = (AbstractFrameBodyTextInfo) frame.getBody();
                         values.addAll(fb.getValues());
                     }
                     else
@@ -2578,17 +2550,15 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
     public TagField createLinkedArtworkField(String url)
     {
         AbstractID3v2Frame frame = createFrame(getFrameAndSubIdFromGenericKey(FieldKey.COVER_ART).getFrameId());
-        if (frame.getBody() instanceof FrameBodyAPIC)
+        if (frame.getBody() instanceof FrameBodyAPIC body)
         {
-            FrameBodyAPIC body = (FrameBodyAPIC) frame.getBody();
             body.setObjectValue(DataTypes.OBJ_PICTURE_DATA, url.getBytes(StandardCharsets.ISO_8859_1));
             body.setObjectValue(DataTypes.OBJ_PICTURE_TYPE, PictureTypes.DEFAULT_ID);
             body.setObjectValue(DataTypes.OBJ_MIME_TYPE, FrameBodyAPIC.IMAGE_IS_URL);
             body.setObjectValue(DataTypes.OBJ_DESCRIPTION, "");
         }
-        else if (frame.getBody() instanceof FrameBodyPIC)
+        else if (frame.getBody() instanceof FrameBodyPIC body)
         {
-            FrameBodyPIC body = (FrameBodyPIC) frame.getBody();
             body.setObjectValue(DataTypes.OBJ_PICTURE_DATA, url.getBytes(StandardCharsets.ISO_8859_1));
             body.setObjectValue(DataTypes.OBJ_PICTURE_TYPE, PictureTypes.DEFAULT_ID);
             body.setObjectValue(DataTypes.OBJ_IMAGE_FORMAT, FrameBodyAPIC.IMAGE_IS_URL);
@@ -2615,14 +2585,12 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
             if (total.length() == 0)
             {
                 doDeleteTagField(formatKey);
-                return;
             }
             else
             {
                 AbstractID3v2Frame frame = (AbstractID3v2Frame) this.getFrame(formatKey.getFrameId());
                 AbstractFrameBodyNumberTotal frameBody = (AbstractFrameBodyNumberTotal) frame.getBody();
                 frameBody.setNumber(0);
-                return;
             }
         }
         else
@@ -2631,14 +2599,12 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
             if (number.length() == 0)
             {
                 doDeleteTagField(formatKey);
-                return;
             }
             else
             {
                 AbstractID3v2Frame frame = (AbstractID3v2Frame) this.getFrame(formatKey.getFrameId());
                 AbstractFrameBodyNumberTotal frameBody = (AbstractFrameBodyNumberTotal) frame.getBody();
                 frameBody.setTotal(0);
-                return;
             }
         }
     }
@@ -2970,9 +2936,9 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
      */
     class FrameAndSubId
     {
-        private FieldKey genericKey;
-        private String frameId;
-        private String subId;
+        private final FieldKey genericKey;
+        private final String frameId;
+        private final String subId;
 
         public FrameAndSubId(FieldKey genericKey, String frameId, String subId)
         {
@@ -3052,7 +3018,7 @@ public abstract class AbstractID3v2Tag extends AbstractID3Tag implements Tag
             out.append("\t");
             out.append(field.getId());
             out.append(":");
-            out.append(field.toString());
+            out.append(field);
             out.append("\n");
         }
 

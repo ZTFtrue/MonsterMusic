@@ -46,7 +46,7 @@ import java.util.regex.Pattern;
  */
 public class ID3v23Frame extends AbstractID3v2Frame
 {
-    private static Pattern validFrameIdentifier = Pattern.compile("[A-Z][0-9A-Z]{3}");
+    private static final Pattern validFrameIdentifier = Pattern.compile("[A-Z][0-9A-Z]{3}");
 
     protected static final int FRAME_ID_SIZE = 4;
     protected static final int FRAME_FLAGS_SIZE = 2;
@@ -338,11 +338,10 @@ public class ID3v23Frame extends AbstractID3v2Frame
     {
         if ( this == obj ) return true;
 
-        if (!(obj instanceof ID3v23Frame))
+        if (!(obj instanceof ID3v23Frame that))
         {
             return false;
         }
-        ID3v23Frame that = (ID3v23Frame) obj;
 
 
         return
@@ -446,7 +445,7 @@ public class ID3v23Frame extends AbstractID3v2Frame
         if(((EncodingFlags)encodingFlags).isNonStandardFlags())
         {
             //Probably corrupt so treat as a standard frame
-            logger.severe(getLoggingFilename() + ":InvalidEncodingFlags:" + Hex.asHex(((EncodingFlags)encodingFlags).getFlags()));
+            logger.severe(getLoggingFilename() + ":InvalidEncodingFlags:" + Hex.asHex(encodingFlags.getFlags()));
         }
 
         if (((EncodingFlags) encodingFlags).isCompression())

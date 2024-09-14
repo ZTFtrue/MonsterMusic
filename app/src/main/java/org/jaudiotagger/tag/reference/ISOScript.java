@@ -14,8 +14,8 @@ import java.util.Map;
  */
 public class ISOScript
 {
-    private static Map<String, Script> codeMap;
-    private static Map<String, Script> descriptionMap;
+    private static final Map<String, Script> codeMap;
+    private static final Map<String, Script> descriptionMap;
 
     static
     {
@@ -54,7 +54,7 @@ public class ISOScript
     /**
      * List of valid Iso Scripts, shows 4 letter abbreviation and script human readable name
      */
-    public static enum Script
+    public enum Script
     {
         ARABIC("Arab", "Arabic"),
         IMPERIAL_ARAMAIC("Armi", "Imperial Aramaic"),
@@ -183,8 +183,8 @@ public class ISOScript
         MATHEMATICAL_NOTATION("Zmth", "Mathematical notation"),
         SYMBOLS("Zsym", "Symbols"),;
 
-        private String code;
-        private String description;
+        private final String code;
+        private final String description;
 
         Script(String code, String description)
         {

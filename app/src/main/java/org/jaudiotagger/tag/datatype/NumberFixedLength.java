@@ -103,11 +103,10 @@ public class NumberFixedLength extends AbstractDataType
      */
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof NumberFixedLength))
+        if (!(obj instanceof NumberFixedLength object))
         {
             return false;
         }
-        NumberFixedLength object = (NumberFixedLength) obj;
         return this.size == object.size && super.equals(obj);
     }
 

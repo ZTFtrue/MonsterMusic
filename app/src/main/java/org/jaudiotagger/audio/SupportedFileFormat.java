@@ -22,7 +22,7 @@ public enum SupportedFileFormat
     AIFC("aifc"),
     DSF("dsf");
 
-    private String filesuffix;
+    private final String filesuffix;
 
     /** Constructor for internal use by this enum.
      */

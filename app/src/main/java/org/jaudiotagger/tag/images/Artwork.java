@@ -10,43 +10,43 @@ import java.io.IOException;
  */
 public interface Artwork
 {
-    public byte[] getBinaryData();
+    byte[] getBinaryData();
 
 
-    public void setBinaryData(byte[] binaryData);
+    void setBinaryData(byte[] binaryData);
 
-    public String getMimeType();
+    String getMimeType();
 
-    public void setMimeType(String mimeType);
+    void setMimeType(String mimeType);
 
-    public String getDescription();
+    String getDescription();
 
-    public int getHeight();
+    int getHeight();
 
-    public int getWidth();
+    int getWidth();
 
-    public void setDescription(String description);
+    void setDescription(String description);
 
     /**
      * Should be called when you wish to prime the artwork for saving
      *
      * @return
      */
-    public boolean setImageFromData();
+    boolean setImageFromData();
 
-    public Object getImage() throws IOException;
+    Object getImage() throws IOException;
 
-    public boolean isLinked();
+    boolean isLinked();
 
-    public void setLinked(boolean linked);
+    void setLinked(boolean linked);
 
-    public String getImageUrl();
+    String getImageUrl();
 
-    public void setImageUrl(String imageUrl);
+    void setImageUrl(String imageUrl);
 
-    public int getPictureType();
+    int getPictureType();
 
-    public void setPictureType(int pictureType);
+    void setPictureType(int pictureType);
 
     /**
      * Create Artwork from File
@@ -54,17 +54,17 @@ public interface Artwork
      * @param file
      * @throws IOException
      */
-    public void setFromFile(File file)  throws IOException;
+    void setFromFile(File file)  throws IOException;
 
     /**
      * Populate Artwork from MetadataBlockDataPicture as used by Flac and VorbisComment
      *
      * @param coverArt
      */
-    public void setFromMetadataBlockDataPicture(MetadataBlockDataPicture coverArt);
+    void setFromMetadataBlockDataPicture(MetadataBlockDataPicture coverArt);
 
 
-    public void setWidth(int width);
+    void setWidth(int width);
 
-    public void setHeight(int height);
+    void setHeight(int height);
 }

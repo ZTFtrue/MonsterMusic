@@ -38,7 +38,7 @@ import java.util.List;
 public class WavInfoTag extends GenericTag
 {
     //We dont use these fields but we need to read them so they can be written back if user modifies
-    private List<TagTextField> unrecognisedFields = new ArrayList<>();
+    private final List<TagTextField> unrecognisedFields = new ArrayList<>();
 
     private Long startLocationInFile = null;
 
@@ -124,7 +124,7 @@ public class WavInfoTag extends GenericTag
     }
 
     public void addUnRecognizedField(String code, String contents)
-    {;
+    {
         unrecognisedFields.add(new GenericTagTextField(code, contents));
     }
 

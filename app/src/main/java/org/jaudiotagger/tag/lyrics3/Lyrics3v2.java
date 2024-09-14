@@ -84,9 +84,8 @@ public class Lyrics3v2 extends AbstractLyrics3
             {
                 throw new UnsupportedOperationException("Copy Constructor not called. Please type cast the argument");
             }
-            else if (mp3tag instanceof Lyrics3v1)
+            else if (mp3tag instanceof Lyrics3v1 lyricOld)
             {
-                Lyrics3v1 lyricOld = (Lyrics3v1) mp3tag;
                 Lyrics3v2Field newField;
                 newField = new Lyrics3v2Field(new FieldFrameBodyLYR(lyricOld.getLyric()));
                 fieldMap.put(newField.getIdentifier(), newField);
@@ -197,12 +196,10 @@ public class Lyrics3v2 extends AbstractLyrics3
      */
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof Lyrics3v2))
+        if (!(obj instanceof Lyrics3v2 object))
         {
             return false;
         }
-
-        Lyrics3v2 object = (Lyrics3v2) obj;
 
         return this.fieldMap.equals(object.fieldMap) && super.equals(obj);
 

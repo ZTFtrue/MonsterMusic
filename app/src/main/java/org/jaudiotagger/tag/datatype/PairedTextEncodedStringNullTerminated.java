@@ -42,12 +42,10 @@ public class PairedTextEncodedStringNullTerminated extends AbstractDataType
             return true;
         }
 
-        if (!(obj instanceof PairedTextEncodedStringNullTerminated))
+        if (!(obj instanceof PairedTextEncodedStringNullTerminated that))
         {
             return false;
         }
-
-        PairedTextEncodedStringNullTerminated that = (PairedTextEncodedStringNullTerminated) obj;
 
         return EqualsUtil.areEqual(value, that.value);
     }
@@ -208,7 +206,7 @@ public class PairedTextEncodedStringNullTerminated extends AbstractDataType
      */
     public static class ValuePairs
     {
-        private List<Pair> mapping = new ArrayList<Pair>();
+        private final List<Pair> mapping = new ArrayList<Pair>();
 
         public ValuePairs()
         {
@@ -282,12 +280,10 @@ public class PairedTextEncodedStringNullTerminated extends AbstractDataType
                 return true;
             }
 
-            if (!(obj instanceof ValuePairs))
+            if (!(obj instanceof ValuePairs that))
             {
                 return false;
             }
-
-            ValuePairs that = (ValuePairs) obj;
 
             return EqualsUtil.areEqual(getNumberOfValues(), that.getNumberOfValues());
         }

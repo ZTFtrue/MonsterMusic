@@ -47,7 +47,7 @@ public class WavTag implements Tag, Id3SupportingTag
     
     private static final String NULL = "\0";
 
-	private List<ChunkSummary> chunkSummaryList = new ArrayList<ChunkSummary>();
+	private final List<ChunkSummary> chunkSummaryList = new ArrayList<ChunkSummary>();
 
     public void addChunkSummary(ChunkSummary cs)
     {
@@ -67,7 +67,7 @@ public class WavTag implements Tag, Id3SupportingTag
     private WavInfoTag infoTag;
     private AbstractID3v2Tag id3Tag;
 
-    private WavOptions wavOptions;
+    private final WavOptions wavOptions;
 
     public WavTag(WavOptions wavOptions)
     {
@@ -161,7 +161,7 @@ public class WavTag implements Tag, Id3SupportingTag
         }
         if (infoTag != null)
         {
-            sb.append(infoTag.toString()+"\n");
+            sb.append(infoTag +"\n");
         }
         return sb.toString();
     }

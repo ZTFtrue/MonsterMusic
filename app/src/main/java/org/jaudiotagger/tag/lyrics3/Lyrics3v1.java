@@ -146,12 +146,10 @@ public class Lyrics3v1 extends AbstractLyrics3
      */
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof Lyrics3v1))
+        if (!(obj instanceof Lyrics3v1 object))
         {
             return false;
         }
-
-        Lyrics3v1 object = (Lyrics3v1) obj;
 
         return this.lyric.equals(object.lyric) && super.equals(obj);
 

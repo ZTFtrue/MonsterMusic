@@ -127,12 +127,10 @@ public class Lyrics3TimeStamp extends AbstractDataType
      */
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof Lyrics3TimeStamp))
+        if (!(obj instanceof Lyrics3TimeStamp object))
         {
             return false;
         }
-
-        Lyrics3TimeStamp object = (Lyrics3TimeStamp) obj;
 
         if (this.minute != object.minute)
         {

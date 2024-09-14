@@ -187,12 +187,10 @@ public class NumberHashMap extends NumberFixedLength implements HashMapInterface
             return true;
         }
         
-        if (!(obj instanceof NumberHashMap))
+        if (!(obj instanceof NumberHashMap that))
         {
             return false;
         }
-
-        NumberHashMap that = (NumberHashMap) obj;
 
         return
               EqualsUtil.areEqual(hasEmptyValue, that.hasEmptyValue) &&
