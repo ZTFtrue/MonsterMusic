@@ -36,7 +36,6 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -45,7 +44,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -95,7 +93,6 @@ import com.ztftrue.music.utils.trackManager.FolderManger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import okhttp3.internal.toLongOrDefault
 
 
@@ -506,7 +503,6 @@ fun SettingsPage(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(120.dp)
                             .padding(0.dp)
                             .drawBehind {
                                 drawLine(
@@ -528,107 +524,101 @@ fun SettingsPage(
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
-                            Text(
-                                text = "-1 don't ignore any,0 ignore duration less than or equal 0s",
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            CompositionLocalProvider(
-                                LocalContentColor provides MaterialTheme.colorScheme.onBackground
-                            ) {
-                                OutlinedTextField(
-                                    value = durationValue,
-                                    onValueChange = { s ->
-                                        if (!s.contains(".") && s.toLongOrNull() != null) {
-                                            durationValue = s
-                                        }
-                                    },
-                                    keyboardOptions = KeyboardOptions.Default.copy(
-                                        imeAction = ImeAction.Done,
-                                        keyboardType = KeyboardType.Number
-                                    ),
-                                    keyboardActions = KeyboardActions(
-                                        onDone = {
-                                            saveIgnoreDuration(
-                                                durationValue, context,
-                                                focusRequester,
-                                                keyboardController
-                                            )
-                                        }
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .focusRequester(focusRequester)
-                                        .background(MaterialTheme.colorScheme.primary),
-                                    colors = TextFieldDefaults.colors(
-                                        errorTextColor = MaterialTheme.colorScheme.primary,
-                                        focusedTextColor = MaterialTheme.colorScheme.primary,
-                                        disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        unfocusedTextColor = MaterialTheme.colorScheme.primary,
-                                        focusedContainerColor = MaterialTheme.colorScheme.background,
-                                        unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                                        cursorColor = MaterialTheme.colorScheme.primary,
-                                        errorCursorColor = MaterialTheme.colorScheme.error,
-                                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                                        unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.12f
-                                        ),
-                                        errorIndicatorColor = MaterialTheme.colorScheme.error,
-                                        disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        errorLeadingIconColor = MaterialTheme.colorScheme.error,
-                                        disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        errorTrailingIconColor = MaterialTheme.colorScheme.error,
-                                        focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        errorLabelColor = MaterialTheme.colorScheme.error,
-                                        disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
+
+                            OutlinedTextField(
+                                value = durationValue,
+                                onValueChange = { s ->
+                                    if (!s.contains(".")) {
+                                        durationValue = s
+                                    }
+                                },
+                                keyboardOptions = KeyboardOptions.Default.copy(
+                                    imeAction = ImeAction.Done,
+                                    keyboardType = KeyboardType.Number
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        saveIgnoreDuration(
+                                            durationValue, context,
+                                            focusRequester,
+                                            keyboardController
                                         )
+                                    }
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .focusRequester(focusRequester)
+                                    .background(MaterialTheme.colorScheme.primary),
+                                colors = TextFieldDefaults.colors(
+                                    errorTextColor = MaterialTheme.colorScheme.primary,
+                                    focusedTextColor = MaterialTheme.colorScheme.primary,
+                                    disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
                                     ),
-                                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
-                                    suffix = {
-                                        Row {
-                                            Text(
-                                                text = "s",
-                                                Modifier.padding(start = 10.dp),
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            )
-                                            ElevatedButton(
-                                                onClick = {
-                                                    saveIgnoreDuration(
-                                                        durationValue, context,
-                                                        focusRequester,
-                                                        keyboardController
-                                                    )
-                                                },
-                                                modifier = Modifier
-                                            ) {
-                                                Text(
-                                                    text = "Save",
-                                                    textAlign = TextAlign.Center,
-                                                    color = MaterialTheme.colorScheme.onBackground
+                                    unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                                    focusedContainerColor = MaterialTheme.colorScheme.background,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                    cursorColor = MaterialTheme.colorScheme.primary,
+                                    errorCursorColor = MaterialTheme.colorScheme.error,
+                                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                                    unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    ),
+                                    disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.12f
+                                    ),
+                                    errorIndicatorColor = MaterialTheme.colorScheme.error,
+                                    disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    ),
+                                    errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    ),
+                                    errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    ),
+                                    disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    ),
+                                    errorLabelColor = MaterialTheme.colorScheme.error,
+                                    disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    )
+                                ),
+                                textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                                suffix = {
+                                    Row(
+                                        horizontalArrangement = Arrangement.Start,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Text(
+                                            text = "s",
+                                            Modifier.padding(start = 10.dp, end = 20.dp),
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                        ElevatedButton(
+                                            onClick = {
+                                                saveIgnoreDuration(
+                                                    durationValue, context,
+                                                    focusRequester,
+                                                    keyboardController
                                                 )
-                                            }
+                                            },
+                                            modifier = Modifier
+                                        ) {
+                                            Text(
+                                                text = "Save",
+                                                textAlign = TextAlign.Center,
+                                                color = MaterialTheme.colorScheme.onBackground
+                                            )
                                         }
                                     }
-                                )
-                            }
+                                }
+                            )
                         }
-
                     }
                     Box(
                         modifier = Modifier
