@@ -26,6 +26,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -171,8 +172,9 @@ fun TopBar(
                                 },
                             )
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center
+                                modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 0.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = buildString {
@@ -181,15 +183,18 @@ fun TopBar(
                                     },
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
+                                IconButton(onClick = { popupVolumeWindow = false }) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Close,
+                                        contentDescription = "Remove folder",
+                                        modifier = Modifier
+                                            .size(30.dp)
+                                            .clip(CircleShape),
+                                        tint = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
                             }
                         }
-                    }
-                    item {
-
-                    }
-
-                    item {
-
                     }
                 }
             }
