@@ -54,7 +54,7 @@ public class VorbisCommentTagField implements TagTextField
     /**
      * Stores the id (name) of the tag field. <br>
      */
-    private String id;
+    private final String id;
 
     /**
      * If id is invalid
@@ -69,7 +69,7 @@ public class VorbisCommentTagField implements TagTextField
      */
     public VorbisCommentTagField(byte[] raw) throws UnsupportedEncodingException
     {
-        String field = new String(raw, "UTF-8");
+        String field = new String(raw, StandardCharsets.UTF_8);
         int i = field.indexOf("=");
         if (i == -1)
         {

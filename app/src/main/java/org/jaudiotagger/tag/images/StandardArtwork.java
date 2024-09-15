@@ -79,7 +79,7 @@ public class StandardArtwork implements Artwork
     {
         try
         {
-            Bitmap image = (Bitmap)getImage();
+            Bitmap image = getImage();
             setWidth(image.getWidth());
             setHeight(image.getHeight());
         }

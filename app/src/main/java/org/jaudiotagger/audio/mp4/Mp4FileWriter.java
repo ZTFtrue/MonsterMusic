@@ -34,7 +34,7 @@ import java.io.RandomAccessFile;
 public class Mp4FileWriter extends AudioFileWriter
 {
 
-    private Mp4TagWriter tw = new Mp4TagWriter();
+    private final Mp4TagWriter tw = new Mp4TagWriter();
 
 
     protected void writeTag(AudioFile audioFile, Tag tag, RandomAccessFile raf, RandomAccessFile rafTemp) throws CannotWriteException, IOException

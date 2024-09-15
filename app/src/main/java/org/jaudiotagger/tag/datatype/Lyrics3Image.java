@@ -135,12 +135,10 @@ public class Lyrics3Image extends AbstractDataType
      */
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof Lyrics3Image))
+        if (!(obj instanceof Lyrics3Image object))
         {
             return false;
         }
-
-        Lyrics3Image object = (Lyrics3Image) obj;
 
         if (!this.description.equals(object.description))
         {
@@ -221,7 +219,7 @@ public class Lyrics3Image extends AbstractDataType
 
         if (time != null)
         {
-            str += (", timestamp = " + time.toString());
+            str += (", timestamp = " + time);
         }
 
         return str + "\n";

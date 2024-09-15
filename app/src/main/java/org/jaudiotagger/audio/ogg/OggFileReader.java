@@ -40,8 +40,8 @@ public class OggFileReader extends AudioFileReader
     // Logger Object
     public static Logger logger = Logger.getLogger("org.jaudiotagger.audio.ogg");
 
-    private OggInfoReader ir;
-    private OggVorbisTagReader vtr;
+    private final OggInfoReader ir;
+    private final OggVorbisTagReader vtr;
 
     public OggFileReader()
     {

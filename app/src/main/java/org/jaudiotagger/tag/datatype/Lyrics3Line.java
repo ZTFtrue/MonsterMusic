@@ -137,11 +137,10 @@ public class Lyrics3Line extends AbstractDataType
      */
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof Lyrics3Line))
+        if (!(obj instanceof Lyrics3Line object))
         {
             return false;
         }
-        Lyrics3Line object = (Lyrics3Line) obj;
         if (!this.lyric.equals(object.lyric))
         {
             return false;

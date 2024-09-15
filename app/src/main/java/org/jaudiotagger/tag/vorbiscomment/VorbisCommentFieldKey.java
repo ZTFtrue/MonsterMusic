@@ -187,7 +187,7 @@ public enum VorbisCommentFieldKey
     ;
 
 
-    private String fieldName;
+    private final String fieldName;
     private EnumSet<Tagger> taggers;
 
     VorbisCommentFieldKey(String fieldName)

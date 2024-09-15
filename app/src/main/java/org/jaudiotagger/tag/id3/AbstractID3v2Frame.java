@@ -233,16 +233,10 @@ public abstract class AbstractID3v2Frame extends AbstractTagFrame implements Tag
 
     protected boolean isPadding(byte[] buffer)
     {
-        if(
-                (buffer[0]=='\0')&&
-                (buffer[1]=='\0')&&
-                (buffer[2]=='\0')&&
-                (buffer[3]=='\0')
-           )
-        {
-            return true;
-        }
-        return false;
+        return (buffer[0] == '\0') &&
+                (buffer[1] == '\0') &&
+                (buffer[2] == '\0') &&
+                (buffer[3] == '\0');
     }
 
     /**
@@ -476,12 +470,8 @@ public abstract class AbstractID3v2Frame extends AbstractTagFrame implements Tag
     public boolean isEmpty()
     {
         AbstractTagFrameBody body = this.getBody();
-        if (body == null)
-        {
-            return true;
-        }
+        return body == null;
         //TODO depends on the body
-        return false;
     }
 
     public StatusFlags getStatusFlags()
@@ -532,11 +522,10 @@ public abstract class AbstractID3v2Frame extends AbstractTagFrame implements Tag
         {
             if ( this == obj ) return true;
 
-            if (!(obj instanceof StatusFlags))
+            if (!(obj instanceof StatusFlags that))
             {
                 return false;
             }
-            StatusFlags that = (StatusFlags) obj;
 
 
             return
@@ -585,11 +574,10 @@ public abstract class AbstractID3v2Frame extends AbstractTagFrame implements Tag
         {
             if ( this == obj ) return true;
 
-            if (!(obj instanceof EncodingFlags))
+            if (!(obj instanceof EncodingFlags that))
             {
                 return false;
             }
-            EncodingFlags that = (EncodingFlags) obj;
 
 
             return EqualsUtil.areEqual(this.getFlags(), that.getFlags());
@@ -609,12 +597,11 @@ public abstract class AbstractID3v2Frame extends AbstractTagFrame implements Tag
     public boolean equals(Object obj)
     {
         if ( this == obj ) return true;
-        if (!(obj instanceof AbstractID3v2Frame))
+        if (!(obj instanceof AbstractID3v2Frame that))
         {
             return false;
         }
 
-        AbstractID3v2Frame that = (AbstractID3v2Frame) obj;
         return super.equals(that);
     }
 

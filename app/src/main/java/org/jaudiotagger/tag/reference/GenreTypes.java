@@ -63,7 +63,7 @@ public class GenreTypes extends AbstractIntStringValuePair
     }
 
     //This maps the lowercase version to the id, so applications can map from the lowercase value to the id
-    private Map<String, Integer> nameToIdMap;
+    private final Map<String, Integer> nameToIdMap;
 
 
     private GenreTypes()

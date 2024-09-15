@@ -1137,7 +1137,7 @@ fun PlayingPage(
 
                     HorizontalPager(
                         state = pagerTabState,
-                        beyondBoundsPageCount = playViewTab.size,
+                        beyondViewportPageCount = playViewTab.size,
                         modifier = Modifier
                             .fillMaxHeight()
                             .padding(it)

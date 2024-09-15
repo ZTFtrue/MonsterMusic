@@ -5,7 +5,7 @@ package org.jaudiotagger.tag.id3;
  */
 public interface Id3SupportingTag
 {
-    public AbstractID3v2Tag getID3Tag();
+    AbstractID3v2Tag getID3Tag();
 
-    public void setID3Tag(AbstractID3v2Tag t);
+    void setID3Tag(AbstractID3v2Tag t);
 }

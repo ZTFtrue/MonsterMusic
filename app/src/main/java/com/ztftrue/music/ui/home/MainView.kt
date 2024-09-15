@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.MaterialTheme
@@ -46,28 +47,38 @@ fun MainView(
     activity: MainActivity,
     navController: NavHostController,
 ) {
-    val showIndicator = remember { mutableStateOf<Boolean>(false) }
-
-    val tabList = remember {
-        mutableStateListOf<MainTab>()
-    }
-    LaunchedEffect(key1 = musicViewModel.mainTabList) {
-        tabList.clear()
-        tabList.addAll(musicViewModel.mainTabList)
-    }
-//    LaunchedEffect(key1 = musicViewModel.showIndicatorMap) {
-        showIndicator.value =
-            musicViewModel.showIndicatorMap.getOrDefault(PlayListType.Songs.toString(), false)
-//    }
+    val showIndicator = remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val pagerState = rememberPagerState { tabList.size }
+
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val sharedPreferences =
         context.getSharedPreferences("list_indicator_config", Context.MODE_PRIVATE)
     val queueD = remember {
         mutableStateOf(sharedPreferences.getBoolean("show_queue_indicator", false))
     }
-    val scope = rememberCoroutineScope()
+    val tabList = remember {
+        mutableStateListOf<MainTab>()
+    }
+    var pagerState: PagerState = rememberPagerState { 0 }
+    LaunchedEffect(key1 = musicViewModel.mainTabList, key2 = musicViewModel.mainTabList.size) {
+        tabList.clear()
+        tabList.addAll(musicViewModel.mainTabList)
+    }
+    pagerState = rememberPagerState(initialPage = 0, pageCount = { tabList.size })
+    LaunchedEffect(tabList,tabList.size) {
+        if (pagerState.currentPage >= tabList.size) {
+            scope.launch {
+                pagerState.scrollToPage(0) // Reset to page 0 if currentPage is out of bounds
+            }
+        }
+    }
+
+//    LaunchedEffect(key1 = musicViewModel.showIndicatorMap) {
+    showIndicator.value =
+        musicViewModel.showIndicatorMap.getOrDefault(PlayListType.Songs.toString(), false)
+//    }
+
     BackHandler(enabled = drawerState.isOpen) {
         if (drawerState.isOpen) {
             scope.launch {
@@ -106,12 +117,12 @@ fun MainView(
                 }, content = {
                     HorizontalPager(
                         state = pagerState,
-                        beyondBoundsPageCount = tabList.size,
+                        beyondViewportPageCount = tabList.size,
                         modifier = Modifier
                             .padding(it)
                             .semantics {
                                 contentDescription =
-                                    "current page is ${musicViewModel.mainTabList[pagerState.currentPage].name}"
+                                    "current page is ${if(musicViewModel.mainTabList.size>pagerState.currentPage) musicViewModel.mainTabList[pagerState.currentPage].name else ""}"
                             },
                     ) { page ->
                         when (tabList[page].type) {

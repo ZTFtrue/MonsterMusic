@@ -59,12 +59,10 @@ public class PartOfSet extends AbstractString
             return true;
         }
 
-        if (!(obj instanceof PartOfSet))
+        if (!(obj instanceof PartOfSet that))
         {
             return false;
         }
-
-        PartOfSet that = (PartOfSet) obj;
 
         return EqualsUtil.areEqual(value, that.value);
     }
@@ -97,7 +95,7 @@ public class PartOfSet extends AbstractString
         CoderResult coderResult = decoder.decode(inBuffer, outBuffer, true);
         if (coderResult.isError())
         {
-            logger.warning("Decoding error:" + coderResult.toString());
+            logger.warning("Decoding error:" + coderResult);
         }
         decoder.flush(outBuffer);
         outBuffer.flip();
@@ -499,12 +497,10 @@ public class PartOfSet extends AbstractString
                 return true;
             }
 
-            if (!(obj instanceof PartOfSetValue))
+            if (!(obj instanceof PartOfSetValue that))
             {
                 return false;
             }
-
-            PartOfSetValue that = (PartOfSetValue) obj;
 
             return EqualsUtil.areEqual(getCount(), that.getCount())
                     && EqualsUtil.areEqual(getTotal(), that.getTotal());

@@ -19,7 +19,7 @@ public class ChunkHeader
 
     private long        size;              // This does not include the 8 bytes of header itself
     private String      chunkId;           // Four character Id of the chunk
-    private ByteOrder   byteOrder;
+    private final ByteOrder   byteOrder;
     private long        startLocationInFile;
 
 

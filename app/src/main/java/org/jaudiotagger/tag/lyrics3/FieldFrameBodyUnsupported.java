@@ -86,12 +86,10 @@ public class FieldFrameBodyUnsupported extends AbstractLyrics3v2FieldFrameBody
      */
     public boolean isSubsetOf(Object obj)
     {
-        if (!(obj instanceof FieldFrameBodyUnsupported))
+        if (!(obj instanceof FieldFrameBodyUnsupported object))
         {
             return false;
         }
-
-        FieldFrameBodyUnsupported object = (FieldFrameBodyUnsupported) obj;
 
         String subset = new String(this.value);
         String superset = new String(object.value);
@@ -106,12 +104,10 @@ public class FieldFrameBodyUnsupported extends AbstractLyrics3v2FieldFrameBody
      */
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof FieldFrameBodyUnsupported))
+        if (!(obj instanceof FieldFrameBodyUnsupported object))
         {
             return false;
         }
-
-        FieldFrameBodyUnsupported object = (FieldFrameBodyUnsupported) obj;
 
         return java.util.Arrays.equals(this.value, object.value) && super.equals(obj);
 

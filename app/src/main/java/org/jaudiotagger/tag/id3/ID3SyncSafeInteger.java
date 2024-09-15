@@ -55,7 +55,7 @@ public class ID3SyncSafeInteger
      */
     public static int bufferToValue(ByteBuffer buffer)
     {
-        byte byteBuffer[] = new byte[INTEGRAL_SIZE];
+        byte[] byteBuffer = new byte[INTEGRAL_SIZE];
         buffer.get(byteBuffer, 0, INTEGRAL_SIZE);
         return bufferToValue(byteBuffer);
     }

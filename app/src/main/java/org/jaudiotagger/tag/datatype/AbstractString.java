@@ -121,7 +121,7 @@ public abstract class AbstractString extends AbstractDataType
         }
         else
         {
-            logger.finest("Failed Trying to decode" + value + "with" + encoder.toString());
+            logger.finest("Failed Trying to decode" + value + "with" + encoder);
             return false;
         }
     }

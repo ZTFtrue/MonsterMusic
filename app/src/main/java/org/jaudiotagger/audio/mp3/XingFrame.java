@@ -57,7 +57,7 @@ public class XingFrame
     private static final byte[] XING_CBR_ID = {'I', 'n', 'f', 'o'};
 
 
-    private ByteBuffer header;
+    private final ByteBuffer header;
 
     private boolean vbr = false;
     private boolean isFrameCountEnabled = false;
@@ -80,7 +80,7 @@ public class XingFrame
         setVbr();
 
         //Read Flags, only the fourth byte of interest to us
-        byte flagBuffer[] = new byte[XING_FLAG_BUFFER_SIZE];
+        byte[] flagBuffer = new byte[XING_FLAG_BUFFER_SIZE];
         header.get(flagBuffer);
 
         //Read FrameCount if flag set
@@ -131,7 +131,7 @@ public class XingFrame
      */
     private void setFrameCount()
     {
-        byte frameCountBuffer[] = new byte[XING_FRAMECOUNT_BUFFER_SIZE];
+        byte[] frameCountBuffer = new byte[XING_FRAMECOUNT_BUFFER_SIZE];
         header.get(frameCountBuffer);
         isFrameCountEnabled = true;
         frameCount = (frameCountBuffer[BYTE_1] << 24) & 0xFF000000 | (frameCountBuffer[BYTE_2] << 16) & 0x00FF0000 | (frameCountBuffer[BYTE_3] << 8) & 0x0000FF00 | frameCountBuffer[BYTE_4] & 0x000000FF;
@@ -158,7 +158,7 @@ public class XingFrame
      */
     private void setAudioSize()
     {
-        byte frameSizeBuffer[] = new byte[XING_AUDIOSIZE_BUFFER_SIZE];
+        byte[] frameSizeBuffer = new byte[XING_AUDIOSIZE_BUFFER_SIZE];
         header.get(frameSizeBuffer);
         isAudioSizeEnabled = true;
         audioSize = (frameSizeBuffer[BYTE_1] << 24) & 0xFF000000 | (frameSizeBuffer[BYTE_2] << 16) & 0x00FF0000 | (frameSizeBuffer[BYTE_3] << 8) & 0x0000FF00 | frameSizeBuffer[BYTE_4] & 0x000000FF;

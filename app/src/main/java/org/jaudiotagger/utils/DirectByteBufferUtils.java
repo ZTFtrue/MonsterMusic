@@ -26,7 +26,7 @@ public class DirectByteBufferUtils
 
     public static final Logger LOGGER = Logger.getLogger(DirectByteBufferUtils.class.getName());
 
-    private static ReleaseStrategy releaseStrategy;
+    private static final ReleaseStrategy releaseStrategy;
 
     static
     {

@@ -43,7 +43,7 @@ import static org.jaudiotagger.tag.vorbiscomment.VorbisCommentFieldKey.VENDOR;
  */
 public class VorbisCommentTag extends AbstractTag
 {
-    private static EnumMap<FieldKey, VorbisCommentFieldKey> tagFieldToOggField = new EnumMap<FieldKey, VorbisCommentFieldKey>(FieldKey.class);
+    private static final EnumMap<FieldKey, VorbisCommentFieldKey> tagFieldToOggField = new EnumMap<FieldKey, VorbisCommentFieldKey>(FieldKey.class);
 
     static
     {
@@ -440,7 +440,6 @@ public class VorbisCommentTag extends AbstractTag
                     VorbisCommentFieldKey vorbisCommentFieldKey = tagFieldToOggField.get(genericKey);
                     deleteField(vorbisCommentFieldKey);
                     deleteField(VorbisCommentFieldKey.ALBUMARTIST_JRIVER);
-                    return;
                 }
 
             }
@@ -786,7 +785,6 @@ public class VorbisCommentTag extends AbstractTag
                     setField(tagfield1);
                     TagField tagfield2 = createField(VorbisCommentFieldKey.ALBUMARTIST_JRIVER, value);
                     setField(tagfield2);
-                    return;
                 }
 
             }
@@ -851,7 +849,6 @@ public class VorbisCommentTag extends AbstractTag
                     addField(tagfield1);
                     TagField tagfield2 = createField(VorbisCommentFieldKey.ALBUMARTIST_JRIVER, value);
                     addField(tagfield2);
-                    return;
                 }
 
             }

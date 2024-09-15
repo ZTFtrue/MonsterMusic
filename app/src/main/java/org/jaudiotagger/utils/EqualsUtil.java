@@ -1,6 +1,8 @@
 package org.jaudiotagger.utils;
 
 
+import java.util.Objects;
+
 /**
  * Collected methods which allow easy implementation of <code>equals</code>.
  *
@@ -70,7 +72,7 @@ public final class EqualsUtil
     static public boolean areEqual(Object aThis, Object aThat)
     {
         //System.out.println("Object");
-        return aThis == null ? aThat == null : aThis.equals(aThat);
+        return Objects.equals(aThis, aThat);
     }
 }
 

@@ -100,7 +100,7 @@
     <string name="play_error_play_next">播放错误, 自动播放下一首</string>
     <string name="no_dictionary_app_tip">没有安装字典应用， 或者已安装的应用不支持这个功能</string>
     <string name="cant_support_feature_tip">当前系统不支持这个功能</string>
-    <string name="ignore_tracks_duration_less_than">忽略时长少于(包括)该秒数的音频</string>
+    <string name="ignore_tracks_duration_less_than">忽略时长少于(包括)该秒数的音频. -1 不忽略任何内容，0 忽略持续时间小于或等于 0 秒的内容。需要重启应用。</string>
     <string name="ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect">忽略时长少于 %1$s s 的音频成功, 请重启APP 以生效。</string>
     <string name="ignored_this_folder_please_restart_the_app_to_take_effect">忽略文件夹成功，重启后生效</string>
     <string name="check_to_not_ignore_the_folder_you_need_restart_the_app_to_take_effect">勾选表示扫描这个文件夹，重启后生效</string>
@@ -108,5 +108,6 @@
     <string name="join_discord">加入 Discord</string>
     <string name="star_share_tip">如果你喜欢这个应用，可以分享它，让更多的人知道；并且，如果你有一个Github账户，请给一个star.</string>
     <string name="preset">预设</string>
+    <string name="app_widget_description">小怪兽音乐小部件</string>
 
 </resources>

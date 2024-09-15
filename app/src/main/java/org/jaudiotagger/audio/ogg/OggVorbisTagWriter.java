@@ -46,8 +46,8 @@ public class OggVorbisTagWriter
     // Logger Object
     public static Logger logger = Logger.getLogger("org.jaudiotagger.audio.ogg");
 
-    private OggVorbisCommentTagCreator tc = new OggVorbisCommentTagCreator();
-    private OggVorbisTagReader reader = new OggVorbisTagReader();
+    private final OggVorbisCommentTagCreator tc = new OggVorbisCommentTagCreator();
+    private final OggVorbisTagReader reader = new OggVorbisTagReader();
 
     public void delete(RandomAccessFile raf, RandomAccessFile tempRaf) throws IOException, CannotReadException, CannotWriteException
     {

@@ -17,7 +17,7 @@ public enum DsfChunkType
     ;
 
     private static final Map<String, DsfChunkType> CODE_TYPE_MAP = new HashMap<String, DsfChunkType>();
-    private String code;
+    private final String code;
 
     /**
      * @param code 4 char string

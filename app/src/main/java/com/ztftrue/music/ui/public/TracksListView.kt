@@ -129,6 +129,7 @@ fun TracksListView(
                 text = stringResource(R.string.no_music),
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier
+                    .fillMaxSize()
                     .horizontalScroll(rememberScrollState(0))
                     .semantics {
                         contentDescription = "No music"

@@ -169,7 +169,6 @@ public class FlacTag implements Tag
                     setField(tagfield1);
                     TagField tagfield2 = createField(VorbisCommentFieldKey.ALBUMARTIST_JRIVER, value);
                     setField(tagfield2);
-                    return;
                 }
 
             }
@@ -234,7 +233,6 @@ public class FlacTag implements Tag
                     addField(tagfield1);
                     TagField tagfield2 = createField(VorbisCommentFieldKey.ALBUMARTIST_JRIVER, value);
                     addField(tagfield2);
-                    return;
                 }
 
             }

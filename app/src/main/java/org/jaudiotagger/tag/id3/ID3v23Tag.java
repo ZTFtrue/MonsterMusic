@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -174,9 +175,8 @@ public class ID3v23Tag extends AbstractID3v2Tag
         logger.config("Copying primitives");
         super.copyPrimitives(copyObj);
 
-        if (copyObj instanceof ID3v23Tag)
+        if (copyObj instanceof ID3v23Tag copyObject)
         {
-            ID3v23Tag copyObject = (ID3v23Tag) copyObj;
             this.crcDataFlag = copyObject.crcDataFlag;
             this.experimental = copyObject.experimental;
             this.extended = copyObject.extended;
@@ -241,10 +241,9 @@ public class ID3v23Tag extends AbstractID3v2Tag
     protected List<AbstractID3v2Frame> convertFrame(AbstractID3v2Frame frame) throws InvalidFrameException
     {
         List<AbstractID3v2Frame> frames = new ArrayList<>();
-        if ((frame.getIdentifier().equals(ID3v24Frames.FRAME_ID_YEAR)) && (frame.getBody() instanceof FrameBodyTDRC))
+        if ((frame.getIdentifier().equals(ID3v24Frames.FRAME_ID_YEAR)) && (frame.getBody() instanceof FrameBodyTDRC tmpBody))
         {
             //TODO will overwrite any existing TYER or TIME frame, do we ever want multiples of these
-            FrameBodyTDRC tmpBody = (FrameBodyTDRC) frame.getBody();
             tmpBody.findMatchingMaskAndExtractV3Values();
             ID3v23Frame newFrame;
             if (!tmpBody.getYear().equals(""))
@@ -407,11 +406,10 @@ public class ID3v23Tag extends AbstractID3v2Tag
      */
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof ID3v23Tag))
+        if (!(obj instanceof ID3v23Tag object))
         {
             return false;
         }
-        ID3v23Tag object = (ID3v23Tag) obj;
         if (this.crc32 != object.crc32)
         {
             return false;
@@ -821,7 +819,7 @@ public class ID3v23Tag extends AbstractID3v2Tag
         int padding = 0;
         if(currentTagSize > 0)
         {
-            int sizeIncPadding = calculateTagSize(bodyByteBuffer.length + TAG_HEADER_LENGTH, (int) currentTagSize);
+            int sizeIncPadding = calculateTagSize(bodyByteBuffer.length + TAG_HEADER_LENGTH, currentTagSize);
             padding = sizeIncPadding - (bodyByteBuffer.length + TAG_HEADER_LENGTH);
             logger.config(getLoggingFilename() + ":Padding:"+padding);
         }
@@ -1014,14 +1012,7 @@ public class ID3v23Tag extends AbstractID3v2Tag
         }
         else
         {
-            try
-            {
-                body.setObjectValue(DataTypes.OBJ_PICTURE_DATA,artwork.getImageUrl().getBytes("ISO-8859-1"));
-            }
-            catch(UnsupportedEncodingException uoe)
-            {
-                throw new RuntimeException(uoe.getMessage());
-            }
+            body.setObjectValue(DataTypes.OBJ_PICTURE_DATA,artwork.getImageUrl().getBytes(StandardCharsets.ISO_8859_1));
             body.setObjectValue(DataTypes.OBJ_PICTURE_TYPE, artwork.getPictureType());
             body.setObjectValue(DataTypes.OBJ_MIME_TYPE, FrameBodyAPIC.IMAGE_IS_URL);
             body.setObjectValue(DataTypes.OBJ_DESCRIPTION, "");

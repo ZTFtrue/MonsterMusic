@@ -133,12 +133,10 @@ public class StringHashMap extends StringFixedLength implements HashMapInterface
      */
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof StringHashMap))
+        if (!(obj instanceof StringHashMap object))
         {
             return false;
         }
-
-        StringHashMap object = (StringHashMap) obj;
 
         if (this.hasEmptyValue != object.hasEmptyValue)
         {

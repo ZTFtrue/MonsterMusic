@@ -27,8 +27,8 @@ import org.jaudiotagger.tag.id3.valuepair.EventTimingTypes;
 public class SynchronisedTempoCode extends AbstractDataType implements Cloneable
 {
 
-    private TempoCode tempo = new TempoCode(DataTypes.OBJ_SYNCHRONISED_TEMPO_DATA, null, 1);
-    private NumberFixedLength timestamp = new NumberFixedLength(DataTypes.OBJ_DATETIME, null, 4);
+    private final TempoCode tempo = new TempoCode(DataTypes.OBJ_SYNCHRONISED_TEMPO_DATA, null, 1);
+    private final NumberFixedLength timestamp = new NumberFixedLength(DataTypes.OBJ_DATETIME, null, 4);
 
     public SynchronisedTempoCode(final SynchronisedTempoCode copy) {
         super(copy);
@@ -127,8 +127,7 @@ public class SynchronisedTempoCode extends AbstractDataType implements Cloneable
         if (!super.equals(o)) return false;
 
         final SynchronisedTempoCode that = (SynchronisedTempoCode) o;
-        if (this.getTempo() != that.getTempo() || this.getTimestamp() != that.getTimestamp()) return false;
-        return true;
+        return this.getTempo() == that.getTempo() && this.getTimestamp() == that.getTimestamp();
     }
 
     @Override
@@ -141,7 +140,7 @@ public class SynchronisedTempoCode extends AbstractDataType implements Cloneable
 
     @Override
     public String toString() {
-        return "" + getTempo() + " (\"" + EventTimingTypes.getInstanceOf().getValueForId(getTempo()) + "\"), " + getTimestamp();
+        return getTempo() + " (\"" + EventTimingTypes.getInstanceOf().getValueForId(getTempo()) + "\"), " + getTimestamp();
     }
 
     @Override

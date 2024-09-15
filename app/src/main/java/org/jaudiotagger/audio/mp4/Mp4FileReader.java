@@ -33,8 +33,8 @@ import java.io.RandomAccessFile;
  */
 public class Mp4FileReader extends AudioFileReader
 {
-    private Mp4InfoReader ir = new Mp4InfoReader();
-    private Mp4TagReader tr = new Mp4TagReader();
+    private final Mp4InfoReader ir = new Mp4InfoReader();
+    private final Mp4TagReader tr = new Mp4TagReader();
 
     protected GenericAudioHeader getEncodingInfo(RandomAccessFile raf) throws CannotReadException, IOException
     {

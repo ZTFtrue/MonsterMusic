@@ -6,7 +6,7 @@ package org.jaudiotagger.tag.aiff;
 public enum AiffTagFieldKey {
     TIMESTAMP("TIMESTAMP");
     
-    private String fieldName;
+    private final String fieldName;
 
     AiffTagFieldKey(String fieldName)
     {

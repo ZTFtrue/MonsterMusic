@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -117,21 +118,18 @@ public class ID3v22Tag extends AbstractID3v2Tag
         super.copyPrimitives(copyObj);
 
         //Set the primitive types specific to v2_2.
-        if (copyObj instanceof ID3v22Tag)
+        if (copyObj instanceof ID3v22Tag copyObject)
         {
-            ID3v22Tag copyObject = (ID3v22Tag) copyObj;
             this.compression = copyObject.compression;
             this.unsynchronization = copyObject.unsynchronization;
         }
-        else if (copyObj instanceof ID3v23Tag)
+        else if (copyObj instanceof ID3v23Tag copyObject)
         {
-            ID3v23Tag copyObject = (ID3v23Tag) copyObj;
             this.compression = copyObject.compression;
             this.unsynchronization = copyObject.unsynchronization;
         }
-        else if (copyObj instanceof ID3v24Tag)
+        else if (copyObj instanceof ID3v24Tag copyObject)
         {
-            ID3v24Tag copyObject = (ID3v24Tag) copyObj;
             this.compression = false;
             this.unsynchronization = copyObject.unsynchronization;
         }
@@ -244,11 +242,10 @@ public class ID3v22Tag extends AbstractID3v2Tag
      */
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof ID3v22Tag))
+        if (!(obj instanceof ID3v22Tag object))
         {
             return false;
         }
-        ID3v22Tag object = (ID3v22Tag) obj;
         if (this.compression != object.compression)
         {
             return false;
@@ -260,9 +257,8 @@ public class ID3v22Tag extends AbstractID3v2Tag
     protected List<AbstractID3v2Frame> convertFrame(AbstractID3v2Frame frame) throws InvalidFrameException
     {
         List<AbstractID3v2Frame> frames = new ArrayList<>();
-        if ((frame.getIdentifier().equals(ID3v24Frames.FRAME_ID_YEAR)) && (frame.getBody() instanceof FrameBodyTDRC))
+        if ((frame.getIdentifier().equals(ID3v24Frames.FRAME_ID_YEAR)) && (frame.getBody() instanceof FrameBodyTDRC tmpBody))
         {
-            FrameBodyTDRC tmpBody = (FrameBodyTDRC) frame.getBody();
             ID3v22Frame newFrame;
             if (tmpBody.getYear().length() != 0)
             {
@@ -582,7 +578,7 @@ public class ID3v22Tag extends AbstractID3v2Tag
         int padding = 0;
         if(currentTagSize > 0)
         {
-            int sizeIncPadding = calculateTagSize(bodyByteBuffer.length + TAG_HEADER_LENGTH, (int) currentTagSize);
+            int sizeIncPadding = calculateTagSize(bodyByteBuffer.length + TAG_HEADER_LENGTH, currentTagSize);
             padding = sizeIncPadding - (bodyByteBuffer.length + TAG_HEADER_LENGTH);
         }
         ByteBuffer headerBuffer = writeHeaderToBuffer(padding, bodyByteBuffer.length);
@@ -813,14 +809,7 @@ public class ID3v22Tag extends AbstractID3v2Tag
         }
         else
         {
-            try
-            {
-                body.setObjectValue(DataTypes.OBJ_PICTURE_DATA,artwork.getImageUrl().getBytes("ISO-8859-1"));
-            }
-            catch(UnsupportedEncodingException uoe)
-            {
-                throw new RuntimeException(uoe.getMessage());
-            }
+            body.setObjectValue(DataTypes.OBJ_PICTURE_DATA,artwork.getImageUrl().getBytes(StandardCharsets.ISO_8859_1));
             body.setObjectValue(DataTypes.OBJ_PICTURE_TYPE, artwork.getPictureType());
             body.setObjectValue(DataTypes.OBJ_IMAGE_FORMAT, FrameBodyAPIC.IMAGE_IS_URL);
             body.setObjectValue(DataTypes.OBJ_DESCRIPTION, "");

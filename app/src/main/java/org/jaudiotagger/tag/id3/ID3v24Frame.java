@@ -49,7 +49,7 @@ import java.util.regex.Pattern;
  */
 public class ID3v24Frame extends AbstractID3v2Frame
 {
-    private static Pattern validFrameIdentifier = Pattern.compile("[A-Z][0-9A-Z]{3}");
+    private static final Pattern validFrameIdentifier = Pattern.compile("[A-Z][0-9A-Z]{3}");
 
     protected static final int FRAME_DATA_LENGTH_SIZE = 4;
 
@@ -372,11 +372,10 @@ public class ID3v24Frame extends AbstractID3v2Frame
 
         if (this == obj) return true;
 
-        if (!(obj instanceof ID3v24Frame))
+        if (!(obj instanceof ID3v24Frame that))
         {
             return false;
         }
-        ID3v24Frame that = (ID3v24Frame) obj;
 
 
         return EqualsUtil.areEqual(this.statusFlags, that.statusFlags) && EqualsUtil.areEqual(this.encodingFlags, that.encodingFlags) && super.equals(that);

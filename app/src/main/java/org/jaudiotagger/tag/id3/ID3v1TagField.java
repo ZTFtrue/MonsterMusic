@@ -34,7 +34,7 @@ public class ID3v1TagField implements TagTextField
     /**
      * Stores the id (name) of the tag field. <br>
      */
-    private String id;
+    private final String id;
 
     /**
      * Creates an instance.

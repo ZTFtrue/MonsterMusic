@@ -22,7 +22,7 @@ public enum MusicalKey
     MINOR("m"),
     OFF_KEY("o");
 
-    private String value;
+    private final String value;
     MusicalKey(String value)
     {
         this.value=value;
@@ -85,10 +85,7 @@ public enum MusicalKey
 
         if(musicalKey.length()==3)
         {
-            if(!musicalKey.substring(2,3).equals(MINOR.getValue()))
-            {
-                return false;
-            }
+            return musicalKey.substring(2, 3).equals(MINOR.getValue());
         }
         return true;
     }

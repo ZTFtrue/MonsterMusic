@@ -1,8 +1,11 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.ztftrue.music.ui.other
 
 import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,11 +31,11 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -41,7 +44,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -61,12 +63,14 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -499,7 +503,6 @@ fun SettingsPage(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(120.dp)
                             .padding(0.dp)
                             .drawBehind {
                                 drawLine(
@@ -521,103 +524,101 @@ fun SettingsPage(
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
-                            CompositionLocalProvider(
-                                LocalContentColor provides MaterialTheme.colorScheme.onBackground
-                            ) {
-                                OutlinedTextField(
-                                    value = durationValue,
-                                    onValueChange = { s ->
-                                        val newText = s.ifEmpty {
-                                            "0"
-                                        }
 
-                                        if (!newText.contains(".") && newText.toLongOrNull() != null) {
-                                            durationValue = newText
-                                        }
-                                    },
-                                    keyboardOptions = KeyboardOptions.Default.copy(
-                                        imeAction = ImeAction.Done,
-                                        keyboardType = KeyboardType.Number
-                                    ),
-                                    keyboardActions = KeyboardActions(
-                                        onDone = {
-                                            val sharedPreferences =
-                                                context.getSharedPreferences(
-                                                    "scan_config",
-                                                    Context.MODE_PRIVATE
-                                                )
-                                            // -1 don't ignore any,0 ignore duration less than or equal 0s,
-                                            sharedPreferences.edit().putLong(
-                                                "ignore_duration",
-                                                durationValue.toLong()
-                                            ).apply()
-                                            Toast.makeText(
-                                                context,
-                                                context.getString(
-                                                    R.string.ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect,
-                                                    durationValue
-                                                ),
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                            focusRequester.freeFocus()
-                                            keyboardController?.hide()
-                                        }
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .focusRequester(focusRequester)
-                                        .background(MaterialTheme.colorScheme.primary),
-                                    colors = TextFieldDefaults.colors(
-                                        errorTextColor = MaterialTheme.colorScheme.primary,
-                                        focusedTextColor = MaterialTheme.colorScheme.primary,
-                                        disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        unfocusedTextColor = MaterialTheme.colorScheme.primary,
-                                        focusedContainerColor = MaterialTheme.colorScheme.background,
-                                        unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                                        cursorColor = MaterialTheme.colorScheme.primary,
-                                        errorCursorColor = MaterialTheme.colorScheme.error,
-                                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                                        unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.12f
-                                        ),
-                                        errorIndicatorColor = MaterialTheme.colorScheme.error,
-                                        disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        errorLeadingIconColor = MaterialTheme.colorScheme.error,
-                                        disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        errorTrailingIconColor = MaterialTheme.colorScheme.error,
-                                        focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        errorLabelColor = MaterialTheme.colorScheme.error,
-                                        disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        )
-                                    ),
-                                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
-                                    suffix = {
-                                        Text(
-                                            text = "s",
-                                            Modifier.padding(start = 10.dp),
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            OutlinedTextField(
+                                value = durationValue,
+                                onValueChange = { s ->
+                                    if (!s.contains(".")) {
+                                        durationValue = s
+                                    }
+                                },
+                                keyboardOptions = KeyboardOptions.Default.copy(
+                                    imeAction = ImeAction.Done,
+                                    keyboardType = KeyboardType.Number
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        saveIgnoreDuration(
+                                            durationValue, context,
+                                            focusRequester,
+                                            keyboardController
                                         )
                                     }
-                                )
-                            }
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .focusRequester(focusRequester)
+                                    .background(MaterialTheme.colorScheme.primary),
+                                colors = TextFieldDefaults.colors(
+                                    errorTextColor = MaterialTheme.colorScheme.primary,
+                                    focusedTextColor = MaterialTheme.colorScheme.primary,
+                                    disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    ),
+                                    unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                                    focusedContainerColor = MaterialTheme.colorScheme.background,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                    cursorColor = MaterialTheme.colorScheme.primary,
+                                    errorCursorColor = MaterialTheme.colorScheme.error,
+                                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                                    unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    ),
+                                    disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.12f
+                                    ),
+                                    errorIndicatorColor = MaterialTheme.colorScheme.error,
+                                    disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    ),
+                                    errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    ),
+                                    errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    ),
+                                    disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    ),
+                                    errorLabelColor = MaterialTheme.colorScheme.error,
+                                    disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    )
+                                ),
+                                textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                                suffix = {
+                                    Row(
+                                        horizontalArrangement = Arrangement.Start,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Text(
+                                            text = "s",
+                                            Modifier.padding(start = 10.dp, end = 20.dp),
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                        ElevatedButton(
+                                            onClick = {
+                                                saveIgnoreDuration(
+                                                    durationValue, context,
+                                                    focusRequester,
+                                                    keyboardController
+                                                )
+                                            },
+                                            modifier = Modifier
+                                        ) {
+                                            Text(
+                                                text = "Save",
+                                                textAlign = TextAlign.Center,
+                                                color = MaterialTheme.colorScheme.onBackground
+                                            )
+                                        }
+                                    }
+                                }
+                            )
                         }
-
                     }
                     Box(
                         modifier = Modifier
@@ -765,7 +766,38 @@ fun SettingsPage(
 
 }
 
+fun saveIgnoreDuration(
+    durationValue: String,
+    context: Context,
+    focusRequester: FocusRequester,
+    keyboardController: SoftwareKeyboardController?
+) {
+    if (durationValue.isEmpty()) {
+        return
+    }
+    val sharedPreferences =
+        context.getSharedPreferences(
+            "scan_config",
+            Context.MODE_PRIVATE
+        )
+    // -1 don't ignore any,0 ignore duration less than or equal 0s,
+    sharedPreferences.edit().putLong(
+        "ignore_duration",
+        durationValue.toLong()
+    ).apply()
+    Toast.makeText(
+        context,
+        context.getString(
+            R.string.ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect,
+            durationValue
+        ),
+        Toast.LENGTH_SHORT
+    ).show()
+    focusRequester.freeFocus()
+    keyboardController?.hide()
+}
 
+@OptIn(ExperimentalFoundationApi::class)
 @UnstableApi
 @Composable
 fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
@@ -787,6 +819,10 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
     }
     fun onConfirmation() {
         musicViewModel.mainTabList.clear()
+        if (mainTabList.size == 0) {
+            Toast.makeText(context, "Must has at least one tab", Toast.LENGTH_SHORT).show()
+            return
+        }
         mainTabList.forEach {
             if (it.isShow) {
                 musicViewModel.mainTabList.add(it)
@@ -813,21 +849,20 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(
-                    text = stringResource(R.string.manage_tab_items), modifier = Modifier
-                        .padding(2.dp),
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-
                 HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
                         .background(color = MaterialTheme.colorScheme.onBackground)
                 )
-
-
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.manage_tab_items), modifier = Modifier
+                                .padding(2.dp),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
                     items(size) {
                         val item = mainTabList[it]
                         Row(
@@ -934,44 +969,47 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                             )
                         }
                     }
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    TextButton(
-                        onClick = { onDismiss() },
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .fillMaxWidth(0.5f),
-                    ) {
-                        Text(
-                            stringResource(R.string.cancel),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                    HorizontalDivider(
-                        modifier = Modifier
-                            .background(MaterialTheme.colorScheme.onBackground)
-                            .width(1.dp)
-                            .height(50.dp)
-                    )
-                    TextButton(
-                        onClick = {
-                            onConfirmation()
-                        },
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .fillMaxWidth(),
-
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
                         ) {
-                        Text(
-                            stringResource(id = R.string.confirm),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
+                            TextButton(
+                                onClick = { onDismiss() },
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .fillMaxWidth(0.5f),
+                            ) {
+                                Text(
+                                    stringResource(R.string.cancel),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                            HorizontalDivider(
+                                modifier = Modifier
+                                    .background(MaterialTheme.colorScheme.onBackground)
+                                    .width(1.dp)
+                                    .height(50.dp)
+                            )
+                            TextButton(
+                                onClick = {
+                                    onConfirmation()
+                                },
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .fillMaxWidth(),
+
+                                ) {
+                                Text(
+                                    stringResource(id = R.string.confirm),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                        }
                     }
                 }
+
             }
         }
     )

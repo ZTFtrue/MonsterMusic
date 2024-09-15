@@ -23,7 +23,7 @@ public class FmtChunk
     public static Logger logger = Logger.getLogger("org.jaudiotagger.audio.dsf.FmtChunk");
 
     public static final int FMT_CHUNK_MIN_DATA_SIZE_ = 40;
-    private long chunkSizeLength;
+    private final long chunkSizeLength;
 
     public static FmtChunk readChunkHeader(ByteBuffer dataBuffer)
     {

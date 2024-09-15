@@ -117,12 +117,11 @@ public abstract class AbstractTagFrame extends AbstractTagItem
     public boolean equals(Object obj)
     {
         if ( this == obj ) return true;
-        if (!(obj instanceof AbstractTagFrame))
+        if (!(obj instanceof AbstractTagFrame that))
         {
             return false;
         }
 
-        AbstractTagFrame that = (AbstractTagFrame) obj;
         return
               EqualsUtil.areEqual(this.getIdentifier(), that.getIdentifier()) &&
               EqualsUtil.areEqual(this.frameBody, that.frameBody) &&

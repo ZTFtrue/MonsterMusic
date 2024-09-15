@@ -102,7 +102,6 @@ public class AggregatedFrame implements TagTextField
 
     public void isBinary(boolean b)
     {
-        ;
     }
 
     public boolean isEmpty()

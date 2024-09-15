@@ -15,9 +15,9 @@ public enum Mp4NonStandardFieldKey
     ADCP("Adcp", "MM3 Album Art Description", Tagger.MEDIA_MONKEY),
     APTY("Apty", "MM3 Album Art ID3 Picture Type", Tagger.MEDIA_MONKEY);
 
-    private String fieldName;
-    private String description;
-    private Tagger tagger;
+    private final String fieldName;
+    private final String description;
+    private final Tagger tagger;
 
     Mp4NonStandardFieldKey(String fieldName, String description, Tagger tagger)
     {

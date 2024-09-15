@@ -13,7 +13,7 @@ public class ID3Chunk
 {
     public static Logger logger = Logger.getLogger("org.jaudiotagger.audio.generic.ID3Chunk");
 
-    private ByteBuffer dataBuffer;
+    private final ByteBuffer dataBuffer;
     public static ID3Chunk readChunk(ByteBuffer dataBuffer)
     {
         String type = Utils.readThreeBytesAsChars(dataBuffer);

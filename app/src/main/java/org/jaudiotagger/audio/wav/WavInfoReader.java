@@ -43,7 +43,7 @@ public class WavInfoReader
     public static Logger logger = Logger.getLogger("org.jaudiotagger.audio.wav");
 
 
-    private String loggingName;
+    private final String loggingName;
     public WavInfoReader(String loggingName)
     {
         this.loggingName = loggingName;

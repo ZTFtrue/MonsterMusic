@@ -448,9 +448,9 @@ public class AudioFile
             switch(id3V2Version)
             {
                 case ID3_V22:
-                    return new ID3v22Tag((ID3v24Tag)tag);
+                    return new ID3v22Tag(tag);
                 case ID3_V23:
-                    return new ID3v23Tag((ID3v24Tag)tag);
+                    return new ID3v23Tag(tag);
                 case ID3_V24:
                     return null;
             }
@@ -460,11 +460,11 @@ public class AudioFile
             switch(id3V2Version)
             {
                 case ID3_V22:
-                    return new ID3v22Tag((ID3v23Tag)tag);
+                    return new ID3v22Tag(tag);
                 case ID3_V23:
                     return null;
                 case ID3_V24:
-                    return new ID3v24Tag((ID3v23Tag)tag);
+                    return new ID3v24Tag(tag);
             }
         }
         else if(tag instanceof ID3v22Tag)
@@ -474,9 +474,9 @@ public class AudioFile
                 case ID3_V22:
                     return null;
                 case ID3_V23:
-                    return new ID3v23Tag((ID3v22Tag)tag);
+                    return new ID3v23Tag(tag);
                 case ID3_V24:
-                    return new ID3v24Tag((ID3v22Tag)tag);
+                    return new ID3v24Tag(tag);
             }
         }
         return null;

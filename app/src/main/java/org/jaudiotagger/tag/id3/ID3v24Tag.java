@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -325,9 +326,8 @@ public class ID3v24Tag extends AbstractID3v2Tag
         logger.config("Copying primitives");
         super.copyPrimitives(copyObj);
 
-        if (copyObj instanceof ID3v24Tag)
+        if (copyObj instanceof ID3v24Tag copyObject)
         {
-            ID3v24Tag copyObject = (ID3v24Tag) copyObj;
             this.footer = copyObject.footer;
             this.tagRestriction = copyObject.tagRestriction;
             this.updateTag = copyObject.updateTag;
@@ -441,9 +441,8 @@ public class ID3v24Tag extends AbstractID3v2Tag
         //
         if (newFrame.getBody() instanceof FrameBodyTDRC)
         {
-            if (existingFrame.getBody() instanceof FrameBodyTDRC)
+            if (existingFrame.getBody() instanceof FrameBodyTDRC body)
             {
-                FrameBodyTDRC body = (FrameBodyTDRC) existingFrame.getBody();
                 FrameBodyTDRC newBody = (FrameBodyTDRC) newFrame.getBody();
 
                 //#304:Check for NullPointer, just ignore this frame
@@ -530,10 +529,9 @@ public class ID3v24Tag extends AbstractID3v2Tag
                 copyFrames((AbstractID3v2Tag) mp3tag);
             }
             //IDv1
-            else if (mp3tag instanceof ID3v1Tag)
+            else if (mp3tag instanceof ID3v1Tag id3tag)
             {
                 // convert id3v1 tags.
-                ID3v1Tag id3tag = (ID3v1Tag) mp3tag;
                 ID3v24Frame newFrame;
                 AbstractID3v2FrameBody newBody;
                 if (id3tag.title.length() > 0)
@@ -581,9 +579,8 @@ public class ID3v24Tag extends AbstractID3v2Tag
                     newFrame.setBody(newBody);
                     frameMap.put(newFrame.getIdentifier(), newFrame);
                 }
-                if (mp3tag instanceof ID3v11Tag)
+                if (mp3tag instanceof ID3v11Tag id3tag2)
                 {
-                    ID3v11Tag id3tag2 = (ID3v11Tag) mp3tag;
                     if (id3tag2.track > 0)
                     {
                         newBody = new FrameBodyTRCK((byte) 0, Byte.toString(id3tag2.track));
@@ -699,11 +696,10 @@ public class ID3v24Tag extends AbstractID3v2Tag
      */
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof ID3v24Tag))
+        if (!(obj instanceof ID3v24Tag object))
         {
             return false;
         }
-        ID3v24Tag object = (ID3v24Tag) obj;
         if (this.footer != object.footer)
         {
             return false;
@@ -1140,7 +1136,7 @@ public class ID3v24Tag extends AbstractID3v2Tag
         int padding = 0;
         if(currentTagSize > 0)
         {
-            int sizeIncPadding = calculateTagSize(bodyByteBuffer.length + TAG_HEADER_LENGTH, (int) currentTagSize);
+            int sizeIncPadding = calculateTagSize(bodyByteBuffer.length + TAG_HEADER_LENGTH, currentTagSize);
             padding = sizeIncPadding - (bodyByteBuffer.length + TAG_HEADER_LENGTH);
         }
         ByteBuffer headerBuffer = writeHeaderToBuffer(padding, bodyByteBuffer.length);
@@ -1346,14 +1342,7 @@ public class ID3v24Tag extends AbstractID3v2Tag
         }
         else
         {
-            try
-            {
-                body.setObjectValue(DataTypes.OBJ_PICTURE_DATA,artwork.getImageUrl().getBytes("ISO-8859-1"));
-            }
-            catch(UnsupportedEncodingException uoe)
-            {
-                throw new RuntimeException(uoe.getMessage());
-            }
+            body.setObjectValue(DataTypes.OBJ_PICTURE_DATA,artwork.getImageUrl().getBytes(StandardCharsets.ISO_8859_1));
             body.setObjectValue(DataTypes.OBJ_PICTURE_TYPE, artwork.getPictureType());
             body.setObjectValue(DataTypes.OBJ_MIME_TYPE, FrameBodyAPIC.IMAGE_IS_URL);
             body.setObjectValue(DataTypes.OBJ_DESCRIPTION, "");

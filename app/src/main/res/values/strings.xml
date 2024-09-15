@@ -100,7 +100,7 @@
     <string name="play_error_play_next">Play error, auto play next</string>
     <string name="no_dictionary_app_tip">Dictionary app is not installed or your dictionary app do not support this feature.</string>
     <string name="cant_support_feature_tip">You system don\'t support this feature</string>
-    <string name="ignore_tracks_duration_less_than">Ignore tracks duration less than(include)</string>
+    <string name="ignore_tracks_duration_less_than">Ignore tracks duration less than(include). -1 don\'t ignore any, 0 ignore duration less than or equal 0s. Need to restart app</string>
     <string name="ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect">Ignore tracks duration less than %1$s s set successfully, please restart the app to take effect</string>
     <string name="ignored_this_folder_please_restart_the_app_to_take_effect">Ignored this folder, please restart the app to take effect</string>
     <string name="check_to_not_ignore_the_folder_you_need_restart_the_app_to_take_effect">Check to not ignore the folder, you need restart the app to take effect</string>
@@ -108,7 +108,5 @@
     <string name="join_discord">Join Discord</string>
     <string name="star_share_tip">If you like it, please share it; And, if you have a GitHub account, please give a star to this project.</string>
     <string name="preset">Preset</string>
-    <string name="appwidget_text">EXAMPLE</string>
-    <string name="add_widget">Add widget</string>
-    <string name="app_widget_description">This is an app widget description</string>
+    <string name="app_widget_description">MonsterMusic app widget description</string>
 </resources>
