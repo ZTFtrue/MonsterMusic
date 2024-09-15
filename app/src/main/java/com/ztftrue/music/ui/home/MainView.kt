@@ -117,7 +117,7 @@ fun MainView(
                 }, content = {
                     HorizontalPager(
                         state = pagerState,
-                        beyondBoundsPageCount = tabList.size,
+                        beyondViewportPageCount = tabList.size,
                         modifier = Modifier
                             .padding(it)
                             .semantics {
