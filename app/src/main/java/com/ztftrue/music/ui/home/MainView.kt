@@ -60,12 +60,11 @@ fun MainView(
     val tabList = remember {
         mutableStateListOf<MainTab>()
     }
-    var pagerState: PagerState = rememberPagerState { 0 }
     LaunchedEffect(key1 = musicViewModel.mainTabList, key2 = musicViewModel.mainTabList.size) {
         tabList.clear()
         tabList.addAll(musicViewModel.mainTabList)
     }
-    pagerState = rememberPagerState(initialPage = 0, pageCount = { tabList.size })
+    val pagerState: PagerState = rememberPagerState(initialPage = 0, pageCount = { tabList.size })
     LaunchedEffect(tabList,tabList.size) {
         if (pagerState.currentPage >= tabList.size) {
             scope.launch {
