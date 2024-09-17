@@ -258,13 +258,13 @@ object PlayUtils {
         val i = getItemInQueueIndex(musicQueue, id)
         val bundle = Bundle()
         if (i > -1) {
-            musicQueue.removeAt(i)
-            changePriorityTableId(musicQueue, musicQueue[i], db)
+            val musicItem = musicQueue.removeAt(i)
+            changePriorityTableId(musicQueue, musicItem, db)
             CoroutineScope(Dispatchers.Main).launch {
                 exoPlayer.removeMediaItem(i)
             }
-            bundle.putInt("playIndex", exoPlayer.currentMediaItemIndex)
         }
+        bundle.putInt("playIndex", exoPlayer.currentMediaItemIndex)
         bundle.putParcelableArrayList("songsList", ArrayList(tracksLinkedHashMap.values))
         bundle.putLong("id", id)
         bundle.putParcelableArrayList("queue", musicQueue)
