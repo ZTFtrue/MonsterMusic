@@ -313,10 +313,12 @@ class MainActivity : ComponentActivity() {
                         musicViewModel.getDb(this@MainActivity).StorageFolderDao().insert(
                             StorageFolder(null, treeUri.toString())
                         )
-                        musicViewModel.dealLyrics(
-                            this@MainActivity,
-                            musicViewModel.currentPlay.value!!
-                        )
+                        val c = musicViewModel.currentPlay.value
+                        if (c != null)
+                            musicViewModel.dealLyrics(
+                                this@MainActivity,
+                                c
+                            )
                     }
 
                 }
