@@ -819,13 +819,13 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
     }
     fun onConfirmation() {
         musicViewModel.mainTabList.clear()
-        if (mainTabList.size == 0) {
+        if(mainTabList.find { it.isShow  }==null){
             Toast.makeText(context, "Must has at least one tab", Toast.LENGTH_SHORT).show()
             return
         }
         mainTabList.forEachIndexed { index, it ->
+            it.priority=index
             if (it.isShow) {
-                it.priority=index
                 musicViewModel.mainTabList.add(it)
             }
         }
