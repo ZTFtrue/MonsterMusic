@@ -819,11 +819,12 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
     }
     fun onConfirmation() {
         musicViewModel.mainTabList.clear()
-        if (mainTabList.size == 0) {
+        if(mainTabList.find { it.isShow  }==null){
             Toast.makeText(context, "Must has at least one tab", Toast.LENGTH_SHORT).show()
             return
         }
-        mainTabList.forEach {
+        mainTabList.forEachIndexed { index, it ->
+            it.priority=index
             if (it.isShow) {
                 musicViewModel.mainTabList.add(it)
             }
@@ -888,7 +889,6 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                                 contentDescription = "Up tab priority"
                                             },
                                             onClick = {
-                                                item.priority = it - 1
                                                 mainTabList.remove(item)
                                                 mainTabList.add(it - 1, item)
                                             }) {
@@ -925,7 +925,6 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                                 contentDescription = "Down tab priority"
                                             },
                                             onClick = {
-                                                item.priority = it + 1
                                                 mainTabList.remove(item)
                                                 mainTabList.add(it + 1, item)
                                             }) {
