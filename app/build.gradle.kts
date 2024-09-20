@@ -13,6 +13,7 @@ android {
             keyPassword = "111111"
             keyAlias = "music"
         }
+
     }
     namespace = "com.ztftrue.music"
     compileSdk = 34
@@ -35,9 +36,9 @@ android {
     }
     dependenciesInfo {
         // Disables dependency metadata when building APKs.
-        includeInApk = false
+        includeInApk = true
         // Disables dependency metadata when building Android App Bundles.
-        includeInBundle = false
+        includeInBundle = true
     }
     buildTypes {
         release {
@@ -64,14 +65,16 @@ android {
                     }
                 }
             }
+            signingConfig = signingConfigs.getByName("debug")
+
         }
         getByName("debug") {
-            isMinifyEnabled = false
-            isShrinkResources = false
-//            proguardFiles(
-//                getDefaultProguardFile("proguard-android-optimize.txt"),
-//                "proguard-rules.pro"
-//            )
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -100,11 +103,11 @@ android {
 dependencies {
 
     implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.5")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
     implementation("androidx.activity:activity-compose:1.9.2")
-    implementation("androidx.navigation:navigation-compose:2.8.0")
+    implementation("androidx.navigation:navigation-compose:2.8.1")
     implementation("androidx.media3:media3-exoplayer:1.4.1")
     implementation ("androidx.media:media:1.7.0")
 
@@ -123,7 +126,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2024.09.01"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.09.02"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
@@ -143,9 +146,9 @@ dependencies {
 //    implementation("net.jthink:jaudiotagger:3.0.1")
 
     implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.collection:collection-ktx:1.4.3")
+    implementation("androidx.collection:collection-ktx:1.4.4")
     implementation("androidx.fragment:fragment-ktx:1.8.3")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.5")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
 
     implementation("androidx.palette:palette-ktx:1.0.0")
 
