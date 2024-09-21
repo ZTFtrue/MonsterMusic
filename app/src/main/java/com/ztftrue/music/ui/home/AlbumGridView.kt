@@ -123,7 +123,15 @@ fun AlbumGridView(
                 })
         }
     }
-
+    if (albumList.isEmpty()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Text(
+                text = "There is no any album in here", Modifier.padding(start = 10.dp),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
+        return
+    }
     when (scrollDirection) {
         ScrollDirectionType.LIST_VERTICAL -> {
 //            LazyColumn(
@@ -271,9 +279,9 @@ fun AlbumItemView(
             val (playIndicator) = createRefs()
             GlideImage(
 
-                    model = musicViewModel.getAlbumCover(
-                        item.id,
-                        context
+                model = musicViewModel.getAlbumCover(
+                    item.id,
+                    context
                 ),
                 contentDescription = "Album cover",
                 modifier = Modifier
