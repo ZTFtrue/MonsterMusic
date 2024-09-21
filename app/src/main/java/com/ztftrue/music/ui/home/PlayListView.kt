@@ -106,6 +106,15 @@ fun PlayListView(
                 }
             })
     }
+    if (playList.isEmpty()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Text(
+                text = "There is no any album in here", Modifier.padding(start = 10.dp),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
+        return
+    }
     LazyColumn(
         state = listState, modifier = modifier.fillMaxSize()
     ) {

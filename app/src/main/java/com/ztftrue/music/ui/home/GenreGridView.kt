@@ -115,6 +115,15 @@ fun GenreGridView(
                 }
             })
     }
+    if (genreList.isEmpty()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Text(
+                text = "There is no any genre in here", Modifier.padding(start = 10.dp),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
+        return
+    }
     when (scrollDirection) {
         ScrollDirectionType.LIST_VERTICAL -> {
 //            LazyColumn(
