@@ -202,7 +202,7 @@ fun MainTopBar(
                                     .padding(all = Dp(value = 8F))
                             ) {
                                 Text(
-                                    text = "Default",
+                                    text = stringResource(R.string.default_set),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                                 RadioButton(
@@ -315,7 +315,7 @@ fun MainTopBar(
                             }) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Close display sort popup",
+                                contentDescription = stringResource(R.string.close_display_sort_popup),
                                 modifier = Modifier
                                     .size(30.dp)
                                     .clip(CircleShape),
@@ -581,7 +581,7 @@ fun MainTopBar(
                                         showSortDialog = true
                                     }) {
                                     Text(
-                                        text = "Sort",
+                                        text = stringResource(R.string.sort),
                                         color = MaterialTheme.colorScheme.onBackground
                                     )
                                 }

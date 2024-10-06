@@ -265,7 +265,7 @@ fun SettingsPage(
                                     })
                             }
                             Text(
-                                text = "Set list indicator",
+                                text = stringResource(R.string.set_list_indicator),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -308,7 +308,7 @@ fun SettingsPage(
                                 },
                         ) {
                             Text(
-                                text = "Add lyrics folders",
+                                text = stringResource(R.string.add_lyrics_folders),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -349,7 +349,7 @@ fun SettingsPage(
                                 },
                         ) {
                             Text(
-                                text = "Set artist folder(artist_name.jpg/jpeg/png)",
+                                text = stringResource(R.string.set_artist_folder_artist_name_jpg_jpeg_png),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -389,7 +389,7 @@ fun SettingsPage(
                                 },
                         ) {
                             Text(
-                                text = "Set genre folder(genre_name.jpg/jpeg/png)",
+                                text = stringResource(R.string.set_genre_folder_genre_name_jpg_jpeg_png),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -440,8 +440,8 @@ fun SettingsPage(
                                     })
                             }
                             Text(
-                                text = "Manage lyrics folders",
-                                Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.manage_lyrics_folders),
+                                modifier = Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -491,8 +491,8 @@ fun SettingsPage(
                                     })
                             }
                             Text(
-                                text = "Manage ignore folder",
-                                Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.manage_ignore_folder),
+                                modifier = Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
 
@@ -610,7 +610,7 @@ fun SettingsPage(
                                             modifier = Modifier
                                         ) {
                                             Text(
-                                                text = "Save",
+                                                text = stringResource(R.string.save),
                                                 textAlign = TextAlign.Center,
                                                 color = MaterialTheme.colorScheme.onBackground
                                             )
@@ -750,7 +750,7 @@ fun SettingsPage(
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Clear Album Cover Cache",
+                                text = stringResource(R.string.clear_album_cover_cache),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -1579,7 +1579,7 @@ fun ClearAlbumCoverDialog(onDismiss: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Are you sure you want to clear album cover cache? this will take some time when next open album list.",
+                    text = stringResource(R.string.are_you_sure_you_want_to_clear_album_cover_cache_this_will_take_some_time_when_next_open_album_list),
                     modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
@@ -1704,7 +1704,7 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                             {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        text = "Show slide indicator",
+                                        text = stringResource(R.string.show_slide_indicator),
                                         color = MaterialTheme.colorScheme.onBackground
                                     )
                                 }
@@ -1738,7 +1738,7 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                             {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        text = "Show top indicator",
+                                        text = stringResource(R.string.show_top_indicator),
                                         color = MaterialTheme.colorScheme.onBackground
                                     )
                                 }
@@ -1772,7 +1772,7 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                             {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        text = "Show indicator in queue",
+                                        text = stringResource(R.string.show_indicator_in_queue),
                                         color = MaterialTheme.colorScheme.onBackground
                                     )
                                 }

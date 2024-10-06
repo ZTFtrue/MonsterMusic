@@ -109,7 +109,7 @@ fun PlayListView(
     if (playList.isEmpty()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Text(
-                text = "There is no any album in here", Modifier.padding(start = 10.dp),
+                text = stringResource(id = R.string.there_is_no_any_album_in_here), Modifier.padding(start = 10.dp),
                 color = MaterialTheme.colorScheme.onBackground
             )
         }
@@ -272,9 +272,9 @@ fun PlayListItemView(
                 }
             ),
             contentDescription = if (musicViewModel.playStatus.value) {
-                "pause"
+                stringResource(R.string.pause)
             } else {
-                "play"
+                stringResource(R.string.play)
             },
             modifier = Modifier
                 .size(40.dp),
@@ -299,7 +299,7 @@ fun PlayListItemView(
             }) {
             Icon(
                 imageVector = Icons.Default.MoreVert,
-                contentDescription = "Operate More, will open dialog",
+                contentDescription = stringResource(id = R.string.operate_more_will_open_dialog),
                 modifier = Modifier
                     .size(20.dp)
                     .clip(CircleShape),

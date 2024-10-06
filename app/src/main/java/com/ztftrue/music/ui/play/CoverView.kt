@@ -101,7 +101,10 @@ fun CoverView(musicViewModel: MusicViewModel) {
                             fontSize = MaterialTheme.typography.titleSmall.fontSize
                         )
                         Text(
-                            text = "Comment: ${musicViewModel.tags[FieldKey.COMMENT.name]?:""}", modifier =
+                            text = stringResource(
+                                R.string.comment,
+                                musicViewModel.tags[FieldKey.COMMENT.name] ?: ""
+                            ), modifier =
                             Modifier
                                 .padding(top = 10.dp)
                                 .horizontalScroll(rememberScrollState(0))
@@ -110,7 +113,10 @@ fun CoverView(musicViewModel: MusicViewModel) {
                             fontSize = MaterialTheme.typography.titleSmall.fontSize
                         )
                         Text(
-                            text = "Year: ${musicViewModel.tags[FieldKey.YEAR.name]?:""}", modifier =
+                            text = stringResource(
+                                R.string.year_tracks,
+                                musicViewModel.tags[FieldKey.YEAR.name] ?: ""
+                            ), modifier =
                             Modifier
                                 .padding(top = 10.dp)
                                 .horizontalScroll(rememberScrollState(0))

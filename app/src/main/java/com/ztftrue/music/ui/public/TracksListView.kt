@@ -324,7 +324,7 @@ fun ItemFilterDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Where are we going?", modifier = Modifier
+                    text = stringResource(R.string.where_are_we_going), modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )

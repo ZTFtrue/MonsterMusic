@@ -145,7 +145,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                 }
                 Slider(
                     modifier = Modifier
-                        .semantics { contentDescription = "Pitch Slider" },
+                        .semantics { contentDescription = context.getString(R.string.pitch_slider) },
                     value = pitch.floatValue,
                     onValueChange = {
                         pitch.floatValue = (it*10f).roundToInt() / 10f
@@ -189,7 +189,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                 }
                 Slider(
                     modifier = Modifier
-                        .semantics { contentDescription = "Speed Slider" },
+                        .semantics { contentDescription = context.getString(R.string.speed_slider) },
                     value = speed.floatValue,
                     onValueChange = {
                         speed.floatValue = (it*10f).roundToInt() / 10f

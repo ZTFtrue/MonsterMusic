@@ -227,7 +227,8 @@ fun FolderItemView(
                     }
                 ),
                 contentDescription = if (musicViewModel.playStatus.value) {
-                    "pause"
+                    val s = "pause"
+                    s
                 } else {
                     "play"
                 },
@@ -408,7 +409,7 @@ fun FolderListOperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Ignore this folder",
+                                text = stringResource(R.string.ignore_this_folder),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )

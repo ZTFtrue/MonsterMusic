@@ -30,6 +30,7 @@ import androidx.navigation.NavHostController
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.QueuePlayList
+import com.ztftrue.music.R
 import com.ztftrue.music.SongsPlayList
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.ui.other.DrawMenu
@@ -88,7 +89,7 @@ fun MainView(
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .semantics { contentDescription = "MainView" },
+            .semantics { contentDescription = context.getString(R.string.mainview) },
         color = MaterialTheme.colorScheme.background
     ) {
         ModalNavigationDrawer(
@@ -105,7 +106,7 @@ fun MainView(
         ) {
             Scaffold(modifier = Modifier.semantics {
                 contentDescription =
-                    "This is main page"
+                    context.getString(R.string.this_is_main_page)
             },
                 topBar = {
                     MainTopBar(musicViewModel, drawerState, pagerState, navController)
@@ -120,8 +121,12 @@ fun MainView(
                         modifier = Modifier
                             .padding(it)
                             .semantics {
-                                contentDescription =
-                                    "current page is ${if(musicViewModel.mainTabList.size>pagerState.currentPage) musicViewModel.mainTabList[pagerState.currentPage].name else ""}"
+                                context
+                                    .getString(
+                                        R.string.current_page_is,
+                                        if (musicViewModel.mainTabList.size > pagerState.currentPage) musicViewModel.mainTabList[pagerState.currentPage].name else ""
+                                    )
+                                    .also { contentDescription = it }
                             },
                     ) { page ->
                         when (tabList[page].type) {

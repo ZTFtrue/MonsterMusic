@@ -125,7 +125,7 @@ fun ArtistsGridView(
     if (artistLists.isEmpty()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Text(
-                text = "There is no any artist in here", Modifier.padding(start = 10.dp),
+                text = stringResource(R.string.there_is_no_any_artist_in_here), Modifier.padding(start = 10.dp),
                 color = MaterialTheme.colorScheme.onBackground
             )
         }
@@ -268,7 +268,7 @@ fun ArtistItemView(
                 painter = rememberAsyncImagePainter(
                     model ?: R.drawable.ic_artist
                 ),
-                contentDescription = "Album cover",
+                contentDescription = stringResource(R.string.album_cover),
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.primaryContainer)
@@ -280,7 +280,7 @@ fun ArtistItemView(
                     painter = painterResource(
                         R.drawable.pause
                     ),
-                    contentDescription = "playing",
+                    contentDescription = stringResource(R.string.playing),
                     modifier = Modifier
                         .width(40.dp)
                         .height(40.dp)
@@ -320,7 +320,7 @@ fun ArtistItemView(
                     }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Operate More, will open dialog",
+                        contentDescription = stringResource(id = R.string.operate_more_will_open_dialog),
                         modifier = Modifier
                             .size(20.dp)
                             .clip(CircleShape),

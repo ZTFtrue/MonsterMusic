@@ -87,7 +87,7 @@ fun DrawMenu(
                     painter = painterResource(
                         id = R.drawable.large_cover
                     ),
-                    contentDescription = "Album cover",
+                    contentDescription = stringResource(id = R.string.album_cover),
                     modifier = Modifier
                         .width(drawerWidth)
                         .height(200.dp)
@@ -106,7 +106,7 @@ fun DrawMenu(
                         musicViewModel.getCurrentMusicCover(context = context)
                             ?: R.drawable.songs_thumbnail_cover
                     ),
-                    contentDescription = "Album cover",
+                    contentDescription = stringResource(id = R.string.album_cover),
                     modifier = Modifier
                         .width(80.dp)
                         .height(80.dp)

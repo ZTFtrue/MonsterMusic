@@ -118,7 +118,7 @@ fun GenreGridView(
     if (genreList.isEmpty()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Text(
-                text = "There is no any genre in here", Modifier.padding(start = 10.dp),
+                text = stringResource(R.string.there_is_no_any_genre_in_here), Modifier.padding(start = 10.dp),
                 color = MaterialTheme.colorScheme.onBackground
             )
         }
@@ -260,7 +260,7 @@ fun GenreItemView(
                 painter = rememberAsyncImagePainter(
                     model ?: R.drawable.ic_genres
                 ),
-                contentDescription = "Genre cover",
+                contentDescription = stringResource(R.string.genre_cover),
                 modifier = Modifier
                     .zIndex(0f)
                     .fillMaxWidth()
@@ -273,7 +273,7 @@ fun GenreItemView(
                     painter = painterResource(
                         R.drawable.pause
                     ),
-                    contentDescription = "playing",
+                    contentDescription = stringResource(id = R.string.playing),
                     modifier = Modifier
                         .width(40.dp)
                         .height(40.dp)
@@ -313,7 +313,7 @@ fun GenreItemView(
                     }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Operate More, will open dialog",
+                        contentDescription = stringResource(R.string.operate_more_will_open_dialog),
                         modifier = Modifier
                             .size(20.dp)
                             .clip(CircleShape),

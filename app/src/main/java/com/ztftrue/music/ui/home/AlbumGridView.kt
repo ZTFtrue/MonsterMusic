@@ -126,7 +126,7 @@ fun AlbumGridView(
     if (albumList.isEmpty()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Text(
-                text = "There is no any album in here", Modifier.padding(start = 10.dp),
+                text = stringResource(R.string.there_is_no_any_album_in_here), Modifier.padding(start = 10.dp),
                 color = MaterialTheme.colorScheme.onBackground
             )
         }
@@ -283,7 +283,7 @@ fun AlbumItemView(
                     item.id,
                     context
                 ),
-                contentDescription = "Album cover",
+                contentDescription = stringResource(id = R.string.album_cover),
                 modifier = Modifier
                     .zIndex(0f)
                     .fillMaxWidth()
@@ -295,7 +295,7 @@ fun AlbumItemView(
                     painter = painterResource(
                         R.drawable.pause
                     ),
-                    contentDescription = "playing",
+                    contentDescription = stringResource(id = R.string.playing),
                     modifier = Modifier
                         .width(30.dp)
                         .height(30.dp)

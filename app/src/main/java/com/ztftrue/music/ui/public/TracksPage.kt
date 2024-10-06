@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -195,7 +196,7 @@ fun TracksListPage(
                                 .padding(all = Dp(value = 8F))
                         ) {
                             Text(
-                                text = "Default",
+                                text = stringResource(R.string.default_set),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             RadioButton(
@@ -616,7 +617,7 @@ fun TracksListPage(
                                     showSortDialog = true
                                 }) {
                                 Text(
-                                    text = "Sort",
+                                    text = stringResource(id = R.string.sort),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                             }
@@ -760,7 +761,11 @@ fun TracksListPage(
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
-                                    text = "${mListPlay.trackNumber} song${if (mListPlay.trackNumber <= 1) "" else "s"}",
+                                    text = stringResource(
+                                        R.string.song_tracks,
+                                        mListPlay.trackNumber,
+                                        if (mListPlay.trackNumber <= 1) "" else "s"
+                                    ),
                                     color = MaterialTheme.colorScheme.onBackground,
                                     modifier = Modifier.horizontalScroll(rememberScrollState(0)),
                                     maxLines = 1
@@ -866,7 +871,11 @@ fun TracksListPage(
                                             color = MaterialTheme.colorScheme.onBackground
                                         )
                                         Text(
-                                            text = "Year : ${a.firstYear}${if (a.firstYear == a.lastYear) "" else " ~ ${a.lastYear}"}",
+                                            text = stringResource(
+                                                R.string.year_tra,
+                                                a.firstYear,
+                                                if (a.firstYear == a.lastYear) "" else " ~ ${a.lastYear}"
+                                            ),
 //                                            modifier = Modifier
 //                                                .wrapContentSize(),
                                             modifier = Modifier.horizontalScroll(
@@ -884,7 +893,11 @@ fun TracksListPage(
                                     val a = musicPlayList.value as ArtistList
                                     Column {
                                         Text(
-                                            text = "${a.albumNumber} album${if (a.albumNumber <= 1) "" else "s"}",
+                                            text = stringResource(
+                                                R.string.album_tracks,
+                                                a.albumNumber,
+                                                if (a.albumNumber <= 1) "" else "s"
+                                            ),
 //                                            modifier = Modifier
 //                                                .wrapContentSize(),
                                             modifier = Modifier.horizontalScroll(
@@ -901,7 +914,11 @@ fun TracksListPage(
                                 is GenresList -> {
                                     val a = musicPlayList.value as GenresList
                                     Text(
-                                        text = "${a.albumNumber} album${if (a.albumNumber <= 1) "" else "s"}",
+                                        text = stringResource(
+                                            R.string.album_tracks,
+                                            a.albumNumber,
+                                            if (a.albumNumber <= 1) "" else "s"
+                                        ),
 //                                        modifier = Modifier
 //                                            .wrapContentSize(),
                                         modifier = Modifier.horizontalScroll(rememberScrollState(0)),

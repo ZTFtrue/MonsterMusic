@@ -212,7 +212,6 @@ object CaptionUtils {
         "ar" to R.string.ar,
         "au" to R.string.au,
         "by" to R.string.by,
-        "re" to R.string.re,
         "ti" to R.string.ti,
         "ve" to R.string.ve
     )
