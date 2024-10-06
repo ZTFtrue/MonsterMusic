@@ -1183,6 +1183,32 @@ fun AboutDialog(onDismiss: () -> Unit) {
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
+                                .clickable {
+                                    openBrowser(
+                                        "https://github.com/ZTFtrue/MonsterMusic/blob/master/readme.md#contribute-translate",
+                                        context
+                                    )
+                                },
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text(
+                                text = "Thanks for translating", Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
                     }
                 }
                 Row(
