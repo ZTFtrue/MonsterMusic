@@ -28,12 +28,12 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var active = false
     private var outputAudioFormat: AudioProcessor.AudioFormat? = null
 
-    private lateinit var sampleBufferRealLeft: DoubleArray
-    private lateinit var sampleBufferRealRight: DoubleArray
+    private var sampleBufferRealLeft: DoubleArray = DoubleArray(0)
+    private var sampleBufferRealRight: DoubleArray = DoubleArray(0)
 
     private var bufferSize = 2048
     private var outputBuffer: ByteBuffer = EMPTY_BUFFER
-    private lateinit var dataBuffer: ByteBuffer
+    private var dataBuffer: ByteBuffer = EMPTY_BUFFER
     private var inputEnded = false
     private val gainDBAbsArray: DoubleArray =
         doubleArrayOf(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
@@ -303,6 +303,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             outputBuffer.clear()
         }
         dataBuffer.clear()
+
         inputEnded = false
     }
 
