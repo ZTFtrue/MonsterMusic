@@ -198,8 +198,11 @@ class MusicViewModel : ViewModel() {
             val embeddedLyrics = arrayListOf<ListStringCaption>()
             val fileLyrics = arrayListOf<ListStringCaption>()
             tags.clear()
-            embeddedLyrics.addAll(CaptionUtils.getEmbeddedLyrics(currentPlay.path, context, tags))
-            if (firstEmbeddedLyrics && embeddedLyrics.isNotEmpty()) {
+            // if embedded lyrics is prior, first import lyrics
+            if(firstEmbeddedLyrics) {
+                embeddedLyrics.addAll(CaptionUtils.getEmbeddedLyrics(currentPlay.path, context, tags))
+            }
+            if (embeddedLyrics.isNotEmpty()) {
                 lyricsType = LyricsType.TEXT
             } else {
                 // import lyrics
@@ -216,22 +219,22 @@ class MusicViewModel : ViewModel() {
                 }
                 // Same as tracks file
                 if (fileLyrics.isEmpty()) {
-                    val fileR = Utils.checkLyrics(
-                        currentPlay.path.substring(
-                            0,
-                            currentPlay.path.lastIndexOf("."),
-                        )
-                    )
-                    if (fileR != null) {
-                        lyricsType = fileR.type
-                        fileLyrics.addAll(
-                            readCaptions(
-                                File(fileR.path).bufferedReader(),
-                                fileR.type,
-                                context
+                        val fileR = Utils.checkLyrics(
+                            currentPlay.path.substring(
+                                0,
+                                currentPlay.path.lastIndexOf("."),
                             )
                         )
-                    }
+                        if (fileR != null) {
+                            lyricsType = fileR.type
+                            fileLyrics.addAll(
+                                readCaptions(
+                                    File(fileR.path).bufferedReader(),
+                                    fileR.type,
+                                    context
+                                )
+                            )
+                        }
                 }
                 if (fileLyrics.isEmpty()) {
                     val musicName: String = try {
@@ -309,6 +312,9 @@ class MusicViewModel : ViewModel() {
 
                     }
                 }
+            }
+            if(fileLyrics.isEmpty()&&!firstEmbeddedLyrics) {
+                embeddedLyrics.addAll(CaptionUtils.getEmbeddedLyrics(currentPlay.path, context, tags))
             }
             if (fileLyrics.isNotEmpty()) {
                 isEmbeddedLyrics.value = false
