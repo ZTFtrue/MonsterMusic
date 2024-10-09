@@ -644,13 +644,13 @@ object Utils {
     }
 
     fun checkLyrics(path: String): CheckLyricsData? {
-        if (File("$path.lrc").exists()) {
+        if (File("$path.lrc").canRead()) {
             return CheckLyricsData("$path.lrc", LyricsType.LRC)
-        } else if (File("$path.txt").exists()) {
+        } else if (File("$path.txt").canRead()) {
             return CheckLyricsData("$path.txt", LyricsType.TEXT)
-        } else if (File("$path.srt").exists()) {
+        } else if (File("$path.srt").canRead()) {
             return CheckLyricsData("$path.srt", LyricsType.SRT)
-        } else if (File("$path.vtt").exists()) {
+        } else if (File("$path.vtt").canRead()) {
             return CheckLyricsData("$path.vtt", LyricsType.VTT)
         }
         return null
