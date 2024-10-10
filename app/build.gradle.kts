@@ -36,7 +36,7 @@ android {
     }
     dependenciesInfo {
         // Disables dependency metadata when building APKs.
-        includeInApk = true
+        includeInApk = false
         // Disables dependency metadata when building Android App Bundles.
         includeInBundle = true
     }
