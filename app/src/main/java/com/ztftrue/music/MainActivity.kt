@@ -21,6 +21,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
@@ -49,6 +50,7 @@ import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.play.EVENT_MEDIA_ITEM_Change
 import com.ztftrue.music.play.EVENT_SLEEP_TIME_Change
+import com.ztftrue.music.play.EVENT_Visualization_Change
 import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
 import com.ztftrue.music.sqlData.model.GENRE_TYPE
@@ -451,6 +453,10 @@ class MainActivity : ComponentActivity() {
         compatSplashScreen?.setKeepOnScreenCondition { musicViewModel.mainTabList.isEmpty() }
         Utils.initSettingsData(musicViewModel, this)
         musicViewModel.prepareArtistAndGenreCover(this@MainActivity)
+        musicViewModel.musicVisualizationEnable.value =
+            SharedPreferencesUtils.getEnableMusicVisualization(this@MainActivity)
+        musicViewModel.showMusicCover.value =
+            SharedPreferencesUtils.getShowMusicCover(this@MainActivity)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
 
             if (ActivityCompat.checkSelfPermission(
@@ -560,6 +566,11 @@ class MainActivity : ComponentActivity() {
         lock.unlock()
     }
 
+    // Add extension function to MediaControllerCompat.Callback
+    fun MediaControllerCompat.Callback.onVisualizerChangedExtension(data: FloatArray?) {
+        println("Handling visualizer data: $data")
+    }
+
     val callback = object : MediaControllerCompat.Callback() {
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
             super.onPlaybackStateChanged(state)
@@ -595,6 +606,13 @@ class MainActivity : ComponentActivity() {
                     if (remainTime == 0L) {
                         musicViewModel.sleepTime.longValue = 0
                     }
+                } else if (it.getInt("type") == EVENT_Visualization_Change) {
+                    val magnitude = it.getFloatArray("magnitude")?.toList()
+                    if (magnitude != null) {
+                        musicViewModel.musicVisualizationData.clear()
+                        musicViewModel.musicVisualizationData.addAll(magnitude)
+                    }
+//                    Log.d("magnitude", magnitude?.size.toString())
                 }
             }
         }

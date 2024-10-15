@@ -1,5 +1,6 @@
 package com.ztftrue.music.effects
 
+import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
@@ -31,7 +32,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var sampleBufferRealLeft: DoubleArray = DoubleArray(0)
     private var sampleBufferRealRight: DoubleArray = DoubleArray(0)
 
-    private var bufferSize = 2048
+    private var bufferSize = 512
     private var outputBuffer: ByteBuffer = EMPTY_BUFFER
     private var dataBuffer: ByteBuffer = EMPTY_BUFFER
     private var inputEnded = false
@@ -81,7 +82,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         outputAudioFormat = inputAudioFormat
         // ENCODING_PCM_16BIT, is two byte to one float
         r = if (outputAudioFormat!!.encoding == C.ENCODING_PCM_16BIT) 2 else 1
-        dataBuffer = ByteBuffer.allocate(bufferSize * 16)
+        dataBuffer = ByteBuffer.allocate(bufferSize * 8)
         val size = bufferSize / r / outputAudioFormat!!.channelCount
         sampleBufferRealLeft = DoubleArray(size)
         sampleBufferRealRight = DoubleArray(size)
@@ -122,10 +123,19 @@ class EqualizerAudioProcessor : AudioProcessor {
         if (!inputBuffer.hasRemaining()) {
             return
         }
+        if (dataBuffer.remaining() < 1||dataBuffer.remaining() < inputBuffer.limit()) {
+            expandBuffer(dataBuffer.capacity()+inputBuffer.limit() * 2)
+            Log.d("ExpandBuffer", dataBuffer.remaining().toString())
+        }
         dataBuffer.put(inputBuffer)
     }
 
-
+    private fun expandBuffer(newCapacity: Int) {
+        val newBuffer = ByteBuffer.allocate(newCapacity)
+        dataBuffer.flip() // 切换到读取模式
+        newBuffer.put(dataBuffer) // 复制内容
+        dataBuffer = newBuffer // 替换旧的 ByteBuffer
+    }
     override fun queueEndOfStream() {
         // TODO
         dataBuffer.flip()
