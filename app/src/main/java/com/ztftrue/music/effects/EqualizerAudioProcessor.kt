@@ -7,6 +7,8 @@ import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
 import androidx.media3.common.util.UnstableApi
 import be.tarsos.dsp.io.TarsosDSPAudioFloatConverter
 import be.tarsos.dsp.io.TarsosDSPAudioFormat
+import com.ztftrue.music.effects.SoundUtils.getBytePerSample
+import com.ztftrue.music.effects.SoundUtils.getOutputSize
 import com.ztftrue.music.utils.Utils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -82,6 +84,9 @@ class EqualizerAudioProcessor : AudioProcessor {
         outputAudioFormat = inputAudioFormat
         // ENCODING_PCM_16BIT, is two byte to one float
         r = if (outputAudioFormat!!.encoding == C.ENCODING_PCM_16BIT) 2 else 1
+
+        BYTES_PER_SAMPLE = getBytePerSample(outputAudioFormat!!.encoding)
+        bufferSize = getOutputSize(outputAudioFormat!!, BYTES_PER_SAMPLE)
         dataBuffer = ByteBuffer.allocate(bufferSize * 8)
         val size = bufferSize / r / outputAudioFormat!!.channelCount
         sampleBufferRealLeft = DoubleArray(size)
@@ -110,7 +115,10 @@ class EqualizerAudioProcessor : AudioProcessor {
         return outputAudioFormat!!
 
     }
+    var BYTES_PER_SAMPLE: Int = 2
 
+    private var leftMax = 1.0
+    private var rightMax = 1.0
     override fun isActive(): Boolean {
         return outputAudioFormat != AudioProcessor.AudioFormat.NOT_SET
     }
@@ -146,13 +154,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         inputEnded = true
     }
 
-    val BYTES_PER_SAMPLE: Int = 2
 
-    private var leftMax = 1.0
-    private var rightMax = 1.0
-    fun getOutputSize(): Int {
-        return outputAudioFormat!!.sampleRate * outputAudioFormat!!.channelCount * BYTES_PER_SAMPLE
-    }
 
     private var changeDb = false
     override fun getOutput(): ByteBuffer {

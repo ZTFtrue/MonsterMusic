@@ -1,5 +1,6 @@
 package com.ztftrue.music.effects
 
+import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
@@ -29,7 +30,7 @@ class EchoAudioProcessor : AudioProcessor {
 
     private val framesInBuffer = 4096
     private var bufferSize = 0
-    private val dataBuffer: ByteBuffer
+    private var dataBuffer: ByteBuffer
     private lateinit var converter: TarsosDSPAudioFloatConverter
     private var delayTime = 0.5f
     private var decay = 1.0f
@@ -98,7 +99,19 @@ class EchoAudioProcessor : AudioProcessor {
             return
         }
         inputBuffer.order(ByteOrder.nativeOrder())
+        if (dataBuffer.remaining() < 1 || dataBuffer.remaining() < inputBuffer.limit()) {
+            expandBuffer(dataBuffer.capacity() + inputBuffer.limit() * 2);
+            Log.d("ExpandBuffer", dataBuffer.remaining().toString())
+        }
+
         dataBuffer.put(inputBuffer)
+    }
+
+    private fun expandBuffer(newCapacity: Int) {
+        val newBuffer = ByteBuffer.allocate(newCapacity)
+        dataBuffer.flip() // 切换到读取模式
+        newBuffer.put(dataBuffer) // 复制内容
+        dataBuffer = newBuffer // 替换旧的 ByteBuffer
     }
 
     override fun getOutput(): ByteBuffer {
