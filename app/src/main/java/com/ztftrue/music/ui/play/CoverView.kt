@@ -46,7 +46,6 @@ import com.ztftrue.music.R
 import com.ztftrue.music.ui.play.Drop.Companion.generateRandomChars
 import kotlinx.coroutines.delay
 import org.jaudiotagger.tag.FieldKey
-import kotlin.random.Random
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -202,6 +201,7 @@ fun CoverView(musicViewModel: MusicViewModel) {
                                 val cDrops = ArrayList<Int>()
                                 columnDrops.forEachIndexed { index3, drop ->
                                     if (index == index2) {
+                                        // TODO Use log function to calculate the speed
                                         drop.update((magnitude))
                                         // 检查是否超出屏幕
                                         if (drop.y > canvasHeight.floatValue + dropHeight) {
@@ -233,6 +233,7 @@ fun CoverView(musicViewModel: MusicViewModel) {
                             //                                        )
                             //                                    )
                         }
+
                         drops.forEach { columnDrops ->
                             columnDrops.forEach { drop ->
                                 drawContext.canvas.nativeCanvas.apply {
