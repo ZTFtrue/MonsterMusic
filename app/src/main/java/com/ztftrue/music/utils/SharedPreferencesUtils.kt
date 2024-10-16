@@ -57,6 +57,25 @@ object SharedPreferencesUtils {
             .getBoolean("EnableShuffle", false)
     }
 
+    fun getEnableMusicVisualization(context: Context): Boolean {
+        return context.getSharedPreferences("Visualization", Context.MODE_PRIVATE)
+            .getBoolean("Enable", false)
+    }
+
+    fun saveEnableMusicVisualization(context: Context,enable: Boolean) {
+        context.getSharedPreferences("Visualization", Context.MODE_PRIVATE).edit()
+            .putBoolean("Enable", enable).apply()
+    }
+    fun getShowMusicCover(context: Context): Boolean {
+        return context.getSharedPreferences("Visualization", Context.MODE_PRIVATE)
+            .getBoolean("Cover", true)
+    }
+
+    fun saveShowMusicCover(context: Context,enable: Boolean) {
+        context.getSharedPreferences("Visualization", Context.MODE_PRIVATE).edit()
+            .putBoolean("Cover", enable).apply()
+    }
+
     fun saveSelectMusicId(context: Context, id: Long) {
         context.getSharedPreferences(
             "SelectedPlayTrack",
@@ -100,7 +119,8 @@ object SharedPreferencesUtils {
             Context.MODE_PRIVATE
         ).getLong("CurrentPosition", 0)
     }
-    fun setWidgetData(context: Context,isPlaying:Boolean,currentPlayTrack:MusicItem?) {
+
+    fun setWidgetData(context: Context, isPlaying: Boolean, currentPlayTrack: MusicItem?) {
         context.getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit()
             .putBoolean("playingStatus", isPlaying)
             .putString("title", currentPlayTrack?.name ?: "")

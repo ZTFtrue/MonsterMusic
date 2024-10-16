@@ -22,8 +22,8 @@ android {
         applicationId = "com.ztftrue.music"
         minSdk = 30
         targetSdk = 34
-        versionCode = 35
-        versionName = "0.1.35"
+        versionCode = 36
+        versionName = "0.1.36"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

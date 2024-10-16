@@ -16,6 +16,7 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.widget.Toast
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.AudioAttributes
@@ -43,6 +44,7 @@ import com.ztftrue.music.PlayMusicWidget
 import com.ztftrue.music.R
 import com.ztftrue.music.effects.EchoAudioProcessor
 import com.ztftrue.music.effects.EqualizerAudioProcessor
+import com.ztftrue.music.effects.VisualizationAudioProcessor
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.Auxr
 import com.ztftrue.music.sqlData.model.CurrentList
@@ -93,6 +95,7 @@ const val ACTION_SWITCH_SHUFFLE = "ACTION_SWITCH_SHUFFLE"
 
 //const val ACTION_CHANGE_SPEED = "ACTION_CHANGE_SPEED"  use MediaSessionCompat instead
 const val ACTION_DSP_ENABLE = "DSP_ENABLE"
+const val ACTION_VISUALIZATION_ENABLE = "VISUALIZATION_ENABLE"
 const val ACTION_DSP_BAND = "ACTION_DSP_BAND"
 const val ACTION_DSP_BAND_FLATTEN = "ACTION_DSP_BAND_FLATTEN"
 const val ACTION_DSP_BANDS_SET = "ACTION_DSP_BANDS_SET"
@@ -119,6 +122,7 @@ const val MY_MEDIA_ROOT_ID = "MY_MEDIA_ROOT_ID"
 const val EVENT_MEDIA_ITEM_Change = 3
 const val EVENT_SLEEP_TIME_Change = 5
 const val EVENT_DATA_READY = 6
+const val EVENT_Visualization_Change = 7
 
 
 //@Suppress("deprecation")
@@ -129,6 +133,7 @@ class PlayService : MediaBrowserServiceCompat() {
 
 
     val equalizerAudioProcessor: EqualizerAudioProcessor = EqualizerAudioProcessor()
+    var visualizationAudioProcessor: VisualizationAudioProcessor = VisualizationAudioProcessor(null)
     val echoAudioProcessor: EchoAudioProcessor = EchoAudioProcessor()
     val sonicAudioProcessor = SonicAudioProcessor()
     lateinit var exoPlayer: ExoPlayer
@@ -176,6 +181,7 @@ class PlayService : MediaBrowserServiceCompat() {
 
     override fun onCreate() {
         super.onCreate()
+        visualizationAudioProcessor = VisualizationAudioProcessor(mediaSession)
         initExo(this@PlayService)
         val contentIntent = Intent(this, MainActivity::class.java)
         val pendingContentIntent = PendingIntent.getActivity(
@@ -293,6 +299,7 @@ class PlayService : MediaBrowserServiceCompat() {
                 }
             })
         }
+        visualizationAudioProcessor.setMediaSession(mediaSession!!);
     }
 
 
@@ -516,6 +523,13 @@ class PlayService : MediaBrowserServiceCompat() {
                 CoroutineScope(Dispatchers.IO).launch {
                     db.AuxDao().update(auxr)
                 }
+            }
+            result.sendResult(null)
+        } else if (ACTION_VISUALIZATION_ENABLE == action) {
+            if (extras != null) {
+                val enable = extras.getBoolean("enable")
+                visualizationAudioProcessor.isActive = enable
+                SharedPreferencesUtils.saveEnableMusicVisualization(this@PlayService, enable)
             }
             result.sendResult(null)
         } else if (ACTION_SET_SLEEP_TIME == action) {
@@ -863,6 +877,8 @@ class PlayService : MediaBrowserServiceCompat() {
 
     private var sqlDataInitialized = false
     private var config: PlayConfig? = null
+    private var musicVisualizationEnable = false
+
     private val lock = ReentrantLock()
     private fun initSqlData(bundle: Bundle) {
         runBlocking {
@@ -982,6 +998,12 @@ class PlayService : MediaBrowserServiceCompat() {
                                     config = PlayConfig(0, Player.REPEAT_MODE_ALL)
                                     db.PlayConfigDao().insert(config!!)
                                 }
+                            },
+                            async {
+                                // TODO move to   val auxTemp = db.AuxDao().findFirstAux()
+                                musicVisualizationEnable =
+                                    SharedPreferencesUtils.getEnableMusicVisualization(this@PlayService)
+                                visualizationAudioProcessor.isActive = musicVisualizationEnable
                             },
                             async {
                                 val list =
@@ -1201,7 +1223,8 @@ class PlayService : MediaBrowserServiceCompat() {
                             arrayOf(
                                 sonicAudioProcessor,
                                 echoAudioProcessor,
-                                equalizerAudioProcessor
+                                equalizerAudioProcessor,
+                                visualizationAudioProcessor
                             )
                         )
                         .build()
@@ -1362,7 +1385,7 @@ class PlayService : MediaBrowserServiceCompat() {
                 reason: Int
             ) {
                 super.onPositionDiscontinuity(oldPosition, newPosition, reason)
-                if (musicQueue.isEmpty()||newPosition.mediaItemIndex>=musicQueue.size) return
+                if (musicQueue.isEmpty() || newPosition.mediaItemIndex >= musicQueue.size) return
 
                 if (oldPosition.mediaItemIndex != newPosition.mediaItemIndex || reason >= 4 || currentPlayTrack?.id != musicQueue[newPosition.mediaItemIndex].id) {
                     SharedPreferencesUtils.saveSelectMusicId(

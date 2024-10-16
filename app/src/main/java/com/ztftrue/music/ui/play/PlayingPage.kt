@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,6 +45,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Slider
@@ -107,6 +109,7 @@ import com.ztftrue.music.play.ACTION_RemoveFromQueue
 import com.ztftrue.music.play.ACTION_SEEK_TO
 import com.ztftrue.music.play.ACTION_SWITCH_SHUFFLE
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
+import com.ztftrue.music.play.ACTION_VISUALIZATION_ENABLE
 import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
@@ -167,7 +170,6 @@ fun PlayingPage(
     }
 
     if (showDeleteTip && music != null) {
-
         DeleteTip(music.name, onDismiss = {
             showDeleteTip = false
             if (it) {
@@ -292,10 +294,12 @@ fun PlayingPage(
                                     ) {
                                         super.onResult(action, extras, resultData)
                                         if (ACTION_RemoveFromQueue == action) {
-                                            if( musicViewModel.currentPlay.value?.id==music.id){
+                                            if (musicViewModel.currentPlay.value?.id == music.id) {
                                                 musicViewModel.currentMusicCover.value = null
-                                                musicViewModel.currentPlayQueueIndex.intValue = (index)%(musicViewModel.musicQueue.size+1)
-                                                musicViewModel.currentPlay.value = musicViewModel.musicQueue[musicViewModel.currentPlayQueueIndex.intValue]
+                                                musicViewModel.currentPlayQueueIndex.intValue =
+                                                    (index) % (musicViewModel.musicQueue.size + 1)
+                                                musicViewModel.currentPlay.value =
+                                                    musicViewModel.musicQueue[musicViewModel.currentPlayQueueIndex.intValue]
                                             }
                                         }
                                     }
@@ -353,6 +357,9 @@ fun PlayingPage(
         })
     }
     var popupWindow by remember {
+        mutableStateOf(false)
+    }
+    var visualizationPopupWindow by remember {
         mutableStateOf(false)
     }
     var popupWindowDictionary by remember {
@@ -745,6 +752,130 @@ fun PlayingPage(
     val list = remember {
         mutableStateListOf<DictionaryApp>()
     }
+    var selectedOption by remember { mutableStateOf("Matrix") }
+    if (visualizationPopupWindow) {
+        Popup(
+            // on below line we are adding
+            // alignment and properties.
+            alignment = Alignment.TopCenter,
+            properties = PopupProperties(),
+            offset = IntOffset(
+                0.dp.toPx(context),
+                40.dp.toPx(context)
+            ),
+            onDismissRequest = {
+                popupWindow = false
+            }
+        ) {
+            val configuration = LocalConfiguration.current
+            Column(
+                modifier = Modifier
+                    .width(
+                        (configuration.screenWidthDp - 20.dp.toPx(
+                            context
+                        )).dp
+                    )
+                    .padding(top = 5.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.background,
+                        RoundedCornerShape(10.dp)
+                    )
+                    .border(
+                        1.dp,
+                        color = MaterialTheme.colorScheme.primary,
+                        RoundedCornerShape(10.dp)
+                    )
+            ) {
+                LazyColumn(
+                    contentPadding = PaddingValues(5.dp),
+                    modifier = Modifier
+                ) {
+                    item {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Visualization ${if (musicViewModel.musicVisualizationEnable.value) "ON" else "OFF"}",
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Switch(
+                                checked = musicViewModel.musicVisualizationEnable.value,
+                                onCheckedChange = {
+                                    musicViewModel.musicVisualizationEnable.value = it
+                                    val bundleTemp = Bundle()
+                                    bundleTemp.putBoolean("enable", it)
+                                    musicViewModel.mediaBrowser?.sendCustomAction(
+                                        ACTION_VISUALIZATION_ENABLE,
+                                        bundleTemp,
+                                        null
+                                    )
+                                }
+                            )
+                        }
+                    }
+                    item {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                "Cover ${if (musicViewModel.showMusicCover.value) "Show" else "Hide"}",
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Switch(
+                                enabled = musicViewModel.musicVisualizationEnable.value,
+                                checked = musicViewModel.showMusicCover.value,
+                                onCheckedChange = {
+                                    musicViewModel.showMusicCover.value = it
+                                    SharedPreferencesUtils.saveShowMusicCover(context, it)
+                                }
+                            )
+                        }
+                    }
+                    item {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                enabled = musicViewModel.musicVisualizationEnable.value,
+                                selected = selectedOption == "Matrix",
+                                onClick = { selectedOption = "Matrix" }
+                            )
+                            Text(
+                                text = "Matrix", Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
+                }
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    IconButton(
+                        modifier = Modifier.width(50.dp),
+                        onClick = {
+                            visualizationPopupWindow = false
+                        }) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close display popup",
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(CircleShape),
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+
+            }
+        }
+    }
     LaunchedEffect(Unit) {
         val hashMap = HashMap<String, DictionaryApp>()
         musicViewModel.dictionaryAppList.forEach {
@@ -1036,6 +1167,23 @@ fun PlayingPage(
                 Column(Modifier.fillMaxWidth()) {
                     key(Unit, pagerTabState.currentPage) {
                         TopBar(navController, musicViewModel, content = {
+                            if (playViewTab[pagerTabState.currentPage].id == CoverID) {
+                                IconButton(
+                                    modifier = Modifier.width(50.dp), onClick = {
+                                        visualizationPopupWindow = !visualizationPopupWindow
+                                    }) {
+                                    Image(
+                                        painter = painterResource(
+                                            R.drawable.equalizer_visualization
+                                        ),
+                                        contentDescription = "Set music visualization",
+                                        modifier = Modifier
+                                            .width(24.dp)
+                                            .height(24.dp),
+                                        colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                                    )
+                                }
+                            }
                             if (playViewTab[pagerTabState.currentPage].id == LyricsID) {
                                 IconButton(
                                     modifier = Modifier.width(50.dp), onClick = {
@@ -1235,7 +1383,7 @@ fun PlayingPage(
                             .fillMaxWidth()
                             .height(60.dp),
                     ) {
-                        val (playIndicator,playIndicator2,playIndicator3) = createRefs()
+                        val (playIndicator, playIndicator2, playIndicator3) = createRefs()
                         Row(
                             modifier = Modifier
                                 .constrainAs(playIndicator) {

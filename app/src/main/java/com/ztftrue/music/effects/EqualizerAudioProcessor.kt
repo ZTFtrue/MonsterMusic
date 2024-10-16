@@ -1,11 +1,14 @@
 package com.ztftrue.music.effects
 
+import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
 import androidx.media3.common.util.UnstableApi
 import be.tarsos.dsp.io.TarsosDSPAudioFloatConverter
 import be.tarsos.dsp.io.TarsosDSPAudioFormat
+import com.ztftrue.music.effects.SoundUtils.getBytePerSample
+import com.ztftrue.music.effects.SoundUtils.getOutputSize
 import com.ztftrue.music.utils.Utils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -31,7 +34,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var sampleBufferRealLeft: DoubleArray = DoubleArray(0)
     private var sampleBufferRealRight: DoubleArray = DoubleArray(0)
 
-    private var bufferSize = 2048
+    private var bufferSize = 512
     private var outputBuffer: ByteBuffer = EMPTY_BUFFER
     private var dataBuffer: ByteBuffer = EMPTY_BUFFER
     private var inputEnded = false
@@ -81,7 +84,10 @@ class EqualizerAudioProcessor : AudioProcessor {
         outputAudioFormat = inputAudioFormat
         // ENCODING_PCM_16BIT, is two byte to one float
         r = if (outputAudioFormat!!.encoding == C.ENCODING_PCM_16BIT) 2 else 1
-        dataBuffer = ByteBuffer.allocate(bufferSize * 16)
+
+        BYTES_PER_SAMPLE = getBytePerSample(outputAudioFormat!!.encoding)
+        bufferSize = getOutputSize(outputAudioFormat!!, BYTES_PER_SAMPLE)
+        dataBuffer = ByteBuffer.allocate(bufferSize * 8)
         val size = bufferSize / r / outputAudioFormat!!.channelCount
         sampleBufferRealLeft = DoubleArray(size)
         sampleBufferRealRight = DoubleArray(size)
@@ -109,7 +115,10 @@ class EqualizerAudioProcessor : AudioProcessor {
         return outputAudioFormat!!
 
     }
+    var BYTES_PER_SAMPLE: Int = 2
 
+    private var leftMax = 1.0
+    private var rightMax = 1.0
     override fun isActive(): Boolean {
         return outputAudioFormat != AudioProcessor.AudioFormat.NOT_SET
     }
@@ -122,10 +131,19 @@ class EqualizerAudioProcessor : AudioProcessor {
         if (!inputBuffer.hasRemaining()) {
             return
         }
+        if (dataBuffer.remaining() < 1||dataBuffer.remaining() < inputBuffer.limit()) {
+            expandBuffer(dataBuffer.capacity()+inputBuffer.limit() * 2)
+            Log.d("ExpandBuffer", dataBuffer.remaining().toString())
+        }
         dataBuffer.put(inputBuffer)
     }
 
-
+    private fun expandBuffer(newCapacity: Int) {
+        val newBuffer = ByteBuffer.allocate(newCapacity)
+        dataBuffer.flip() // 切换到读取模式
+        newBuffer.put(dataBuffer) // 复制内容
+        dataBuffer = newBuffer // 替换旧的 ByteBuffer
+    }
     override fun queueEndOfStream() {
         // TODO
         dataBuffer.flip()
@@ -136,13 +154,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         inputEnded = true
     }
 
-    val BYTES_PER_SAMPLE: Int = 2
 
-    private var leftMax = 1.0
-    private var rightMax = 1.0
-    fun getOutputSize(): Int {
-        return outputAudioFormat!!.sampleRate * outputAudioFormat!!.channelCount * BYTES_PER_SAMPLE
-    }
 
     private var changeDb = false
     override fun getOutput(): ByteBuffer {

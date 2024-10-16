@@ -72,10 +72,12 @@ class MusicViewModel : ViewModel() {
     var mediaController: MediaControllerCompat? = null
     var mediaBrowser: MediaBrowserCompat? = null
 
-//    val albumScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
+    //    val albumScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
 //    val artistScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
 //    val genreScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
-
+    var musicVisualizationData = mutableStateListOf<Float>()
+   var  musicVisualizationEnable= mutableStateOf(false)
+   var  showMusicCover= mutableStateOf(false)
     // 当前播放的列表，应该换数据结构存储，每个列表设置变量 播放状态，album和 genres 也是，艺术家跳转到 album， 然后在下一步处理
     // 每次播放仅设置当前列表的状态
 
@@ -199,8 +201,14 @@ class MusicViewModel : ViewModel() {
             val fileLyrics = arrayListOf<ListStringCaption>()
             tags.clear()
             // if embedded lyrics is prior, first import lyrics
-            if(firstEmbeddedLyrics) {
-                embeddedLyrics.addAll(CaptionUtils.getEmbeddedLyrics(currentPlay.path, context, tags))
+            if (firstEmbeddedLyrics) {
+                embeddedLyrics.addAll(
+                    CaptionUtils.getEmbeddedLyrics(
+                        currentPlay.path,
+                        context,
+                        tags
+                    )
+                )
             }
             if (embeddedLyrics.isNotEmpty()) {
                 lyricsType = LyricsType.TEXT
@@ -219,22 +227,22 @@ class MusicViewModel : ViewModel() {
                 }
                 // Same as tracks file
                 if (fileLyrics.isEmpty()) {
-                        val fileR = Utils.checkLyrics(
-                            currentPlay.path.substring(
-                                0,
-                                currentPlay.path.lastIndexOf("."),
+                    val fileR = Utils.checkLyrics(
+                        currentPlay.path.substring(
+                            0,
+                            currentPlay.path.lastIndexOf("."),
+                        )
+                    )
+                    if (fileR != null) {
+                        lyricsType = fileR.type
+                        fileLyrics.addAll(
+                            readCaptions(
+                                File(fileR.path).bufferedReader(),
+                                fileR.type,
+                                context
                             )
                         )
-                        if (fileR != null) {
-                            lyricsType = fileR.type
-                            fileLyrics.addAll(
-                                readCaptions(
-                                    File(fileR.path).bufferedReader(),
-                                    fileR.type,
-                                    context
-                                )
-                            )
-                        }
+                    }
                 }
                 if (fileLyrics.isEmpty()) {
                     val musicName: String = try {
@@ -313,8 +321,14 @@ class MusicViewModel : ViewModel() {
                     }
                 }
             }
-            if(fileLyrics.isEmpty()&&!firstEmbeddedLyrics) {
-                embeddedLyrics.addAll(CaptionUtils.getEmbeddedLyrics(currentPlay.path, context, tags))
+            if (fileLyrics.isEmpty() && !firstEmbeddedLyrics) {
+                embeddedLyrics.addAll(
+                    CaptionUtils.getEmbeddedLyrics(
+                        currentPlay.path,
+                        context,
+                        tags
+                    )
+                )
             }
             if (fileLyrics.isNotEmpty()) {
                 isEmbeddedLyrics.value = false
