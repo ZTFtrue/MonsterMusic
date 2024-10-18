@@ -58,7 +58,7 @@ fun CoverView(musicViewModel: MusicViewModel) {
     val showOtherMessage = remember { mutableStateOf(false) }
     val magnitudes = remember { musicViewModel.musicVisualizationData }
     val dropCount = 100 // 字符数量
-    val drops = remember { MutableList(dropCount) { mutableStateListOf<Drop>() } }
+    val drops = remember { mutableStateListOf(mutableStateListOf<Drop>()) }
     val columnSpacing = 80f // 列之间的间隔
     val dropHeight = 80f // 字符的高度间隔
     val textSizeSet = 60f
@@ -78,13 +78,11 @@ fun CoverView(musicViewModel: MusicViewModel) {
     LaunchedEffect(
         canvasHeight.floatValue,
         canvasWidth.floatValue,
-        initDrops.value , musicVisualizationEnable.value
+        initDrops.value, musicVisualizationEnable.value
     ) {
         if (!musicVisualizationEnable.value) {
             initDrops.value = false
-            drops.forEach{
-                it.clear()
-            }
+            drops.clear()
             return@LaunchedEffect
         }
         if (initDrops.value) return@LaunchedEffect
@@ -94,8 +92,9 @@ fun CoverView(musicViewModel: MusicViewModel) {
             val columnRowDropsCount = (canvasHeight.floatValue / dropHeight).toInt() + 10
             //有多少列
             val columnDropsCount = (canvasHeight.floatValue / columnSpacing).toInt()
+            drops.clear()
             repeat(columnDropsCount) { column ->
-                drops[column].clear()
+                drops.add(mutableStateListOf())
                 repeat(columnRowDropsCount) { row ->
                     drops[column].add(
                         Drop(
@@ -121,7 +120,7 @@ fun CoverView(musicViewModel: MusicViewModel) {
                 val cDrops = ArrayList<Int>()
                 // 更新每一列的雨滴
                 columnDrops.forEachIndexed { index3, drop ->
-                    drop.update(3f)
+                    drop.update(1f)
                     // 检查是否超出屏幕
                     if (drop.y > canvasHeight.floatValue + dropHeight) {
                         cDrops.add(index3)
@@ -135,7 +134,9 @@ fun CoverView(musicViewModel: MusicViewModel) {
                     columnDrops.add(d)
                 }
             }
-            delay(20) // 控制更新频率
+            magnitudes.add(0f)
+            magnitudes.removeAt(magnitudes.size - 1)
+            delay(10) // 控制更新频率
         }
     }
     LazyColumn(
@@ -174,9 +175,11 @@ fun CoverView(musicViewModel: MusicViewModel) {
                             )
                         }
                     } else {
-                        Box(modifier = Modifier
-                            .fillMaxSize()
-                            .background(color = Color.Black)) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(color = Color.Black)
+                        ) {
 
                         }
                     }
@@ -191,9 +194,9 @@ fun CoverView(musicViewModel: MusicViewModel) {
                     ) {
                         canvasHeight.floatValue = size.height
                         canvasWidth.floatValue = size.width
-                        val barWidth =
-                            size.width / magnitudes.size
-                        val maxBarHeight = size.width / 2
+//                        val barWidth =
+//                            size.width / magnitudes.size
+//                        val maxBarHeight = size.width / 2
                         // 绘制每列的雨滴
                         magnitudes.forEachIndexed { index, magnitude ->
                             drops.forEachIndexed { index2, columnDrops ->
