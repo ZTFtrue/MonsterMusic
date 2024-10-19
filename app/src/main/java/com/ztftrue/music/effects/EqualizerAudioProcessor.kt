@@ -37,6 +37,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var bufferSize = 512
     private var outputBuffer: ByteBuffer = EMPTY_BUFFER
     private var dataBuffer: ByteBuffer = EMPTY_BUFFER
+    private var floatArray = FloatArray(bufferSize)
     private var inputEnded = false
     private val gainDBAbsArray: DoubleArray =
         doubleArrayOf(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
@@ -69,7 +70,6 @@ class EqualizerAudioProcessor : AudioProcessor {
         lock.unlock()
     }
 
-    var r = 2
 
     override fun configure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
         // TODO need support more encoding
@@ -78,13 +78,11 @@ class EqualizerAudioProcessor : AudioProcessor {
             return AudioProcessor.AudioFormat.NOT_SET
         }
         outputAudioFormat = inputAudioFormat
-        // ENCODING_PCM_16BIT, is two byte to one float
-        r = if (outputAudioFormat!!.encoding == C.ENCODING_PCM_16BIT) 2 else 1
-
         BYTES_PER_SAMPLE = getBytePerSample(outputAudioFormat!!.encoding)
         bufferSize = getOutputSize(outputAudioFormat!!, BYTES_PER_SAMPLE)
         dataBuffer = ByteBuffer.allocate(bufferSize * 8)
-        val size = bufferSize / r / outputAudioFormat!!.channelCount
+        floatArray = FloatArray(bufferSize)
+        val size = bufferSize / BYTES_PER_SAMPLE / outputAudioFormat!!.channelCount
         sampleBufferRealLeft = DoubleArray(size)
         sampleBufferRealRight = DoubleArray(size)
         // https://stackoverflow.com/questions/68776031/playing-a-wav-file-with-tarsosdsp-on-android
@@ -113,7 +111,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     }
 
     var BYTES_PER_SAMPLE: Int = 2
-
+    private var ind = 0
     private var leftMax = 1.0
     private var rightMax = 1.0
     override fun isActive(): Boolean {
@@ -187,11 +185,18 @@ class EqualizerAudioProcessor : AudioProcessor {
                     dataBuffer.limit(dataBuffer.position() + readSize) // 设置新 limit 来控制读取量
                     processedBuffer.put(dataBuffer)
                     dataBuffer.limit(oldLimit)
-                    val floatArray = FloatArray(bufferSize / r)
-                    converter.toFloatArray(processedBuffer.array(), floatArray)
-                    var ind = 0
+
+                    val byteArray = processedBuffer.array()
+
+                    converter.toFloatArray(
+                        byteArray,
+                        floatArray,
+                        bufferSize / BYTES_PER_SAMPLE
+                    )
+                    ind = 0
+                    val halfLength = floatArray.size / 2
                     // TODO need support more channel count
-                    for (i in floatArray.indices step outputAudioFormat!!.channelCount) {
+                    for (i in 0 until halfLength step outputAudioFormat!!.channelCount) {
                         sampleBufferRealLeft[ind] = floatArray[i].toDouble()
                         sampleBufferRealRight[ind] = floatArray[i + 1].toDouble()
                         ind += 1
@@ -233,20 +238,19 @@ class EqualizerAudioProcessor : AudioProcessor {
                             }
                         )
                     }
-                    val outDoubleArray = FloatArray(sampleBufferRealLeft.size * 2)
-                    var pI = 0
+                    ind = 0
                     // TODO need support more channel count
-                    for (i in floatArray.indices step outputAudioFormat!!.channelCount) {
-                        outDoubleArray[i] = sampleBufferRealLeft[pI].toFloat()
-                        outDoubleArray[i + 1] = sampleBufferRealRight[pI].toFloat()
-                        pI += 1
+                    for (i in 0 until halfLength step outputAudioFormat!!.channelCount) {
+                        floatArray[i] = sampleBufferRealLeft[ind].toFloat()
+                        floatArray[i + 1] = sampleBufferRealRight[ind].toFloat()
+                        ind += 1
                     }
-                    val outB = ByteArray(bufferSize)
-                    converter.toByteArray(outDoubleArray, outB)
-                    val processedResultBuffer = ByteBuffer.wrap(outB)
-                    processedResultBuffer.position(bufferSize)
-                    processedResultBuffer.order(ByteOrder.nativeOrder())
-                    this.outputBuffer = processedResultBuffer
+                    converter.toByteArray(floatArray, halfLength, byteArray)
+                    processedBuffer.clear()
+                    processedBuffer.put(byteArray)
+                    processedBuffer.position(bufferSize)
+                    processedBuffer.order(ByteOrder.nativeOrder())
+                    this.outputBuffer = processedBuffer
                 }
                 dataBuffer.compact()
             }
