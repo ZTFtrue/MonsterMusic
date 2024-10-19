@@ -1224,7 +1224,7 @@ class PlayService : MediaBrowserServiceCompat() {
                                 sonicAudioProcessor,
                                 echoAudioProcessor,
                                 equalizerAudioProcessor,
-//                                visualizationAudioProcessor
+                                visualizationAudioProcessor
                             )
                         )
                         .build()

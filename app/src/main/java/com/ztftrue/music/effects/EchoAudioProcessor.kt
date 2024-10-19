@@ -33,7 +33,7 @@ class EchoAudioProcessor : AudioProcessor {
     private var floatArray = FloatArray(bufferSize)
 
     private var inputEnded = false
-    var BYTES_PER_SAMPLE: Int = 2
+    private var BYTES_PER_SAMPLE: Int = 2
 
     private lateinit var converter: TarsosDSPAudioFloatConverter
     private var delayTime = 0.5f
@@ -102,7 +102,7 @@ class EchoAudioProcessor : AudioProcessor {
         }
         inputBuffer.order(ByteOrder.nativeOrder())
         if (dataBuffer.remaining() < 1 || dataBuffer.remaining() < inputBuffer.limit()) {
-            expandBuffer(dataBuffer.capacity() + inputBuffer.limit() * 2);
+            expandBuffer(dataBuffer.capacity() + inputBuffer.limit() * 2)
             Log.d("ExpandBuffer1", dataBuffer.remaining().toString())
         }
 
@@ -175,8 +175,8 @@ class EchoAudioProcessor : AudioProcessor {
                     ind = 0
                     // TODO need support more channel count
                     for (i in 0 until halfLength step outputAudioFormat!!.channelCount) {
-                        floatArray[i] = sampleBufferRealLeft[ind].toFloat()
-                        floatArray[i + 1] = sampleBufferRealRight[ind].toFloat()
+                        floatArray[i] = sampleBufferRealLeft[ind]
+                        floatArray[i + 1] = sampleBufferRealRight[ind]
                         ind += 1
                     }
                     converter.toByteArray(floatArray, halfLength, byteArray)
