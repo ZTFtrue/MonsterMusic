@@ -16,7 +16,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.math3.util.FastMath
-import uk.me.berndporr.iirj.Butterworth
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.locks.ReentrantLock
@@ -45,8 +44,6 @@ class EqualizerAudioProcessor : AudioProcessor {
 
     private val mCoefficientLeftBiQuad: ArrayList<BiQuadraticFilter> = arrayListOf()
     private val mCoefficientRightBiQuad: ArrayList<BiQuadraticFilter> = arrayListOf()
-    private val butterWorthLeftBandPass: ArrayList<Butterworth> = arrayListOf()
-    private val butterWorthRightBandPass: ArrayList<Butterworth> = arrayListOf()
 
     private lateinit var converter: TarsosDSPAudioFloatConverter
 
@@ -55,8 +52,6 @@ class EqualizerAudioProcessor : AudioProcessor {
         repeat(Utils.bandsCenter.count()) {
             mCoefficientLeftBiQuad.add(BiQuadraticFilter())
             mCoefficientRightBiQuad.add(BiQuadraticFilter())
-            butterWorthLeftBandPass.add(Butterworth())
-            butterWorthRightBandPass.add(Butterworth())
         }
         outputAudioFormat = AudioProcessor.AudioFormat.NOT_SET
         pendingOutputSampleRate = SAMPLE_RATE_NO_CHANGE
@@ -135,7 +130,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         }
         if (dataBuffer.remaining() < 1 || dataBuffer.remaining() < inputBuffer.limit()) {
             dataBuffer = expandBuffer(dataBuffer.capacity() + inputBuffer.limit() * 2, dataBuffer)
-            Log.d("ExpandBuffer", dataBuffer.remaining().toString())
+            Log.d("ExpandBuffer2", dataBuffer.remaining().toString())
         }
         dataBuffer.put(inputBuffer)
     }
@@ -176,8 +171,6 @@ class EqualizerAudioProcessor : AudioProcessor {
                 leftMax = 1.0
                 rightMax = 1.0
                 for (i in 0 until 10) {
-                    butterWorthRightBandPass[i].reset()
-                    butterWorthLeftBandPass[i].reset()
                     mCoefficientLeftBiQuad[i].reset()
                     mCoefficientRightBiQuad[i].reset()
                 }
@@ -206,23 +199,8 @@ class EqualizerAudioProcessor : AudioProcessor {
                     runBlocking {
                         awaitAll(
                             async(Dispatchers.IO) {
-                                // https://stackoverflow.com/questions/24003887/how-properly-implement-equalization-using-band-pass-filer
                                 sampleBufferRealLeft.forEachIndexed { index, it ->
                                     var outY: Double = it
-                                    var sum = 0.0
-//                                butterWorthLeftBandPass.forEachIndexed { index1, filter ->
-//                                    // only used for peaking and shelving filters
-//                                    sum += gainDBAbsArray[index1] * filter.filter(
-//                                        outY
-//                                    )
-//                                }
-//                                mCoefficientLeftBiQuad.forEachIndexed { index1, filter ->
-//                                    // only used for peaking and shelving filters
-//                                    sum += gainDBAbsArray[index1] * filter.filter(
-//                                        outY
-//                                    )
-//                                }
-//                                outY = sum
                                     mCoefficientLeftBiQuad.forEach { filter ->
                                         outY = filter.filter(
                                             outY
@@ -236,25 +214,10 @@ class EqualizerAudioProcessor : AudioProcessor {
                                         sampleBufferRealLeft[index] = it / leftMax
                                     }
                                 }
-//                            (if (outY > 1.0) 1.0 else if (outY < -1.0) -1.0 else outY)
                             },
                             async(Dispatchers.IO) {
                                 sampleBufferRealRight.forEachIndexed { index, it ->
                                     var outY: Double = it
-//                                var sum = 0.0
-//                                butterWorthRightBandPass.forEachIndexed { index1, filter ->
-//                                    // only used for peaking and shelving filters
-//                                    sum += gainDBAbsArray[index1] * filter.filter(
-//                                        outY
-//                                    )
-//                                }
-//                                mCoefficientRightBiQuad.forEachIndexed { index1, filter ->
-//                                    // only used for peaking and shelving filters
-//                                    sum += gainDBAbsArray[index1] * filter.filter(
-//                                        outY
-//                                    )
-//                                }
-//                                outY = sum
                                     mCoefficientRightBiQuad.forEach { filter ->
                                         outY = filter.filter(
                                             outY
@@ -262,7 +225,6 @@ class EqualizerAudioProcessor : AudioProcessor {
                                     }
                                     rightMax = FastMath.max(rightMax, FastMath.abs(outY))
                                     sampleBufferRealRight[index] = outY
-//                                    (if (outY > 1.0) 1.0 else if (outY < -1.0) -1.0 else outY)
                                 }
                                 if (rightMax > 1.0)
                                     sampleBufferRealRight.forEachIndexed { index, it ->
@@ -338,18 +300,6 @@ class EqualizerAudioProcessor : AudioProcessor {
             gainDBAbsArray[index] = FastMath.pow(10.0, (value.toDouble() / 20))
             gainDBArray[index] = value
             if (outputAudioFormat!!.sampleRate.toDouble() > 0) {
-                butterWorthLeftBandPass[index].bandPass(
-                    Utils.order,
-                    outputAudioFormat!!.sampleRate.toDouble(),
-                    Utils.bandsCenter[index],
-                    Utils.kThirdBW[index]
-                )
-                butterWorthRightBandPass[index].bandPass(
-                    Utils.order,
-                    outputAudioFormat!!.sampleRate.toDouble(),
-                    Utils.bandsCenter[index],
-                    Utils.kThirdBW[index]
-                )
                 mCoefficientLeftBiQuad[index].configure(
                     BiQuadraticFilter.PEAK,
                     Utils.bandsCenter[index],

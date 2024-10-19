@@ -105,16 +105,28 @@ class VisualizationAudioProcessor(private var mediaSession: MediaSessionCompat?)
         if (!inputBuffer.hasRemaining()) {
             return
         }
-        if (ttfBuffer.remaining() < 1 || ttfBuffer.remaining() < inputBuffer.limit()) {
-            ttfBuffer =
-                SoundUtils.expandBuffer(ttfBuffer.capacity() + inputBuffer.limit() * 2, ttfBuffer);
-            Log.d("ExpandBuffer", ttfBuffer.remaining().toString())
+        if (active) {
+            if (ttfBuffer.remaining() < 1 || ttfBuffer.remaining() < inputBuffer.limit()) {
+                ttfBuffer =
+                    SoundUtils.expandBuffer(
+                        ttfBuffer.capacity() + inputBuffer.limit() * 2,
+                        ttfBuffer
+                    );
+                Log.d(
+                    "2${VisualizationAudioProcessor::class.simpleName}ExpandBuffer",
+                    ttfBuffer.remaining().toString()
+                )
+            }
+            ttfBuffer.put(inputBuffer.array())
         }
-        ttfBuffer.put(inputBuffer.array())
+
         if (dataBuffer.remaining() < 1 || dataBuffer.remaining() < inputBuffer.limit()) {
             dataBuffer =
                 SoundUtils.expandBuffer(dataBuffer.capacity() + inputBuffer.limit() * 2, dataBuffer)
-            Log.d("ExpandBuffer", dataBuffer.remaining().toString())
+            Log.d(
+                "1${VisualizationAudioProcessor::class.simpleName}ExpandBuffer",
+                dataBuffer.remaining().toString()
+            )
         }
         dataBuffer.put(inputBuffer)
     }
@@ -186,6 +198,8 @@ class VisualizationAudioProcessor(private var mediaSession: MediaSessionCompat?)
                 }
                 ttfBuffer.compact()
             }
+        } else {
+            ttfBuffer.clear()
         }
     }
 

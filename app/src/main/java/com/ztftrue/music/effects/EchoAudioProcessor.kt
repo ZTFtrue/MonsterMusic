@@ -101,7 +101,7 @@ class EchoAudioProcessor : AudioProcessor {
         inputBuffer.order(ByteOrder.nativeOrder())
         if (dataBuffer.remaining() < 1 || dataBuffer.remaining() < inputBuffer.limit()) {
             expandBuffer(dataBuffer.capacity() + inputBuffer.limit() * 2);
-            Log.d("ExpandBuffer", dataBuffer.remaining().toString())
+            Log.d("ExpandBuffer1", dataBuffer.remaining().toString())
         }
 
         dataBuffer.put(inputBuffer)

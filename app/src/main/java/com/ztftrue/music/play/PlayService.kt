@@ -1215,6 +1215,7 @@ class PlayService : MediaBrowserServiceCompat() {
                     enableFloatOutput: Boolean,
                     enableAudioTrackPlaybackParams: Boolean,
                 ): AudioSink {
+//                    sonicAudioProcessor.setPitch(0.9f)
                     val au = DefaultAudioSink.Builder(context)
                         .setEnableFloatOutput(enableFloatOutput)
                         .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
@@ -1223,7 +1224,7 @@ class PlayService : MediaBrowserServiceCompat() {
                                 sonicAudioProcessor,
                                 echoAudioProcessor,
                                 equalizerAudioProcessor,
-                                visualizationAudioProcessor
+//                                visualizationAudioProcessor
                             )
                         )
                         .build()
