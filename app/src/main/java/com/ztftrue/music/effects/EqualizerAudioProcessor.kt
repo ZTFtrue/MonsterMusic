@@ -7,6 +7,7 @@ import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
 import androidx.media3.common.util.UnstableApi
 import be.tarsos.dsp.io.TarsosDSPAudioFloatConverter
 import be.tarsos.dsp.io.TarsosDSPAudioFormat
+import com.ztftrue.music.effects.SoundUtils.expandBuffer
 import com.ztftrue.music.effects.SoundUtils.getBytePerSample
 import com.ztftrue.music.effects.SoundUtils.getOutputSize
 import com.ztftrue.music.utils.Utils
@@ -115,6 +116,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         return outputAudioFormat!!
 
     }
+
     var BYTES_PER_SAMPLE: Int = 2
 
     private var leftMax = 1.0
@@ -131,19 +133,19 @@ class EqualizerAudioProcessor : AudioProcessor {
         if (!inputBuffer.hasRemaining()) {
             return
         }
-        if (dataBuffer.remaining() < 1||dataBuffer.remaining() < inputBuffer.limit()) {
-            expandBuffer(dataBuffer.capacity()+inputBuffer.limit() * 2)
+        if (dataBuffer.remaining() < 1 || dataBuffer.remaining() < inputBuffer.limit()) {
+            dataBuffer = expandBuffer(dataBuffer.capacity() + inputBuffer.limit() * 2, dataBuffer)
             Log.d("ExpandBuffer", dataBuffer.remaining().toString())
         }
         dataBuffer.put(inputBuffer)
     }
 
-    private fun expandBuffer(newCapacity: Int) {
-        val newBuffer = ByteBuffer.allocate(newCapacity)
-        dataBuffer.flip() // 切换到读取模式
-        newBuffer.put(dataBuffer) // 复制内容
-        dataBuffer = newBuffer // 替换旧的 ByteBuffer
-    }
+    //    private fun expandBuffer(newCapacity: Int) {
+//        val newBuffer = ByteBuffer.allocate(newCapacity)
+//        dataBuffer.flip() // 切换到读取模式
+//        newBuffer.put(dataBuffer) // 复制内容
+//        dataBuffer = newBuffer // 替换旧的 ByteBuffer
+//    }
     override fun queueEndOfStream() {
         // TODO
         dataBuffer.flip()
@@ -153,7 +155,6 @@ class EqualizerAudioProcessor : AudioProcessor {
         dataBuffer.compact()
         inputEnded = true
     }
-
 
 
     private var changeDb = false
