@@ -5,6 +5,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
+import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
 import androidx.media3.common.util.UnstableApi
 import be.tarsos.dsp.io.TarsosDSPAudioFloatConverter
 import be.tarsos.dsp.io.TarsosDSPAudioFormat
@@ -24,13 +25,13 @@ class VisualizationAudioProcessor(private var mediaSession: MediaSessionCompat?)
 
     private var active = false
     private var outputAudioFormat: AudioProcessor.AudioFormat? = null
-    var r = 2
     var BYTES_PER_SAMPLE: Int = 2
     private var sampleBuffer: FloatArray = FloatArray(0)
 
-    private var bufferSize = 2048
-    private var outputBuffer: ByteBuffer = AudioProcessor.EMPTY_BUFFER
-    private var dataBuffer: ByteBuffer = AudioProcessor.EMPTY_BUFFER
+    private var bufferSize = 512
+    private var outputBuffer: ByteBuffer = EMPTY_BUFFER
+    private var dataBuffer: ByteBuffer = EMPTY_BUFFER
+    private var ttfBuffer: ByteBuffer = EMPTY_BUFFER
     private var inputEnded = false
     private lateinit var converter: TarsosDSPAudioFloatConverter
     private var readSize = 2048
@@ -59,9 +60,10 @@ class VisualizationAudioProcessor(private var mediaSession: MediaSessionCompat?)
         }
         outputAudioFormat = inputAudioFormat
         // ENCODING_PCM_16BIT, is two byte to one float
-        r = if (outputAudioFormat!!.encoding == C.ENCODING_PCM_16BIT) 2 else 1
-        dataBuffer = ByteBuffer.allocate(bufferSize * 8)
-        val size = bufferSize / r / outputAudioFormat!!.channelCount
+        BYTES_PER_SAMPLE = getBytePerSample(outputAudioFormat!!.encoding)
+        ttfBuffer = ByteBuffer.allocate(bufferSize * 8)
+        val size = bufferSize / BYTES_PER_SAMPLE / outputAudioFormat!!.channelCount
+        readSize = getOutputSize(outputAudioFormat!!, BYTES_PER_SAMPLE) / 2
         sampleBuffer = FloatArray(size)
         // https://stackoverflow.com/questions/68776031/playing-a-wav-file-with-tarsosdsp-on-android
         val tarsosDSPAudioFormat = TarsosDSPAudioFormat(
@@ -80,8 +82,9 @@ class VisualizationAudioProcessor(private var mediaSession: MediaSessionCompat?)
                 tarsosDSPAudioFormat
             )
 
-        BYTES_PER_SAMPLE = getBytePerSample(outputAudioFormat!!.encoding)
-        readSize = getOutputSize(outputAudioFormat!!, BYTES_PER_SAMPLE) / 10
+
+
+        dataBuffer = ByteBuffer.allocate(readSize)
         pcmToFrequencyDomain =
             PCMToFrequencyDomain(
                 readSize / (outputAudioFormat!!.channelCount * BYTES_PER_SAMPLE),
@@ -102,53 +105,81 @@ class VisualizationAudioProcessor(private var mediaSession: MediaSessionCompat?)
         if (!inputBuffer.hasRemaining()) {
             return
         }
-        this.outputBuffer = inputBuffer
-        if (dataBuffer.remaining() < 1 || dataBuffer.remaining() < inputBuffer.limit()) {
-            expandBuffer(dataBuffer.capacity() + inputBuffer.limit() * 2);
-            Log.d("ExpandBuffer", dataBuffer.remaining().toString())
+        if (active) {
+            if (ttfBuffer.remaining() < 1 || ttfBuffer.remaining() < inputBuffer.limit()) {
+                ttfBuffer =
+                    SoundUtils.expandBuffer(
+                        ttfBuffer.capacity() + inputBuffer.limit() * 2,
+                        ttfBuffer
+                    );
+                Log.d(
+                    "2${VisualizationAudioProcessor::class.simpleName}ExpandBuffer",
+                    ttfBuffer.remaining().toString()
+                )
+            }
+            ttfBuffer.put(inputBuffer.array())
         }
-        dataBuffer.put(inputBuffer.array())
+
+        if (dataBuffer.remaining() < 1 || dataBuffer.remaining() < inputBuffer.limit()) {
+            dataBuffer =
+                SoundUtils.expandBuffer(dataBuffer.capacity() + inputBuffer.limit() * 2, dataBuffer)
+            Log.d(
+                "1${VisualizationAudioProcessor::class.simpleName}ExpandBuffer",
+                dataBuffer.remaining().toString()
+            )
+        }
+        dataBuffer.put(inputBuffer)
     }
 
-    private fun expandBuffer(newCapacity: Int) {
-        val newBuffer = ByteBuffer.allocate(newCapacity)
-        dataBuffer.flip() // 切换到读取模式
-        newBuffer.put(dataBuffer) // 复制内容
-        dataBuffer = newBuffer // 替换旧的 ByteBuffer
-    }
 
     override fun queueEndOfStream() {
         // TODO
-//        val processedBuffer = ByteBuffer.allocate(dataBuffer.limit())
-//        processedBuffer.put(dataBuffer)
-//        this.outputBuffer = processedBuffer
-//        dataBuffer.compact()
+        val processedBuffer = ByteBuffer.allocate(dataBuffer.limit())
+        processedBuffer.put(dataBuffer)
+        this.outputBuffer = processedBuffer
+        dataBuffer.compact()
+        this.outputBuffer = EMPTY_BUFFER
         inputEnded = true
     }
 
 
     override fun getOutput(): ByteBuffer {
         processData()
+        dataBuffer.flip()
+        if (dataBuffer.hasRemaining()) {
+            val dataRemaining = dataBuffer.remaining() // 获取 dataBuffer 中剩余的有效数据量
+            val readSize =
+                if (dataRemaining > bufferSize) bufferSize else dataRemaining // 确定实际读取量
+            val processedBuffer: ByteBuffer = ByteBuffer.allocate(readSize)
+            val oldLimit = dataBuffer.limit() // 记录旧的 limit
+            dataBuffer.limit(dataBuffer.position() + readSize) // 设置新 limit 来控制读取量
+            processedBuffer.put(dataBuffer)
+            dataBuffer.limit(oldLimit)
+            processedBuffer.order(ByteOrder.nativeOrder())
+            this.outputBuffer = processedBuffer
+        }
+        dataBuffer.compact()
         val outputBuffer: ByteBuffer = this.outputBuffer
-//        this.outputBuffer = AudioProcessor.EMPTY_BUFFER
+        this.outputBuffer = EMPTY_BUFFER
+        outputBuffer.flip()
         return outputBuffer
     }
 
     private fun processData() {
         if (active) {
-            if (dataBuffer.position() >= readSize) {
-                dataBuffer.flip()
-                if (dataBuffer.hasRemaining()) {
-                    val dataRemaining = dataBuffer.remaining() // 获取 dataBuffer 中剩余的有效数据量
+            if (ttfBuffer.position() >= readSize) {
+                ttfBuffer.flip()
+                if (ttfBuffer.hasRemaining()) {
+                    val dataRemaining = ttfBuffer.remaining() // 获取 dataBuffer 中剩余的有效数据量
                     val readSize =
                         if (dataRemaining > readSize) readSize else dataRemaining // 确定实际读取量,TODO 正常不会发生，代码需要修改
                     val processedBuffer = ByteBuffer.allocate(readSize)
-                    val oldLimit = dataBuffer.limit() // 记录旧的 limit
-                    dataBuffer.limit(dataBuffer.position() + readSize) // 设置新 limit 来控制读取量
-                    processedBuffer.put(dataBuffer)
-                    dataBuffer.limit(oldLimit)
+                    val oldLimit = ttfBuffer.limit() // 记录旧的 limit
+                    ttfBuffer.limit(ttfBuffer.position() + readSize) // 设置新 limit 来控制读取量
+                    processedBuffer.put(ttfBuffer)
+                    ttfBuffer.limit(oldLimit)
                     CoroutineScope(Dispatchers.IO).launch {
-                        val floatArray = FloatArray(bufferSize / r)
+                        val floatArray = FloatArray(bufferSize / BYTES_PER_SAMPLE)
                         converter.toFloatArray(processedBuffer.array(), floatArray)
                         var ind = 0
                         // TODO need support more channel count
@@ -165,8 +196,10 @@ class VisualizationAudioProcessor(private var mediaSession: MediaSessionCompat?)
                         mediaSession?.setExtras(bundle)
                     }
                 }
-                dataBuffer.compact()
+                ttfBuffer.compact()
             }
+        } else {
+            ttfBuffer.clear()
         }
     }
 
@@ -179,6 +212,7 @@ class VisualizationAudioProcessor(private var mediaSession: MediaSessionCompat?)
             outputBuffer.clear()
         }
         dataBuffer.clear()
+        ttfBuffer.clear()
         inputEnded = false
     }
 

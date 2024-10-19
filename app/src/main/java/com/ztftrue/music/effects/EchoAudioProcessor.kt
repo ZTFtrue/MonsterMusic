@@ -7,11 +7,12 @@ import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
 import androidx.media3.common.util.UnstableApi
 import be.tarsos.dsp.io.TarsosDSPAudioFloatConverter
 import be.tarsos.dsp.io.TarsosDSPAudioFormat
+import com.ztftrue.music.effects.SoundUtils.getBytePerSample
+import com.ztftrue.music.effects.SoundUtils.getOutputSize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
-import org.apache.commons.math3.util.FastMath
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -19,32 +20,25 @@ import java.nio.ByteOrder
 @UnstableApi
 class EchoAudioProcessor : AudioProcessor {
     private var active = false
-    private var pendingOutputAudioFormat: AudioProcessor.AudioFormat? = null
-    private var outputAudioFormat: AudioProcessor.AudioFormat? = null
+    private var pendingOutputAudioFormat: AudioProcessor.AudioFormat? =
+        AudioProcessor.AudioFormat.NOT_SET
+    private var outputAudioFormat: AudioProcessor.AudioFormat? = AudioProcessor.AudioFormat.NOT_SET
 
-    private val sampleBufferRealLeft: FloatArray
-    private val sampleBufferRealRight: FloatArray
+    private var sampleBufferRealLeft: FloatArray = FloatArray(0)
+    private var sampleBufferRealRight: FloatArray = FloatArray(0)
 
-    private var outputBuffer: ByteBuffer
+    private var bufferSize = 512
+    private var outputBuffer: ByteBuffer = EMPTY_BUFFER
+    private var dataBuffer: ByteBuffer = EMPTY_BUFFER
+    private var floatArray = FloatArray(bufferSize)
+
     private var inputEnded = false
+    private var BYTES_PER_SAMPLE: Int = 2
 
-    private val framesInBuffer = 4096
-    private var bufferSize = 0
-    private var dataBuffer: ByteBuffer
     private lateinit var converter: TarsosDSPAudioFloatConverter
     private var delayTime = 0.5f
     private var decay = 1.0f
     private var echoFeedBack = false
-
-    init {
-        outputBuffer = EMPTY_BUFFER
-        bufferSize = framesInBuffer
-        dataBuffer = ByteBuffer.allocate(bufferSize * 16)
-        sampleBufferRealLeft = FloatArray(bufferSize / 4)
-        sampleBufferRealRight = FloatArray(bufferSize / 4)
-        pendingOutputAudioFormat = AudioProcessor.AudioFormat.NOT_SET
-        outputAudioFormat = AudioProcessor.AudioFormat.NOT_SET
-    }
 
     fun setActive(active: Boolean) {
         if (this.active != active) {
@@ -70,6 +64,14 @@ class EchoAudioProcessor : AudioProcessor {
             true,
             ByteOrder.BIG_ENDIAN == ByteOrder.nativeOrder()
         )
+        outputAudioFormat = inputAudioFormat
+        BYTES_PER_SAMPLE = getBytePerSample(outputAudioFormat!!.encoding)
+        bufferSize = getOutputSize(outputAudioFormat!!, BYTES_PER_SAMPLE)
+        dataBuffer = ByteBuffer.allocate(bufferSize * 8)
+        floatArray = FloatArray(bufferSize)
+        val size = bufferSize / BYTES_PER_SAMPLE / outputAudioFormat!!.channelCount
+        sampleBufferRealLeft = FloatArray(size)
+        sampleBufferRealRight = FloatArray(size)
         delayEffectLeft = DelayEffect(
             delayTime.toDouble(),
             decay,
@@ -100,8 +102,8 @@ class EchoAudioProcessor : AudioProcessor {
         }
         inputBuffer.order(ByteOrder.nativeOrder())
         if (dataBuffer.remaining() < 1 || dataBuffer.remaining() < inputBuffer.limit()) {
-            expandBuffer(dataBuffer.capacity() + inputBuffer.limit() * 2);
-            Log.d("ExpandBuffer", dataBuffer.remaining().toString())
+            expandBuffer(dataBuffer.capacity() + inputBuffer.limit() * 2)
+            Log.d("ExpandBuffer1", dataBuffer.remaining().toString())
         }
 
         dataBuffer.put(inputBuffer)
@@ -132,6 +134,7 @@ class EchoAudioProcessor : AudioProcessor {
         inputEnded = true
     }
 
+    private var ind = 0
     private fun processData() {
         if (active) {
             if (dataBuffer.position() >= bufferSize) {
@@ -145,17 +148,19 @@ class EchoAudioProcessor : AudioProcessor {
                     dataBuffer.limit(dataBuffer.position() + readSize) // 设置新 limit 来控制读取量
                     processedBuffer.put(dataBuffer)
                     dataBuffer.limit(oldLimit)
-                    val floatArray =
-                        FloatArray(bufferSize / pendingOutputAudioFormat!!.channelCount)
-                    converter.toFloatArray(processedBuffer.array(), floatArray)
+                    val byteArray = processedBuffer.array()
+                    converter.toFloatArray(
+                        byteArray,
+                        floatArray,
+                        bufferSize / BYTES_PER_SAMPLE
+                    )
+                    ind = 0
+                    val halfLength = floatArray.size / 2
                     // TODO need support more channel count
-                    for (i in 0 until bufferSize / 2) {
-                        if (i % 2 == 0) {
-                            sampleBufferRealLeft[i / 2] = floatArray[i]
-                        } else {
-                            sampleBufferRealRight[FastMath.floor((i / 2).toDouble()).toInt()] =
-                                floatArray[i]
-                        }
+                    for (i in 0 until halfLength step outputAudioFormat!!.channelCount) {
+                        sampleBufferRealLeft[ind] = floatArray[i]
+                        sampleBufferRealRight[ind] = floatArray[i + 1]
+                        ind += 1
                     }
                     runBlocking {
                         awaitAll(
@@ -167,20 +172,19 @@ class EchoAudioProcessor : AudioProcessor {
                             }
                         )
                     }
-                    val outD = FloatArray(bufferSize / pendingOutputAudioFormat!!.channelCount)
-                    var pI = 0
+                    ind = 0
                     // TODO need support more channel count
-                    for (i in 0 until sampleBufferRealLeft.size) {
-                        outD[pI] = sampleBufferRealLeft[i]
-                        outD[pI + 1] = sampleBufferRealRight[i]
-                        pI = pI + 2
+                    for (i in 0 until halfLength step outputAudioFormat!!.channelCount) {
+                        floatArray[i] = sampleBufferRealLeft[ind]
+                        floatArray[i + 1] = sampleBufferRealRight[ind]
+                        ind += 1
                     }
-                    val outB = ByteArray(bufferSize)
-                    converter.toByteArray(outD, outB)
-                    val processedBuffer2 = ByteBuffer.wrap(outB)
-                    processedBuffer2.position(bufferSize)
-                    processedBuffer2.order(ByteOrder.nativeOrder())
-                    this.outputBuffer = processedBuffer2
+                    converter.toByteArray(floatArray, halfLength, byteArray)
+                    processedBuffer.clear()
+                    processedBuffer.put(byteArray)
+                    processedBuffer.position(bufferSize)
+                    processedBuffer.order(ByteOrder.nativeOrder())
+                    this.outputBuffer = processedBuffer
                 }
                 dataBuffer.compact()
             }

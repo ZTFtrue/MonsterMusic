@@ -56,9 +56,8 @@ fun CoverView(musicViewModel: MusicViewModel) {
     val context = LocalContext.current
     val musicVisualizationEnable = remember { musicViewModel.musicVisualizationEnable }
     val showOtherMessage = remember { mutableStateOf(false) }
-    val magnitudes = remember { musicViewModel.musicVisualizationData }
-    val dropCount = 100 // 字符数量
-    val drops = remember { mutableStateListOf(mutableStateListOf<Drop>()) }
+
+    val drops = remember { mutableStateListOf<MutableList<Drop>>() }
     val columnSpacing = 80f // 列之间的间隔
     val dropHeight = 80f // 字符的高度间隔
     val textSizeSet = 60f
@@ -112,30 +111,52 @@ fun CoverView(musicViewModel: MusicViewModel) {
         }
 
     }
+
     // 动画更新
     LaunchedEffect(Unit, musicViewModel.playStatus.value, musicVisualizationEnable.value) {
         while (musicViewModel.playStatus.value && musicVisualizationEnable.value) {
             if (!musicViewModel.playStatus.value) break
-            drops.forEach { columnDrops ->
-                val cDrops = ArrayList<Int>()
-                // 更新每一列的雨滴
-                columnDrops.forEachIndexed { index3, drop ->
-                    drop.update(1f)
-                    // 检查是否超出屏幕
-                    if (drop.y > canvasHeight.floatValue + dropHeight) {
-                        cDrops.add(index3)
-                        drop.char = generateRandomChars()
+//            drops.forEach { columnDrops ->
+//                val cDrops = ArrayList<Int>()
+//                // 更新每一列的雨滴
+//                columnDrops.forEachIndexed { index3, drop ->
+//                    drop.update(1f)
+//                    // 检查是否超出屏幕
+//                    if (drop.y > canvasHeight.floatValue + dropHeight) {
+//                        cDrops.add(index3)
+//                        drop.char = generateRandomChars()
+//                    }
+//                }
+//
+//                cDrops.forEach { index3 ->
+//                    val d = columnDrops.removeAt(index3)
+//                    d.y = columnDrops[columnDrops.size - 1].y - dropHeight
+//                    columnDrops.add(d)
+//                }
+//            }
+            musicViewModel.musicVisualizationData.forEachIndexed { index, magnitude ->
+                drops.forEachIndexed { index2, columnDrops ->
+                    // 更新每一列的雨滴
+                    val cDrops = ArrayList<Int>()
+                    columnDrops.forEachIndexed { index3, drop ->
+                        if (index == index2) {
+                            // TODO Use log function to calculate the speed
+                            drop.update((magnitude+1))
+                            // 检查是否超出屏幕
+                            if (drop.y > canvasHeight.floatValue + dropHeight) {
+                                cDrops.add(index3)
+                                drop.char = generateRandomChars()
+                            }
+                        }
                     }
-                }
-
-                cDrops.forEach { index3 ->
-                    val d = columnDrops.removeAt(index3)
-                    d.y = columnDrops[columnDrops.size - 1].y - dropHeight
-                    columnDrops.add(d)
+                    cDrops.forEach { index3 ->
+                        val d = columnDrops.removeAt(index3)
+                        d.y = columnDrops[columnDrops.size - 1].y - dropHeight
+                        columnDrops.add(d)
+                    }
+                    //                                        val d=  columnDrops.removeAt(index3)
                 }
             }
-            magnitudes.add(0f)
-            magnitudes.removeAt(magnitudes.size - 1)
             delay(10) // 控制更新频率
         }
     }
@@ -198,45 +219,6 @@ fun CoverView(musicViewModel: MusicViewModel) {
 //                            size.width / magnitudes.size
 //                        val maxBarHeight = size.width / 2
                         // 绘制每列的雨滴
-                        magnitudes.forEachIndexed { index, magnitude ->
-                            drops.forEachIndexed { index2, columnDrops ->
-                                // 更新每一列的雨滴
-                                val cDrops = ArrayList<Int>()
-                                columnDrops.forEachIndexed { index3, drop ->
-                                    if (index == index2) {
-                                        // TODO Use log function to calculate the speed
-                                        drop.update((magnitude))
-                                        // 检查是否超出屏幕
-                                        if (drop.y > canvasHeight.floatValue + dropHeight) {
-                                            cDrops.add(index3)
-                                            drop.char = generateRandomChars()
-                                        }
-                                    }
-                                }
-                                cDrops.forEach { index3 ->
-                                    val d = columnDrops.removeAt(index3)
-                                    d.y = columnDrops[columnDrops.size - 1].y - dropHeight
-                                    columnDrops.add(d)
-                                }
-
-                                //                                        val d=  columnDrops.removeAt(index3)
-
-                            }
-
-                            //                                    val barHeight = magnitude * maxBarHeight
-                            //                                    drawRect(
-                            //                                        color = Color.Cyan,
-                            //                                        topLeft = Offset(
-                            //                                            x = index * barWidth,
-                            //                                            y = maxBarHeight - barHeight
-                            //                                        ),
-                            //                                        size = Size(
-                            //                                            width = barWidth - 4.dp.toPx(),
-                            //                                            height = barHeight
-                            //                                        )
-                            //                                    )
-                        }
-
                         drops.forEach { columnDrops ->
                             columnDrops.forEach { drop ->
                                 drawContext.canvas.nativeCanvas.apply {
@@ -323,14 +305,18 @@ fun CoverView(musicViewModel: MusicViewModel) {
     }
 }
 
-// 雨滴类
-data class Drop(
-    var x: Float,
-    var y: Float,
-    var color: Color = Color.Green,
-    var char: String = generateRandomChars(),
-) {
 
+// 雨滴类
+  class Drop(
+    var x: Float,
+    y: Float,
+    var color: Color = Color.Green,
+    var char: String = generateRandomChars()
+) {
+//    var x   by mutableFloatStateOf(x)
+    var y by mutableFloatStateOf(y)
+//    var color by mutableStateOf(color)
+//    var char by mutableStateOf(char)
     fun update(speed: Float) {
 //        char = generateRandomChars()
         y += speed // 下落速度

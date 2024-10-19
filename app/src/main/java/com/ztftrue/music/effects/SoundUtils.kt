@@ -104,5 +104,11 @@ object SoundUtils {
 
         return adjustedMagnitudes.toFloatArray()
     }
+      fun expandBuffer(newCapacity: Int, oldBuffer: ByteBuffer): ByteBuffer {
+        val newBuffer = ByteBuffer.allocate(newCapacity)
+        oldBuffer.flip() // 切换到读取模式
+        newBuffer.put(oldBuffer) // 复制内容
+        return newBuffer
+    }
 
 }

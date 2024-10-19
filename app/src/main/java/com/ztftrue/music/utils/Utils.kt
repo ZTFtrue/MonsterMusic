@@ -121,8 +121,8 @@ object Utils {
         R.string.theme_material_you,
     )
     var bandsCenter = doubleArrayOf(
-        31.0, 62.0, 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0, 16000.0
-        //60.0,170.0,310.0,600.0,1000.0,3000.0,6000.0,12000.0,14000.0,16000.0
+//        31.0, 62.0, 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0, 16000.0
+        60.0, 170.0, 310.0, 600.0, 1000.0, 3000.0, 6000.0, 12000.0, 14000.0, 16000.0
     )
     var qs = doubleArrayOf(
 //        1.0,//31
@@ -135,16 +135,17 @@ object Utils {
 //        2.0,//4000
 //        1.5,//8000
 //        1.0,//16000
-        2.0,
-        1.9,
-        1.7,
-        1.6,
-        1.5,
-        1.5,
-        1.4,
-        1.3,
-        1.3,
-        1.2
+//        2.0,
+//        1.9,
+//        1.7,
+//        1.6,
+//        1.5,
+//        1.5,
+//        1.4,
+//        1.3,
+//        1.3,
+//        1.2
+        1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
     )
 
     var kThirdBW = doubleArrayOf(
@@ -264,7 +265,13 @@ object Utils {
             retriever.setDataSource(path)
             val coverT = retriever.embeddedPicture
             if (coverT != null) {
-                return Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(coverT, 0, coverT.size),512,512,false)
+                return Bitmap.createScaledBitmap(
+                    BitmapFactory.decodeByteArray(
+                        coverT,
+                        0,
+                        coverT.size
+                    ), 512, 512, false
+                )
             }
         } catch (_: Exception) {
         }
@@ -610,16 +617,19 @@ object Utils {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
         (context as MainActivity).folderPickerLauncher.launch(intent)
     }
+
     @OptIn(UnstableApi::class)
     fun setArtistFolder(context: Context) {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
         (context as MainActivity).artistFolderPickerLauncher.launch(intent)
     }
+
     @OptIn(UnstableApi::class)
     fun setGenreFolder(context: Context) {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
         (context as MainActivity).genreFolderPickerLauncher.launch(intent)
     }
+
     @OptIn(UnstableApi::class)
     fun setLyricsFile(musicViewModel: MusicViewModel, context: Context) {
         if (musicViewModel.currentPlay.value != null) {
