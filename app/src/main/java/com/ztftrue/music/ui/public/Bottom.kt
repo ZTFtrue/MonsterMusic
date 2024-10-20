@@ -139,8 +139,8 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
                     colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                 )
                 Image(
-                    painter = painterResource(R.drawable.skip_next),
-                    contentDescription = "skip next",
+                    painter = painterResource(R.drawable.next_song),
+                    contentDescription = "next song",
                     modifier = Modifier
                         .clickable {
                             musicViewModel.mediaController?.transportControls?.skipToNext()
