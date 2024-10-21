@@ -16,7 +16,6 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.widget.Toast
-import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.AudioAttributes
@@ -1216,6 +1215,7 @@ class PlayService : MediaBrowserServiceCompat() {
                     enableFloatOutput: Boolean,
                     enableAudioTrackPlaybackParams: Boolean,
                 ): AudioSink {
+//                    sonicAudioProcessor.setPitch(0.9f)
                     val au = DefaultAudioSink.Builder(context)
                         .setEnableFloatOutput(enableFloatOutput)
                         .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)

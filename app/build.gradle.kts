@@ -22,8 +22,8 @@ android {
         applicationId = "com.ztftrue.music"
         minSdk = 30
         targetSdk = 34
-        versionCode = 35
-        versionName = "0.1.35"
+        versionCode = 38
+        versionName = "0.1.38"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -36,7 +36,7 @@ android {
     }
     dependenciesInfo {
         // Disables dependency metadata when building APKs.
-        includeInApk = true
+        includeInApk = false
         // Disables dependency metadata when building Android App Bundles.
         includeInBundle = true
     }
