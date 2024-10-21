@@ -2,6 +2,7 @@ package com.ztftrue.music
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -60,7 +61,11 @@ class ErrorTipActivity : ComponentActivity() {
         LaunchedEffect(Unit) {
             try {
                 errorMessage = intent.getStringExtra("error") ?: ""
+                errorMessage= "If possible, please tell me what caused this error to occur, or when the BUG occurs, you are clicking on the button of the app.   \n\n $errorMessage"
                 errorMessage=errorMessage+"\n\nVERSION_CODE   "+BuildConfig.VERSION_CODE
+                errorMessage=errorMessage+"\n\nBrand:   "+Build.BRAND
+                errorMessage=errorMessage+"\n\nAndroidVersion:   "+ Build.VERSION.SDK_INT
+                errorMessage=errorMessage+"\n\n:DEVICE:   "+ Build.DEVICE
             } catch (e: Exception) {
                 Log.e("ERROR", e.toString())
             }
