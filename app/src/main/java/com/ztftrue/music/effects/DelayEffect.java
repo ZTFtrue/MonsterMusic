@@ -4,20 +4,20 @@ package com.ztftrue.music.effects;
  * from <a href="https://github.com/JorenSix/TarsosDSP/blob/master/core/src/main/java/be/tarsos/dsp/effects/DelayEffect.java">TarsosDSP DelayEffect</a>
  */
 public class DelayEffect {
-    private final double sampleRate;
+    private final float sampleRate;
     private float[] echoBuffer;//in seconds
     private int position;
     private float decay;
     private boolean withFeedBack = false;
     private boolean withFeedBackDeal = false;
-    private double newEchoLength;
+    private float newEchoLength;
 
     /**
      * @param echoLength in seconds
      * @param sampleRate the sample rate in Hz.
      * @param decay      The decay of the echo, a value between 0 and 1. 1 meaning no decay, 0 means immediate decay (not echo effect).
      */
-    public DelayEffect(double echoLength, float decay, double sampleRate) {
+    public DelayEffect(float echoLength, float decay, float sampleRate) {
         this.sampleRate = sampleRate;
         setDecay(decay);
         setEchoLength(echoLength);
@@ -27,7 +27,7 @@ public class DelayEffect {
     /**
      * @param newEchoLength A new echo buffer length in seconds.
      */
-    public void setEchoLength(double newEchoLength) {
+    public void setEchoLength(float newEchoLength) {
         this.newEchoLength = newEchoLength;
     }
 

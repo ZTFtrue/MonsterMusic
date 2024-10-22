@@ -2,7 +2,6 @@ package com.ztftrue.music.effects
 
 import android.os.Bundle
 import android.support.v4.media.session.MediaSessionCompat
-import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
@@ -134,15 +133,15 @@ class EqualizerAudioProcessor : AudioProcessor {
         }
 
         delayEffectLeft = DelayEffect(
-            delayTime.toDouble(),
+            delayTime,
             decay,
-            outputAudioFormat!!.sampleRate.toDouble()
+            outputAudioFormat!!.sampleRate.toFloat()
         )
         delayEffectLeft?.isWithFeedBack = echoFeedBack
         delayEffectRight = DelayEffect(
-            delayTime.toDouble(),
+            delayTime,
             decay,
-            outputAudioFormat!!.sampleRate.toDouble()
+            outputAudioFormat!!.sampleRate.toFloat()
         )
         delayEffectRight?.isWithFeedBack = echoFeedBack
         leftEqualizerMax = 1.0f
@@ -414,7 +413,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             changeDb = true
             gainDBAbsArray[index] = FastMath.pow(10.0, (value.toDouble() / 20.0)).toFloat()
             gainDBArray[index] = value
-            if (outputAudioFormat!!.sampleRate.toDouble() > 0) {
+            if (outputAudioFormat!!.sampleRate.toFloat() > 0) {
                 mCoefficientLeftBiQuad[index].configure(
                     BiQuadraticFilter.PEAK,
                     Utils.bandsCenter[index],
@@ -458,8 +457,8 @@ class EqualizerAudioProcessor : AudioProcessor {
      */
     fun setDaleyTime(value: Float) {
         delayTime = value
-        delayEffectLeft?.setEchoLength(delayTime.toDouble())
-        delayEffectRight?.setEchoLength(delayTime.toDouble())
+        delayEffectLeft?.setEchoLength(delayTime)
+        delayEffectRight?.setEchoLength(delayTime)
     }
 
     fun setDecay(value: Float) {
