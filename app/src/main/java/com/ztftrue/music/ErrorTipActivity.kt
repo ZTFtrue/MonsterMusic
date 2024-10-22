@@ -67,7 +67,7 @@ class ErrorTipActivity : ComponentActivity() {
                 errorMessage=errorMessage+"\n\nAndroidVersion:   "+ Build.VERSION.SDK_INT
                 errorMessage=errorMessage+"\n\n:DEVICE:   "+ Build.DEVICE
             } catch (e: Exception) {
-                Log.e("ERROR", e.toString())
+//                Log.e("ERROR", e.toString())
             }
         }
         BackHandler(enabled = true) {

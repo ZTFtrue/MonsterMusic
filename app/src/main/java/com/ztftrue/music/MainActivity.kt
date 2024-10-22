@@ -45,8 +45,10 @@ import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import com.ztftrue.music.play.ACTION_IS_CONNECTED
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
+import com.ztftrue.music.play.ACTION_WILL_DISCONNECTED
 import com.ztftrue.music.play.EVENT_MEDIA_ITEM_Change
 import com.ztftrue.music.play.EVENT_SLEEP_TIME_Change
 import com.ztftrue.music.play.EVENT_Visualization_Change
@@ -371,7 +373,6 @@ class MainActivity : ComponentActivity() {
     private fun openAppSettings() {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
         intent.setData(Uri.fromParts("package", packageName, null))
-        // Check if there is an activity that can handle this intent
         if (intent.resolveActivity(packageManager) != null) {
             startActivity(intent)
             finish()
@@ -411,6 +412,7 @@ class MainActivity : ComponentActivity() {
                 connectionCallbacks,
                 null // optional Bundle
             )
+
             setContent {
                 MusicPitchTheme(musicViewModel) {
                     BaseLayout(musicViewModel, this@MainActivity)
@@ -452,10 +454,6 @@ class MainActivity : ComponentActivity() {
         compatSplashScreen?.setKeepOnScreenCondition { musicViewModel.mainTabList.isEmpty() }
         Utils.initSettingsData(musicViewModel, this)
         musicViewModel.prepareArtistAndGenreCover(this@MainActivity)
-        musicViewModel.musicVisualizationEnable.value =
-            SharedPreferencesUtils.getEnableMusicVisualization(this@MainActivity)
-        musicViewModel.showMusicCover.value =
-            SharedPreferencesUtils.getShowMusicCover(this@MainActivity)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
 
             if (ActivityCompat.checkSelfPermission(
@@ -529,6 +527,7 @@ class MainActivity : ComponentActivity() {
     }
 
     public override fun onStop() {
+        musicViewModel.mediaBrowser?.sendCustomAction(ACTION_WILL_DISCONNECTED,null,null)
         MediaControllerCompat.getMediaController(this)?.unregisterCallback(callback)
         musicViewModel.mediaController = null
         mediaBrowser?.disconnect()
@@ -563,11 +562,6 @@ class MainActivity : ComponentActivity() {
             jobSeek?.cancel()
         }
         lock.unlock()
-    }
-
-    // Add extension function to MediaControllerCompat.Callback
-    fun MediaControllerCompat.Callback.onVisualizerChangedExtension(data: FloatArray?) {
-        println("Handling visualizer data: $data")
     }
 
     val callback = object : MediaControllerCompat.Callback() {
@@ -678,6 +672,7 @@ class MainActivity : ComponentActivity() {
                 }
                 MediaControllerCompat.setMediaController(this@MainActivity, mediaController)
                 mediaController?.registerCallback(callback)
+                musicViewModel.mediaBrowser?.sendCustomAction(ACTION_IS_CONNECTED,null,null)
             }
         }
 

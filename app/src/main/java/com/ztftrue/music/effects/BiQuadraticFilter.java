@@ -14,9 +14,9 @@ final public class BiQuadraticFilter {
     final static int LOWSHELF = 5;
     final static int HIGHSHELF = 6;
     final static int Gain = 7;
-    private double a0, a1, a2, b0, b1, b2;
-    private double x1, x2, y, y1, y2;
-    private double gain_abs;
+    private float a0, a1, a2, b0, b1, b2;
+    private float x1, x2, y, y1, y2;
+    private float gain_abs;
     private int type;
     BIND_TYPE bindType = BIND_TYPE.Q;
 
@@ -26,17 +26,17 @@ final public class BiQuadraticFilter {
         S
     }
 
-    double center_freq, sample_rate, Q, gainDB, bw;
+    float center_freq, sample_rate, Q, gainDB, bw;
 
     public BiQuadraticFilter() {
     }
 
-    public BiQuadraticFilter(int type, double center_freq, double sample_rate, double Q, double gainDB) {
+    public BiQuadraticFilter(int type, float center_freq, float sample_rate, float Q, float gainDB) {
         configure(type, center_freq, sample_rate, Q, gainDB);
     }
 
     // constructor without gain setting
-    public BiQuadraticFilter(int type, double center_freq, double sample_rate, double Q) {
+    public BiQuadraticFilter(int type, float center_freq, float sample_rate, float Q) {
         configure(type, center_freq, sample_rate, Q, 0);
     }
 
@@ -48,9 +48,9 @@ final public class BiQuadraticFilter {
         return center_freq;
     }
 
-    public void configure(int type, double center_freq, double sample_rate, double Q, double gainDB) {
+    public void configure(int type, float center_freq, float sample_rate, float Q, float gainDB) {
         reset();
-        Q = (Q == 0) ? 1e-9 : Q;
+        Q = (Q == 0f) ? (float) 1e-9 : Q;
         this.type = type;
         this.sample_rate = sample_rate;
         this.Q = Q;
@@ -58,45 +58,36 @@ final public class BiQuadraticFilter {
         reconfigure(center_freq);
     }
 
-    public void configure(int type, double center_freq, double sample_rate, double Q) {
+    public void configure(int type, float center_freq, float sample_rate, float Q) {
         configure(type, center_freq, sample_rate, Q, 0);
     }
 
-    public void configureBw(int type, BIND_TYPE bindType, double center_freq, double sample_rate, double bw, double gainDB) {
-        reset();
-        this.type = type;
-        this.bindType = bindType;
-        this.bw = bw;
-        this.sample_rate = sample_rate;
-        this.gainDB = gainDB;
-        this.Q = bw / 60.0;
-        reconfigure(center_freq);
-    }
+
 
     // allow parameter change while running
-    public void reconfigure(double cf) {
+    public void reconfigure(float cf) {
         center_freq = cf;
         // only used for peaking and shelving filters
-        gain_abs = FastMath.pow(10, gainDB / 40);
+        gain_abs = (float) FastMath.pow(10, gainDB / 40);
         double omega = 2 * FastMath.PI * cf / sample_rate;
-        double sn = FastMath.sin(omega);
-        double cs = FastMath.cos(omega);
-        double alpha = 0.0;
+        float sn = (float) FastMath.sin(omega);
+        float cs = (float) FastMath.cos(omega);
+        float alpha = 0.0f;
         if (bindType == (BIND_TYPE.BW)) {
-            double bwq = bw / 60.0;
+            float bwq = bw / 60.0f;
             double LN2 = 0.69314718055994530942;
-            alpha = sn * FastMath.sinh(LN2 / 2.0 * bwq * omega / FastMath.sin(omega));
+            alpha = (float) (sn * FastMath.sinh(LN2 / 2.0 * bwq * omega / FastMath.sin(omega)));
         } else if (bindType == BIND_TYPE.Q) {
             alpha = sn / (2 * Q);
         } else if (bindType == BIND_TYPE.S) {
-            alpha = sn * FastMath.sqrt((gain_abs + 1.0 / gain_abs) * (1 / Q - 1) + 2) / 2.0;
+            alpha = (float) (sn * FastMath.sqrt((gain_abs + 1.0 / gain_abs) * (1 / Q - 1) + 2) / 2.0);
         }
-        double beta = FastMath.sqrt(gain_abs + gain_abs);
+        float beta = (float) FastMath.sqrt(gain_abs + gain_abs);
         switch (type) {
             case Gain -> {
                 b0 = gain_abs;
-                a0 = 1.0;
-                a1 = a2 = b1 = b2 = 0.0;
+                a0 = 1.0f;
+                a1 = a2 = b1 = b2 = 0.0f;
             }
             case BANDPASS -> {
                 b0 = alpha;
@@ -110,15 +101,15 @@ final public class BiQuadraticFilter {
                 b0 = (1 - cs) / 2;
                 b1 = 1 - cs;
                 b2 = (1 - cs) / 2;
-                a0 = 1.0 + alpha;
-                a1 = -2.0 * cs;
-                a2 = 1.0 - alpha;
+                a0 = 1.0f + alpha;
+                a1 = -2.0f * cs;
+                a2 = 1.0f - alpha;
             }
             case HIGHPASS -> {
                 b0 = b2 = (1 + cs) / 2;
-                b1 = -(1.0 + cs);
-                a0 = 1.0 + alpha;
-                a1 = -2.0 * cs;
+                b1 = -(1.0f + cs);
+                a0 = 1.0f + alpha;
+                a1 = -2.0f * cs;
                 a2 = 1 - alpha;
             }
             case NOTCH -> {
@@ -138,7 +129,7 @@ final public class BiQuadraticFilter {
                 a2 = 1 - (alpha / gain_abs);
             }
             case LOWSHELF -> {
-                b0 = gain_abs * ((gain_abs + 1) - (gain_abs - 1) * cs + beta * sn);
+                b0 = gain_abs * ((gain_abs + 1f) - (gain_abs - 1f) * cs + beta * sn);
                 b1 = 2 * gain_abs * ((gain_abs - 1) - (gain_abs + 1) * cs);
                 b2 = gain_abs * ((gain_abs + 1) - (gain_abs - 1) * cs - beta * sn);
                 a0 = (gain_abs + 1) + (gain_abs - 1) * cs + beta * sn;
@@ -187,12 +178,12 @@ final public class BiQuadraticFilter {
     }
 
     // return the constant set for this filter
-    public double[] constants() {
-        return new double[]{a1, a2, b0, b1, b2};
+    public float[] constants() {
+        return new float[]{a1, a2, b0, b1, b2};
     }
 
     // perform one filtering step
-    public double filter(double x) {
+    public float filter(float x) {
         y = b0 * x + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
         x2 = x1;
         x1 = x;

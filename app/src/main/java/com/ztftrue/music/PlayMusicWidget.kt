@@ -135,13 +135,12 @@ class PlayMusicWidget : AppWidgetProvider() {
     override fun onDeleted(context: Context?, appWidgetIds: IntArray?) {
         super.onDeleted(context, appWidgetIds)
         appWidgetIds?.forEach { hashMap.remove(it) }
-
-        Log.d("PlayMusicWidget", "onAppWidgetOptionsChanged")
+//        Log.d("PlayMusicWidget", "onAppWidgetOptionsChanged")
     }
 
     override fun onRestored(context: Context?, oldWidgetIds: IntArray?, newWidgetIds: IntArray?) {
         super.onRestored(context, oldWidgetIds, newWidgetIds)
-        Log.d("PlayMusicWidget", "onRestored")
+//        Log.d("PlayMusicWidget", "onRestored")
     }
 
     @OptIn(UnstableApi::class)
@@ -159,7 +158,7 @@ class PlayMusicWidget : AppWidgetProvider() {
     @OptIn(UnstableApi::class)
     override fun onEnabled(context: Context) {
         // TODO send broadcast
-        Log.d("PlayMusicWidget", "onEnabled")
+//        Log.d("PlayMusicWidget", "onEnabled")
         context.getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit().apply {
             putBoolean("enable", true)
             apply()
@@ -174,7 +173,7 @@ class PlayMusicWidget : AppWidgetProvider() {
             putBoolean("enable", false)
             apply()
         }
-        Log.d("PlayMusicWidget", "onDisabled")
+//        Log.d("PlayMusicWidget", "onDisabled")
     }
 
 

@@ -55,10 +55,11 @@ public class DelayEffect {
      * @param newDecay the new decay (preferably between zero and one).
      */
     public void setDecay(float newDecay) {
-        this.decay =   newDecay;
+        this.decay = newDecay;
     }
 
-    public void process(float[] floatBuffer) {
+    public float process(float[] floatBuffer) {
+        float max = 0;
         for (int i = 0; i < floatBuffer.length; i++) {
             if (position >= echoBuffer.length) {
                 position = 0;
@@ -67,19 +68,21 @@ public class DelayEffect {
             //output is the input added with the decayed echo
             floatBuffer[i] = floatBuffer[i] + echoBuffer[position] * decay;
             //store the sample in the buffer;
-            if (floatBuffer[i] > 1.0f) {
-                floatBuffer[i] = 1.0f;
-            } else if (floatBuffer[i] < -1.0f) {
-                floatBuffer[i] = -1.0f;
-            }
-            if(withFeedBackDeal){
+//            if (floatBuffer[i] > 1.0f) {
+//                floatBuffer[i] = 1.0f;
+//            } else if (floatBuffer[i] < -1.0f) {
+//                floatBuffer[i] = -1.0f;
+//            }
+            max = Math.max(max, Math.abs(floatBuffer[i]));
+            if (withFeedBackDeal) {
                 echoBuffer[position] = floatBuffer[i];// multiple times, defined delay times
-            }else{
+            } else {
                 echoBuffer[position] = f;// Just once
             }
             position++;
         }
         applyNewEchoLength();
+        return max;
     }
 
     public boolean isWithFeedBack() {

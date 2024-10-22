@@ -5,7 +5,7 @@ import be.tarsos.dsp.util.fft.FFT
 
 class PCMToFrequencyDomain(private val bufferSize: Int, private val sampleRate: Float) {
     private val fft: FFT = FFT(bufferSize)
-    val fftSize: Int = bufferSize / 2
+    private val fftSize: Int = bufferSize / 2
     fun process(pcmData: FloatArray): FloatArray {
         val paddedData = pcmData.copyOf(bufferSize)
         fft.forwardTransform(paddedData)
