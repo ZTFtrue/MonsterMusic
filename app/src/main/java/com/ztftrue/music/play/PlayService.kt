@@ -171,7 +171,7 @@ class PlayService : MediaBrowserServiceCompat() {
         equalizer = false,
         equalizerBand = bandsValue
     )
-    private var subscribed = false
+//    private var subscribed = false
     var remainingTime = 0L
     var playCompleted = false
     var needPlayPause = false
@@ -215,9 +215,9 @@ class PlayService : MediaBrowserServiceCompat() {
             )
             mediaController = controller
             setCallback(object : MediaSessionCompat.Callback() {
-                override fun onSetShuffleMode(shuffleMode: Int) {
-                    super.onSetShuffleMode(shuffleMode)
-                }
+//                override fun onSetShuffleMode(shuffleMode: Int) {
+//                    super.onSetShuffleMode(shuffleMode)
+//                }
 
                 override fun onPlay() {
                     pauseOrPlayMusic()
@@ -870,7 +870,6 @@ class PlayService : MediaBrowserServiceCompat() {
         clientUid: Int,
         rootHints: Bundle?
     ): BrowserRoot? {
-        Log.d("TAG", "onGetRoot: " + clientPackageName)
         return if (clientPackageName == "com.ztftrue.music") {
             lock.lock()
             var bundle = getData(Bundle())
