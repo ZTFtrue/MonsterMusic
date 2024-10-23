@@ -63,7 +63,7 @@
                 android:id="@+id/next"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:src="@drawable/skip_next" />
+                android:src="@drawable/next_song" />
         </LinearLayout>
     </LinearLayout>
 

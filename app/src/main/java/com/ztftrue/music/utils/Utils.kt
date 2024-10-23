@@ -120,11 +120,11 @@ object Utils {
         R.string.theme_follow_music_cover,
         R.string.theme_material_you,
     )
-    var bandsCenter = doubleArrayOf(
+    var bandsCenter = floatArrayOf(
 //        31.0, 62.0, 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0, 16000.0
-        60.0, 170.0, 310.0, 600.0, 1000.0, 3000.0, 6000.0, 12000.0, 14000.0, 16000.0
+        60.0f, 170.0f, 310.0f, 600.0f, 1000.0f, 3000.0f, 6000.0f, 12000.0f, 14000.0f, 16000.0f
     )
-    var qs = doubleArrayOf(
+    var qs = floatArrayOf(
 //        1.0,//31
 //        1.2,//62
 //        1.4,//125
@@ -135,25 +135,18 @@ object Utils {
 //        2.0,//4000
 //        1.5,//8000
 //        1.0,//16000
-//        2.0,
-//        1.9,
-//        1.7,
-//        1.6,
-//        1.5,
-//        1.5,
-//        1.4,
-//        1.3,
-//        1.3,
-//        1.2
-        1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
+        2.0f,
+        1.9f,
+        1.7f,
+        1.6f,
+        1.5f,
+        1.5f,
+        1.4f,
+        1.3f,
+        1.3f,
+        1.2f
+//        1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f
     )
-
-    var kThirdBW = doubleArrayOf(
-        //15.0, 30.0, 60.0, 120.0, 240.0, 480.0, 960.0, 1920.0, 3840.0, 7680.0
-        60.0, 170.0, 310.0, 600.0, 1000.0, 3000.0, 6000.0, 12000.0, 14000.0, 16000.0
-    )
-
-    var order = 40
     var equalizerMax = 13
     var equalizerMin = -13
     var custom = "Custom"
@@ -180,7 +173,10 @@ object Utils {
 
     fun initSettingsData(musicViewModel: MusicViewModel, context: Context) {
         CoroutineScope(Dispatchers.IO).launch {
-
+            musicViewModel.musicVisualizationEnable.value =
+                SharedPreferencesUtils.getEnableMusicVisualization(context)
+            musicViewModel.showMusicCover.value =
+                SharedPreferencesUtils.getShowMusicCover(context)
             musicViewModel.themeSelected.intValue = context.getSharedPreferences(
                 "SelectedTheme",
                 Context.MODE_PRIVATE
@@ -594,13 +590,12 @@ object Utils {
         shareIntent.putExtra(Intent.EXTRA_TEXT, "")
         val resolveInfoList: List<ResolveInfo> =
             context.packageManager.queryIntentActivities(shareIntent, 0)
-        for (resolveInfo in resolveInfoList) {
-            val activityInfo = resolveInfo.activityInfo
-            val packageName = activityInfo.packageName
-            val className = activityInfo.name
-            val label = resolveInfo.loadLabel(context.packageManager).toString()
-            println("Package Name: $packageName, Class Name: $className, Label: $label")
-        }
+//        for (resolveInfo in resolveInfoList) {
+//            val activityInfo = resolveInfo.activityInfo
+//            val packageName = activityInfo.packageName
+//            val className = activityInfo.name
+//            val label = resolveInfo.loadLabel(context.packageManager).toString()
+//        }
         return resolveInfoList
     }
 

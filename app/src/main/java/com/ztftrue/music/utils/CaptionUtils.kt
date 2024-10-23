@@ -166,7 +166,7 @@ object CaptionUtils {
                 }
             }
         } catch (e: Exception) {
-            Log.e("getEmbeddedLyrics",e.message?:"")
+//            Log.e("getEmbeddedLyrics",e.message?:"")
         }
         return arrayList
     }

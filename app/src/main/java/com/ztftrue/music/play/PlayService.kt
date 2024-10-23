@@ -15,6 +15,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.media.MediaBrowserServiceCompat
@@ -26,7 +27,6 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
-import androidx.media3.common.audio.SonicAudioProcessor
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
@@ -41,9 +41,7 @@ import com.ztftrue.music.BuildConfig
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.PlayMusicWidget
 import com.ztftrue.music.R
-import com.ztftrue.music.effects.EchoAudioProcessor
 import com.ztftrue.music.effects.EqualizerAudioProcessor
-import com.ztftrue.music.effects.VisualizationAudioProcessor
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.Auxr
 import com.ztftrue.music.sqlData.model.CurrentList
@@ -91,8 +89,8 @@ const val ACTION_SEEK_TO = "SeekTo"
 const val ACTION_CHANGE_PITCH = "ChangePitch"
 const val ACTION_SEARCH = "ACTION_SEARCH"
 const val ACTION_SWITCH_SHUFFLE = "ACTION_SWITCH_SHUFFLE"
-
-//const val ACTION_CHANGE_SPEED = "ACTION_CHANGE_SPEED"  use MediaSessionCompat instead
+const val ACTION_WILL_DISCONNECTED = "ACTION_WILL_DISCONNECTED"
+const val ACTION_IS_CONNECTED = "ACTION_IS_CONNECTED"
 const val ACTION_DSP_ENABLE = "DSP_ENABLE"
 const val ACTION_VISUALIZATION_ENABLE = "VISUALIZATION_ENABLE"
 const val ACTION_DSP_BAND = "ACTION_DSP_BAND"
@@ -128,15 +126,13 @@ const val EVENT_Visualization_Change = 7
 @UnstableApi
 class PlayService : MediaBrowserServiceCompat() {
 
+
     private var mediaSession: MediaSessionCompat? = null
 
-
     val equalizerAudioProcessor: EqualizerAudioProcessor = EqualizerAudioProcessor()
-    var visualizationAudioProcessor: VisualizationAudioProcessor = VisualizationAudioProcessor(null)
-    val echoAudioProcessor: EchoAudioProcessor = EchoAudioProcessor()
-    val sonicAudioProcessor = SonicAudioProcessor()
-    lateinit var exoPlayer: ExoPlayer
+//    val sonicAudioProcessor = SonicAudioProcessor()
 
+    lateinit var exoPlayer: ExoPlayer
 
     private var playListCurrent: AnyListBase? = null
     var musicQueue = java.util.ArrayList<MusicItem>()
@@ -164,8 +160,6 @@ class PlayService : MediaBrowserServiceCompat() {
     private val artistHasAlbumMap: HashMap<Long, ArrayList<AlbumList>> = HashMap()
     private val genreHasAlbumMap: HashMap<Long, ArrayList<AlbumList>> = HashMap()
 
-    var sleepTime = 0L
-
     private var mediaController: MediaControllerCompat? = null
     private val mainTab = ArrayList<MainTab>(7)
     private lateinit var db: MusicDatabase
@@ -177,10 +171,15 @@ class PlayService : MediaBrowserServiceCompat() {
         equalizer = false,
         equalizerBand = bandsValue
     )
-
+//    private var subscribed = false
+    var remainingTime = 0L
+    var playCompleted = false
+    var needPlayPause = false
+    var sleepTime = 0L
+    private var countDownTimer: CountDownTimer? = null
     override fun onCreate() {
         super.onCreate()
-        visualizationAudioProcessor = VisualizationAudioProcessor(mediaSession)
+//        visualizationAudioProcessor = VisualizationAudioProcessor(mediaSession)
         initExo(this@PlayService)
         val contentIntent = Intent(this, MainActivity::class.java)
         val pendingContentIntent = PendingIntent.getActivity(
@@ -214,10 +213,12 @@ class PlayService : MediaBrowserServiceCompat() {
                     }
                 }
             )
-
             mediaController = controller
-
             setCallback(object : MediaSessionCompat.Callback() {
+//                override fun onSetShuffleMode(shuffleMode: Int) {
+//                    super.onSetShuffleMode(shuffleMode)
+//                }
+
                 override fun onPlay() {
                     pauseOrPlayMusic()
                 }
@@ -298,7 +299,9 @@ class PlayService : MediaBrowserServiceCompat() {
                 }
             })
         }
-        visualizationAudioProcessor.setMediaSession(mediaSession!!);
+//        visualizationAudioProcessor.setMediaSession(mediaSession!!)
+        equalizerAudioProcessor.setMediaSession(mediaSession!!)
+
     }
 
 
@@ -442,7 +445,7 @@ class PlayService : MediaBrowserServiceCompat() {
             result.sendResult(null)
         } else if (ACTION_DSP_ENABLE == action) {
             if (extras != null) {
-                equalizerAudioProcessor.isActive = extras.getBoolean("enable")
+                equalizerAudioProcessor.setEqualizerActive(extras.getBoolean("enable"))
                 auxr.equalizer = equalizerAudioProcessor.isSetActive()
                 CoroutineScope(Dispatchers.IO).launch {
                     db.AuxDao().update(auxr)
@@ -487,7 +490,8 @@ class PlayService : MediaBrowserServiceCompat() {
         } else if (ACTION_ECHO_ENABLE == action) {
             if (extras != null) {
                 val echoActive = extras.getBoolean("enable")
-                echoAudioProcessor.isActive = echoActive
+//                echoAudioProcessor.isActive = echoActive
+                equalizerAudioProcessor.setEchoActive(echoActive)
                 auxr.echo = echoActive
                 CoroutineScope(Dispatchers.IO).launch {
                     db.AuxDao().update(auxr)
@@ -497,7 +501,7 @@ class PlayService : MediaBrowserServiceCompat() {
         } else if (ACTION_ECHO_DELAY == action) {
             if (extras != null) {
                 val delayTime = extras.getFloat("delay")
-                echoAudioProcessor.setDaleyTime(delayTime)
+                equalizerAudioProcessor.setDaleyTime(delayTime)
                 auxr.echoDelay = delayTime
                 CoroutineScope(Dispatchers.IO).launch {
                     db.AuxDao().update(auxr)
@@ -507,7 +511,7 @@ class PlayService : MediaBrowserServiceCompat() {
         } else if (ACTION_ECHO_DECAY == action) {
             if (extras != null) {
                 val decay = extras.getFloat("decay")
-                echoAudioProcessor.setDecay(decay)
+                equalizerAudioProcessor.setDecay(decay)
                 auxr.echoDecay = decay
                 CoroutineScope(Dispatchers.IO).launch {
                     db.AuxDao().update(auxr)
@@ -517,7 +521,7 @@ class PlayService : MediaBrowserServiceCompat() {
         } else if (ACTION_ECHO_FEEDBACK == action) {
             if (extras != null) {
                 val echoFeedBack = extras.getBoolean("enable")
-                echoAudioProcessor.setFeedBack(echoFeedBack)
+                equalizerAudioProcessor.setFeedBack(echoFeedBack)
                 auxr.echoRevert = echoFeedBack
                 CoroutineScope(Dispatchers.IO).launch {
                     db.AuxDao().update(auxr)
@@ -527,7 +531,8 @@ class PlayService : MediaBrowserServiceCompat() {
         } else if (ACTION_VISUALIZATION_ENABLE == action) {
             if (extras != null) {
                 val enable = extras.getBoolean("enable")
-                visualizationAudioProcessor.isActive = enable
+                musicVisualizationEnable = enable
+                equalizerAudioProcessor.setVisualizationAudioActive(enable)
                 SharedPreferencesUtils.saveEnableMusicVisualization(this@PlayService, enable)
             }
             result.sendResult(null)
@@ -727,13 +732,18 @@ class PlayService : MediaBrowserServiceCompat() {
                 exoPlayer.volume = volumeValue / 100f
             }
             result.sendResult(null)
+        } else if (ACTION_WILL_DISCONNECTED == action) {
+            equalizerAudioProcessor.setVisualizationAudioActive(false)
+            result.sendResult(null)
+        } else if (ACTION_IS_CONNECTED == action) {
+            if (musicVisualizationEnable) {
+                equalizerAudioProcessor.setVisualizationAudioActive(true)
+            }
+            result.sendResult(null)
         }
     }
 
-    var remainingTime = 0L
-    var playCompleted = false
-    var needPlayPause = false
-    private var countDownTimer: CountDownTimer? = null
+
     private fun timeSet(extras: Bundle, result: Result<Bundle>) {
         val t = extras.getLong("time")
         val v = extras.getBoolean("play_completed", false)
@@ -801,9 +811,9 @@ class PlayService : MediaBrowserServiceCompat() {
                 musicQueue.addAll(musicItems)
                 val t1 = ArrayList<MediaItem>()
                 if (musicQueue.isNotEmpty()) {
-                    musicQueue.forEachIndexed { i, it ->
-                        it.priority = i + 1
-                        t1.add(MediaItem.fromUri(File(it.path).toUri()))
+                    musicQueue.forEachIndexed { i, musicItem ->
+                        musicItem.priority = i + 1
+                        t1.add(MediaItem.fromUri(File(musicItem.path).toUri()))
                     }
                     val bundle = Bundle()
                     bundle.putParcelableArrayList("list", musicQueue)
@@ -877,8 +887,8 @@ class PlayService : MediaBrowserServiceCompat() {
     private var sqlDataInitialized = false
     private var config: PlayConfig? = null
     private var musicVisualizationEnable = false
-
     private val lock = ReentrantLock()
+
     private fun initSqlData(bundle: Bundle) {
         runBlocking {
             awaitAll(
@@ -920,11 +930,11 @@ class PlayService : MediaBrowserServiceCompat() {
                                 } else {
                                     auxr = auxTemp
                                 }
-                                echoAudioProcessor.setDaleyTime(auxr.echoDelay)
-                                echoAudioProcessor.setDecay(auxr.echoDecay)
-                                echoAudioProcessor.setFeedBack(auxr.echoRevert)
-                                echoAudioProcessor.isActive = auxr.echo
-                                equalizerAudioProcessor.isActive = auxr.equalizer
+                                equalizerAudioProcessor.setDaleyTime(auxr.echoDelay)
+                                equalizerAudioProcessor.setDecay(auxr.echoDecay)
+                                equalizerAudioProcessor.setFeedBack(auxr.echoRevert)
+                                equalizerAudioProcessor.setEchoActive(auxr.echo)
+                                equalizerAudioProcessor.setEqualizerActive(auxr.equalizer)
                                 val selectedPreset = this@PlayService.getSharedPreferences(
                                     "SelectedPreset",
                                     Context.MODE_PRIVATE
@@ -1002,7 +1012,10 @@ class PlayService : MediaBrowserServiceCompat() {
                                 // TODO move to   val auxTemp = db.AuxDao().findFirstAux()
                                 musicVisualizationEnable =
                                     SharedPreferencesUtils.getEnableMusicVisualization(this@PlayService)
-                                visualizationAudioProcessor.isActive = musicVisualizationEnable
+//                                visualizationAudioProcessor.isActive = musicVisualizationEnable
+                                equalizerAudioProcessor.setVisualizationAudioActive(
+                                    musicVisualizationEnable
+                                )
                             },
                             async {
                                 val list =
@@ -1064,7 +1077,6 @@ class PlayService : MediaBrowserServiceCompat() {
             null
         }
     }
-
 
     private fun setData(bundle: Bundle, position: Float?) {
         bundle.putInt("type", EVENT_DATA_READY)
@@ -1221,10 +1233,8 @@ class PlayService : MediaBrowserServiceCompat() {
                         .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
                         .setAudioProcessors(
                             arrayOf(
-                                sonicAudioProcessor,
-                                echoAudioProcessor,
+//                                sonicAudioProcessor,
                                 equalizerAudioProcessor,
-                                visualizationAudioProcessor
                             )
                         )
                         .build()
@@ -1310,12 +1320,12 @@ class PlayService : MediaBrowserServiceCompat() {
             @SuppressLint("ApplySharedPref")
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 super.onIsPlayingChanged(isPlaying)
-                if (musicQueue.isNotEmpty() && exoPlayer.currentMediaItemIndex < musicQueue.size) {
-                    currentPlayTrack =
+                currentPlayTrack =
+                    if (musicQueue.isNotEmpty() && exoPlayer.currentMediaItemIndex < musicQueue.size) {
                         musicQueue[exoPlayer.currentMediaItemIndex]
-                } else {
-                    currentPlayTrack = null
-                }
+                    } else {
+                        null
+                    }
                 getSharedPreferences("Widgets", Context.MODE_PRIVATE).getBoolean(
                     "enable",
                     false
@@ -1859,11 +1869,8 @@ class PlayService : MediaBrowserServiceCompat() {
                             bundle.putParcelable("message", playListLinkedHashMap[id])
                             result.sendResult(bundle)
                         }
-
                         return
                     }
-
-
                 }
 
                 PlayListType.Albums.name -> {

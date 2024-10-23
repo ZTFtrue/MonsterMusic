@@ -1514,7 +1514,7 @@ fun PlayingPage(
                                 colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                             )
                             Image(
-                                painter = painterResource(R.drawable.skip_next),
+                                painter = painterResource(R.drawable.next_song),
                                 contentDescription = "skip next",
                                 modifier = Modifier
                                     .clickable {

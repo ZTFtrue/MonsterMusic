@@ -23,6 +23,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -40,6 +41,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.media3.common.util.Log
 import coil.compose.rememberAsyncImagePainter
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
@@ -65,6 +70,8 @@ fun CoverView(musicViewModel: MusicViewModel) {
     val canvasHeight = remember { mutableFloatStateOf(0f) }
     val canvasWidth = remember { mutableFloatStateOf(0f) }
     val initDrops = remember { mutableStateOf(false) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var shouldRun by remember { mutableStateOf(false) }
     val textPaint = android.graphics.Paint().apply {
         color = android.graphics.Color.GREEN
         textSize = textSizeSet
@@ -111,11 +118,34 @@ fun CoverView(musicViewModel: MusicViewModel) {
         }
 
     }
+    DisposableEffect(lifecycleOwner) {
+        val lifecycle = lifecycleOwner.lifecycle
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> {
+                    // Resume the loop when the activity starts
+                    shouldRun = true
+                }
 
+                Lifecycle.Event.ON_STOP -> {
+                    // Stop the loop when the activity stops
+                    shouldRun = false
+                }
+
+                else -> Unit
+            }
+        }
+
+        lifecycle.addObserver(observer)
+        // Remove the observer when the Composable leaves the Composition
+        onDispose {
+            lifecycle.removeObserver(observer)
+        }
+    }
     // 动画更新
-    LaunchedEffect(Unit, musicViewModel.playStatus.value, musicVisualizationEnable.value) {
-        while (musicViewModel.playStatus.value && musicVisualizationEnable.value) {
-            if (!musicViewModel.playStatus.value) break
+    LaunchedEffect(musicViewModel.playStatus.value, musicVisualizationEnable.value, shouldRun) {
+        while (musicViewModel.playStatus.value && musicVisualizationEnable.value && shouldRun) {
+            if (!musicViewModel.playStatus.value || !shouldRun) break
 //            drops.forEach { columnDrops ->
 //                val cDrops = ArrayList<Int>()
 //                // 更新每一列的雨滴
@@ -141,7 +171,7 @@ fun CoverView(musicViewModel: MusicViewModel) {
                     columnDrops.forEachIndexed { index3, drop ->
                         if (index == index2) {
                             // TODO Use log function to calculate the speed
-                            drop.update((magnitude+1))
+                            drop.update((magnitude + 1))
                             // 检查是否超出屏幕
                             if (drop.y > canvasHeight.floatValue + dropHeight) {
                                 cDrops.add(index3)
@@ -157,7 +187,7 @@ fun CoverView(musicViewModel: MusicViewModel) {
                     //                                        val d=  columnDrops.removeAt(index3)
                 }
             }
-            delay(10) // 控制更新频率
+            delay(17) // 控制更新频率
         }
     }
     LazyColumn(
@@ -307,15 +337,16 @@ fun CoverView(musicViewModel: MusicViewModel) {
 
 
 // 雨滴类
-  class Drop(
+class Drop(
     var x: Float,
     y: Float,
     var color: Color = Color.Green,
     var char: String = generateRandomChars()
 ) {
-//    var x   by mutableFloatStateOf(x)
+    //    var x   by mutableFloatStateOf(x)
     var y by mutableFloatStateOf(y)
-//    var color by mutableStateOf(color)
+
+    //    var color by mutableStateOf(color)
 //    var char by mutableStateOf(char)
     fun update(speed: Float) {
 //        char = generateRandomChars()

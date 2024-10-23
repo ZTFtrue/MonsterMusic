@@ -138,7 +138,7 @@ class CreateNotification(service: Service, private val mediaSession: MediaSessio
             )
         )
         builder.addAction(
-            R.drawable.skip_next, "Next", MediaButtonReceiver.buildMediaButtonPendingIntent(
+            R.drawable.next_song, "Next", MediaButtonReceiver.buildMediaButtonPendingIntent(
                 service,
                 PlaybackStateCompat.ACTION_SKIP_TO_NEXT
             )

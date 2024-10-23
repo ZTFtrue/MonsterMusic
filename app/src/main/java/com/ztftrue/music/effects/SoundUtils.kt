@@ -1,10 +1,11 @@
-package com.ztftrue.music.effects;
+package com.ztftrue.music.effects
 
 import androidx.annotation.OptIn
 import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.util.UnstableApi
+import org.apache.commons.math3.util.FastMath
 import java.nio.ByteBuffer
 
 object SoundUtils {
@@ -16,8 +17,8 @@ object SoundUtils {
 
             for (i in downsampled.indices) {
                 // Exponential scaling
-                val startIdx = Math.pow((i.toDouble() / targetSize), 2.0) * totalSize
-                val endIdx = Math.pow(((i + 1).toDouble() / targetSize), 2.0) * totalSize
+                val startIdx = FastMath.pow((i.toDouble() / targetSize), 2.0) * totalSize
+                val endIdx = FastMath.pow(((i + 1).toDouble() / targetSize), 2.0) * totalSize
 
                 // Convert to valid index
                 val start = startIdx.toInt().coerceAtLeast(0).coerceAtMost(totalSize - 1)
@@ -35,42 +36,42 @@ object SoundUtils {
     }
 
     @OptIn(UnstableApi::class)
-    fun getOutputSize(outputAudioFormat: AudioProcessor.AudioFormat,BYTES_PER_SAMPLE:Int): Int {
-        return outputAudioFormat.sampleRate * outputAudioFormat.channelCount * BYTES_PER_SAMPLE
+    fun getOutputSize(outputAudioFormat: AudioProcessor.AudioFormat, bytePerSample:Int): Int {
+        return outputAudioFormat.sampleRate * outputAudioFormat.channelCount * bytePerSample
     }
 
     @OptIn(UnstableApi::class)
     fun getBytePerSample(bitDepth: Int): Int {
         when (bitDepth) {
             Format.NO_VALUE -> {
-                return 1;
+                return 1
             }
 
             C.ENCODING_INVALID -> {
-                return 1;
+                return 1
             }
 
             C.ENCODING_PCM_8BIT -> {
-                return 1;
+                return 1
             }
 
             C.ENCODING_PCM_16BIT, C.ENCODING_PCM_16BIT_BIG_ENDIAN -> {
-                return 2;
+                return 2
             }
 
             C.ENCODING_PCM_24BIT, C.ENCODING_PCM_24BIT_BIG_ENDIAN -> {
-                return 3;
+                return 3
             }
 
             C.ENCODING_PCM_32BIT, C.ENCODING_PCM_32BIT_BIG_ENDIAN -> {
-                return 4;
+                return 4
             }
 
             C.ENCODING_PCM_FLOAT -> {
-                return 4;
+                return 4
             }
         }
-        return 1;
+        return 1
     }
 
     fun adjustFrequencies(magnitudes: FloatArray, sampleRate: Int, fftSize: Int): FloatArray {

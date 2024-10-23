@@ -1,23 +1,30 @@
 package com.ztftrue.music.effects
 
-import android.util.Log
+import android.os.Bundle
+import android.support.v4.media.session.MediaSessionCompat
 import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
 import androidx.media3.common.util.UnstableApi
 import be.tarsos.dsp.io.TarsosDSPAudioFloatConverter
 import be.tarsos.dsp.io.TarsosDSPAudioFormat
+import com.ztftrue.music.effects.SoundUtils.downsampleMagnitudes
 import com.ztftrue.music.effects.SoundUtils.expandBuffer
 import com.ztftrue.music.effects.SoundUtils.getBytePerSample
 import com.ztftrue.music.effects.SoundUtils.getOutputSize
+import com.ztftrue.music.play.EVENT_Visualization_Change
 import com.ztftrue.music.utils.Utils
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.math3.util.FastMath
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.LinkedList
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.locks.ReentrantLock
 
 
@@ -26,27 +33,33 @@ private const val SAMPLE_RATE_NO_CHANGE = -1
 
 @UnstableApi
 class EqualizerAudioProcessor : AudioProcessor {
-
+    private var delayEffectLeft: DelayEffect? = null
+    private var delayEffectRight: DelayEffect? = null
     private var pendingOutputSampleRate = 0
-    private var active = false
+    private var equalizerActive = false
+    private var echoActive = false
+    private var visualizationAudioActive = false
+
     private var outputAudioFormat: AudioProcessor.AudioFormat? = null
 
-    private var sampleBufferRealLeft: DoubleArray = DoubleArray(0)
-    private var sampleBufferRealRight: DoubleArray = DoubleArray(0)
+    private var sampleBufferRealLeft: FloatArray = FloatArray(0)
+    private var sampleBufferRealRight: FloatArray = FloatArray(0)
 
     private var bufferSize = 512
     private var outputBuffer: ByteBuffer = EMPTY_BUFFER
     private var dataBuffer: ByteBuffer = EMPTY_BUFFER
     private var floatArray = FloatArray(bufferSize)
     private var inputEnded = false
-    private val gainDBAbsArray: DoubleArray =
-        doubleArrayOf(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
+    private val gainDBAbsArray: FloatArray =
+        floatArrayOf(1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f)
     private val gainDBArray: IntArray = intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-
     private val mCoefficientLeftBiQuad: ArrayList<BiQuadraticFilter> = arrayListOf()
     private val mCoefficientRightBiQuad: ArrayList<BiQuadraticFilter> = arrayListOf()
-
+    private var delayTime = 0.5f
+    private var decay = 1.0f
+    private var echoFeedBack = false
     private lateinit var converter: TarsosDSPAudioFloatConverter
+    private var pcmToFrequencyDomain = PCMToFrequencyDomain(bufferSize, 44100f)
 
     init {
         outputBuffer = EMPTY_BUFFER
@@ -59,17 +72,22 @@ class EqualizerAudioProcessor : AudioProcessor {
     }
 
 
-    fun setActive(active: Boolean) {
+    fun setEqualizerActive(active: Boolean) {
         lock.lock()
-        if (this.active != active) {
-            mCoefficientRightBiQuad.forEachIndexed { index, biQuadraticFilter ->
+        if (this.equalizerActive != active) {
+            mCoefficientRightBiQuad.forEachIndexed { index, _ ->
                 setBand(index, gainDBArray[index])
             }
-            this.active = active
+            this.equalizerActive = active
         }
         lock.unlock()
     }
 
+    fun setEchoActive(active: Boolean) {
+        if (this.echoActive != active) {
+            this.echoActive = active
+        }
+    }
 
     override fun configure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
         // TODO need support more encoding
@@ -78,13 +96,22 @@ class EqualizerAudioProcessor : AudioProcessor {
             return AudioProcessor.AudioFormat.NOT_SET
         }
         outputAudioFormat = inputAudioFormat
-        BYTES_PER_SAMPLE = getBytePerSample(outputAudioFormat!!.encoding)
-        bufferSize = getOutputSize(outputAudioFormat!!, BYTES_PER_SAMPLE)
+        bytePerSample = getBytePerSample(outputAudioFormat!!.encoding)
+        bufferSize = getOutputSize(outputAudioFormat!!, bytePerSample)
         dataBuffer = ByteBuffer.allocate(bufferSize * 8)
         floatArray = FloatArray(bufferSize)
-        val size = bufferSize / BYTES_PER_SAMPLE / outputAudioFormat!!.channelCount
-        sampleBufferRealLeft = DoubleArray(size)
-        sampleBufferRealRight = DoubleArray(size)
+        val size = bufferSize / bytePerSample / outputAudioFormat!!.channelCount
+        sampleBufferRealLeft = FloatArray(size)
+        sampleBufferRealRight = FloatArray(size)
+        visualizationBuffer = FloatArray(size)
+        visualizationArrayList.clear()
+        pcmToFrequencyDomain =
+            PCMToFrequencyDomain(
+                size / 2,
+                outputAudioFormat!!.sampleRate.toFloat()
+            )
+        blockingQueue.clear()
+        blockingQueue = LinkedBlockingQueue(bufferSize * 4)
         // https://stackoverflow.com/questions/68776031/playing-a-wav-file-with-tarsosdsp-on-android
         val tarsosDSPAudioFormat = TarsosDSPAudioFormat(
             if (inputAudioFormat.sampleRate.toFloat() <= 0) {
@@ -101,25 +128,48 @@ class EqualizerAudioProcessor : AudioProcessor {
             TarsosDSPAudioFloatConverter.getConverter(
                 tarsosDSPAudioFormat
             )
-        mCoefficientRightBiQuad.forEachIndexed { index, biQuadraticFilter ->
+        mCoefficientRightBiQuad.forEachIndexed { index, _ ->
             setBand(index, gainDBArray[index])
         }
-        leftMax = 1.0
-        rightMax = 1.0
+
+        delayEffectLeft = DelayEffect(
+            delayTime,
+            decay,
+            outputAudioFormat!!.sampleRate.toFloat()
+        )
+        delayEffectLeft?.isWithFeedBack = echoFeedBack
+        delayEffectRight = DelayEffect(
+            delayTime,
+            decay,
+            outputAudioFormat!!.sampleRate.toFloat()
+        )
+        delayEffectRight?.isWithFeedBack = echoFeedBack
+        leftEqualizerMax = 1.0f
+        rightEqualizerMax = 1.0f
+        leftEchoMax = 1.0f
+        rightEchoMax = 1.0f
+
         return outputAudioFormat!!
 
     }
 
-    var BYTES_PER_SAMPLE: Int = 2
+    private var bytePerSample: Int = 2
     private var ind = 0
-    private var leftMax = 1.0
-    private var rightMax = 1.0
+    private var leftEqualizerMax: Float = 1.0f
+    private var rightEqualizerMax: Float = 1.0f
+
+    private var leftEchoMax: Float = 1.0f
+    private var rightEchoMax: Float = 1.0f
     override fun isActive(): Boolean {
         return outputAudioFormat != AudioProcessor.AudioFormat.NOT_SET
     }
 
     fun isSetActive(): Boolean {
-        return active
+        return equalizerActive
+    }
+
+    fun setVisualizationAudioActive(active: Boolean) {
+        this.visualizationAudioActive = active
     }
 
     override fun queueInput(inputBuffer: ByteBuffer) {
@@ -128,7 +178,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         }
         if (dataBuffer.remaining() < 1 || dataBuffer.remaining() < inputBuffer.limit()) {
             dataBuffer = expandBuffer(dataBuffer.capacity() + inputBuffer.limit() * 2, dataBuffer)
-            Log.d("ExpandBuffer2", dataBuffer.remaining().toString())
+//            Log.d("ExpandBuffer", dataBuffer.remaining().toString())
         }
         dataBuffer.put(inputBuffer)
     }
@@ -149,6 +199,11 @@ class EqualizerAudioProcessor : AudioProcessor {
         inputEnded = true
     }
 
+    private var mediaSession: MediaSessionCompat? = null
+
+    fun setMediaSession(mediaSession: MediaSessionCompat) {
+        this.mediaSession = mediaSession
+    }
 
     private var changeDb = false
     override fun getOutput(): ByteBuffer {
@@ -162,12 +217,16 @@ class EqualizerAudioProcessor : AudioProcessor {
         return outputBuffer
     }
 
+    private var blockingQueue = LinkedBlockingQueue<Float>(bufferSize * 4)
+    private var visualizationArrayList = LinkedList<Float>() // 用于存储Data
+    private var visualizationBuffer: FloatArray = FloatArray(0)
+
     private fun processData() {
-        if (active) {
+        if (equalizerActive or echoActive or visualizationAudioActive) {
             lock.lock()
             if (changeDb) {
-                leftMax = 1.0
-                rightMax = 1.0
+                leftEqualizerMax = 1.0f
+                rightEqualizerMax = 1.0f
                 for (i in 0 until 10) {
                     mCoefficientLeftBiQuad[i].reset()
                     mCoefficientRightBiQuad[i].reset()
@@ -191,58 +250,94 @@ class EqualizerAudioProcessor : AudioProcessor {
                     converter.toFloatArray(
                         byteArray,
                         floatArray,
-                        bufferSize / BYTES_PER_SAMPLE
+                        bufferSize / bytePerSample
                     )
                     ind = 0
                     val halfLength = floatArray.size / 2
                     // TODO need support more channel count
                     for (i in 0 until halfLength step outputAudioFormat!!.channelCount) {
-                        sampleBufferRealLeft[ind] = floatArray[i].toDouble()
-                        sampleBufferRealRight[ind] = floatArray[i + 1].toDouble()
+                        sampleBufferRealLeft[ind] = floatArray[i]
+                        sampleBufferRealRight[ind] = floatArray[i + 1]
                         ind += 1
                     }
                     runBlocking {
                         awaitAll(
                             async(Dispatchers.IO) {
-                                sampleBufferRealLeft.forEachIndexed { index, it ->
-                                    var outY: Double = it
-                                    mCoefficientLeftBiQuad.forEach { filter ->
-                                        outY = filter.filter(
-                                            outY
-                                        )
+                                if (echoActive && delayEffectLeft != null) {
+                                    leftEchoMax = FastMath.max(
+                                        delayEffectLeft?.process(sampleBufferRealLeft) ?: 1.0f,
+                                        leftEchoMax
+                                    )
+                                    if (leftEchoMax > 1.0) {
+                                        sampleBufferRealLeft.forEachIndexed { index, it ->
+                                            sampleBufferRealLeft[index] = it / leftEchoMax
+                                        }
                                     }
-                                    leftMax = FastMath.max(leftMax, FastMath.abs(outY))
-                                    sampleBufferRealLeft[index] = outY
                                 }
-                                if (leftMax > 1.0) {
+                                if (equalizerActive) {
                                     sampleBufferRealLeft.forEachIndexed { index, it ->
-                                        sampleBufferRealLeft[index] = it / leftMax
+                                        var outY: Float = it
+                                        mCoefficientLeftBiQuad.forEach { filter ->
+                                            outY = filter.filter(
+                                                outY
+                                            )
+                                        }
+                                        leftEqualizerMax =
+                                            FastMath.max(leftEqualizerMax, FastMath.abs(outY))
+                                        sampleBufferRealLeft[index] = outY
                                     }
                                 }
+                                if (leftEqualizerMax > 1.0) {
+                                    sampleBufferRealLeft.forEachIndexed { index, it ->
+                                        sampleBufferRealLeft[index] = it / leftEqualizerMax
+                                    }
+                                }
+
+
                             },
                             async(Dispatchers.IO) {
-                                sampleBufferRealRight.forEachIndexed { index, it ->
-                                    var outY: Double = it
-                                    mCoefficientRightBiQuad.forEach { filter ->
-                                        outY = filter.filter(
-                                            outY
+                                if (echoActive && delayEffectRight != null) {
+                                    rightEchoMax =
+                                        FastMath.max(
+                                            delayEffectRight?.process(sampleBufferRealRight)
+                                                ?: 1.0f, rightEchoMax
                                         )
+                                    if (rightEchoMax > 1.0) {
+                                        sampleBufferRealRight.forEachIndexed { index, it ->
+                                            sampleBufferRealRight[index] = it / rightEchoMax
+                                        }
                                     }
-                                    rightMax = FastMath.max(rightMax, FastMath.abs(outY))
-                                    sampleBufferRealRight[index] = outY
                                 }
-                                if (rightMax > 1.0)
+                                if (equalizerActive) {
                                     sampleBufferRealRight.forEachIndexed { index, it ->
-                                        sampleBufferRealRight[index] = it / rightMax
+                                        var outY: Float = it
+                                        mCoefficientRightBiQuad.forEach { filter ->
+                                            outY = filter.filter(
+                                                outY
+                                            )
+                                        }
+                                        rightEqualizerMax =
+                                            FastMath.max(rightEqualizerMax, FastMath.abs(outY))
+                                        sampleBufferRealRight[index] = outY
+                                    }
+                                }
+                                if (rightEqualizerMax > 1.0)
+                                    sampleBufferRealRight.forEachIndexed { index, it ->
+                                        sampleBufferRealRight[index] = it / rightEqualizerMax
                                     }
                             }
                         )
                     }
+                    if (visualizationAudioActive) {
+                        sampleBufferRealLeft.forEachIndexed { index, it ->
+                            blockingQueue.offer((it + sampleBufferRealRight[index]) / 2f)
+                        }
+                    }
                     ind = 0
                     // TODO need support more channel count
                     for (i in 0 until halfLength step outputAudioFormat!!.channelCount) {
-                        floatArray[i] = sampleBufferRealLeft[ind].toFloat()
-                        floatArray[i + 1] = sampleBufferRealRight[ind].toFloat()
+                        floatArray[i] = sampleBufferRealLeft[ind]
+                        floatArray[i + 1] = sampleBufferRealRight[ind]
                         ind += 1
                     }
                     converter.toByteArray(floatArray, halfLength, byteArray)
@@ -253,6 +348,20 @@ class EqualizerAudioProcessor : AudioProcessor {
                     this.outputBuffer = processedBuffer
                 }
                 dataBuffer.compact()
+            }
+            if (visualizationAudioActive && blockingQueue.size >= visualizationBuffer.size) {
+                visualizationBuffer.forEachIndexed { index, _ ->
+                    visualizationBuffer[index] = blockingQueue.poll() ?: 0f
+                }
+                CoroutineScope(Dispatchers.IO).launch {
+                    val magnitude: FloatArray =
+                        pcmToFrequencyDomain.process(visualizationBuffer)
+                    val m = downsampleMagnitudes(magnitude, 32)
+                    val bundle = Bundle()
+                    bundle.putInt("type", EVENT_Visualization_Change)
+                    bundle.putFloatArray("magnitude", m)
+                    mediaSession?.setExtras(bundle)
+                }
             }
             lock.unlock()
         } else {
@@ -282,6 +391,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             outputBuffer.clear()
         }
         dataBuffer.clear()
+        blockingQueue.clear()
 
         inputEnded = false
     }
@@ -301,22 +411,22 @@ class EqualizerAudioProcessor : AudioProcessor {
         lock.lock()
         if (outputAudioFormat != null) {
             changeDb = true
-            gainDBAbsArray[index] = FastMath.pow(10.0, (value.toDouble() / 20))
+            gainDBAbsArray[index] = FastMath.pow(10.0, (value.toDouble() / 20.0)).toFloat()
             gainDBArray[index] = value
-            if (outputAudioFormat!!.sampleRate.toDouble() > 0) {
+            if (outputAudioFormat!!.sampleRate.toFloat() > 0) {
                 mCoefficientLeftBiQuad[index].configure(
                     BiQuadraticFilter.PEAK,
                     Utils.bandsCenter[index],
-                    outputAudioFormat!!.sampleRate.toDouble(),
+                    outputAudioFormat!!.sampleRate.toFloat(),
                     Utils.qs[index],
-                    value.toDouble(),
+                    value.toFloat(),
                 )
                 mCoefficientRightBiQuad[index].configure(
                     BiQuadraticFilter.PEAK,
                     Utils.bandsCenter[index],
-                    outputAudioFormat!!.sampleRate.toDouble(),
+                    outputAudioFormat!!.sampleRate.toFloat(),
                     Utils.qs[index],
-                    value.toDouble(),
+                    value.toFloat(),
                 )
             }
         }
@@ -341,4 +451,34 @@ class EqualizerAudioProcessor : AudioProcessor {
         }
         return bandLevels
     }
+
+    /**
+     * Set the delay time in milliseconds
+     */
+    fun setDaleyTime(value: Float) {
+        delayTime = value
+        delayEffectLeft?.setEchoLength(delayTime)
+        delayEffectRight?.setEchoLength(delayTime)
+    }
+
+    fun setDecay(value: Float) {
+        if (decay > 1.0 || decay < 0.0) {
+            return
+        }
+        leftEchoMax = 1.0f
+        rightEchoMax = 1.0f
+        this.decay = value
+        delayEffectLeft?.setDecay(value)
+        delayEffectRight?.setDecay(value)
+    }
+
+    fun setFeedBack(value: Boolean) {
+        leftEchoMax = 1.0f
+        rightEchoMax = 1.0f
+        echoFeedBack = value
+        this.echoFeedBack = value
+        delayEffectLeft?.isWithFeedBack = value
+        delayEffectRight?.isWithFeedBack = value
+    }
+
 }
