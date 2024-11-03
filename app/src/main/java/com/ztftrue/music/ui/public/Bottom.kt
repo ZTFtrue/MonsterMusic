@@ -140,7 +140,7 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
                 )
                 Image(
                     painter = painterResource(R.drawable.next_song),
-                    contentDescription = "next song",
+                    contentDescription = "skip next song",
                     modifier = Modifier
                         .clickable {
                             musicViewModel.mediaController?.transportControls?.skipToNext()

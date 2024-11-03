@@ -1515,7 +1515,7 @@ fun PlayingPage(
                             )
                             Image(
                                 painter = painterResource(R.drawable.next_song),
-                                contentDescription = "skip next",
+                                contentDescription = "skip next song",
                                 modifier = Modifier
                                     .clickable {
                                         musicViewModel.mediaController?.transportControls?.skipToNext()
