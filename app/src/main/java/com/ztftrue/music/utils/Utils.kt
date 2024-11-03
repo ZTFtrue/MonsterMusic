@@ -84,8 +84,7 @@ enum class OperateType {
     ShowArtist,
     ClearQueue,
     SaveQueueToPlayList,
-    IgnoreFolder,
-    QueueSwipeSort
+    IgnoreFolder
 }
 
 enum class ScrollDirectionType {
@@ -226,6 +225,20 @@ object Utils {
         ) else String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
     }
 
+    fun formatTimeWithUnit(millis: Long): String {
+        val totalSeconds = millis / 1000
+        val seconds = totalSeconds % 60
+        var minutes = totalSeconds / 60
+        val hours = minutes / 60
+        minutes %= 60
+        return if (hours > 0) String.format(
+            Locale.getDefault(),
+            "%02dh %02dm %02ds",
+            hours,
+            minutes,
+            seconds
+        ) else String.format(Locale.getDefault(), "%02dm %02ds", minutes, seconds)
+    }
 
     private fun openFile(path: String, minType: String = "text/plain", context: Context) {
         val fileUri: Uri

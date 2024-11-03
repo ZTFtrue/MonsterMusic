@@ -3,7 +3,6 @@ package com.ztftrue.music.ui.other
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.widget.Toast
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -93,7 +92,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainTopBar(
     musicViewModel: MusicViewModel,
@@ -457,8 +456,6 @@ fun MainTopBar(
                     musicViewModel.currentCaptionList.clear()
                 } else if (it == OperateType.SaveQueueToPlayList) {
                     showAddPlayListDialog = true
-                } else if (it == OperateType.QueueSwipeSort) {
-
                 }
             })
         }
@@ -684,7 +681,7 @@ fun MainTopBar(
                     )
                 }
             })
-        if(musicViewModel.mainTabList.size > pagerState.currentPage){
+        if (musicViewModel.mainTabList.size > pagerState.currentPage) {
             ScrollableTabRow(
                 selectedTabIndex = pagerState.currentPage,
                 modifier = Modifier.fillMaxWidth(),

@@ -114,6 +114,7 @@ fun TracksListPage(
 ) {
     val tracksList = remember { mutableStateListOf<MusicItem>() }
     val showIndicator = remember { mutableStateOf(false) }
+    val durationAll = remember { mutableStateOf("") }
     val musicPlayList = remember { mutableStateOf(AnyListBase(2, PlayListType.None)) }
     val albumsList = remember { mutableStateListOf<AlbumList>() }
     var refreshCurrentValueList by remember { mutableStateOf(false) }
@@ -396,146 +397,161 @@ fun TracksListPage(
         }
     }
     if (showMoreOperateDialog) {
-        if (type == PlayListType.Albums) {
-            // TODO this can avoid use an error dialog
-            val item =
-                if (musicPlayList.value is AlbumList) {
-                    val a = (musicPlayList.value as AlbumList)
-                    AlbumList(id, "", a.artist, a.firstYear, a.lastYear, 0)
-                } else {
-                    AlbumList(id, "", "", "", "", 0)
-                }
+        when (type) {
+            PlayListType.Albums -> {
+                // TODO this can avoid use an error dialog
+                val item =
+                    if (musicPlayList.value is AlbumList) {
+                        val a = (musicPlayList.value as AlbumList)
+                        AlbumList(id, "", a.artist, a.firstYear, a.lastYear, 0)
+                    } else {
+                        AlbumList(id, "", "", "", "", 0)
+                    }
 
-            AlbumsOperateDialog(
-                musicViewModel,
-                playList = item,
-                onDismiss = {
-                    showMoreOperateDialog = false
-                    when (it) {
-                        OperateType.AddToPlaylist -> {
-                            showAddPlayListDialog = true
-                        }
+                AlbumsOperateDialog(
+                    musicViewModel,
+                    playList = item,
+                    onDismiss = {
+                        showMoreOperateDialog = false
+                        when (it) {
+                            OperateType.AddToPlaylist -> {
+                                showAddPlayListDialog = true
+                            }
 
-                        OperateType.ShowArtist -> {
-                            val bundle = Bundle()
-                            bundle.putLong("albumId", id)
-                            musicViewModel.mediaBrowser?.sendCustomAction(
-                                ACTION_GET_ALBUM_BY_ID,
-                                bundle,
-                                object : MediaBrowserCompat.CustomActionCallback() {
-                                    override fun onResult(
-                                        action: String?,
-                                        extras: Bundle?,
-                                        resultData: Bundle?
-                                    ) {
-                                        super.onResult(action, extras, resultData)
-                                        if (action == ACTION_GET_ALBUM_BY_ID) {
-                                            val albumList =
-                                                resultData?.getParcelable<AlbumList>("album")
-                                            if (albumList != null) {
-                                                ArtistManager.getArtistIdByName(
-                                                    context,
-                                                    albumList.artist
-                                                )?.let { artistId ->
-                                                    navController.navigate(
-                                                        Router.PlayListView.withArgs(
-                                                            artistId.toString(),
-                                                            enumToStringForPlayListType(PlayListType.Artists)
-                                                        ),
-                                                    ) {
+                            OperateType.ShowArtist -> {
+                                val bundle = Bundle()
+                                bundle.putLong("albumId", id)
+                                musicViewModel.mediaBrowser?.sendCustomAction(
+                                    ACTION_GET_ALBUM_BY_ID,
+                                    bundle,
+                                    object : MediaBrowserCompat.CustomActionCallback() {
+                                        override fun onResult(
+                                            action: String?,
+                                            extras: Bundle?,
+                                            resultData: Bundle?
+                                        ) {
+                                            super.onResult(action, extras, resultData)
+                                            if (action == ACTION_GET_ALBUM_BY_ID) {
+                                                val albumList =
+                                                    resultData?.getParcelable<AlbumList>("album")
+                                                if (albumList != null) {
+                                                    ArtistManager.getArtistIdByName(
+                                                        context,
+                                                        albumList.artist
+                                                    )?.let { artistId ->
+                                                        navController.navigate(
+                                                            Router.PlayListView.withArgs(
+                                                                artistId.toString(),
+                                                                enumToStringForPlayListType(
+                                                                    PlayListType.Artists
+                                                                )
+                                                            ),
+                                                        ) {
 
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
-                                    }
-                                })
+                                    })
 
-                        }
+                            }
 
-                        else -> {
-                            Utils.operateDialogDeal(
-                                it,
-                                item,
-                                musicViewModel
-                            )
+                            else -> {
+                                Utils.operateDialogDeal(
+                                    it,
+                                    item,
+                                    musicViewModel
+                                )
 
+                            }
                         }
-                    }
-                },
-            )
-        } else if (type == PlayListType.Artists) {
-            val item = ArtistList(id, "", 0, 0)
-            ArtistsOperateDialog(
-                musicViewModel,
-                playList = item,
-                onDismiss = {
-                    showMoreOperateDialog = false
-                    when (it) {
-                        OperateType.AddToPlaylist -> {
-                            showAddPlayListDialog = true
-                        }
+                    },
+                )
+            }
 
-                        else -> {
-                            Utils.operateDialogDeal(it, item, musicViewModel)
-                        }
-                    }
-                },
-            )
-        } else if (type == PlayListType.Folders) {
-            val item = FolderList("", id, 0)
-            FolderListOperateDialog(
-                musicViewModel,
-                playList = item,
-                onDismiss = {
-                    showMoreOperateDialog = false
-                    when (it) {
-                        OperateType.AddToPlaylist -> {
-                            showAddPlayListDialog = true
-                        }
+            PlayListType.Artists -> {
+                val item = ArtistList(id, "", 0, 0)
+                ArtistsOperateDialog(
+                    musicViewModel,
+                    playList = item,
+                    onDismiss = {
+                        showMoreOperateDialog = false
+                        when (it) {
+                            OperateType.AddToPlaylist -> {
+                                showAddPlayListDialog = true
+                            }
 
-                        else -> {
-                            Utils.operateDialogDeal(it, item, musicViewModel)
+                            else -> {
+                                Utils.operateDialogDeal(it, item, musicViewModel)
+                            }
                         }
-                    }
-                },
-            )
-        } else if (type == PlayListType.Genres) {
-            val item = GenresList(id, "", 0, 0)
-            GenreListOperateDialog(
-                musicViewModel,
-                playList = item,
-                onDismiss = {
-                    showMoreOperateDialog = false
-                    when (it) {
-                        OperateType.AddToPlaylist -> {
-                            showAddPlayListDialog = true
-                        }
+                    },
+                )
+            }
 
-                        else -> {
-                            Utils.operateDialogDeal(it, item, musicViewModel)
-                        }
-                    }
-                },
-            )
-        } else if (type == PlayListType.PlayLists) {
-            val item = MusicPlayList("", id, 0)
-            PlayListOperateDialog(
-                musicViewModel,
-                playList = item,
-                onDismiss = {
-                    showMoreOperateDialog = false
-                    when (it) {
-                        OperateType.AddToPlaylist -> {
-                            showAddPlayListDialog = true
-                        }
+            PlayListType.Folders -> {
+                val item = FolderList("", id, 0)
+                FolderListOperateDialog(
+                    musicViewModel,
+                    playList = item,
+                    onDismiss = {
+                        showMoreOperateDialog = false
+                        when (it) {
+                            OperateType.AddToPlaylist -> {
+                                showAddPlayListDialog = true
+                            }
 
-                        else -> {
-                            Utils.operateDialogDeal(it, item, musicViewModel)
+                            else -> {
+                                Utils.operateDialogDeal(it, item, musicViewModel)
+                            }
                         }
-                    }
-                },
-            )
+                    },
+                )
+            }
+
+            PlayListType.Genres -> {
+                val item = GenresList(id, "", 0, 0)
+                GenreListOperateDialog(
+                    musicViewModel,
+                    playList = item,
+                    onDismiss = {
+                        showMoreOperateDialog = false
+                        when (it) {
+                            OperateType.AddToPlaylist -> {
+                                showAddPlayListDialog = true
+                            }
+
+                            else -> {
+                                Utils.operateDialogDeal(it, item, musicViewModel)
+                            }
+                        }
+                    },
+                )
+            }
+
+            PlayListType.PlayLists -> {
+                val item = MusicPlayList("", id, 0)
+                PlayListOperateDialog(
+                    musicViewModel,
+                    playList = item,
+                    onDismiss = {
+                        showMoreOperateDialog = false
+                        when (it) {
+                            OperateType.AddToPlaylist -> {
+                                showAddPlayListDialog = true
+                            }
+
+                            else -> {
+                                Utils.operateDialogDeal(it, item, musicViewModel)
+                            }
+                        }
+                    },
+                )
+            }
+            PlayListType.Songs -> {}
+            PlayListType.Queue -> {}
+            PlayListType.None -> {}
         }
 
     }
@@ -675,6 +691,8 @@ fun TracksListPage(
                         tracksList.addAll(
                             tracksListResult ?: emptyList()
                         )
+                        val duration = tracksList.sumOf { it.duration }
+                        durationAll.value = Utils.formatTimeWithUnit(duration)
                         albumsList.addAll(albumLists ?: emptyList())
                         if (tracksList.isEmpty() && albumsList.isEmpty() && parentListMessage == null) {
                             navController.popBackStack()
@@ -711,7 +729,8 @@ fun TracksListPage(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 10.dp, end = 10.dp, top = 10.dp, bottom = 10.dp)
+                            .padding(start = 10.dp, end = 10.dp, top = 10.dp, bottom = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Image(
                             painter = rememberAsyncImagePainter(
@@ -764,7 +783,7 @@ fun TracksListPage(
                                     text = stringResource(
                                         R.string.song_tracks,
                                         mListPlay.trackNumber,
-                                        if (mListPlay.trackNumber <= 1) "" else "s"
+                                        if (mListPlay.trackNumber <= 1) "" else stringResource(id = R.string.s)
                                     ),
                                     color = MaterialTheme.colorScheme.onBackground,
                                     modifier = Modifier.horizontalScroll(rememberScrollState(0)),
@@ -854,6 +873,16 @@ fun TracksListPage(
                                     colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                                 )
                             }
+                            Text(
+                                text = "Duration: ${durationAll.value}",
+                                modifier = Modifier.horizontalScroll(
+                                    rememberScrollState(
+                                        0
+                                    )
+                                ),
+                                maxLines = 1,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
                             when (musicPlayList.value) {
                                 is AlbumList -> {
                                     val a = musicPlayList.value as AlbumList
@@ -896,7 +925,7 @@ fun TracksListPage(
                                             text = stringResource(
                                                 R.string.album_tracks,
                                                 a.albumNumber,
-                                                if (a.albumNumber <= 1) "" else "s"
+                                                if (a.albumNumber <= 1) "" else stringResource(id = R.string.s)
                                             ),
 //                                            modifier = Modifier
 //                                                .wrapContentSize(),
@@ -917,7 +946,7 @@ fun TracksListPage(
                                         text = stringResource(
                                             R.string.album_tracks,
                                             a.albumNumber,
-                                            if (a.albumNumber <= 1) "" else "s"
+                                            if (a.albumNumber <= 1) "" else stringResource(id = R.string.s)
                                         ),
 //                                        modifier = Modifier
 //                                            .wrapContentSize(),

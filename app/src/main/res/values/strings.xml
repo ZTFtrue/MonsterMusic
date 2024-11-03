@@ -144,4 +144,5 @@
     <string name="speed_slider">Speed Slider</string>
     <string name="default_set">Default</string>
     <string name="play">play</string>
+    <string name="s">s</string>
 </resources>
