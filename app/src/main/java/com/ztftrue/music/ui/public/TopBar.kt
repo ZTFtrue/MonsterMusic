@@ -34,7 +34,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -72,6 +71,7 @@ import com.ztftrue.music.Router
 import com.ztftrue.music.play.ACTION_SET_SLEEP_TIME
 import com.ztftrue.music.play.ACTION_Volume_CHANGE
 import com.ztftrue.music.ui.play.toPx
+import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.Utils
 import kotlin.math.roundToLong
 
@@ -139,7 +139,7 @@ fun TopBar(
                 ) {
                     item {
                         Column(modifier = Modifier.fillMaxWidth()) {
-                            Slider(
+                            CustomSlider(
                                 modifier = Modifier
                                     .semantics { contentDescription = "Slider" },
                                 value = musicViewModel.volume.intValue.toFloat(),
