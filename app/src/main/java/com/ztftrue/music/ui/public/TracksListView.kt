@@ -26,8 +26,11 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
@@ -283,14 +286,12 @@ fun TracksListView(
                             .offset(x = (-1).dp, y = (-40).dp),
                         shape = CircleShape,
                     ) {
-                        Image(
-                            painter = painterResource(
-                                R.drawable.icon_location
-                            ),
+                        Icon(
+                            imageVector= Icons.Default.MyLocation,
                             contentDescription = "find current playing music",
                             modifier = Modifier
                                 .size(30.dp),
-                            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 }

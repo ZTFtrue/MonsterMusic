@@ -27,6 +27,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
@@ -892,14 +895,22 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                                 mainTabList.remove(item)
                                                 mainTabList.add(it - 1, item)
                                             }) {
-                                            Image(
-                                                painter = painterResource(R.drawable.ic_up),
-                                                contentDescription = "Up tab priority",
+                                            Icon(
+                                                imageVector = Icons.Default.KeyboardArrowUp,
+                                                contentDescription = "Operate More, will open dialog",
                                                 modifier = Modifier
                                                     .size(30.dp)
                                                     .clip(CircleShape),
-                                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
+//                                            Image(
+//                                                painter = painterResource(R.drawable.ic_up),
+//                                                contentDescription = "Up tab priority",
+//                                                modifier = Modifier
+//                                                    .size(30.dp)
+//                                                    .clip(CircleShape),
+//                                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+//                                            )
                                         }
                                     } else {
                                         Box(
@@ -928,14 +939,22 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                                 mainTabList.remove(item)
                                                 mainTabList.add(it + 1, item)
                                             }) {
-                                            Image(
-                                                painter = painterResource(R.drawable.ic_down),
-                                                contentDescription = "Down tab priority",
+                                            Icon(
+                                                imageVector = Icons.Default.KeyboardArrowDown,
+                                                contentDescription = "Operate More, will open dialog",
                                                 modifier = Modifier
                                                     .size(30.dp)
                                                     .clip(CircleShape),
-                                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
+//                                            Image(
+//                                                painter = painterResource(R.drawable.ic_down),
+//                                                contentDescription = "Down tab priority",
+//                                                modifier = Modifier
+//                                                    .size(30.dp)
+//                                                    .clip(CircleShape),
+//                                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+//                                            )
                                         }
                                     }
                                 }

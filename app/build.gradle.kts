@@ -56,7 +56,7 @@ android {
                         tasks.named("mergeReleaseArtProfile").configure {
                             doLast {
                                 copy {
-                                    from("$buildDir/outputs/mapping/release/mapping.txt")
+                                    from("${layout.buildDirectory}/outputs/mapping/release/mapping.txt")
                                     into(variantOutput.outputFile.parent)
                                     rename { "mapping.txt" }
                                 }

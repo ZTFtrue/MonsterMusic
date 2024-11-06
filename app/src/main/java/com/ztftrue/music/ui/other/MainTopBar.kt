@@ -28,6 +28,9 @@ import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.HourglassEmpty
+import androidx.compose.material.icons.outlined.HourglassTop
+import androidx.compose.material.icons.outlined.Timelapse
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -52,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -106,10 +110,10 @@ fun MainTopBar(
     var showCreatePlayListDialog by remember { mutableStateOf(false) }
     var showSortDialog by remember { mutableStateOf(false) }
     var showOperateDialog by remember { mutableStateOf(false) }
-    val timerIcon: Int = if (musicViewModel.remainTime.longValue == 0L) {
-        R.drawable.set_timer
+    val timerIcon: ImageVector = if (musicViewModel.remainTime.longValue == 0L) {
+        Icons.Outlined.HourglassEmpty
     } else {
-        R.drawable.setted_timer
+        Icons.Outlined.HourglassTop
     }
 
     Column {
@@ -653,13 +657,13 @@ fun MainTopBar(
                 }, onClick = {
                     showSleepDialog = true
                 }) {
-                    Image(
-                        painter = painterResource(timerIcon),
+                    Icon(
+                        imageVector = timerIcon,
                         contentDescription = "Sleeper time",
                         modifier = Modifier
                             .size(30.dp)
                             .clip(CircleShape),
-                        colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                        tint = MaterialTheme.colorScheme.onBackground
                     )
                 }
                 IconButton(
