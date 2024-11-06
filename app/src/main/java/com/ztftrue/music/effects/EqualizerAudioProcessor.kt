@@ -368,12 +368,12 @@ class EqualizerAudioProcessor : AudioProcessor {
 
     override fun flush() {
         lock.lock()
-        if (outputBuffer != EMPTY_BUFFER) {
-            outputBuffer.clear()
-        }
+//        if (outputBuffer != EMPTY_BUFFER) {
+//            outputBuffer.clear()
+//        }
+        outputBuffer= EMPTY_BUFFER
         dataBuffer.clear()
         blockingQueue.clear()
-
         inputEnded = false
         lock.unlock()
     }
@@ -383,7 +383,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         outputAudioFormat = AudioProcessor.AudioFormat.NOT_SET
         outputAudioFormat = AudioProcessor.AudioFormat.NOT_SET
         pendingOutputSampleRate = SAMPLE_RATE_NO_CHANGE
-        outputBuffer.clear()
+//        outputBuffer.clear()
         outputBuffer = EMPTY_BUFFER
         inputEnded = false
     }
