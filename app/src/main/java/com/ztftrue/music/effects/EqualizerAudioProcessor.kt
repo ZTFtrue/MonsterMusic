@@ -1,5 +1,6 @@
 package com.ztftrue.music.effects
 
+import android.os.Bundle
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.media3.common.C
@@ -9,12 +10,16 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import be.tarsos.dsp.io.TarsosDSPAudioFloatConverter
 import be.tarsos.dsp.io.TarsosDSPAudioFormat
+import com.ztftrue.music.effects.SoundUtils.downsampleMagnitudes
 import com.ztftrue.music.effects.SoundUtils.expandBuffer
 import com.ztftrue.music.effects.SoundUtils.getBytePerSample
+import com.ztftrue.music.play.EVENT_Visualization_Change
 import com.ztftrue.music.utils.Utils
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.math3.util.FastMath
 import java.nio.ByteBuffer
@@ -97,7 +102,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         val perSecond = Util.getPcmFrameSize(
             outputAudioFormat!!.encoding,
             outputAudioFormat!!.channelCount
-        )* outputAudioFormat!!.sampleRate
+        ) * outputAudioFormat!!.sampleRate
         Log.d("EqualizerAudioProcessor", "configure: ${outputAudioFormat!!.sampleRate}")
         bufferSize = perSecond
         dataBuffer = ByteBuffer.allocate(bufferSize * 8)
@@ -282,14 +287,12 @@ class EqualizerAudioProcessor : AudioProcessor {
                                             FastMath.max(leftEqualizerMax, FastMath.abs(outY))
                                         sampleBufferRealLeft[index] = outY
                                     }
-                                }
-                                if (leftEqualizerMax > 1.0) {
-                                    sampleBufferRealLeft.forEachIndexed { index, it ->
-                                        sampleBufferRealLeft[index] = it / leftEqualizerMax
+                                    if (leftEqualizerMax > 1.0) {
+                                        sampleBufferRealLeft.forEachIndexed { index, it ->
+                                            sampleBufferRealLeft[index] = it / leftEqualizerMax
+                                        }
                                     }
                                 }
-
-
                             },
                             async(Dispatchers.IO) {
                                 if (echoActive && delayEffectRight != null) {
@@ -316,17 +319,31 @@ class EqualizerAudioProcessor : AudioProcessor {
                                             FastMath.max(rightEqualizerMax, FastMath.abs(outY))
                                         sampleBufferRealRight[index] = outY
                                     }
+                                    if (rightEqualizerMax > 1.0)
+                                        sampleBufferRealRight.forEachIndexed { index, it ->
+                                            sampleBufferRealRight[index] = it / rightEqualizerMax
+                                        }
                                 }
-                                if (rightEqualizerMax > 1.0)
-                                    sampleBufferRealRight.forEachIndexed { index, it ->
-                                        sampleBufferRealRight[index] = it / rightEqualizerMax
-                                    }
                             }
                         )
                     }
                     if (visualizationAudioActive) {
                         sampleBufferRealLeft.forEachIndexed { index, it ->
                             blockingQueue.offer((it + sampleBufferRealRight[index]) / 2f)
+                        }
+                        if (blockingQueue.size >= visualizationBuffer.size) {
+                            visualizationBuffer.forEachIndexed { index, _ ->
+                                visualizationBuffer[index] = blockingQueue.poll() ?: 0f
+                            }
+                            CoroutineScope(Dispatchers.IO).launch {
+                                val magnitude: FloatArray =
+                                    pcmToFrequencyDomain.process(visualizationBuffer)
+                                val m = downsampleMagnitudes(magnitude, 32)
+                                val bundle = Bundle()
+                                bundle.putInt("type", EVENT_Visualization_Change)
+                                bundle.putFloatArray("magnitude", m)
+                                mediaSession?.setExtras(bundle)
+                            }
                         }
                     }
                     ind = 0
@@ -371,7 +388,7 @@ class EqualizerAudioProcessor : AudioProcessor {
 //        if (outputBuffer != EMPTY_BUFFER) {
 //            outputBuffer.clear()
 //        }
-        outputBuffer= EMPTY_BUFFER
+        outputBuffer = EMPTY_BUFFER
         dataBuffer.clear()
         blockingQueue.clear()
         inputEnded = false
