@@ -1,6 +1,5 @@
 package com.ztftrue.music.effects
 
-import android.os.Bundle
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.media3.common.C
@@ -10,16 +9,12 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import be.tarsos.dsp.io.TarsosDSPAudioFloatConverter
 import be.tarsos.dsp.io.TarsosDSPAudioFormat
-import com.ztftrue.music.effects.SoundUtils.downsampleMagnitudes
 import com.ztftrue.music.effects.SoundUtils.expandBuffer
 import com.ztftrue.music.effects.SoundUtils.getBytePerSample
-import com.ztftrue.music.play.EVENT_Visualization_Change
 import com.ztftrue.music.utils.Utils
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.math3.util.FastMath
 import java.nio.ByteBuffer
@@ -102,9 +97,9 @@ class EqualizerAudioProcessor : AudioProcessor {
         val perSecond = Util.getPcmFrameSize(
             outputAudioFormat!!.encoding,
             outputAudioFormat!!.channelCount
-        ) * outputAudioFormat!!.sampleRate
+        )* outputAudioFormat!!.sampleRate
         Log.d("EqualizerAudioProcessor", "configure: ${outputAudioFormat!!.sampleRate}")
-        bufferSize = perSecond / 2
+        bufferSize = perSecond
         dataBuffer = ByteBuffer.allocate(bufferSize * 8)
         floatArray = FloatArray(bufferSize)
         val size = bufferSize / (bytePerSample * outputAudioFormat!!.channelCount)
@@ -214,9 +209,6 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var changeDb = false
     override fun getOutput(): ByteBuffer {
         processData()
-//        if (outputBuffer.position() == 0) {
-//            return EMPTY_BUFFER;
-//        }
         val outputBuffer: ByteBuffer = this.outputBuffer
         this.outputBuffer = EMPTY_BUFFER
         outputBuffer.flip()
@@ -239,132 +231,117 @@ class EqualizerAudioProcessor : AudioProcessor {
                 }
                 changeDb = false
             }
-            dataBuffer.flip()
-            if (dataBuffer.hasRemaining()) {
-                val dataRemaining = dataBuffer.remaining() // 获取 dataBuffer 中剩余的有效数据量
-                val readSize =
-                    if (dataRemaining > bufferSize) bufferSize else dataRemaining // 确定实际读取量
-                val processedBuffer = ByteBuffer.allocate(readSize)
-                val oldLimit = dataBuffer.limit() // 记录旧的 limit
-                dataBuffer.limit(dataBuffer.position() + readSize) // 设置新 limit 来控制读取量
-                processedBuffer.put(dataBuffer)
-                dataBuffer.limit(oldLimit)
-                val byteArray = processedBuffer.array()
-                floatArray = FloatArray(readSize / bytePerSample)
-                sampleBufferRealLeft = FloatArray(floatArray.size / 2)
-                sampleBufferRealRight = FloatArray(floatArray.size / 2)
-                converter.toFloatArray(
-                    byteArray,
-                    floatArray,
-                    floatArray.size
-                )
-                ind = 0
-                val halfLength = floatArray.size / outputAudioFormat!!.channelCount
-                // TODO need support more channel count
-                for (i in 0 until halfLength step outputAudioFormat!!.channelCount) {
-                    sampleBufferRealLeft[ind] = floatArray[i]
-                    sampleBufferRealRight[ind] = floatArray[i + 1]
-                    ind += 1
-                }
-                runBlocking {
-                    awaitAll(
-                        async(Dispatchers.IO) {
-                            if (echoActive && delayEffectLeft != null) {
-                                leftEchoMax = FastMath.max(
-                                    delayEffectLeft?.process(sampleBufferRealLeft) ?: 1.0f,
-                                    leftEchoMax
-                                )
-                                if (leftEchoMax > 1.0) {
-                                    sampleBufferRealLeft.forEachIndexed { index, it ->
-                                        sampleBufferRealLeft[index] = it / leftEchoMax
-                                    }
-                                }
-                            }
-                            if (equalizerActive) {
-                                sampleBufferRealLeft.forEachIndexed { index, it ->
-                                    var outY: Float = it
-                                    mCoefficientLeftBiQuad.forEach { filter ->
-                                        outY = filter.filter(
-                                            outY
-                                        )
-                                    }
-                                    leftEqualizerMax =
-                                        FastMath.max(leftEqualizerMax, FastMath.abs(outY))
-                                    sampleBufferRealLeft[index] = outY
-                                }
-                            }
-                            if (leftEqualizerMax > 1.0) {
-                                sampleBufferRealLeft.forEachIndexed { index, it ->
-                                    sampleBufferRealLeft[index] = it / leftEqualizerMax
-                                }
-                            }
-                        },
-                        async(Dispatchers.IO) {
-                            if (echoActive && delayEffectRight != null) {
-                                rightEchoMax =
-                                    FastMath.max(
-                                        delayEffectRight?.process(sampleBufferRealRight)
-                                            ?: 1.0f, rightEchoMax
-                                    )
-                                if (rightEchoMax > 1.0) {
-                                    sampleBufferRealRight.forEachIndexed { index, it ->
-                                        sampleBufferRealRight[index] = it / rightEchoMax
-                                    }
-                                }
-                            }
-                            if (equalizerActive) {
-                                sampleBufferRealRight.forEachIndexed { index, it ->
-                                    var outY: Float = it
-                                    mCoefficientRightBiQuad.forEach { filter ->
-                                        outY = filter.filter(
-                                            outY
-                                        )
-                                    }
-                                    rightEqualizerMax =
-                                        FastMath.max(rightEqualizerMax, FastMath.abs(outY))
-                                    sampleBufferRealRight[index] = outY
-                                }
-                            }
-                            if (rightEqualizerMax > 1.0)
-                                sampleBufferRealRight.forEachIndexed { index, it ->
-                                    sampleBufferRealRight[index] = it / rightEqualizerMax
-                                }
-                        }
+            if (dataBuffer.position() >= bufferSize) {
+                dataBuffer.flip()
+                if (dataBuffer.hasRemaining()) {
+                    val dataRemaining = dataBuffer.remaining() // 获取 dataBuffer 中剩余的有效数据量
+                    val readSize =
+                        if (dataRemaining > bufferSize) bufferSize else dataRemaining // 确定实际读取量
+                    val processedBuffer = ByteBuffer.allocate(readSize)
+                    val oldLimit = dataBuffer.limit() // 记录旧的 limit
+                    dataBuffer.limit(dataBuffer.position() + readSize) // 设置新 limit 来控制读取量
+                    processedBuffer.put(dataBuffer)
+                    dataBuffer.limit(oldLimit)
+                    val byteArray = processedBuffer.array()
+                    converter.toFloatArray(
+                        byteArray,
+                        floatArray,
+                        bufferSize / bytePerSample
                     )
-                }
-                if (visualizationAudioActive) {
-                    sampleBufferRealLeft.forEachIndexed { index, it ->
-                        blockingQueue.offer((it + sampleBufferRealRight[index]) / 2f)
+                    ind = 0
+                    val halfLength = floatArray.size / 2
+                    // TODO need support more channel count
+                    for (i in 0 until halfLength step outputAudioFormat!!.channelCount) {
+                        sampleBufferRealLeft[ind] = floatArray[i]
+                        sampleBufferRealRight[ind] = floatArray[i + 1]
+                        ind += 1
                     }
+                    runBlocking {
+                        awaitAll(
+                            async(Dispatchers.IO) {
+                                if (echoActive && delayEffectLeft != null) {
+                                    leftEchoMax = FastMath.max(
+                                        delayEffectLeft?.process(sampleBufferRealLeft) ?: 1.0f,
+                                        leftEchoMax
+                                    )
+                                    if (leftEchoMax > 1.0) {
+                                        sampleBufferRealLeft.forEachIndexed { index, it ->
+                                            sampleBufferRealLeft[index] = it / leftEchoMax
+                                        }
+                                    }
+                                }
+                                if (equalizerActive) {
+                                    sampleBufferRealLeft.forEachIndexed { index, it ->
+                                        var outY: Float = it
+                                        mCoefficientLeftBiQuad.forEach { filter ->
+                                            outY = filter.filter(
+                                                outY
+                                            )
+                                        }
+                                        leftEqualizerMax =
+                                            FastMath.max(leftEqualizerMax, FastMath.abs(outY))
+                                        sampleBufferRealLeft[index] = outY
+                                    }
+                                }
+                                if (leftEqualizerMax > 1.0) {
+                                    sampleBufferRealLeft.forEachIndexed { index, it ->
+                                        sampleBufferRealLeft[index] = it / leftEqualizerMax
+                                    }
+                                }
+
+
+                            },
+                            async(Dispatchers.IO) {
+                                if (echoActive && delayEffectRight != null) {
+                                    rightEchoMax =
+                                        FastMath.max(
+                                            delayEffectRight?.process(sampleBufferRealRight)
+                                                ?: 1.0f, rightEchoMax
+                                        )
+                                    if (rightEchoMax > 1.0) {
+                                        sampleBufferRealRight.forEachIndexed { index, it ->
+                                            sampleBufferRealRight[index] = it / rightEchoMax
+                                        }
+                                    }
+                                }
+                                if (equalizerActive) {
+                                    sampleBufferRealRight.forEachIndexed { index, it ->
+                                        var outY: Float = it
+                                        mCoefficientRightBiQuad.forEach { filter ->
+                                            outY = filter.filter(
+                                                outY
+                                            )
+                                        }
+                                        rightEqualizerMax =
+                                            FastMath.max(rightEqualizerMax, FastMath.abs(outY))
+                                        sampleBufferRealRight[index] = outY
+                                    }
+                                }
+                                if (rightEqualizerMax > 1.0)
+                                    sampleBufferRealRight.forEachIndexed { index, it ->
+                                        sampleBufferRealRight[index] = it / rightEqualizerMax
+                                    }
+                            }
+                        )
+                    }
+                    if (visualizationAudioActive) {
+                        sampleBufferRealLeft.forEachIndexed { index, it ->
+                            blockingQueue.offer((it + sampleBufferRealRight[index]) / 2f)
+                        }
+                    }
+                    ind = 0
+                    // TODO need support more channel count
+                    for (i in 0 until halfLength step outputAudioFormat!!.channelCount) {
+                        floatArray[i] = sampleBufferRealLeft[ind]
+                        floatArray[i + 1] = sampleBufferRealRight[ind]
+                        ind += 1
+                    }
+                    converter.toByteArray(floatArray, halfLength, byteArray)
+                    processedBuffer.position(bufferSize)
+                    processedBuffer.order(ByteOrder.nativeOrder())
+                    this.outputBuffer = processedBuffer
                 }
-                ind = 0
-                // TODO need support more channel count
-                for (i in 0 until halfLength step outputAudioFormat!!.channelCount) {
-                    floatArray[i] = sampleBufferRealLeft[ind]
-                    floatArray[i + 1] = sampleBufferRealRight[ind]
-                    ind += 1
-                }
-                converter.toByteArray(floatArray, halfLength, byteArray)
-                processedBuffer.clear()
-                processedBuffer.put(byteArray)
-                processedBuffer.position(readSize)
-                processedBuffer.order(ByteOrder.nativeOrder())
-                this.outputBuffer = processedBuffer
-            }
-            dataBuffer.compact()
-            if (visualizationAudioActive && blockingQueue.size >= visualizationBuffer.size) {
-                visualizationBuffer.forEachIndexed { index, _ ->
-                    visualizationBuffer[index] = blockingQueue.poll() ?: 0f
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    val magnitude: FloatArray =
-                        pcmToFrequencyDomain.process(visualizationBuffer)
-                    val m = downsampleMagnitudes(magnitude, 32)
-                    val bundle = Bundle()
-                    bundle.putInt("type", EVENT_Visualization_Change)
-                    bundle.putFloatArray("magnitude", m)
-                    mediaSession?.setExtras(bundle)
-                }
+                dataBuffer.compact()
             }
             lock.unlock()
         } else {
@@ -390,6 +367,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     }
 
     override fun flush() {
+        lock.lock()
         if (outputBuffer != EMPTY_BUFFER) {
             outputBuffer.clear()
         }
@@ -397,6 +375,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         blockingQueue.clear()
 
         inputEnded = false
+        lock.unlock()
     }
 
 
