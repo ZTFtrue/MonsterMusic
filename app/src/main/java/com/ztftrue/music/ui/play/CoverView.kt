@@ -38,13 +38,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.media3.common.util.Log
 import coil.compose.rememberAsyncImagePainter
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
@@ -66,7 +64,6 @@ fun CoverView(musicViewModel: MusicViewModel) {
     val columnSpacing = 80f // 列之间的间隔
     val dropHeight = 80f // 字符的高度间隔
     val textSizeSet = 60f
-    val density = LocalDensity.current.density
     val canvasHeight = remember { mutableFloatStateOf(0f) }
     val canvasWidth = remember { mutableFloatStateOf(0f) }
     val initDrops = remember { mutableStateOf(false) }
@@ -109,7 +106,7 @@ fun CoverView(musicViewModel: MusicViewModel) {
                             color = if (row == columnRowDropsCount - 1) {
                                 Color.White
                             } else {
-                                Color.Green.copy(alpha = ((columnRowDropsCount - row) / columnRowDropsCount.toFloat()).toFloat())
+                                Color.Green.copy(alpha = ((columnRowDropsCount - row) / columnRowDropsCount.toFloat()))
                             }
                         )
                     )

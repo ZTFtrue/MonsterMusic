@@ -144,5 +144,5 @@
     <string name="speed_slider">速度滑块</string>
     <string name="default_set">默认</string>
     <string name="play">播放</string>
-
+    <string name="s" />
 </resources>

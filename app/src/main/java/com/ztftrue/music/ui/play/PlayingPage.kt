@@ -41,6 +41,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,7 +49,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
@@ -117,6 +117,7 @@ import com.ztftrue.music.ui.public.CreatePlayListDialog
 import com.ztftrue.music.ui.public.DeleteTip
 import com.ztftrue.music.ui.public.OperateDialog
 import com.ztftrue.music.ui.public.TopBar
+import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.SharedPreferencesUtils
@@ -142,7 +143,8 @@ data class PlayingViewTab(
 
 
 @OptIn(
-    ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class
+    ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class,
+    ExperimentalMaterial3Api::class
 )
 @UnstableApi
 @Composable
@@ -1320,9 +1322,10 @@ fun PlayingPage(
                         .background(MaterialTheme.colorScheme.surface)
                 ) {
                     if (musicViewModel.currentDuration.longValue > 0) {
-                        Slider(
+                        CustomSlider(
                             modifier = Modifier
                                 .semantics { contentDescription = "Slider" }
+//                                .padding(start = 50.dp, end = 50.dp)
                                 .motionEventSpy {
                                     when (it.action) {
                                         MotionEvent.ACTION_DOWN -> {
@@ -1515,7 +1518,7 @@ fun PlayingPage(
                             )
                             Image(
                                 painter = painterResource(R.drawable.next_song),
-                                contentDescription = "skip next",
+                                contentDescription = "skip next song",
                                 modifier = Modifier
                                     .clickable {
                                         musicViewModel.mediaController?.transportControls?.skipToNext()

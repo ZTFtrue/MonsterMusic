@@ -1,24 +1,20 @@
 package com.ztftrue.music.effects
 
-import android.os.Bundle
 import android.support.v4.media.session.MediaSessionCompat
+import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.common.util.Util
 import be.tarsos.dsp.io.TarsosDSPAudioFloatConverter
 import be.tarsos.dsp.io.TarsosDSPAudioFormat
-import com.ztftrue.music.effects.SoundUtils.downsampleMagnitudes
 import com.ztftrue.music.effects.SoundUtils.expandBuffer
 import com.ztftrue.music.effects.SoundUtils.getBytePerSample
-import com.ztftrue.music.effects.SoundUtils.getOutputSize
-import com.ztftrue.music.play.EVENT_Visualization_Change
 import com.ztftrue.music.utils.Utils
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.math3.util.FastMath
 import java.nio.ByteBuffer
@@ -96,11 +92,17 @@ class EqualizerAudioProcessor : AudioProcessor {
             return AudioProcessor.AudioFormat.NOT_SET
         }
         outputAudioFormat = inputAudioFormat
+        // single channel
         bytePerSample = getBytePerSample(outputAudioFormat!!.encoding)
-        bufferSize = getOutputSize(outputAudioFormat!!, bytePerSample)
+        val perSecond = Util.getPcmFrameSize(
+            outputAudioFormat!!.encoding,
+            outputAudioFormat!!.channelCount
+        )* outputAudioFormat!!.sampleRate
+        Log.d("EqualizerAudioProcessor", "configure: ${outputAudioFormat!!.sampleRate}")
+        bufferSize = perSecond
         dataBuffer = ByteBuffer.allocate(bufferSize * 8)
         floatArray = FloatArray(bufferSize)
-        val size = bufferSize / bytePerSample / outputAudioFormat!!.channelCount
+        val size = bufferSize / (bytePerSample * outputAudioFormat!!.channelCount)
         sampleBufferRealLeft = FloatArray(size)
         sampleBufferRealRight = FloatArray(size)
         visualizationBuffer = FloatArray(size)
@@ -178,7 +180,6 @@ class EqualizerAudioProcessor : AudioProcessor {
         }
         if (dataBuffer.remaining() < 1 || dataBuffer.remaining() < inputBuffer.limit()) {
             dataBuffer = expandBuffer(dataBuffer.capacity() + inputBuffer.limit() * 2, dataBuffer)
-//            Log.d("ExpandBuffer", dataBuffer.remaining().toString())
         }
         dataBuffer.put(inputBuffer)
     }
@@ -208,9 +209,6 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var changeDb = false
     override fun getOutput(): ByteBuffer {
         processData()
-//        if (outputBuffer.position() == 0) {
-//            return EMPTY_BUFFER;
-//        }
         val outputBuffer: ByteBuffer = this.outputBuffer
         this.outputBuffer = EMPTY_BUFFER
         outputBuffer.flip()
@@ -244,9 +242,7 @@ class EqualizerAudioProcessor : AudioProcessor {
                     dataBuffer.limit(dataBuffer.position() + readSize) // 设置新 limit 来控制读取量
                     processedBuffer.put(dataBuffer)
                     dataBuffer.limit(oldLimit)
-
                     val byteArray = processedBuffer.array()
-
                     converter.toFloatArray(
                         byteArray,
                         floatArray,
@@ -341,27 +337,11 @@ class EqualizerAudioProcessor : AudioProcessor {
                         ind += 1
                     }
                     converter.toByteArray(floatArray, halfLength, byteArray)
-                    processedBuffer.clear()
-                    processedBuffer.put(byteArray)
                     processedBuffer.position(bufferSize)
                     processedBuffer.order(ByteOrder.nativeOrder())
                     this.outputBuffer = processedBuffer
                 }
                 dataBuffer.compact()
-            }
-            if (visualizationAudioActive && blockingQueue.size >= visualizationBuffer.size) {
-                visualizationBuffer.forEachIndexed { index, _ ->
-                    visualizationBuffer[index] = blockingQueue.poll() ?: 0f
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    val magnitude: FloatArray =
-                        pcmToFrequencyDomain.process(visualizationBuffer)
-                    val m = downsampleMagnitudes(magnitude, 32)
-                    val bundle = Bundle()
-                    bundle.putInt("type", EVENT_Visualization_Change)
-                    bundle.putFloatArray("magnitude", m)
-                    mediaSession?.setExtras(bundle)
-                }
             }
             lock.unlock()
         } else {
@@ -387,6 +367,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     }
 
     override fun flush() {
+        lock.lock()
         if (outputBuffer != EMPTY_BUFFER) {
             outputBuffer.clear()
         }
@@ -394,6 +375,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         blockingQueue.clear()
 
         inputEnded = false
+        lock.unlock()
     }
 
 

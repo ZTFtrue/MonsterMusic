@@ -244,7 +244,7 @@ fun FolderItemView(
                     modifier = Modifier.horizontalScroll(rememberScrollState(0)),
                 )
                 Text(
-                    text = stringResource(R.string.song, number, if (number <= 1L) "" else "s"),
+                    text = stringResource(R.string.song, number, if (number <= 1L) "" else stringResource(id = R.string.s)),
                     color = MaterialTheme.colorScheme.onBackground,
                 )
             }

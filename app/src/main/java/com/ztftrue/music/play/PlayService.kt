@@ -15,7 +15,6 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
 import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.media.MediaBrowserServiceCompat
@@ -28,6 +27,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.common.util.Util
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.audio.AudioSink
@@ -171,7 +171,8 @@ class PlayService : MediaBrowserServiceCompat() {
         equalizer = false,
         equalizerBand = bandsValue
     )
-//    private var subscribed = false
+
+    //    private var subscribed = false
     var remainingTime = 0L
     var playCompleted = false
     var needPlayPause = false
@@ -1244,10 +1245,10 @@ class PlayService : MediaBrowserServiceCompat() {
                             specifiedBufferSize: Int,
                             outputChannels: IntArray?
                         ) {
-//                            val bytesPerSec = Util.getPcmFrameSize(
-//                                inputFormat.pcmEncoding,
-//                                inputFormat.channelCount
-//                            ) * inputFormat.sampleRate * 1 // 这里计算出的就是1s音频的缓冲长度
+                            val bytesPerSec = Util.getPcmFrameSize(
+                                inputFormat.pcmEncoding,
+                                inputFormat.channelCount
+                            ) * inputFormat.sampleRate * 1 // 这里计算出的就是 1s音频的缓冲长度
 
                             CoroutineScope(Dispatchers.Main).launch {
                                 if (needPlayPause) {
@@ -1259,8 +1260,7 @@ class PlayService : MediaBrowserServiceCompat() {
                                     exoPlayer.duration
                                 )
                             }
-
-                            super.configure(inputFormat, specifiedBufferSize, outputChannels)
+                            super.configure(inputFormat, bytesPerSec, outputChannels)
                         }
 
                     }

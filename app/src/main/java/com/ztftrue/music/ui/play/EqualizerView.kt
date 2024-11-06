@@ -22,10 +22,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -65,12 +65,14 @@ import com.ztftrue.music.play.ACTION_DSP_ENABLE
 import com.ztftrue.music.play.ACTION_ECHO_DECAY
 import com.ztftrue.music.play.ACTION_ECHO_DELAY
 import com.ztftrue.music.play.ACTION_ECHO_ENABLE
+import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.equalizerMax
 import com.ztftrue.music.utils.Utils.equalizerMin
 import com.ztftrue.music.utils.model.EqualizerBand
 import kotlin.math.roundToInt
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EqualizerView(musicViewModel: MusicViewModel) {
     val listState = rememberLazyListState()
@@ -143,12 +145,14 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                         )
                     }
                 }
-                Slider(
+                CustomSlider(
                     modifier = Modifier
-                        .semantics { contentDescription = context.getString(R.string.pitch_slider) },
+                        .semantics {
+                            contentDescription = context.getString(R.string.pitch_slider)
+                        },
                     value = pitch.floatValue,
                     onValueChange = {
-                        pitch.floatValue = (it*10f).roundToInt() / 10f
+                        pitch.floatValue = (it * 10f).roundToInt() / 10f
                     },
                     valueRange = 0.5f..2.0f,
                     steps = 15,
@@ -187,12 +191,14 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                         )
                     }
                 }
-                Slider(
+                CustomSlider(
                     modifier = Modifier
-                        .semantics { contentDescription = context.getString(R.string.speed_slider) },
+                        .semantics {
+                            contentDescription = context.getString(R.string.speed_slider)
+                        },
                     value = speed.floatValue,
                     onValueChange = {
-                        speed.floatValue = (it*10f).roundToInt() / 10f
+                        speed.floatValue = (it * 10f).roundToInt() / 10f
                     },
                     valueRange = 0.5f..2f,
                     steps = 15,
@@ -273,12 +279,12 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     ),
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                Slider(
+                CustomSlider(
                     modifier = Modifier
                         .semantics { contentDescription = "Localized Description" },
                     value = delayTime.floatValue,
                     onValueChange = {
-                        delayTime.floatValue = (it*10f).roundToInt() / 10f
+                        delayTime.floatValue = (it * 10f).roundToInt() / 10f
                     },
                     enabled = musicViewModel.enableEcho.value,
                     valueRange = 0.1f..2f,
@@ -298,12 +304,12 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     text = stringResource(R.string.decay) + (decay.floatValue).toString(),
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                Slider(
+                CustomSlider(
                     modifier = Modifier
                         .semantics { contentDescription = "Localized Description" },
                     value = decay.floatValue,
                     onValueChange = {
-                        decay.floatValue = (it*10f).roundToInt() / 10f
+                        decay.floatValue = (it * 10f).roundToInt() / 10f
                     },
                     valueRange = 0f..1f,
                     steps = 10,
@@ -396,7 +402,9 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                                     context.getSharedPreferences(
                                                         "SelectedPreset",
                                                         Context.MODE_PRIVATE
-                                                    ).edit().putString("SelectedPreset", Utils.custom).apply()
+                                                    ).edit()
+                                                        .putString("SelectedPreset", Utils.custom)
+                                                        .apply()
                                                 } else {
                                                     Toast.makeText(
                                                         context,
@@ -426,7 +434,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                 text = " ${band.name} ",
                                 color = MaterialTheme.colorScheme.onBackground
                             )
-                            Slider(
+                            CustomSlider(
                                 modifier = Modifier
                                     .graphicsLayer {
                                         rotationZ = 270f

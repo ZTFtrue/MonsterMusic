@@ -16,6 +16,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.outlined.CheckBox
+import androidx.compose.material.icons.outlined.CheckBoxOutlineBlank
+import androidx.compose.material.icons.outlined.IndeterminateCheckBox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -112,40 +116,41 @@ fun TracksSelectPage(
                                 selectList.addAll(musicList)
                             }
                         }) {
-                            Image(
-                                painter = painterResource(
-                                    if (selectList.size == musicList.size) {
-                                        R.drawable.ic_checked_box
-                                    } else if (selectList.size > 0) {
-                                        R.drawable.ic_indeterminate_check_box
-                                    } else {
-                                        R.drawable.ic_nocheck_box
-                                    }
-                                ),
+                            Icon(
+                                imageVector = if (selectList.size == musicList.size) {
+                                    Icons.Outlined.CheckBox
+                                } else if (selectList.size > 0) {
+                                    Icons.Outlined.IndeterminateCheckBox
+                                } else {
+                                    Icons.Outlined.CheckBoxOutlineBlank
+                                },
                                 contentDescription = "Operate More, will open dialog",
                                 modifier = Modifier
                                     .size(30.dp)
                                     .clip(CircleShape),
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                         IconButton(onClick = {
                             if (playListId == -1L) {// create
                                 if (!playListName.isNullOrEmpty()) {
-                                    val id = PlaylistManager.createPlaylist(context,playListName)
+                                    val id = PlaylistManager.createPlaylist(context, playListName)
                                     if (id != -1L) {
                                         val ids = ArrayList<Long>(selectList.size)
                                         selectList.forEach { ids.add(it.id) }
-                                        PlaylistManager.addMusicsToPlaylist(context,id, ids)
+                                        PlaylistManager.addMusicsToPlaylist(context, id, ids)
                                         selectList.clear()
                                         musicViewModel.mediaBrowser?.sendCustomAction(
-                                            ACTION_PlayLIST_CHANGE,null,null
+                                            ACTION_PlayLIST_CHANGE, null, null
                                         )
                                         navController.popBackStack()
 
                                     } else {
-                                        Toast.makeText(context,
-                                            context.getString(R.string.create_failed), Toast.LENGTH_SHORT)
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.create_failed),
+                                            Toast.LENGTH_SHORT
+                                        )
                                             .show()
                                     }
                                 }
@@ -153,11 +158,16 @@ fun TracksSelectPage(
                                 if (playListId != null) {
                                     val ids = ArrayList<Long>(selectList.size)
                                     selectList.forEach { ids.add(it.id) }
-                                    if(PlaylistManager.addMusicsToPlaylist(context,playListId, ids)){
+                                    if (PlaylistManager.addMusicsToPlaylist(
+                                            context,
+                                            playListId,
+                                            ids
+                                        )
+                                    ) {
                                         selectList.clear()
                                     }
                                     musicViewModel.mediaBrowser?.sendCustomAction(
-                                        ACTION_PlayLIST_CHANGE,null,null
+                                        ACTION_PlayLIST_CHANGE, null, null
                                     )
                                     navController.popBackStack()
                                 }
@@ -169,7 +179,7 @@ fun TracksSelectPage(
                                 modifier = Modifier
                                     .size(30.dp)
                                     .clip(CircleShape),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -193,7 +203,7 @@ fun TracksSelectPage(
                 )
                 TracksListView(
                     musicViewModel,
-                    AnyListBase(0, PlayListType.None), musicList, showIndicator =showIndicator,
+                    AnyListBase(0, PlayListType.None), musicList, showIndicator = showIndicator,
                     selectStatus = true, selectList = selectList
                 )
             }

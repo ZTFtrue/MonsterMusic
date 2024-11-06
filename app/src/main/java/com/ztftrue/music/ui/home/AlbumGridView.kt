@@ -62,8 +62,7 @@ import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
+import coil.compose.rememberAsyncImagePainter
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
@@ -126,7 +125,8 @@ fun AlbumGridView(
     if (albumList.isEmpty()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Text(
-                text = stringResource(R.string.there_is_no_any_album_in_here), Modifier.padding(start = 10.dp),
+                text = stringResource(R.string.there_is_no_any_album_in_here),
+                Modifier.padding(start = 10.dp),
                 color = MaterialTheme.colorScheme.onBackground
             )
         }
@@ -196,7 +196,7 @@ fun AlbumGridView(
 }
 
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalGlideComposeApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun AlbumItemView(
@@ -277,12 +277,24 @@ fun AlbumItemView(
         }) {
         ConstraintLayout {
             val (playIndicator) = createRefs()
-            GlideImage(
-
-                model = musicViewModel.getAlbumCover(
-                    item.id,
-                    context
+            Image(
+//                painter = painterResource(
+//                    musicViewModel.getAlbumCover(
+//                        item.id,
+//                        context
+//                    )
+//                ),
+                painter = rememberAsyncImagePainter(
+                    musicViewModel.getAlbumCover(
+                        item.id,
+                        context
+                    )
+                        ?: R.drawable.songs_thumbnail_cover
                 ),
+//                model = musicViewModel.getAlbumCover(
+//                    item.id,
+//                    context
+//                ),
                 contentDescription = stringResource(id = R.string.album_cover),
                 modifier = Modifier
                     .zIndex(0f)
@@ -324,7 +336,11 @@ fun AlbumItemView(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = stringResource(R.string.song, number, if (number <= 1L) "" else "s"),
+                    text = stringResource(
+                        R.string.song,
+                        number,
+                        if (number <= 1L) "" else stringResource(id = R.string.s)
+                    ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 IconButton(

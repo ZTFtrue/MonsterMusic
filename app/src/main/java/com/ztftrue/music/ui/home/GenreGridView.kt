@@ -302,7 +302,7 @@ fun GenreItemView(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = stringResource(R.string.song, number, if (number <= 1L) "" else "s"),
+                    text = stringResource(R.string.song, number, if (number <= 1L) "" else stringResource(id = R.string.s)),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 IconButton(

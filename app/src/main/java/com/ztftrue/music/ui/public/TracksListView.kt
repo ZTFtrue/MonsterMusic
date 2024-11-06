@@ -26,8 +26,11 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
@@ -80,7 +83,7 @@ fun TracksListView(
     showIndicator: MutableState<Boolean>,
     selectStatus: Boolean = false,
     selectList: SnapshotStateList<MusicItem>? = null,
-    header: @Composable() (() -> Unit)? = null,
+    header: @Composable (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     var showSlideIndicator by remember { mutableStateOf(false) }
@@ -92,25 +95,25 @@ fun TracksListView(
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 //    LaunchedEffect(key1 = tracksList, showIndicator.value) {
-        showSlideIndicator =
-            sharedPreferences.getBoolean("show_slide_indicator", true) && showIndicator.value
-        showTopIndicator =
-            sharedPreferences.getBoolean("show_top_indicator", true) && showIndicator.value
-        itemFilterList.clear()
-        if (showIndicator.value) {
-            tracksList.forEachIndexed { index, musicItem ->
-                val currentF = musicItem.name[0]
-                if (index > 0) {
-                    val lastM = tracksList[index - 1]
-                    val lastMF = lastM.name[0]
-                    if (lastMF != currentF) {
-                        itemFilterList.add(ItemFilterModel(currentF.toString(), index))
-                    }
-                } else {
+    showSlideIndicator =
+        sharedPreferences.getBoolean("show_slide_indicator", true) && showIndicator.value
+    showTopIndicator =
+        sharedPreferences.getBoolean("show_top_indicator", true) && showIndicator.value
+    itemFilterList.clear()
+    if (showIndicator.value) {
+        tracksList.forEachIndexed { index, musicItem ->
+            val currentF = musicItem.name[0]
+            if (index > 0) {
+                val lastM = tracksList[index - 1]
+                val lastMF = lastM.name[0]
+                if (lastMF != currentF) {
                     itemFilterList.add(ItemFilterModel(currentF.toString(), index))
                 }
+            } else {
+                itemFilterList.add(ItemFilterModel(currentF.toString(), index))
             }
         }
+    }
 //    }
     if (showItemFilterDialog) {
         ItemFilterDialog(itemFilterList, onDismiss = {
@@ -124,7 +127,7 @@ fun TracksListView(
         })
     }
     key(tracksList, itemFilterList, showSlideIndicator, showTopIndicator) {
-        if (tracksList.size == 0&&header==null) {
+        if (tracksList.size == 0 && header == null) {
             Text(
                 text = stringResource(R.string.no_music),
                 color = MaterialTheme.colorScheme.onBackground,
@@ -283,14 +286,12 @@ fun TracksListView(
                             .offset(x = (-1).dp, y = (-40).dp),
                         shape = CircleShape,
                     ) {
-                        Image(
-                            painter = painterResource(
-                                R.drawable.icon_location
-                            ),
+                        Icon(
+                            imageVector= Icons.Default.MyLocation,
                             contentDescription = "find current playing music",
                             modifier = Modifier
                                 .size(30.dp),
-                            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 }
