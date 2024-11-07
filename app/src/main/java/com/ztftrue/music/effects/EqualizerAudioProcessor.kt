@@ -2,7 +2,6 @@ package com.ztftrue.music.effects
 
 import android.os.Bundle
 import android.support.v4.media.session.MediaSessionCompat
-import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
@@ -103,7 +102,6 @@ class EqualizerAudioProcessor : AudioProcessor {
             outputAudioFormat!!.encoding,
             outputAudioFormat!!.channelCount
         ) * outputAudioFormat!!.sampleRate
-        Log.d("EqualizerAudioProcessor", "configure: ${outputAudioFormat!!.sampleRate}")
         bufferSize = perSecond
         dataBuffer = ByteBuffer.allocate(bufferSize * 8)
         floatArray = FloatArray(bufferSize)

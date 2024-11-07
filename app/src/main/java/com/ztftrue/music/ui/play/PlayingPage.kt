@@ -38,8 +38,24 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.FormatAlignLeft
+import androidx.compose.material.icons.automirrored.outlined.FormatAlignRight
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FormatAlignLeft
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material.icons.filled.SwipeVertical
+import androidx.compose.material.icons.outlined.Equalizer
+import androidx.compose.material.icons.outlined.FormatAlignCenter
+import androidx.compose.material.icons.outlined.FormatAlignJustify
+import androidx.compose.material.icons.outlined.FormatAlignLeft
+import androidx.compose.material.icons.outlined.FormatShapes
+import androidx.compose.material.icons.outlined.Repeat
+import androidx.compose.material.icons.outlined.RepeatOne
+import androidx.compose.material.icons.outlined.Shuffle
+import androidx.compose.material.icons.outlined.SwipeVertical
+import androidx.compose.material.icons.outlined.TextDecrease
+import androidx.compose.material.icons.outlined.TextIncrease
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -418,10 +434,8 @@ fun PlayingPage(
                                     TextAlign.Left
                                 )
                             }) {
-                            Image(
-                                painter = painterResource(
-                                    R.drawable.ic_format_align_left
-                                ),
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Outlined.FormatAlignLeft,
                                 contentDescription = "Set lyrics display align left",
                                 modifier = Modifier
                                     .width(24.dp)
@@ -442,7 +456,7 @@ fun PlayingPage(
                                             )
                                         }
                                     },
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     }
@@ -457,10 +471,8 @@ fun PlayingPage(
                                     TextAlign.Center
                                 )
                             }) {
-                            Image(
-                                painter = painterResource(
-                                    R.drawable.ic_format_align_center
-                                ),
+                            Icon(
+                                imageVector = Icons.Outlined.FormatAlignCenter,
                                 contentDescription = "Set lyrics display  align center",
                                 modifier = Modifier
                                     .width(24.dp)
@@ -481,7 +493,7 @@ fun PlayingPage(
                                             )
                                         }
                                     },
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     }
@@ -496,10 +508,8 @@ fun PlayingPage(
                                     TextAlign.Right
                                 )
                             }) {
-                            Image(
-                                painter = painterResource(
-                                    R.drawable.ic_format_align_right
-                                ),
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Outlined.FormatAlignRight,
                                 contentDescription = "Set lyrics display align right",
                                 modifier = Modifier
                                     .width(24.dp)
@@ -520,7 +530,7 @@ fun PlayingPage(
                                             )
                                         }
                                     },
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     }
@@ -535,10 +545,8 @@ fun PlayingPage(
                                     TextAlign.Justify
                                 )
                             }) {
-                            Image(
-                                painter = painterResource(
-                                    R.drawable.ic_format_align_justify
-                                ),
+                            Icon(
+                                imageVector = Icons.Outlined.FormatAlignJustify,
                                 contentDescription = "Set lyrics display align justify",
                                 modifier = Modifier
                                     .width(24.dp)
@@ -558,7 +566,7 @@ fun PlayingPage(
                                                 style = Stroke(4f)
                                             )
                                     },
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     }
@@ -573,15 +581,13 @@ fun PlayingPage(
                                     musicViewModel.fontSize.intValue
                                 )
                             }) {
-                            Image(
-                                painter = painterResource(
-                                    R.drawable.ic_text_decrease
-                                ),
+                            Icon(
+                                imageVector = Icons.Outlined.TextDecrease,
                                 contentDescription = "Font size decrease",
                                 modifier = Modifier
                                     .width(24.dp)
                                     .height(24.dp),
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     }
@@ -595,15 +601,13 @@ fun PlayingPage(
                                     musicViewModel.fontSize.intValue
                                 )
                             }) {
-                            Image(
-                                painter = painterResource(
-                                    R.drawable.ic_text_increase
-                                ),
+                            Icon(
+                                imageVector = Icons.Outlined.TextIncrease,
                                 contentDescription = "Font size increase",
                                 modifier = Modifier
                                     .width(24.dp)
                                     .height(24.dp),
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     }
@@ -1009,10 +1013,8 @@ fun PlayingPage(
                                                     offset = 0f
                                                 }
                                             )) {
-                                            Image(
-                                                painter = painterResource(
-                                                    R.drawable.ic_swipe_vertical
-                                                ),
+                                            Icon(
+                                                imageVector = Icons.Outlined.SwipeVertical,
                                                 contentDescription = "Down ${item.label} app priority",
                                                 modifier = Modifier
                                                     .size(60.dp)
@@ -1020,9 +1022,7 @@ fun PlayingPage(
                                                     .clip(
                                                         CircleShape
                                                     ),
-                                                colorFilter = ColorFilter.tint(
-                                                    color = MaterialTheme.colorScheme.onBackground
-                                                )
+                                                tint = MaterialTheme.colorScheme.onBackground
                                             )
                                         }
                                         Box(modifier = Modifier.width(80.dp)) {
@@ -1174,15 +1174,13 @@ fun PlayingPage(
                                     modifier = Modifier.width(50.dp), onClick = {
                                         visualizationPopupWindow = !visualizationPopupWindow
                                     }) {
-                                    Image(
-                                        painter = painterResource(
-                                            R.drawable.equalizer_visualization
-                                        ),
+                                    Icon(
+                                        imageVector = Icons.Outlined.Equalizer,
                                         contentDescription = "Set music visualization",
                                         modifier = Modifier
                                             .width(24.dp)
                                             .height(24.dp),
-                                        colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                                        tint = MaterialTheme.colorScheme.onBackground
                                     )
                                 }
                             }
@@ -1191,15 +1189,13 @@ fun PlayingPage(
                                     modifier = Modifier.width(50.dp), onClick = {
                                         popupWindow = !popupWindow
                                     }) {
-                                    Image(
-                                        painter = painterResource(
-                                            R.drawable.ic_format_shapes
-                                        ),
+                                    Icon(
+                                        imageVector = Icons.Outlined.FormatShapes,
                                         contentDescription = "Set lyrics display format",
                                         modifier = Modifier
                                             .width(24.dp)
                                             .height(24.dp),
-                                        colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                                        tint = MaterialTheme.colorScheme.onBackground
                                     )
                                 }
                             }
@@ -1451,19 +1447,15 @@ fun PlayingPage(
                                         }
                                     )
                                 }) {
-                                    Image(
-                                        painter = painterResource(
-                                            R.drawable.shuffle_model
-                                        ),
+                                    Icon(
+                                        imageVector = if (musicViewModel.enableShuffleModel.value) Icons.Outlined.Shuffle else Icons.Outlined.Shuffle,
                                         contentDescription = "shuffle model",
                                         modifier = Modifier
                                             .width(50.dp)
                                             .height(50.dp)
                                             .padding(5.dp),
-                                        colorFilter = ColorFilter.tint(
-                                            color = if (musicViewModel.enableShuffleModel.value) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(
-                                                alpha = 0.5f
-                                            )
+                                        tint = if (musicViewModel.enableShuffleModel.value) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(
+                                            alpha = 0.5f
                                         )
                                     )
                                 }
@@ -1530,22 +1522,20 @@ fun PlayingPage(
                             )
                         }
                         key(repeatModel.intValue) {
-                            Image(
-                                painter = painterResource(
-                                    when (repeatModel.intValue) {
-                                        Player.REPEAT_MODE_ALL -> {
-                                            R.drawable.ic_repeat_all
-                                        }
-
-                                        Player.REPEAT_MODE_ONE -> {
-                                            R.drawable.ic_repeat_one
-                                        }
-
-                                        else -> {
-                                            R.drawable.ic_repeat_off
-                                        }
+                            Icon(
+                                imageVector = when (repeatModel.intValue) {
+                                    Player.REPEAT_MODE_ALL -> {
+                                        Icons.Outlined.Repeat
                                     }
-                                ),
+
+                                    Player.REPEAT_MODE_ONE -> {
+                                        Icons.Outlined.RepeatOne
+                                    }
+
+                                    else -> {
+                                        Icons.Outlined.Repeat
+                                    }
+                                },
                                 contentDescription = "Repeat model",
                                 modifier = Modifier
                                     .clickable {
@@ -1580,7 +1570,9 @@ fun PlayingPage(
                                         end.linkTo(anchor = parent.end, margin = 0.dp)
                                         top.linkTo(anchor = parent.top, margin = 0.dp)
                                     },
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                                tint = if (repeatModel.intValue == Player.REPEAT_MODE_OFF) MaterialTheme.colorScheme.onBackground.copy(
+                                    alpha = 0.5f
+                                ) else MaterialTheme.colorScheme.onBackground
                             )
                         }
                     }
