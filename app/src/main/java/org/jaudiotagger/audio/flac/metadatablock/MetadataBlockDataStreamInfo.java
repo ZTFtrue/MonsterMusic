@@ -58,12 +58,20 @@ public class MetadataBlockDataStreamInfo  implements MetadataBlockData
     // Logger Object
     public static Logger logger = Logger.getLogger("org.jaudiotagger.audio.flac.MetadataBlockDataStreamInfo");
 
-    private int minBlockSize, maxBlockSize, minFrameSize, maxFrameSize, samplingRate, samplingRatePerChannel, bitsPerSample, noOfChannels, noOfSamples;
-    private float trackLength;
-    private String md5;
-    private boolean isValid = true;
+    private final int minBlockSize;
+    private final int maxBlockSize;
+    private final int minFrameSize;
+    private final int maxFrameSize;
+    private final int samplingRate;
+    private final int samplingRatePerChannel;
+    private final int bitsPerSample;
+    private final int noOfChannels;
+    private final int noOfSamples;
+    private final float trackLength;
+    private final String md5;
+    private final boolean isValid = true;
 
-    private ByteBuffer rawdata;
+    private final ByteBuffer rawdata;
 
     public MetadataBlockDataStreamInfo(MetadataBlockHeader header, FileChannel fc) throws IOException
     {

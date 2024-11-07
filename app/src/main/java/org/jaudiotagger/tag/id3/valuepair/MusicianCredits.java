@@ -8,7 +8,7 @@ import java.util.*;
  */
 public class MusicianCredits
 {
-    private static Set<String> musicianCredits = new HashSet();
+    private static final Set<String> musicianCredits = new HashSet();
 
     static
     {

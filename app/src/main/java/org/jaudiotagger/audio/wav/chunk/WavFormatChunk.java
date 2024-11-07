@@ -49,11 +49,11 @@ public class WavFormatChunk extends Chunk
     private static final String WAV_RIFF_ENCODING_PREPEND = "WAV-RIFF ";
 
 
-    private boolean isValid = false;
+    private final boolean isValid = false;
 
     private int blockAlign,  channelMask;
     private WavSubFormat wsf;
-    private GenericAudioHeader info;
+    private final GenericAudioHeader info;
 
     public WavFormatChunk(ByteBuffer chunkData, ChunkHeader hdr, GenericAudioHeader info) throws IOException
     {

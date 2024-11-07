@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 public class ID3Chunk extends Chunk
 {
     public static Logger logger = Logger.getLogger("org.jaudiotagger.audio.aiff.chunk");
-    private AiffTag aiffTag;
+    private final AiffTag aiffTag;
 
     /**
      * Constructor.

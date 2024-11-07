@@ -438,7 +438,7 @@ public class DefaultTreeModel implements Serializable, TreeModel {
      * @since 1.4
      */
     public TreeModelListener[] getTreeModelListeners() {
-        return (TreeModelListener[])listenerList.getListeners(
+        return listenerList.getListeners(
                 TreeModelListener.class);
     }
 

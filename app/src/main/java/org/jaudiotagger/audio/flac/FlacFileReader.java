@@ -34,8 +34,8 @@ import java.nio.file.Path;
 public class FlacFileReader extends AudioFileReader2
 {
 
-    private FlacInfoReader ir = new FlacInfoReader();
-    private FlacTagReader tr = new FlacTagReader();
+    private final FlacInfoReader ir = new FlacInfoReader();
+    private final FlacTagReader tr = new FlacTagReader();
 
     protected GenericAudioHeader  getEncodingInfo(Path path) throws CannotReadException, IOException
     {

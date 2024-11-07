@@ -29,6 +29,7 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
@@ -40,7 +41,7 @@ import java.util.GregorianCalendar;
 public class Utils
 {
 
-    public static final long DIFF_BETWEEN_ASF_DATE_AND_JAVA_DATE = 11644470000000l;
+    public static final long DIFF_BETWEEN_ASF_DATE_AND_JAVA_DATE = 11644470000000L;
     /**
      * Stores the default line separator of the current underlying system.
      */
@@ -78,10 +79,7 @@ public class Utils
     {
         if (value != null)
         {
-            if (value.length() > MAXIMUM_STRING_LENGTH_ALLOWED)
-            {
-                return false;
-            }
+            return value.length() <= MAXIMUM_STRING_LENGTH_ALLOWED;
         }
         return true;
     }
@@ -351,7 +349,7 @@ public class Utils
                     strBytes = copy;
                 }
             }
-            return new String(strBytes, "UTF-16LE");
+            return new String(strBytes, StandardCharsets.UTF_16LE);
         }
         throw new IllegalStateException("Couldn't read the necessary amount of bytes.");
     }
@@ -465,7 +463,7 @@ public class Utils
                     buf = copy;
                 }
             }
-            return new String(buf, AsfHeader.ASF_CHARSET.name());
+            return new String(buf, AsfHeader.ASF_CHARSET);
         }
         throw new IllegalStateException("Invalid Data for current interpretation"); //$NON-NLS-1$
     }

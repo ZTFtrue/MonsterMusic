@@ -9,8 +9,8 @@ import java.util.EnumSet;
  */
 public class ID3NumberTotalFields
 {
-    private static EnumSet<FieldKey> numberField = EnumSet.noneOf(FieldKey.class);
-    private static EnumSet<FieldKey> totalField = EnumSet.noneOf(FieldKey.class);
+    private static final EnumSet<FieldKey> numberField = EnumSet.noneOf(FieldKey.class);
+    private static final EnumSet<FieldKey> totalField = EnumSet.noneOf(FieldKey.class);
 
     static
     {

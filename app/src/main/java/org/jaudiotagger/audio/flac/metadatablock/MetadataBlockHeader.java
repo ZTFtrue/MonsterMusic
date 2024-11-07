@@ -35,10 +35,10 @@ public class MetadataBlockHeader
     public static final int BLOCK_LENGTH        = 3;
     public static final int HEADER_LENGTH       = BLOCK_TYPE_LENGTH + BLOCK_LENGTH;
 
-    private boolean isLastBlock;
-    private int dataLength;
-    private byte[] bytes;
-    private BlockType blockType;
+    private final boolean isLastBlock;
+    private final int dataLength;
+    private final byte[] bytes;
+    private final BlockType blockType;
 
     public static Logger logger = Logger.getLogger("org.jaudiotagger.audio.flac");
     /**

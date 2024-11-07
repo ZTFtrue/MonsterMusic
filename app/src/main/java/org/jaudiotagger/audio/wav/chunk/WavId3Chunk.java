@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 public class WavId3Chunk extends Chunk
 {
     public static Logger logger = Logger.getLogger("org.jaudiotagger.audio.wav.chunk");
-    private WavTag wavTag;
+    private final WavTag wavTag;
 
     /**
      * Constructor.

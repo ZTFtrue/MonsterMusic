@@ -33,7 +33,7 @@ import java.nio.channels.FileChannel;
  */
 public class MetadataBlockDataApplication implements MetadataBlockData
 {
-    private ByteBuffer data;
+    private final ByteBuffer data;
 
     public MetadataBlockDataApplication(MetadataBlockHeader header, FileChannel fc) throws IOException
     {

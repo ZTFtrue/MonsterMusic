@@ -29,6 +29,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Apps
+import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,10 +48,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -549,6 +549,7 @@ fun TracksListPage(
                     },
                 )
             }
+
             PlayListType.Songs -> {}
             PlayListType.Queue -> {}
             PlayListType.None -> {}
@@ -712,15 +713,13 @@ fun TracksListPage(
                         modifier = Modifier.width(50.dp), onClick = {
                             showOperatePopup = true
                         }) {
-                        Image(
-                            painter = rememberAsyncImagePainter(
-                                R.drawable.apps
-                            ),
+                        Icon(
+                            imageVector = Icons.Outlined.Apps,
                             contentDescription = "Operate More, will open popup",
                             modifier = Modifier
                                 .width(30.dp)
                                 .aspectRatio(1f),
-                            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 })
@@ -862,15 +861,13 @@ fun TracksListPage(
                                     }
                                 )
                             }) {
-                                Image(
-                                    painter = painterResource(
-                                        R.drawable.shuffle_model
-                                    ),
+                                Icon(
+                                    imageVector = Icons.Outlined.Shuffle,
                                     contentDescription = "shuffle model",
                                     modifier = Modifier
                                         .width(30.dp)
                                         .height(30.dp),
-                                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                                    tint = MaterialTheme.colorScheme.onBackground
                                 )
                             }
                             Text(

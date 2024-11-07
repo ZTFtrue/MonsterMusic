@@ -70,7 +70,7 @@ import java.util.*;
  * @version 1.25 03/23/10
  * @author Rob Davis
  */
-public class DefaultMutableTreeNode extends Object implements Cloneable,
+public class DefaultMutableTreeNode implements Cloneable,
        MutableTreeNode, Serializable
 {
 
@@ -1288,7 +1288,7 @@ public class DefaultMutableTreeNode extends Object implements Cloneable,
     }
 
     final class PreorderEnumeration implements Enumeration<TreeNode> {
-	protected Stack stack;
+	private final Stack stack;
 
 	public PreorderEnumeration(TreeNode rootNode) {
 	    super();
@@ -1322,9 +1322,9 @@ public class DefaultMutableTreeNode extends Object implements Cloneable,
 
 
     final class PostorderEnumeration implements Enumeration<TreeNode> {
-	protected TreeNode root;
-	protected Enumeration<TreeNode> children;
-	protected Enumeration<TreeNode> subtree;
+	private TreeNode root;
+	private final Enumeration<TreeNode> children;
+	private Enumeration<TreeNode> subtree;
 
 	public PostorderEnumeration(TreeNode rootNode) {
 	    super();
@@ -1344,7 +1344,7 @@ public class DefaultMutableTreeNode extends Object implements Cloneable,
 		retval = subtree.nextElement();
 	    } else if (children.hasMoreElements()) {
 		subtree = new PostorderEnumeration(
-				(TreeNode)children.nextElement());
+                children.nextElement());
 		retval = subtree.nextElement();
 	    } else {
 		retval = root;
@@ -1359,7 +1359,7 @@ public class DefaultMutableTreeNode extends Object implements Cloneable,
 
 
     final class BreadthFirstEnumeration implements Enumeration<TreeNode> {
-	protected Queue	queue;
+	private final Queue	queue;
 
 	public BreadthFirstEnumeration(TreeNode rootNode) {
 	    super();
@@ -1447,7 +1447,7 @@ public class DefaultMutableTreeNode extends Object implements Cloneable,
 
 
     final class PathBetweenNodesEnumeration implements Enumeration<TreeNode> {
-	protected Stack<TreeNode> stack;
+	private final Stack<TreeNode> stack;
 
 	public PathBetweenNodesEnumeration(TreeNode ancestor,
 					   TreeNode descendant)

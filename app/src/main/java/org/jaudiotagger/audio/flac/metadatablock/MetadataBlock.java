@@ -27,8 +27,8 @@ package org.jaudiotagger.audio.flac.metadatablock;
  */
 public class MetadataBlock
 {
-    private MetadataBlockHeader mbh;
-    private MetadataBlockData mbd;
+    private final MetadataBlockHeader mbh;
+    private final MetadataBlockData mbd;
 
     public MetadataBlock(MetadataBlockHeader mbh, MetadataBlockData mbd)
     {

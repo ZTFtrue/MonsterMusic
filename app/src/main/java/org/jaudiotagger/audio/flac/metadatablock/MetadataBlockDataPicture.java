@@ -92,7 +92,7 @@ public class MetadataBlockDataPicture implements MetadataBlockData, TagField
         imageData = new byte[lengthOfPictureInBytes];
         rawdata.get(imageData);
 
-        logger.config("Read image:" + this.toString());
+        logger.config("Read image:" + this);
     }
 
     /**
@@ -258,7 +258,7 @@ public class MetadataBlockDataPicture implements MetadataBlockData, TagField
     {
         if (isImageUrl())
         {
-            return new String(getImageData(), 0, getImageData().length, StandardCharsets.ISO_8859_1);
+            return new String(getImageData(), StandardCharsets.ISO_8859_1);
         }
         else
         {

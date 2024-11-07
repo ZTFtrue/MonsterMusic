@@ -88,17 +88,17 @@ public class OggPageHeader
     public static final int FIELD_PAGE_CHECKSUM_LENGTH = 4;
     public static final int FIELD_PAGE_SEGMENTS_LENGTH = 1;
 
-    private byte[] rawHeaderData;
+    private final byte[] rawHeaderData;
     private double absoluteGranulePosition;
     private int checksum;
-    private byte headerTypeFlag;
+    private final byte headerTypeFlag;
 
     private boolean isValid = false;
     private int pageLength = 0;
     private int pageSequenceNumber, streamSerialNumber;
     private byte[] segmentTable;
 
-    private List<PacketStartAndLength> packetList = new ArrayList<PacketStartAndLength>();
+    private final List<PacketStartAndLength> packetList = new ArrayList<PacketStartAndLength>();
     private boolean lastPacketIncomplete = false;
 
     private long startByte = 0;
@@ -233,7 +233,7 @@ public class OggPageHeader
 
         if(logger.isLoggable(Level.CONFIG))
         {
-            logger.config("Constructed OggPage:" + this.toString());
+            logger.config("Constructed OggPage:" + this);
         }
     }
 
@@ -384,7 +384,7 @@ public class OggPageHeader
      * a file would normally have a value of 0x5 because both the CONTINUED_PACKET
      * bit and the END_OF_BITSTREAM bit would be set.
      */
-    public static enum HeaderTypeFlag
+    public enum HeaderTypeFlag
     {
         FRESH_PACKET((byte) 0x0),
         CONTINUED_PACKET((byte) 0x1),

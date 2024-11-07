@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
@@ -548,14 +549,7 @@ public class MetadataDescriptor implements Comparable<MetadataDescriptor>, Clone
                 result = String.valueOf(getNumber());
                 break;
             case TYPE_STRING:
-                try
-                {
-                    result = new String(this.content, "UTF-16LE");
-                }
-                catch (final UnsupportedEncodingException e)
-                {
-                    LOGGER.warning(e.getMessage());
-                }
+                result = new String(this.content, StandardCharsets.UTF_16LE);
                 break;
             default:
                 throw new IllegalStateException("Current type is not known.");
@@ -727,7 +721,7 @@ public class MetadataDescriptor implements Comparable<MetadataDescriptor>, Clone
     {
         if (value < 0)
         {
-            throw new IllegalArgumentException("value out of range (0-" + MetadataDescriptor.QWORD_MAXVALUE.toString() + ")");
+            throw new IllegalArgumentException("value out of range (0-" + MetadataDescriptor.QWORD_MAXVALUE + ")");
         }
         this.content = Utils.getBytes(value, 8);
         this.descriptorType = TYPE_QWORD;

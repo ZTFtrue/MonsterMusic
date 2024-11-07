@@ -392,7 +392,7 @@ public abstract class AbstractTag implements Tag
             out.append("\t");
             out.append(field.getId());
             out.append(":");
-            out.append(field.toString());
+            out.append(field);
             out.append("\n");
         }
         return out.toString().substring(0, out.length() - 1);

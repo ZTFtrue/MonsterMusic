@@ -346,9 +346,8 @@ public final class GUID
     public boolean equals(final Object obj)
     {
         boolean result = false;
-        if (obj instanceof GUID)
+        if (obj instanceof GUID other)
         {
-            final GUID other = (GUID) obj;
             result = Arrays.equals(this.getGUID(), other.getGUID());
         }
         return result;
@@ -459,7 +458,7 @@ public final class GUID
         {
             result.append("Description: ").append(descr).append(Utils.LINE_SEPARATOR).append("   ");
         }
-        result.append(this.toString());
+        result.append(this);
         return result.toString();
     }
 

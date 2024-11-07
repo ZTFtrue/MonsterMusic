@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,7 +47,7 @@ public class Mp4HdlrBox extends AbstractMp4Box
     private String          name;            // Variable length but 4 bytes in existing files
     private MediaDataType   mediaDataType;
 
-    private static Map<String, MediaDataType> mediaDataTypeMap;
+    private static final Map<String, MediaDataType> mediaDataTypeMap;
 
     static
     {
@@ -75,7 +76,7 @@ public class Mp4HdlrBox extends AbstractMp4Box
         dataBuffer.position(dataBuffer.position() + VERSION_FLAG_LENGTH + OTHER_FLAG_LENGTH + RESERVED_FLAG_LENGTH);
 
 
-        CharsetDecoder decoder = Charset.forName("ISO-8859-1").newDecoder();
+        CharsetDecoder decoder = StandardCharsets.ISO_8859_1.newDecoder();
         try
         {
             handlerType = decoder.decode((ByteBuffer) dataBuffer.slice().limit(HANDLER_LENGTH)).toString();
@@ -106,7 +107,7 @@ public class Mp4HdlrBox extends AbstractMp4Box
         return s;
     }
 
-    public static enum MediaDataType
+    public enum MediaDataType
     {
         ODSM("odsm", "ObjectDescriptorStream - defined in ISO/IEC JTC1/SC29/WG11 - CODING OF MOVING PICTURES AND AUDIO"),
         CRSM("crsm", "ClockReferenceStream - defined in ISO/IEC JTC1/SC29/WG11 - CODING OF MOVING PICTURES AND AUDIO"),
@@ -124,8 +125,8 @@ public class Mp4HdlrBox extends AbstractMp4Box
         APPL("appl", "Apple specific"),
         META("meta", "Timed Metadata track - defined in ISO/IEC JTC1/SC29/WG11 - CODING OF MOVING PICTURES AND AUDIO"),;
 
-        private String id;
-        private String description;
+        private final String id;
+        private final String description;
 
 
         MediaDataType(String id, String description)

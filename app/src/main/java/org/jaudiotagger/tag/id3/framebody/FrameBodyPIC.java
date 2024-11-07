@@ -255,7 +255,7 @@ public class FrameBodyPIC extends AbstractID3v2FrameBody implements ID3v22FrameB
     {
         if (isImageUrl())
         {
-            return new String(((byte[]) getObjectValue(DataTypes.OBJ_PICTURE_DATA)), 0, ((byte[]) getObjectValue(DataTypes.OBJ_PICTURE_DATA)).length, StandardCharsets.ISO_8859_1);
+            return new String(((byte[]) getObjectValue(DataTypes.OBJ_PICTURE_DATA)), StandardCharsets.ISO_8859_1);
         }
         else
         {

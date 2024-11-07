@@ -11,7 +11,7 @@ public enum ID3V2ExtendedGenreTypes
     RX("Remix"),
     CR("Cover");
 
-    private String description;
+    private final String description;
 
     ID3V2ExtendedGenreTypes(String description)
     {

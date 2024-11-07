@@ -152,11 +152,10 @@ public class Chunk
      */
     public String prettyPrint(final String prefix)
     {
-        final StringBuilder result = new StringBuilder();
-        result.append(prefix).append("-> GUID: ").append(GUID.getGuidDescription(this.guid)).append(Utils.LINE_SEPARATOR);
-        result.append(prefix).append("  | : Starts at position: ").append(getPosition()).append(Utils.LINE_SEPARATOR);
-        result.append(prefix).append("  | : Last byte at: ").append(getChunkEnd() - 1).append(Utils.LINE_SEPARATOR);
-        return result.toString();
+        String result = prefix + "-> GUID: " + GUID.getGuidDescription(this.guid) + Utils.LINE_SEPARATOR +
+                prefix + "  | : Starts at position: " + getPosition() + Utils.LINE_SEPARATOR +
+                prefix + "  | : Last byte at: " + (getChunkEnd() - 1) + Utils.LINE_SEPARATOR;
+        return result;
     }
 
     /**

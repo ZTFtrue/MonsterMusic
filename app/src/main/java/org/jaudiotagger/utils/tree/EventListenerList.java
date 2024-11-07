@@ -149,7 +149,7 @@ public class EventListenerList implements Serializable {
     private int getListenerCount(Object[] list, Class t) {
         int count = 0;
 	for (int i = 0; i < list.length; i+=2) {
-	    if (t == (Class)list[i])
+	    if (t == list[i])
 		count++;
 	}
 	return count;
@@ -207,7 +207,7 @@ public class EventListenerList implements Serializable {
 	// Is l on the list?
 	int index = -1;
 	for (int i = listenerList.length-2; i>=0; i-=2) {
-	    if ((listenerList[i]==t) && (listenerList[i+1].equals(l) == true)) {
+	    if ((listenerList[i]==t) && (listenerList[i + 1].equals(l))) {
 		index = i;
 		break;
 	    }

@@ -36,9 +36,9 @@ public class Mp4DiscNoField extends Mp4TagTextNumberField
         super(Mp4FieldKey.DISCNUMBER.getFieldName(), discValue);
 
         numbers = new ArrayList<Short>();
-        numbers.add(new Short("0"));
+        numbers.add(Short.valueOf("0"));
 
-        String values[] = discValue.split("/");
+        String[] values = discValue.split("/");
         switch (values.length)
         {
             case 1:
@@ -51,7 +51,7 @@ public class Mp4DiscNoField extends Mp4TagTextNumberField
                 {
                     throw new FieldDataInvalidException("Value of:" + values[0] + " is invalid for field:" + id);
                 }
-                numbers.add(new Short("0"));
+                numbers.add(Short.valueOf("0"));
                 break;
 
             case 2:
@@ -88,9 +88,9 @@ public class Mp4DiscNoField extends Mp4TagTextNumberField
     {
         super(Mp4FieldKey.DISCNUMBER.getFieldName(), String.valueOf(discNo));
         numbers = new ArrayList<Short>();
-        numbers.add(new Short("0"));
+        numbers.add(Short.valueOf("0"));
         numbers.add((short) discNo);
-        numbers.add(new Short("0"));
+        numbers.add(Short.valueOf("0"));
     }
 
     /**
@@ -103,7 +103,7 @@ public class Mp4DiscNoField extends Mp4TagTextNumberField
     {
         super(Mp4FieldKey.DISCNUMBER.getFieldName(), String.valueOf(discNo));
         numbers = new ArrayList<Short>();
-        numbers.add(new Short("0"));
+        numbers.add(Short.valueOf("0"));
         numbers.add((short) discNo);
         numbers.add((short) total);
     }

@@ -35,7 +35,7 @@ import java.nio.file.Path;
 public class FlacFileWriter extends AudioFileWriter2
 {
 
-    private FlacTagWriter tw = new FlacTagWriter();
+    private final FlacTagWriter tw = new FlacTagWriter();
 
     @Override
     protected void writeTag(Tag tag, Path file) throws CannotWriteException

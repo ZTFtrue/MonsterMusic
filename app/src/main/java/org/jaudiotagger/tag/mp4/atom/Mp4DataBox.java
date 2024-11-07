@@ -36,7 +36,7 @@ public class Mp4DataBox extends AbstractMp4Box
     //For use externally
     public static final int TYPE_POS_INCLUDING_HEADER = Mp4BoxHeader.HEADER_LENGTH + TYPE_POS;
 
-    private int type;
+    private final int type;
     private String content;
 
     public static final int NUMBER_LENGTH = 2;

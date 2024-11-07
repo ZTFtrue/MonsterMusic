@@ -38,11 +38,7 @@ public class AiffChunkSummary
         }
 
         //Should always be true but this is to protect against something gone wrong
-        if(firstId3Tag==true)
-        {
-            return true;
-        }
-        return false;
+        return firstId3Tag;
 
     }
 

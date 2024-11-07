@@ -39,7 +39,7 @@ import java.util.Vector;
  * @author Scott Violet
  * @author Philip Milne
  */
-public class TreePath extends Object implements Serializable {
+public class TreePath implements Serializable {
     /** Path representing the parent, null if lastPathComponent represents
      * the root. */
     private TreePath           parentPath;
@@ -189,10 +189,9 @@ public class TreePath extends Object implements Serializable {
     public boolean equals(Object o) {
 	if(o == this)
 	    return true;
-        if(o instanceof TreePath) {
-            TreePath            oTreePath = (TreePath)o;
+        if(o instanceof TreePath oTreePath) {
 
-	    if(getPathCount() != oTreePath.getPathCount())
+            if(getPathCount() != oTreePath.getPathCount())
 		return false;
 	    for(TreePath path = this; path != null; path = path.parentPath) {
 		if (!(path.lastPathComponent.equals

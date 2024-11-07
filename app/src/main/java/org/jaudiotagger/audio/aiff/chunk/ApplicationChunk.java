@@ -19,7 +19,7 @@ public class ApplicationChunk extends Chunk
     private static final String SIGNATURE_PDOS = "pdos";
     private static final String SIGNATURE_STOC = "stoc";
 
-    private AiffAudioHeader aiffHeader;
+    private final AiffAudioHeader aiffHeader;
 
     /**
      * Constructor.

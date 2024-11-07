@@ -30,6 +30,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.SwipeVertical
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -447,10 +448,8 @@ fun MusicItemView(
 
                             }
                         )) {
-                        Image(
-                            painter = painterResource(
-                                R.drawable.ic_swipe_vertical
-                            ),
+                        Icon(
+                            imageVector = Icons.Outlined.SwipeVertical,
                             contentDescription = "${music.name} sort",
                             modifier = Modifier
                                 .size(40.dp)
@@ -458,9 +457,7 @@ fun MusicItemView(
                                 .clip(
                                     CircleShape
                                 ),
-                            colorFilter = ColorFilter.tint(
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 }

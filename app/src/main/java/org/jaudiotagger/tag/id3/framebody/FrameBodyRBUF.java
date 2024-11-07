@@ -37,9 +37,9 @@ import java.nio.ByteBuffer;
  */
 public class FrameBodyRBUF extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody
 {
-    private static int BUFFER_FIELD_SIZE = 3;
-    private static int EMBED_FLAG_BIT_POSITION = 1;
-    private static int OFFSET_FIELD_SIZE = 4;
+    private static final int BUFFER_FIELD_SIZE = 3;
+    private static final int EMBED_FLAG_BIT_POSITION = 1;
+    private static final int OFFSET_FIELD_SIZE = 4;
 
     /**
      * Creates a new FrameBodyRBUF datatype.

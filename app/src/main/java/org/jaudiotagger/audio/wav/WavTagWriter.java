@@ -56,7 +56,7 @@ import static org.jaudiotagger.audio.iff.IffHeaderChunk.SIZE_LENGTH;
 public class WavTagWriter
 {
     //For logging
-    private String loggingName;
+    private final String loggingName;
     public WavTagWriter(String loggingName)
     {
         this.loggingName = loggingName;
@@ -177,7 +177,7 @@ public class WavTagWriter
                         else
                         {
                             final int lengthTagChunk = (int) (existingTag.getInfoTag().getEndLocationInFile().intValue() - existingTag.getStartLocationInFileOfId3Chunk());
-                            deleteTagChunk(fc, (int) existingTag.getInfoTag().getEndLocationInFile().intValue(), lengthTagChunk);
+                            deleteTagChunk(fc, existingTag.getInfoTag().getEndLocationInFile().intValue(), lengthTagChunk);
                         }
                     }
                 }

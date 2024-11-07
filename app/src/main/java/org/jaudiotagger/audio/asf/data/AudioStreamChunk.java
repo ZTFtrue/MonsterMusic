@@ -231,13 +231,12 @@ public final class AudioStreamChunk extends StreamChunk
     @Override
     public String prettyPrint(final String prefix)
     {
-        final StringBuilder result = new StringBuilder(super.prettyPrint(prefix));
-        result.append(prefix).append("  |-> Audio info:").append(Utils.LINE_SEPARATOR);
-        result.append(prefix).append("  |  : Bitrate : ").append(getKbps()).append(Utils.LINE_SEPARATOR);
-        result.append(prefix).append("  |  : Channels : ").append(getChannelCount()).append(" at ").append(getSamplingRate()).append(" Hz").append(Utils.LINE_SEPARATOR);
-        result.append(prefix).append("  |  : Bits per Sample: ").append(getBitsPerSample()).append(Utils.LINE_SEPARATOR);
-        result.append(prefix).append("  |  : Formatcode: ").append(getCodecDescription()).append(Utils.LINE_SEPARATOR);
-        return result.toString();
+        String result = super.prettyPrint(prefix) + prefix + "  |-> Audio info:" + Utils.LINE_SEPARATOR +
+                prefix + "  |  : Bitrate : " + getKbps() + Utils.LINE_SEPARATOR +
+                prefix + "  |  : Channels : " + getChannelCount() + " at " + getSamplingRate() + " Hz" + Utils.LINE_SEPARATOR +
+                prefix + "  |  : Bits per Sample: " + getBitsPerSample() + Utils.LINE_SEPARATOR +
+                prefix + "  |  : Formatcode: " + getCodecDescription() + Utils.LINE_SEPARATOR;
+        return result;
     }
 
     /**

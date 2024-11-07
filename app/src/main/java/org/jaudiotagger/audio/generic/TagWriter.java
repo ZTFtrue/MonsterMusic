@@ -12,7 +12,7 @@ import java.io.RandomAccessFile;
  */
 public interface TagWriter
 {
-    public void delete(Tag tag, RandomAccessFile raf, RandomAccessFile tempRaf) throws IOException, CannotWriteException;
+    void delete(Tag tag, RandomAccessFile raf, RandomAccessFile tempRaf) throws IOException, CannotWriteException;
 
 
     /**
@@ -24,5 +24,5 @@ public interface TagWriter
      * @throws org.jaudiotagger.audio.exceptions.CannotWriteException
      * @throws java.io.IOException
      */
-    public void write(AudioFile af, Tag tag, RandomAccessFile raf, RandomAccessFile rafTemp) throws CannotWriteException, IOException;
+    void write(AudioFile af, Tag tag, RandomAccessFile raf, RandomAccessFile rafTemp) throws CannotWriteException, IOException;
 }

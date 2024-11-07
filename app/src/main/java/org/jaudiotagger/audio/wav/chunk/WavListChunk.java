@@ -34,10 +34,10 @@ import java.nio.ByteBuffer;
 public class WavListChunk extends Chunk
 {
 
-    private boolean isValid = false;
+    private final boolean isValid = false;
 
-    private WavTag tag;
-    private String loggingName;
+    private final WavTag tag;
+    private final String loggingName;
 
     public WavListChunk(String loggingName, ByteBuffer chunkData, ChunkHeader chunkHeader, WavTag tag) throws IOException
     {

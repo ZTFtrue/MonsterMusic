@@ -79,7 +79,7 @@ public class MetadataContainer extends Chunk implements WriteableChunk
          * @param descriptor the descriptor to identify.
          * @return this instance.
          */
-        protected DescriptorPointer setDescriptor(final MetadataDescriptor descriptor)
+        private DescriptorPointer setDescriptor(final MetadataDescriptor descriptor)
         {
             assert descriptor != null;
             this.desc = descriptor;
@@ -109,7 +109,7 @@ public class MetadataContainer extends Chunk implements WriteableChunk
         }
         if (result == null)
         {
-            throw new IllegalArgumentException("Unknown metadata container specified by GUID (" + guid.toString() + ")");
+            throw new IllegalArgumentException("Unknown metadata container specified by GUID (" + guid + ")");
         }
         return result;
     }

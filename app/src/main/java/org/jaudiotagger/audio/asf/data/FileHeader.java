@@ -229,10 +229,9 @@ public class FileHeader extends Chunk
     @Override
     public String prettyPrint(final String prefix)
     {
-        final StringBuilder result = new StringBuilder(super.prettyPrint(prefix));
-        result.append(prefix).append("  |-> Filesize      = ").append(getFileSize().toString()).append(" Bytes").append(Utils.LINE_SEPARATOR);
-        result.append(prefix).append("  |-> Media duration= ").append(getDuration().divide(new BigInteger("10000")).toString()).append(" ms").append(Utils.LINE_SEPARATOR);
-        result.append(prefix).append("  |-> Created at    = ").append(getFileCreationTime()).append(Utils.LINE_SEPARATOR);
-        return result.toString();
+        String result = super.prettyPrint(prefix) + prefix + "  |-> Filesize      = " + getFileSize().toString() + " Bytes" + Utils.LINE_SEPARATOR +
+                prefix + "  |-> Media duration= " + getDuration().divide(new BigInteger("10000")) + " ms" + Utils.LINE_SEPARATOR +
+                prefix + "  |-> Created at    = " + getFileCreationTime() + Utils.LINE_SEPARATOR;
+        return result;
     }
 }

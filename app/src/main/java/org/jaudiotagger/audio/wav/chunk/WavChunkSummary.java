@@ -86,11 +86,7 @@ public class WavChunkSummary
         }
 
         //Should always be true but this is to protect against something gone wrong
-        if(firstMetadataTag==true)
-        {
-            return true;
-        }
-        return false;
+        return firstMetadataTag;
 
     }
 

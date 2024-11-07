@@ -53,7 +53,7 @@ public class FlacTagWriter
 {
     // Logger Object
     public static Logger logger = Logger.getLogger("org.jaudiotagger.audio.flac");
-    private FlacTagCreator tc = new FlacTagCreator();
+    private final FlacTagCreator tc = new FlacTagCreator();
 
     /**
      * @param tag
@@ -71,10 +71,10 @@ public class FlacTagWriter
     private static class MetadataBlockInfo
     {
         private MetadataBlock streamInfoBlock;
-        private List<MetadataBlock> metadataBlockPadding = new ArrayList<MetadataBlock>(1);
-        private List<MetadataBlock> metadataBlockApplication = new ArrayList<MetadataBlock>(1);
-        private List<MetadataBlock> metadataBlockSeekTable = new ArrayList<MetadataBlock>(1);
-        private List<MetadataBlock> metadataBlockCueSheet = new ArrayList<MetadataBlock>(1);
+        private final List<MetadataBlock> metadataBlockPadding = new ArrayList<MetadataBlock>(1);
+        private final List<MetadataBlock> metadataBlockApplication = new ArrayList<MetadataBlock>(1);
+        private final List<MetadataBlock> metadataBlockSeekTable = new ArrayList<MetadataBlock>(1);
+        private final List<MetadataBlock> metadataBlockCueSheet = new ArrayList<MetadataBlock>(1);
     }
 
     /**
@@ -434,8 +434,7 @@ public class FlacTagWriter
         writeTags(tag, fc, blockInfo, flacStream);
     }
 
-    private void writeTags(Tag tag, FileChannel fc, MetadataBlockInfo blockInfo, FlacStreamReader flacStream) throws IOException, UnsupportedEncodingException
-    {
+    private void writeTags(Tag tag, FileChannel fc, MetadataBlockInfo blockInfo, FlacStreamReader flacStream) throws IOException {
         //Jump over Id3 (if exists) Flac Header
         fc.position(flacStream.getStartOfFlacInFile() + FlacStreamReader.FLAC_STREAM_IDENTIFIER_LENGTH);
         writeOtherMetadataBlocks(fc, blockInfo);

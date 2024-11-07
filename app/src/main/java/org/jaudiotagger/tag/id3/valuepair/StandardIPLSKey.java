@@ -17,7 +17,7 @@ public enum StandardIPLSKey
     PRODUCER("producer"),
     ARRANGER("arranger"),;
 
-    private String key;
+    private final String key;
 
     StandardIPLSKey(String key)
     {

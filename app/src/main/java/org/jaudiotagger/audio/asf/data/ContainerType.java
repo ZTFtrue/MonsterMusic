@@ -132,7 +132,7 @@ public enum ContainerType
      * @param language       see {@link #languageEnabled}
      * @param multiValue     see {@link #multiValued}
      */
-    private ContainerType(final GUID guid, final int maxDataLenBits, final boolean guidAllowed, final boolean stream, final boolean language, final boolean multiValue)
+    ContainerType(final GUID guid, final int maxDataLenBits, final boolean guidAllowed, final boolean stream, final boolean language, final boolean multiValue)
     {
         this.containerGUID = guid;
         this.maximumDataLength = BigInteger.valueOf(2).pow(maxDataLenBits).subtract(BigInteger.ONE);

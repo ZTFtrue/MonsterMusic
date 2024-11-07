@@ -53,7 +53,7 @@ public class CommentsChunk extends Chunk
     private static final int MARKERID_LENGTH = 2;
     private static final int COUNT_LENGTH = 2;
 
-    private AiffAudioHeader aiffHeader;
+    private final AiffAudioHeader aiffHeader;
 
     /**
      * @param chunkHeader The header for this chunk

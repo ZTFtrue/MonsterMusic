@@ -35,7 +35,7 @@ import java.nio.file.Path;
 public class AiffFileWriter extends AudioFileWriter2
 {
 
-    private AiffTagWriter tw = new AiffTagWriter();
+    private final AiffTagWriter tw = new AiffTagWriter();
 
     @Override
     protected void writeTag(Tag tag, Path file) throws CannotWriteException
