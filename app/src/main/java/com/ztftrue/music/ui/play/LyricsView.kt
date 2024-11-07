@@ -405,7 +405,7 @@ fun LyricsView(
                                             fontSize = fontSize.sp,
                                             textAlign = musicViewModel.textAlign.value,
                                             lineHeight = (fontSize * 1.5).sp,
-                                            textIndent = if (musicViewModel.textAlign.value == TextAlign.Justify || musicViewModel.textAlign.value == TextAlign.Left) {
+                                            textIndent = if (musicViewModel.textAlign.value == TextAlign.Justify || musicViewModel.textAlign.value == TextAlign.Start) {
                                                 TextIndent(fontSize.sp * 2)
                                             } else {
                                                 TextIndent.None

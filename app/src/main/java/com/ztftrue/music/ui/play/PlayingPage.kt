@@ -426,10 +426,10 @@ fun PlayingPage(
                             modifier = Modifier.width(50.dp),
                             onClick = {
                                 musicViewModel.textAlign.value =
-                                    TextAlign.Left
+                                    TextAlign.Start
                                 SharedPreferencesUtils.saveDisplayAlign(
                                     context,
-                                    TextAlign.Left
+                                    TextAlign.Start
                                 )
                             }) {
                             Icon(
@@ -439,7 +439,7 @@ fun PlayingPage(
                                     .width(24.dp)
                                     .height(24.dp)
                                     .drawBehind {
-                                        if (musicViewModel.textAlign.value == TextAlign.Left) {
+                                        if (musicViewModel.textAlign.value == TextAlign.Start) {
                                             drawRect(
                                                 color = color,
                                                 topLeft = Offset(
@@ -500,10 +500,10 @@ fun PlayingPage(
                             modifier = Modifier.width(50.dp),
                             onClick = {
                                 musicViewModel.textAlign.value =
-                                    TextAlign.Right
+                                    TextAlign.End
                                 SharedPreferencesUtils.saveDisplayAlign(
                                     context,
-                                    TextAlign.Right
+                                    TextAlign.End
                                 )
                             }) {
                             Icon(
@@ -513,7 +513,7 @@ fun PlayingPage(
                                     .width(24.dp)
                                     .height(24.dp)
                                     .drawBehind {
-                                        if (musicViewModel.textAlign.value == TextAlign.Right) {
+                                        if (musicViewModel.textAlign.value == TextAlign.End) {
                                             drawRect(
                                                 color = color,
                                                 topLeft = Offset(
