@@ -28,7 +28,6 @@ import org.jaudiotagger.audio.wav.chunk.WavId3Chunk;
 import org.jaudiotagger.audio.wav.chunk.WavListChunk;
 import org.jaudiotagger.logging.Hex;
 import org.jaudiotagger.tag.TagOptionSingleton;
-import org.jaudiotagger.tag.id3.ID3v23Tag;
 import org.jaudiotagger.tag.wav.WavInfoTag;
 import org.jaudiotagger.tag.wav.WavTag;
 

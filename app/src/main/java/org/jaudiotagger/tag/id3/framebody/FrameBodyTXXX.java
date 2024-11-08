@@ -31,11 +31,9 @@ import org.jaudiotagger.tag.datatype.TextEncodedStringSizeTerminated;
 import org.jaudiotagger.tag.id3.ID3TextEncodingConversion;
 import org.jaudiotagger.tag.id3.ID3v24Frames;
 import org.jaudiotagger.tag.id3.valuepair.TextEncoding;
-import org.jaudiotagger.tag.reference.Tagger;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
-import java.util.EnumSet;
 
 
 /**

@@ -21,7 +21,6 @@ package org.jaudiotagger.audio.flac.metadatablock;
 import org.jaudiotagger.audio.generic.Utils;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;

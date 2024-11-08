@@ -5,7 +5,6 @@ import org.jaudiotagger.audio.mp4.Mp4AtomIdentifier;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
-import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;

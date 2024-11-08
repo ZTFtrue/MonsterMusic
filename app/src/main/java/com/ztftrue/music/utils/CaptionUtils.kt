@@ -1,7 +1,6 @@
 package com.ztftrue.music.utils
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.ztftrue.music.R
 import com.ztftrue.music.utils.model.Caption
