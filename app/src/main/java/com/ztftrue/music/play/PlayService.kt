@@ -3,9 +3,11 @@ package com.ztftrue.music.play
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
+import android.bluetooth.BluetoothDevice
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.CountDownTimer
@@ -49,6 +51,7 @@ import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.PlayConfig
 import com.ztftrue.music.sqlData.model.SortFiledData
+import com.ztftrue.music.utils.BluetoothConnectionReceiver
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
@@ -177,11 +180,16 @@ class PlayService : MediaBrowserServiceCompat() {
     var playCompleted = false
     var needPlayPause = false
     var sleepTime = 0L
+    var receiver: BluetoothConnectionReceiver? = null
     private var countDownTimer: CountDownTimer? = null
     override fun onCreate() {
         super.onCreate()
-//        visualizationAudioProcessor = VisualizationAudioProcessor(mediaSession)
         initExo(this@PlayService)
+        receiver = BluetoothConnectionReceiver(exoPlayer)
+        val filter = IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED)
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
+        filter.addAction(Intent.ACTION_HEADSET_PLUG)
+        registerReceiver(receiver, filter)
         val contentIntent = Intent(this, MainActivity::class.java)
         val pendingContentIntent = PendingIntent.getActivity(
             this, 0, contentIntent,
@@ -1141,6 +1149,7 @@ class PlayService : MediaBrowserServiceCompat() {
             exoPlayer.release()
         } catch (_: Exception) {
         }
+        unregisterReceiver(receiver)
         super.onDestroy()
     }
 
@@ -1281,7 +1290,7 @@ class PlayService : MediaBrowserServiceCompat() {
         exoPlayer.setAudioAttributes(
             AudioAttributes.Builder()
                 .setUsage(C.USAGE_MEDIA)
-                .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+                .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
                 .build(),
             true
         )
