@@ -51,9 +51,14 @@ public class FrameBodyTDRC extends AbstractFrameBodyTextInfo implements ID3v24Fr
     private boolean monthOnly = false;
     private boolean hoursOnly = false;
 
-    private static SimpleDateFormat formatYearIn, formatYearOut;
-    private static SimpleDateFormat formatDateIn, formatDateOut, formatMonthOut;
-    private static SimpleDateFormat formatTimeIn, formatTimeOut, formatHoursOut;
+    private static final SimpleDateFormat formatYearIn;
+    private static final SimpleDateFormat formatYearOut;
+    private static final SimpleDateFormat formatDateIn;
+    private static final SimpleDateFormat formatDateOut;
+    private static final SimpleDateFormat formatMonthOut;
+    private static final SimpleDateFormat formatTimeIn;
+    private static final SimpleDateFormat formatTimeOut;
+    private static final SimpleDateFormat formatHoursOut;
 
     private static final List<SimpleDateFormat> formatters = new ArrayList<SimpleDateFormat>();
 

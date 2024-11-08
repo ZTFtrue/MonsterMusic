@@ -123,11 +123,11 @@ public final class ContentDescription extends MetadataContainer
         long result = 44; // GUID + UINT64 for size + 5 times string length
         // (each
         // 2 bytes) + 5 times zero term char (2 bytes each).
-        result += getAuthor().length() * 2; // UTF-16LE
-        result += getComment().length() * 2;
-        result += getRating().length() * 2;
-        result += getTitle().length() * 2;
-        result += getCopyRight().length() * 2;
+        result += getAuthor().length() * 2L; // UTF-16LE
+        result += getComment().length() * 2L;
+        result += getRating().length() * 2L;
+        result += getTitle().length() * 2L;
+        result += getCopyRight().length() * 2L;
         return result;
     }
 
@@ -162,13 +162,12 @@ public final class ContentDescription extends MetadataContainer
     @Override
     public String prettyPrint(final String prefix)
     {
-        final StringBuilder result = new StringBuilder(super.prettyPrint(prefix));
-        result.append(prefix).append("  |->Title      : ").append(getTitle()).append(Utils.LINE_SEPARATOR);
-        result.append(prefix).append("  |->Author     : ").append(getAuthor()).append(Utils.LINE_SEPARATOR);
-        result.append(prefix).append("  |->Copyright  : ").append(getCopyRight()).append(Utils.LINE_SEPARATOR);
-        result.append(prefix).append("  |->Description: ").append(getComment()).append(Utils.LINE_SEPARATOR);
-        result.append(prefix).append("  |->Rating     :").append(getRating()).append(Utils.LINE_SEPARATOR);
-        return result.toString();
+        String result = super.prettyPrint(prefix) + prefix + "  |->Title      : " + getTitle() + Utils.LINE_SEPARATOR +
+                prefix + "  |->Author     : " + getAuthor() + Utils.LINE_SEPARATOR +
+                prefix + "  |->Copyright  : " + getCopyRight() + Utils.LINE_SEPARATOR +
+                prefix + "  |->Description: " + getComment() + Utils.LINE_SEPARATOR +
+                prefix + "  |->Rating     :" + getRating() + Utils.LINE_SEPARATOR;
+        return result;
     }
 
     /**

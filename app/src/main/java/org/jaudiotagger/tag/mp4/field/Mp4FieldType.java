@@ -31,7 +31,7 @@ public enum Mp4FieldType
     ;
 
 
-    private int fileClassId;
+    private final int fileClassId;
 
     Mp4FieldType(int fileClassId)
     {
@@ -64,7 +64,7 @@ public enum Mp4FieldType
         return fileClassIdFiedTypeMap.get(fieldClassId);
     }
 
-    private static EnumSet<Mp4FieldType> coverArtTypes;
+    private static final EnumSet<Mp4FieldType> coverArtTypes;
     static
     {
         coverArtTypes = EnumSet.of(COVERART_GIF,COVERART_JPEG,COVERART_PNG,COVERART_BMP);

@@ -22,6 +22,7 @@ import org.jaudiotagger.audio.asf.util.Utils;
 
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,7 +40,7 @@ public final class AsfHeader extends ChunkContainer
     /**
      * The charset &quot;UTF-16LE&quot; is mandatory for ASF handling.
      */
-    public final static Charset ASF_CHARSET = Charset.forName("UTF-16LE"); //$NON-NLS-1$
+    public final static Charset ASF_CHARSET = StandardCharsets.UTF_16LE; //$NON-NLS-1$
 
     /**
      * Byte sequence representing the zero term character.
@@ -217,7 +218,6 @@ public final class AsfHeader extends ChunkContainer
     @Override
     public String prettyPrint(final String prefix)
     {
-        final StringBuilder result = new StringBuilder(super.prettyPrint(prefix, prefix + "  | : Contains: \"" + getChunkCount() + "\" chunks" + Utils.LINE_SEPARATOR));
-        return result.toString();
+        return super.prettyPrint(prefix, prefix + "  | : Contains: \"" + getChunkCount() + "\" chunks" + Utils.LINE_SEPARATOR);
     }
 }

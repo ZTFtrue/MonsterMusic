@@ -2,7 +2,6 @@ package org.jaudiotagger.audio.aiff.chunk;
 
 import org.jaudiotagger.audio.aiff.AiffAudioHeader;
 import org.jaudiotagger.audio.aiff.AiffUtil;
-import org.jaudiotagger.audio.generic.Utils;
 import org.jaudiotagger.audio.iff.Chunk;
 import org.jaudiotagger.audio.iff.ChunkHeader;
 
@@ -36,7 +35,7 @@ import java.util.Date;
  */
 public class FormatVersionChunk extends Chunk
 {
-    private AiffAudioHeader aiffHeader;
+    private final AiffAudioHeader aiffHeader;
 
     /**
      * @param chunkHeader  The header for this chunk

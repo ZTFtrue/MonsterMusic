@@ -16,8 +16,8 @@ public enum WavSubFormat
     FORMAT_GSM_COMPRESSED(0x31, "GSM_COMPRESSED"),
     ;
 
-    private int code;
-    private String description;
+    private final int code;
+    private final String description;
 
     WavSubFormat(int code, String description)
     {

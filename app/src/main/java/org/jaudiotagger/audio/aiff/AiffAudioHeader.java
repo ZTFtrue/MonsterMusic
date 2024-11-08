@@ -26,9 +26,9 @@ public class AiffAudioHeader extends GenericAudioHeader
     private String author;
     private String copyright;
 
-    private List<String> applicationIdentifiers;
-    private List<String> comments;
-    private List<String> annotations;
+    private final List<String> applicationIdentifiers;
+    private final List<String> comments;
+    private final List<String> annotations;
 
     public AiffAudioHeader()
     {
@@ -228,6 +228,6 @@ public class AiffAudioHeader extends GenericAudioHeader
                 sb.append("\t"+next+"\n");
             }
         }
-        return super.toString() + sb.toString();
+        return super.toString() + sb;
     }
 }

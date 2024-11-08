@@ -2,7 +2,6 @@ package com.ztftrue.music.ui.public
 
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -25,8 +24,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.QueueMusic
+import androidx.compose.material.icons.automirrored.outlined.VolumeOff
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Snooze
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,10 +51,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -85,15 +88,15 @@ fun TopBar(
     val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
     var popupVolumeWindow by remember { mutableStateOf(false) }
-    val timerIcon: Int = if (musicViewModel.remainTime.longValue == 0L) {
-        R.drawable.set_timer
+    val timerIcon: ImageVector = if (musicViewModel.remainTime.longValue == 0L) {
+        Icons.Outlined.Alarm
     } else {
-        R.drawable.setted_timer
+        Icons.Outlined.Snooze
     }
-    val volumeIcon: Int = if (musicViewModel.volume.intValue == 0) {
-        R.drawable.volume_off
+    val volumeIcon: ImageVector = if (musicViewModel.volume.intValue == 0) {
+        Icons.AutoMirrored.Outlined.VolumeOff
     } else {
-        R.drawable.volume_up
+        Icons.AutoMirrored.Outlined.VolumeUp
     }
     if (showDialog) {
         SleepTimeDialog(musicViewModel, onDismiss = {
@@ -172,7 +175,9 @@ fun TopBar(
                                 },
                             )
                             Row(
-                                modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 0.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 10.dp, end = 0.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -221,14 +226,12 @@ fun TopBar(
                         }
                     }
                 }) {
-                Image(
-                    painter = painterResource(
-                        R.drawable.ic_queue
-                    ),
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.QueueMusic,
                     contentDescription = "Queue Page",
                     modifier = Modifier
                         .size(30.dp),
-                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                    tint = MaterialTheme.colorScheme.onBackground
                 )
             }
             IconButton(
@@ -239,25 +242,25 @@ fun TopBar(
                 onClick = {
                     popupVolumeWindow = true
                 }) {
-                Image(
-                    painter = painterResource(volumeIcon),
+                Icon(
+                    imageVector = volumeIcon,
                     contentDescription = "Operate More, will open popup",
                     modifier = Modifier
                         .size(30.dp)
                         .clip(CircleShape),
-                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                    tint = MaterialTheme.colorScheme.onBackground
                 )
             }
             IconButton(onClick = {
                 showDialog = true
             }) {
-                Image(
-                    painter = painterResource(timerIcon),
+                Icon(
+                    imageVector = timerIcon,
                     contentDescription = "Operate More, will open dialog",
                     modifier = Modifier
                         .size(30.dp)
                         .clip(CircleShape),
-                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                    tint = MaterialTheme.colorScheme.onBackground
                 )
             }
             IconButton(

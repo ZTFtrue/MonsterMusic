@@ -13,7 +13,7 @@ public class Mp4NameBox extends AbstractMp4Box
 {
     public static final String IDENTIFIER = "name";
 
-    private String name;
+    private final String name;
 
     //TODO Are these misnamed, are these version flag bytes or just null bytes
     public static final int VERSION_LENGTH = 1;

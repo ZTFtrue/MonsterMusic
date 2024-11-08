@@ -16,7 +16,7 @@ import java.nio.ByteBuffer;
  */
 public class CommonChunk extends Chunk
 {
-    private AiffAudioHeader aiffHeader;
+    private final AiffAudioHeader aiffHeader;
 
     /**
      *

@@ -28,10 +28,10 @@ public interface MetadataBlockData
     /**
      * @return the rawdata as it will be written to file
      */
-    public ByteBuffer getBytes();
+    ByteBuffer getBytes();
 
     /**
      * @return the length in bytes that the data uses when written to file
      */
-    public int getLength();
+    int getLength();
 }

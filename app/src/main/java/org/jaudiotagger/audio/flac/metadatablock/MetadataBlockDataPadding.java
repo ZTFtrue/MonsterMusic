@@ -32,7 +32,7 @@ import java.nio.ByteBuffer;
  */
 public class MetadataBlockDataPadding implements MetadataBlockData
 {
-    private int length;
+    private final int length;
 
     public MetadataBlockDataPadding(int length)
     {

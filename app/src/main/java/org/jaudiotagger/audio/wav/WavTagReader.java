@@ -28,7 +28,6 @@ import org.jaudiotagger.audio.wav.chunk.WavId3Chunk;
 import org.jaudiotagger.audio.wav.chunk.WavListChunk;
 import org.jaudiotagger.logging.Hex;
 import org.jaudiotagger.tag.TagOptionSingleton;
-import org.jaudiotagger.tag.id3.ID3v23Tag;
 import org.jaudiotagger.tag.wav.WavInfoTag;
 import org.jaudiotagger.tag.wav.WavTag;
 
@@ -45,7 +44,7 @@ public class WavTagReader
 {
     public static Logger logger = Logger.getLogger("org.jaudiotagger.audio.wav");
 
-    private String loggingName;
+    private final String loggingName;
     public WavTagReader(String loggingName)
     {
         this.loggingName = loggingName;

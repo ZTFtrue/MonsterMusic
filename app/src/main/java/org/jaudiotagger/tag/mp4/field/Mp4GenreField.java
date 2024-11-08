@@ -48,10 +48,7 @@ public class Mp4GenreField extends Mp4TagTextNumberField
         Integer id3GenreId = GenreTypes.getInstanceOf().getIdForValue(genreId);
         if (id3GenreId != null)
         {
-            if (id3GenreId <= GenreTypes.getMaxStandardGenreId())
-            {
-                return true;
-            }
+            return id3GenreId <= GenreTypes.getMaxStandardGenreId();
         }
         return false;
     }

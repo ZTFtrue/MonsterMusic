@@ -61,8 +61,8 @@ public class  ImageFormats
      */
     public static final String MIME_TYPE_JPG  = "image/jpg";
 
-    private static Map<String, String> imageFormatsToMimeType = new HashMap<String, String>();
-    private static Map<String, String> imageMimeTypeToFormat = new HashMap <String, String>();
+    private static final Map<String, String> imageFormatsToMimeType = new HashMap<String, String>();
+    private static final Map<String, String> imageMimeTypeToFormat = new HashMap <String, String>();
 
     static
     {

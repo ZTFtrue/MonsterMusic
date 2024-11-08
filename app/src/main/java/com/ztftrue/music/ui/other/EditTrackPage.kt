@@ -3,7 +3,6 @@ package com.ztftrue.music.ui.other
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BrokenImage
 import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -53,7 +53,6 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.text.isDigitsOnly
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
-import coil.compose.rememberAsyncImagePainter
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
@@ -253,16 +252,9 @@ fun EditTrackPage(
                 ) {
                     item {
                         ConstraintLayout {
-
                             val (cover, edit) = createRefs()
-                            Image(
-                                painter = rememberAsyncImagePainter(
-                                    if (coverBitmap.value == null) {
-                                        R.drawable.broken_image
-                                    } else {
-                                        coverBitmap.value
-                                    }
-                                ),
+                            Icon(
+                                imageVector = Icons.Outlined.BrokenImage,
                                 contentDescription = "Cover",
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -271,7 +263,8 @@ fun EditTrackPage(
                                         top.linkTo(parent.top)
                                         start.linkTo(parent.start)
                                         end.linkTo(parent.end)
-                                    }
+                                    },
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                             if (enableEdit) {
                                 IconButton(

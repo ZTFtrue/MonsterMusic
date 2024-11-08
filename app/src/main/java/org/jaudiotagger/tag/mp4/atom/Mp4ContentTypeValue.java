@@ -17,8 +17,8 @@ public enum Mp4ContentTypeValue
     TV_SHOW("TV Show", 10),
     BOOKLET("Booklet", 11);
 
-    private String description;
-    private int id;
+    private final String description;
+    private final int id;
 
 
     /**

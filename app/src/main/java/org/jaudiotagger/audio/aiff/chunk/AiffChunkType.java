@@ -24,7 +24,7 @@ public enum AiffChunkType
     CORRUPT_TAG_EARLY("\u0000ID3");
 
     private static final Map<String, AiffChunkType> CODE_TYPE_MAP = new HashMap<String, AiffChunkType>();
-    private String code;
+    private final String code;
 
     /**
      * @param code 4 char string

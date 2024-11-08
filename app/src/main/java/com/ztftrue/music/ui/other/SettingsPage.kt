@@ -6,7 +6,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -29,7 +28,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
@@ -62,12 +60,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -903,14 +899,6 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                                     .clip(CircleShape),
                                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
-//                                            Image(
-//                                                painter = painterResource(R.drawable.ic_up),
-//                                                contentDescription = "Up tab priority",
-//                                                modifier = Modifier
-//                                                    .size(30.dp)
-//                                                    .clip(CircleShape),
-//                                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
-//                                            )
                                         }
                                     } else {
                                         Box(
@@ -947,14 +935,6 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                                     .clip(CircleShape),
                                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
-//                                            Image(
-//                                                painter = painterResource(R.drawable.ic_down),
-//                                                contentDescription = "Down tab priority",
-//                                                modifier = Modifier
-//                                                    .size(30.dp)
-//                                                    .clip(CircleShape),
-//                                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
-//                                            )
                                         }
                                     }
                                 }

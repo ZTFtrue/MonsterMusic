@@ -22,7 +22,6 @@ import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.generic.Utils;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
@@ -48,10 +47,7 @@ public class WavRIFFHeader
         if(Utils.readFourBytesAsChars(headerBuffer).equals(RIFF_SIGNATURE))
         {
             headerBuffer.getInt(); //Size
-            if(Utils.readFourBytesAsChars(headerBuffer).equals(WAVE_SIGNATURE))
-            {
-                return true;
-            }
+            return Utils.readFourBytesAsChars(headerBuffer).equals(WAVE_SIGNATURE);
         }
         return false;
     }

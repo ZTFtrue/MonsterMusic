@@ -8,7 +8,6 @@ import org.jaudiotagger.tag.id3.AbstractID3v2Tag;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Path;
 import java.util.logging.Logger;
 
 /**
@@ -23,8 +22,8 @@ public class FlacStreamReader
     public static final int FLAC_STREAM_IDENTIFIER_LENGTH = 4;
     public static final String FLAC_STREAM_IDENTIFIER = "fLaC";
 
-    private FileChannel fc;
-    private String loggingName;
+    private final FileChannel fc;
+    private final String loggingName;
     private int startOfFlacInFile;
 
     /**
@@ -77,10 +76,7 @@ public class FlacStreamReader
         {
             logger.warning(loggingName + ErrorMessage.FLAC_CONTAINS_ID3TAG.getMsg(fc.position()));
             //FLAC Stream immediately after end of id3 tag
-            if (isFlacHeader())
-            {
-                return true;
-            }
+            return isFlacHeader();
         }
         return false;
     }

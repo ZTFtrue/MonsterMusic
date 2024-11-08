@@ -36,7 +36,7 @@ public class ModificationHandler implements AudioFileModificationListener
     /**
      * The listeners to wich events are broadcasted are stored here.
      */
-    private Vector<AudioFileModificationListener> listeners = new Vector<AudioFileModificationListener>();
+    private final Vector<AudioFileModificationListener> listeners = new Vector<AudioFileModificationListener>();
 
     /**
      * This method adds an {@link AudioFileModificationListener}
@@ -118,10 +118,7 @@ public class ModificationHandler implements AudioFileModificationListener
      */
     public void removeAudioFileModificationListener(AudioFileModificationListener l)
     {
-        if (this.listeners.contains(l))
-        {
-            this.listeners.remove(l);
-        }
+        this.listeners.remove(l);
     }
 
     /**

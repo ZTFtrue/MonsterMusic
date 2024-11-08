@@ -20,8 +20,8 @@ public class WavInfoChunk
 {
     public static Logger logger = Logger.getLogger("org.jaudiotagger.audio.wav.WavInfoChunk");
 
-    private WavInfoTag wavInfoTag;
-    private String    loggingName;
+    private final WavInfoTag wavInfoTag;
+    private final String    loggingName;
 
     public WavInfoChunk(WavTag tag, String loggingName)
     {

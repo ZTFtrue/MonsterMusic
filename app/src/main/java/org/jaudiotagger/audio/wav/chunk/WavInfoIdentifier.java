@@ -33,9 +33,9 @@ public enum WavInfoIdentifier
     ;
     private static final Map<String, WavInfoIdentifier> CODE_TYPE_MAP = new HashMap<String, WavInfoIdentifier>();
     private static final Map<FieldKey, WavInfoIdentifier> FIELDKEY_TYPE_MAP = new HashMap<FieldKey, WavInfoIdentifier>();
-    private String code;
-    private FieldKey fieldKey;
-    private int      preferredWriteOrder;
+    private final String code;
+    private final FieldKey fieldKey;
+    private final int      preferredWriteOrder;
 
     WavInfoIdentifier(String code, FieldKey fieldKey, int preferredWriteOrder)
     {

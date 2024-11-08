@@ -19,13 +19,11 @@
 package org.jaudiotagger.audio.flac;
 
 import org.jaudiotagger.audio.exceptions.CannotReadException;
-import org.jaudiotagger.audio.generic.AudioFileReader;
 import org.jaudiotagger.audio.generic.AudioFileReader2;
 import org.jaudiotagger.audio.generic.GenericAudioHeader;
 import org.jaudiotagger.tag.Tag;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.file.Path;
 
 /**
@@ -34,8 +32,8 @@ import java.nio.file.Path;
 public class FlacFileReader extends AudioFileReader2
 {
 
-    private FlacInfoReader ir = new FlacInfoReader();
-    private FlacTagReader tr = new FlacTagReader();
+    private final FlacInfoReader ir = new FlacInfoReader();
+    private final FlacTagReader tr = new FlacTagReader();
 
     protected GenericAudioHeader  getEncodingInfo(Path path) throws CannotReadException, IOException
     {

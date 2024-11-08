@@ -21,7 +21,6 @@ package org.jaudiotagger.tag.vorbiscomment;
 
 import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.generic.Utils;
-import org.jaudiotagger.audio.ogg.util.VorbisHeader;
 import org.jaudiotagger.logging.ErrorMessage;
 
 import java.io.IOException;

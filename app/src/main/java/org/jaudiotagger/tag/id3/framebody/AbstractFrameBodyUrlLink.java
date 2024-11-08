@@ -29,7 +29,6 @@ import org.jaudiotagger.tag.datatype.DataTypes;
 import org.jaudiotagger.tag.datatype.StringSizeTerminated;
 
 import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharsetEncoder;
@@ -153,22 +152,12 @@ public abstract class AbstractFrameBodyUrlLink extends AbstractID3v2FrameBody
      */
     private String encodeURL(String url)
     {
-        try
+        final String[] splitURL = url.split("(?<!/)/(?!/)", -1);
+        final StringBuffer sb = new StringBuffer(splitURL[0]);
+        for (int i = 1; i < splitURL.length; i++)
         {
-            final String[] splitURL = url.split("(?<!/)/(?!/)", -1);
-            final StringBuffer sb = new StringBuffer(splitURL[0]);
-            for (int i = 1; i < splitURL.length; i++)
-            {
-                sb.append("/").append(URLEncoder.encode(splitURL[i], "utf-8"));
-            }
-            return sb.toString();
+            sb.append("/").append(URLEncoder.encode(splitURL[i], StandardCharsets.UTF_8));
         }
-        catch (UnsupportedEncodingException uee)
-        {
-            //Should never happen as utf-8 is always availablebut in case it does we just return the utl
-            //unmodified
-            logger.warning("Uable to url encode because utf-8 charset not available:" + uee.getMessage());
-            return url;
-        }
+        return sb.toString();
     }
 }

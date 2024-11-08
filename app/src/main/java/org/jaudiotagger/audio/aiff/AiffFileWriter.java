@@ -18,14 +18,10 @@
  */
 package org.jaudiotagger.audio.aiff;
 
-import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.exceptions.CannotWriteException;
-import org.jaudiotagger.audio.generic.AudioFileWriter;
 import org.jaudiotagger.audio.generic.AudioFileWriter2;
 import org.jaudiotagger.tag.Tag;
 
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.file.Path;
 
 
@@ -35,7 +31,7 @@ import java.nio.file.Path;
 public class AiffFileWriter extends AudioFileWriter2
 {
 
-    private AiffTagWriter tw = new AiffTagWriter();
+    private final AiffTagWriter tw = new AiffTagWriter();
 
     @Override
     protected void writeTag(Tag tag, Path file) throws CannotWriteException

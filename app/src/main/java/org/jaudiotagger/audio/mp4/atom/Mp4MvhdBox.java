@@ -55,8 +55,8 @@ public class Mp4MvhdBox extends AbstractMp4Box
 
     private static final int LONG_FORMAT = 1;
 
-    private int timeScale;
-    private long timeLength;
+    private final int timeScale;
+    private final long timeLength;
 
     /**
      * @param header     header info

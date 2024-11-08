@@ -13,7 +13,7 @@ public class Mp4MeanBox extends AbstractMp4Box
 {
     public static final String IDENTIFIER = "mean";
 
-    private String issuer;
+    private final String issuer;
 
     //TODO Are these misnamed, are these version flag bytes or just null bytes
     public static final int VERSION_LENGTH = 1;

@@ -306,19 +306,6 @@ fun PlayListItemView(
                 tint = MaterialTheme.colorScheme.onBackground
             )
         }
-//        Image(
-//            painter = painterResource(
-//                R.drawable.ic_queue
-//            ),
-//            contentDescription = if (musicViewModel.playStatus.value) {
-//                "pause"
-//            } else {
-//                "play"
-//            },
-//            modifier = Modifier
-//                .size(40.dp),
-//            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
-//        )
     }
 }
 

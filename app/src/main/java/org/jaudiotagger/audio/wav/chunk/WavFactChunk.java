@@ -22,7 +22,6 @@ import org.jaudiotagger.audio.generic.GenericAudioHeader;
 import org.jaudiotagger.audio.generic.Utils;
 import org.jaudiotagger.audio.iff.Chunk;
 import org.jaudiotagger.audio.iff.ChunkHeader;
-import org.jaudiotagger.audio.wav.WavSubFormat;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -34,9 +33,9 @@ import java.nio.ByteBuffer;
 */
 public class WavFactChunk extends Chunk
 {
-    private boolean isValid = false;
+    private final boolean isValid = false;
 
-    private GenericAudioHeader info;
+    private final GenericAudioHeader info;
 
     public WavFactChunk(ByteBuffer chunkData, ChunkHeader hdr, GenericAudioHeader info) throws IOException
     {

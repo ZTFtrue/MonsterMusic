@@ -54,10 +54,10 @@ public class FlacInfoReader
             //Search for StreamInfo Block, but even after we found it we still have to continue through all
             //the metadata blocks so that we can find the start of the audio frames which we need to calculate
             //the bitrate
-            while (isLastBlock==false)
+            while (!isLastBlock)
             {
                 MetadataBlockHeader mbh = MetadataBlockHeader.readHeader(fc);
-                logger.info(path.toString() + " "  + mbh.toString());
+                logger.info(path + " "  + mbh);
                 if (mbh.getBlockType() == BlockType.STREAMINFO)
                 {
                     mbdsi = new MetadataBlockDataStreamInfo(mbh, fc);
@@ -115,7 +115,7 @@ public class FlacInfoReader
     {
         try(FileChannel fc = FileChannel.open(f.toPath()))
         {
-            FlacStreamReader flacStream = new FlacStreamReader(fc, f.toPath().toString() + " ");
+            FlacStreamReader flacStream = new FlacStreamReader(fc, f.toPath() + " ");
             flacStream.findStream();
 
             boolean isLastBlock = false;

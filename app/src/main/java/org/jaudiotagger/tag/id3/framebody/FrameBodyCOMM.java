@@ -77,10 +77,7 @@ public class FrameBodyCOMM extends AbstractID3v2FrameBody implements ID3v24Frame
         String desc = getDescription();
         if(desc!=null && !(desc.length()==0))
         {
-            if(desc.startsWith(MM_PREFIX))
-            {
-                return true;
-            }
+            return desc.startsWith(MM_PREFIX);
         }
         return false;
     }
@@ -90,10 +87,7 @@ public class FrameBodyCOMM extends AbstractID3v2FrameBody implements ID3v24Frame
         String desc = getDescription();
         if(desc!=null && !(desc.length()==0))
         {
-            if(desc.equals(ITUNES_NORMALIZATION))
-            {
-                return true;
-            }
+            return desc.equals(ITUNES_NORMALIZATION);
         }
         return false;
     }

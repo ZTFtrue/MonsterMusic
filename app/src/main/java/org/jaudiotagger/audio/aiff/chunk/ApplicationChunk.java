@@ -1,7 +1,6 @@
 package org.jaudiotagger.audio.aiff.chunk;
 
 import org.jaudiotagger.audio.aiff.AiffAudioHeader;
-import org.jaudiotagger.audio.aiff.AiffUtil;
 import org.jaudiotagger.audio.generic.Utils;
 import org.jaudiotagger.audio.iff.Chunk;
 import org.jaudiotagger.audio.iff.ChunkHeader;
@@ -19,7 +18,7 @@ public class ApplicationChunk extends Chunk
     private static final String SIGNATURE_PDOS = "pdos";
     private static final String SIGNATURE_STOC = "stoc";
 
-    private AiffAudioHeader aiffHeader;
+    private final AiffAudioHeader aiffHeader;
 
     /**
      * Constructor.

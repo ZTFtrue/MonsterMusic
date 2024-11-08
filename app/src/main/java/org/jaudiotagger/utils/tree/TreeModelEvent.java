@@ -277,13 +277,13 @@ public class TreeModelEvent extends EventObject {
 	StringBuffer   retBuffer = new StringBuffer();
 
 	retBuffer.append(getClass().getName() + " " +
-			 Integer.toString(hashCode()));
+            hashCode());
 	if(path != null)
 	    retBuffer.append(" path " + path);
 	if(childIndices != null) {
 	    retBuffer.append(" indices [ ");
 	    for(int counter = 0; counter < childIndices.length; counter++)
-		retBuffer.append(Integer.toString(childIndices[counter])+ " ");
+		retBuffer.append(childIndices[counter] + " ");
 	    retBuffer.append("]");
 	}
 	if(children != null) {
