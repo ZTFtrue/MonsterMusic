@@ -53,7 +53,6 @@ but some features cannot be used.
 
 ### Need TODO
 
-- DSP visualize
 - App Start Flash
 - Composition, Performance optimize
 - Disable eq when can't support the track's encode or make it support.
