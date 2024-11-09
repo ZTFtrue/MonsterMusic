@@ -1366,7 +1366,7 @@ fun ManageAutoPlayDialog(onDismiss: () -> Unit) {
                                         }
                                 )
                                 Text(
-                                    text = "Enable auto play when bluetooth connected or headset connected",
+                                    text = "Enable auto play when bluetooth connected or headset connected. Need restart app.",
                                     modifier = Modifier.padding(8.dp),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
