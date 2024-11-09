@@ -185,11 +185,13 @@ class PlayService : MediaBrowserServiceCompat() {
     override fun onCreate() {
         super.onCreate()
         initExo(this@PlayService)
-        receiver = BluetoothConnectionReceiver(exoPlayer)
-        val filter = IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED)
-        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
-        filter.addAction(Intent.ACTION_HEADSET_PLUG)
-        registerReceiver(receiver, filter)
+        if (SharedPreferencesUtils.getAutoPlayEnable(this)) {
+            receiver = BluetoothConnectionReceiver(exoPlayer)
+            val filter = IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED)
+            filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
+            filter.addAction(Intent.ACTION_HEADSET_PLUG)
+            registerReceiver(receiver, filter)
+        }
         val contentIntent = Intent(this, MainActivity::class.java)
         val pendingContentIntent = PendingIntent.getActivity(
             this, 0, contentIntent,
@@ -1149,7 +1151,9 @@ class PlayService : MediaBrowserServiceCompat() {
             exoPlayer.release()
         } catch (_: Exception) {
         }
-        unregisterReceiver(receiver)
+        if (receiver != null) {
+            unregisterReceiver(receiver)
+        }
         super.onDestroy()
     }
 
