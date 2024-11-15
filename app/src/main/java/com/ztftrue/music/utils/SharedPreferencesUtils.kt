@@ -62,16 +62,17 @@ object SharedPreferencesUtils {
             .getBoolean("Enable", false)
     }
 
-    fun saveEnableMusicVisualization(context: Context,enable: Boolean) {
+    fun saveEnableMusicVisualization(context: Context, enable: Boolean) {
         context.getSharedPreferences("Visualization", Context.MODE_PRIVATE).edit()
             .putBoolean("Enable", enable).apply()
     }
+
     fun getShowMusicCover(context: Context): Boolean {
         return context.getSharedPreferences("Visualization", Context.MODE_PRIVATE)
             .getBoolean("Cover", true)
     }
 
-    fun saveShowMusicCover(context: Context,enable: Boolean) {
+    fun saveShowMusicCover(context: Context, enable: Boolean) {
         context.getSharedPreferences("Visualization", Context.MODE_PRIVATE).edit()
             .putBoolean("Cover", enable).apply()
     }
@@ -126,6 +127,26 @@ object SharedPreferencesUtils {
             .putString("title", currentPlayTrack?.name ?: "")
             .putLong("id", currentPlayTrack?.id ?: 0L)
             .putString("author", currentPlayTrack?.artist ?: "")
-            .putString("path", currentPlayTrack?.path ?: "").commit()
+            .putString("path", currentPlayTrack?.path ?: "").apply()
+    }
+
+    fun getAutoPlayWaitTime(context: Context): Long {
+        return context.getSharedPreferences("AutoPlay", Context.MODE_PRIVATE)
+            .getLong("waitTime", 1000)
+    }
+
+    fun getAutoPlayEnable(context: Context): Boolean {
+        return context.getSharedPreferences("AutoPlay", Context.MODE_PRIVATE)
+            .getBoolean("enable", false)
+    }
+
+    fun setAutoPlayWaitTime(context: Context, waitTime: Long) {
+        context.getSharedPreferences("AutoPlay", Context.MODE_PRIVATE).edit()
+            .putLong("waitTime", waitTime).apply()
+    }
+
+    fun setAutoPlayEnable(context: Context,enable: Boolean) {
+        context.getSharedPreferences("AutoPlay", Context.MODE_PRIVATE).edit()
+            .putBoolean("enable", enable).apply()
     }
 }

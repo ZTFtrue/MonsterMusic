@@ -8,7 +8,6 @@ import org.jaudiotagger.tag.reference.PictureTypes;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;

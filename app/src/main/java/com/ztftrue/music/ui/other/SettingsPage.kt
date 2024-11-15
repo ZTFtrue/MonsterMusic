@@ -1,11 +1,8 @@
-@file:OptIn(ExperimentalFoundationApi::class)
-
 package com.ztftrue.music.ui.other
 
 import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.Toast
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -48,6 +45,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -85,6 +83,7 @@ import com.ztftrue.music.sqlData.model.StorageFolder
 import com.ztftrue.music.ui.public.BackTopBar
 import com.ztftrue.music.utils.LyricsSettings.FIRST_EMBEDDED_LYRICS
 import com.ztftrue.music.utils.SharedPreferencesName.LYRICS_SETTINGS
+import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.openBrowser
 import com.ztftrue.music.utils.model.FolderList
@@ -105,6 +104,7 @@ fun SettingsPage(
     navController: NavHostController,
 ) {
     val context = LocalContext.current
+    val color = MaterialTheme.colorScheme.onBackground
     var durationValue by remember { mutableStateOf("0") }
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -143,8 +143,8 @@ fun SettingsPage(
                     .fillMaxSize()
                     .padding(it)
             ) {
-                item(1) {
-                    val color = MaterialTheme.colorScheme.onBackground
+                item {
+
                     var showDialog by remember { mutableStateOf(false) }
                     var showManageFolderDialog by remember { mutableStateOf(false) }
                     var showLyricsFolderDialog by remember { mutableStateOf(false) }
@@ -757,7 +757,59 @@ fun SettingsPage(
 
                     }
                 }
+                item {
+                    var showAutoPlaySetDialog by remember { mutableStateOf(false) }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .padding(0.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+                                showAutoPlaySetDialog = !showAutoPlaySetDialog
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
+                                .clickable {
+                                    showAutoPlaySetDialog = !showAutoPlaySetDialog
+                                },
+                        ) {
 
+                            if (showAutoPlaySetDialog) {
+                                ManageAutoPlayDialog(
+                                    onDismiss = {
+                                        showAutoPlaySetDialog = false
+                                    })
+                            }
+                            Text(
+                                text = "Set Auto Play",
+                                modifier = Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
+                }
             }
         },
     )
@@ -796,7 +848,6 @@ fun saveIgnoreDuration(
     keyboardController?.hide()
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @UnstableApi
 @Composable
 fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
@@ -818,12 +869,12 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
     }
     fun onConfirmation() {
         musicViewModel.mainTabList.clear()
-        if(mainTabList.find { it.isShow  }==null){
+        if (mainTabList.find { it.isShow } == null) {
             Toast.makeText(context, "Must has at least one tab", Toast.LENGTH_SHORT).show()
             return
         }
         mainTabList.forEachIndexed { index, it ->
-            it.priority=index
+            it.priority = index
             if (it.isShow) {
                 musicViewModel.mainTabList.add(it)
             }
@@ -1233,6 +1284,249 @@ fun AboutDialog(onDismiss: () -> Unit) {
         }
     )
 }
+
+@UnstableApi
+@Composable
+fun ManageAutoPlayDialog(onDismiss: () -> Unit) {
+
+    val context = LocalContext.current
+    val scopeMain = CoroutineScope(Dispatchers.IO)
+
+    var enableAutoPlay by remember { mutableStateOf(false) }
+    var waitTime by remember { mutableLongStateOf(1000) }
+    var waitTimeString by remember { mutableStateOf("1") }
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    LaunchedEffect(Unit) {
+        enableAutoPlay = SharedPreferencesUtils.getAutoPlayEnable(context)
+        waitTime = SharedPreferencesUtils.getAutoPlayWaitTime(context)
+        waitTimeString = (waitTime / 1000).toString()
+    }
+    fun onConfirmation() {
+        SharedPreferencesUtils.setAutoPlayEnable(context, enableAutoPlay)
+        SharedPreferencesUtils.setAutoPlayWaitTime(context, waitTime)
+        scopeMain.launch {
+            onDismiss()
+        }
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = true, dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        ),
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(color = MaterialTheme.colorScheme.background),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(color = MaterialTheme.colorScheme.background),
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(color = MaterialTheme.colorScheme.onBackground)
+                    )
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        item {
+                            Row(
+                                horizontalArrangement = Arrangement.Start,
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                            ) {
+                                Checkbox(
+                                    checked = enableAutoPlay,
+                                    onCheckedChange = { v ->
+                                        enableAutoPlay = v
+                                    },
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .width(60.dp)
+                                        .height(60.dp)
+                                        .semantics {
+                                            contentDescription = if (enableAutoPlay) {
+                                                "Enable auto play"
+                                            } else {
+                                                "Disable auto play"
+                                            }
+                                        }
+                                )
+                                Text(
+                                    text = "Enable auto play when bluetooth connected or headset connected. Need restart app.",
+                                    modifier = Modifier.padding(8.dp),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                        }
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(0.dp)
+                                    .drawBehind {
+//                                    drawLine(
+////                                        color = MaterialTheme.colorScheme.onBackground,
+//                                        start = Offset(0f, size.height - 1.dp.toPx()),
+//                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+//                                        strokeWidth = 1.dp.toPx()
+//                                    )
+                                    }
+                                    .clickable {
+
+                                    },
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "Wait time before auto play",
+                                        Modifier.padding(start = 10.dp),
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                    OutlinedTextField(
+                                        enabled = enableAutoPlay,
+                                        value = waitTimeString,
+                                        onValueChange = { s ->
+                                            if (!s.contains(".")) {
+                                                waitTimeString = s
+                                                if (s.isNotEmpty()) {
+                                                    waitTime = s.toLong() * 1000
+                                                }
+                                            }
+                                        },
+                                        keyboardOptions = KeyboardOptions.Default.copy(
+                                            imeAction = ImeAction.Done,
+                                            keyboardType = KeyboardType.Number
+                                        ),
+                                        keyboardActions = KeyboardActions(
+                                            onDone = {
+                                                focusRequester.freeFocus()
+                                                keyboardController?.hide()
+                                            }
+                                        ),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .focusRequester(focusRequester)
+                                            .background(MaterialTheme.colorScheme.primary),
+                                        colors = TextFieldDefaults.colors(
+                                            errorTextColor = MaterialTheme.colorScheme.primary,
+                                            focusedTextColor = MaterialTheme.colorScheme.primary,
+                                            disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(
+                                                alpha = 0.38f
+                                            ),
+                                            unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                                            focusedContainerColor = MaterialTheme.colorScheme.background,
+                                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                            cursorColor = MaterialTheme.colorScheme.primary,
+                                            errorCursorColor = MaterialTheme.colorScheme.error,
+                                            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                                            unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
+                                                alpha = 0.38f
+                                            ),
+                                            disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
+                                                alpha = 0.12f
+                                            ),
+                                            errorIndicatorColor = MaterialTheme.colorScheme.error,
+                                            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                                alpha = 0.38f
+                                            ),
+                                            errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                                alpha = 0.38f
+                                            ),
+                                            errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                                alpha = 0.38f
+                                            ),
+                                            disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                                alpha = 0.38f
+                                            ),
+                                            errorLabelColor = MaterialTheme.colorScheme.error,
+                                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                                alpha = 0.38f
+                                            )
+                                        ),
+                                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                                        suffix = {
+                                            Row(
+                                                horizontalArrangement = Arrangement.Start,
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                Text(
+                                                    text = "s",
+                                                    Modifier.padding(start = 10.dp, end = 20.dp),
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                )
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center,
+                            ) {
+                                TextButton(
+                                    onClick = {
+                                        onConfirmation()
+                                    },
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .fillMaxWidth(0.5f),
+                                ) {
+                                    Text(
+                                        "Confirm",
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                                HorizontalDivider(
+                                    modifier = Modifier
+                                        .background(MaterialTheme.colorScheme.onBackground)
+                                        .width(1.dp)
+                                        .height(50.dp)
+                                )
+                                TextButton(
+                                    onClick = {
+                                        onDismiss()
+                                    },
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .fillMaxWidth(),
+
+                                    ) {
+                                    Text(
+                                        "Cancel",
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+            }
+        }
+    )
+}
+
 
 @UnstableApi
 @Composable

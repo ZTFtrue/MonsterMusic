@@ -4,7 +4,6 @@ import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.iff.Chunk;
 import org.jaudiotagger.audio.iff.ChunkHeader;
 import org.jaudiotagger.tag.TagException;
-import org.jaudiotagger.tag.aiff.AiffTag;
 import org.jaudiotagger.tag.id3.AbstractID3v2Tag;
 import org.jaudiotagger.tag.id3.ID3v22Tag;
 import org.jaudiotagger.tag.id3.ID3v23Tag;

@@ -1,12 +1,8 @@
 package org.jaudiotagger.tag.datatype;
 
 
-import org.jaudiotagger.tag.TagOptionSingleton;
 import org.jaudiotagger.tag.id3.AbstractTagFrameBody;
 
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

@@ -1,9 +1,7 @@
 package org.jaudiotagger.audio.wav.chunk;
 
-import org.jaudiotagger.audio.aiff.chunk.AiffChunkType;
 import org.jaudiotagger.audio.iff.ChunkSummary;
 import org.jaudiotagger.audio.wav.WavChunkType;
-import org.jaudiotagger.tag.aiff.AiffTag;
 import org.jaudiotagger.tag.wav.WavTag;
 
 import java.util.logging.Logger;

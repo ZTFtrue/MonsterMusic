@@ -7,6 +7,10 @@
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" /> <!-- <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" /> -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" /> <!-- <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" /> -->
+<!--    <uses-permission android:name="android.permission.BLUETOOTH" />-->
+<!--    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />-->
+<!--    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />-->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT" />
@@ -83,6 +87,11 @@
                 android:resource="@xml/file_paths"
                 android:value="androidx.startup" />
         </provider>
+<!--        <receiver android:name=".utils.BluetoothConnectionReceiver" android:exported="false">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />-->
+<!--            </intent-filter>-->
+<!--        </receiver>-->
     </application>
 
 </manifest>

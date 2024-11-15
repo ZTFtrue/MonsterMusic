@@ -19,7 +19,6 @@ import org.jaudiotagger.tag.InvalidTagException;
 import org.jaudiotagger.tag.datatype.DataTypes;
 import org.jaudiotagger.tag.datatype.NumberHashMap;
 import org.jaudiotagger.tag.datatype.PartOfSet;
-import org.jaudiotagger.tag.id3.ID3v24Frames;
 import org.jaudiotagger.tag.id3.valuepair.TextEncoding;
 
 import java.nio.ByteBuffer;

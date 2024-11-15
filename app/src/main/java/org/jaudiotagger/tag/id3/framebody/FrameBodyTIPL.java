@@ -26,17 +26,13 @@ package org.jaudiotagger.tag.id3.framebody;
 
 import org.jaudiotagger.tag.InvalidTagException;
 import org.jaudiotagger.tag.datatype.DataTypes;
-import org.jaudiotagger.tag.datatype.NumberHashMap;
 import org.jaudiotagger.tag.datatype.Pair;
 import org.jaudiotagger.tag.datatype.PairedTextEncodedStringNullTerminated;
 import org.jaudiotagger.tag.id3.ID3v24Frames;
 import org.jaudiotagger.tag.id3.valuepair.StandardIPLSKey;
-import org.jaudiotagger.tag.id3.valuepair.TextEncoding;
 
-import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.StringTokenizer;
 
 
 /**

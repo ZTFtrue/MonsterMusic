@@ -18,10 +18,8 @@
  */
 package org.jaudiotagger.audio.dsf;
 
-import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.exceptions.CannotWriteException;
 import org.jaudiotagger.audio.exceptions.NoWritePermissionsException;
-import org.jaudiotagger.audio.generic.AudioFileWriter;
 import org.jaudiotagger.audio.generic.AudioFileWriter2;
 import org.jaudiotagger.audio.generic.Utils;
 import org.jaudiotagger.tag.Tag;
@@ -31,7 +29,6 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.AccessDeniedException;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 

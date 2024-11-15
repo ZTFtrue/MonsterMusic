@@ -19,7 +19,6 @@
 package org.jaudiotagger.audio.mp3;
 
 import org.jaudiotagger.audio.generic.Utils;
-import org.jaudiotagger.tag.id3.valuepair.TextEncoding;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;

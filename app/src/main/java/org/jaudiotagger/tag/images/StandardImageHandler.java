@@ -1,17 +1,10 @@
 package org.jaudiotagger.tag.images;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.ImageWriter;
-
-import org.jaudiotagger.tag.id3.valuepair.ImageFormats;
 
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Iterator;
-
-import coil.decode.BitmapFactoryDecoder;
 
 /**
  * Image Handling used when running on standard JVM

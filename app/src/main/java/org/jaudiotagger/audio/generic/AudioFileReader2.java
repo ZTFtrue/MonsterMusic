@@ -14,9 +14,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.AclEntry;
-import java.nio.file.attribute.AclFileAttributeView;
-import java.nio.file.attribute.DosFileAttributes;
 import java.util.logging.Level;
 
 /**

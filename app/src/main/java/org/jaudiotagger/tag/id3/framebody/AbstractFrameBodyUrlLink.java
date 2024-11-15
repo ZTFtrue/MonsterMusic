@@ -29,7 +29,6 @@ import org.jaudiotagger.tag.datatype.DataTypes;
 import org.jaudiotagger.tag.datatype.StringSizeTerminated;
 
 import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharsetEncoder;
