@@ -2,6 +2,7 @@ package com.ztftrue.music.ui.play
 
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.widget.Toast
@@ -13,16 +14,19 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Adjust
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -48,20 +52,25 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalTextToolbar
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.TextToolbarStatus
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextIndent
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -75,6 +84,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
+import com.ztftrue.music.play.ACTION_SEEK_TO
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.model.ListStringCaption
@@ -166,6 +176,8 @@ fun LyricsView(
     var popupOffset by remember {
         mutableStateOf(IntOffset(0, 0))
     }
+    val layoutResult = remember { mutableStateOf<TextLayoutResult?>(null) }
+
 //    DisposableEffect(Unit) {
 //        onDispose {
 //
@@ -306,8 +318,10 @@ fun LyricsView(
         ) {
             val textToolbar = LocalTextToolbar.current
             val focusManager = LocalFocusManager.current
+            var lrycisViewWidth by remember { mutableStateOf(0.dp) }
+            var density = LocalDensity.current
             ConstraintLayout {
-                val (playIndicator) = createRefs()
+                val (embededIndicator) = createRefs()
                 SelectionContainer(
                     modifier = Modifier.zIndex(1f),
                     content = {
@@ -317,14 +331,12 @@ fun LyricsView(
                                     available: Offset,
                                     source: NestedScrollSource
                                 ): Offset {
-//                                if (textToolbar.status == TextToolbarStatus.Shown) {
                                     try {
                                         focusManager.clearFocus()
                                         textToolbar.hide()
                                     } catch (_: Exception) {
 
                                     }
-//                                }
                                     return super.onPreScroll(available, source)
                                 }
                             }
@@ -334,6 +346,11 @@ fun LyricsView(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .fillMaxHeight()
+                                .onGloballyPositioned { layoutCoordinates ->
+                                    with(density) {
+                                        lrycisViewWidth = layoutCoordinates.size.width.toDp()
+                                    }
+                                }
                                 .nestedScroll(nestedScrollConnection)
                                 .pointerInteropFilter {
                                     when (it.action) {
@@ -374,79 +391,136 @@ fun LyricsView(
                                     val tex = musicViewModel.currentCaptionList[listIndex].text
                                     val annotatedString = buildAnnotatedString {
                                         for ((index, text) in tex.withIndex()) {
-                                            val pattern = Regex("[,:;.\"]")
-                                            val tItem = text.replace(pattern, "")
-                                            pushStringAnnotation("word$tItem$index", tItem)
+                                            pushStringAnnotation("text", text)
                                             withStyle(
                                                 style = SpanStyle(
-                                                    textDecoration = if (selectedTag == "$listIndex word$tItem$index") {
+                                                    textDecoration = if (selectedTag == text) {
                                                         TextDecoration.Underline
                                                     } else {
                                                         TextDecoration.None
                                                     }
                                                 )
                                             ) {
-                                                append(text)
+                                                withLink(
+                                                    link = LinkAnnotation.Clickable(
+                                                        tag = "text",
+                                                        linkInteractionListener = { link ->
+                                                            if (textToolbar.status == TextToolbarStatus.Shown) {
+                                                                textToolbar.hide()
+                                                                focusManager.clearFocus()
+                                                            } else if (showMenu) {
+                                                                showMenu = false
+                                                            } else {
+                                                                selectedTag = text
+                                                                word = text
+                                                                showMenu = true
+                                                            }
+                                                        },
+                                                    ),
+                                                ) {
+                                                    append(text)
+                                                }
                                             }
-                                            pop()
-                                            pushStringAnnotation("space", "")
-                                            append(" ")
-                                            pop()
+
+                                            if (index < tex.size-1) {
+                                                val regex = Regex("\\p{Punct}")
+                                                if (regex.matches(tex[index + 1])) {
+
+                                                } else {
+                                                    pop()
+                                                    pushStringAnnotation("space", "")
+                                                    append(" ")
+                                                    pop()
+                                                }
+//                                                val tItem = text.replace(pattern, "")
+                                            }
                                         }
                                     }
-                                    ClickableText(
-                                        text = annotatedString,
-                                        style = TextStyle(
-                                            color = if (currentI == listIndex && musicViewModel.autoHighLight.value) {
-                                                MaterialTheme.colorScheme.onTertiaryContainer
-                                            } else {
-                                                MaterialTheme.colorScheme.onBackground
-                                            },
-                                            fontSize = fontSize.sp,
-                                            textAlign = musicViewModel.textAlign.value,
-                                            lineHeight = (fontSize * 1.5).sp,
-                                            textIndent = if (musicViewModel.textAlign.value == TextAlign.Justify || musicViewModel.textAlign.value == TextAlign.Start) {
-                                                TextIndent(fontSize.sp * 2)
-                                            } else {
-                                                TextIndent.None
-                                            }
-                                        ),
+                                    ConstraintLayout(
                                         modifier = Modifier
                                             .fillMaxWidth()
+                                            .wrapContentHeight()
+                                            .heightIn(min = 40.dp)
                                             .background(
                                                 if (currentI == listIndex && musicViewModel.autoHighLight.value) MaterialTheme.colorScheme.tertiaryContainer.copy(
                                                     alpha = 0.3f
                                                 ) else MaterialTheme.colorScheme.background
-                                            )
-                                            .padding(
-                                                start = 20.dp,
-                                                end = 20.dp,
-                                                top = 2.dp,
-                                                bottom = 2.dp
-                                            )
-                                    ) { offset ->
-                                        if (textToolbar.status == TextToolbarStatus.Shown) {
-                                            textToolbar.hide()
-                                            focusManager.clearFocus()
-                                        } else if (showMenu) {
-                                            showMenu = false
-                                        } else {
-                                            val annotations =
-                                                annotatedString.getStringAnnotations(offset, offset)
-                                            annotations.firstOrNull()?.let { itemAnnotations ->
-                                                if (itemAnnotations.tag.startsWith("word")) {
-                                                    selectedTag =
-                                                        "$listIndex ${itemAnnotations.tag}"
-                                                    word = itemAnnotations.item
-                                                    showMenu = true
+                                            ),
+                                    ) {
+                                        val (playIndicator) = createRefs()
+                                        Icon(
+                                            imageVector = Icons.Outlined.Adjust,
+                                            contentDescription = stringResource(id = R.string.operate_more_will_open_dialog),
+                                            tint = if (currentI == listIndex && musicViewModel.autoHighLight.value) {
+                                                MaterialTheme.colorScheme.onTertiaryContainer.copy(
+                                                    alpha = 0.3f
+                                                )
+                                            } else {
+                                                MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
+                                            },
+                                            modifier = Modifier
+                                                .width(40.dp)
+                                                .fillMaxHeight()
+                                                .clickable {
+                                                    val bundle = Bundle()
+                                                    bundle.putLong(
+                                                        "position",
+                                                        musicViewModel.currentCaptionList[listIndex].timeStart
+                                                    )
+                                                    musicViewModel.sliderPosition.floatValue =
+                                                        musicViewModel.currentCaptionList[listIndex].timeStart.toFloat()
+                                                    musicViewModel.mediaBrowser?.sendCustomAction(
+                                                        ACTION_SEEK_TO,
+                                                        bundle,
+                                                        null
+                                                    )
                                                 }
-                                            }
-                                        }
-
+                                                .padding(
+                                                    start = 10.dp,
+                                                    end = 10.dp,
+                                                    top = 2.dp,
+                                                    bottom = 2.dp
+                                                )
+                                                .constrainAs(playIndicator) {
+                                                    bottom.linkTo(
+                                                        anchor = parent.bottom,
+                                                    )
+                                                    top.linkTo(anchor = parent.top)
+                                                    start.linkTo(anchor = parent.start)
+                                                }
+                                                .zIndex(2.0f),
+                                        )
+                                        Text(
+                                            text = annotatedString,
+                                            style = TextStyle(
+                                                color = if (currentI == listIndex && musicViewModel.autoHighLight.value) {
+                                                    MaterialTheme.colorScheme.onTertiaryContainer
+                                                } else {
+                                                    MaterialTheme.colorScheme.onBackground
+                                                },
+                                                fontSize = fontSize.sp,
+                                                textAlign = musicViewModel.textAlign.value,
+                                                lineHeight = (fontSize * 1.5).sp,
+                                                textIndent = if (musicViewModel.textAlign.value == TextAlign.Justify || musicViewModel.textAlign.value == TextAlign.Start) {
+                                                    TextIndent(fontSize.sp * 2)
+                                                } else {
+                                                    TextIndent.None
+                                                }
+                                            ),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(
+                                                    top = 2.dp,
+                                                    bottom = 2.dp,
+                                                    start = 20.dp,
+                                                    end = 20.dp,
+                                                )
+                                        )
                                     }
                                 }
 
                             }
+
                         }
                     }
                 )
@@ -469,7 +543,7 @@ fun LyricsView(
                                         )
                                         .show()
                                 }
-                                .constrainAs(playIndicator) {
+                                .constrainAs(embededIndicator) {
                                     top.linkTo(anchor = parent.top, margin = 5.dp)
                                     start.linkTo(anchor = parent.start, margin = 10.dp)
                                 },

@@ -29,6 +29,7 @@ import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.play.Lyrics
 import com.ztftrue.music.utils.CaptionUtils
+import com.ztftrue.music.utils.CaptionUtils.splitStringIntoWordsAndSymbols
 import com.ztftrue.music.utils.LyricsSettings.FIRST_EMBEDDED_LYRICS
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.PlayListType
@@ -76,8 +77,8 @@ class MusicViewModel : ViewModel() {
 //    val artistScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
 //    val genreScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
     var musicVisualizationData = mutableStateListOf<Float>()
-   var  musicVisualizationEnable= mutableStateOf(false)
-   var  showMusicCover= mutableStateOf(false)
+    var musicVisualizationEnable = mutableStateOf(false)
+    var showMusicCover = mutableStateOf(false)
     // 当前播放的列表，应该换数据结构存储，每个列表设置变量 播放状态，album和 genres 也是，艺术家跳转到 album， 然后在下一步处理
     // 每次播放仅设置当前列表的状态
 
@@ -389,7 +390,7 @@ class MusicViewModel : ViewModel() {
         val arrayList = arrayListOf<ListStringCaption>()
         captions.forEach {
             val an = ListStringCaption(
-                text = ArrayList(it.text.split(Regex("[\\n\\r\\s]+"))),
+                text = splitStringIntoWordsAndSymbols(it.text), //ArrayList(it.text.split(Regex("[\\n\\r\\s]+"))),
                 timeStart = it.timeStart,
                 timeEnd = it.timeEnd
             )
