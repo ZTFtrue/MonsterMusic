@@ -15,7 +15,8 @@ internal class TextActionModeCallback(
     var onCutRequested: (() -> Unit)? = null,
     var onSelectAllRequested: (() -> Unit)? = null,
     var customProcessTextApp: List<DictionaryApp>? = null,
-    var onProcessAppItemClick: ((DictionaryApp) -> Unit)? = null
+    var onProcessAppItemClick: ((DictionaryApp) -> Unit)? = null,
+    var textToolbar: CustomTextToolbar?=null
 ) {
     fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
         requireNotNull(menu)
@@ -35,6 +36,9 @@ internal class TextActionModeCallback(
         }
         onSelectAllRequested?.let {
             addMenuItem(menu, MenuItemOption.SelectAll)
+        }
+        textToolbar?.let {
+            addMenuItem(menu, MenuItemOption.Close)
         }
         return true
     }
@@ -56,6 +60,7 @@ internal class TextActionModeCallback(
                         MenuItemOption.Paste.id -> onPasteRequested?.invoke()
                         MenuItemOption.Cut.id -> onCutRequested?.invoke()
                         MenuItemOption.SelectAll.id -> onSelectAllRequested?.invoke()
+                        MenuItemOption.Close.id ->textToolbar?.hideAll()
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -143,7 +148,8 @@ internal enum class MenuItemOption(val id: Int) {
     Copy(0),
     Paste(1),
     Cut(2),
-    SelectAll(3);
+    SelectAll(3),
+    Close(4);
 
     val titleResource: Int
         get() = when (this) {
@@ -151,6 +157,7 @@ internal enum class MenuItemOption(val id: Int) {
             Paste -> android.R.string.paste
             Cut -> android.R.string.cut
             SelectAll -> android.R.string.selectAll
+            Close -> android.R.string.cancel
         }
 
     /**

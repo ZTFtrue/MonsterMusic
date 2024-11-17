@@ -42,6 +42,7 @@ import androidx.compose.material.icons.automirrored.outlined.FormatAlignLeft
 import androidx.compose.material.icons.automirrored.outlined.FormatAlignRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Adjust
 import androidx.compose.material.icons.outlined.Equalizer
 import androidx.compose.material.icons.outlined.FormatAlignCenter
 import androidx.compose.material.icons.outlined.FormatAlignJustify
@@ -727,6 +728,26 @@ fun PlayingPage(
                             )
                         }
                     }
+                    item {
+                        IconButton(
+                            modifier = Modifier.width(50.dp), onClick = {
+                                musicViewModel.showSlideIndicators.value =
+                                    !musicViewModel.showSlideIndicators.value
+                                SharedPreferencesUtils.setShowSlideIndicators(
+                                    context,
+                                    musicViewModel.showSlideIndicators.value
+                                )
+                            }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Adjust,
+                                contentDescription = "Set show slider indicator",
+                                modifier = Modifier
+                                    .width(24.dp)
+                                    .height(24.dp),
+                                tint = if (musicViewModel.showSlideIndicators.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
                 }
                 Row(
                     horizontalArrangement = Arrangement.Center,
@@ -1195,8 +1216,6 @@ fun PlayingPage(
                                     )
                                 }
                             }
-
-
                             IconButton(
                                 modifier = Modifier.width(50.dp), onClick = {
                                     showDialog = true

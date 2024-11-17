@@ -149,4 +149,12 @@ object SharedPreferencesUtils {
         context.getSharedPreferences("AutoPlay", Context.MODE_PRIVATE).edit()
             .putBoolean("enable", enable).apply()
     }
+    fun getShowSlideIndicators(context: Context):Boolean {
+       return context.getSharedPreferences("display", Context.MODE_PRIVATE)
+            .getBoolean("lyrics_slider_indicators", false)
+    }
+    fun setShowSlideIndicators(context: Context,enable: Boolean) {
+        context.getSharedPreferences("display", Context.MODE_PRIVATE).edit()
+            .putBoolean("lyrics_slider_indicators", enable).apply()
+    }
 }

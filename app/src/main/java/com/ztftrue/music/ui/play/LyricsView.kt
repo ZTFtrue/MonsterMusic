@@ -11,6 +11,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -30,6 +32,7 @@ import androidx.compose.material.icons.outlined.Adjust
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,12 +54,10 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.motionEventSpy
-import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalTextToolbar
 import androidx.compose.ui.platform.LocalView
@@ -64,7 +65,6 @@ import androidx.compose.ui.platform.TextToolbarStatus
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -107,6 +107,10 @@ fun LyricsView(
     var currentI by remember { mutableIntStateOf(0) }
     var isSelected by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
+    var showSlideIndicators by remember { mutableStateOf(false) }
+    LaunchedEffect(key1 = musicViewModel.showSlideIndicators.value) {
+        showSlideIndicators = musicViewModel.showSlideIndicators.value
+    }
     LaunchedEffect(musicViewModel.sliderPosition.floatValue) {
         val timeState = musicViewModel.sliderPosition.floatValue
         if (musicViewModel.lyricsType == LyricsType.LRC) {
@@ -176,7 +180,7 @@ fun LyricsView(
     var popupOffset by remember {
         mutableStateOf(IntOffset(0, 0))
     }
-    val layoutResult = remember { mutableStateOf<TextLayoutResult?>(null) }
+    var viewPosition by remember { mutableStateOf(Offset.Zero) }
 
 //    DisposableEffect(Unit) {
 //        onDispose {
@@ -210,11 +214,10 @@ fun LyricsView(
             if (list.isEmpty()) {
                 showMenu = false
             } else {
-
                 Popup(
                     // on below line we are adding
                     // alignment and properties.
-                    alignment = Alignment.TopCenter,
+                    alignment = Alignment.TopStart,
                     properties = PopupProperties(),
                     offset = popupOffset,
                     onDismissRequest = {
@@ -246,7 +249,7 @@ fun LyricsView(
                             state = rowListSate,
                             modifier = Modifier
                                 .background(MaterialTheme.colorScheme.background)
-                                .fillMaxWidth()
+                                .wrapContentWidth(Alignment.CenterHorizontally)
                         ) {
                             items(list.size) { index ->
                                 val resolveInfo = list[index]
@@ -308,22 +311,53 @@ fun LyricsView(
         }
 
     } else {
+        val textToolbarProvider = LocalTextToolbar provides CustomTextToolbar(
+            LocalView.current,
+            musicViewModel.dictionaryAppList,
+            LocalFocusManager.current,
+            LocalClipboardManager.current
+        )
+        var longpress = false
         CompositionLocalProvider(
-            LocalTextToolbar provides CustomTextToolbar(
-                LocalView.current,
-                musicViewModel.dictionaryAppList,
-                LocalFocusManager.current,
-                LocalClipboardManager.current
-            ),
+            textToolbarProvider,
         ) {
-            val textToolbar = LocalTextToolbar.current
+            var downtime = 0L
             val focusManager = LocalFocusManager.current
-            var lrycisViewWidth by remember { mutableStateOf(0.dp) }
-            var density = LocalDensity.current
+            val textToolbar = textToolbarProvider.value
             ConstraintLayout {
                 val (embededIndicator) = createRefs()
                 SelectionContainer(
-                    modifier = Modifier.zIndex(1f),
+                    modifier = Modifier
+                        .onGloballyPositioned { coordinates ->
+                            // 获取视图在屏幕中的位置
+                            val positionInWindow = coordinates.positionInWindow()
+                            viewPosition = positionInWindow
+                        }
+                        .motionEventSpy {
+                            when (it.action) {
+                                MotionEvent.ACTION_DOWN -> {
+                                    longpress = false
+                                    downtime = System.currentTimeMillis()
+                                    textToolbar.hide()
+                                    focusManager.clearFocus()
+                                }
+
+                                MotionEvent.ACTION_UP -> {
+                                    longpress = System.currentTimeMillis() - downtime >= 200
+                                    val a =
+                                        it.y - 115.dp.toPx(context)
+                                    popupOffset =
+                                        IntOffset(it.x.toInt() - 60.dp.toPx(context), a.toInt())
+                                    if (showMenu) {
+                                        showMenu = false
+                                        isSelected = false
+                                        selectedTag = ""
+                                        word = ""
+                                    }
+                                }
+                            }
+                        }
+                        .zIndex(1f),
                     content = {
                         val nestedScrollConnection = remember {
                             object : NestedScrollConnection {
@@ -332,8 +366,8 @@ fun LyricsView(
                                     source: NestedScrollSource
                                 ): Offset {
                                     try {
-                                        focusManager.clearFocus()
                                         textToolbar.hide()
+                                        focusManager.clearFocus()
                                     } catch (_: Exception) {
 
                                     }
@@ -346,45 +380,7 @@ fun LyricsView(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .fillMaxHeight()
-                                .onGloballyPositioned { layoutCoordinates ->
-                                    with(density) {
-                                        lrycisViewWidth = layoutCoordinates.size.width.toDp()
-                                    }
-                                }
                                 .nestedScroll(nestedScrollConnection)
-                                .pointerInteropFilter {
-                                    when (it.action) {
-                                        MotionEvent.ACTION_DOWN -> {
-                                            if (it.action == MotionEvent.ACTION_DOWN) {
-                                                val a = if (it.y > size.value.height / 2) {
-                                                    it.y - fontSize * 3 - 60.dp.toPx(context)
-                                                } else {
-                                                    it.y + fontSize * 3
-                                                }
-                                                popupOffset = IntOffset(0, a.toInt())
-                                            }
-                                        }
-
-                                        MotionEvent.ACTION_UP -> {
-                                            if (showMenu) {
-                                                showMenu = false
-                                                isSelected = false
-                                                selectedTag = ""
-                                                word = ""
-                                            }
-                                        }
-                                    }
-                                    false
-                                }
-                                .motionEventSpy {
-                                    if (it.action == MotionEvent.ACTION_DOWN && textToolbar.status == TextToolbarStatus.Shown) {
-                                        textToolbar.hide()
-                                        focusManager.clearFocus()
-                                    }
-                                }
-                                .onSizeChanged { sizeIt ->
-                                    size.value = sizeIt
-                                }
                         ) {
                             items(musicViewModel.currentCaptionList.size) { listIndex ->
                                 key(Unit) {
@@ -404,17 +400,20 @@ fun LyricsView(
                                                 withLink(
                                                     link = LinkAnnotation.Clickable(
                                                         tag = "text",
-                                                        linkInteractionListener = { link ->
-                                                            if (textToolbar.status == TextToolbarStatus.Shown) {
-                                                                textToolbar.hide()
-                                                                focusManager.clearFocus()
-                                                            } else if (showMenu) {
-                                                                showMenu = false
-                                                            } else {
-                                                                selectedTag = text
-                                                                word = text
-                                                                showMenu = true
+                                                        linkInteractionListener = { _ ->
+                                                            if (!longpress) {
+                                                                if (textToolbar.status == TextToolbarStatus.Shown) {
+                                                                    textToolbar.hide()
+                                                                    focusManager.clearFocus()
+                                                                } else if (showMenu) {
+                                                                    showMenu = false
+                                                                } else {
+                                                                    selectedTag = text
+                                                                    word = text
+                                                                    showMenu = true
+                                                                }
                                                             }
+
                                                         },
                                                     ),
                                                 ) {
@@ -422,21 +421,18 @@ fun LyricsView(
                                                 }
                                             }
 
-                                            if (index < tex.size-1) {
+                                            if (index < tex.size - 1) {
                                                 val regex = Regex("\\p{Punct}")
-                                                if (regex.matches(tex[index + 1])) {
-
-                                                } else {
+                                                if (!regex.matches(tex[index + 1])) {
                                                     pop()
                                                     pushStringAnnotation("space", "")
                                                     append(" ")
                                                     pop()
                                                 }
-//                                                val tItem = text.replace(pattern, "")
                                             }
                                         }
                                     }
-                                    ConstraintLayout(
+                                    Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .wrapContentHeight()
@@ -446,50 +442,43 @@ fun LyricsView(
                                                     alpha = 0.3f
                                                 ) else MaterialTheme.colorScheme.background
                                             ),
+                                        verticalAlignment = Alignment.CenterVertically,
                                     ) {
-                                        val (playIndicator) = createRefs()
-                                        Icon(
-                                            imageVector = Icons.Outlined.Adjust,
-                                            contentDescription = stringResource(id = R.string.operate_more_will_open_dialog),
-                                            tint = if (currentI == listIndex && musicViewModel.autoHighLight.value) {
-                                                MaterialTheme.colorScheme.onTertiaryContainer.copy(
-                                                    alpha = 0.3f
-                                                )
-                                            } else {
-                                                MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
-                                            },
-                                            modifier = Modifier
-                                                .width(40.dp)
-                                                .fillMaxHeight()
-                                                .clickable {
+                                        if (showSlideIndicators) {
+                                            IconButton(
+                                                modifier = Modifier.width(40.dp), onClick = {
                                                     val bundle = Bundle()
                                                     bundle.putLong(
                                                         "position",
                                                         musicViewModel.currentCaptionList[listIndex].timeStart
                                                     )
+                                                    // TODO
                                                     musicViewModel.sliderPosition.floatValue =
-                                                        musicViewModel.currentCaptionList[listIndex].timeStart.toFloat()
+                                                        musicViewModel.currentCaptionList[listIndex].timeStart.toFloat() + 100
                                                     musicViewModel.mediaBrowser?.sendCustomAction(
                                                         ACTION_SEEK_TO,
                                                         bundle,
                                                         null
                                                     )
-                                                }
-                                                .padding(
-                                                    start = 10.dp,
-                                                    end = 10.dp,
-                                                    top = 2.dp,
-                                                    bottom = 2.dp
+                                                }) {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.Adjust,
+                                                    contentDescription = stringResource(id = R.string.operate_more_will_open_dialog),
+                                                    tint = if (currentI == listIndex && musicViewModel.autoHighLight.value) {
+                                                        MaterialTheme.colorScheme.onTertiaryContainer.copy(
+                                                            alpha = 0.3f
+                                                        )
+                                                    } else {
+                                                        MaterialTheme.colorScheme.onBackground.copy(
+                                                            alpha = 0.3f
+                                                        )
+                                                    },
+                                                    modifier = Modifier
+                                                        .zIndex(2.0f),
                                                 )
-                                                .constrainAs(playIndicator) {
-                                                    bottom.linkTo(
-                                                        anchor = parent.bottom,
-                                                    )
-                                                    top.linkTo(anchor = parent.top)
-                                                    start.linkTo(anchor = parent.start)
-                                                }
-                                                .zIndex(2.0f),
-                                        )
+                                            }
+                                        }
+
                                         Text(
                                             text = annotatedString,
                                             style = TextStyle(
@@ -512,7 +501,7 @@ fun LyricsView(
                                                 .padding(
                                                     top = 2.dp,
                                                     bottom = 2.dp,
-                                                    start = 20.dp,
+                                                    start = if (showSlideIndicators) 10.dp else 20.dp,
                                                     end = 20.dp,
                                                 )
                                         )

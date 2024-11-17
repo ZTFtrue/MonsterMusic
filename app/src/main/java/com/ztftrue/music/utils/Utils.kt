@@ -172,6 +172,7 @@ object Utils {
 
     fun initSettingsData(musicViewModel: MusicViewModel, context: Context) {
         CoroutineScope(Dispatchers.IO).launch {
+            musicViewModel.showSlideIndicators.value = SharedPreferencesUtils.getShowSlideIndicators(context)
             musicViewModel.musicVisualizationEnable.value =
                 SharedPreferencesUtils.getEnableMusicVisualization(context)
             musicViewModel.showMusicCover.value =
