@@ -137,7 +137,11 @@ object CaptionUtils {
         return arrayList
     }
 
-    fun getEmbeddedLyrics(path: String, context: Context,tags: SnapshotStateMap<String, String>): ArrayList<ListStringCaption> {
+    fun getEmbeddedLyrics(
+        path: String,
+        context: Context,
+        tags: SnapshotStateMap<String, String>
+    ): ArrayList<ListStringCaption> {
         val audioFile = File(path)
         val arrayList = arrayListOf<ListStringCaption>()
 
@@ -150,14 +154,14 @@ object CaptionUtils {
 //                }
 //
 //            }
-            tags[ FieldKey.COMMENT.name] = tag.getFirst(FieldKey.COMMENT)
+            tags[FieldKey.COMMENT.name] = tag.getFirst(FieldKey.COMMENT)
             tags[FieldKey.YEAR.name] = tag.getFirst(FieldKey.YEAR)
             val lyrics: String = tag.getFirst(FieldKey.LYRICS)
             if (lyrics.trim().isNotEmpty()) {
                 lyrics.split("\n").forEach {
                     val captions = parseLyricLine(it, context)
                     val an = ListStringCaption(
-                        text = ArrayList(captions.text.split(Regex("[\\n\\r\\s]+"))),
+                        text = splitStringIntoWordsAndSymbols(captions.text),// ArrayList(captions.text.split(Regex("[\\n\\r\\s]+"))),
                         timeStart = captions.timeStart,
                         timeEnd = captions.timeEnd
                     )
@@ -168,6 +172,15 @@ object CaptionUtils {
 //            Log.e("getEmbeddedLyrics",e.message?:"")
         }
         return arrayList
+    }
+
+    val regex = Regex("\\b\\w+'?\\w*\\b|\\p{Punct}|\\s+")
+    fun splitStringIntoWordsAndSymbols(input: String): ArrayList<String> {
+        val regex = Regex("\\b\\w+'?\\w*\\b|\\p{Punct}|\\s+")
+        return ArrayList(regex.findAll(input)
+            .map { it.value.trim() }
+            .filter { it.isNotEmpty() }
+            .toList())
     }
 
     private fun captionTimestampToMilliseconds(timestamp: String, splitter: String = "."): Long {

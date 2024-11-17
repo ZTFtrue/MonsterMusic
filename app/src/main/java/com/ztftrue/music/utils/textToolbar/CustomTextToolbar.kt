@@ -20,7 +20,7 @@ internal class CustomTextToolbar(
     private val clipboardManager: ClipboardManager
 ) : TextToolbar {
     private var actionMode: ActionMode? = null
-    private val textActionModeCallback: TextActionModeCallback = TextActionModeCallback()
+    private val textActionModeCallback: TextActionModeCallback = TextActionModeCallback(textToolbar = this)
 
     override var status: TextToolbarStatus = TextToolbarStatus.Hidden
         private set
@@ -31,7 +31,12 @@ internal class CustomTextToolbar(
         actionMode?.finish()
         actionMode = null
     }
-
+    fun hideAll() {
+        focusManager.clearFocus()
+        status = TextToolbarStatus.Hidden
+        actionMode?.finish()
+        actionMode = null
+    }
     override fun showMenu(
         rect: Rect,
         onCopyRequested: (() -> Unit)?,
