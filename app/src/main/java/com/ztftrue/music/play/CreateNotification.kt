@@ -120,7 +120,7 @@ class CreateNotification(service: Service, private val mediaSession: MediaSessio
             .setAutoCancel(false)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         builder.addAction(
-            R.drawable.skip_previous, "Previous", MediaButtonReceiver.buildMediaButtonPendingIntent(
+            R.drawable.play_previous_song, "Previous", MediaButtonReceiver.buildMediaButtonPendingIntent(
                 service,
                 PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
             )
@@ -138,7 +138,7 @@ class CreateNotification(service: Service, private val mediaSession: MediaSessio
             )
         )
         builder.addAction(
-            R.drawable.next_song, "Next", MediaButtonReceiver.buildMediaButtonPendingIntent(
+            R.drawable.play_next_song, "Next", MediaButtonReceiver.buildMediaButtonPendingIntent(
                 service,
                 PlaybackStateCompat.ACTION_SKIP_TO_NEXT
             )

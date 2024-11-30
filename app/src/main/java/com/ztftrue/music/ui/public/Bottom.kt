@@ -99,8 +99,8 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
 
             key(Unit) {
                 Image(
-                    painter = painterResource(R.drawable.skip_previous),
-                    contentDescription = "skip previous",
+                    painter = painterResource(R.drawable.play_previous_song),
+                    contentDescription = "play previous song",
                     modifier = Modifier
                         .clickable {
                             musicViewModel.mediaController?.transportControls?.skipToPrevious()
@@ -139,7 +139,7 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
                     colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                 )
                 Image(
-                    painter = painterResource(R.drawable.next_song),
+                    painter = painterResource(R.drawable.play_next_song),
                     contentDescription = "Play next song",
                     modifier = Modifier
                         .clickable {

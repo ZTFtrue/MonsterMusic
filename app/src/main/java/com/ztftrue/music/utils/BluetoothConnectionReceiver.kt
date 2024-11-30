@@ -14,7 +14,6 @@ import androidx.media3.exoplayer.ExoPlayer
 class BluetoothConnectionReceiver(private val exoPlayer: ExoPlayer) : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        Log.d("TAG", "onReceive")
         if (intent == null || context == null) return
         val waitTime = SharedPreferencesUtils.getAutoPlayWaitTime(context)
         if (intent.action == BluetoothDevice.ACTION_ACL_CONNECTED) {

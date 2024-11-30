@@ -28,6 +28,7 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -123,7 +124,7 @@ const val EVENT_MEDIA_ITEM_Change = 3
 const val EVENT_SLEEP_TIME_Change = 5
 const val EVENT_DATA_READY = 6
 const val EVENT_Visualization_Change = 7
-
+const val EVENT_INPUT_FORTMAT_Change = 8
 
 //@Suppress("deprecation")
 @UnstableApi
@@ -180,7 +181,7 @@ class PlayService : MediaBrowserServiceCompat() {
     var playCompleted = false
     var needPlayPause = false
     var sleepTime = 0L
-    var receiver: BluetoothConnectionReceiver? = null
+    private var receiver: BluetoothConnectionReceiver? = null
     private var countDownTimer: CountDownTimer? = null
     override fun onCreate() {
         super.onCreate()
@@ -1076,6 +1077,9 @@ class PlayService : MediaBrowserServiceCompat() {
                 }
                 updateNotify(position, currentPlayTrack?.duration)
             }
+            exoPlayer.playWhenReady = false
+            exoPlayer.prepare()
+
         }
         setData(bundle, position.toFloat())
     }
@@ -1330,6 +1334,25 @@ class PlayService : MediaBrowserServiceCompat() {
     var errorCount = 0
     private fun playerAddListener() {
         exoPlayer.addListener(@UnstableApi object : Player.Listener {
+            override fun onTracksChanged(tracks: Tracks) {
+                val formatMap = HashMap<String, String>()
+                val audioTrackGroups = tracks.groups.filter { it.type == C.TRACK_TYPE_AUDIO }
+                for (trackGroup in audioTrackGroups) {
+                    for (i in 0 until trackGroup.length) {
+                        val format = trackGroup.getTrackFormat(i)
+                        formatMap["Codec"] = format.codecs ?: ""
+                        formatMap["SampleRate"] = format.sampleRate.toString()
+                        formatMap["ChannelCount"] = format.channelCount.toString()
+                        formatMap["Bitrate"] = format.bitrate.toString()
+                        break
+                    }
+                }
+                val bundle = Bundle()
+                bundle.putSerializable("current", formatMap)
+                bundle.putInt("type", EVENT_INPUT_FORTMAT_Change)
+                mediaSession?.setExtras(bundle)
+            }
+
             @SuppressLint("ApplySharedPref")
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 super.onIsPlayingChanged(isPlaying)

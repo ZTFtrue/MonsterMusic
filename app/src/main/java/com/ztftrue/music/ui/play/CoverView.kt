@@ -58,7 +58,7 @@ fun CoverView(musicViewModel: MusicViewModel) {
     var coverPaint by remember { mutableStateOf<Bitmap?>(null) }
     val context = LocalContext.current
     val musicVisualizationEnable = remember { musicViewModel.musicVisualizationEnable }
-    val showOtherMessage = remember { mutableStateOf(false) }
+    val showOtherMessage = remember { mutableStateOf(true) }
 
     val drops = remember { mutableStateListOf<MutableList<Drop>>() }
     val columnSpacing = 80f // 列之间的间隔
@@ -318,6 +318,47 @@ fun CoverView(musicViewModel: MusicViewModel) {
                                 R.string.year_tracks,
                                 musicViewModel.tags[FieldKey.YEAR.name] ?: ""
                             ), modifier =
+                            Modifier
+                                .padding(top = 10.dp)
+                                .horizontalScroll(rememberScrollState(0))
+                                .fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.onBackground,// Set the text color here
+                            fontSize = MaterialTheme.typography.titleSmall.fontSize
+                        )
+
+                        Text(
+                            text = "Sample Rate: ${musicViewModel.currentInputFormat["SampleRate"]?:""}Hz",
+                            modifier =
+                            Modifier
+                                .padding(top = 10.dp)
+                                .horizontalScroll(rememberScrollState(0))
+                                .fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.onBackground,// Set the text color here
+                            fontSize = MaterialTheme.typography.titleSmall.fontSize
+                        )
+                        Text(
+                            text = "Bitrate: ${musicViewModel.currentInputFormat["Bitrate"]?:""}",
+                            modifier =
+                            Modifier
+                                .padding(top = 10.dp)
+                                .horizontalScroll(rememberScrollState(0))
+                                .fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.onBackground,// Set the text color here
+                            fontSize = MaterialTheme.typography.titleSmall.fontSize
+                        )
+                        Text(
+                            text = "Channel Count:  ${musicViewModel.currentInputFormat["ChannelCount"]?:""}",
+                            modifier =
+                            Modifier
+                                .padding(top = 10.dp)
+                                .horizontalScroll(rememberScrollState(0))
+                                .fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.onBackground,// Set the text color here
+                            fontSize = MaterialTheme.typography.titleSmall.fontSize
+                        )
+                        Text(
+                            text = "Codec : ${musicViewModel.currentInputFormat["Codec"]?:""}",
+                            modifier =
                             Modifier
                                 .padding(top = 10.dp)
                                 .horizontalScroll(rememberScrollState(0))
