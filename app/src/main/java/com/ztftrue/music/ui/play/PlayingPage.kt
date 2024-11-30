@@ -1488,8 +1488,8 @@ fun PlayingPage(
                             }
                         ) {
                             Image(
-                                painter = painterResource(R.drawable.skip_previous),
-                                contentDescription = "skip previous",
+                                painter = painterResource(R.drawable.play_previous_song),
+                                contentDescription = "play previous song",
                                 modifier = Modifier
                                     .clickable {
                                         musicViewModel.mediaController?.transportControls?.skipToPrevious()
@@ -1524,7 +1524,7 @@ fun PlayingPage(
                                 colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                             )
                             Image(
-                                painter = painterResource(R.drawable.next_song),
+                                painter = painterResource(R.drawable.play_next_song),
                                 contentDescription = "Play next song",
                                 modifier = Modifier
                                     .clickable {

@@ -51,7 +51,7 @@
                 android:id="@+id/preview"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:src="@drawable/skip_previous" />
+                android:src="@drawable/play_previous_song" />
 
             <ImageView
                 android:id="@+id/pause"
@@ -63,7 +63,7 @@
                 android:id="@+id/next"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:src="@drawable/next_song" />
+                android:src="@drawable/play_next_song" />
         </LinearLayout>
     </LinearLayout>
 
