@@ -6,15 +6,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -22,6 +23,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -68,6 +70,7 @@ import kotlinx.coroutines.launch
 /**
  * show all music of playlist
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @UnstableApi
 @Composable
 fun SearchPage(
@@ -171,93 +174,98 @@ fun SearchPage(
             .padding(all = 0.dp)
             .fillMaxSize(),
         topBar = {
-            Column {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            TopAppBar(
+                navigationIcon = {
                     BackButton(navController)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        CompositionLocalProvider(
-                            LocalContentColor provides MaterialTheme.colorScheme.onBackground
-                        ) {
-                            OutlinedTextField(
-                                value = keywords,
-                                onValueChange = {
-                                    val newText = it.ifEmpty {
-                                        ""
-                                    }
-                                    if (keywords != newText) {
-                                        keywords = newText
-                                    }
-                                },
-                                placeholder = {
-                                    Text(stringResource(R.string.enter_text_to_search))
-                                }, // Placeholder or hint text
-                                keyboardOptions = KeyboardOptions.Default.copy(
-                                    imeAction = ImeAction.Done,
-                                    keyboardType = KeyboardType.Text
-                                ),
-                                keyboardActions = KeyboardActions(
-                                    onDone = {
-                                        focusRequester.freeFocus()
-                                        keyboardController?.hide()
-                                    }
-                                ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .focusRequester(focusRequester)
-                                    .background(MaterialTheme.colorScheme.primary),
-                                suffix = {
+                },
+                title = {},
+                actions = {
+                    Row(
+                        modifier = Modifier
+                            .width(configuration.screenWidthDp.dp - 60.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            CompositionLocalProvider(
+                                LocalContentColor provides MaterialTheme.colorScheme.onBackground
+                            ) {
+                                OutlinedTextField(
+                                    value = keywords,
+                                    onValueChange = {
+                                        val newText = it.ifEmpty {
+                                            ""
+                                        }
+                                        if (keywords != newText) {
+                                            keywords = newText
+                                        }
+                                    },
+                                    placeholder = {
+                                        Text(stringResource(R.string.enter_text_to_search))
+                                    }, // Placeholder or hint text
+                                    keyboardOptions = KeyboardOptions.Default.copy(
+                                        imeAction = ImeAction.Done,
+                                        keyboardType = KeyboardType.Text
+                                    ),
+                                    keyboardActions = KeyboardActions(
+                                        onDone = {
+                                            focusRequester.freeFocus()
+                                            keyboardController?.hide()
+                                        }
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .focusRequester(focusRequester)
+                                        .background(MaterialTheme.colorScheme.primary),
+                                    suffix = {
 
-                                },
-                                colors = TextFieldDefaults.colors(
-                                    errorTextColor = MaterialTheme.colorScheme.primary,
-                                    focusedTextColor = MaterialTheme.colorScheme.primary,
-                                    disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.38f
+                                    },
+                                    colors = TextFieldDefaults.colors(
+                                        errorTextColor = MaterialTheme.colorScheme.primary,
+                                        focusedTextColor = MaterialTheme.colorScheme.primary,
+                                        disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.38f
+                                        ),
+                                        unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                                        focusedContainerColor = MaterialTheme.colorScheme.background,
+                                        unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                        cursorColor = MaterialTheme.colorScheme.primary,
+                                        errorCursorColor = MaterialTheme.colorScheme.error,
+                                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                                        unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.38f
+                                        ),
+                                        disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.12f
+                                        ),
+                                        errorIndicatorColor = MaterialTheme.colorScheme.error,
+                                        disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.38f
+                                        ),
+                                        errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                                        disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.38f
+                                        ),
+                                        errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.38f
+                                        ),
+                                        disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.38f
+                                        ),
+                                        errorLabelColor = MaterialTheme.colorScheme.error,
+                                        disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.38f
+                                        )
                                     ),
-                                    unfocusedTextColor = MaterialTheme.colorScheme.primary,
-                                    focusedContainerColor = MaterialTheme.colorScheme.background,
-                                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                                    cursorColor = MaterialTheme.colorScheme.primary,
-                                    errorCursorColor = MaterialTheme.colorScheme.error,
-                                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                                    unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.38f
-                                    ),
-                                    disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.12f
-                                    ),
-                                    errorIndicatorColor = MaterialTheme.colorScheme.error,
-                                    disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.38f
-                                    ),
-                                    errorLeadingIconColor = MaterialTheme.colorScheme.error,
-                                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.38f
-                                    ),
-                                    errorTrailingIconColor = MaterialTheme.colorScheme.error,
-                                    focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.38f
-                                    ),
-                                    disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.38f
-                                    ),
-                                    errorLabelColor = MaterialTheme.colorScheme.error,
-                                    disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.38f
-                                    )
-                                ),
-                                textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
-                            )
+                                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                                )
+                            }
                         }
                     }
                 }
-            }
+            )
         },
         bottomBar = { Bottom(musicViewModel, navController) },
         floatingActionButton = {},
@@ -272,9 +280,11 @@ fun SearchPage(
                 )
             }
             var height = localViewHeight
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .padding(it)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(it)
+            ) {
                 TracksListView(
                     musicViewModel,
                     modeList, tracksList, remember {
