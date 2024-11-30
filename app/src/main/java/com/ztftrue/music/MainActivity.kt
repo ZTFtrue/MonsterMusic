@@ -44,11 +44,13 @@ import androidx.core.app.ActivityCompat
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.media3.common.Player
+import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.play.ACTION_IS_CONNECTED
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.play.ACTION_WILL_DISCONNECTED
+import com.ztftrue.music.play.EVENT_INPUT_FORTMAT_Change
 import com.ztftrue.music.play.EVENT_MEDIA_ITEM_Change
 import com.ztftrue.music.play.EVENT_SLEEP_TIME_Change
 import com.ztftrue.music.play.EVENT_Visualization_Change
@@ -527,7 +529,7 @@ class MainActivity : ComponentActivity() {
     }
 
     public override fun onStop() {
-        musicViewModel.mediaBrowser?.sendCustomAction(ACTION_WILL_DISCONNECTED,null,null)
+        musicViewModel.mediaBrowser?.sendCustomAction(ACTION_WILL_DISCONNECTED, null, null)
         MediaControllerCompat.getMediaController(this)?.unregisterCallback(callback)
         musicViewModel.mediaController = null
         mediaBrowser?.disconnect()
@@ -606,6 +608,19 @@ class MainActivity : ComponentActivity() {
                         musicViewModel.musicVisualizationData.addAll(magnitude)
                     }
 //                    Log.d("magnitude", magnitude?.size.toString())
+                } else if (it.getInt("type") == EVENT_INPUT_FORTMAT_Change) {
+                    val data = it.getSerializable("current")
+                    Log.d("current", data.toString())
+                    musicViewModel.currentInputFormat.clear()
+                    if (data != null) {
+                        val d = data as HashMap<String, String>
+                        d.forEach() { formatItem ->
+                            musicViewModel.currentInputFormat[formatItem.key] = formatItem.value
+                        }
+
+                    }
+
+
                 }
             }
         }
@@ -672,7 +687,7 @@ class MainActivity : ComponentActivity() {
                 }
                 MediaControllerCompat.setMediaController(this@MainActivity, mediaController)
                 mediaController?.registerCallback(callback)
-                musicViewModel.mediaBrowser?.sendCustomAction(ACTION_IS_CONNECTED,null,null)
+                musicViewModel.mediaBrowser?.sendCustomAction(ACTION_IS_CONNECTED, null, null)
             }
         }
 

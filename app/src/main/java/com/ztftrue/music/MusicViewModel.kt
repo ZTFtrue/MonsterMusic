@@ -72,7 +72,7 @@ class MusicViewModel : ViewModel() {
 //    val genreItemsCount = mutableIntStateOf(2)
     var mediaController: MediaControllerCompat? = null
     var mediaBrowser: MediaBrowserCompat? = null
-
+    var currentInputFormat = mutableStateMapOf<String, String>() //mutableStateOf<LinkedHashMap<String, String>>(java.util.LinkedHashMap())
     //    val albumScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
 //    val artistScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
 //    val genreScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
