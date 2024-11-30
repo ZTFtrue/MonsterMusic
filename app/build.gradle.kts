@@ -22,14 +22,12 @@ android {
         applicationId = "com.ztftrue.music"
         minSdk = 30
         targetSdk = 35
-        versionCode = 41
-        versionName = "0.1.41"
-
+        versionCode = 42
+        versionName = "0.1.42"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
-
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
         }

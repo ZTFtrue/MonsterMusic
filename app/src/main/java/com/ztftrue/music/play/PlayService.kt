@@ -17,7 +17,6 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
 import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.media.MediaBrowserServiceCompat
@@ -182,7 +181,7 @@ class PlayService : MediaBrowserServiceCompat() {
     var playCompleted = false
     var needPlayPause = false
     var sleepTime = 0L
-    var receiver: BluetoothConnectionReceiver? = null
+    private var receiver: BluetoothConnectionReceiver? = null
     private var countDownTimer: CountDownTimer? = null
     override fun onCreate() {
         super.onCreate()

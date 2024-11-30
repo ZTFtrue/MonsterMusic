@@ -606,19 +606,15 @@ class MainActivity : ComponentActivity() {
                         musicViewModel.musicVisualizationData.clear()
                         musicViewModel.musicVisualizationData.addAll(magnitude)
                     }
-//                    Log.d("magnitude", magnitude?.size.toString())
                 } else if (it.getInt("type") == EVENT_INPUT_FORTMAT_Change) {
                     val data = it.getSerializable("current")
                     musicViewModel.currentInputFormat.clear()
                     if (data != null) {
                         val d = data as HashMap<String, String>
-                        d.forEach() { formatItem ->
+                        d.forEach { formatItem ->
                             musicViewModel.currentInputFormat[formatItem.key] = formatItem.value
                         }
-
                     }
-
-
                 }
             }
         }
