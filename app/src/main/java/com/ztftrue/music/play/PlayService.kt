@@ -1351,7 +1351,6 @@ class PlayService : MediaBrowserServiceCompat() {
                 val bundle = Bundle()
                 bundle.putSerializable("current", formatMap)
                 bundle.putInt("type", EVENT_INPUT_FORTMAT_Change)
-                Log.d("PlayMusicWidget", "onTracksChanged")
                 mediaSession?.setExtras(bundle)
             }
 

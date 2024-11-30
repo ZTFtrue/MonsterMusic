@@ -44,7 +44,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.media3.common.Player
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.play.ACTION_IS_CONNECTED
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
@@ -610,7 +609,6 @@ class MainActivity : ComponentActivity() {
 //                    Log.d("magnitude", magnitude?.size.toString())
                 } else if (it.getInt("type") == EVENT_INPUT_FORTMAT_Change) {
                     val data = it.getSerializable("current")
-                    Log.d("current", data.toString())
                     musicViewModel.currentInputFormat.clear()
                     if (data != null) {
                         val d = data as HashMap<String, String>
