@@ -26,6 +26,7 @@ import java.nio.ByteOrder
 import java.util.LinkedList
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.math.absoluteValue
 
 
 /** Indicates that the output sample rate should be the same as the input.  */
@@ -33,8 +34,8 @@ private const val SAMPLE_RATE_NO_CHANGE = -1
 
 @UnstableApi
 class EqualizerAudioProcessor : AudioProcessor {
-    private var delayEffectLeft: DelayEffect? = null
-    private var delayEffectRight: DelayEffect? = null
+    private var delayEffectLeft: DelayEffect = DelayEffect(0.0f, 1.0f, 44100.0f)
+    private var delayEffectRight: DelayEffect = DelayEffect(0.0f, 1.0f, 44100.0f)
     private var pendingOutputSampleRate = 0
     private var equalizerActive = false
     private var echoActive = false
@@ -142,13 +143,13 @@ class EqualizerAudioProcessor : AudioProcessor {
             decay,
             outputAudioFormat!!.sampleRate.toFloat()
         )
-        delayEffectLeft?.isWithFeedBack = echoFeedBack
+        delayEffectLeft.isWithFeedBack = echoFeedBack
         delayEffectRight = DelayEffect(
             delayTime,
             decay,
             outputAudioFormat!!.sampleRate.toFloat()
         )
-        delayEffectRight?.isWithFeedBack = echoFeedBack
+        delayEffectRight.isWithFeedBack = echoFeedBack
         leftEqualizerMax = 1.0f
         rightEqualizerMax = 1.0f
         leftEchoMax = 1.0f
@@ -221,6 +222,10 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var blockingQueue = LinkedBlockingQueue<Float>(bufferSize * 4)
     private var visualizationArrayList = LinkedList<Float>() // 用于存储Data
     private var visualizationBuffer: FloatArray = FloatArray(0)
+    private var leftLimiter: Limiter? =
+        Limiter(threshold = 0.707f, knee = 0.1f, attack = 0.05f, release = 0.3f)
+    private var rightLimiter: Limiter? =
+        Limiter(threshold = 0.707f, knee = 0.1f, attack = 0.05f, release = 0.3f)
 
     private fun processData() {
         if (equalizerActive or echoActive or visualizationAudioActive) {
@@ -262,14 +267,14 @@ class EqualizerAudioProcessor : AudioProcessor {
                     runBlocking {
                         awaitAll(
                             async(Dispatchers.IO) {
-                                if (echoActive && delayEffectLeft != null) {
+                                if (echoActive) {
                                     leftEchoMax = FastMath.max(
-                                        delayEffectLeft?.process(sampleBufferRealLeft) ?: 1.0f,
-                                        leftEchoMax
+                                        delayEffectLeft.process(sampleBufferRealLeft),
+                                        leftEchoMax.absoluteValue
                                     )
                                     if (leftEchoMax > 1.0) {
                                         sampleBufferRealLeft.forEachIndexed { index, it ->
-                                            sampleBufferRealLeft[index] = it / leftEchoMax
+                                                sampleBufferRealLeft[index] = it / leftEchoMax
                                         }
                                     }
                                 }
@@ -282,26 +287,26 @@ class EqualizerAudioProcessor : AudioProcessor {
                                             )
                                         }
                                         leftEqualizerMax =
-                                            FastMath.max(leftEqualizerMax, FastMath.abs(outY))
+                                            FastMath.max(leftEqualizerMax, outY.absoluteValue)
                                         sampleBufferRealLeft[index] = outY
                                     }
                                     if (leftEqualizerMax > 1.0) {
                                         sampleBufferRealLeft.forEachIndexed { index, it ->
-                                            sampleBufferRealLeft[index] = it / leftEqualizerMax
+                                                sampleBufferRealLeft[index] = it / leftEqualizerMax
                                         }
                                     }
                                 }
                             },
                             async(Dispatchers.IO) {
-                                if (echoActive && delayEffectRight != null) {
+                                if (echoActive) {
                                     rightEchoMax =
                                         FastMath.max(
-                                            delayEffectRight?.process(sampleBufferRealRight)
-                                                ?: 1.0f, rightEchoMax
+                                            delayEffectRight.process(sampleBufferRealRight),
+                                            rightEchoMax.absoluteValue
                                         )
                                     if (rightEchoMax > 1.0) {
                                         sampleBufferRealRight.forEachIndexed { index, it ->
-                                            sampleBufferRealRight[index] = it / rightEchoMax
+                                                sampleBufferRealRight[index] = it / rightEchoMax
                                         }
                                     }
                                 }
@@ -314,13 +319,17 @@ class EqualizerAudioProcessor : AudioProcessor {
                                             )
                                         }
                                         rightEqualizerMax =
-                                            FastMath.max(rightEqualizerMax, FastMath.abs(outY))
+                                            FastMath.max(rightEqualizerMax, outY.absoluteValue)
                                         sampleBufferRealRight[index] = outY
                                     }
-                                    if (rightEqualizerMax > 1.0)
+                                    if (rightEqualizerMax > 1.0) {
                                         sampleBufferRealRight.forEachIndexed { index, it ->
-                                            sampleBufferRealRight[index] = it / rightEqualizerMax
+                                                sampleBufferRealRight[index] =
+                                                    it / rightEqualizerMax
+
                                         }
+                                    }
+
                                 }
                             }
                         )
@@ -454,8 +463,8 @@ class EqualizerAudioProcessor : AudioProcessor {
      */
     fun setDaleyTime(value: Float) {
         delayTime = value
-        delayEffectLeft?.setEchoLength(delayTime)
-        delayEffectRight?.setEchoLength(delayTime)
+        delayEffectLeft.setEchoLength(delayTime)
+        delayEffectRight.setEchoLength(delayTime)
     }
 
     fun setDecay(value: Float) {
@@ -465,8 +474,8 @@ class EqualizerAudioProcessor : AudioProcessor {
         leftEchoMax = 1.0f
         rightEchoMax = 1.0f
         this.decay = value
-        delayEffectLeft?.setDecay(value)
-        delayEffectRight?.setDecay(value)
+        delayEffectLeft.setDecay(value)
+        delayEffectRight.setDecay(value)
     }
 
     fun setFeedBack(value: Boolean) {
@@ -474,8 +483,8 @@ class EqualizerAudioProcessor : AudioProcessor {
         rightEchoMax = 1.0f
         echoFeedBack = value
         this.echoFeedBack = value
-        delayEffectLeft?.isWithFeedBack = value
-        delayEffectRight?.isWithFeedBack = value
+        delayEffectLeft.isWithFeedBack = value
+        delayEffectRight.isWithFeedBack = value
     }
 
 }
