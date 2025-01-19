@@ -20,7 +20,7 @@ import com.ztftrue.music.utils.Utils.getCover
  * Implementation of App Widget functionality.
  */
 class PlayMusicWidget : AppWidgetProvider() {
-    val hashMap = mutableMapOf<Int, RemoteViews>()
+    private val hashMap = mutableMapOf<Int, RemoteViews>()
 
     @OptIn(UnstableApi::class)
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -142,13 +142,13 @@ class PlayMusicWidget : AppWidgetProvider() {
 
         // 获取最小/最大宽高（单位：dp）
         val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
-        val maxWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
-        val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
-        val maxHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
+//        val maxWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
+//        val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
+//        val maxHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
 
         val view = hashMap[appWidgetId]
         if (view != null) {
-            updateView(context, view, minWidth, maxWidth)
+            updateView(context, view, minWidth)
         } else {
             RemoteViews(
                 context.packageName,
@@ -185,14 +185,14 @@ class PlayMusicWidget : AppWidgetProvider() {
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
                 it.setOnClickPendingIntent(R.id.play_music_widget, pendingIntent)
-                updateView(context, it, minWidth, maxWidth)
+                updateView(context, it, minWidth)
                 appWidgetManager.updateAppWidget(appWidgetId, it)
                 hashMap[appWidgetId] = it
             }
         }
     }
 
-    fun updateView(context: Context, it: RemoteViews, minWidth: Int, maxWidth: Int) {
+    private fun updateView(context: Context, it: RemoteViews, minWidth: Int) {
         context.getSharedPreferences("Widgets", Context.MODE_PRIVATE)
             .also { sharedPreferences ->
                 val playingStatus = sharedPreferences.getBoolean("playingStatus", false)

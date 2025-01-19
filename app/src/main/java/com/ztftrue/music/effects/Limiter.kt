@@ -15,7 +15,6 @@ class Limiter(// 限制阈值 (-3 dB = 0.707)
 //                val gain = 1f - 0.5f * tanh(t)
 //                return (data * gain)
 //            }
-            atan(data)
             return atan(data)
         }
 

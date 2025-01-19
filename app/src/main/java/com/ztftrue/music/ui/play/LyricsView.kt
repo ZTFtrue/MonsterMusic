@@ -2,7 +2,6 @@ package com.ztftrue.music.ui.play
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.MotionEvent
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -158,7 +157,6 @@ fun LyricsView(
                     }
                 }
             }
-            Log.i("TAG lyrcis", "cIndex: $nearestIndex")
             if (nearestIndex >= 0 && cIndex != currentI) {
                 currentI = nearestIndex
                 if (musicViewModel.autoScroll.value && !isSelected && !showMenu) {
