@@ -1,9 +1,7 @@
 package com.ztftrue.music.ui.play
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.TypedValue
 import android.view.MotionEvent
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -72,7 +70,6 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -87,6 +84,7 @@ import com.ztftrue.music.R
 import com.ztftrue.music.play.ACTION_SEEK_TO
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.model.ListStringCaption
 import com.ztftrue.music.utils.textToolbar.CustomTextToolbar
 import kotlinx.coroutines.Dispatchers
@@ -548,10 +546,4 @@ fun LyricsView(
 
 }
 
-
-fun Dp.toPx(context: Context): Int {
-    val displayMetrics = context.resources.displayMetrics
-    return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this.value, displayMetrics)
-        .toInt()
-}
 
