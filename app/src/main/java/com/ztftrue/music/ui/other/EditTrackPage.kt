@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -261,7 +260,7 @@ fun EditTrackPage(
                             val (cover, edit) = createRefs()
                             Image(
                                 painter = rememberAsyncImagePainter(
-                                    coverBitmap.value?:Icons.Default.BrokenImage
+                                    coverBitmap.value?:R.drawable.broken_image
                                 ),
                                 contentDescription = "Cover",
                                 modifier = Modifier
