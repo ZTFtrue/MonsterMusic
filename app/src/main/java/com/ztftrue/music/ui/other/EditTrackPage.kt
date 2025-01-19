@@ -33,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -59,6 +60,7 @@ import com.ztftrue.music.R
 import com.ztftrue.music.play.ACTION_TRACKS_UPDATE
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.BackButton
+import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.getCover
 import com.ztftrue.music.utils.trackManager.TracksManager
 
@@ -84,6 +86,7 @@ fun EditTrackPage(
     var year by remember { mutableStateOf("") }
     var lyrics by remember { mutableStateOf("") }
     var musicPath by remember { mutableStateOf("") }
+    var duration by remember { mutableLongStateOf(0L) }
     var enableEdit by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -111,6 +114,7 @@ fun EditTrackPage(
             album = musicItem.album
             artist = musicItem.artist
             genre = musicItem.genre
+            duration = musicItem.duration
             year = if (musicItem.year == 0) "" else musicItem.year.toString()
         } else {
             navController.popBackStack()
@@ -278,7 +282,6 @@ fun EditTrackPage(
                                             end.linkTo(parent.end)
                                         },
                                     onClick = {
-
                                         if (context is MainActivity) {
                                             (context).openImagePicker(coverBitmap)
                                         }
@@ -580,6 +583,67 @@ fun EditTrackPage(
                             label = {
                                 Text(
                                     stringResource(R.string.year),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }, // Placeholder or hint text
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Done,
+                                keyboardType = KeyboardType.Number
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    focusRequester.freeFocus()
+                                    keyboardController?.hide()
+                                }
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth(1f)
+                                .focusRequester(focusRequester),
+                            colors = TextFieldDefaults.colors(
+                                errorTextColor = MaterialTheme.colorScheme.primary,
+                                focusedTextColor = MaterialTheme.colorScheme.primary,
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                errorCursorColor = MaterialTheme.colorScheme.error,
+                                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                                unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.12f
+                                ),
+                                errorIndicatorColor = MaterialTheme.colorScheme.error,
+                                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                errorLabelColor = MaterialTheme.colorScheme.error,
+                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                )
+                            ),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                        )
+                    }
+                    item {
+                        TextField(
+                            enabled = false,
+                            value = Utils.formatTimeWithUnit(duration),
+                            onValueChange = {
+                            },
+                            label = {
+                                Text(
+                                    "Duration",
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                             }, // Placeholder or hint text
