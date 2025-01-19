@@ -222,10 +222,6 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var blockingQueue = LinkedBlockingQueue<Float>(bufferSize * 4)
     private var visualizationArrayList = LinkedList<Float>() // 用于存储Data
     private var visualizationBuffer: FloatArray = FloatArray(0)
-    private var leftLimiter: Limiter? =
-        Limiter(threshold = 0.707f, knee = 0.1f, attack = 0.05f, release = 0.3f)
-    private var rightLimiter: Limiter? =
-        Limiter(threshold = 0.707f, knee = 0.1f, attack = 0.05f, release = 0.3f)
 
     private fun processData() {
         if (equalizerActive or echoActive or visualizationAudioActive) {
@@ -274,7 +270,7 @@ class EqualizerAudioProcessor : AudioProcessor {
                                     )
                                     if (leftEchoMax > 1.0) {
                                         sampleBufferRealLeft.forEachIndexed { index, it ->
-                                                sampleBufferRealLeft[index] = it / leftEchoMax
+                                            sampleBufferRealLeft[index] = it / leftEchoMax
                                         }
                                     }
                                 }
@@ -286,13 +282,16 @@ class EqualizerAudioProcessor : AudioProcessor {
                                                 outY
                                             )
                                         }
-                                        leftEqualizerMax =
-                                            FastMath.max(leftEqualizerMax, outY.absoluteValue)
                                         sampleBufferRealLeft[index] = outY
                                     }
+                                    leftEqualizerMax =
+                                        FastMath.max(
+                                            leftEqualizerMax,
+                                            Limiter.Limiter.process(sampleBufferRealLeft)
+                                        )
                                     if (leftEqualizerMax > 1.0) {
                                         sampleBufferRealLeft.forEachIndexed { index, it ->
-                                                sampleBufferRealLeft[index] = it / leftEqualizerMax
+                                            sampleBufferRealLeft[index] = it / leftEqualizerMax
                                         }
                                     }
                                 }
@@ -306,7 +305,7 @@ class EqualizerAudioProcessor : AudioProcessor {
                                         )
                                     if (rightEchoMax > 1.0) {
                                         sampleBufferRealRight.forEachIndexed { index, it ->
-                                                sampleBufferRealRight[index] = it / rightEchoMax
+                                            sampleBufferRealRight[index] = it / rightEchoMax
                                         }
                                     }
                                 }
@@ -318,18 +317,19 @@ class EqualizerAudioProcessor : AudioProcessor {
                                                 outY
                                             )
                                         }
-                                        rightEqualizerMax =
-                                            FastMath.max(rightEqualizerMax, outY.absoluteValue)
                                         sampleBufferRealRight[index] = outY
                                     }
+                                    rightEqualizerMax =
+                                        FastMath.max(
+                                            rightEqualizerMax,
+                                            Limiter.Limiter.process(sampleBufferRealRight)
+                                        )
                                     if (rightEqualizerMax > 1.0) {
                                         sampleBufferRealRight.forEachIndexed { index, it ->
-                                                sampleBufferRealRight[index] =
-                                                    it / rightEqualizerMax
-
+                                            sampleBufferRealRight[index] =
+                                                it / rightEqualizerMax
                                         }
                                     }
-
                                 }
                             }
                         )
