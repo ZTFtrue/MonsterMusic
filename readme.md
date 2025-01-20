@@ -2,6 +2,23 @@
 
 [Join Discord](https://discord.gg/R9YbH9TBbJ)
 
+
+## I need your help!!!
+
+Hello everyone, I need your help with something. I am Chinese and have been persecuted by the Chinese government.
+
+Because I refused to bribe Chinese government officials, the livestock raised by my family were poisoned and subsequently banned by the authorities through their connections with organized crime, resulting in losses exceeding $1.4 million.
+
+In China, there are 600 million people with a monthly income of less than $150.
+
+The organized crime groups also assaulted my parents and deliberately caused accidents on several occasions. The Chinese government did nothing to intervene and allowed these groups to act freely.
+
+Due to the influence of the Chinese government, no Chinese media outlet dares to report these incidents, and no lawyer is willing to take on this case.
+
+If possible, I hope you can help spread this news to the world and show everyone the truth about China and its government. They suppress news and create a false image of peace and prosperity. In reality, they oppress the Chinese people and are crueler than the American slave plantations they criticize.
+
+[This is a video showing a cow being poisoned. Viewer discretion is advised.](./Picture/death.mp4)
+
 ## This is a local music player on Android platform
 
 [MonsterMusic] is open source, free. Enjoy all the features without any cost!
