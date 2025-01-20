@@ -199,6 +199,7 @@ class PlayService : MediaBrowserServiceCompat() {
             PendingIntent.FLAG_IMMUTABLE
         )
         mediaSession = MediaSessionCompat(baseContext, PlayService::class.java.simpleName).apply {
+            isActive=true
             val stateBuilder = PlaybackStateCompat.Builder()
                 .setActions(
                     PlaybackStateCompat.ACTION_SEEK_TO

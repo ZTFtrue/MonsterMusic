@@ -1,6 +1,7 @@
 package com.ztftrue.music.ui.other
 
-import androidx.compose.foundation.ExperimentalFoundationApi
+import android.net.Uri
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -52,7 +53,6 @@ import com.ztftrue.music.utils.Utils
 import kotlinx.coroutines.launch
 
 @UnstableApi
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DrawMenu(
     pagerState: PagerState,
@@ -244,6 +244,33 @@ fun DrawMenu(
             ) {
                 Text(
                     text = stringResource(R.string.exit_app), Modifier.padding(start = 10.dp),
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .drawBehind {
+                        drawLine(
+                            color = color,
+                            start = Offset(0f, size.height - 1.dp.toPx()),
+                            end = Offset(size.width, size.height - 1.dp.toPx()),
+                            strokeWidth = 1.dp.toPx()
+                        )
+                    }
+                    .clickable {
+                        val url =
+                            "https://github.com/ZTFtrue/MonsterMusic/blob/master/I_need_your_help.md"
+                        val intent = CustomTabsIntent
+                            .Builder()
+                            .build()
+                        intent.launchUrl(context, Uri.parse(url))
+                    },
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text(
+                    text = "I need your help!!!", Modifier.padding(start = 10.dp),
                     color = MaterialTheme.colorScheme.onBackground,
                 )
             }

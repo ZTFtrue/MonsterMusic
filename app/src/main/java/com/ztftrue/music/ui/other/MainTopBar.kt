@@ -76,7 +76,6 @@ import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.dao.SortFiledDao
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.SortFiledData
-import com.ztftrue.music.ui.play.toPx
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.CreatePlayListDialog
 import com.ztftrue.music.ui.public.QueueOperateDialog
@@ -84,6 +83,7 @@ import com.ztftrue.music.ui.public.SleepTimeDialog
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

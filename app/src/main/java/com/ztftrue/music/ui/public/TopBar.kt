@@ -73,9 +73,9 @@ import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.ACTION_SET_SLEEP_TIME
 import com.ztftrue.music.play.ACTION_Volume_CHANGE
-import com.ztftrue.music.ui.play.toPx
 import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.Utils.toPx
 import kotlin.math.roundToLong
 
 @OptIn(ExperimentalMaterial3Api::class)

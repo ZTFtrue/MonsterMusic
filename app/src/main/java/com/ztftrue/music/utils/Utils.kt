@@ -10,8 +10,10 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.text.TextUtils
+import android.util.TypedValue
 import android.widget.Toast
 import androidx.annotation.OptIn
+import androidx.compose.ui.unit.Dp
 import androidx.core.content.FileProvider
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
@@ -685,4 +687,11 @@ object Utils {
         }
         return null
     }
+    fun Dp.toPx(context: Context): Int {
+        val displayMetrics = context.resources.displayMetrics
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this.value, displayMetrics)
+            .toInt()
+    }
+
+
 }

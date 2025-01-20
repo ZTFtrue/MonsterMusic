@@ -1,9 +1,7 @@
 package com.ztftrue.music.ui.play
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.TypedValue
 import android.view.MotionEvent
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -72,7 +70,6 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -87,6 +84,7 @@ import com.ztftrue.music.R
 import com.ztftrue.music.play.ACTION_SEEK_TO
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.model.ListStringCaption
 import com.ztftrue.music.utils.textToolbar.CustomTextToolbar
 import kotlinx.coroutines.Dispatchers
@@ -104,7 +102,7 @@ fun LyricsView(
 ) {
     val context = LocalContext.current
     val listState = rememberLazyListState()
-    var currentI by remember { mutableIntStateOf(0) }
+    var currentI by remember { mutableIntStateOf(-1) }
     var isSelected by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showSlideIndicators by remember { mutableStateOf(false) }
@@ -117,8 +115,8 @@ fun LyricsView(
             var cIndex = 0
             for (index in musicViewModel.currentCaptionList.size - 1 downTo 0) {
                 val entry = musicViewModel.currentCaptionList[index]
+                cIndex= index
                 if (timeState > entry.timeStart) {
-                    cIndex = index
                     break
                 }
             }
@@ -144,8 +142,23 @@ fun LyricsView(
                     -1
                 }
             }
-            if (cIndex >= 0 && cIndex != currentI) {
-                currentI = cIndex
+            val nearestIndex = if (cIndex >= 0) {
+                cIndex
+            } else {
+                val insertIndex = -cIndex - 1
+                when {
+                    insertIndex == 0 -> 0 // 最小值
+                    insertIndex >= musicViewModel.currentCaptionList.size -> musicViewModel.currentCaptionList.size - 1 // 最大值
+                    else -> {
+                        // 选择更接近的那个
+                        val prev = musicViewModel.currentCaptionList[insertIndex - 1]
+                        val next = musicViewModel.currentCaptionList[insertIndex]
+                        if ((timeState - prev.timeEnd) <= (next.timeStart - timeState)) insertIndex - 1 else insertIndex
+                    }
+                }
+            }
+            if (nearestIndex >= 0 && cIndex != currentI) {
+                currentI = nearestIndex
                 if (musicViewModel.autoScroll.value && !isSelected && !showMenu) {
                     launch(Dispatchers.Main) {
                         // TODO calculate the scroll position by　
@@ -548,10 +561,4 @@ fun LyricsView(
 
 }
 
-
-fun Dp.toPx(context: Context): Int {
-    val displayMetrics = context.resources.displayMetrics
-    return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this.value, displayMetrics)
-        .toInt()
-}
 

@@ -71,11 +71,11 @@ import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.SortFiledData
-import com.ztftrue.music.ui.play.toPx
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.deleteTrackUpdate
+import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.trackManager.PlaylistManager

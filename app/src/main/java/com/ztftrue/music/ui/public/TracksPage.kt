@@ -79,11 +79,11 @@ import com.ztftrue.music.ui.home.ArtistsOperateDialog
 import com.ztftrue.music.ui.home.FolderListOperateDialog
 import com.ztftrue.music.ui.home.GenreListOperateDialog
 import com.ztftrue.music.ui.home.PlayListOperateDialog
-import com.ztftrue.music.ui.play.toPx
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.AlbumList
 import com.ztftrue.music.utils.model.AnyListBase
