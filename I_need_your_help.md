@@ -20,7 +20,7 @@ To this day, the relevant government departments are still unwilling to solve th
 
 If possible, I hope you can help spread this message and attract more attention.
 
-[The content may cause discomfort, please click with caution.](./Picture/death.mp4)
+[The content may cause discomfort, please click with caution.](./helpme/)
 
 ---
 
@@ -38,7 +38,7 @@ If possible, I hope you can help spread this message and attract more attention.
 
 此外，当地政府的多个部门官员都在为黑社会提供庇护，公安局只是其中的执行机构。
 
-尽管中国严格禁止枪支，这个黑社会仍然被允许持有武器。  
+尽管中国严格禁止枪支，这个黑社会仍然被允许持有猎枪。  
 
 直到今天，相关政府部门仍然不愿意解决这些问题，而黑社会依旧肆无忌惮地犯罪。  
 
