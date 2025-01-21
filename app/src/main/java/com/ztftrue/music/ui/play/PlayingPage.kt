@@ -1543,60 +1543,65 @@ fun PlayingPage(
                                 colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                             )
                         }
-                        key(repeatModel.intValue) {
-                            Icon(
-                                imageVector = when (repeatModel.intValue) {
-                                    Player.REPEAT_MODE_ALL -> {
-                                        Icons.Outlined.Repeat
-                                    }
+                        Icon(
+                            imageVector = when (repeatModel.intValue) {
 
-                                    Player.REPEAT_MODE_ONE -> {
-                                        Icons.Outlined.RepeatOne
-                                    }
+                                Player.REPEAT_MODE_ALL -> {
+                                    Icons.Outlined.Repeat
+                                }
 
-                                    else -> {
-                                        Icons.Outlined.Repeat
-                                    }
-                                },
-                                contentDescription = "Repeat model",
-                                modifier = Modifier
-                                    .clickable {
-                                        when (repeatModel.intValue) {
-                                            Player.REPEAT_MODE_ALL -> {
-                                                repeatModel.intValue = Player.REPEAT_MODE_ONE
-                                                musicViewModel.mediaController?.transportControls?.setRepeatMode(
-                                                    PlaybackStateCompat.REPEAT_MODE_ONE
-                                                )
-                                            }
+                                Player.REPEAT_MODE_ONE -> {
+                                    Icons.Outlined.RepeatOne
+                                }
 
-                                            Player.REPEAT_MODE_ONE -> {
-                                                repeatModel.intValue = Player.REPEAT_MODE_OFF
-                                                musicViewModel.mediaController?.transportControls?.setRepeatMode(
-                                                    PlaybackStateCompat.REPEAT_MODE_NONE
-                                                )
-                                            }
+                                else -> {
+                                    Icons.Outlined.Repeat
+                                }
+                            },
+                            contentDescription = "Repeat model",
+                            modifier = Modifier
+                                .clickable {
+                                    when (repeatModel.intValue) {
+                                        Player.REPEAT_MODE_ALL -> {
+                                            repeatModel.intValue = Player.REPEAT_MODE_ONE
+                                            musicViewModel.repeatModel.intValue =
+                                                Player.REPEAT_MODE_ONE
+                                            musicViewModel.mediaController?.transportControls?.setRepeatMode(
+                                                PlaybackStateCompat.REPEAT_MODE_ONE
+                                            )
+                                        }
 
-                                            else -> {
-                                                repeatModel.intValue = Player.REPEAT_MODE_ALL
-                                                musicViewModel.mediaController?.transportControls?.setRepeatMode(
-                                                    PlaybackStateCompat.REPEAT_MODE_ALL
-                                                )
-                                            }
+                                        Player.REPEAT_MODE_ONE -> {
+                                            repeatModel.intValue = Player.REPEAT_MODE_OFF
+                                            musicViewModel.repeatModel.intValue =
+                                                Player.REPEAT_MODE_OFF
+                                            musicViewModel.mediaController?.transportControls?.setRepeatMode(
+                                                PlaybackStateCompat.REPEAT_MODE_NONE
+                                            )
+                                        }
+
+                                        else -> {
+                                            repeatModel.intValue = Player.REPEAT_MODE_ALL
+                                            musicViewModel.repeatModel.intValue =
+                                                Player.REPEAT_MODE_ALL
+                                            musicViewModel.mediaController?.transportControls?.setRepeatMode(
+                                                PlaybackStateCompat.REPEAT_MODE_ALL
+                                            )
                                         }
                                     }
-                                    .width(50.dp)
-                                    .height(50.dp)
-                                    .padding(10.dp)
-                                    .constrainAs(playIndicator3) {
-                                        bottom.linkTo(anchor = parent.bottom, margin = 0.dp)
-                                        end.linkTo(anchor = parent.end, margin = 0.dp)
-                                        top.linkTo(anchor = parent.top, margin = 0.dp)
-                                    },
-                                tint = if (repeatModel.intValue == Player.REPEAT_MODE_OFF) MaterialTheme.colorScheme.onBackground.copy(
-                                    alpha = 0.5f
-                                ) else MaterialTheme.colorScheme.onBackground
-                            )
-                        }
+                                }
+                                .width(50.dp)
+                                .height(50.dp)
+                                .padding(10.dp)
+                                .constrainAs(playIndicator3) {
+                                    bottom.linkTo(anchor = parent.bottom, margin = 0.dp)
+                                    end.linkTo(anchor = parent.end, margin = 0.dp)
+                                    top.linkTo(anchor = parent.top, margin = 0.dp)
+                                },
+                            tint = if (repeatModel.intValue == Player.REPEAT_MODE_OFF) MaterialTheme.colorScheme.onBackground.copy(
+                                alpha = 0.5f
+                            ) else MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
             }
