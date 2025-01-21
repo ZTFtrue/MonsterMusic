@@ -178,7 +178,7 @@ fun PlayingPage(
     var showDialog by remember { mutableStateOf(false) }
     var showAddPlayListDialog by remember { mutableStateOf(false) }
     var showCreatePlayListDialog by remember { mutableStateOf(false) }
-    val repeatModel = remember { mutableIntStateOf(musicViewModel.repeatModel.intValue) }
+    var repeatModel by remember { mutableIntStateOf(musicViewModel.repeatModel.intValue) }
     var music: MusicItem? = musicViewModel.currentPlay.value
     var showDeleteTip by remember { mutableStateOf(false) }
     LaunchedEffect(music) {
@@ -1544,7 +1544,7 @@ fun PlayingPage(
                             )
                         }
                         Icon(
-                            imageVector = when (repeatModel.intValue) {
+                            imageVector = when (repeatModel) {
 
                                 Player.REPEAT_MODE_ALL -> {
                                     Icons.Outlined.Repeat
@@ -1561,9 +1561,9 @@ fun PlayingPage(
                             contentDescription = "Repeat model",
                             modifier = Modifier
                                 .clickable {
-                                    when (repeatModel.intValue) {
+                                    when (repeatModel) {
                                         Player.REPEAT_MODE_ALL -> {
-                                            repeatModel.intValue = Player.REPEAT_MODE_ONE
+                                            repeatModel = Player.REPEAT_MODE_ONE
                                             musicViewModel.repeatModel.intValue =
                                                 Player.REPEAT_MODE_ONE
                                             musicViewModel.mediaController?.transportControls?.setRepeatMode(
@@ -1572,7 +1572,7 @@ fun PlayingPage(
                                         }
 
                                         Player.REPEAT_MODE_ONE -> {
-                                            repeatModel.intValue = Player.REPEAT_MODE_OFF
+                                            repeatModel = Player.REPEAT_MODE_OFF
                                             musicViewModel.repeatModel.intValue =
                                                 Player.REPEAT_MODE_OFF
                                             musicViewModel.mediaController?.transportControls?.setRepeatMode(
@@ -1581,7 +1581,7 @@ fun PlayingPage(
                                         }
 
                                         else -> {
-                                            repeatModel.intValue = Player.REPEAT_MODE_ALL
+                                            repeatModel = Player.REPEAT_MODE_ALL
                                             musicViewModel.repeatModel.intValue =
                                                 Player.REPEAT_MODE_ALL
                                             musicViewModel.mediaController?.transportControls?.setRepeatMode(
@@ -1598,7 +1598,7 @@ fun PlayingPage(
                                     end.linkTo(anchor = parent.end, margin = 0.dp)
                                     top.linkTo(anchor = parent.top, margin = 0.dp)
                                 },
-                            tint = if (repeatModel.intValue == Player.REPEAT_MODE_OFF) MaterialTheme.colorScheme.onBackground.copy(
+                            tint = if (repeatModel == Player.REPEAT_MODE_OFF) MaterialTheme.colorScheme.onBackground.copy(
                                 alpha = 0.5f
                             ) else MaterialTheme.colorScheme.onBackground
                         )
