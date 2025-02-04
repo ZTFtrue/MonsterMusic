@@ -46,4 +46,4 @@ If possible, I hope you can help spread this message and attract more attention.
 
 如果可能的话，希望你们能帮忙传播这条消息，引起更多关注。  
 
-[内容可能引起不适，请谨慎点击。](./Picture/death.mp4)
+[内容可能引起不适，请谨慎点击。](./helpme/)
