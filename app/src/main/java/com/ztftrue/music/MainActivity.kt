@@ -49,6 +49,7 @@ import com.ztftrue.music.play.ACTION_IS_CONNECTED
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.play.ACTION_WILL_DISCONNECTED
+import com.ztftrue.music.play.EVENT_CHECK_MEDIA_ITEM_CHANGE
 import com.ztftrue.music.play.EVENT_INPUT_FORTMAT_Change
 import com.ztftrue.music.play.EVENT_MEDIA_ITEM_Change
 import com.ztftrue.music.play.EVENT_SLEEP_TIME_Change
@@ -577,10 +578,11 @@ class MainActivity : ComponentActivity() {
         override fun onExtrasChanged(extras: Bundle?) {
             super.onExtrasChanged(extras)
             extras?.let {
-                if (it.getInt("type") == EVENT_MEDIA_ITEM_Change) {
+                val type = it.getInt("type")
+                if (type == EVENT_MEDIA_ITEM_Change || type == EVENT_CHECK_MEDIA_ITEM_CHANGE) {
                     // before switch to another music, must clear lyrics
                     val index = it.getInt("index")
-                    if (index >= 0 && musicViewModel.musicQueue.size > index && index != musicViewModel.currentPlayQueueIndex.intValue) {
+                    if (index >= 0 && musicViewModel.musicQueue.size > index && musicViewModel.currentPlay.value?.id != musicViewModel.musicQueue[index].id) {
                         musicViewModel.currentCaptionList.clear()
                         musicViewModel.currentMusicCover.value = null
                         musicViewModel.currentPlay.value =
@@ -594,19 +596,19 @@ class MainActivity : ComponentActivity() {
                             musicViewModel.musicQueue[index]
                         )
                     }
-                } else if (it.getInt("type") == EVENT_SLEEP_TIME_Change) {
+                } else if (type == EVENT_SLEEP_TIME_Change) {
                     val remainTime = it.getLong("remaining")
                     musicViewModel.remainTime.longValue = remainTime
                     if (remainTime == 0L) {
                         musicViewModel.sleepTime.longValue = 0
                     }
-                } else if (it.getInt("type") == EVENT_Visualization_Change) {
+                } else if (type == EVENT_Visualization_Change) {
                     val magnitude = it.getFloatArray("magnitude")?.toList()
                     if (magnitude != null) {
                         musicViewModel.musicVisualizationData.clear()
                         musicViewModel.musicVisualizationData.addAll(magnitude)
                     }
-                } else if (it.getInt("type") == EVENT_INPUT_FORTMAT_Change) {
+                } else if (type == EVENT_INPUT_FORTMAT_Change) {
                     val data = it.getSerializable("current")
                     musicViewModel.currentInputFormat.clear()
                     if (data != null) {

@@ -72,6 +72,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.edit
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
@@ -116,6 +117,11 @@ fun SettingsPage(
                 LYRICS_SETTINGS, Context.MODE_PRIVATE
             )
                 .getBoolean(FIRST_EMBEDDED_LYRICS, false)
+        )
+    }
+    var autoToTopRandom by remember {
+        mutableStateOf(
+            SharedPreferencesUtils.getAutoToTopRandom(context)
         )
     }
     LaunchedEffect(Unit) {
@@ -719,7 +725,7 @@ fun SettingsPage(
                                         context.getSharedPreferences(
                                             "SelectedTheme",
                                             Context.MODE_PRIVATE
-                                        ).edit().putInt("SelectedTheme", index).apply()
+                                        ).edit { putInt("SelectedTheme", index) }
                                     })
                             }
                         }
@@ -808,6 +814,49 @@ fun SettingsPage(
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
+                    }
+                }
+                item {
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .padding(0.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Auto switch current track to top when random",
+                                Modifier
+                                    .padding(start = 10.dp)
+                                    .weight(1f),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Switch(
+                                checked = autoToTopRandom,
+                                onCheckedChange = { value ->
+                                    autoToTopRandom = value
+                                    SharedPreferencesUtils.setAutoToTopRandom(
+                                        context,
+                                        autoToTopRandom
+                                    )
+                                },
+//                                colors = SwitchDefaults.colors(checkedThumbColor = Color.Green)
+                            )
+                        }
+
                     }
                 }
             }
@@ -932,12 +981,13 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     if (it != 0) {
-                                        FilledIconButton(modifier = Modifier
-                                            .size(50.dp)
-                                            .clip(CircleShape)
-                                            .semantics {
-                                                contentDescription = "Up tab priority"
-                                            },
+                                        FilledIconButton(
+                                            modifier = Modifier
+                                                .size(50.dp)
+                                                .clip(CircleShape)
+                                                .semantics {
+                                                    contentDescription = "Up tab priority"
+                                                },
                                             onClick = {
                                                 mainTabList.remove(item)
                                                 mainTabList.add(it - 1, item)
@@ -968,12 +1018,13 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                             )
                                     )
                                     if (it < mainTabList.size - 1) {
-                                        FilledIconButton(modifier = Modifier
-                                            .size(50.dp)
-                                            .clip(CircleShape)
-                                            .semantics {
-                                                contentDescription = "Down tab priority"
-                                            },
+                                        FilledIconButton(
+                                            modifier = Modifier
+                                                .size(50.dp)
+                                                .clip(CircleShape)
+                                                .semantics {
+                                                    contentDescription = "Down tab priority"
+                                                },
                                             onClick = {
                                                 mainTabList.remove(item)
                                                 mainTabList.add(it + 1, item)

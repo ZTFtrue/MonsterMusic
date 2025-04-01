@@ -3,6 +3,7 @@ package com.ztftrue.music.utils
 import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.ui.text.style.TextAlign
+import androidx.core.content.edit
 import com.ztftrue.music.sqlData.model.MusicItem
 
 object SharedPreferencesUtils {
@@ -145,16 +146,29 @@ object SharedPreferencesUtils {
             .putLong("waitTime", waitTime).apply()
     }
 
-    fun setAutoPlayEnable(context: Context,enable: Boolean) {
+    fun setAutoPlayEnable(context: Context, enable: Boolean) {
         context.getSharedPreferences("AutoPlay", Context.MODE_PRIVATE).edit()
             .putBoolean("enable", enable).apply()
     }
-    fun getShowSlideIndicators(context: Context):Boolean {
-       return context.getSharedPreferences("display", Context.MODE_PRIVATE)
+
+    fun getShowSlideIndicators(context: Context): Boolean {
+        return context.getSharedPreferences("display", Context.MODE_PRIVATE)
             .getBoolean("lyrics_slider_indicators", false)
     }
-    fun setShowSlideIndicators(context: Context,enable: Boolean) {
+
+    fun setShowSlideIndicators(context: Context, enable: Boolean) {
         context.getSharedPreferences("display", Context.MODE_PRIVATE).edit()
             .putBoolean("lyrics_slider_indicators", enable).apply()
+    }
+
+    fun getAutoToTopRandom(context: Context): Boolean {
+        return context.getSharedPreferences("config", Context.MODE_PRIVATE)
+            .getBoolean("auto_to_top_when_random", false)
+    }
+
+    fun setAutoToTopRandom(context: Context, enable: Boolean) {
+        context.getSharedPreferences("config", Context.MODE_PRIVATE).edit {
+            putBoolean("auto_to_top_when_random", enable)
+        }
     }
 }

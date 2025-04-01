@@ -20,12 +20,23 @@ import kotlinx.coroutines.launch
 
 object TracksUtils {
 
-    fun currentPlayToTop(mediaBrowserCompat: MediaBrowserCompat, currentIndex: Int) {
-        sortQueue(mediaBrowserCompat, currentIndex, 0)
+    fun currentPlayToTop(
+        mediaBrowserCompat: MediaBrowserCompat, musicList: SnapshotStateList<MusicItem>,
+        music: MusicItem, currentIndex: Int
+    ) {
+        sortQueue(
+            mediaBrowserCompat, musicList,
+            music, currentIndex, 0
+        )
     }
 
-    fun sortQueue(mediaBrowserCompat: MediaBrowserCompat, currentIndex: Int, targetIndex: Int) {
+    fun sortQueue(
+        mediaBrowserCompat: MediaBrowserCompat, musicList: SnapshotStateList<MusicItem>,
+        music: MusicItem, currentIndex: Int, targetIndex: Int
+    ) {
         if (currentIndex == targetIndex) return
+        musicList.remove(music)
+        musicList.add(targetIndex, music)
         val bundle = Bundle()
         bundle.putInt("index", currentIndex)
         bundle.putInt("targetIndex", targetIndex)
@@ -54,8 +65,11 @@ object TracksUtils {
         context: Context,
         playList: AnyListBase,
         musicList: SnapshotStateList<MusicItem>,
-        music: MusicItem
+        music: MusicItem,
+        targetIndex: Int = 0
     ) {
+        musicList.remove(music)
+        musicList.add(targetIndex, music)
         val playListPath =
             PlaylistManager.modifyTrackFromPlayList(
                 context,

@@ -125,7 +125,7 @@ const val EVENT_SLEEP_TIME_Change = 5
 const val EVENT_DATA_READY = 6
 const val EVENT_Visualization_Change = 7
 const val EVENT_INPUT_FORTMAT_Change = 8
-
+const val EVENT_CHECK_MEDIA_ITEM_CHANGE = 9
 //@Suppress("deprecation")
 @UnstableApi
 class PlayService : MediaBrowserServiceCompat() {
@@ -199,7 +199,7 @@ class PlayService : MediaBrowserServiceCompat() {
             PendingIntent.FLAG_IMMUTABLE
         )
         mediaSession = MediaSessionCompat(baseContext, PlayService::class.java.simpleName).apply {
-            isActive=true
+            isActive = true
             val stateBuilder = PlaybackStateCompat.Builder()
                 .setActions(
                     PlaybackStateCompat.ACTION_SEEK_TO
@@ -1400,6 +1400,11 @@ class PlayService : MediaBrowserServiceCompat() {
                     this@PlayService,
                     exoPlayer.currentPosition
                 )
+                val bundle = Bundle()
+                bundle.putParcelable("current", currentPlayTrack)
+                bundle.putInt("type", EVENT_CHECK_MEDIA_ITEM_CHANGE)
+                bundle.putInt("index", exoPlayer.currentMediaItemIndex)
+                mediaSession?.setExtras(bundle)
                 updateNotify()
             }
 
@@ -1433,7 +1438,6 @@ class PlayService : MediaBrowserServiceCompat() {
             ) {
                 super.onPositionDiscontinuity(oldPosition, newPosition, reason)
                 if (musicQueue.isEmpty() || newPosition.mediaItemIndex >= musicQueue.size) return
-
                 if (oldPosition.mediaItemIndex != newPosition.mediaItemIndex || reason >= 4 || currentPlayTrack?.id != musicQueue[newPosition.mediaItemIndex].id) {
                     SharedPreferencesUtils.saveSelectMusicId(
                         this@PlayService,
@@ -1709,9 +1713,19 @@ class PlayService : MediaBrowserServiceCompat() {
             val targetIndex = extras.getInt("targetIndex")
             val m = musicQueue.removeAt(index)
             musicQueue.add(targetIndex, m)
+
+            val currentPlayIndex = exoPlayer.currentMediaItemIndex
+            val currentPosition= exoPlayer.currentPosition
+            if(currentPlayIndex == index){
+                exoPlayer.pause()
+            }
             val im = exoPlayer.getMediaItemAt(index)
             exoPlayer.removeMediaItem(index)
             exoPlayer.addMediaItem(targetIndex, im)
+            if(currentPlayIndex == index){
+                exoPlayer.seekTo(targetIndex,currentPosition)
+                exoPlayer.play()
+            }
             val start = FastMath.min(index, targetIndex)
             val end = FastMath.max(index, targetIndex)
             if (SharedPreferencesUtils.getEnableShuffle(this@PlayService)) {

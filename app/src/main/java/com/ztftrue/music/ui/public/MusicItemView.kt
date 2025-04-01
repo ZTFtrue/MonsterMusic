@@ -428,8 +428,6 @@ fun MusicItemView(
                                         targetPosition = musicList.size - 1
                                     }
                                     if (targetPosition != index) {
-                                        musicList.remove(music)
-                                        musicList.add(targetPosition, music)
                                         saveSortResult(
                                             playList,
                                             musicList,
@@ -487,19 +485,22 @@ fun saveSortResult(
     index: Int,
     targetIndex: Int
 ) {
+
     if (playList.type == PlayListType.PlayLists) {
         viewModel.mediaBrowser?.let {
             TracksUtils.sortPlayLists(
                 it, context,
                 playList,
                 musicList,
-                music
+                music,
+                targetIndex
             )
         }
     } else if (playList.type == PlayListType.Queue) {
         viewModel.mediaBrowser?.let {
             TracksUtils.sortQueue(
-                it,
+                it,   musicList,
+                music,
                 index, targetIndex
             )
         }
