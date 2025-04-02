@@ -739,6 +739,8 @@ class MainActivity : ComponentActivity() {
         }
         val pitch = resultData.getFloat("pitch", 1f)
         val speed = resultData.getFloat("speed", 1f)
+        val Q = resultData.getFloat("Q", Utils.Q)
+        musicViewModel.Q.floatValue = Q
         musicViewModel.pitch.floatValue = pitch
         musicViewModel.speed.floatValue = speed
         musicViewModel.sleepTime.longValue =

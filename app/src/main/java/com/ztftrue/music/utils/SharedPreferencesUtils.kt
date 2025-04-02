@@ -171,4 +171,5 @@ object SharedPreferencesUtils {
             putBoolean("auto_to_top_when_random", enable)
         }
     }
+
 }

@@ -125,29 +125,8 @@ object Utils {
 //        31.0, 62.0, 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0, 16000.0
         60.0f, 170.0f, 310.0f, 600.0f, 1000.0f, 3000.0f, 6000.0f, 12000.0f, 14000.0f, 16000.0f
     )
-    var qs = floatArrayOf(
-//        1.0,//31
-//        1.2,//62
-//        1.4,//125
-//        1.5,//250
-//        1.5,//500
-//        2.5,//1000
-//        2.0,//2000
-//        2.0,//4000
-//        1.5,//8000
-//        1.0,//16000
-//        3.0f,
-//        2.8f,
-//        2.6f,
-//        2.4f,
-//        2.2f,
-//        2.0f,
-//        1.8f,
-//        1.6f,
-//        1.4f,
-//        1.2f
-        3.2f, 3.2f, 3.2f, 3.2f, 3.2f, 3.2f, 3.2f, 3.2f, 3.2f, 3.2f
-    )
+    const val Q = 3.2f
+
     var equalizerMax = 13
     var equalizerMin = -13
     var custom = "Custom"
@@ -174,7 +153,8 @@ object Utils {
 
     fun initSettingsData(musicViewModel: MusicViewModel, context: Context) {
         CoroutineScope(Dispatchers.IO).launch {
-            musicViewModel.showSlideIndicators.value = SharedPreferencesUtils.getShowSlideIndicators(context)
+            musicViewModel.showSlideIndicators.value =
+                SharedPreferencesUtils.getShowSlideIndicators(context)
             musicViewModel.musicVisualizationEnable.value =
                 SharedPreferencesUtils.getEnableMusicVisualization(context)
             musicViewModel.showMusicCover.value =
@@ -687,6 +667,7 @@ object Utils {
         }
         return null
     }
+
     fun Dp.toPx(context: Context): Int {
         val displayMetrics = context.resources.displayMetrics
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this.value, displayMetrics)

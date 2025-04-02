@@ -96,6 +96,7 @@ class MusicViewModel : ViewModel() {
     var echoFeedBack = mutableStateOf(false)
     var enableShuffleModel = mutableStateOf(false)
     var pitch = mutableFloatStateOf(1f)
+    var Q = mutableFloatStateOf(Utils.Q)
     var speed = mutableFloatStateOf(1f)
     var currentDuration = mutableLongStateOf(0)
 
