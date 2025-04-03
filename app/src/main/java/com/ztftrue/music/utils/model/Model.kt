@@ -90,3 +90,8 @@ data class ListStringCaption(
     val timeStart: Long,
     val timeEnd: Long = 0
 )
+
+data class LanguageModel(
+    val name: String,
+    val code: String
+)

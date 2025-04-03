@@ -26,6 +26,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -41,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
+import androidx.core.os.LocaleListCompat
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.media3.common.Player
@@ -452,6 +454,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags("en")
+        AppCompatDelegate.setApplicationLocales(appLocale )
         compatSplashScreen = installSplashScreen()
         compatSplashScreen?.setKeepOnScreenCondition { musicViewModel.mainTabList.isEmpty() }
         Utils.initSettingsData(musicViewModel, this)

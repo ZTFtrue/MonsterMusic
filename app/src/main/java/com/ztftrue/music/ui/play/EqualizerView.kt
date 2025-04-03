@@ -116,7 +116,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     .height(1.dp)
                     .background(color = MaterialTheme.colorScheme.primary)
             )
-            Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 20.dp)) {
+            Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 10.dp)) {
                 Row(
                     modifier = Modifier
                         .absolutePadding(
@@ -380,7 +380,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                     context.getSharedPreferences(
                                         "SelectedPreset",
                                         Context.MODE_PRIVATE
-                                    ).edit().putString("SelectedPreset", key).apply()
+                                    ).edit { putString("SelectedPreset", key) }
                                 })
                         }
 
@@ -389,17 +389,18 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
             }
         }
         items(1) {
-            Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 10.dp)) {
+            Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 1.dp, bottom = 10.dp)) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Equalizer Q:" + (Q.floatValue).toString(),
+                        text = "Equalizer Q: " + (Q.floatValue).toString(),
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     OutlinedButton(
+                        enabled = musicViewModel.enableEqualizer.value,
                         modifier = Modifier.padding(0.dp),
                         onClick = {
                             musicViewModel.Q.floatValue = Utils.Q
@@ -420,6 +421,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     }
                 }
                 CustomSlider(
+                    enabled = musicViewModel.enableEqualizer.value,
                     modifier = Modifier
                         .semantics {
                             contentDescription = "Q"

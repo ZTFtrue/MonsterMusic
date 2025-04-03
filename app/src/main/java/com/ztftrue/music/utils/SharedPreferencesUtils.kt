@@ -171,5 +171,14 @@ object SharedPreferencesUtils {
             putBoolean("auto_to_top_when_random", enable)
         }
     }
+    fun getCurrentLanguage(context: Context): String? {
+        return context.getSharedPreferences("config", Context.MODE_PRIVATE)
+            .getString("language", null)
+    }
 
+    fun setCurrentLanguage(context: Context, value: String) {
+        context.getSharedPreferences("config", Context.MODE_PRIVATE).edit {
+            putString("language", value)
+        }
+    }
 }
