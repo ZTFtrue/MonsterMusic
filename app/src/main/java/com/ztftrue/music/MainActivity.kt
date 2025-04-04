@@ -26,7 +26,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -42,7 +41,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
-import androidx.core.os.LocaleListCompat
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.media3.common.Player
@@ -454,9 +452,21 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+//        val languageCode = SharedPreferencesUtils.getCurrentLanguage(context = this)
+//        if (!languageCode.isNullOrEmpty()) {
+//            val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(languageCode)
+//            val configuration = resources.configuration
+//            configuration.setLocale(appLocale[0])
+//            resources.updateConfiguration(configuration, resources.displayMetrics)
+//        }
+//        val locale = Locale("en")
+//        Locale.setDefault(locale)
+//        val config = resources.configuration
+//        config.setLocale(locale)
+//        resources.updateConfiguration(config, resources.displayMetrics)
+//        val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags("xx-YY")
+//        AppCompatDelegate.setApplicationLocales(appLocale)
 
-        val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags("en")
-        AppCompatDelegate.setApplicationLocales(appLocale )
         compatSplashScreen = installSplashScreen()
         compatSplashScreen?.setKeepOnScreenCondition { musicViewModel.mainTabList.isEmpty() }
         Utils.initSettingsData(musicViewModel, this)

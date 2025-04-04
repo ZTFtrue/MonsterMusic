@@ -3,7 +3,9 @@ package com.ztftrue.music.ui.other
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -74,6 +76,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.edit
+import androidx.core.os.LocaleListCompat
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
@@ -283,56 +286,56 @@ fun SettingsPage(
                         }
 
                     }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(0.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
-                                }
-                                .clickable {
-                                    showSetLanguageDialog = !showSetLanguageDialog
-                                },
-                        ) {
-                            if (showSetLanguageDialog) {
-                                SwitchLanguageDialog(
-                                    musicViewModel,
-                                    onDismiss = {
-                                        showSetLanguageDialog = false
-                                    })
-                            }
-                            Text(
-                                text = "Set language",
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                    }
+//                    Box(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(50.dp)
+//                            .padding(0.dp)
+//                            .drawBehind {
+//                                drawLine(
+//                                    color = color,
+//                                    start = Offset(0f, size.height - 1.dp.toPx()),
+//                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+//                                    strokeWidth = 1.dp.toPx()
+//                                )
+//                            }
+//                            .clickable {
+//
+//                            },
+//                        contentAlignment = Alignment.CenterStart
+//                    ) {
+//                        Row(
+//                            verticalAlignment = Alignment.CenterVertically,
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(50.dp)
+//                                .padding(0.dp)
+//                                .drawBehind {
+//                                    drawLine(
+//                                        color = color,
+//                                        start = Offset(0f, size.height - 1.dp.toPx()),
+//                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+//                                        strokeWidth = 1.dp.toPx()
+//                                    )
+//                                }
+//                                .clickable {
+//                                    showSetLanguageDialog = !showSetLanguageDialog
+//                                },
+//                        ) {
+//                            if (showSetLanguageDialog) {
+//                                SwitchLanguageDialog(
+//                                    musicViewModel,
+//                                    onDismiss = {
+//                                        showSetLanguageDialog = false
+//                                    })
+//                            }
+//                            Text(
+//                                text = "Set language",
+//                                Modifier.padding(start = 10.dp),
+//                                color = MaterialTheme.colorScheme.onBackground
+//                            )
+//                        }
+//                    }
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -2301,16 +2304,20 @@ fun SwitchLanguageDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) 
     }
     fun onConfirmation() {
         val locale = Locale(language[selectIndex].code)
-        Locale.setDefault(locale)
-        val config = context.resources.configuration
-        config.setLocale(locale)
-        context.createConfigurationContext(config)
+
         val activity = context as? Activity
+        val localeList = LocaleListCompat.forLanguageTags("en-US")
+        AppCompatDelegate.setApplicationLocales(localeList)
+        activity?.runOnUiThread {
+            activity.recreate()
+        }
+        Log.d("TAG",localeList.toString())
+        val currentLocale = AppCompatDelegate.getApplicationLocales()[0]
+        Log.d("LanguageChange", "Current Language: $currentLocale")
+
         scopeMain.launch {
             onDismiss()
-            activity?.runOnUiThread {
-//                activity?.recreate()
-            }
+
         }
     }
 

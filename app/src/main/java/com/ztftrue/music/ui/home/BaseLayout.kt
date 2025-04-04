@@ -1,12 +1,9 @@
 package com.ztftrue.music.ui.home
 
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.os.LocaleListCompat
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -33,19 +30,6 @@ fun BaseLayout(
     val navController: NavHostController = rememberNavController()
     musicViewModel.navController = navController
     val context = LocalContext.current
-//    val locale = Locale("en")
-//    Locale.setDefault(locale)
-//    val config = context.resources.configuration
-//    config.setLocale(locale)
-    SideEffect {
-        val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags("en")
-        AppCompatDelegate.setApplicationLocales(appLocale )
-    }
-    val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags("en")
-
-    AppCompatDelegate.setApplicationLocales(appLocale )
-
-//      context.createConfigurationContext(config)
     CompositionLocalProvider(LocalContext provides context){
         NavHost(
             navController = navController, startDestination = Router.MainView.route,
