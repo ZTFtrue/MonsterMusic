@@ -23,7 +23,6 @@ import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.PlayConfig
 import com.ztftrue.music.sqlData.model.SortFiledData
 import com.ztftrue.music.sqlData.model.StorageFolder
-import kotlin.concurrent.Volatile
 
 const val MUSIC_DATABASE_NAME = "default_data.db"
 
@@ -31,13 +30,14 @@ const val MUSIC_DATABASE_NAME = "default_data.db"
 @Database(
     entities = [Auxr::class, CurrentList::class, MainTab::class, PlayConfig::class, MusicItem::class,
         DictionaryApp::class, StorageFolder::class,SortFiledData::class],
-    version = 5,
+    version = 6,
     exportSchema = true,
     autoMigrations = [
 //        AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),
         AutoMigration(from = 3, to = 4),
         AutoMigration(from = 4, to = 5),
+        AutoMigration(from = 5, to = 6),
     ]
 )
 abstract class MusicDatabase : RoomDatabase() {

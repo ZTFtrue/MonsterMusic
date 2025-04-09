@@ -5,6 +5,8 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.ztftrue.music.sqlData.IntArrayConverters
+import com.ztftrue.music.utils.Utils
+
 // because Aux make an error
 @Entity(tableName = "aux")
 data class Auxr(
@@ -18,6 +20,7 @@ data class Auxr(
     @ColumnInfo var echoDecay: Float,
     @ColumnInfo var echoRevert: Boolean,
     @ColumnInfo var equalizer: Boolean,
+    @ColumnInfo(defaultValue = Utils.Q.toString()) var equalizerQ: Float=Utils.Q,
     @field:TypeConverters(IntArrayConverters::class)
     @ColumnInfo var equalizerBand: IntArray,
 ) {

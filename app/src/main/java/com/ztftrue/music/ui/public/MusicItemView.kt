@@ -5,7 +5,6 @@ import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
-import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -66,13 +65,11 @@ import com.ztftrue.music.play.ACTION_AddPlayQueue
 import com.ztftrue.music.play.ACTION_PLAY_MUSIC
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_RemoveFromQueue
-import com.ztftrue.music.play.ACTION_Sort_Queue
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
-import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.MusicItem
-import com.ztftrue.music.sqlData.model.SortFiledData
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
+import com.ztftrue.music.utils.TracksUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.deleteTrackUpdate
 import com.ztftrue.music.utils.Utils.toPx
@@ -80,9 +77,6 @@ import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.TracksManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalFoundationApi::class)
@@ -315,54 +309,55 @@ fun MusicItemView(
         })
     }
     var offset by remember { mutableFloatStateOf(0f) }
-    Row(modifier
-        .height(80.dp)
-        .graphicsLayer(
-            translationY = offset,
-        )
-        .combinedClickable(
-            onClick = {
-                // in select tracks status for add playlist
-                if (selectStatus) {
-                    if (selectList?.contains(music) == true) {
-                        selectList.remove(music)
+    Row(
+        modifier
+            .height(80.dp)
+            .graphicsLayer(
+                translationY = offset,
+            )
+            .combinedClickable(
+                onClick = {
+                    // in select tracks status for add playlist
+                    if (selectStatus) {
+                        if (selectList?.contains(music) == true) {
+                            selectList.remove(music)
+                        } else {
+                            selectList?.add(music)
+                        }
                     } else {
-                        selectList?.add(music)
+                        val bundle = Bundle()
+                        if (playList.type != PlayListType.Queue) {
+                            viewModel.playListCurrent.value = playList
+                            viewModel.musicQueue.clear()
+                            viewModel.currentPlayQueueIndex.intValue = -1
+                            viewModel.musicQueue.addAll(musicList)
+                            bundle.putBoolean("switch_queue", true)
+                        } else {
+                            bundle.putBoolean("switch_queue", false)
+                        }
+                        viewModel.enableShuffleModel.value = false
+                        if (viewModel.playListCurrent.value == null) {
+                            viewModel.playListCurrent.value = playList
+                            viewModel.currentMusicCover.value = null
+                            viewModel.currentPlay.value = music
+                        }
+                        bundle.putParcelable("musicItem", music)
+                        bundle.putParcelable("playList", playList)
+                        bundle.putParcelableArrayList("musicItems", ArrayList(musicList))
+                        bundle.putInt("index", index)
+                        viewModel.mediaBrowser?.sendCustomAction(
+                            ACTION_PLAY_MUSIC,
+                            bundle,
+                            null
+                        )
                     }
-                } else {
-                    val bundle = Bundle()
-                    if (playList.type != PlayListType.Queue) {
-                        viewModel.playListCurrent.value = playList
-                        viewModel.musicQueue.clear()
-                        viewModel.currentPlayQueueIndex.intValue = -1
-                        viewModel.musicQueue.addAll(musicList)
-                        bundle.putBoolean("switch_queue", true)
-                    } else {
-                        bundle.putBoolean("switch_queue", false)
+                },
+                onLongClick = {
+                    if (!selectStatus) {
+                        showDialog = true
                     }
-                    viewModel.enableShuffleModel.value = false
-                    if (viewModel.playListCurrent.value == null) {
-                        viewModel.playListCurrent.value = playList
-                        viewModel.currentMusicCover.value = null
-                        viewModel.currentPlay.value = music
-                    }
-                    bundle.putParcelable("musicItem", music)
-                    bundle.putParcelable("playList", playList)
-                    bundle.putParcelableArrayList("musicItems", ArrayList(musicList))
-                    bundle.putInt("index", index)
-                    viewModel.mediaBrowser?.sendCustomAction(
-                        ACTION_PLAY_MUSIC,
-                        bundle,
-                        null
-                    )
                 }
-            },
-            onLongClick = {
-                if (!selectStatus) {
-                    showDialog = true
-                }
-            }
-        ), verticalAlignment = Alignment.CenterVertically) {
+            ), verticalAlignment = Alignment.CenterVertically) {
         Row(
             modifier
                 .wrapContentHeight(Alignment.CenterVertically)
@@ -371,7 +366,7 @@ fun MusicItemView(
         ) {
             if (selectStatus) {
                 Checkbox(
-                    checked = selectList?.contains(music) ?: false,
+                    checked = selectList?.contains(music) == true,
                     onCheckedChange = { v ->
                         if (v) {
                             selectList?.add(music)
@@ -414,40 +409,39 @@ fun MusicItemView(
                     )
                 }
                 if (playList.type == PlayListType.Queue || playList.type == PlayListType.PlayLists) {
-                    Box(modifier = Modifier
-                        .height(45.dp)
-                        .width(45.dp)
-                        .draggable(
-                            orientation = Orientation.Vertical,
-                            state = rememberDraggableState { delta ->
-                                offset += delta
-                            },
-                            onDragStopped = { _ ->
-                                var targetPosition =
-                                    index + (offset / 80.dp.toPx(context)).toInt()
-                                if (targetPosition < 0) {
-                                    targetPosition = 0
-                                }
-                                if (targetPosition > musicList.size - 1) {
-                                    targetPosition = musicList.size - 1
-                                }
-                                if (targetPosition != index) {
-                                    musicList.remove(music)
-                                    musicList.add(targetPosition, music)
-                                    saveSortResult(
-                                        playList,
-                                        musicList,
-                                        context,
-                                        music,
-                                        viewModel,
-                                        index,
-                                        targetPosition
-                                    )
-                                }
-                                offset = 0f
+                    Box(
+                        modifier = Modifier
+                            .height(45.dp)
+                            .width(45.dp)
+                            .draggable(
+                                orientation = Orientation.Vertical,
+                                state = rememberDraggableState { delta ->
+                                    offset += delta
+                                },
+                                onDragStopped = { _ ->
+                                    var targetPosition =
+                                        index + (offset / 80.dp.toPx(context)).toInt()
+                                    if (targetPosition < 0) {
+                                        targetPosition = 0
+                                    }
+                                    if (targetPosition > musicList.size - 1) {
+                                        targetPosition = musicList.size - 1
+                                    }
+                                    if (targetPosition != index) {
+                                        saveSortResult(
+                                            playList,
+                                            musicList,
+                                            context,
+                                            music,
+                                            viewModel,
+                                            index,
+                                            targetPosition
+                                        )
+                                    }
+                                    offset = 0f
 
-                            }
-                        )) {
+                                }
+                            )) {
                         Icon(
                             imageVector = Icons.Outlined.SwipeVertical,
                             contentDescription = "${music.name} sort",
@@ -491,102 +485,25 @@ fun saveSortResult(
     index: Int,
     targetIndex: Int
 ) {
+
     if (playList.type == PlayListType.PlayLists) {
-        val playListPath =
-            PlaylistManager.modifyTrackFromPlayList(
-                context,
-                playList.id,
-                ArrayList(musicList.toList()),
-                music.path
+        viewModel.mediaBrowser?.let {
+            TracksUtils.sortPlayLists(
+                it, context,
+                playList,
+                musicList,
+                music,
+                targetIndex
             )
-        CoroutineScope(Dispatchers.IO).launch {
-            val sortDb =
-                MusicDatabase
-                    .getDatabase(context)
-                    .SortFiledDao()
-            var sortData =
-                sortDb.findSortByType(playList.type.name + "@Tracks")
-            if (sortData != null) {
-                if (sortData.method != "" || sortData.filed != "") {
-                    CoroutineScope(Dispatchers.Main).launch {
-                        Toast
-                            .makeText(
-                                context,
-                                "Already change you sort order to default",
-                                Toast.LENGTH_LONG
-                            )
-                            .show()
-                    }
-                }
-                sortData.method = ""
-                sortData.methodName = ""
-                sortData.filed = ""
-                sortData.filedName = ""
-                sortDb.update(sortData)
-            } else {
-                sortData = SortFiledData(
-                    playList.type.name + "@Tracks",
-                    "", "", "", ""
-                )
-                sortDb.insert(sortData)
-            }
-            if (!playListPath.isNullOrEmpty()) {
-                MediaScannerConnection.scanFile(
-                    context,
-                    arrayOf(playListPath),
-                    arrayOf("*/*"),
-                    object :
-                        MediaScannerConnection.MediaScannerConnectionClient {
-                        override fun onMediaScannerConnected() {}
-                        override fun onScanCompleted(
-                            path: String,
-                            uri: Uri
-                        ) {
-                            viewModel.mediaBrowser?.sendCustomAction(
-                                ACTION_PlayLIST_CHANGE,
-                                null,
-                                object :
-                                    MediaBrowserCompat.CustomActionCallback() {
-                                    override fun onResult(
-                                        action: String?,
-                                        extras: Bundle?,
-                                        resultData: Bundle?
-                                    ) {
-                                        super.onResult(
-                                            action,
-                                            extras,
-                                            resultData
-                                        )
-                                    }
-                                }
-                            )
-                        }
-                    })
-            }
         }
     } else if (playList.type == PlayListType.Queue) {
-        val bundle = Bundle()
-        bundle.putInt("index", index)
-        bundle.putInt("targetIndex", targetIndex)
-        viewModel.mediaBrowser?.sendCustomAction(
-            ACTION_Sort_Queue,
-            bundle,
-            object :
-                MediaBrowserCompat.CustomActionCallback() {
-                override fun onResult(
-                    action: String?,
-                    extras: Bundle?,
-                    resultData: Bundle?
-                ) {
-                    super.onResult(
-                        action,
-                        extras,
-                        resultData
-                    )
-                }
-            }
-        )
-
+        viewModel.mediaBrowser?.let {
+            TracksUtils.sortQueue(
+                it,   musicList,
+                music,
+                index, targetIndex
+            )
+        }
     }
 }
 

@@ -2,6 +2,7 @@ package com.ztftrue.music.effects
 
 import android.os.Bundle
 import android.support.v4.media.session.MediaSessionCompat
+import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
@@ -61,6 +62,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var echoFeedBack = false
     private lateinit var converter: TarsosDSPAudioFloatConverter
     private var pcmToFrequencyDomain = PCMToFrequencyDomain(bufferSize, 44100f)
+    private var Q = Utils.Q
 
     init {
         outputBuffer = EMPTY_BUFFER
@@ -413,6 +415,19 @@ class EqualizerAudioProcessor : AudioProcessor {
     }
 
     private val lock = ReentrantLock()
+    fun setQ(value: Float, needChange: Boolean = true) {
+        this.Q = value
+        if (needChange) {
+            for (i in 0 until 10) {
+                Log.d("CHANGE_Q", gainDBArray[i].toString()+","+Q)
+                setBand(
+                    i,
+                    gainDBArray[i]
+                )
+            }
+        }
+    }
+
     fun setBand(index: Int, value: Int) {
         lock.lock()
         if (outputAudioFormat != null) {
@@ -424,14 +439,14 @@ class EqualizerAudioProcessor : AudioProcessor {
                     BiQuadraticFilter.PEAK,
                     Utils.bandsCenter[index],
                     outputAudioFormat!!.sampleRate.toFloat(),
-                    Utils.qs[index],
+                    Q,
                     value.toFloat(),
                 )
                 mCoefficientRightBiQuad[index].configure(
                     BiQuadraticFilter.PEAK,
                     Utils.bandsCenter[index],
                     outputAudioFormat!!.sampleRate.toFloat(),
-                    Utils.qs[index],
+                    Q,
                     value.toFloat(),
                 )
             }

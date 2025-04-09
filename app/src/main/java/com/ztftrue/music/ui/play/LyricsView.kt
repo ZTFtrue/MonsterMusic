@@ -295,7 +295,7 @@ fun LyricsView(
         }
     }
 
-    if (musicViewModel.currentCaptionList.size == 0) {
+    if (musicViewModel.currentCaptionList.isEmpty()) {
         Column {
             Text(
                 text = stringResource(R.string.no_lyrics_import_tip),

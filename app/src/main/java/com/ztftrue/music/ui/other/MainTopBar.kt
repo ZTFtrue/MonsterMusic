@@ -35,11 +35,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -682,25 +681,32 @@ fun MainTopBar(
                 }
             })
         if (musicViewModel.mainTabList.size > pagerState.currentPage) {
-            ScrollableTabRow(
+            PrimaryScrollableTabRow(
                 selectedTabIndex = pagerState.currentPage,
                 modifier = Modifier.fillMaxWidth(),
-                indicator = { tabPositions ->
-                    if (tabPositions.isNotEmpty()) {
-                        TabRowDefaults.SecondaryIndicator(
-                            Modifier
-                                .height(3.0.dp)
-                                .tabIndicatorOffset(tabPositions[pagerState.currentPage]),
-                            height = 3.0.dp,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    } else {
-                        TabRowDefaults.SecondaryIndicator(
-                            Modifier.height(3.0.dp),
-                            height = 3.0.dp,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
+                indicator = {
+                    TabRowDefaults.PrimaryIndicator(
+                        Modifier
+                            .height(3.0.dp)
+                            .tabIndicatorOffset(pagerState.currentPage),
+                        height = 3.0.dp,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+//                    if (tabPositions.isNotEmpty()) {
+//                        TabRowDefaults.SecondaryIndicator(
+//                            Modifier
+//                                .height(3.0.dp)
+//                                .tabIndicatorOffset(tabPositions[pagerState.currentPage]),
+//                            height = 3.0.dp,
+//                            color = MaterialTheme.colorScheme.onBackground
+//                        )
+//                    } else {
+//                        TabRowDefaults.SecondaryIndicator(
+//                            Modifier.height(3.0.dp),
+//                            height = 3.0.dp,
+//                            color = MaterialTheme.colorScheme.onBackground
+//                        )
+//                    }
                 },
             ) {
                 musicViewModel.mainTabList.forEachIndexed { index, item ->

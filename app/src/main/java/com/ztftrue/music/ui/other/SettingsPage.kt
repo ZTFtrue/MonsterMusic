@@ -1,8 +1,11 @@
 package com.ztftrue.music.ui.other
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -72,6 +75,8 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.edit
+import androidx.core.os.LocaleListCompat
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
@@ -87,11 +92,13 @@ import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.openBrowser
 import com.ztftrue.music.utils.model.FolderList
+import com.ztftrue.music.utils.model.LanguageModel
 import com.ztftrue.music.utils.trackManager.FolderManger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.internal.toLongOrDefault
+import java.util.Locale
 
 
 /**
@@ -116,6 +123,11 @@ fun SettingsPage(
                 LYRICS_SETTINGS, Context.MODE_PRIVATE
             )
                 .getBoolean(FIRST_EMBEDDED_LYRICS, false)
+        )
+    }
+    var autoToTopRandom by remember {
+        mutableStateOf(
+            SharedPreferencesUtils.getAutoToTopRandom(context)
         )
     }
     LaunchedEffect(Unit) {
@@ -150,6 +162,7 @@ fun SettingsPage(
                     var showLyricsFolderDialog by remember { mutableStateOf(false) }
                     var showAboutDialog by remember { mutableStateOf(false) }
                     var showSetListIndicatorDialog by remember { mutableStateOf(false) }
+                    var showSetLanguageDialog by remember { mutableStateOf(false) }
 
                     Box(
                         modifier = Modifier
@@ -273,6 +286,56 @@ fun SettingsPage(
                         }
 
                     }
+//                    Box(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(50.dp)
+//                            .padding(0.dp)
+//                            .drawBehind {
+//                                drawLine(
+//                                    color = color,
+//                                    start = Offset(0f, size.height - 1.dp.toPx()),
+//                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+//                                    strokeWidth = 1.dp.toPx()
+//                                )
+//                            }
+//                            .clickable {
+//
+//                            },
+//                        contentAlignment = Alignment.CenterStart
+//                    ) {
+//                        Row(
+//                            verticalAlignment = Alignment.CenterVertically,
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(50.dp)
+//                                .padding(0.dp)
+//                                .drawBehind {
+//                                    drawLine(
+//                                        color = color,
+//                                        start = Offset(0f, size.height - 1.dp.toPx()),
+//                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+//                                        strokeWidth = 1.dp.toPx()
+//                                    )
+//                                }
+//                                .clickable {
+//                                    showSetLanguageDialog = !showSetLanguageDialog
+//                                },
+//                        ) {
+//                            if (showSetLanguageDialog) {
+//                                SwitchLanguageDialog(
+//                                    musicViewModel,
+//                                    onDismiss = {
+//                                        showSetLanguageDialog = false
+//                                    })
+//                            }
+//                            Text(
+//                                text = "Set language",
+//                                Modifier.padding(start = 10.dp),
+//                                color = MaterialTheme.colorScheme.onBackground
+//                            )
+//                        }
+//                    }
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -719,7 +782,7 @@ fun SettingsPage(
                                         context.getSharedPreferences(
                                             "SelectedTheme",
                                             Context.MODE_PRIVATE
-                                        ).edit().putInt("SelectedTheme", index).apply()
+                                        ).edit { putInt("SelectedTheme", index) }
                                     })
                             }
                         }
@@ -808,6 +871,49 @@ fun SettingsPage(
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
+                    }
+                }
+                item {
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .padding(0.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Auto switch current track to top when random",
+                                Modifier
+                                    .padding(start = 10.dp)
+                                    .weight(1f),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Switch(
+                                checked = autoToTopRandom,
+                                onCheckedChange = { value ->
+                                    autoToTopRandom = value
+                                    SharedPreferencesUtils.setAutoToTopRandom(
+                                        context,
+                                        autoToTopRandom
+                                    )
+                                },
+//                                colors = SwitchDefaults.colors(checkedThumbColor = Color.Green)
+                            )
+                        }
+
                     }
                 }
             }
@@ -932,12 +1038,13 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     if (it != 0) {
-                                        FilledIconButton(modifier = Modifier
-                                            .size(50.dp)
-                                            .clip(CircleShape)
-                                            .semantics {
-                                                contentDescription = "Up tab priority"
-                                            },
+                                        FilledIconButton(
+                                            modifier = Modifier
+                                                .size(50.dp)
+                                                .clip(CircleShape)
+                                                .semantics {
+                                                    contentDescription = "Up tab priority"
+                                                },
                                             onClick = {
                                                 mainTabList.remove(item)
                                                 mainTabList.add(it - 1, item)
@@ -968,12 +1075,13 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                                             )
                                     )
                                     if (it < mainTabList.size - 1) {
-                                        FilledIconButton(modifier = Modifier
-                                            .size(50.dp)
-                                            .clip(CircleShape)
-                                            .semantics {
-                                                contentDescription = "Down tab priority"
-                                            },
+                                        FilledIconButton(
+                                            modifier = Modifier
+                                                .size(50.dp)
+                                                .clip(CircleShape)
+                                                .semantics {
+                                                    contentDescription = "Down tab priority"
+                                                },
                                             onClick = {
                                                 mainTabList.remove(item)
                                                 mainTabList.add(it + 1, item)
@@ -2152,6 +2260,182 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                         )
                     }
                 }
+            }
+        }
+    )
+}
+
+@UnstableApi
+@Composable
+fun SwitchLanguageDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
+
+    val context = LocalContext.current
+    val scopeMain = CoroutineScope(Dispatchers.IO)
+
+    val language = remember { mutableStateListOf<LanguageModel>() }
+    var size by remember { mutableIntStateOf(0) }
+    var selectIndex by remember { mutableIntStateOf(0) }
+    var locale by remember { mutableStateOf(Locale.getDefault().language) }
+    val supportedLanguages = listOf("en", "de", "eo", "hu") // App-supported languages
+    val systemLanguage = context.resources.configuration.locales[0].language
+
+    LaunchedEffect(Unit) {
+        scopeMain.launch {
+            locale = if (systemLanguage in supportedLanguages) {
+                systemLanguage // Use system language if supported
+            } else {
+                "en" // Fallback to English
+            }
+            language.add(LanguageModel("English", "en"))
+            language.add(LanguageModel("中文", "zh"))
+            language.add(LanguageModel("Deutsch", "de"))
+            language.add(LanguageModel("Esperanto", "eo"))
+            language.add(LanguageModel("Magyar", "hu"))
+            SharedPreferencesUtils.getCurrentLanguage(context).let {
+                if (it.isNullOrEmpty()) {
+                    locale = Locale.getDefault().language
+                } else {
+                    locale = it
+                }
+            }
+            selectIndex = language.indexOfFirst { it.code == locale }
+            size = language.size
+        }
+    }
+    fun onConfirmation() {
+        val locale = Locale(language[selectIndex].code)
+
+        val activity = context as? Activity
+        val localeList = LocaleListCompat.forLanguageTags("en-US")
+        AppCompatDelegate.setApplicationLocales(localeList)
+        activity?.runOnUiThread {
+            activity.recreate()
+        }
+        Log.d("TAG",localeList.toString())
+        val currentLocale = AppCompatDelegate.getApplicationLocales()[0]
+        Log.d("LanguageChange", "Current Language: $currentLocale")
+
+        scopeMain.launch {
+            onDismiss()
+
+        }
+    }
+
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = true, dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        ),
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(color = MaterialTheme.colorScheme.background),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(color = MaterialTheme.colorScheme.onBackground)
+                )
+                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.manage_tab_items), modifier = Modifier
+                                .padding(2.dp),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    items(size) {
+                        val item = language[it]
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    start = 10.dp, end = 10.dp
+                                ),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        )
+                        {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(
+                                    modifier = Modifier.width(120.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = item.name,
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                                var isChecked by remember {
+                                    mutableStateOf(false)
+                                }
+                                isChecked = it == selectIndex
+                                Checkbox(
+                                    checked = isChecked,
+                                    onCheckedChange = { v ->
+                                        isChecked = v
+                                        selectIndex = it
+                                    },
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .semantics {
+                                            contentDescription = if (isChecked) {
+                                                "Show this language ${item.name}"
+                                            } else {
+                                                "Hide this language ${item.name}"
+                                            }
+                                        }
+                                )
+                            }
+                        }
+                    }
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            TextButton(
+                                onClick = { onDismiss() },
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .fillMaxWidth(0.5f),
+                            ) {
+                                Text(
+                                    stringResource(R.string.cancel),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                            HorizontalDivider(
+                                modifier = Modifier
+                                    .background(MaterialTheme.colorScheme.onBackground)
+                                    .width(1.dp)
+                                    .height(50.dp)
+                            )
+                            TextButton(
+                                onClick = {
+                                    onConfirmation()
+                                },
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .fillMaxWidth(),
+
+                                ) {
+                                Text(
+                                    stringResource(id = R.string.confirm),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                        }
+                    }
+                }
+
             }
         }
     )

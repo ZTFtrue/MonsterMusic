@@ -20,6 +20,7 @@
     </queries>
 
     <application
+        android:localeConfig="@xml/locale_config"
         android:name=".MyApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -50,6 +51,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleInstance"
+            android:configChanges="locale|layoutDirection"
             android:theme="@style/Theme.MusicPitch">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -67,7 +69,14 @@
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
-
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
         <receiver
             android:name="androidx.media.session.MediaButtonReceiver"
             android:exported="true">

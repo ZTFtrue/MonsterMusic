@@ -49,12 +49,16 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.core.content.edit
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
+import com.ztftrue.music.play.ACTION_CHANGE_Q
 import com.ztftrue.music.play.ACTION_DSP_BAND
 import com.ztftrue.music.play.ACTION_DSP_BANDS_SET
 import com.ztftrue.music.play.ACTION_DSP_BAND_FLATTEN
@@ -74,6 +78,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
     val context = LocalContext.current
     val minEQLevel = remember { equalizerMin }
     val maxEQLevel = remember { equalizerMax }
+    val Q = remember { mutableFloatStateOf(musicViewModel.Q.floatValue) }
     val tempBandValue = ArrayList<MutableFloatState>(Utils.bandsCenter.size)
     bands.forEach { band ->
         val bandValue = remember { mutableFloatStateOf(band.value.toFloat()) }
@@ -111,7 +116,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     .height(1.dp)
                     .background(color = MaterialTheme.colorScheme.primary)
             )
-            Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 20.dp)) {
+            Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 10.dp)) {
                 Row(
                     modifier = Modifier
                         .absolutePadding(
@@ -181,9 +186,9 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                                     context.getSharedPreferences(
                                                         "SelectedPreset",
                                                         Context.MODE_PRIVATE
-                                                    ).edit()
-                                                        .putString("SelectedPreset", Utils.custom)
-                                                        .apply()
+                                                    ).edit {
+                                                        putString("SelectedPreset", Utils.custom)
+                                                    }
                                                 } else {
                                                     Toast.makeText(
                                                         context,
@@ -246,7 +251,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                     context.getSharedPreferences(
                                         "SelectedPreset",
                                         Context.MODE_PRIVATE
-                                    ).edit().putString("SelectedPreset", Utils.custom).apply()
+                                    ).edit { putString("SelectedPreset", Utils.custom) }
                                     band.value = tempBandValue[index].floatValue.roundToInt()
                                     musicViewModel.mediaBrowser?.sendCustomAction(
                                         ACTION_DSP_BAND,
@@ -375,12 +380,74 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                     context.getSharedPreferences(
                                         "SelectedPreset",
                                         Context.MODE_PRIVATE
-                                    ).edit().putString("SelectedPreset", key).apply()
+                                    ).edit { putString("SelectedPreset", key) }
                                 })
                         }
 
                     }
                 }
+            }
+        }
+        items(1) {
+            Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 1.dp, bottom = 10.dp)) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Equalizer Q: " + (Q.floatValue).toString(),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    OutlinedButton(
+                        enabled = musicViewModel.enableEqualizer.value,
+                        modifier = Modifier.padding(0.dp),
+                        onClick = {
+                            musicViewModel.Q.floatValue = Utils.Q
+                            Q.floatValue = Utils.Q
+                            val bundle = Bundle()
+                            bundle.putFloat("Q", musicViewModel.Q.floatValue)
+                            musicViewModel.mediaBrowser?.sendCustomAction(
+                                ACTION_CHANGE_Q,
+                                bundle,
+                                null
+                            )
+                        },
+                    ) {
+                        Text(
+                            text = stringResource(R.string.reset),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+                CustomSlider(
+                    enabled = musicViewModel.enableEqualizer.value,
+                    modifier = Modifier
+                        .semantics {
+                            contentDescription = "Q"
+                        },
+                    value = Q.floatValue,
+                    onValueChange = {
+                        Q.floatValue = (it * 10f).roundToInt() / 10f
+                    },
+                    valueRange = 0.7f..4.3f,
+                    steps = 36,
+                    onValueChangeFinished = {
+                        musicViewModel.Q.floatValue = Q.floatValue
+                        val bundle = Bundle()
+                        bundle.putFloat("Q", musicViewModel.Q.floatValue)
+                        musicViewModel.mediaBrowser?.sendCustomAction(
+                            ACTION_CHANGE_Q,
+                            bundle,
+                            null
+                        )
+                    },
+                )
+                Text(
+                    text = "Lower Q values will lead to a more pronounced effect, but with increased noise.",
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
             }
         }
     }
