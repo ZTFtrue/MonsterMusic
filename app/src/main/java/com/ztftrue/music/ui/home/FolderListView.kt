@@ -52,6 +52,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.edit
 import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
@@ -167,8 +168,9 @@ fun FolderItemView(
                         } else {
                             "$ignoreFolders,${item.id}"
                         }
-                        sharedPreferences.edit().putString("ignore_folders", newIgnoreFolders)
-                            .apply()
+                        sharedPreferences.edit {
+                            putString("ignore_folders", newIgnoreFolders)
+                        }
                         Toast.makeText(
                             context,
                             context.getString(R.string.ignored_this_folder_please_restart_the_app_to_take_effect),

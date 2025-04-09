@@ -366,7 +366,7 @@ fun MusicItemView(
         ) {
             if (selectStatus) {
                 Checkbox(
-                    checked = selectList?.contains(music) ?: false,
+                    checked = selectList?.contains(music) == true,
                     onCheckedChange = { v ->
                         if (v) {
                             selectList?.add(music)

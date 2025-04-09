@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
+import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.media3.common.Player
@@ -125,7 +126,7 @@ class MainActivity : ComponentActivity() {
                     if (playListPath.isNotEmpty()) {
                         modifyTrackFromM3U(
                             this@MainActivity,
-                            Uri.parse(uri),
+                            uri.toUri(),
                             playListPath,
                             arrayList,
                             tracksPath

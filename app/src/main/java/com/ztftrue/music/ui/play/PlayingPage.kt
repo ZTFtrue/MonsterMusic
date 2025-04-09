@@ -61,12 +61,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -1260,25 +1259,17 @@ fun PlayingPage(
                     }
 
                     key(Unit) {
-                        ScrollableTabRow(
+                        SecondaryScrollableTabRow(
                             selectedTabIndex = pagerTabState.currentPage,
                             modifier = Modifier.fillMaxWidth(),
-                            indicator = { tabPositions ->
-                                if (tabPositions.isNotEmpty()) {
-                                    TabRowDefaults.SecondaryIndicator(
-                                        Modifier
-                                            .height(3.0.dp)
-                                            .tabIndicatorOffset(tabPositions[pagerTabState.currentPage]),
-                                        height = 3.0.dp,
-                                        color = MaterialTheme.colorScheme.onBackground
-                                    )
-                                } else {
-                                    TabRowDefaults.SecondaryIndicator(
-                                        Modifier.height(3.0.dp),
-                                        height = 3.0.dp,
-                                        color = MaterialTheme.colorScheme.onBackground
-                                    )
-                                }
+                            indicator = {
+                                TabRowDefaults.SecondaryIndicator(
+                                    Modifier
+                                        .height(3.0.dp)
+                                        .tabIndicatorOffset(pagerTabState.currentPage),
+                                    height = 3.0.dp,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
                             },
                         ) {
                             playViewTab.forEachIndexed { index, item ->
@@ -1468,7 +1459,10 @@ fun PlayingPage(
                                                                     musicViewModel.musicQueue[qIndex]
                                                                 )
                                                             }
-                                                            if (musicViewModel.enableShuffleModel.value && music != null&& SharedPreferencesUtils.getAutoToTopRandom(context)) {
+                                                            if (musicViewModel.enableShuffleModel.value && music != null && SharedPreferencesUtils.getAutoToTopRandom(
+                                                                    context
+                                                                )
+                                                            ) {
                                                                 TracksUtils.currentPlayToTop(
                                                                     musicViewModel.mediaBrowser!!,
                                                                     musicViewModel.musicQueue,
