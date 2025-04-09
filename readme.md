@@ -44,11 +44,11 @@ Or download the latest APK from the [Releases Section](https://github.com/ZTFtru
 <img alt="songs" src="./Picture/songs.jpg" width="200px"/><img alt="songs" src="./Picture/songs.jpg" width="200px"/>
 <img alt="dic" src="./Picture/dic.png" width="200px"/><img alt="lyrics" src="./Picture/lyrics.png" width="200px"/><img alt="songs" src="./Picture/artist.png" width="200px"/>
 <img alt="songs" src="./Picture/genre.png" width="200px"/><img alt="songs" src="./Picture/index.jpg" width="200px"/>
-<img alt="songs" src="./Picture/matrix.png" width="200px"/><img alt="songs" src="./Picture/index.jpg" width="200px"/>
+<img alt="songs" src="./Picture/matrix.gif" width="200px"/>
 
-<video width="320px" controls>
+<!-- <video width="320px" controls>
   <source src="./Picture/MonstrMusicExample.mp4" type="video/mp4">
-</video>
+</video> -->
 
 Songs from: <https://helpguide.sony.net/high-res/sample1/v1/en/index.html>
 
