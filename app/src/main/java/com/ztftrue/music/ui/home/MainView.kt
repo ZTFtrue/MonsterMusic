@@ -3,17 +3,20 @@ package com.ztftrue.music.ui.home
 import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -66,7 +69,7 @@ fun MainView(
         tabList.addAll(musicViewModel.mainTabList)
     }
     val pagerState: PagerState = rememberPagerState(initialPage = 0, pageCount = { tabList.size })
-    LaunchedEffect(tabList,tabList.size) {
+    LaunchedEffect(tabList, tabList.size) {
         if (pagerState.currentPage >= tabList.size) {
             scope.launch {
                 pagerState.scrollToPage(0) // Reset to page 0 if currentPage is out of bounds
@@ -86,115 +89,115 @@ fun MainView(
             }
         }
     }
-    Surface(
-        modifier = Modifier
-            .fillMaxSize()
-            .semantics { contentDescription = context.getString(R.string.mainview) },
-        color = MaterialTheme.colorScheme.background
+    val paddingModifier = Modifier
+        .padding(
+            WindowInsets.navigationBars.only(WindowInsetsSides.Bottom).asPaddingValues()
+        )
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            DrawMenu(
+                pagerState,
+                drawerState,
+                navController,
+                musicViewModel,
+                activity
+            )
+        },
     ) {
-        ModalNavigationDrawer(
-            drawerState = drawerState,
-            drawerContent = {
-                DrawMenu(
-                    pagerState,
-                    drawerState,
-                    navController,
-                    musicViewModel,
-                    activity
+        Scaffold(
+            contentWindowInsets = WindowInsets.safeDrawing,
+            modifier = Modifier
+                .semantics {
+                    contentDescription =
+                        context.getString(R.string.this_is_main_page)
+                },
+            topBar = {
+                MainTopBar(musicViewModel, drawerState, pagerState, navController)
+            }, bottomBar = {
+                Bottom(
+                    musicViewModel, navController
                 )
-            },
-        ) {
-            Scaffold(modifier = Modifier.semantics {
-                contentDescription =
-                    context.getString(R.string.this_is_main_page)
-            },
-                topBar = {
-                    MainTopBar(musicViewModel, drawerState, pagerState, navController)
-                }, bottomBar = {
-                    Bottom(
-                        musicViewModel, navController
-                    )
-                }, content = {
-                    HorizontalPager(
-                        state = pagerState,
-                        beyondViewportPageCount = tabList.size,
-                        modifier = Modifier
-                            .padding(it)
-                            .semantics {
-                                context
-                                    .getString(
-                                        R.string.current_page_is,
-                                        if (musicViewModel.mainTabList.size > pagerState.currentPage) musicViewModel.mainTabList[pagerState.currentPage].name else ""
-                                    )
-                                    .also { contentDescription = it }
-                            },
-                    ) { page ->
-                        when (tabList[page].type) {
-                            PlayListType.Songs -> {
-                                TracksListView(
-                                    musicViewModel,
-                                    SongsPlayList,
-                                    musicViewModel.songsList,
-                                    showIndicator
+            }, content = {innerPadding->
+                HorizontalPager(
+                    state = pagerState,
+                    beyondViewportPageCount = tabList.size,
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .semantics {
+                            context
+                                .getString(
+                                    R.string.current_page_is,
+                                    if (musicViewModel.mainTabList.size > pagerState.currentPage) musicViewModel.mainTabList[pagerState.currentPage].name else ""
                                 )
-                            }
+                                .also { contentDescription = it }
+                        },
+                ) { page ->
+                    when (tabList[page].type) {
+                        PlayListType.Songs -> {
+                            TracksListView(
+                                musicViewModel,
+                                SongsPlayList,
+                                musicViewModel.songsList,
+                                showIndicator
+                            )
+                        }
 
-                            PlayListType.PlayLists -> {
-                                PlayListView(
-                                    Modifier.fillMaxHeight(),
-                                    musicViewModel,
-                                    navController,
-                                )
-                            }
+                        PlayListType.PlayLists -> {
+                            PlayListView(
+                                Modifier.fillMaxHeight(),
+                                musicViewModel,
+                                navController,
+                            )
+                        }
 
-                            PlayListType.Queue -> {
-                                TracksListView(
-                                    musicViewModel,
-                                    QueuePlayList,
-                                    tracksList = musicViewModel.musicQueue,
-                                    queueD
-                                )
-                            }
+                        PlayListType.Queue -> {
+                            TracksListView(
+                                musicViewModel,
+                                QueuePlayList,
+                                tracksList = musicViewModel.musicQueue,
+                                queueD
+                            )
+                        }
 
-                            PlayListType.Albums -> {
-                                AlbumGridView(
-                                    Modifier.fillMaxHeight(),
-                                    musicViewModel,
-                                    navController
-                                )
-                            }
+                        PlayListType.Albums -> {
+                            AlbumGridView(
+                                Modifier.fillMaxHeight(),
+                                musicViewModel,
+                                navController
+                            )
+                        }
 
-                            PlayListType.Artists -> {
-                                ArtistsGridView(
-                                    Modifier.fillMaxHeight(),
-                                    musicViewModel,
-                                    navController,
-                                )
-                            }
+                        PlayListType.Artists -> {
+                            ArtistsGridView(
+                                Modifier.fillMaxHeight(),
+                                musicViewModel,
+                                navController,
+                            )
+                        }
 
-                            PlayListType.Genres -> {
-                                GenreGridView(
-                                    Modifier.fillMaxHeight(),
-                                    musicViewModel,
-                                    navController,
-                                )
-                            }
+                        PlayListType.Genres -> {
+                            GenreGridView(
+                                Modifier.fillMaxHeight(),
+                                musicViewModel,
+                                navController,
+                            )
+                        }
 
-                            PlayListType.Folders -> {
-                                FolderListView(
-                                    Modifier.fillMaxHeight(),
-                                    musicViewModel,
-                                    navController,
-                                )
-                            }
+                        PlayListType.Folders -> {
+                            FolderListView(
+                                Modifier.fillMaxHeight(),
+                                musicViewModel,
+                                navController,
+                            )
+                        }
 
-                            else -> {
+                        else -> {
 
-                            }
                         }
                     }
-                })
-        }
+                }
+            })
     }
 
 }

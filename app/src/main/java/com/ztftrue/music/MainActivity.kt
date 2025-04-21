@@ -23,6 +23,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -44,6 +45,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.WindowCompat
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.play.ACTION_IS_CONNECTED
@@ -453,6 +455,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 //        val languageCode = SharedPreferencesUtils.getCurrentLanguage(context = this)
 //        if (!languageCode.isNullOrEmpty()) {
 //            val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(languageCode)
@@ -467,6 +470,8 @@ class MainActivity : ComponentActivity() {
 //        resources.updateConfiguration(config, resources.displayMetrics)
 //        val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags("xx-YY")
 //        AppCompatDelegate.setApplicationLocales(appLocale)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
         compatSplashScreen = installSplashScreen()
         compatSplashScreen?.setKeepOnScreenCondition { musicViewModel.mainTabList.isEmpty() }
@@ -502,6 +507,7 @@ class MainActivity : ComponentActivity() {
         } else {
             audioPermissionRequest.launch(Manifest.permission.READ_MEDIA_AUDIO)
         }
+
     }
 
     public override fun onStart() {

@@ -21,11 +21,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -62,7 +67,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SecondaryScrollableTabRow
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
@@ -181,6 +185,10 @@ fun PlayingPage(
     var repeatModel by remember { mutableIntStateOf(musicViewModel.repeatModel.intValue) }
     var music: MusicItem? = musicViewModel.currentPlay.value
     var showDeleteTip by remember { mutableStateOf(false) }
+    val paddingModifier = Modifier
+        .padding(
+            WindowInsets.navigationBars.only(WindowInsetsSides.Bottom).asPaddingValues()
+        )
     LaunchedEffect(music) {
         if (music == null) {
             navController.popBackStack()
@@ -1179,442 +1187,431 @@ fun PlayingPage(
         }
 
     }
-    Surface(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
-    ) {
 
-        Scaffold(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(),
-            topBar = {
-                Column(Modifier.fillMaxWidth()) {
-                    key(Unit, pagerTabState.currentPage) {
-                        TopBar(navController, musicViewModel, content = {
-                            if (playViewTab[pagerTabState.currentPage].id == CoverID) {
-                                IconButton(
-                                    modifier = Modifier.width(50.dp), onClick = {
-                                        visualizationPopupWindow = !visualizationPopupWindow
-                                    }) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Equalizer,
-                                        contentDescription = "Set music visualization",
-                                        modifier = Modifier
-                                            .width(24.dp)
-                                            .height(24.dp),
-                                        tint = MaterialTheme.colorScheme.onBackground
-                                    )
-                                }
-                            }
-                            if (playViewTab[pagerTabState.currentPage].id == LyricsID) {
-                                IconButton(
-                                    modifier = Modifier.width(50.dp), onClick = {
-                                        popupWindow = !popupWindow
-                                    }) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.FormatShapes,
-                                        contentDescription = "Set lyrics display format",
-                                        modifier = Modifier
-                                            .width(24.dp)
-                                            .height(24.dp),
-                                        tint = MaterialTheme.colorScheme.onBackground
-                                    )
-                                }
-                            }
+    Scaffold(
+        contentWindowInsets = WindowInsets.safeDrawing,
+        modifier = paddingModifier,
+        topBar = {
+            Column(Modifier.fillMaxWidth()) {
+                key(Unit, pagerTabState.currentPage) {
+                    TopBar(navController, musicViewModel, content = {
+                        if (playViewTab[pagerTabState.currentPage].id == CoverID) {
                             IconButton(
                                 modifier = Modifier.width(50.dp), onClick = {
-                                    showDialog = true
+                                    visualizationPopupWindow = !visualizationPopupWindow
                                 }) {
                                 Icon(
-                                    imageVector = Icons.Default.MoreVert,
-                                    contentDescription = "More operate",
+                                    imageVector = Icons.Outlined.Equalizer,
+                                    contentDescription = "Set music visualization",
                                     modifier = Modifier
-                                        .size(30.dp)
-                                        .clip(CircleShape),
+                                        .width(24.dp)
+                                        .height(24.dp),
                                     tint = MaterialTheme.colorScheme.onBackground
                                 )
                             }
-                        })
-                    }
-                    key(musicViewModel.currentPlay.value) {
-                        Column(
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(start = 10.dp, end = 10.dp)
-                        ) {
-                            musicViewModel.currentPlay.value?.let { it1 ->
-                                Text(
-                                    text = it1.name,
+                        }
+                        if (playViewTab[pagerTabState.currentPage].id == LyricsID) {
+                            IconButton(
+                                modifier = Modifier.width(50.dp), onClick = {
+                                    popupWindow = !popupWindow
+                                }) {
+                                Icon(
+                                    imageVector = Icons.Outlined.FormatShapes,
+                                    contentDescription = "Set lyrics display format",
                                     modifier = Modifier
-                                        .padding(0.dp)
-                                        .horizontalScroll(rememberScrollState(0))
-                                        .fillMaxWidth(),
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    fontSize = MaterialTheme.typography.titleSmall.fontSize
+                                        .width(24.dp)
+                                        .height(24.dp),
+                                    tint = MaterialTheme.colorScheme.onBackground
                                 )
                             }
                         }
-                    }
-
-                    key(Unit) {
-                        SecondaryScrollableTabRow(
-                            selectedTabIndex = pagerTabState.currentPage,
-                            modifier = Modifier.fillMaxWidth(),
-                            indicator = {
-                                TabRowDefaults.SecondaryIndicator(
-                                    Modifier
-                                        .height(3.0.dp)
-                                        .tabIndicatorOffset(pagerTabState.currentPage),
-                                    height = 3.0.dp,
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            },
-                        ) {
-                            playViewTab.forEachIndexed { index, item ->
-                                Tab(selected = pagerTabState.currentPage == index, onClick = {
-                                    coroutineScope.launch {
-                                        pagerTabState.animateScrollToPage(index)
-                                    }
-                                }, text = {
-                                    Text(
-                                        text = stringResource(
-                                            id = Utils.translateMap[item.name] ?: R.string.app_name
-                                        ),
-                                        color = MaterialTheme.colorScheme.onBackground,
-                                        fontSize = 14.sp,
-                                    )
-                                })
-                            }
+                        IconButton(
+                            modifier = Modifier.width(50.dp), onClick = {
+                                showDialog = true
+                            }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "More operate",
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clip(CircleShape),
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    })
+                }
+                key(musicViewModel.currentPlay.value) {
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(start = 10.dp, end = 10.dp)
+                    ) {
+                        musicViewModel.currentPlay.value?.let { it1 ->
+                            Text(
+                                text = it1.name,
+                                modifier = Modifier
+                                    .padding(0.dp)
+                                    .horizontalScroll(rememberScrollState(0))
+                                    .fillMaxWidth(),
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontSize = MaterialTheme.typography.titleSmall.fontSize
+                            )
                         }
                     }
                 }
-            },
-            content =
-                {
-                    Row {
 
-                        HorizontalPager(
-                            state = pagerTabState,
-                            beyondViewportPageCount = playViewTab.size,
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .padding(it)
-                                .pointerInput(Unit) {
-
-                                },
-                            userScrollEnabled = false
-                        ) { id ->
-                            when (playViewTab[id].id) {
-                                CoverID -> {
-                                    CoverView(musicViewModel)
+                key(Unit) {
+                    SecondaryScrollableTabRow(
+                        selectedTabIndex = pagerTabState.currentPage,
+                        modifier = Modifier.fillMaxWidth(),
+                        indicator = {
+                            TabRowDefaults.SecondaryIndicator(
+                                Modifier
+                                    .height(3.0.dp)
+                                    .tabIndicatorOffset(pagerTabState.currentPage),
+                                height = 3.0.dp,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        },
+                    ) {
+                        playViewTab.forEachIndexed { index, item ->
+                            Tab(selected = pagerTabState.currentPage == index, onClick = {
+                                coroutineScope.launch {
+                                    pagerTabState.animateScrollToPage(index)
                                 }
+                            }, text = {
+                                Text(
+                                    text = stringResource(
+                                        id = Utils.translateMap[item.name] ?: R.string.app_name
+                                    ),
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    fontSize = 14.sp,
+                                )
+                            })
+                        }
+                    }
+                }
+            }
+        },
+        content =
+            {
+                HorizontalPager(
+                    state = pagerTabState,
+                    beyondViewportPageCount = playViewTab.size,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(it)
+                        .pointerInput(Unit) {
 
-                                LyricsID -> {
-                                    LyricsView(musicViewModel)
-                                }
+                        },
+                    userScrollEnabled = false
+                ) { id ->
+                    when (playViewTab[id].id) {
+                        CoverID -> {
+                            CoverView(musicViewModel)
+                        }
 
-                                EqualizerID -> {
-                                    EqualizerView(musicViewModel)
-                                }
+                        LyricsID -> {
+                            LyricsView(musicViewModel)
+                        }
 
-                                EffectID -> {
-                                    EffectView(musicViewModel)
-                                }
-                            }
+                        EqualizerID -> {
+                            EqualizerView(musicViewModel)
+                        }
 
+                        EffectID -> {
+                            EffectView(musicViewModel)
                         }
                     }
 
-                },
-            bottomBar =
-                {
-                    Column(
-                        modifier = Modifier
-                            .padding(10.dp)
-                            .background(MaterialTheme.colorScheme.surface)
-                    ) {
-                        if (musicViewModel.currentDuration.longValue > 0) {
-                            CustomSlider(
-                                modifier = Modifier
-                                    .semantics { contentDescription = "Slider" }
+                }
+            },
+        bottomBar =
+            {
+                Column(
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .background(MaterialTheme.colorScheme.surface)
+                ) {
+                    if (musicViewModel.currentDuration.longValue > 0) {
+                        CustomSlider(
+                            modifier = Modifier
+                                .semantics { contentDescription = "Slider" }
 //                                .padding(start = 50.dp, end = 50.dp)
-                                    .motionEventSpy {
-                                        when (it.action) {
-                                            MotionEvent.ACTION_DOWN -> {
-                                                musicViewModel.sliderTouching = true
-                                            }
-
-                                            MotionEvent.ACTION_MOVE -> {
-                                            }
-
-                                            MotionEvent.ACTION_UP -> {
-                                            }
+                                .motionEventSpy {
+                                    when (it.action) {
+                                        MotionEvent.ACTION_DOWN -> {
+                                            musicViewModel.sliderTouching = true
                                         }
-                                    },
-                                value = musicViewModel.sliderPosition.floatValue,
-                                onValueChange = {
-                                    musicViewModel.sliderPosition.floatValue =
-                                        it.roundToLong().toFloat()
+
+                                        MotionEvent.ACTION_MOVE -> {
+                                        }
+
+                                        MotionEvent.ACTION_UP -> {
+                                        }
+                                    }
                                 },
-                                valueRange = 0f..musicViewModel.currentDuration.longValue.toFloat(),
-                                steps = 100,
-                                onValueChangeFinished = {
+                            value = musicViewModel.sliderPosition.floatValue,
+                            onValueChange = {
+                                musicViewModel.sliderPosition.floatValue =
+                                    it.roundToLong().toFloat()
+                            },
+                            valueRange = 0f..musicViewModel.currentDuration.longValue.toFloat(),
+                            steps = 100,
+                            onValueChangeFinished = {
+                                val bundle = Bundle()
+                                bundle.putLong(
+                                    "position",
+                                    musicViewModel.sliderPosition.floatValue.toLong()
+                                )
+                                musicViewModel.mediaBrowser?.sendCustomAction(
+                                    ACTION_SEEK_TO,
+                                    bundle,
+                                    null
+                                )
+                                musicViewModel.sliderTouching = false
+                            },
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = Utils.formatTime(musicViewModel.sliderPosition.floatValue.toLong()),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Text(
+                                text = Utils.formatTime(musicViewModel.currentDuration.longValue),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    } else {
+                        if (musicViewModel.currentPlay.value != null) {
+                            Text(
+                                text = stringResource(R.string.get_duration_failed),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
+                    ConstraintLayout(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp),
+                    ) {
+                        val (playIndicator, playIndicator2, playIndicator3) = createRefs()
+                        Row(
+                            modifier = Modifier
+                                .constrainAs(playIndicator) {
+                                    bottom.linkTo(anchor = parent.bottom, margin = 0.dp)
+                                    start.linkTo(anchor = parent.start, margin = 0.dp)
+                                    top.linkTo(anchor = parent.top, margin = 0.dp)
+                                }
+                                .height(60.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            key(musicViewModel.enableShuffleModel.value) {
+                                IconButton(onClick = {
+                                    musicViewModel.enableShuffleModel.value =
+                                        !musicViewModel.enableShuffleModel.value
                                     val bundle = Bundle()
-                                    bundle.putLong(
-                                        "position",
-                                        musicViewModel.sliderPosition.floatValue.toLong()
+                                    bundle.putBoolean(
+                                        "enable",
+                                        musicViewModel.enableShuffleModel.value
                                     )
                                     musicViewModel.mediaBrowser?.sendCustomAction(
-                                        ACTION_SEEK_TO,
+                                        ACTION_SWITCH_SHUFFLE,
                                         bundle,
-                                        null
-                                    )
-                                    musicViewModel.sliderTouching = false
-                                },
-                            )
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = Utils.formatTime(musicViewModel.sliderPosition.floatValue.toLong()),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                                Text(
-                                    text = Utils.formatTime(musicViewModel.currentDuration.longValue),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            }
-                        } else {
-                            if (musicViewModel.currentPlay.value != null) {
-                                Text(
-                                    text = stringResource(R.string.get_duration_failed),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            }
-                        }
-                        ConstraintLayout(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(60.dp),
-                        ) {
-                            val (playIndicator, playIndicator2, playIndicator3) = createRefs()
-                            Row(
-                                modifier = Modifier
-                                    .constrainAs(playIndicator) {
-                                        bottom.linkTo(anchor = parent.bottom, margin = 0.dp)
-                                        start.linkTo(anchor = parent.start, margin = 0.dp)
-                                        top.linkTo(anchor = parent.top, margin = 0.dp)
-                                    }
-                                    .height(60.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                key(musicViewModel.enableShuffleModel.value) {
-                                    IconButton(onClick = {
-                                        musicViewModel.enableShuffleModel.value =
-                                            !musicViewModel.enableShuffleModel.value
-                                        val bundle = Bundle()
-                                        bundle.putBoolean(
-                                            "enable",
-                                            musicViewModel.enableShuffleModel.value
-                                        )
-                                        musicViewModel.mediaBrowser?.sendCustomAction(
-                                            ACTION_SWITCH_SHUFFLE,
-                                            bundle,
-                                            object : MediaBrowserCompat.CustomActionCallback() {
-                                                override fun onResult(
-                                                    action: String?,
-                                                    extras: Bundle?,
-                                                    resultData: Bundle?
-                                                ) {
-                                                    super.onResult(action, extras, resultData)
-                                                    if (ACTION_SWITCH_SHUFFLE == action && resultData != null) {
-                                                        val qList =
-                                                            resultData.getParcelableArrayList<MusicItem>(
-                                                                "list"
+                                        object : MediaBrowserCompat.CustomActionCallback() {
+                                            override fun onResult(
+                                                action: String?,
+                                                extras: Bundle?,
+                                                resultData: Bundle?
+                                            ) {
+                                                super.onResult(action, extras, resultData)
+                                                if (ACTION_SWITCH_SHUFFLE == action && resultData != null) {
+                                                    val qList =
+                                                        resultData.getParcelableArrayList<MusicItem>(
+                                                            "list"
+                                                        )
+                                                    val qIndex = resultData.getInt("index", -1)
+                                                    if (qList != null && qIndex != -1) {
+                                                        musicViewModel.musicQueue.clear()
+                                                        musicViewModel.musicQueue.addAll(qList)
+                                                        if (musicViewModel.currentPlayQueueIndex.intValue == -1) {
+                                                            musicViewModel.currentPlayQueueIndex.intValue =
+                                                                qIndex
+                                                            musicViewModel.currentPlay.value =
+                                                                musicViewModel.musicQueue[qIndex]
+                                                            musicViewModel.currentCaptionList.clear()
+                                                            musicViewModel.currentMusicCover.value =
+                                                                null
+                                                            musicViewModel.currentPlay.value =
+                                                                musicViewModel.musicQueue[qIndex]
+                                                            musicViewModel.sliderPosition.floatValue =
+                                                                0f
+                                                            musicViewModel.currentDuration.longValue =
+                                                                musicViewModel.currentPlay.value?.duration
+                                                                    ?: 0
+                                                            musicViewModel.dealLyrics(
+                                                                context,
+                                                                musicViewModel.musicQueue[qIndex]
                                                             )
-                                                        val qIndex = resultData.getInt("index", -1)
-                                                        if (qList != null && qIndex != -1) {
-                                                            musicViewModel.musicQueue.clear()
-                                                            musicViewModel.musicQueue.addAll(qList)
-                                                            if (musicViewModel.currentPlayQueueIndex.intValue == -1) {
-                                                                musicViewModel.currentPlayQueueIndex.intValue =
-                                                                    qIndex
-                                                                musicViewModel.currentPlay.value =
-                                                                    musicViewModel.musicQueue[qIndex]
-                                                                musicViewModel.currentCaptionList.clear()
-                                                                musicViewModel.currentMusicCover.value =
-                                                                    null
-                                                                musicViewModel.currentPlay.value =
-                                                                    musicViewModel.musicQueue[qIndex]
-                                                                musicViewModel.sliderPosition.floatValue =
-                                                                    0f
-                                                                musicViewModel.currentDuration.longValue =
-                                                                    musicViewModel.currentPlay.value?.duration
-                                                                        ?: 0
-                                                                musicViewModel.dealLyrics(
-                                                                    context,
-                                                                    musicViewModel.musicQueue[qIndex]
-                                                                )
-                                                            }
-                                                            if (musicViewModel.enableShuffleModel.value && music != null && SharedPreferencesUtils.getAutoToTopRandom(
-                                                                    context
-                                                                )
-                                                            ) {
-                                                                TracksUtils.currentPlayToTop(
-                                                                    musicViewModel.mediaBrowser!!,
-                                                                    musicViewModel.musicQueue,
-                                                                    music,
-                                                                    qIndex
-                                                                )
-                                                            }
-
                                                         }
+                                                        if (musicViewModel.enableShuffleModel.value && music != null && SharedPreferencesUtils.getAutoToTopRandom(
+                                                                context
+                                                            )
+                                                        ) {
+                                                            TracksUtils.currentPlayToTop(
+                                                                musicViewModel.mediaBrowser!!,
+                                                                musicViewModel.musicQueue,
+                                                                music,
+                                                                qIndex
+                                                            )
+                                                        }
+
                                                     }
                                                 }
                                             }
+                                        }
+                                    )
+                                }) {
+                                    Icon(
+                                        imageVector = if (musicViewModel.enableShuffleModel.value) Icons.Outlined.Shuffle else Icons.Outlined.Shuffle,
+                                        contentDescription = "shuffle model",
+                                        modifier = Modifier
+                                            .width(50.dp)
+                                            .height(50.dp)
+                                            .padding(5.dp),
+                                        tint = if (musicViewModel.enableShuffleModel.value) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(
+                                            alpha = 0.5f
                                         )
-                                    }) {
-                                        Icon(
-                                            imageVector = if (musicViewModel.enableShuffleModel.value) Icons.Outlined.Shuffle else Icons.Outlined.Shuffle,
-                                            contentDescription = "shuffle model",
-                                            modifier = Modifier
-                                                .width(50.dp)
-                                                .height(50.dp)
-                                                .padding(5.dp),
-                                            tint = if (musicViewModel.enableShuffleModel.value) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(
-                                                alpha = 0.5f
-                                            )
-                                        )
-                                    }
+                                    )
                                 }
                             }
+                        }
 
-                            Row(
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.constrainAs(playIndicator2) {
-                                    bottom.linkTo(anchor = parent.bottom, margin = 0.dp)
-                                    start.linkTo(anchor = parent.start, margin = 0.dp)
-                                    end.linkTo(anchor = parent.end, margin = 0.dp)
-                                    top.linkTo(anchor = parent.top, margin = 0.dp)
-                                }
-                            ) {
-                                Image(
-                                    painter = painterResource(R.drawable.play_previous_song),
-                                    contentDescription = "play previous song",
-                                    modifier = Modifier
-                                        .clickable {
-                                            musicViewModel.mediaController?.transportControls?.skipToPrevious()
-                                        }
-                                        .width(50.dp)
-                                        .height(50.dp)
-                                        .padding(10.dp),
-                                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
-                                )
-                                Image(
-                                    painter = painterResource(
-                                        if (musicViewModel.playStatus.value) {
-                                            R.drawable.pause
-                                        } else {
-                                            R.drawable.play
-                                        }
-                                    ),
-                                    contentDescription = "Pause",
-                                    modifier = Modifier
-                                        .clickable {
-                                            val pbState =
-                                                musicViewModel.mediaController?.playbackState?.state
-                                            if (pbState == PlaybackStateCompat.STATE_PLAYING) {
-                                                musicViewModel.mediaController?.transportControls?.pause()
-                                            } else {
-                                                musicViewModel.mediaController?.transportControls?.play()
-                                            }
-                                        }
-                                        .width(60.dp)
-                                        .height(60.dp)
-                                        .padding(5.dp),
-                                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
-                                )
-                                Image(
-                                    painter = painterResource(R.drawable.play_next_song),
-                                    contentDescription = "Play next song",
-                                    modifier = Modifier
-                                        .clickable {
-                                            musicViewModel.mediaController?.transportControls?.skipToNext()
-                                        }
-                                        .width(50.dp)
-                                        .height(50.dp)
-                                        .padding(10.dp),
-                                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
-                                )
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.constrainAs(playIndicator2) {
+                                bottom.linkTo(anchor = parent.bottom, margin = 0.dp)
+                                start.linkTo(anchor = parent.start, margin = 0.dp)
+                                end.linkTo(anchor = parent.end, margin = 0.dp)
+                                top.linkTo(anchor = parent.top, margin = 0.dp)
                             }
-                            Icon(
-                                imageVector = when (repeatModel) {
-
-                                    Player.REPEAT_MODE_ALL -> {
-                                        Icons.Outlined.Repeat
-                                    }
-
-                                    Player.REPEAT_MODE_ONE -> {
-                                        Icons.Outlined.RepeatOne
-                                    }
-
-                                    else -> {
-                                        Icons.Outlined.Repeat
-                                    }
-                                },
-                                contentDescription = "Repeat model",
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.play_previous_song),
+                                contentDescription = "play previous song",
                                 modifier = Modifier
                                     .clickable {
-                                        when (repeatModel) {
-                                            Player.REPEAT_MODE_ALL -> {
-                                                repeatModel = Player.REPEAT_MODE_ONE
-                                                musicViewModel.repeatModel.intValue =
-                                                    Player.REPEAT_MODE_ONE
-                                                musicViewModel.mediaController?.transportControls?.setRepeatMode(
-                                                    PlaybackStateCompat.REPEAT_MODE_ONE
-                                                )
-                                            }
-
-                                            Player.REPEAT_MODE_ONE -> {
-                                                repeatModel = Player.REPEAT_MODE_OFF
-                                                musicViewModel.repeatModel.intValue =
-                                                    Player.REPEAT_MODE_OFF
-                                                musicViewModel.mediaController?.transportControls?.setRepeatMode(
-                                                    PlaybackStateCompat.REPEAT_MODE_NONE
-                                                )
-                                            }
-
-                                            else -> {
-                                                repeatModel = Player.REPEAT_MODE_ALL
-                                                musicViewModel.repeatModel.intValue =
-                                                    Player.REPEAT_MODE_ALL
-                                                musicViewModel.mediaController?.transportControls?.setRepeatMode(
-                                                    PlaybackStateCompat.REPEAT_MODE_ALL
-                                                )
-                                            }
-                                        }
+                                        musicViewModel.mediaController?.transportControls?.skipToPrevious()
                                     }
                                     .width(50.dp)
                                     .height(50.dp)
-                                    .padding(10.dp)
-                                    .constrainAs(playIndicator3) {
-                                        bottom.linkTo(anchor = parent.bottom, margin = 0.dp)
-                                        end.linkTo(anchor = parent.end, margin = 0.dp)
-                                        top.linkTo(anchor = parent.top, margin = 0.dp)
-                                    },
-                                tint = if (repeatModel == Player.REPEAT_MODE_OFF) MaterialTheme.colorScheme.onBackground.copy(
-                                    alpha = 0.5f
-                                ) else MaterialTheme.colorScheme.onBackground
+                                    .padding(10.dp),
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                            )
+                            Image(
+                                painter = painterResource(
+                                    if (musicViewModel.playStatus.value) {
+                                        R.drawable.pause
+                                    } else {
+                                        R.drawable.play
+                                    }
+                                ),
+                                contentDescription = "Pause",
+                                modifier = Modifier
+                                    .clickable {
+                                        val pbState =
+                                            musicViewModel.mediaController?.playbackState?.state
+                                        if (pbState == PlaybackStateCompat.STATE_PLAYING) {
+                                            musicViewModel.mediaController?.transportControls?.pause()
+                                        } else {
+                                            musicViewModel.mediaController?.transportControls?.play()
+                                        }
+                                    }
+                                    .width(60.dp)
+                                    .height(60.dp)
+                                    .padding(5.dp),
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                            )
+                            Image(
+                                painter = painterResource(R.drawable.play_next_song),
+                                contentDescription = "Play next song",
+                                modifier = Modifier
+                                    .clickable {
+                                        musicViewModel.mediaController?.transportControls?.skipToNext()
+                                    }
+                                    .width(50.dp)
+                                    .height(50.dp)
+                                    .padding(10.dp),
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                             )
                         }
+                        Icon(
+                            imageVector = when (repeatModel) {
+
+                                Player.REPEAT_MODE_ALL -> {
+                                    Icons.Outlined.Repeat
+                                }
+
+                                Player.REPEAT_MODE_ONE -> {
+                                    Icons.Outlined.RepeatOne
+                                }
+
+                                else -> {
+                                    Icons.Outlined.Repeat
+                                }
+                            },
+                            contentDescription = "Repeat model",
+                            modifier = Modifier
+                                .clickable {
+                                    when (repeatModel) {
+                                        Player.REPEAT_MODE_ALL -> {
+                                            repeatModel = Player.REPEAT_MODE_ONE
+                                            musicViewModel.repeatModel.intValue =
+                                                Player.REPEAT_MODE_ONE
+                                            musicViewModel.mediaController?.transportControls?.setRepeatMode(
+                                                PlaybackStateCompat.REPEAT_MODE_ONE
+                                            )
+                                        }
+
+                                        Player.REPEAT_MODE_ONE -> {
+                                            repeatModel = Player.REPEAT_MODE_OFF
+                                            musicViewModel.repeatModel.intValue =
+                                                Player.REPEAT_MODE_OFF
+                                            musicViewModel.mediaController?.transportControls?.setRepeatMode(
+                                                PlaybackStateCompat.REPEAT_MODE_NONE
+                                            )
+                                        }
+
+                                        else -> {
+                                            repeatModel = Player.REPEAT_MODE_ALL
+                                            musicViewModel.repeatModel.intValue =
+                                                Player.REPEAT_MODE_ALL
+                                            musicViewModel.mediaController?.transportControls?.setRepeatMode(
+                                                PlaybackStateCompat.REPEAT_MODE_ALL
+                                            )
+                                        }
+                                    }
+                                }
+                                .width(50.dp)
+                                .height(50.dp)
+                                .padding(10.dp)
+                                .constrainAs(playIndicator3) {
+                                    bottom.linkTo(anchor = parent.bottom, margin = 0.dp)
+                                    end.linkTo(anchor = parent.end, margin = 0.dp)
+                                    top.linkTo(anchor = parent.top, margin = 0.dp)
+                                },
+                            tint = if (repeatModel == Player.REPEAT_MODE_OFF) MaterialTheme.colorScheme.onBackground.copy(
+                                alpha = 0.5f
+                            ) else MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
-        )
-    }
+            }
+    )
 
 }
 

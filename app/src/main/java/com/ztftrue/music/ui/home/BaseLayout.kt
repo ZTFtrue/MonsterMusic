@@ -1,9 +1,13 @@
 package com.ztftrue.music.ui.home
 
+import androidx.activity.compose.LocalActivity
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.key
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -27,16 +31,22 @@ fun BaseLayout(
     musicViewModel: MusicViewModel,
     activity: MainActivity
 ) {
+    val window = LocalActivity.current!!.window
+    WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars =
+        MaterialTheme.colorScheme.background.luminance() > 0.5
+//    window.navigationBarColor = MaterialTheme.colorScheme.background.toArgb()
+
     val navController: NavHostController = rememberNavController()
     musicViewModel.navController = navController
     val context = LocalContext.current
-    CompositionLocalProvider(LocalContext provides context){
+
+    CompositionLocalProvider(LocalContext provides context) {
         NavHost(
             navController = navController, startDestination = Router.MainView.route,
         ) {
             composable(route = Router.MainView.route) {
                 key(Unit) {
-                    if(musicViewModel.mainTabList.isNotEmpty()){
+                    if (musicViewModel.mainTabList.isNotEmpty()) {
                         MainView(musicViewModel, activity, navController)
                     }
                 }

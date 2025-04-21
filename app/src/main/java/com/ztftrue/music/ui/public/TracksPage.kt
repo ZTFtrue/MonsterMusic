@@ -958,8 +958,6 @@ fun TracksListPage(
                     }
                 }
             }
-
-
         },
         bottomBar = { Bottom(musicViewModel, navController) },
         floatingActionButton = {},

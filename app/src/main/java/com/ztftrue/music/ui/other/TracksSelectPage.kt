@@ -3,14 +3,14 @@ package com.ztftrue.music.ui.other
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -18,11 +18,12 @@ import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.outlined.CheckBox
 import androidx.compose.material.icons.outlined.CheckBoxOutlineBlank
 import androidx.compose.material.icons.outlined.IndeterminateCheckBox
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
@@ -50,6 +51,7 @@ import com.ztftrue.music.utils.trackManager.PlaylistManager
 /**
  * show all music of playlist
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @UnstableApi
 @Composable
 fun TracksSelectPage(
@@ -91,112 +93,114 @@ fun TracksSelectPage(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets.safeDrawing,
         modifier = Modifier.padding(all = 0.dp),
         topBar = {
-            Column {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            TopAppBar(
+                navigationIcon = {
                     BackButton(navController)
-                    Row {
-                        IconButton(onClick = {
-                            if (selectList.size == musicList.size) {
-                                selectList.clear()
-                            } else if (selectList.size > 0) {
-                                selectList.clear()
-                                selectList.addAll(musicList)
-                            } else {
-                                selectList.addAll(musicList)
-                            }
-                        }) {
-                            Icon(
-                                imageVector = if (selectList.size == musicList.size) {
-                                    Icons.Outlined.CheckBox
-                                } else if (selectList.size > 0) {
-                                    Icons.Outlined.IndeterminateCheckBox
+                },
+                title = {},
+                actions = {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        BackButton(navController)
+                        Row {
+                            IconButton(onClick = {
+                                if (selectList.size == musicList.size) {
+                                    selectList.clear()
+                                } else if (selectList.isNotEmpty()) {
+                                    selectList.clear()
+                                    selectList.addAll(musicList)
                                 } else {
-                                    Icons.Outlined.CheckBoxOutlineBlank
-                                },
-                                contentDescription = "Operate More, will open dialog",
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .clip(CircleShape),
-                                tint = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                        IconButton(onClick = {
-                            if (playListId == -1L) {// create
-                                if (!playListName.isNullOrEmpty()) {
-                                    val id = PlaylistManager.createPlaylist(context, playListName)
-                                    if (id != -1L) {
+                                    selectList.addAll(musicList)
+                                }
+                            }) {
+                                Icon(
+                                    imageVector = if (selectList.size == musicList.size) {
+                                        Icons.Outlined.CheckBox
+                                    } else if (selectList.isNotEmpty()) {
+                                        Icons.Outlined.IndeterminateCheckBox
+                                    } else {
+                                        Icons.Outlined.CheckBoxOutlineBlank
+                                    },
+                                    contentDescription = "Operate More, will open dialog",
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .clip(CircleShape),
+                                    tint = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                            IconButton(onClick = {
+                                if (playListId == -1L) {// create
+                                    if (!playListName.isNullOrEmpty()) {
+                                        val id = PlaylistManager.createPlaylist(context, playListName)
+                                        if (id != -1L) {
+                                            val ids = ArrayList<Long>(selectList.size)
+                                            selectList.forEach { ids.add(it.id) }
+                                            PlaylistManager.addMusicsToPlaylist(context, id, ids)
+                                            selectList.clear()
+                                            musicViewModel.mediaBrowser?.sendCustomAction(
+                                                ACTION_PlayLIST_CHANGE, null, null
+                                            )
+                                            navController.popBackStack()
+
+                                        } else {
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(R.string.create_failed),
+                                                Toast.LENGTH_SHORT
+                                            )
+                                                .show()
+                                        }
+                                    }
+                                } else {
+                                    if (playListId != null) {
                                         val ids = ArrayList<Long>(selectList.size)
                                         selectList.forEach { ids.add(it.id) }
-                                        PlaylistManager.addMusicsToPlaylist(context, id, ids)
-                                        selectList.clear()
+                                        if (PlaylistManager.addMusicsToPlaylist(
+                                                context,
+                                                playListId,
+                                                ids
+                                            )
+                                        ) {
+                                            selectList.clear()
+                                        }
                                         musicViewModel.mediaBrowser?.sendCustomAction(
                                             ACTION_PlayLIST_CHANGE, null, null
                                         )
                                         navController.popBackStack()
-
-                                    } else {
-                                        Toast.makeText(
-                                            context,
-                                            context.getString(R.string.create_failed),
-                                            Toast.LENGTH_SHORT
-                                        )
-                                            .show()
                                     }
                                 }
-                            } else {
-                                if (playListId != null) {
-                                    val ids = ArrayList<Long>(selectList.size)
-                                    selectList.forEach { ids.add(it.id) }
-                                    if (PlaylistManager.addMusicsToPlaylist(
-                                            context,
-                                            playListId,
-                                            ids
-                                        )
-                                    ) {
-                                        selectList.clear()
-                                    }
-                                    musicViewModel.mediaBrowser?.sendCustomAction(
-                                        ACTION_PlayLIST_CHANGE, null, null
-                                    )
-                                    navController.popBackStack()
-                                }
+                            }) {
+                                Icon(
+                                    Icons.Default.Done,
+                                    contentDescription = "Save playlist",
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .clip(CircleShape),
+                                    tint = MaterialTheme.colorScheme.onBackground
+                                )
                             }
-                        }) {
-                            Icon(
-                                Icons.Default.Done,
-                                contentDescription = "Save playlist",
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .clip(CircleShape),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
                         }
-                    }
 
+                    }
                 }
-            }
+            )
+
         },
         bottomBar = { },
         floatingActionButton = {},
         content = {
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(it)
             ) {
-                HorizontalDivider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .background(color = MaterialTheme.colorScheme.onBackground)
-                )
                 TracksListView(
                     musicViewModel,
                     AnyListBase(0, PlayListType.None), musicList, showIndicator = showIndicator,
