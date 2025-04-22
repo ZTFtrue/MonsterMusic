@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -106,7 +105,6 @@ fun MainView(
         },
     ) {
         Scaffold(
-            contentWindowInsets = WindowInsets.safeDrawing,
             modifier = Modifier
                 .semantics {
                     contentDescription =

@@ -45,7 +45,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.WindowCompat
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.play.ACTION_IS_CONNECTED
@@ -470,7 +469,7 @@ class MainActivity : ComponentActivity() {
 //        resources.updateConfiguration(config, resources.displayMetrics)
 //        val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags("xx-YY")
 //        AppCompatDelegate.setApplicationLocales(appLocale)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
         compatSplashScreen = installSplashScreen()

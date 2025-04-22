@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -58,6 +57,7 @@ import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material.icons.outlined.SwipeVertical
 import androidx.compose.material.icons.outlined.TextDecrease
 import androidx.compose.material.icons.outlined.TextIncrease
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -91,6 +91,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -1189,8 +1190,6 @@ fun PlayingPage(
     }
 
     Scaffold(
-        contentWindowInsets = WindowInsets.safeDrawing,
-        modifier = paddingModifier,
         topBar = {
             Column(Modifier.fillMaxWidth()) {
                 key(Unit, pagerTabState.currentPage) {
@@ -1328,288 +1327,309 @@ fun PlayingPage(
             },
         bottomBar =
             {
-                Column(
+                BottomAppBar(
                     modifier = Modifier
-                        .padding(10.dp)
-                        .background(MaterialTheme.colorScheme.surface)
-                ) {
-                    if (musicViewModel.currentDuration.longValue > 0) {
-                        CustomSlider(
-                            modifier = Modifier
-                                .semantics { contentDescription = "Slider" }
-//                                .padding(start = 50.dp, end = 50.dp)
-                                .motionEventSpy {
-                                    when (it.action) {
-                                        MotionEvent.ACTION_DOWN -> {
-                                            musicViewModel.sliderTouching = true
-                                        }
-
-                                        MotionEvent.ACTION_MOVE -> {
-                                        }
-
-                                        MotionEvent.ACTION_UP -> {
-                                        }
-                                    }
-                                },
-                            value = musicViewModel.sliderPosition.floatValue,
-                            onValueChange = {
-                                musicViewModel.sliderPosition.floatValue =
-                                    it.roundToLong().toFloat()
-                            },
-                            valueRange = 0f..musicViewModel.currentDuration.longValue.toFloat(),
-                            steps = 100,
-                            onValueChangeFinished = {
-                                val bundle = Bundle()
-                                bundle.putLong(
-                                    "position",
-                                    musicViewModel.sliderPosition.floatValue.toLong()
-                                )
-                                musicViewModel.mediaBrowser?.sendCustomAction(
-                                    ACTION_SEEK_TO,
-                                    bundle,
-                                    null
-                                )
-                                musicViewModel.sliderTouching = false
-                            },
+                        .fillMaxWidth()
+                        .height(
+                            (150.dp + WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)
+                                .asPaddingValues().calculateBottomPadding())
                         )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = Utils.formatTime(musicViewModel.sliderPosition.floatValue.toLong()),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            Text(
-                                text = Utils.formatTime(musicViewModel.currentDuration.longValue),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                    } else {
-                        if (musicViewModel.currentPlay.value != null) {
-                            Text(
-                                text = stringResource(R.string.get_duration_failed),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                    }
-                    ConstraintLayout(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(60.dp),
-                    ) {
-                        val (playIndicator, playIndicator2, playIndicator3) = createRefs()
-                        Row(
+                        .padding(0.dp), // padding 为 0
+                    containerColor = Color.Transparent, // 透明背景
+                    tonalElevation = 0.dp, // 阴影去掉（可选）
+                    contentPadding = PaddingValues(0.dp), // 内容也没有内边距
+                    actions = {
+                        Column(
                             modifier = Modifier
-                                .constrainAs(playIndicator) {
-                                    bottom.linkTo(anchor = parent.bottom, margin = 0.dp)
-                                    start.linkTo(anchor = parent.start, margin = 0.dp)
-                                    top.linkTo(anchor = parent.top, margin = 0.dp)
-                                }
-                                .height(60.dp),
-                            verticalAlignment = Alignment.CenterVertically,
+                                .padding(10.dp)
+                                .height(
+                                    (150.dp + WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)
+                                        .asPaddingValues().calculateBottomPadding())
+                                )
+                                .background(MaterialTheme.colorScheme.surface)
                         ) {
-                            key(musicViewModel.enableShuffleModel.value) {
-                                IconButton(onClick = {
-                                    musicViewModel.enableShuffleModel.value =
-                                        !musicViewModel.enableShuffleModel.value
-                                    val bundle = Bundle()
-                                    bundle.putBoolean(
-                                        "enable",
-                                        musicViewModel.enableShuffleModel.value
-                                    )
-                                    musicViewModel.mediaBrowser?.sendCustomAction(
-                                        ACTION_SWITCH_SHUFFLE,
-                                        bundle,
-                                        object : MediaBrowserCompat.CustomActionCallback() {
-                                            override fun onResult(
-                                                action: String?,
-                                                extras: Bundle?,
-                                                resultData: Bundle?
-                                            ) {
-                                                super.onResult(action, extras, resultData)
-                                                if (ACTION_SWITCH_SHUFFLE == action && resultData != null) {
-                                                    val qList =
-                                                        resultData.getParcelableArrayList<MusicItem>(
-                                                            "list"
-                                                        )
-                                                    val qIndex = resultData.getInt("index", -1)
-                                                    if (qList != null && qIndex != -1) {
-                                                        musicViewModel.musicQueue.clear()
-                                                        musicViewModel.musicQueue.addAll(qList)
-                                                        if (musicViewModel.currentPlayQueueIndex.intValue == -1) {
-                                                            musicViewModel.currentPlayQueueIndex.intValue =
-                                                                qIndex
-                                                            musicViewModel.currentPlay.value =
-                                                                musicViewModel.musicQueue[qIndex]
-                                                            musicViewModel.currentCaptionList.clear()
-                                                            musicViewModel.currentMusicCover.value =
-                                                                null
-                                                            musicViewModel.currentPlay.value =
-                                                                musicViewModel.musicQueue[qIndex]
-                                                            musicViewModel.sliderPosition.floatValue =
-                                                                0f
-                                                            musicViewModel.currentDuration.longValue =
-                                                                musicViewModel.currentPlay.value?.duration
-                                                                    ?: 0
-                                                            musicViewModel.dealLyrics(
-                                                                context,
-                                                                musicViewModel.musicQueue[qIndex]
-                                                            )
-                                                        }
-                                                        if (musicViewModel.enableShuffleModel.value && music != null && SharedPreferencesUtils.getAutoToTopRandom(
-                                                                context
-                                                            )
-                                                        ) {
-                                                            TracksUtils.currentPlayToTop(
-                                                                musicViewModel.mediaBrowser!!,
-                                                                musicViewModel.musicQueue,
-                                                                music,
-                                                                qIndex
-                                                            )
-                                                        }
+                            if (musicViewModel.currentDuration.longValue > 0) {
+                                CustomSlider(
+                                    modifier = Modifier
+                                        .semantics { contentDescription = "Slider" }
+                                        .motionEventSpy {
+                                            when (it.action) {
+                                                MotionEvent.ACTION_DOWN -> {
+                                                    musicViewModel.sliderTouching = true
+                                                }
 
-                                                    }
+                                                MotionEvent.ACTION_MOVE -> {
+                                                }
+
+                                                MotionEvent.ACTION_UP -> {
                                                 }
                                             }
-                                        }
+                                        },
+                                    value = musicViewModel.sliderPosition.floatValue,
+                                    onValueChange = {
+                                        musicViewModel.sliderPosition.floatValue =
+                                            it.roundToLong().toFloat()
+                                    },
+                                    valueRange = 0f..musicViewModel.currentDuration.longValue.toFloat(),
+                                    steps = 100,
+                                    onValueChangeFinished = {
+                                        val bundle = Bundle()
+                                        bundle.putLong(
+                                            "position",
+                                            musicViewModel.sliderPosition.floatValue.toLong()
+                                        )
+                                        musicViewModel.mediaBrowser?.sendCustomAction(
+                                            ACTION_SEEK_TO,
+                                            bundle,
+                                            null
+                                        )
+                                        musicViewModel.sliderTouching = false
+                                    },
+                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = Utils.formatTime(musicViewModel.sliderPosition.floatValue.toLong()),
+                                        color = MaterialTheme.colorScheme.onBackground
                                     )
-                                }) {
-                                    Icon(
-                                        imageVector = if (musicViewModel.enableShuffleModel.value) Icons.Outlined.Shuffle else Icons.Outlined.Shuffle,
-                                        contentDescription = "shuffle model",
+                                    Text(
+                                        text = Utils.formatTime(musicViewModel.currentDuration.longValue),
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                            } else {
+                                if (musicViewModel.currentPlay.value != null) {
+                                    Text(
+                                        text = stringResource(R.string.get_duration_failed),
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                            }
+                            ConstraintLayout(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(60.dp),
+                            ) {
+                                val (playIndicator, playIndicator2, playIndicator3) = createRefs()
+                                Row(
+                                    modifier = Modifier
+                                        .constrainAs(playIndicator) {
+                                            bottom.linkTo(anchor = parent.bottom, margin = 0.dp)
+                                            start.linkTo(anchor = parent.start, margin = 0.dp)
+                                            top.linkTo(anchor = parent.top, margin = 0.dp)
+                                        }
+                                        .height(60.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    key(musicViewModel.enableShuffleModel.value) {
+                                        IconButton(onClick = {
+                                            musicViewModel.enableShuffleModel.value =
+                                                !musicViewModel.enableShuffleModel.value
+                                            val bundle = Bundle()
+                                            bundle.putBoolean(
+                                                "enable",
+                                                musicViewModel.enableShuffleModel.value
+                                            )
+                                            musicViewModel.mediaBrowser?.sendCustomAction(
+                                                ACTION_SWITCH_SHUFFLE,
+                                                bundle,
+                                                object : MediaBrowserCompat.CustomActionCallback() {
+                                                    override fun onResult(
+                                                        action: String?,
+                                                        extras: Bundle?,
+                                                        resultData: Bundle?
+                                                    ) {
+                                                        super.onResult(action, extras, resultData)
+                                                        if (ACTION_SWITCH_SHUFFLE == action && resultData != null) {
+                                                            val qList =
+                                                                resultData.getParcelableArrayList<MusicItem>(
+                                                                    "list"
+                                                                )
+                                                            val qIndex =
+                                                                resultData.getInt("index", -1)
+                                                            if (qList != null && qIndex != -1) {
+                                                                musicViewModel.musicQueue.clear()
+                                                                musicViewModel.musicQueue.addAll(
+                                                                    qList
+                                                                )
+                                                                if (musicViewModel.currentPlayQueueIndex.intValue == -1) {
+                                                                    musicViewModel.currentPlayQueueIndex.intValue =
+                                                                        qIndex
+                                                                    musicViewModel.currentPlay.value =
+                                                                        musicViewModel.musicQueue[qIndex]
+                                                                    musicViewModel.currentCaptionList.clear()
+                                                                    musicViewModel.currentMusicCover.value =
+                                                                        null
+                                                                    musicViewModel.currentPlay.value =
+                                                                        musicViewModel.musicQueue[qIndex]
+                                                                    musicViewModel.sliderPosition.floatValue =
+                                                                        0f
+                                                                    musicViewModel.currentDuration.longValue =
+                                                                        musicViewModel.currentPlay.value?.duration
+                                                                            ?: 0
+                                                                    musicViewModel.dealLyrics(
+                                                                        context,
+                                                                        musicViewModel.musicQueue[qIndex]
+                                                                    )
+                                                                }
+                                                                if (musicViewModel.enableShuffleModel.value && music != null && SharedPreferencesUtils.getAutoToTopRandom(
+                                                                        context
+                                                                    )
+                                                                ) {
+                                                                    TracksUtils.currentPlayToTop(
+                                                                        musicViewModel.mediaBrowser!!,
+                                                                        musicViewModel.musicQueue,
+                                                                        music,
+                                                                        qIndex
+                                                                    )
+                                                                }
+
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            )
+                                        }) {
+                                            Icon(
+                                                imageVector = if (musicViewModel.enableShuffleModel.value) Icons.Outlined.Shuffle else Icons.Outlined.Shuffle,
+                                                contentDescription = "shuffle model",
+                                                modifier = Modifier
+                                                    .width(50.dp)
+                                                    .height(50.dp)
+                                                    .padding(5.dp),
+                                                tint = if (musicViewModel.enableShuffleModel.value) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(
+                                                    alpha = 0.5f
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.constrainAs(playIndicator2) {
+                                        bottom.linkTo(anchor = parent.bottom, margin = 0.dp)
+                                        start.linkTo(anchor = parent.start, margin = 0.dp)
+                                        end.linkTo(anchor = parent.end, margin = 0.dp)
+                                        top.linkTo(anchor = parent.top, margin = 0.dp)
+                                    }
+                                ) {
+                                    Image(
+                                        painter = painterResource(R.drawable.play_previous_song),
+                                        contentDescription = "play previous song",
                                         modifier = Modifier
+                                            .clickable {
+                                                musicViewModel.mediaController?.transportControls?.skipToPrevious()
+                                            }
                                             .width(50.dp)
                                             .height(50.dp)
+                                            .padding(10.dp),
+                                        colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                                    )
+                                    Image(
+                                        painter = painterResource(
+                                            if (musicViewModel.playStatus.value) {
+                                                R.drawable.pause
+                                            } else {
+                                                R.drawable.play
+                                            }
+                                        ),
+                                        contentDescription = "Pause",
+                                        modifier = Modifier
+                                            .clickable {
+                                                val pbState =
+                                                    musicViewModel.mediaController?.playbackState?.state
+                                                if (pbState == PlaybackStateCompat.STATE_PLAYING) {
+                                                    musicViewModel.mediaController?.transportControls?.pause()
+                                                } else {
+                                                    musicViewModel.mediaController?.transportControls?.play()
+                                                }
+                                            }
+                                            .width(60.dp)
+                                            .height(60.dp)
                                             .padding(5.dp),
-                                        tint = if (musicViewModel.enableShuffleModel.value) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(
-                                            alpha = 0.5f
-                                        )
+                                        colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                                    )
+                                    Image(
+                                        painter = painterResource(R.drawable.play_next_song),
+                                        contentDescription = "Play next song",
+                                        modifier = Modifier
+                                            .clickable {
+                                                musicViewModel.mediaController?.transportControls?.skipToNext()
+                                            }
+                                            .width(50.dp)
+                                            .height(50.dp)
+                                            .padding(10.dp),
+                                        colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                                     )
                                 }
-                            }
-                        }
+                                Icon(
+                                    imageVector = when (repeatModel) {
 
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.constrainAs(playIndicator2) {
-                                bottom.linkTo(anchor = parent.bottom, margin = 0.dp)
-                                start.linkTo(anchor = parent.start, margin = 0.dp)
-                                end.linkTo(anchor = parent.end, margin = 0.dp)
-                                top.linkTo(anchor = parent.top, margin = 0.dp)
-                            }
-                        ) {
-                            Image(
-                                painter = painterResource(R.drawable.play_previous_song),
-                                contentDescription = "play previous song",
-                                modifier = Modifier
-                                    .clickable {
-                                        musicViewModel.mediaController?.transportControls?.skipToPrevious()
-                                    }
-                                    .width(50.dp)
-                                    .height(50.dp)
-                                    .padding(10.dp),
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
-                            )
-                            Image(
-                                painter = painterResource(
-                                    if (musicViewModel.playStatus.value) {
-                                        R.drawable.pause
-                                    } else {
-                                        R.drawable.play
-                                    }
-                                ),
-                                contentDescription = "Pause",
-                                modifier = Modifier
-                                    .clickable {
-                                        val pbState =
-                                            musicViewModel.mediaController?.playbackState?.state
-                                        if (pbState == PlaybackStateCompat.STATE_PLAYING) {
-                                            musicViewModel.mediaController?.transportControls?.pause()
-                                        } else {
-                                            musicViewModel.mediaController?.transportControls?.play()
-                                        }
-                                    }
-                                    .width(60.dp)
-                                    .height(60.dp)
-                                    .padding(5.dp),
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
-                            )
-                            Image(
-                                painter = painterResource(R.drawable.play_next_song),
-                                contentDescription = "Play next song",
-                                modifier = Modifier
-                                    .clickable {
-                                        musicViewModel.mediaController?.transportControls?.skipToNext()
-                                    }
-                                    .width(50.dp)
-                                    .height(50.dp)
-                                    .padding(10.dp),
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
-                            )
-                        }
-                        Icon(
-                            imageVector = when (repeatModel) {
-
-                                Player.REPEAT_MODE_ALL -> {
-                                    Icons.Outlined.Repeat
-                                }
-
-                                Player.REPEAT_MODE_ONE -> {
-                                    Icons.Outlined.RepeatOne
-                                }
-
-                                else -> {
-                                    Icons.Outlined.Repeat
-                                }
-                            },
-                            contentDescription = "Repeat model",
-                            modifier = Modifier
-                                .clickable {
-                                    when (repeatModel) {
                                         Player.REPEAT_MODE_ALL -> {
-                                            repeatModel = Player.REPEAT_MODE_ONE
-                                            musicViewModel.repeatModel.intValue =
-                                                Player.REPEAT_MODE_ONE
-                                            musicViewModel.mediaController?.transportControls?.setRepeatMode(
-                                                PlaybackStateCompat.REPEAT_MODE_ONE
-                                            )
+                                            Icons.Outlined.Repeat
                                         }
 
                                         Player.REPEAT_MODE_ONE -> {
-                                            repeatModel = Player.REPEAT_MODE_OFF
-                                            musicViewModel.repeatModel.intValue =
-                                                Player.REPEAT_MODE_OFF
-                                            musicViewModel.mediaController?.transportControls?.setRepeatMode(
-                                                PlaybackStateCompat.REPEAT_MODE_NONE
-                                            )
+                                            Icons.Outlined.RepeatOne
                                         }
 
                                         else -> {
-                                            repeatModel = Player.REPEAT_MODE_ALL
-                                            musicViewModel.repeatModel.intValue =
-                                                Player.REPEAT_MODE_ALL
-                                            musicViewModel.mediaController?.transportControls?.setRepeatMode(
-                                                PlaybackStateCompat.REPEAT_MODE_ALL
-                                            )
+                                            Icons.Outlined.Repeat
                                         }
-                                    }
-                                }
-                                .width(50.dp)
-                                .height(50.dp)
-                                .padding(10.dp)
-                                .constrainAs(playIndicator3) {
-                                    bottom.linkTo(anchor = parent.bottom, margin = 0.dp)
-                                    end.linkTo(anchor = parent.end, margin = 0.dp)
-                                    top.linkTo(anchor = parent.top, margin = 0.dp)
-                                },
-                            tint = if (repeatModel == Player.REPEAT_MODE_OFF) MaterialTheme.colorScheme.onBackground.copy(
-                                alpha = 0.5f
-                            ) else MaterialTheme.colorScheme.onBackground
-                        )
+                                    },
+                                    contentDescription = "Repeat model",
+                                    modifier = Modifier
+                                        .clickable {
+                                            when (repeatModel) {
+                                                Player.REPEAT_MODE_ALL -> {
+                                                    repeatModel = Player.REPEAT_MODE_ONE
+                                                    musicViewModel.repeatModel.intValue =
+                                                        Player.REPEAT_MODE_ONE
+                                                    musicViewModel.mediaController?.transportControls?.setRepeatMode(
+                                                        PlaybackStateCompat.REPEAT_MODE_ONE
+                                                    )
+                                                }
+
+                                                Player.REPEAT_MODE_ONE -> {
+                                                    repeatModel = Player.REPEAT_MODE_OFF
+                                                    musicViewModel.repeatModel.intValue =
+                                                        Player.REPEAT_MODE_OFF
+                                                    musicViewModel.mediaController?.transportControls?.setRepeatMode(
+                                                        PlaybackStateCompat.REPEAT_MODE_NONE
+                                                    )
+                                                }
+
+                                                else -> {
+                                                    repeatModel = Player.REPEAT_MODE_ALL
+                                                    musicViewModel.repeatModel.intValue =
+                                                        Player.REPEAT_MODE_ALL
+                                                    musicViewModel.mediaController?.transportControls?.setRepeatMode(
+                                                        PlaybackStateCompat.REPEAT_MODE_ALL
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        .width(50.dp)
+                                        .height(50.dp)
+                                        .padding(10.dp)
+                                        .constrainAs(playIndicator3) {
+                                            bottom.linkTo(anchor = parent.bottom, margin = 0.dp)
+                                            end.linkTo(anchor = parent.end, margin = 0.dp)
+                                            top.linkTo(anchor = parent.top, margin = 0.dp)
+                                        },
+                                    tint = if (repeatModel == Player.REPEAT_MODE_OFF) MaterialTheme.colorScheme.onBackground.copy(
+                                        alpha = 0.5f
+                                    ) else MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                        }
                     }
-                }
+                )
+
             }
     )
 
