@@ -1,5 +1,6 @@
 package com.ztftrue.music
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -48,6 +49,7 @@ class ErrorTipActivity : ComponentActivity() {
         }
     }
 
+    @SuppressLint("UseKtx")
     @androidx.annotation.OptIn(UnstableApi::class)
     @Composable
     fun ErrorCollectorView(

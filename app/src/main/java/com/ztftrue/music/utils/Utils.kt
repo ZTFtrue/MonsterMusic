@@ -15,6 +15,8 @@ import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.compose.ui.unit.Dp
 import androidx.core.content.FileProvider
+import androidx.core.graphics.scale
+import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
@@ -257,13 +259,11 @@ object Utils {
             retriever.setDataSource(path)
             val coverT = retriever.embeddedPicture
             if (coverT != null) {
-                return Bitmap.createScaledBitmap(
-                    BitmapFactory.decodeByteArray(
-                        coverT,
-                        0,
-                        coverT.size
-                    ), 512, 512, false
-                )
+                return BitmapFactory.decodeByteArray(
+                    coverT,
+                    0,
+                    coverT.size
+                ).scale(512, 512, false)
             }
         } catch (_: Exception) {
         }
@@ -291,13 +291,13 @@ object Utils {
     }
 
     fun openBrowser(link: String, context: Context) {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
+        val intent = Intent(Intent.ACTION_VIEW, link.toUri())
         context.startActivity(intent)
     }
 
     fun sendEmail(recipient: String, subject: String, context: Context) {
         val intent = Intent(Intent.ACTION_SENDTO).apply {
-            data = Uri.parse("mailto:") // only email apps should handle this
+        data = "mailto:".toUri() // only email apps should handle this
             putExtra(Intent.EXTRA_EMAIL, arrayOf(recipient))
             putExtra(Intent.EXTRA_SUBJECT, subject)
         }

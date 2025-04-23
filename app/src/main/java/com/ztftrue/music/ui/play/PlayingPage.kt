@@ -186,10 +186,7 @@ fun PlayingPage(
     var repeatModel by remember { mutableIntStateOf(musicViewModel.repeatModel.intValue) }
     var music: MusicItem? = musicViewModel.currentPlay.value
     var showDeleteTip by remember { mutableStateOf(false) }
-    val paddingModifier = Modifier
-        .padding(
-            WindowInsets.navigationBars.only(WindowInsetsSides.Bottom).asPaddingValues()
-        )
+
     LaunchedEffect(music) {
         if (music == null) {
             navController.popBackStack()

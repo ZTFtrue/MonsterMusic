@@ -13,10 +13,10 @@ interface SortFiledDao {
     fun findSortByType(type: String): SortFiledData?
 
     @Query("SELECT * FROM sort_filed_data")
-    fun findSortAll(): List<SortFiledData>?
+    fun findSortAll(): List<SortFiledData>
 
     @Query("SELECT * FROM sort_filed_data WHERE type LIKE '%' || :substring")
-    fun findSortAllTracksData(substring:String="@Tracks"): List<SortFiledData>?
+    fun findSortAllTracksData(substring:String="@Tracks"): List<SortFiledData>
 
     @Insert
     fun insert(sortFiledData: SortFiledData)

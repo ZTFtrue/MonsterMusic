@@ -11,10 +11,10 @@ import com.ztftrue.music.sqlData.model.MusicItem
 interface QueueDao {
 
     @Query("SELECT * FROM queue ORDER by tableId")
-    fun findQueue(): List<MusicItem>?
+    fun findQueue(): List<MusicItem>
 
     @Query("SELECT * FROM queue ORDER by priority")
-    fun findQueueShuffle(): List<MusicItem>?
+    fun findQueueShuffle(): List<MusicItem>
 
     @Insert
     fun insert(main: MusicItem)

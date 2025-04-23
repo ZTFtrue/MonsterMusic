@@ -3,12 +3,7 @@ package com.ztftrue.music.ui.home
 import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
@@ -88,10 +83,7 @@ fun MainView(
             }
         }
     }
-    val paddingModifier = Modifier
-        .padding(
-            WindowInsets.navigationBars.only(WindowInsetsSides.Bottom).asPaddingValues()
-        )
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {

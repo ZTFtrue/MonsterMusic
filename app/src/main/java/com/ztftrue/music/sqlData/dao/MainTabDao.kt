@@ -10,10 +10,10 @@ import com.ztftrue.music.sqlData.model.MainTab
 interface MainTabDao {
 
     @Query("SELECT * FROM main_tab ORDER BY priority ASC")
-    fun findAllMainTabSortByPriority(): List<MainTab>?
+    fun findAllMainTabSortByPriority(): List<MainTab>
 
     @Query("SELECT * FROM main_tab WHERE isShow = 1 ORDER BY priority ASC")
-    fun findAllIsShowMainTabSortByPriority(): List<MainTab>?
+    fun findAllIsShowMainTabSortByPriority(): List<MainTab>
 
     @Insert
     fun insertAll(list: List<MainTab>)

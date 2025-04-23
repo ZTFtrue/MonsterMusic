@@ -9,7 +9,7 @@ import com.ztftrue.music.sqlData.model.DictionaryApp
 interface DictionaryAppDao {
 
     @Query("SELECT * FROM dictionary_app")
-    fun findAllDictionaryApp(): List<DictionaryApp>?
+    fun findAllDictionaryApp(): List<DictionaryApp>
 
     @Insert
     fun insertAll(list: List<DictionaryApp>)

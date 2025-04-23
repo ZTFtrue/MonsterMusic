@@ -461,7 +461,7 @@ class PlayService : MediaBrowserServiceCompat() {
             result.sendResult(null)
         } else if (ACTION_CHANGE_Q == action) {
             if (extras != null) {
-                val Q = extras.getFloat("Q", 1f)
+                val Q = extras.getFloat("Q", 3.2f)
                 equalizerAudioProcessor.setQ(Q)
                 auxr.equalizerQ = Q
                 CoroutineScope(Dispatchers.IO).launch {
@@ -937,15 +937,13 @@ class PlayService : MediaBrowserServiceCompat() {
                         awaitAll(
                             async {
                                 val sortData1 = db.SortFiledDao().findSortAll()
-                                if (sortData1 != null) {
-                                    showIndicatorList.clear()
-                                    sortData1.forEach {
-                                        if (it.type == PlayListType.Songs.name || it.type.endsWith(
-                                                "@Tracks"
-                                            )
-                                        ) {
-                                            showIndicatorList.add(it)
-                                        }
+                                showIndicatorList.clear()
+                                sortData1.forEach {
+                                    if (it.type == PlayListType.Songs.name || it.type.endsWith(
+                                            "@Tracks"
+                                        )
+                                    ) {
+                                        showIndicatorList.add(it)
                                     }
                                 }
                             },
@@ -964,7 +962,7 @@ class PlayService : MediaBrowserServiceCompat() {
                                 equalizerAudioProcessor.setQ(auxr.equalizerQ, false)
                                 val selectedPreset = this@PlayService.getSharedPreferences(
                                     "SelectedPreset",
-                                    Context.MODE_PRIVATE
+                                    MODE_PRIVATE
                                 ).getString("SelectedPreset", Utils.custom)
                                 if (selectedPreset == Utils.custom) {
                                     for (i in 0 until 10) {
@@ -991,7 +989,7 @@ class PlayService : MediaBrowserServiceCompat() {
                                         db.QueueDao().findQueue()
                                     }
                                 musicQueue.clear()
-                                if (!queue.isNullOrEmpty()) {
+                                if (queue.isNotEmpty()) {
                                     val idCurrent =
                                         SharedPreferencesUtils.getCurrentPlayId(this@PlayService)
                                     var id = -1L
@@ -1047,7 +1045,7 @@ class PlayService : MediaBrowserServiceCompat() {
                             async {
                                 val list =
                                     db.MainTabDao().findAllIsShowMainTabSortByPriority()
-                                if (list.isNullOrEmpty()) {
+                                if (list.isEmpty()) {
                                     PlayUtils.addDefaultMainTab(mainTab)
                                     db.MainTabDao().insertAll(mainTab)
                                 } else {
@@ -1121,6 +1119,7 @@ class PlayService : MediaBrowserServiceCompat() {
         bundle.putInt("index", exoPlayer.currentMediaItemIndex)
         bundle.putFloat("pitch", auxr.pitch)
         bundle.putFloat("speed", auxr.speed)
+        bundle.putFloat("Q", auxr.equalizerQ)
         bundle.putBoolean("equalizerEnable", equalizerAudioProcessor.isSetActive())
         bundle.putIntArray("equalizerValue", equalizerAudioProcessor.getBandLevels())
         bundle.putParcelable("musicItem", currentPlayTrack)
@@ -1299,7 +1298,7 @@ class PlayService : MediaBrowserServiceCompat() {
                 }
             }
         val trackSelectionFactory = AdaptiveTrackSelection.Factory()
-        val trackSelectorParameters = DefaultTrackSelector.Parameters.Builder(context).build()
+        val trackSelectorParameters = DefaultTrackSelector.Parameters.Builder().build()
         val trackSelector = DefaultTrackSelector(context, trackSelectionFactory)
         trackSelector.parameters = trackSelectorParameters
         exoPlayer = ExoPlayer.Builder(context, renderersFactory)
@@ -1377,7 +1376,7 @@ class PlayService : MediaBrowserServiceCompat() {
                     } else {
                         null
                     }
-                getSharedPreferences("Widgets", Context.MODE_PRIVATE).getBoolean(
+                getSharedPreferences("Widgets", MODE_PRIVATE).getBoolean(
                     "enable",
                     false
                 )
@@ -1463,7 +1462,7 @@ class PlayService : MediaBrowserServiceCompat() {
                     bundle.putParcelable("current", currentPlayTrack)
                     bundle.putInt("type", EVENT_MEDIA_ITEM_Change)
                     bundle.putInt("index", exoPlayer.currentMediaItemIndex)
-                    getSharedPreferences("Widgets", Context.MODE_PRIVATE).getBoolean(
+                    getSharedPreferences("Widgets", MODE_PRIVATE).getBoolean(
                         "enable",
                         false
                     )
@@ -1805,12 +1804,10 @@ class PlayService : MediaBrowserServiceCompat() {
                                 true
                             )
                             val sortData1 = db.SortFiledDao().findSortAll()
-                            if (sortData1 != null) {
-                                showIndicatorList.clear()
-                                sortData1.forEach {
-                                    if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
-                                        showIndicatorList.add(it)
-                                    }
+                            showIndicatorList.clear()
+                            sortData1.forEach {
+                                if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                    showIndicatorList.add(it)
                                 }
                             }
                         }
@@ -1821,12 +1818,10 @@ class PlayService : MediaBrowserServiceCompat() {
                         playListTracksHashMap.clear()
                         CoroutineScope(Dispatchers.IO).launch {
                             val sortData1 = db.SortFiledDao().findSortAll()
-                            if (sortData1 != null) {
-                                showIndicatorList.clear()
-                                sortData1.forEach {
-                                    if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
-                                        showIndicatorList.add(it)
-                                    }
+                            showIndicatorList.clear()
+                            sortData1.forEach {
+                                if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                    showIndicatorList.add(it)
                                 }
                             }
                         }
@@ -1836,12 +1831,10 @@ class PlayService : MediaBrowserServiceCompat() {
                         albumsListTracksHashMap.clear()
                         CoroutineScope(Dispatchers.IO).launch {
                             val sortData1 = db.SortFiledDao().findSortAll()
-                            if (sortData1 != null) {
-                                showIndicatorList.clear()
-                                sortData1.forEach {
-                                    if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
-                                        showIndicatorList.add(it)
-                                    }
+                            showIndicatorList.clear()
+                            sortData1.forEach {
+                                if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                    showIndicatorList.add(it)
                                 }
                             }
                         }
@@ -1851,12 +1844,10 @@ class PlayService : MediaBrowserServiceCompat() {
                         artistsListTracksHashMap.clear()
                         CoroutineScope(Dispatchers.IO).launch {
                             val sortData1 = db.SortFiledDao().findSortAll()
-                            if (sortData1 != null) {
-                                showIndicatorList.clear()
-                                sortData1.forEach {
-                                    if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
-                                        showIndicatorList.add(it)
-                                    }
+                            showIndicatorList.clear()
+                            sortData1.forEach {
+                                if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                    showIndicatorList.add(it)
                                 }
                             }
                         }
@@ -1866,12 +1857,10 @@ class PlayService : MediaBrowserServiceCompat() {
                         genresListTracksHashMap.clear()
                         CoroutineScope(Dispatchers.IO).launch {
                             val sortData1 = db.SortFiledDao().findSortAll()
-                            if (sortData1 != null) {
-                                showIndicatorList.clear()
-                                sortData1.forEach {
-                                    if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
-                                        showIndicatorList.add(it)
-                                    }
+                            showIndicatorList.clear()
+                            sortData1.forEach {
+                                if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                    showIndicatorList.add(it)
                                 }
                             }
                         }
@@ -1881,12 +1870,10 @@ class PlayService : MediaBrowserServiceCompat() {
                         foldersListTracksHashMap.clear()
                         CoroutineScope(Dispatchers.IO).launch {
                             val sortData1 = db.SortFiledDao().findSortAll()
-                            if (sortData1 != null) {
-                                showIndicatorList.clear()
-                                sortData1.forEach {
-                                    if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
-                                        showIndicatorList.add(it)
-                                    }
+                            showIndicatorList.clear()
+                            sortData1.forEach {
+                                if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                    showIndicatorList.add(it)
                                 }
                             }
                         }
