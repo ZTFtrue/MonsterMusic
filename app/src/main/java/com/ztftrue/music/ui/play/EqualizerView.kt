@@ -443,11 +443,12 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                         )
                     },
                 )
-                Text(
-                    text = "Lower Q values will lead to a more pronounced effect, but with increased noise.",
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-
+                if( Q.floatValue < 2.0f) {
+                    Text(
+                        text = "Lower Q values will lead to a more pronounced effect, but with increased noise.",
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
             }
         }
     }
