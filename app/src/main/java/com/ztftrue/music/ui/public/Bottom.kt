@@ -65,11 +65,12 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
             .padding(0.dp), // padding 为 0
         containerColor = Color.Transparent, // 透明背景
         tonalElevation = 0.dp, // 阴影去掉（可选）
-        contentPadding = PaddingValues(0.dp), // 内容也没有内边距
+        contentPadding = PaddingValues(0.dp, 0.dp), // 内容也没有内边距
         actions = {
             Row(
                 modifier = modifier
                     .fillMaxWidth()
+                    .padding(0.dp)
                     .height(60.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -162,9 +163,6 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
             }
 
         },
-        floatingActionButton = {
-
-        }
     )
 
 }
