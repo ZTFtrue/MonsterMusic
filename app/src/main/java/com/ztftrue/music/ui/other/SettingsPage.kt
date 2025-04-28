@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -61,6 +62,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -336,127 +338,8 @@ fun SettingsPage(
 //                            )
 //                        }
 //                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(0.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-                                Utils.setLyricsFolder(context)
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
-                                },
-                        ) {
-                            Text(
-                                text = stringResource(R.string.add_lyrics_folders),
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                    }
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(0.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-                                Utils.setArtistFolder(context)
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
-                                },
-                        ) {
-                            Text(
-                                text = stringResource(R.string.set_artist_folder_artist_name_jpg_jpeg_png),
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(0.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-                                Utils.setGenreFolder(context)
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
-                                },
-                        ) {
-                            Text(
-                                text = stringResource(R.string.set_genre_folder_genre_name_jpg_jpeg_png),
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                    }
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -493,7 +376,6 @@ fun SettingsPage(
                                     showLyricsFolderDialog = !showLyricsFolderDialog
                                 },
                         ) {
-
                             if (showLyricsFolderDialog) {
                                 ManageLyricsFolderDialog(
                                     musicViewModel,
@@ -573,9 +455,6 @@ fun SettingsPage(
                                     end = Offset(size.width, size.height - 1.dp.toPx()),
                                     strokeWidth = 1.dp.toPx()
                                 )
-                            }
-                            .clickable {
-
                             },
                         contentAlignment = Alignment.CenterStart
                     ) {
@@ -1642,7 +1521,8 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
 
     val context = LocalContext.current
     val scopeMain = CoroutineScope(Dispatchers.IO)
-
+    val configuration = LocalConfiguration.current
+    val screenHeightDp = configuration.screenHeightDp
     val folderList = remember { mutableStateListOf<StorageFolder>() }
 
     LaunchedEffect(Unit) {
@@ -1666,120 +1546,180 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
             dismissOnClickOutside = true
         ),
         content = {
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight()
                     .background(color = MaterialTheme.colorScheme.background),
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Column(
+                val color = MaterialTheme.colorScheme.background
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(color = MaterialTheme.colorScheme.background),
-                    verticalArrangement = Arrangement.Top,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    HorizontalDivider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(1.dp)
-                            .background(color = MaterialTheme.colorScheme.onBackground)
-                    )
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(60.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    )
-                    {
-
-                    }
-                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                        items(folderList.size) {
-                            val item = folderList[it]
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(
-                                        start = 10.dp, end = 10.dp
-                                    ),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                        .height(50.dp)
+                        .padding(0.dp)
+                        .clickable {
+                            onConfirmation()
+                            Utils.setLyricsFolder(context)
+                        }
+                        .drawBehind {
+                            drawLine(
+                                color = color,
+                                start = Offset(0f, size.height - 1.dp.toPx()),
+                                end = Offset(size.width, size.height - 1.dp.toPx()),
+                                strokeWidth = 1.dp.toPx()
                             )
-                            {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text(
-                                        text = if (item.type == LYRICS_TYPE) "Lyrics" else if (item.type == ARTIST_TYPE) "Artist" else "Genre",
-                                        color = MaterialTheme.colorScheme.onBackground,
-                                        modifier = Modifier.horizontalScroll(rememberScrollState(0))
-                                    )
-                                    HorizontalDivider(
-                                        modifier = Modifier
-                                            .width(1.dp)
-                                            .fillMaxWidth(0.1f)
-                                            .height(50.dp)
-                                    )
-                                    Text(
-                                        text = item.uri,
-                                        color = MaterialTheme.colorScheme.onBackground,
-                                        modifier = Modifier.horizontalScroll(rememberScrollState(0))
-                                    )
-                                }
-                                IconButton(
-                                    modifier = Modifier.width(50.dp),
-                                    onClick = {
-                                        scopeMain.launch {
-                                            item.id?.let { it1 ->
-                                                musicViewModel.getDb(context).StorageFolderDao()
-                                                    .deleteById(
-                                                        it1
-                                                    )
-                                            }
-                                            folderList.removeAt(it)
+                        },
+                ) {
+                    Text(
+                        text = stringResource(R.string.add_lyrics_folders),
+                        Modifier.padding(start = 10.dp),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(color = MaterialTheme.colorScheme.onBackground)
+                )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .padding(0.dp)
+                        .clickable {
+                            onConfirmation()
+                            Utils.setArtistFolder(context)
+                        }
+                        .drawBehind {
+                            drawLine(
+                                color = color,
+                                start = Offset(0f, size.height - 1.dp.toPx()),
+                                end = Offset(size.width, size.height - 1.dp.toPx()),
+                                strokeWidth = 1.dp.toPx()
+                            )
+                        },
+                ) {
+                    Text(
+                        text = stringResource(R.string.set_artist_folder_artist_name_jpg_jpeg_png),
+                        Modifier.padding(start = 10.dp),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(color = MaterialTheme.colorScheme.onBackground)
+                )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .padding(0.dp)
+                        .clickable {
+                            onConfirmation()
+                            Utils.setGenreFolder(context)
+                        }
+                        .drawBehind {
+                            drawLine(
+                                color = color,
+                                start = Offset(0f, size.height - 1.dp.toPx()),
+                                end = Offset(size.width, size.height - 1.dp.toPx()),
+                                strokeWidth = 1.dp.toPx()
+                            )
+                        },
+                ) {
+                    Text(
+                        text = stringResource(R.string.set_genre_folder_genre_name_jpg_jpeg_png),
+                        Modifier.padding(start = 10.dp),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(color = MaterialTheme.colorScheme.onBackground)
+                )
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = (screenHeightDp - 203).dp)
+                ) {
+                    items(folderList.size) {
+                        val item = folderList[it]
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    start = 10.dp, end = 10.dp
+                                ),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        )
+                        {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = if (item.type == LYRICS_TYPE) "Lyrics: " else if (item.type == ARTIST_TYPE) "Artist: " else "Genre: ",
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    modifier = Modifier.horizontalScroll(rememberScrollState(0))
+                                )
+                                HorizontalDivider(
+                                    modifier = Modifier
+                                        .width(1.dp)
+                                        .fillMaxWidth(0.1f)
+                                        .height(50.dp)
+                                )
+                                Text(
+                                    text = item.uri,
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    modifier = Modifier.horizontalScroll(rememberScrollState(0))
+                                )
+                            }
+                            IconButton(
+                                modifier = Modifier.width(50.dp),
+                                onClick = {
+                                    scopeMain.launch {
+                                        item.id?.let { it1 ->
+                                            musicViewModel.getDb(context).StorageFolderDao()
+                                                .deleteById(
+                                                    it1
+                                                )
                                         }
-                                    }) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Delete,
-                                        contentDescription = "Remove folder",
-                                        modifier = Modifier
-                                            .size(30.dp)
-                                            .clip(CircleShape),
-                                        tint = MaterialTheme.colorScheme.onBackground
-                                    )
-                                }
+                                        folderList.removeAt(it)
+                                    }
+                                }) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Delete,
+                                    contentDescription = "Remove folder",
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .clip(CircleShape),
+                                    tint = MaterialTheme.colorScheme.onBackground
+                                )
                             }
                         }
                     }
                 }
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                 ) {
-//                    TextButton(
-//                        onClick = { onDismiss() },
-//                        modifier = Modifier
-//                            .padding(8.dp)
-//                            .fillMaxWidth(0.5f),
-//                    ) {
-//                        Text(
-//                            "Add",
-//                            color = MaterialTheme.colorScheme.onBackground
-//                        )
-//                    }
-//                    HorizontalDivider(
-//                        modifier = Modifier
-//                            .background(MaterialTheme.colorScheme.onBackground)
-//                            .width(1.dp)
-//                            .height(50.dp)
-//                    )
                     TextButton(
                         onClick = {
                             onConfirmation()
@@ -2311,7 +2251,7 @@ fun SwitchLanguageDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) 
         activity?.runOnUiThread {
             activity.recreate()
         }
-        Log.d("TAG",localeList.toString())
+        Log.d("TAG", localeList.toString())
         val currentLocale = AppCompatDelegate.getApplicationLocales()[0]
         Log.d("LanguageChange", "Current Language: $currentLocale")
 

@@ -117,7 +117,7 @@
     <string name="add_lyrics_folders">Add lyrics folders</string>
     <string name="set_artist_folder_artist_name_jpg_jpeg_png">Set artist folder(artist_name.jpg/jpeg/png)</string>
     <string name="set_genre_folder_genre_name_jpg_jpeg_png">Set genre folder(genre_name.jpg/jpeg/png)</string>
-    <string name="manage_lyrics_folders">Manage lyrics folders</string>
+    <string name="manage_lyrics_folders">Manage folders</string>
     <string name="manage_ignore_folder">Manage ignore folder</string>
     <string name="save">Save</string>
     <string name="clear_album_cover_cache">Clear Album Cover Cache</string>

@@ -117,7 +117,7 @@
     <string name="add_lyrics_folders">添加歌词文件夹</string>
     <string name="set_artist_folder_artist_name_jpg_jpeg_png">设置艺术家文件夹</string>
     <string name="set_genre_folder_genre_name_jpg_jpeg_png">设置流派文件夹</string>
-    <string name="manage_lyrics_folders">管理歌词文件夹</string>
+    <string name="manage_lyrics_folders">管理文件夹</string>
     <string name="manage_ignore_folder">管理忽略的文件夹</string>
     <string name="save">保存</string>
     <string name="clear_album_cover_cache">清除专辑封面缓存</string>
