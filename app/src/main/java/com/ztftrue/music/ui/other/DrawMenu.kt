@@ -1,6 +1,7 @@
 package com.ztftrue.music.ui.other
 
-import android.net.Uri
+import android.os.Bundle
+import android.support.v4.media.MediaBrowserCompat
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
@@ -49,6 +51,10 @@ import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
+import com.ztftrue.music.play.ACTION_REFRESH_ALL
+import com.ztftrue.music.play.ACTION_SORT
+import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
 import kotlinx.coroutines.launch
 
@@ -73,6 +79,7 @@ fun DrawMenu(
             Modifier
                 .width(drawerWidth)
                 .fillMaxHeight()
+                .background(color = MaterialTheme.colorScheme.background)
                 .padding(all = 0.dp),
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Top
@@ -120,17 +127,6 @@ fun DrawMenu(
                 )
             }
 
-
-//                    musicViewModel.mainTabList.forEachIndexed() { i, it ->
-//                        Box(modifier = Modifier.clickable {
-//                            scope.launch {
-//                                pagerState.scrollToPage(i)
-//                                drawerState.close()
-//                            }
-//                        }) {
-//                            Text(text = it.name)
-//                        }
-//                    }
             Box(
                 modifier = Modifier
                     .width(drawerWidth)
@@ -265,7 +261,7 @@ fun DrawMenu(
                         val intent = CustomTabsIntent
                             .Builder()
                             .build()
-                        intent.launchUrl(context, Uri.parse(url))
+                        intent.launchUrl(context, url.toUri())
                     },
                 contentAlignment = Alignment.CenterStart
             ) {
@@ -274,7 +270,58 @@ fun DrawMenu(
                     color = MaterialTheme.colorScheme.onBackground,
                 )
             }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .drawBehind {
+                        drawLine(
+                            color = color,
+                            start = Offset(0f, size.height - 1.dp.toPx()),
+                            end = Offset(size.width, size.height - 1.dp.toPx()),
+                            strokeWidth = 1.dp.toPx()
+                        )
+                    }
+                    .clickable {
+                        musicViewModel.mediaBrowser?.sendCustomAction(
+                            ACTION_REFRESH_ALL,
+                            null,
+                            object : MediaBrowserCompat.CustomActionCallback() {
+                                override fun onResult(
+                                    action: String?,
+                                    extras: Bundle?,
+                                    resultData: Bundle?
+                                ) {
+                                    super.onResult(action, extras, resultData)
+                                    if (ACTION_REFRESH_ALL == action) {
+                                        musicViewModel.refreshPlayList.value =
+                                            !musicViewModel.refreshPlayList.value
+                                        musicViewModel.refreshAlbum.value =
+                                            !musicViewModel.refreshAlbum.value
+                                        musicViewModel.refreshArtist.value =
+                                            !musicViewModel.refreshArtist.value
+                                        musicViewModel.refreshGenre.value =
+                                            !musicViewModel.refreshGenre.value
+                                        resultData?.getParcelableArrayList<MusicItem>(
+                                            "songsList"
+                                        )?.also {
+                                            musicViewModel.songsList.clear()
+                                            musicViewModel.songsList.addAll(it)
+                                        }
+                                    }
+                                }
+                            }
+                        )
+                    },
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text(
+                    text = "Refresh tracks", Modifier.padding(start = 10.dp),
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+            }
         }
+
     }
 }
 

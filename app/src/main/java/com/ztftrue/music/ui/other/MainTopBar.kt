@@ -330,7 +330,7 @@ fun MainTopBar(
                                             sortDb =
                                                 MusicDatabase.getDatabase(context).SortFiledDao()
                                             var sortData =
-                                                sortDb?.findSortByType(musicViewModel.mainTabList[pagerState.currentPage].type.name)
+                                                sortDb.findSortByType(musicViewModel.mainTabList[pagerState.currentPage].type.name)
                                             if (sortData != null) {
                                                 sortData.method =
                                                     PlayUtils.methodMap[methodSelected] ?: ""
@@ -338,7 +338,7 @@ fun MainTopBar(
                                                 sortData.filed = sortFiledOptions[filedSelected]
                                                     ?: ""
                                                 sortData.filedName = filedSelected
-                                                sortDb?.update(sortData)
+                                                sortDb.update(sortData)
                                             } else {
                                                 sortData = SortFiledData(
                                                     musicViewModel.mainTabList[pagerState.currentPage].type.name,
@@ -348,7 +348,7 @@ fun MainTopBar(
                                                     methodSelected,
                                                     filedSelected
                                                 )
-                                                sortDb?.insert(sortData)
+                                                sortDb.insert(sortData)
                                             }
                                         })
                                 }

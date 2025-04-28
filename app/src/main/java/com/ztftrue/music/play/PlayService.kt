@@ -116,6 +116,7 @@ const val ACTION_TRACKS_UPDATE = "ACTION_TRACKS_UPDATE"
 const val ACTION_GET_TRACK_BY_ID = "ACTION_GET_TRACK_BY_ID"
 const val ACTION_CLEAR_QUEUE = "ACTION_CLEAR_QUEUE"
 const val ACTION_SORT = "ACTION_SORT"
+const val ACTION_REFRESH_ALL = "ACTION_REFRESH_ALL"
 const val ACTION_SHUFFLE_PLAY_QUEUE = "ACTION_SHUFFLE_PLAY_QUEUE"
 const val ACTION_GET_ALBUM_BY_ID = "GET_ARTIST_FROM_ALBUM"
 
@@ -750,6 +751,8 @@ class PlayService : MediaBrowserServiceCompat() {
             result.sendResult(null)
         } else if (action == ACTION_SORT) {
             sortAction(extras, result)
+        } else if (action == ACTION_REFRESH_ALL) {
+            refreshAction(result)
         } else if (action == ACTION_Volume_CHANGE) {
             if (extras != null) {
                 volumeValue = extras.getInt("volume", 100)
@@ -1764,6 +1767,39 @@ class PlayService : MediaBrowserServiceCompat() {
         result.sendResult(null)
     }
 
+    private fun refreshAction(result: Result<Bundle>) {
+//        playListLinkedHashMap.clear()
+//        albumsLinkedHashMap.clear()
+//        artistsLinkedHashMap.clear()
+//        genresLinkedHashMap.clear()
+//        tracksLinkedHashMap.clear()
+//        playListTracksHashMap.clear()
+//        albumsListTracksHashMap.clear()
+//        artistsListTracksHashMap.clear()
+//        genresListTracksHashMap.clear()
+//        foldersListTracksHashMap.clear()
+        clearCacheData()
+        result.detach()
+        CoroutineScope(Dispatchers.IO).launch {
+            val sortData =
+                db.SortFiledDao().findSortByType(PlayListType.Songs.name)
+            TracksManager.getFolderList(
+                this@PlayService,
+                foldersLinkedHashMap,
+                result,
+                tracksLinkedHashMap,
+                "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
+                true
+            )
+            val sortData1 = db.SortFiledDao().findSortAll()
+            showIndicatorList.clear()
+            sortData1.forEach {
+                if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                    showIndicatorList.add(it)
+                }
+            }
+        }
+    }
 
     private fun sortAction(extras: Bundle?, result: Result<Bundle>) {
         val bundle = Bundle()
