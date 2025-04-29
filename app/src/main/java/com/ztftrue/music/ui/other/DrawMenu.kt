@@ -302,6 +302,8 @@ fun DrawMenu(
                                             !musicViewModel.refreshArtist.value
                                         musicViewModel.refreshGenre.value =
                                             !musicViewModel.refreshGenre.value
+                                        musicViewModel.refreshFolder.value =
+                                            !musicViewModel.refreshFolder.value
                                         resultData?.getParcelableArrayList<MusicItem>(
                                             "songsList"
                                         )?.also {
