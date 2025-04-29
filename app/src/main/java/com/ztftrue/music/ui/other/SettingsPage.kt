@@ -164,7 +164,6 @@ fun SettingsPage(
                     var showLyricsFolderDialog by remember { mutableStateOf(false) }
                     var showAboutDialog by remember { mutableStateOf(false) }
                     var showSetListIndicatorDialog by remember { mutableStateOf(false) }
-                    var showSetLanguageDialog by remember { mutableStateOf(false) }
 
                     Box(
                         modifier = Modifier
@@ -228,7 +227,7 @@ fun SettingsPage(
                                     context.getSharedPreferences(
                                         LYRICS_SETTINGS,
                                         Context.MODE_PRIVATE
-                                    ).edit().putBoolean(FIRST_EMBEDDED_LYRICS, value).apply()
+                                    ).edit { putBoolean(FIRST_EMBEDDED_LYRICS, value) }
                                 },
 //                                colors = SwitchDefaults.colors(checkedThumbColor = Color.Green)
                             )
@@ -817,10 +816,12 @@ fun saveIgnoreDuration(
             Context.MODE_PRIVATE
         )
     // -1 don't ignore any,0 ignore duration less than or equal 0s,
-    sharedPreferences.edit().putLong(
-        "ignore_duration",
-        durationValue.toLong()
-    ).apply()
+    sharedPreferences.edit {
+        putLong(
+            "ignore_duration",
+            durationValue.toLong()
+        )
+    }
     Toast.makeText(
         context,
         context.getString(
@@ -847,7 +848,6 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
         scopeMain.launch {
             mainTabList.addAll(
                 musicViewModel.getDb(context).MainTabDao().findAllMainTabSortByPriority()
-                    ?: emptyList()
             )
             size = mainTabList.size
         }
@@ -1778,7 +1778,7 @@ fun ManageFolderDialog(onDismiss: () -> Unit) {
             }
         }
         val sharedPreferences = context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
-        sharedPreferences.edit().putString("ignore_folders", hideFolderIds.toString()).apply()
+        sharedPreferences.edit { putString("ignore_folders", hideFolderIds.toString())}
         scopeMain.launch {
             onDismiss()
         }
@@ -2020,11 +2020,11 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
     @SuppressLint("ApplySharedPref")
     fun onConfirmation() {
         coroutineScope.launch {
-            sharedPreferences.edit()
-                .putBoolean("show_slide_indicator", showSlideIndicator)
-                .putBoolean("show_top_indicator", showTopIndicator)
-                .putBoolean("show_queue_indicator", showQueueIndicator)
-                .apply()
+            sharedPreferences.edit {
+                putBoolean("show_slide_indicator", showSlideIndicator)
+                    .putBoolean("show_top_indicator", showTopIndicator)
+                    .putBoolean("show_queue_indicator", showQueueIndicator)
+            }
             onDismiss()
         }
     }
@@ -2232,10 +2232,10 @@ fun SwitchLanguageDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) 
             language.add(LanguageModel("Esperanto", "eo"))
             language.add(LanguageModel("Magyar", "hu"))
             SharedPreferencesUtils.getCurrentLanguage(context).let {
-                if (it.isNullOrEmpty()) {
-                    locale = Locale.getDefault().language
+                locale = if (it.isNullOrEmpty()) {
+                    Locale.getDefault().language
                 } else {
-                    locale = it
+                    it
                 }
             }
             selectIndex = language.indexOfFirst { it.code == locale }
@@ -2243,7 +2243,7 @@ fun SwitchLanguageDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) 
         }
     }
     fun onConfirmation() {
-        val locale = Locale(language[selectIndex].code)
+        Locale(language[selectIndex].code)
 
         val activity = context as? Activity
         val localeList = LocaleListCompat.forLanguageTags("en-US")

@@ -50,6 +50,7 @@ import java.io.FileOutputStream
 import java.io.InputStreamReader
 import java.nio.file.Files
 import java.util.concurrent.locks.ReentrantLock
+import androidx.core.net.toUri
 
 
 var SongsPlayList = AnyListBase(-1, PlayListType.Songs)
@@ -72,7 +73,9 @@ class MusicViewModel : ViewModel() {
 //    val genreItemsCount = mutableIntStateOf(2)
     var mediaController: MediaControllerCompat? = null
     var mediaBrowser: MediaBrowserCompat? = null
-    var currentInputFormat = mutableStateMapOf<String, String>() //mutableStateOf<LinkedHashMap<String, String>>(java.util.LinkedHashMap())
+    var currentInputFormat =
+        mutableStateMapOf<String, String>() //mutableStateOf<LinkedHashMap<String, String>>(java.util.LinkedHashMap())
+
     //    val albumScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
 //    val artistScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
 //    val genreScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
@@ -186,7 +189,7 @@ class MusicViewModel : ViewModel() {
             lyricsJob?.cancel()
         }
         lyricsJob = CoroutineScope(Dispatchers.IO).launch {
-            val regexPattern = Regex("[<>\"/~'{}?,+=)(^&*%!@#\$]")
+            val regexPattern = Regex("[<>\"/~'{}?,+=)(^&*%!@#$]")
             val artistsFolder = currentPlay.artist.replace(
                 regexPattern,
                 "_"
@@ -254,64 +257,62 @@ class MusicViewModel : ViewModel() {
                             currentPlay.path.lastIndexOf("/") + 1,
                             currentPlay.path.lastIndexOf(".")
                         )
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         ""
                     }
                     val files = getDb(context).StorageFolderDao().findAllByType(LYRICS_TYPE)
                     outer@ for (storageFolder in files) {
                         try {
-                            val treeUri = Uri.parse(storageFolder.uri)
-                            if (treeUri != null) {
-                                context.contentResolver.takePersistableUriPermission(
-                                    treeUri,
-                                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                                )
-                                val pickedDir = DocumentFile.fromTreeUri(context, treeUri)
-                                val d = pickedDir?.listFiles()
-                                if (d != null) {
-                                    for (it in d) {
-                                        if (it != null && it.isFile && it.canRead()
+                            val treeUri = storageFolder.uri.toUri()
+                            context.contentResolver.takePersistableUriPermission(
+                                treeUri,
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                            )
+                            val pickedDir = DocumentFile.fromTreeUri(context, treeUri)
+                            val d = pickedDir?.listFiles()
+                            if (d != null) {
+                                for (it in d) {
+                                    if (it != null && it.isFile && it.canRead()
+                                    ) {
+                                        val fileNameWithSuffix =
+                                            it.name?.lowercase() ?: ""
+                                        val type =
+                                            if (fileNameWithSuffix.endsWith(".lrc")) {
+                                                LyricsType.LRC
+                                            } else if (fileNameWithSuffix.endsWith(".srt")) {
+                                                LyricsType.SRT
+                                            } else if (fileNameWithSuffix.endsWith(".vtt")) {
+                                                LyricsType.VTT
+                                            } else if (fileNameWithSuffix.endsWith(".txt")) {
+                                                LyricsType.TEXT
+                                            } else {
+                                                continue
+                                            }
+                                        val fileName = try {
+                                            fileNameWithSuffix.substring(
+                                                0,
+                                                fileNameWithSuffix.indexOf(".")
+                                            )
+                                        } catch (_: Exception) {
+                                            ""
+                                        }
+                                        if (fileName.trim()
+                                                .lowercase() == musicName.trim()
+                                                .lowercase()
                                         ) {
-                                            val fileNameWithSuffix =
-                                                it.name?.lowercase() ?: ""
-                                            val type =
-                                                if (fileNameWithSuffix.endsWith(".lrc")) {
-                                                    LyricsType.LRC
-                                                } else if (fileNameWithSuffix.endsWith(".srt")) {
-                                                    LyricsType.SRT
-                                                } else if (fileNameWithSuffix.endsWith(".vtt")) {
-                                                    LyricsType.VTT
-                                                } else if (fileNameWithSuffix.endsWith(".txt")) {
-                                                    LyricsType.TEXT
-                                                } else {
-                                                    continue
-                                                }
-                                            val fileName = try {
-                                                fileNameWithSuffix.substring(
-                                                    0,
-                                                    fileNameWithSuffix.indexOf(".")
+                                            fileLyrics.addAll(
+                                                fileRead(
+                                                    it.uri,
+                                                    context,
+                                                    type
                                                 )
-                                            } catch (e: Exception) {
-                                                ""
-                                            }
-                                            if (fileName.trim()
-                                                    .lowercase() == musicName.trim()
-                                                    .lowercase()
-                                            ) {
-                                                fileLyrics.addAll(
-                                                    fileRead(
-                                                        it.uri,
-                                                        context,
-                                                        type
-                                                    )
-                                                )
-                                                break@outer
-                                            }
+                                            )
+                                            break@outer
                                         }
                                     }
                                 }
                             }
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
                             getDb(context).StorageFolderDao().deleteById(storageFolder.id!!)
                             CoroutineScope(Dispatchers.Main).launch {
                                 Toast.makeText(
@@ -344,7 +345,7 @@ class MusicViewModel : ViewModel() {
             val duration = currentPlay.duration
             // every lyrics line duration
             itemDuration =
-                duration / if (currentCaptionList.size == 0) 1 else currentCaptionList.size
+                duration / if (currentCaptionList.isEmpty()) 1 else currentCaptionList.size
         }
         lock.unlock()
     }
@@ -429,7 +430,7 @@ class MusicViewModel : ViewModel() {
             }
             try {
                 val albumUri = ContentUris.withAppendedId(
-                    Uri.parse("content://media/external/audio/albumart"),
+                    "content://media/external/audio/albumart".toUri(),
                     id
                 )
                 val s = context.contentResolver.openInputStream(
@@ -457,7 +458,7 @@ class MusicViewModel : ViewModel() {
                     s.close()
                 }
 
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 //                        e.printStackTrace()
             }
             if (result == null) {
@@ -486,27 +487,25 @@ class MusicViewModel : ViewModel() {
                 val files = getDb(context).StorageFolderDao().findAllByType(GENRE_TYPE)
                 outer@ for (storageFolder in files) {
                     try {
-                        val treeUri = Uri.parse(storageFolder.uri)
-                        if (treeUri != null) {
-                            context.contentResolver.takePersistableUriPermission(
-                                treeUri,
-                                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                            )
-                            val pickedDir = DocumentFile.fromTreeUri(context, treeUri)
-                            val d = pickedDir?.listFiles()
-                            if (d != null) {
-                                for (it in d) {
-                                    if (it != null && it.isFile && it.canRead() && it.name != null
-                                        && (it.name?.endsWith(".jpg") == true
-                                                || it.name?.endsWith(".jpeg") == true
-                                                || it.name?.endsWith(".png") == true)
-                                    ) {
+                        val treeUri = storageFolder.uri.toUri()
+                        context.contentResolver.takePersistableUriPermission(
+                            treeUri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        )
+                        val pickedDir = DocumentFile.fromTreeUri(context, treeUri)
+                        val d = pickedDir?.listFiles()
+                        if (d != null) {
+                            for (it in d) {
+                                if (it != null && it.isFile && it.canRead() && it.name != null
+                                    && (it.name?.endsWith(".jpg") == true
+                                            || it.name?.endsWith(".jpeg") == true
+                                            || it.name?.endsWith(".png") == true)
+                                ) {
 
-                                        genreCover[it.name!!.lowercase().replace(".jpg", "")
-                                            .replace(".jpeg", "")
-                                            .replace(".png", "")
-                                            .trimIndent().trimEnd()] = it.uri
-                                    }
+                                    genreCover[it.name!!.lowercase().replace(".jpg", "")
+                                        .replace(".jpeg", "")
+                                        .replace(".png", "")
+                                        .trimIndent().trimEnd()] = it.uri
                                 }
                             }
                         }
@@ -522,26 +521,24 @@ class MusicViewModel : ViewModel() {
                 val files = getDb(context).StorageFolderDao().findAllByType(ARTIST_TYPE)
                 outer@ for (storageFolder in files) {
                     try {
-                        val treeUri = Uri.parse(storageFolder.uri)
-                        if (treeUri != null) {
-                            context.contentResolver.takePersistableUriPermission(
-                                treeUri,
-                                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                            )
-                            val pickedDir = DocumentFile.fromTreeUri(context, treeUri)
-                            val d = pickedDir?.listFiles()
-                            if (d != null) {
-                                for (it in d) {
-                                    if (it != null && it.isFile && it.canRead() && it.name != null
-                                        && (it.name?.endsWith(".jpg") == true
-                                                || it.name?.endsWith(".jpeg") == true
-                                                || it.name?.endsWith(".png") == true)
-                                    ) {
-                                        artistCover[it.name!!.lowercase().replace(".jpg", "")
-                                            .replace(".jpeg", "")
-                                            .replace(".png", "")
-                                            .trimIndent().trimEnd()] = it.uri
-                                    }
+                        val treeUri = storageFolder.uri.toUri()
+                        context.contentResolver.takePersistableUriPermission(
+                            treeUri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        )
+                        val pickedDir = DocumentFile.fromTreeUri(context, treeUri)
+                        val d = pickedDir?.listFiles()
+                        if (d != null) {
+                            for (it in d) {
+                                if (it != null && it.isFile && it.canRead() && it.name != null
+                                    && (it.name?.endsWith(".jpg") == true
+                                            || it.name?.endsWith(".jpeg") == true
+                                            || it.name?.endsWith(".png") == true)
+                                ) {
+                                    artistCover[it.name!!.lowercase().replace(".jpg", "")
+                                        .replace(".jpeg", "")
+                                        .replace(".png", "")
+                                        .trimIndent().trimEnd()] = it.uri
                                 }
                             }
                         }

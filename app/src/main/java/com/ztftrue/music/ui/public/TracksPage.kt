@@ -326,7 +326,7 @@ fun TracksListPage(
                                         sortDb =
                                             MusicDatabase.getDatabase(context).SortFiledDao()
                                         var sortData =
-                                            sortDb?.findSortByType(type.name + "@Tracks")
+                                            sortDb.findSortByType(type.name + "@Tracks")
                                         if (sortData != null) {
                                             sortData.method =
                                                 PlayUtils.methodMap[methodSelected] ?: ""
@@ -334,7 +334,7 @@ fun TracksListPage(
                                             sortData.filed = sortFiledOptions[filedSelected]
                                                 ?: ""
                                             sortData.filedName = filedSelected
-                                            sortDb?.update(sortData)
+                                            sortDb.update(sortData)
                                         } else {
                                             sortData = SortFiledData(
                                                 type.name + "@Tracks",
@@ -344,7 +344,7 @@ fun TracksListPage(
                                                 methodSelected,
                                                 filedSelected
                                             )
-                                            sortDb?.insert(sortData)
+                                            sortDb.insert(sortData)
                                         }
                                     })
                             }

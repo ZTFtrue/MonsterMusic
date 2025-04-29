@@ -1,5 +1,6 @@
 package com.ztftrue.music.ui.play
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -50,6 +51,7 @@ import com.ztftrue.music.ui.play.Drop.Companion.generateRandomChars
 import kotlinx.coroutines.delay
 import org.jaudiotagger.tag.FieldKey
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
@@ -199,67 +201,67 @@ fun CoverView(musicViewModel: MusicViewModel) {
                     .fillMaxSize()
                     .aspectRatio(1f)// Force the canvas to be a square
             ) {
-                Box(modifier = Modifier.size(minOf(maxWidth, maxHeight))) {
-                    if (!musicVisualizationEnable.value || musicViewModel.showMusicCover.value) {
-                        key(musicViewModel.currentPlay.value) {
-                            Image(
-                                painter = rememberAsyncImagePainter(
-                                    coverPaint ?: R.drawable.songs_thumbnail_cover
-                                ), contentDescription = stringResource(R.string.cover),
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .aspectRatio(1f)
-                                    .background(color = Color.Black)
-                                    .combinedClickable(
-                                        onLongClick = {
-                                            showOtherMessage.value = !showOtherMessage.value
-                                        },
-                                        onClick = {
-
-                                        }
-                                    )
-                            )
-                        }
-                    } else {
-                        Box(
+                if (!musicVisualizationEnable.value || musicViewModel.showMusicCover.value) {
+                    key(musicViewModel.currentPlay.value) {
+                        Image(
+                            painter = rememberAsyncImagePainter(
+                                coverPaint ?: R.drawable.songs_thumbnail_cover
+                            ), contentDescription = stringResource(R.string.cover),
                             modifier = Modifier
-                                .fillMaxSize()
+                                .size(minOf(maxWidth, maxHeight))
+                                .aspectRatio(1f)
                                 .background(color = Color.Black)
-                        ) {
+                                .combinedClickable(
+                                    onLongClick = {
+                                        showOtherMessage.value = !showOtherMessage.value
+                                    },
+                                    onClick = {
 
-                        }
+                                    }
+                                )
+                        )
                     }
-
-                    Canvas(
-                        modifier = Modifier
-                            .graphicsLayer {
-                                clip = true // 禁用裁剪
-                            }
-                            .fillMaxSize()
-                            .padding(start = 4.dp, end = 4.dp)
+                } else {
+                    Box(
+                        modifier =
+                            Modifier
+                                .size(minOf(maxWidth, maxHeight))
+                                .background(color = Color.Black)
                     ) {
-                        canvasHeight.floatValue = size.height
-                        canvasWidth.floatValue = size.width
+
+                    }
+                }
+                Canvas(
+                    modifier = Modifier
+                        .size(minOf(maxWidth, maxHeight))
+                        .graphicsLayer {
+                            clip = true // 禁用裁剪
+                        }
+
+                        .padding(start = 4.dp, end = 4.dp)
+                ) {
+                    canvasHeight.floatValue = size.height
+                    canvasWidth.floatValue = size.width
 //                        val barWidth =
 //                            size.width / magnitudes.size
 //                        val maxBarHeight = size.width / 2
-                        // 绘制每列的雨滴
-                        drops.forEach { columnDrops ->
-                            columnDrops.forEach { drop ->
-                                drawContext.canvas.nativeCanvas.apply {
-                                    textPaint.color = drop.color.toArgb()
-                                    drawText(
-                                        drop.char,
-                                        drop.x,
-                                        drop.y,
-                                        textPaint
-                                    )
-                                }
+                    // 绘制每列的雨滴
+                    drops.forEach { columnDrops ->
+                        columnDrops.forEach { drop ->
+                            drawContext.canvas.nativeCanvas.apply {
+                                textPaint.color = drop.color.toArgb()
+                                drawText(
+                                    drop.char,
+                                    drop.x,
+                                    drop.y,
+                                    textPaint
+                                )
                             }
                         }
                     }
                 }
             }
+
         }
         item {
             if (showOtherMessage.value) {

@@ -173,7 +173,7 @@ object Utils {
             musicViewModel.autoHighLight.value =
                 SharedPreferencesUtils.getAutoHighLight(context)
             val dicApps = musicViewModel.getDb(context).DictionaryAppDao().findAllDictionaryApp()
-            if (dicApps.isNullOrEmpty()) {
+            if (dicApps.isEmpty()) {
                 val list = ArrayList<DictionaryApp>()
                 getAllDictionaryActivity(context)
                     .forEachIndexed { index, it ->
@@ -624,7 +624,7 @@ object Utils {
     @OptIn(UnstableApi::class)
     fun setLyricsFile(musicViewModel: MusicViewModel, context: Context) {
         if (musicViewModel.currentPlay.value != null) {
-            val regexPattern = Regex("[<>\"/~'{}?,+=)(^&*%!@#\$]")
+            val regexPattern = Regex("[<>\"/~'{}?,+=)(^&*%!@#$]")
             val artistsFolder = musicViewModel.currentPlay.value?.artist
                 ?.replace(
                     regexPattern,

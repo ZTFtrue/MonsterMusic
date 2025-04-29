@@ -124,7 +124,7 @@ fun TracksListView(
         })
     }
     key(tracksList, itemFilterList, showSlideIndicator, showTopIndicator) {
-        if (tracksList.size == 0 && header == null) {
+        if (tracksList.isEmpty() && header == null) {
             Text(
                 text = stringResource(R.string.no_music),
                 color = MaterialTheme.colorScheme.onBackground,

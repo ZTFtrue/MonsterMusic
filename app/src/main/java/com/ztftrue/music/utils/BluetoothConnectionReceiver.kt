@@ -8,7 +8,6 @@ import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import androidx.media3.exoplayer.ExoPlayer
 
 class BluetoothConnectionReceiver(private val exoPlayer: ExoPlayer) : BroadcastReceiver() {

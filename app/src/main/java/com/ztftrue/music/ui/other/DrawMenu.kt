@@ -52,9 +52,7 @@ import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.ACTION_REFRESH_ALL
-import com.ztftrue.music.play.ACTION_SORT
 import com.ztftrue.music.sqlData.model.MusicItem
-import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
 import kotlinx.coroutines.launch
 
