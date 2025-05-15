@@ -160,8 +160,8 @@ fun MusicPitchTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.value.background.toArgb()
-            window.navigationBarColor = colorScheme.value.background.toArgb()
+//            window.statusBarColor = colorScheme.value.background.toArgb()
+//            window.navigationBarColor = colorScheme.value.background.toArgb()
             val darkColor = !CustomColorUtils.isColorDark(colorScheme.value.background.toArgb())
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkColor
             WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars =
