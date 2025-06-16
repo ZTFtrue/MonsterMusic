@@ -1,9 +1,6 @@
 package com.ztftrue.music.ui.other
 
-import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -12,12 +9,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -25,11 +20,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -44,12 +38,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.play.ACTION_SEARCH
-import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.home.AlbumGridView
 import com.ztftrue.music.ui.home.ArtistsGridView
 import com.ztftrue.music.ui.public.BackButton
@@ -57,128 +50,48 @@ import com.ztftrue.music.ui.public.Bottom
 import com.ztftrue.music.ui.public.TracksListView
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType
-import com.ztftrue.music.utils.model.AlbumList
 import com.ztftrue.music.utils.model.AnyListBase
-import com.ztftrue.music.utils.model.ArtistList
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 
 
 /**
- * show all music of playlist
+ * Composable function for the Search screen.
+ * Handles user input for search, displays search results (tracks, albums, artists).
  */
-@OptIn(ExperimentalMaterial3Api::class)
-@UnstableApi
+@androidx.annotation.OptIn(UnstableApi::class)
+@OptIn(ExperimentalMaterial3Api::class, UnstableApi::class)
 @Composable
 fun SearchPage(
     musicViewModel: MusicViewModel,
     navController: NavHostController,
+    // Inject SearchScreenViewModel using viewModel() helper with a factory
+    searchScreenViewModel: SearchScreenViewModel = viewModel(
+        factory = SearchScreenViewModelFactory(musicViewModel)
+    )
 ) {
-    val focusRequester = remember { FocusRequester() }
-    val tracksList = remember { mutableStateListOf<MusicItem>() }
-    val albumsList = remember { mutableStateListOf<AlbumList>() }
-    val artistList = remember { mutableStateListOf<ArtistList>() }
+    // Collect state from the ViewModel
+    val keywords by searchScreenViewModel.keywords.collectAsState()
+//    val tracksList by searchScreenViewModel.tracksList.collectAsState()
+//    val albumsList by searchScreenViewModel.albumsList.collectAsState()
+//    val artistList by searchScreenViewModel.artistList.collectAsState()
     var modeList by remember { mutableStateOf(AnyListBase(-1, PlayListType.None)) }
-    var keywords by remember { mutableStateOf("") }
+
+    val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     val configuration = LocalConfiguration.current
+    // Calculate item width for horizontal scrollable grids (albums, artists)
     val width = (configuration.screenWidthDp / 2.5) + 70
-    var jobSeek: Job? = null
-    val job = CoroutineScope(Dispatchers.IO)
     val rootView = LocalView.current
     val localViewHeight by remember { mutableIntStateOf(rootView.height) }
-//    DisposableEffect(rootView) {
-//        val listener = ViewTreeObserver.OnGlobalLayoutListener {
-//            val rect = Rect()
-//            rootView.getWindowVisibleDisplayFrame(rect)
-//            val screenHeight = rootView.height
-//            val keypadHeight = screenHeight - rect.bottom
-//            keyboardHeight = if (keypadHeight > screenHeight * 0.15) keypadHeight else 0
-//            localViewHeight=rect.height()
-//        }
-//
-//        rootView.viewTreeObserver.addOnGlobalLayoutListener(listener)
-//
-//        onDispose {
-//            rootView.viewTreeObserver.removeOnGlobalLayoutListener(listener)
-//        }
-//    }
-    LaunchedEffect(keywords) {
-        jobSeek?.cancel()
-        if (keywords.isNotEmpty()) {
-            jobSeek = job.launch {
-                Thread.sleep(300)
-                val bundle = Bundle()
-                bundle.putString("keyword", keywords)
-                if (keywords.isEmpty()) {
-                    return@launch
-                }
-                if (!isActive) {
-                    return@launch
-                }
-                musicViewModel.mediaBrowser?.sendCustomAction(
-                    ACTION_SEARCH,
-                    bundle,
-                    object : MediaBrowserCompat.CustomActionCallback() {
-                        override fun onResult(
-                            action: String?,
-                            extras: Bundle?,
-                            resultData: Bundle?
-                        ) {
-                            super.onResult(action, extras, resultData)
-                            if (ACTION_SEARCH == action && resultData != null) {
-                                tracksList.clear()
-                                albumsList.clear()
-                                artistList.clear()
-                                modeList = AnyListBase(modeList.id - 1, PlayListType.None)
-                                val tracksListResult =
-                                    resultData.getParcelableArrayList<MusicItem>("tracks")
-                                val albumListsResult =
-                                    resultData.getParcelableArrayList<AlbumList>("albums")
-                                val artistListsResult =
-                                    resultData.getParcelableArrayList<ArtistList>("artist")
-                                tracksList.addAll(tracksListResult ?: emptyList())
-                                albumsList.addAll(albumListsResult ?: emptyList())
-                                artistList.addAll(artistListsResult ?: emptyList())
-                            }
-                        }
-                    }
-                )
-            }
-        }
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
     }
-    /**
-     * sometimes some the focusRequester is not initialized
-     * java.lang.IllegalStateException:
-     * 01-22 04:40:38.980: W/AndroidJUnitRunner(9977):    FocusRequester is not initialized. Here are some possible fixes:
-     * 01-22 04:40:38.980: W/AndroidJUnitRunner(9977):    1. Remember the FocusRequester: val focusRequester = remember { FocusRequester() }
-     * 01-22 04:40:38.980: W/AndroidJUnitRunner(9977):    2. Did you forget to add a Modifier.focusRequester() ?
-     * 01-22 04:40:38.980: W/AndroidJUnitRunner(9977):    3. Are you attempting to request focus during composition? Focus requests
-     * should be made in response to some event. Eg Modifier.clickable { focusRequester.requestFocus() }
-     *   DisposableEffect(Unit) {
-     *         // This block will be executed when the composable is committed
-     *         onDispose {
-     *             // This block will be executed when the composable is disposed (removed)
-     *             // Perform any cleanup or actions needed when the composition is ending
-     *         }
-     *     }
-     */
-//    LaunchedEffect(Unit) {
-//        focusRequester.requestFocus()
-//    }
+
     Scaffold(
-        modifier = Modifier
-            .padding(all = 0.dp)
-            .fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                navigationIcon = {
-                    BackButton(navController)
-                },
-                title = {},
+                navigationIcon = { BackButton(navController) },
+                title = { /* Empty title, search bar is in actions */ },
                 actions = {
                     Row(
                         modifier = Modifier
@@ -186,163 +99,167 @@ fun SearchPage(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            CompositionLocalProvider(
-                                LocalContentColor provides MaterialTheme.colorScheme.onBackground
-                            ) {
-                                OutlinedTextField(
-                                    value = keywords,
-                                    onValueChange = {
-                                        val newText = it.ifEmpty {
-                                            ""
-                                        }
-                                        if (keywords != newText) {
-                                            keywords = newText
-                                        }
-                                    },
-                                    placeholder = {
-                                        Text(stringResource(R.string.enter_text_to_search))
-                                    }, // Placeholder or hint text
-                                    keyboardOptions = KeyboardOptions.Default.copy(
-                                        imeAction = ImeAction.Done,
-                                        keyboardType = KeyboardType.Text
-                                    ),
-                                    keyboardActions = KeyboardActions(
-                                        onDone = {
-                                            focusRequester.freeFocus()
-                                            keyboardController?.hide()
-                                        }
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .focusRequester(focusRequester)
-                                        .background(MaterialTheme.colorScheme.primary),
-                                    suffix = {
-
-                                    },
-                                    colors = TextFieldDefaults.colors(
-                                        errorTextColor = MaterialTheme.colorScheme.primary,
-                                        focusedTextColor = MaterialTheme.colorScheme.primary,
-                                        disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        unfocusedTextColor = MaterialTheme.colorScheme.primary,
-                                        focusedContainerColor = MaterialTheme.colorScheme.background,
-                                        unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                                        cursorColor = MaterialTheme.colorScheme.primary,
-                                        errorCursorColor = MaterialTheme.colorScheme.error,
-                                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                                        unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.12f
-                                        ),
-                                        errorIndicatorColor = MaterialTheme.colorScheme.error,
-                                        disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        errorLeadingIconColor = MaterialTheme.colorScheme.error,
-                                        disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        errorTrailingIconColor = MaterialTheme.colorScheme.error,
-                                        focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        ),
-                                        errorLabelColor = MaterialTheme.colorScheme.error,
-                                        disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.38f
-                                        )
-                                    ),
-                                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                        // Using OutlinedTextField for a distinct search bar look
+                        OutlinedTextField(
+                            value = keywords,
+                            onValueChange = { searchScreenViewModel.onKeywordsChange(it) },
+                            placeholder = {
+                                Text(
+                                    text = stringResource(R.string.enter_text_to_search),
+                                    color = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    )
                                 )
-                            }
-                        }
+                            },
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Search, // Keyboard action for search
+                                keyboardType = KeyboardType.Text
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onSearch = {
+                                    // Hide keyboard and clear focus when search action is performed
+                                    keyboardController?.hide()
+                                    focusRequester.freeFocus()
+                                }
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(focusRequester),
+                            colors = TextFieldDefaults.colors(
+                                errorTextColor = MaterialTheme.colorScheme.primary,
+                                focusedTextColor = MaterialTheme.colorScheme.primary,
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                errorCursorColor = MaterialTheme.colorScheme.error,
+                                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                                unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.12f
+                                ),
+                                errorIndicatorColor = MaterialTheme.colorScheme.error,
+                                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorLabelColor = MaterialTheme.colorScheme.error,
+                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                )
+                            ),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                            singleLine = true // Search fields are typically single-line
+                        )
                     }
                 }
             )
         },
         bottomBar = { Bottom(musicViewModel, navController) },
-        floatingActionButton = {},
-        content = {
-            if (keywords.isNotEmpty() && albumsList.isEmpty() && artistList.isEmpty() && tracksList.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.no_music),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier
-                        .horizontalScroll(rememberScrollState(0))
-                        .padding(it)
-                )
-            }
-            var height = localViewHeight
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(it)
-            ) {
-                TracksListView(
-                    musicViewModel,
-                    modeList, tracksList, remember {
-                        mutableStateOf(true)
-                    }
-                ) {
-                    if (albumsList.isNotEmpty()) {
-                        height -= width.toInt()
-                        Text(
-                            text = stringResource(R.string.album, ""),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Box(
-                            modifier = Modifier
-                                .height(width.dp)
-                                .background(MaterialTheme.colorScheme.secondary)
-                                .fillMaxWidth()
-                        ) {
-                            AlbumGridView(
-                                musicViewModel = musicViewModel,
-                                navController = navController,
-                                albumListDefault = albumsList,
-                                scrollDirection = ScrollDirectionType.GRID_HORIZONTAL
-                            )
-                        }
+        content = { paddingValues ->
+            // Determine if "No music" message should be shown
+            val hasResults =
+                searchScreenViewModel._albumsList.isNotEmpty()
+                        || searchScreenViewModel._artistList.isNotEmpty()
+                        || searchScreenViewModel._tracksList.isNotEmpty()
+            // Show message if keywords are not empty, longer than 1 character, and no results are found
+            val showNoMusicMessage = keywords.isNotEmpty() && !hasResults && keywords.length > 1
 
-                        HorizontalDivider(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(1.dp)
-                                .background(color = MaterialTheme.colorScheme.onBackground)
-                        )
-                    }
-                    if (artistList.isNotEmpty()) {
-                        height -= width.toInt()
-                        Text(
-                            text = stringResource(R.string.artist, ""),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Box(
-                            modifier = Modifier
-                                .height(width.dp)
-                                .background(MaterialTheme.colorScheme.secondary)
-                                .fillMaxWidth()
-                        ) {
-                            ArtistsGridView(
-                                musicViewModel = musicViewModel,
-                                navController = navController,
-                                artistListDefault = artistList,
-                                scrollDirection = ScrollDirectionType.GRID_HORIZONTAL
+            if (showNoMusicMessage) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(horizontal = 16.dp), // Add some horizontal padding for text
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.no_music),
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                }
+            } else if (hasResults) {
+                var height = localViewHeight
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    TracksListView(
+                        musicViewModel,
+                        modeList, searchScreenViewModel._tracksList, remember {
+                            mutableStateOf(true)
+                        }
+                    ) {
+                        if ( searchScreenViewModel._albumsList.isNotEmpty()) {
+                            height -= width.toInt()
+                            Text(
+                                text = stringResource(R.string.album, ""),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .height(width.dp)
+                                    .background(MaterialTheme.colorScheme.secondary)
+                                    .fillMaxWidth()
+                            ) {
+                                AlbumGridView(
+                                    musicViewModel = musicViewModel,
+                                    navController = navController,
+                                    albumListDefault =  searchScreenViewModel._albumsList,
+                                    scrollDirection = ScrollDirectionType.GRID_HORIZONTAL
+                                )
+                            }
+
+                            HorizontalDivider(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(1.dp)
+                                    .background(color = MaterialTheme.colorScheme.onBackground)
                             )
                         }
-                        HorizontalDivider(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(1.dp)
-                                .background(color = MaterialTheme.colorScheme.onBackground)
-                        )
+                        if (searchScreenViewModel._artistList.isNotEmpty()) {
+                            height -= width.toInt()
+                            Text(
+                                text = stringResource(R.string.artist, ""),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .height(width.dp)
+                                    .background(MaterialTheme.colorScheme.secondary)
+                                    .fillMaxWidth()
+                            ) {
+                                ArtistsGridView(
+                                    musicViewModel = musicViewModel,
+                                    navController = navController,
+                                    artistListDefault =  searchScreenViewModel._artistList,
+                                    scrollDirection = ScrollDirectionType.GRID_HORIZONTAL
+                                )
+                            }
+                            HorizontalDivider(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(1.dp)
+                                    .background(color = MaterialTheme.colorScheme.onBackground)
+                            )
+                        }
                     }
                 }
             }
