@@ -24,6 +24,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Adjust
@@ -491,8 +493,7 @@ fun LyricsView(
                                                 )
                                             }
                                         }
-
-                                        Text(
+                                        BasicText(
                                             text = annotatedString,
                                             style = TextStyle(
                                                 color = if (currentI == listIndex && musicViewModel.autoHighLight.value) {
