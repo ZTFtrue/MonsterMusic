@@ -66,6 +66,7 @@ android {
 
         }
         getByName("debug") {
+            applicationIdSuffix = ".debug" // Appends ".debug" to the
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
