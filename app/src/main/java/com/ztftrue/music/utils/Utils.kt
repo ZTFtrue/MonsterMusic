@@ -18,6 +18,7 @@ import androidx.core.content.FileProvider
 import androidx.core.graphics.scale
 import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
+import com.ztftrue.music.BuildConfig
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
@@ -231,7 +232,7 @@ object Utils {
         fileUri =
             FileProvider.getUriForFile(
                 context,
-                context.packageName + ".fileprovider",
+                "${BuildConfig.APPLICATION_ID}.fileprovider",
                 outputImage
             )
         val intent = Intent(Intent.ACTION_VIEW)
@@ -297,7 +298,7 @@ object Utils {
 
     fun sendEmail(recipient: String, subject: String, context: Context) {
         val intent = Intent(Intent.ACTION_SENDTO).apply {
-        data = "mailto:".toUri() // only email apps should handle this
+            data = "mailto:".toUri() // only email apps should handle this
             putExtra(Intent.EXTRA_EMAIL, arrayOf(recipient))
             putExtra(Intent.EXTRA_SUBJECT, subject)
         }

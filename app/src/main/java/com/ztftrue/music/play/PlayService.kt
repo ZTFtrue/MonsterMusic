@@ -899,7 +899,7 @@ class PlayService : MediaBrowserServiceCompat() {
         clientUid: Int,
         rootHints: Bundle?
     ): BrowserRoot? {
-        return if (clientPackageName == "com.ztftrue.music") {
+        return if (clientPackageName == packageName) {
             lock.lock()
             var bundle = getData(Bundle())
             if (bundle == null) {

@@ -87,7 +87,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.ztftrue.music.fileprovider"
+            android:authorities="${applicationId}.fileprovider"
             android:enabled="true"
             android:exported="false"
             android:grantUriPermissions="true">
