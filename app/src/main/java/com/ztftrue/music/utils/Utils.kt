@@ -1,5 +1,6 @@
 package com.ztftrue.music.utils
 
+import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ResolveInfo
@@ -8,6 +9,7 @@ import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.support.v4.media.MediaBrowserCompat
 import android.text.TextUtils
 import android.util.TypedValue
@@ -74,6 +76,7 @@ fun stringToEnumForPlayListType(enumString: String): PlayListType {
 
 enum class OperateType {
     AddToQueue,
+    RemoveDuplicate,
     RemoveFromQueue,
     PlayNext,
     AddToPlaylist,
@@ -310,58 +313,59 @@ object Utils {
         context: Context,
         type: PlayListType,
         id: Long,
-        musicViewModel: MusicViewModel
+        musicViewModel: MusicViewModel,
+        removeDuplicate: Boolean
     ) {
         if (name.isNotEmpty()) {
-            val idPlayList = PlaylistManager.createPlaylist(context, name)
-            if (idPlayList != -1L) {
-                val bundle = Bundle()
-                bundle.putString("type", type.name)
-                bundle.putLong("id", id)
-                musicViewModel.mediaBrowser?.sendCustomAction(
-                    ACTION_GET_TRACKS,
-                    bundle,
-                    object : MediaBrowserCompat.CustomActionCallback() {
-                        override fun onResult(
-                            action: String?,
-                            extras: Bundle?,
-                            resultData: Bundle?
-                        ) {
-                            super.onResult(action, extras, resultData)
-                            if (ACTION_GET_TRACKS == action && resultData != null) {
-                                val tracksList =
-                                    resultData.getParcelableArrayList<MusicItem>("list")
-                                if (tracksList != null) {
-                                    val tIds = ArrayList(tracksList.map { item -> item.id })
-                                    PlaylistManager.addMusicsToPlaylist(context, idPlayList, tIds)
-                                    musicViewModel.mediaBrowser?.sendCustomAction(
-                                        ACTION_PlayLIST_CHANGE,
-                                        null,
-                                        object : MediaBrowserCompat.CustomActionCallback() {
-                                            override fun onResult(
-                                                action: String?,
-                                                extras: Bundle?,
-                                                resultData: Bundle?
-                                            ) {
-                                                super.onResult(action, extras, resultData)
-                                                musicViewModel.refreshPlayList.value =
-                                                    !musicViewModel.refreshPlayList.value
-                                            }
-                                        }
-                                    )
+
+            val bundle = Bundle()
+            bundle.putString("type", type.name)
+            bundle.putLong("id", id)
+            musicViewModel.mediaBrowser?.sendCustomAction(
+                ACTION_GET_TRACKS,
+                bundle,
+                object : MediaBrowserCompat.CustomActionCallback() {
+                    override fun onResult(
+                        action: String?,
+                        extras: Bundle?,
+                        resultData: Bundle?
+                    ) {
+                        super.onResult(action, extras, resultData)
+                        if (ACTION_GET_TRACKS == action && resultData != null) {
+                            val tracksList =
+                                resultData.getParcelableArrayList<MusicItem>("list")
+                            if (tracksList != null) {
+                                val idPlayList =
+                                    PlaylistManager.createPlaylist(context, name, tracksList, false)
+                                if (idPlayList == null) {
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.create_failed),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return
                                 }
+                                musicViewModel.mediaBrowser?.sendCustomAction(
+                                    ACTION_PlayLIST_CHANGE,
+                                    null,
+                                    object : MediaBrowserCompat.CustomActionCallback() {
+                                        override fun onResult(
+                                            action: String?,
+                                            extras: Bundle?,
+                                            resultData: Bundle?
+                                        ) {
+                                            super.onResult(action, extras, resultData)
+                                            musicViewModel.refreshPlayList.value =
+                                                !musicViewModel.refreshPlayList.value
+                                        }
+                                    }
+                                )
                             }
                         }
                     }
-                )
-            } else {
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.create_failed),
-                    Toast.LENGTH_SHORT
-                )
-                    .show()
-            }
+                }
+            )
+
         }
     }
 
@@ -369,12 +373,14 @@ object Utils {
         name: String,
         context: Context,
         item: MusicItem,
-        musicViewModel: MusicViewModel
+        musicViewModel: MusicViewModel,
+        removeDuplicate: Boolean
     ) {
         if (name.isNotEmpty()) {
-            val idPlayList = PlaylistManager.createPlaylist(context, name)
-            if (idPlayList != -1L) {
-                PlaylistManager.addMusicToPlaylist(context, idPlayList, item.id)
+            val tIds = ArrayList<MusicItem>()
+            tIds.add(item)
+            val idPlayList = PlaylistManager.createPlaylist(context, name, tIds, removeDuplicate)
+            if (idPlayList != null) {
                 musicViewModel.mediaBrowser?.sendCustomAction(
                     ACTION_PlayLIST_CHANGE, null, null
                 )
@@ -394,7 +400,8 @@ object Utils {
         context: Context,
         type: PlayListType,
         id: Long,
-        musicViewModel: MusicViewModel
+        musicViewModel: MusicViewModel,
+        removeDuplicate: Boolean
     ) {
         val bundle = Bundle()
         bundle.putString("type", type.name)
@@ -413,8 +420,13 @@ object Utils {
                         val tracksList =
                             resultData.getParcelableArrayList<MusicItem>("list")
                         if (tracksList != null) {
-                            val tIds = ArrayList(tracksList.map { item -> item.id })
-                            PlaylistManager.addMusicsToPlaylist(context, playListId, tIds)
+                            val tIds = ArrayList(tracksList.map { item -> item })
+                            PlaylistManager.addMusicsToPlaylist(
+                                context,
+                                playListId,
+                                tIds,
+                                removeDuplicate
+                            )
                             musicViewModel.mediaBrowser?.sendCustomAction(
                                 ACTION_PlayLIST_CHANGE,
                                 null,

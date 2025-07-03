@@ -1,5 +1,7 @@
 package com.ztftrue.music.ui.home
 
+import android.media.MediaScannerConnection
+import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -109,7 +111,8 @@ fun PlayListView(
     if (playList.isEmpty()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Text(
-                text = stringResource(id = R.string.there_is_no_any_album_in_here), Modifier.padding(start = 10.dp),
+                text = stringResource(R.string.there_is_no_any_playlist_in_here),
+                modifier = Modifier.padding(start = 10.dp),
                 color = MaterialTheme.colorScheme.onBackground
             )
         }
@@ -127,7 +130,10 @@ fun PlayListView(
                 PlayListType.PlayLists,
                 playList,
             )
-            HorizontalDivider(color = MaterialTheme.colorScheme.inverseOnSurface, thickness = 1.2.dp)
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.inverseOnSurface,
+                thickness = 1.2.dp
+            )
         }
     }
 }
@@ -170,6 +176,39 @@ fun PlayListItemView(
                         showDeleteTip = true
                     }
 
+                    OperateType.RemoveDuplicate -> {
+                        PlaylistManager.cleanDuplicateTrackFromPlayList(
+                            context,
+                            item.id,
+                            item.path,
+                            musicViewModel.songsList.toList()
+                        )
+                        MediaScannerConnection.scanFile(
+                            context,
+                            arrayOf(item.path),
+                            arrayOf("*/*"),
+                            object : MediaScannerConnection.MediaScannerConnectionClient {
+                                override fun onMediaScannerConnected() {}
+                                override fun onScanCompleted(path: String, uri: Uri) {
+                                    musicViewModel.mediaBrowser?.sendCustomAction(
+                                        ACTION_PlayLIST_CHANGE,
+                                        null,
+                                        object : MediaBrowserCompat.CustomActionCallback() {
+                                            override fun onResult(
+                                                action: String?,
+                                                extras: Bundle?,
+                                                resultData: Bundle?
+                                            ) {
+                                                super.onResult(action, extras, resultData)
+                                                musicViewModel.refreshPlayList.value =
+                                                    !musicViewModel.refreshPlayList.value
+                                            }
+                                        }
+                                    )
+                                }
+                            })
+                    }
+
                     else -> {
                         operateDialogDeal(it, item, musicViewModel)
                     }
@@ -178,13 +217,20 @@ fun PlayListItemView(
         )
     }
     if (showAddPlayListDialog) {
-        AddMusicToPlayListDialog(musicViewModel, null, onDismiss = {
+        AddMusicToPlayListDialog(musicViewModel, null, onDismiss = { playListId, removeDuplicate ->
             showAddPlayListDialog = false
-            if (it != null) {
-                if (it == -1L) {
+            if (playListId != null) {
+                if (playListId == -1L) {
                     showCreatePlayListDialog = true
                 } else {
-                    Utils.addTracksToPlayList(it, context, type, item.id, musicViewModel)
+                    Utils.addTracksToPlayList(
+                        playListId,
+                        context,
+                        type,
+                        item.id,
+                        musicViewModel,
+                        removeDuplicate
+                    )
                 }
             }
         })
@@ -193,7 +239,7 @@ fun PlayListItemView(
         CreatePlayListDialog(onDismiss = {
             showCreatePlayListDialog = false
             if (it != null) {
-                Utils.createPlayListAddTracks(it, context, type, item.id, musicViewModel)
+                Utils.createPlayListAddTracks(it, context, type, item.id, musicViewModel, false)
             }
         })
     }
@@ -212,7 +258,8 @@ fun PlayListItemView(
                                 resultData: Bundle?
                             ) {
                                 super.onResult(action, extras, resultData)
-                                musicViewModel.refreshPlayList.value = !musicViewModel.refreshPlayList.value
+                                musicViewModel.refreshPlayList.value =
+                                    !musicViewModel.refreshPlayList.value
                             }
                         }
                     )
@@ -236,7 +283,8 @@ fun PlayListItemView(
                                 resultData: Bundle?
                             ) {
                                 super.onResult(action, extras, resultData)
-                                musicViewModel.refreshPlayList.value = !musicViewModel.refreshPlayList.value
+                                musicViewModel.refreshPlayList.value =
+                                    !musicViewModel.refreshPlayList.value
                             }
                         }
                     )
@@ -287,7 +335,11 @@ fun PlayListItemView(
                 modifier = Modifier.horizontalScroll(rememberScrollState(0))
             )
             Text(
-                text = stringResource(R.string.song, number, if (number <= 1L) "" else stringResource(id = R.string.s)),
+                text = stringResource(
+                    R.string.song,
+                    number,
+                    if (number <= 1L) "" else stringResource(id = R.string.s)
+                ),
                 color = MaterialTheme.colorScheme.onBackground,
             )
         }
@@ -393,12 +445,37 @@ fun PlayListOperateDialog(
                                     }
                                     .clickable {
                                         musicViewModel.playListCurrent.value = null
+                                        onDismiss(OperateType.RemoveDuplicate)
+                                    },
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                Text(
+                                    text = "Remove duplicate tracks",
+                                    Modifier.padding(start = 10.dp),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(50.dp)
+                                    .padding(0.dp)
+                                    .drawBehind {
+                                        drawLine(
+                                            color = color,
+                                            start = Offset(0f, size.height - 1.dp.toPx()),
+                                            end = Offset(size.width, size.height - 1.dp.toPx()),
+                                            strokeWidth = 1.dp.toPx()
+                                        )
+                                    }
+                                    .clickable {
+                                        musicViewModel.playListCurrent.value = null
                                         onDismiss(OperateType.PlayNext)
                                     },
                                 contentAlignment = Alignment.CenterStart
                             ) {
                                 Text(
-                                    text =stringResource(id = R.string.play_next),
+                                    text = stringResource(id = R.string.play_next),
                                     Modifier.padding(start = 10.dp),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
@@ -491,7 +568,10 @@ fun PlayListOperateDialog(
                             .padding(8.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
             }

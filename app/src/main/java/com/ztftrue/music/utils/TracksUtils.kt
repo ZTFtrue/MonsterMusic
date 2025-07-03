@@ -13,6 +13,7 @@ import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.SortFiledData
 import com.ztftrue.music.utils.model.AnyListBase
+import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -68,79 +69,82 @@ object TracksUtils {
         music: MusicItem,
         targetIndex: Int = 0
     ) {
-        musicList.remove(music)
-        musicList.add(targetIndex, music)
-        val playListPath =
-            PlaylistManager.modifyTrackFromPlayList(
-                context,
-                playList.id,
-                ArrayList(musicList.toList()),
-                music.path
-            )
-        CoroutineScope(Dispatchers.IO).launch {
-            val sortDb =
-                MusicDatabase
-                    .getDatabase(context)
-                    .SortFiledDao()
-            var sortData =
-                sortDb.findSortByType(playList.type.name + "@Tracks")
-            if (sortData != null) {
-                if (sortData.method != "" || sortData.filed != "") {
-                    CoroutineScope(Dispatchers.Main).launch {
-                        Toast
-                            .makeText(
-                                context,
-                                "Already change you sort order to default",
-                                Toast.LENGTH_LONG
-                            )
-                            .show()
-                    }
-                }
-                sortData.method = ""
-                sortData.methodName = ""
-                sortData.filed = ""
-                sortData.filedName = ""
-                sortDb.update(sortData)
-            } else {
-                sortData = SortFiledData(
-                    playList.type.name + "@Tracks",
-                    "", "", "", ""
-                )
-                sortDb.insert(sortData)
-            }
-            if (!playListPath.isNullOrEmpty()) {
-                MediaScannerConnection.scanFile(
+        if (playList is MusicPlayList) {
+            musicList.remove(music)
+            musicList.add(targetIndex, music)
+            val playListPath =
+                PlaylistManager.resortOrRemoveTrackFromPlayList(
                     context,
-                    arrayOf(playListPath),
-                    arrayOf("*/*"),
-                    object :
-                        MediaScannerConnection.MediaScannerConnectionClient {
-                        override fun onMediaScannerConnected() {}
-                        override fun onScanCompleted(
-                            path: String,
-                            uri: Uri
-                        ) {
-                            mediaBrowserCompat.sendCustomAction(
-                                ACTION_PlayLIST_CHANGE,
-                                null,
-                                object :
-                                    MediaBrowserCompat.CustomActionCallback() {
-                                    override fun onResult(
-                                        action: String?,
-                                        extras: Bundle?,
-                                        resultData: Bundle?
-                                    ) {
-                                        super.onResult(
-                                            action,
-                                            extras,
-                                            resultData
-                                        )
-                                    }
-                                }
-                            )
+                    playList.id,
+                    ArrayList(musicList.toList()),
+                    playList.path
+                )
+            CoroutineScope(Dispatchers.IO).launch {
+                val sortDb =
+                    MusicDatabase
+                        .getDatabase(context)
+                        .SortFiledDao()
+                var sortData =
+                    sortDb.findSortByType(playList.type.name + "@Tracks")
+                if (sortData != null) {
+                    if (sortData.method != "" || sortData.filed != "") {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            Toast
+                                .makeText(
+                                    context,
+                                    "Already change you sort order to default",
+                                    Toast.LENGTH_LONG
+                                )
+                                .show()
                         }
-                    })
+                    }
+                    sortData.method = ""
+                    sortData.methodName = ""
+                    sortData.filed = ""
+                    sortData.filedName = ""
+                    sortDb.update(sortData)
+                } else {
+                    sortData = SortFiledData(
+                        playList.type.name + "@Tracks",
+                        "", "", "", ""
+                    )
+                    sortDb.insert(sortData)
+                }
+                if (!playListPath.isNullOrEmpty()) {
+                    MediaScannerConnection.scanFile(
+                        context,
+                        arrayOf(playListPath),
+                        arrayOf("*/*"),
+                        object :
+                            MediaScannerConnection.MediaScannerConnectionClient {
+                            override fun onMediaScannerConnected() {}
+                            override fun onScanCompleted(
+                                path: String,
+                                uri: Uri
+                            ) {
+                                mediaBrowserCompat.sendCustomAction(
+                                    ACTION_PlayLIST_CHANGE,
+                                    null,
+                                    object :
+                                        MediaBrowserCompat.CustomActionCallback() {
+                                        override fun onResult(
+                                            action: String?,
+                                            extras: Bundle?,
+                                            resultData: Bundle?
+                                        ) {
+                                            super.onResult(
+                                                action,
+                                                extras,
+                                                resultData
+                                            )
+                                        }
+                                    }
+                                )
+                            }
+                        })
+                }
             }
+
         }
     }
 }

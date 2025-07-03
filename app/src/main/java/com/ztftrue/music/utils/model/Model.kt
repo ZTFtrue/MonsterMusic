@@ -9,6 +9,7 @@ import java.io.Serializable
 data class MusicPlayList(
     override var name: String,
     override var id: Long,
+    var path: String,
     override var trackNumber: Int,
     override var type: PlayListType = PlayListType.PlayLists,
 ) : ListBase(id, name, trackNumber, type)

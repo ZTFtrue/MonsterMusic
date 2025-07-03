@@ -1,6 +1,9 @@
 package com.ztftrue.music.ui.public
 
+import android.content.ContentUris
 import android.content.Context
+import android.net.Uri
+import android.provider.MediaStore
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -48,6 +51,7 @@ import com.ztftrue.music.QueuePlayList
 import com.ztftrue.music.R
 import com.ztftrue.music.play.ACTION_CLEAR_QUEUE
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
+import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 
@@ -89,17 +93,17 @@ fun QueuePage(
         })
     }
     if (showAddPlayListDialog) {
-        AddMusicToPlayListDialog(musicViewModel, null) { playListId ->
+        AddMusicToPlayListDialog(musicViewModel, null) { playListId,removeDuplicate ->
             showAddPlayListDialog = false
             if (playListId != null) {
                 if (playListId == -1L) {
                     showCreatePlayListDialog = true
                 } else {
-                    val ids = ArrayList<Long>(musicList.size)
+                    val ids = ArrayList<MusicItem>(musicList.size)
                     musicList.forEach {
-                        ids.add(it.id)
+                        ids.add(it)
                     }
-                    PlaylistManager.addMusicsToPlaylist(context, playListId, ids)
+                    PlaylistManager.addMusicsToPlaylist(context, playListId, ids,removeDuplicate)
                     musicViewModel.mediaBrowser?.sendCustomAction(
                         ACTION_PlayLIST_CHANGE, null, null
                     )
@@ -111,13 +115,12 @@ fun QueuePage(
         CreatePlayListDialog(onDismiss = { playListName ->
             showCreatePlayListDialog = false
             if (!playListName.isNullOrEmpty()) {
-                val ids = ArrayList<Long>(musicList.size)
+                val ids = ArrayList<MusicItem>(musicList.size)
                 musicList.forEach {
-                    ids.add(it.id)
+                    ids.add(it)
                 }
-                val idPlayList = PlaylistManager.createPlaylist(context, playListName)
-                if (idPlayList != -1L) {
-                    PlaylistManager.addMusicsToPlaylist(context, idPlayList, ids)
+                val idPlayList = PlaylistManager.createPlaylist(context, playListName,ids,false)
+                if (idPlayList != null) {
                     musicViewModel.mediaBrowser?.sendCustomAction(
                         ACTION_PlayLIST_CHANGE, null, null
                     )

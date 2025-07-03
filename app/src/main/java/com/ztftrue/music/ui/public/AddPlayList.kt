@@ -1,5 +1,6 @@
 package com.ztftrue.music.ui.public
 
+import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import androidx.compose.foundation.background
@@ -21,6 +22,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +42,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -92,63 +96,63 @@ fun CreatePlayListDialog(
                         .background(color = MaterialTheme.colorScheme.primary)
                 )
                 Row {
-                        TextField(
-                            value = playListName,
-                            onValueChange = {
-                                playListName = it
-                            },
-                            label = {
-                                Text(
-                                    text = stringResource(id = R.string.enter_name),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            },
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                imeAction = ImeAction.Done,
-                                keyboardType = KeyboardType.Text
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
+                    TextField(
+                        value = playListName,
+                        onValueChange = {
+                            playListName = it
+                        },
+                        label = {
+                            Text(
+                                text = stringResource(id = R.string.enter_name),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Done,
+                            keyboardType = KeyboardType.Text
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
 //                            startTimer(inputMinutes.toInt())
-                                }
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            suffix = {
+                            }
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        suffix = {
 //                            Text("")
-                            },
-                            colors = TextFieldDefaults.colors(
-                                errorTextColor = MaterialTheme.colorScheme.primary,
-                                focusedTextColor = MaterialTheme.colorScheme.primary,
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                unfocusedTextColor = MaterialTheme.colorScheme.primary,
-                                focusedContainerColor = MaterialTheme.colorScheme.background,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                                cursorColor = MaterialTheme.colorScheme.primary,
-                                errorCursorColor = MaterialTheme.colorScheme.error,
-                                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                                unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                                errorIndicatorColor = MaterialTheme.colorScheme.error,
-                                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                ),
-                                errorLeadingIconColor = MaterialTheme.colorScheme.error,
-                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                ),
-                                errorTrailingIconColor = MaterialTheme.colorScheme.error,
-                                focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                errorLabelColor = MaterialTheme.colorScheme.error,
-                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                )
+                        },
+                        colors = TextFieldDefaults.colors(
+                            errorTextColor = MaterialTheme.colorScheme.primary,
+                            focusedTextColor = MaterialTheme.colorScheme.primary,
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                            focusedContainerColor = MaterialTheme.colorScheme.background,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            errorCursorColor = MaterialTheme.colorScheme.error,
+                            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                            unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                            errorIndicatorColor = MaterialTheme.colorScheme.error,
+                            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
                             ),
-                            textStyle= MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
-                        )
+                            errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
+                            ),
+                            errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            errorLabelColor = MaterialTheme.colorScheme.error,
+                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
+                            )
+                        ),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                    )
 
                 }
                 Row(
@@ -259,57 +263,57 @@ fun RenamePlayListDialog(
                         .background(color = MaterialTheme.colorScheme.onBackground)
                 )
                 Row {
-                        TextField(
-                            value = playListName,
-                            onValueChange = {
-                                playListName = it
-                            },
-                            label = { Text(stringResource(R.string.enter_name)) },
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                imeAction = ImeAction.Done,
-                                keyboardType = KeyboardType.Text
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
+                    TextField(
+                        value = playListName,
+                        onValueChange = {
+                            playListName = it
+                        },
+                        label = { Text(stringResource(R.string.enter_name)) },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Done,
+                            keyboardType = KeyboardType.Text
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
 //                            startTimer(inputMinutes.toInt())
-                                }
+                            }
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        suffix = {
+                        },
+                        colors = TextFieldDefaults.colors(
+                            errorTextColor = MaterialTheme.colorScheme.primary,
+                            focusedTextColor = MaterialTheme.colorScheme.primary,
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                            focusedContainerColor = MaterialTheme.colorScheme.background,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            errorCursorColor = MaterialTheme.colorScheme.error,
+                            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                            unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                            errorIndicatorColor = MaterialTheme.colorScheme.error,
+                            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
                             ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            suffix = {
-                            },
-                            colors = TextFieldDefaults.colors(
-                                errorTextColor = MaterialTheme.colorScheme.primary,
-                                focusedTextColor = MaterialTheme.colorScheme.primary,
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                unfocusedTextColor = MaterialTheme.colorScheme.primary,
-                                focusedContainerColor = MaterialTheme.colorScheme.background,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                                cursorColor = MaterialTheme.colorScheme.primary,
-                                errorCursorColor = MaterialTheme.colorScheme.error,
-                                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                                unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                                errorIndicatorColor = MaterialTheme.colorScheme.error,
-                                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                ),
-                                errorLeadingIconColor = MaterialTheme.colorScheme.error,
-                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                ),
-                                errorTrailingIconColor = MaterialTheme.colorScheme.error,
-                                focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                errorLabelColor = MaterialTheme.colorScheme.error,
-                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.38f
-                                )
+                            errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
                             ),
-                            textStyle= MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
-                        )
+                            errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            errorLabelColor = MaterialTheme.colorScheme.error,
+                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
+                            )
+                        ),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                    )
 
                 }
                 Row(
@@ -335,7 +339,7 @@ fun RenamePlayListDialog(
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
-                            text =stringResource(R.string.cancel),
+                            text = stringResource(R.string.cancel),
                             Modifier.padding(start = 10.dp),
                             color = MaterialTheme.colorScheme.onBackground,
                         )
@@ -441,7 +445,7 @@ fun DeleteTip(
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
-                            text =stringResource(R.string.cancel), Modifier.padding(start = 10.dp),
+                            text = stringResource(R.string.cancel), Modifier.padding(start = 10.dp),
                             color = MaterialTheme.colorScheme.onBackground,
                         )
                     }
@@ -488,15 +492,15 @@ fun DeleteTip(
 fun AddMusicToPlayListDialog(
     musicViewModel: MusicViewModel,
     musicItem: MusicItem? = null,
-    onDismiss: (playListId: Long?) -> Unit
+    onDismiss: (playListId: Long?, removeDuplicate: Boolean) -> Unit
 ) {
-
+    val removeDuplicate = remember { mutableStateOf(true) }
     fun onConfirmation(id: Long) {
-        onDismiss(id)
+        onDismiss(id,removeDuplicate.value)
     }
 
     val onDis = {
-        onDismiss(null)
+        onDismiss(null,removeDuplicate.value)
     }
     val color = MaterialTheme.colorScheme.onBackground
 
@@ -544,10 +548,35 @@ fun AddMusicToPlayListDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = stringResource(R.string.add_music_to_playlist, musicItem?.name?:""), modifier = Modifier
+                    text = stringResource(R.string.add_music_to_playlist, musicItem?.name ?: ""),
+                    modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )
+               Row {
+                   Checkbox(
+                       checked = removeDuplicate.value,
+                       onCheckedChange = { v ->
+
+                           removeDuplicate.value = v
+                       },
+                       modifier = Modifier
+                           .padding(8.dp)
+                           .semantics {
+                               contentDescription =
+                                   if (removeDuplicate.value) {
+                                       "Auto remove duplicate songs"
+                                   } else {
+                                       "Don't remove duplicate songs"
+                                   }
+                           }
+                   )
+                   Text(
+                       text = "Auto remove duplicate songs",
+                       modifier = Modifier.padding(8.dp),
+                       color = MaterialTheme.colorScheme.onBackground
+                   )
+               }
                 HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -564,7 +593,7 @@ fun AddMusicToPlayListDialog(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Operate More, will open dialog",
+                        contentDescription = stringResource(R.string.add_new_playlist),
                         modifier = Modifier
                             .size(30.dp)
                             .clip(CircleShape),
@@ -586,9 +615,11 @@ fun AddMusicToPlayListDialog(
                                     onConfirmation(item.id)
                                 }, verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(
+                            Box(
+                                contentAlignment= Alignment.CenterStart,
                                 modifier = Modifier
                                     .fillMaxWidth(0.9f)
+                                    .padding(10.dp,0.dp,0.dp,10.dp)
                                     .height(50.dp)
                             ) {
                                 Text(
@@ -622,7 +653,11 @@ fun AddMusicToPlayListDialog(
                         },
                     contentAlignment = Alignment.CenterStart
                 ) {
-                    Text(text = stringResource(R.string.cancel), Modifier.padding(start = 10.dp), color = MaterialTheme.colorScheme.onBackground)
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        Modifier.padding(start = 10.dp),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 }
             }
         }

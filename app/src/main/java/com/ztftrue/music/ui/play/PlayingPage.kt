@@ -1,6 +1,9 @@
 package com.ztftrue.music.ui.play
 
+import android.content.ContentUris
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.view.MotionEvent
@@ -148,6 +151,7 @@ import com.ztftrue.music.utils.trackManager.TracksManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.collections.ArrayList
 import kotlin.math.roundToLong
 
 const val CoverID = 0
@@ -355,19 +359,29 @@ fun PlayingPage(
     }
     if (showAddPlayListDialog) {
         if (music != null) {
-            AddMusicToPlayListDialog(musicViewModel, music, onDismiss = {
-                showAddPlayListDialog = false
-                if (it != null) {
-                    if (it == -1L) {
-                        showCreatePlayListDialog = true
-                    } else {
-                        PlaylistManager.addMusicToPlaylist(context, it, music.id)
-                        musicViewModel.mediaBrowser?.sendCustomAction(
-                            ACTION_PlayLIST_CHANGE, null, null
-                        )
+            AddMusicToPlayListDialog(
+                musicViewModel,
+                music,
+                onDismiss = { playListId, removeDuplicate ->
+                    showAddPlayListDialog = false
+                    if (playListId != null) {
+                        if (playListId == -1L) {
+                            showCreatePlayListDialog = true
+                        } else {
+                            val musics = java.util.ArrayList<MusicItem>(1)
+                            musics.add(music)
+                            PlaylistManager.addMusicsToPlaylist(
+                                context,
+                                playListId,
+                                musics,
+                                removeDuplicate
+                            )
+                            musicViewModel.mediaBrowser?.sendCustomAction(
+                                ACTION_PlayLIST_CHANGE, null, null
+                            )
+                        }
                     }
-                }
-            })
+                })
         }
     }
     if (showCreatePlayListDialog) {
@@ -375,7 +389,7 @@ fun PlayingPage(
             showCreatePlayListDialog = false
             if (!it.isNullOrEmpty()) {
                 if (music != null) {
-                    Utils.createPlayListAddTrack(it, context, music, musicViewModel)
+                    Utils.createPlayListAddTrack(it, context, music, musicViewModel, false)
                 }
             }
         })

@@ -75,6 +75,7 @@ import com.ztftrue.music.utils.Utils.deleteTrackUpdate
 import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.AnyListBase
+import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.TracksManager
 
@@ -163,40 +164,42 @@ fun MusicItemView(
                     }
 
                     OperateType.RemoveFromPlaylist -> {
-                        if (index < musicList.size)
-                            musicList.removeAt(index)
-                        val playListPath =
-                            PlaylistManager.modifyTrackFromPlayList(
-                                context,
-                                playList.id,
-                                ArrayList(musicList.toList()),
-                                music.path
-                            )
-                        if (!playListPath.isNullOrEmpty()) {
-                            MediaScannerConnection.scanFile(
-                                context,
-                                arrayOf(playListPath),
-                                arrayOf("*/*"),
-                                object : MediaScannerConnection.MediaScannerConnectionClient {
-                                    override fun onMediaScannerConnected() {}
-                                    override fun onScanCompleted(path: String, uri: Uri) {
-                                        viewModel.mediaBrowser?.sendCustomAction(
-                                            ACTION_PlayLIST_CHANGE,
-                                            null,
-                                            object : MediaBrowserCompat.CustomActionCallback() {
-                                                override fun onResult(
-                                                    action: String?,
-                                                    extras: Bundle?,
-                                                    resultData: Bundle?
-                                                ) {
-                                                    super.onResult(action, extras, resultData)
-                                                    viewModel.refreshPlayList.value =
-                                                        !viewModel.refreshPlayList.value
+                        if (playList is MusicPlayList) {
+                            if (index < musicList.size)
+                                musicList.removeAt(index)
+                            val playListPath =
+                                PlaylistManager.resortOrRemoveTrackFromPlayList(
+                                    context,
+                                    playList.id,
+                                    ArrayList(musicList.toList()),
+                                    playList.path
+                                )
+                            if (!playListPath.isNullOrEmpty()) {
+                                MediaScannerConnection.scanFile(
+                                    context,
+                                    arrayOf(playListPath),
+                                    arrayOf("*/*"),
+                                    object : MediaScannerConnection.MediaScannerConnectionClient {
+                                        override fun onMediaScannerConnected() {}
+                                        override fun onScanCompleted(path: String, uri: Uri) {
+                                            viewModel.mediaBrowser?.sendCustomAction(
+                                                ACTION_PlayLIST_CHANGE,
+                                                null,
+                                                object : MediaBrowserCompat.CustomActionCallback() {
+                                                    override fun onResult(
+                                                        action: String?,
+                                                        extras: Bundle?,
+                                                        resultData: Bundle?
+                                                    ) {
+                                                        super.onResult(action, extras, resultData)
+                                                        viewModel.refreshPlayList.value =
+                                                            !viewModel.refreshPlayList.value
+                                                    }
                                                 }
-                                            }
-                                        )
-                                    }
-                                })
+                                            )
+                                        }
+                                    })
+                            }
                         }
                     }
 
@@ -283,14 +286,21 @@ fun MusicItemView(
         )
     }
     if (showAddPlayListDialog) {
-        AddMusicToPlayListDialog(viewModel, music, onDismiss = {
+        AddMusicToPlayListDialog(viewModel, music, onDismiss = { playListId, removeDuplicate ->
             showAddPlayListDialog = false
-            if (it != null) {
-                if (it == -1L) {
+            if (playListId != null) {
+                if (playListId == -1L) {
                     showCreatePlayListDialog = true
                 } else {
-                    PlaylistManager.addMusicToPlaylist(context, it, music.id)
-                    if (playList.id == it) {
+                    val musics = ArrayList<MusicItem>()
+                    musics.add(music)
+                    PlaylistManager.addMusicsToPlaylist(
+                        context,
+                        playListId,
+                        musics,
+                        removeDuplicate
+                    )
+                    if (playList.id == playListId) {
                         musicList.add(music)
                     }
                     viewModel.mediaBrowser?.sendCustomAction(
@@ -304,7 +314,7 @@ fun MusicItemView(
         CreatePlayListDialog(onDismiss = {
             showCreatePlayListDialog = false
             if (!it.isNullOrEmpty()) {
-                Utils.createPlayListAddTrack(it, context, music, viewModel)
+                Utils.createPlayListAddTrack(it, context, music, viewModel, false)
             }
         })
     }
@@ -499,7 +509,7 @@ fun saveSortResult(
     } else if (playList.type == PlayListType.Queue) {
         viewModel.mediaBrowser?.let {
             TracksUtils.sortQueue(
-                it,   musicList,
+                it, musicList,
                 music,
                 index, targetIndex
             )

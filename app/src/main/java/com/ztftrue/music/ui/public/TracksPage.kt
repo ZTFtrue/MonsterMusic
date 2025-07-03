@@ -1,5 +1,7 @@
 package com.ztftrue.music.ui.public
 
+import android.media.MediaScannerConnection
+import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import androidx.compose.foundation.Image
@@ -66,6 +68,7 @@ import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.ACTION_GET_ALBUM_BY_ID
 import com.ztftrue.music.play.ACTION_GET_TRACKS
+import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_SHUFFLE_PLAY_QUEUE
 import com.ztftrue.music.play.ACTION_SORT
 import com.ztftrue.music.play.PlayUtils
@@ -93,6 +96,7 @@ import com.ztftrue.music.utils.model.GenresList
 import com.ztftrue.music.utils.model.ListBase
 import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.trackManager.ArtistManager
+import com.ztftrue.music.utils.trackManager.PlaylistManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -531,7 +535,7 @@ fun TracksListPage(
             }
 
             PlayListType.PlayLists -> {
-                val item = MusicPlayList("", id, 0)
+                val item = MusicPlayList("", id, "", 0)
                 PlayListOperateDialog(
                     musicViewModel,
                     playList = item,
@@ -542,9 +546,43 @@ fun TracksListPage(
                                 showAddPlayListDialog = true
                             }
 
+                            OperateType.RemoveDuplicate -> {
+                                PlaylistManager.cleanDuplicateTrackFromPlayList(
+                                    context,
+                                    item.id,
+                                    item.path,
+                                    musicViewModel.songsList.toList()
+                                )
+                                MediaScannerConnection.scanFile(
+                                    context,
+                                    arrayOf(item.path),
+                                    arrayOf("*/*"),
+                                    object : MediaScannerConnection.MediaScannerConnectionClient {
+                                        override fun onMediaScannerConnected() {}
+                                        override fun onScanCompleted(path: String, uri: Uri) {
+                                            musicViewModel.mediaBrowser?.sendCustomAction(
+                                                ACTION_PlayLIST_CHANGE,
+                                                null,
+                                                object : MediaBrowserCompat.CustomActionCallback() {
+                                                    override fun onResult(
+                                                        action: String?,
+                                                        extras: Bundle?,
+                                                        resultData: Bundle?
+                                                    ) {
+                                                        super.onResult(action, extras, resultData)
+                                                        musicViewModel.refreshPlayList.value =
+                                                            !musicViewModel.refreshPlayList.value
+                                                    }
+                                                }
+                                            )
+                                        }
+                                    })
+                            }
+
                             else -> {
                                 Utils.operateDialogDeal(it, item, musicViewModel)
                             }
+
                         }
                     },
                 )
@@ -557,13 +595,20 @@ fun TracksListPage(
 
     }
     if (showAddPlayListDialog) {
-        AddMusicToPlayListDialog(musicViewModel, null, onDismiss = {
+        AddMusicToPlayListDialog(musicViewModel, null, onDismiss = { playListId, removeDuplicate ->
             showAddPlayListDialog = false
-            if (it != null) {
-                if (it == -1L) {
+            if (playListId != null) {
+                if (playListId == -1L) {
                     showCreatePlayListDialog = true
                 } else {
-                    Utils.addTracksToPlayList(it, context, type, id, musicViewModel)
+                    Utils.addTracksToPlayList(
+                        playListId,
+                        context,
+                        type,
+                        id,
+                        musicViewModel,
+                        removeDuplicate
+                    )
                 }
             }
         })
@@ -572,7 +617,7 @@ fun TracksListPage(
         CreatePlayListDialog(onDismiss = {
             showCreatePlayListDialog = false
             if (it != null) {
-                Utils.createPlayListAddTracks(it, context, type, id, musicViewModel)
+                Utils.createPlayListAddTracks(it, context, type, id, musicViewModel, false)
             }
         })
     }
@@ -639,7 +684,6 @@ fun TracksListPage(
                                 )
                             }
                         }
-
                     }
                 }
                 Row(

@@ -5,10 +5,12 @@ import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.bluetooth.BluetoothDevice
 import android.content.ComponentName
+import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.provider.MediaStore
@@ -339,7 +341,8 @@ class PlayService : MediaBrowserServiceCompat() {
                         playListLinkedHashMap,
                         tracksLinkedHashMap,
                         result,
-                        "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
+                        sortData?.filed,
+                        sortData?.method
                     )
                 }
             }
@@ -641,7 +644,7 @@ class PlayService : MediaBrowserServiceCompat() {
                     playListLinkedHashMap,
                     tracksLinkedHashMap,
                     null,
-                    "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
+                    sortData?.filed, sortData?.method
                 )
             }
             result.sendResult(null)
@@ -1940,19 +1943,23 @@ class PlayService : MediaBrowserServiceCompat() {
                             val sortData =
                                 db.SortFiledDao()
                                     .findSortByType(PlayUtils.ListTypeTracks.PlayListsTracks)
-                            val tracksUri = MediaStore.Audio.Playlists.Members.getContentUri(
-                                "external", id
-                            )
-                            val tracks =
-                                PlaylistManager.getTracksByPlayListId(
-                                    this@PlayService,
-                                    tracksUri,
-                                    allTracksLinkedHashMap,
-                                    null,
-                                    null,
-                                    "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
+
+                            val playList = playListLinkedHashMap[id]
+                            if (playList != null) {
+                                val file = File(playList.path)
+                                val contentUri: Uri = ContentUris.withAppendedId(
+                                    MediaStore.Files.getContentUri("external"), id
                                 )
-                            playListTracksHashMap[id] = tracks
+                                val tracks =
+                                    PlaylistManager.getTracksByPlayListId(
+                                        this@PlayService,
+                                        contentUri,
+                                        file.parent!!,
+                                        allTracksLinkedHashMap,
+                                        sortData?.filed, sortData?.method
+                                    )
+                                playListTracksHashMap[id] = tracks
+                            }
                             bundle.putParcelableArrayList("list", playListTracksHashMap[id])
                             bundle.putParcelable("message", playListLinkedHashMap[id])
                             result.sendResult(bundle)

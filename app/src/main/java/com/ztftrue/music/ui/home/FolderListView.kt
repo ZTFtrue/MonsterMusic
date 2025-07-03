@@ -187,13 +187,13 @@ fun FolderItemView(
         )
     }
     if (showAddPlayListDialog) {
-        AddMusicToPlayListDialog(musicViewModel, null, onDismiss = {
+        AddMusicToPlayListDialog(musicViewModel, null, onDismiss = {playListId,removeDuplicate ->
             showAddPlayListDialog = false
-            if (it != null) {
-                if (it == -1L) {
+            if (playListId != null) {
+                if (playListId == -1L) {
                     showCreatePlayListDialog = true
                 } else {
-                    Utils.addTracksToPlayList(it, context, type, item.id, musicViewModel)
+                    Utils.addTracksToPlayList(playListId, context, type, item.id, musicViewModel,removeDuplicate)
                 }
             }
         })
@@ -202,7 +202,7 @@ fun FolderItemView(
         CreatePlayListDialog(onDismiss = {
             showCreatePlayListDialog = false
             if (it != null) {
-                Utils.createPlayListAddTracks(it, context, type, item.id, musicViewModel)
+                Utils.createPlayListAddTracks(it, context, type, item.id, musicViewModel,false)
             }
         })
     }

@@ -219,13 +219,13 @@ fun GenreItemView(
         )
     }
     if (showAddPlayListDialog) {
-        AddMusicToPlayListDialog(musicViewModel, null, onDismiss = {
+        AddMusicToPlayListDialog(musicViewModel, null, onDismiss = {playListId,removeDuplicate ->
             showAddPlayListDialog = false
-            if (it != null) {
-                if (it == -1L) {
+            if (playListId != null) {
+                if (playListId == -1L) {
                     showCreatePlayListDialog = true
                 } else {
-                    addTracksToPlayList(it, context, type, item.id, musicViewModel)
+                    addTracksToPlayList(playListId, context, type, item.id, musicViewModel,removeDuplicate)
                 }
             }
         })
@@ -234,7 +234,7 @@ fun GenreItemView(
         CreatePlayListDialog(onDismiss = {
             showCreatePlayListDialog = false
             if (it != null) {
-                createPlayListAddTracks(it, context, type, item.id, musicViewModel)
+                createPlayListAddTracks(it, context, type, item.id, musicViewModel, false)
             }
         })
     }

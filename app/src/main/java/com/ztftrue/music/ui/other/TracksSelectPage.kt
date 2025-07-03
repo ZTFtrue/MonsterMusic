@@ -1,6 +1,9 @@
 package com.ztftrue.music.ui.other
 
+import android.content.ContentUris
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.support.v4.media.MediaBrowserCompat
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -138,11 +141,16 @@ fun TracksSelectPage(
                             IconButton(onClick = {
                                 if (playListId == -1L) {// create
                                     if (!playListName.isNullOrEmpty()) {
-                                        val id = PlaylistManager.createPlaylist(context, playListName)
-                                        if (id != -1L) {
-                                            val ids = ArrayList<Long>(selectList.size)
-                                            selectList.forEach { ids.add(it.id) }
-                                            PlaylistManager.addMusicsToPlaylist(context, id, ids)
+                                        val ids = ArrayList<MusicItem>(selectList.size)
+                                        selectList.forEach { ids.add(it) }
+                                        val id =
+                                            PlaylistManager.createPlaylist(
+                                                context,
+                                                playListName,
+                                                ids,
+                                                false
+                                            )
+                                        if (id != null) {
                                             selectList.clear()
                                             musicViewModel.mediaBrowser?.sendCustomAction(
                                                 ACTION_PlayLIST_CHANGE, null, null
@@ -160,12 +168,13 @@ fun TracksSelectPage(
                                     }
                                 } else {
                                     if (playListId != null) {
-                                        val ids = ArrayList<Long>(selectList.size)
-                                        selectList.forEach { ids.add(it.id) }
+                                        val ids = ArrayList<MusicItem>(selectList.size)
+                                        selectList.forEach { ids.add(it) }
                                         if (PlaylistManager.addMusicsToPlaylist(
                                                 context,
                                                 playListId,
-                                                ids
+                                                ids,
+                                                false
                                             )
                                         ) {
                                             selectList.clear()

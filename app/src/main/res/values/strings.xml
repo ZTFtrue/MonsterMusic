@@ -145,4 +145,5 @@
     <string name="default_set">Default</string>
     <string name="play">play</string>
     <string name="s">s</string>
+    <string name="there_is_no_any_playlist_in_here">There is no any playlist in here</string>
 </resources>

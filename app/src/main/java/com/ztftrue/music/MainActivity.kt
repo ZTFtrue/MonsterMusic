@@ -21,6 +21,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -70,7 +71,8 @@ import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.deleteTrackUpdate
 import com.ztftrue.music.utils.model.AnyListBase
-import com.ztftrue.music.utils.trackManager.PlaylistManager.modifyTrackFromM3U
+import com.ztftrue.music.utils.trackManager.PlaylistManager
+import com.ztftrue.music.utils.trackManager.PlaylistManager.resortOrRemoveTrackFromM3U
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -108,9 +110,18 @@ class MainActivity : ComponentActivity() {
                     }
                 } else if (OperateTypeInActivity.InsertTrackToPlaylist.name == action) {
                     val u = bundle.getParcelable<Uri>("uri")
-                    val v = bundle.getParcelableArrayList<ContentValues>("values")
+                    val v = bundle.getParcelableArrayList<MusicItem>("values")
+                    val id = bundle.getLong("id")
+                    val removeDuplicate = bundle.getBoolean("removeDuplicate")
                     if (u != null && v != null) {
-                        resolver.bulkInsert(u, v.toTypedArray())
+//                        resolver.bulkInsert(u, v.toTypedArray())
+                        PlaylistManager.addMusicsToPlaylist(
+                            this@MainActivity,
+                            id,
+                            v,
+                            removeDuplicate,
+                            true
+                        )
                     }
                 } else if (OperateTypeInActivity.RenamePlaylist.name == action) {
                     val u = bundle.getParcelable<Uri>("uri")
@@ -121,16 +132,14 @@ class MainActivity : ComponentActivity() {
                 } else if (OperateTypeInActivity.ModifyTrackFromPlayList.name == action) {
                     val playListPath = bundle.getString("playListPath", "")
                     val uri = bundle.getString("uri", "")
-                    val tracksPath = bundle.getString("tracksPath", "")
                     val arrayList: ArrayList<MusicItem> =
                         bundle.getParcelableArrayList("list") ?: ArrayList()
                     if (playListPath.isNotEmpty()) {
-                        modifyTrackFromM3U(
+                        resortOrRemoveTrackFromM3U(
                             this@MainActivity,
                             uri.toUri(),
                             playListPath,
-                            arrayList,
-                            tracksPath
+                            arrayList
                         )
                         MediaScannerConnection.scanFile(
                             this@MainActivity,
@@ -188,7 +197,6 @@ class MainActivity : ComponentActivity() {
                 } else if (OperateTypeInActivity.EditTrackInfo.name == action) {
                     musicViewModel.editTrackEnable.value = true
                 }
-
                 musicViewModel.mediaBrowser?.sendCustomAction(
                     ACTION_PlayLIST_CHANGE,
                     null,
@@ -206,8 +214,10 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 )
+                bundle.clear()
             } else {
                 bundle.clear()
+                Toast.makeText(this@MainActivity, "Need permission", Toast.LENGTH_SHORT).show()
             }
         }
 
