@@ -170,7 +170,7 @@ object PlaylistManager {
                 Log.e("PlaylistCreator", "Failed to create new MediaStore entry.")
                 return null
             }
-            var checkDuplicateMap = HashMap<String, Boolean>()
+            val checkDuplicateMap = HashMap<String, Boolean>()
             contentResolver.openOutputStream(newPlaylistUri)?.use { outputStream ->
                 outputStream.bufferedWriter().use { writer ->
                     writer.write("#EXTM3U\n")

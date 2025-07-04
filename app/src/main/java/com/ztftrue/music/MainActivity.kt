@@ -107,6 +107,7 @@ class MainActivity : ComponentActivity() {
                     val u = bundle.getParcelable<Uri>("uri")
                     if (u != null) {
                         resolver.delete(u, null, null)
+                        resolver.notifyChange(u, null)
                         musicViewModel.refreshPlayList.value =
                             !musicViewModel.refreshPlayList.value
                     }
