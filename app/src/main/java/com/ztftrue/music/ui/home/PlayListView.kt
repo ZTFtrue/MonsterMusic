@@ -255,21 +255,7 @@ fun PlayListItemView(
             showDeleteTip = false
             if (it) {
                 if (PlaylistManager.deletePlaylist(context, item.id)) {
-                    musicViewModel.mediaBrowser?.sendCustomAction(
-                        ACTION_PlayLIST_CHANGE,
-                        null,
-                        object : MediaBrowserCompat.CustomActionCallback() {
-                            override fun onResult(
-                                action: String?,
-                                extras: Bundle?,
-                                resultData: Bundle?
-                            ) {
-                                super.onResult(action, extras, resultData)
-                                musicViewModel.refreshPlayList.value =
-                                    !musicViewModel.refreshPlayList.value
-                            }
-                        }
-                    )
+                    Utils.refreshPlaylist(musicViewModel)
                 }
             }
         })

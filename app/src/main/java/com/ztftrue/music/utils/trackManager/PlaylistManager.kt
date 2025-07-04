@@ -303,8 +303,8 @@ object PlaylistManager {
             val playlistUri: Uri = ContentUris.withAppendedId(
                 MediaStore.Files.getContentUri("external"), playListId
             )
-            val playListFile=File(playListPath)
-            if(!playListFile.exists()){
+            val playListFile = File(playListPath)
+            if (!playListFile.exists()) {
                 return false
             }
             context.contentResolver.openInputStream(playlistUri)?.use { inputStream ->
@@ -439,7 +439,8 @@ object PlaylistManager {
     fun deletePlaylist(context: Context, playlistId: Long): Boolean {
         val resolver: ContentResolver = context.contentResolver
         val contentUri: Uri = ContentUris.withAppendedId(
-            MediaStore.Files.getContentUri("external"), playlistId
+            MediaStore.Audio.Playlists.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
+            playlistId
         )
         if (context.checkUriPermission(
                 contentUri,

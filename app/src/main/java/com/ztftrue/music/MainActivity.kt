@@ -107,6 +107,8 @@ class MainActivity : ComponentActivity() {
                     val u = bundle.getParcelable<Uri>("uri")
                     if (u != null) {
                         resolver.delete(u, null, null)
+                        musicViewModel.refreshPlayList.value =
+                            !musicViewModel.refreshPlayList.value
                     }
                 } else if (OperateTypeInActivity.InsertTrackToPlaylist.name == action) {
                     val u = bundle.getParcelable<Uri>("uri")
@@ -161,10 +163,10 @@ class MainActivity : ComponentActivity() {
                                                 resultData: Bundle?
                                             ) {
                                                 super.onResult(action, extras, resultData)
-//                                                if (ACTION_PlayLIST_CHANGE == action) {
-//                                                    musicViewModel.refreshPlayList.value =
-//                                                        !musicViewModel.refreshPlayList.value
-//                                                }
+                                                if (ACTION_PlayLIST_CHANGE == action) {
+                                                    musicViewModel.refreshPlayList.value =
+                                                        !musicViewModel.refreshPlayList.value
+                                                }
                                             }
                                         }
                                     )
