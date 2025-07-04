@@ -21,7 +21,6 @@ import com.ztftrue.music.MainActivity
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.OperateTypeInActivity
 import com.ztftrue.music.utils.model.MusicPlayList
-import kotlinx.serialization.builtins.ArraySerializer
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileOutputStream
@@ -114,7 +113,7 @@ object PlaylistManager {
         val list = arrayListOf<MusicItem>()
         val trackMapPath = LinkedHashMap<String, MusicItem>()
         tracksHashMap.values.forEach {
-            trackMapPath[it.path] = it
+            trackMapPath[File(it.path).canonicalPath] = it
         }
         try {
             context.contentResolver.openInputStream(playlistUri)?.use { inputStream ->
@@ -124,7 +123,7 @@ object PlaylistManager {
                             val rawSongPath = line.trim()
                             val songFile = File(rawSongPath)
                             val absoluteSongPath = if (songFile.isAbsolute) {
-                                songFile.canonicalPath // canonicalPath可以解析 ".." 等
+                                songFile.canonicalPath
                             } else {
                                 File(playlistDir, rawSongPath).canonicalPath
                             }
@@ -213,7 +212,7 @@ object PlaylistManager {
         if (musicIds.isEmpty()) {
             return true // 没有新歌，也算成功
         }
-        var playlistUri = ContentUris.withAppendedId(
+        val playlistUri = ContentUris.withAppendedId(
             MediaStore.Audio.Playlists.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
             playlistId
         )
@@ -286,7 +285,6 @@ object PlaylistManager {
             }
             return false
         }
-        return true
     }
 
     fun cleanDuplicateTrackFromPlayList(
@@ -294,7 +292,7 @@ object PlaylistManager {
         playListId: Long,
         playListPath: String,
         tracks: List<MusicItem>
-    ) {
+    ): Boolean {
         val list = arrayListOf<MusicItem>()
         val trackMapPath = LinkedHashMap<String, MusicItem>()
         tracks.forEach {
@@ -305,6 +303,10 @@ object PlaylistManager {
             val playlistUri: Uri = ContentUris.withAppendedId(
                 MediaStore.Files.getContentUri("external"), playListId
             )
+            val playListFile=File(playListPath)
+            if(!playListFile.exists()){
+                return false
+            }
             context.contentResolver.openInputStream(playlistUri)?.use { inputStream ->
                 BufferedReader(InputStreamReader(inputStream)).use { reader ->
                     reader.forEachLine { line ->
@@ -314,11 +316,12 @@ object PlaylistManager {
                             val absoluteSongPath = if (songFile.isAbsolute) {
                                 songFile.canonicalPath // canonicalPath可以解析 ".." 等
                             } else {
-                                File(playListPath, rawSongPath).canonicalPath
+                                File(playListFile.parent, rawSongPath).canonicalPath
                             }
                             val foundSong = trackMapPath[absoluteSongPath]
                             if (foundSong != null && hashMapAlreadyAdd.get(foundSong.id) == null) {
                                 list.add(foundSong)
+                                hashMapAlreadyAdd.put(foundSong.id, foundSong)
                             } else {
                                 Log.w(
                                     "PlaylistMatcher",
@@ -329,15 +332,15 @@ object PlaylistManager {
                     }
                 }
             }
-            resortOrRemoveTrackFromPlayList(
+            return resortOrRemoveTrackFromPlayList(
                 context,
                 playListId,
                 list, playListPath
-            )
+            ) != null
         } catch (e: Exception) {
 //            Log.e("PlaylistParser", "Error reading playlist file: ${playlistUri}", e)
         }
-
+        return false
 
     }
 
@@ -348,7 +351,7 @@ object PlaylistManager {
         playListPath: String
     ): String? {
         val contentResolver: ContentResolver = context.contentResolver
-        var playlistUri = ContentUris.withAppendedId(
+        val playlistUri = ContentUris.withAppendedId(
             MediaStore.Audio.Playlists.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
             playListId
         )
@@ -388,7 +391,6 @@ object PlaylistManager {
             }
             return null
         }
-        return null
     }
 
     fun renamePlaylist(context: Context, playlistId: Long, newName: String?): Boolean {

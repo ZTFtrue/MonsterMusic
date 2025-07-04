@@ -1,6 +1,5 @@
 package com.ztftrue.music.ui.public
 
-import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import androidx.compose.foundation.background
@@ -224,9 +223,10 @@ fun CreatePlayListDialog(
 
 @Composable
 fun RenamePlayListDialog(
+    oldName: String,
     onDismiss: (value: String?) -> Unit
 ) {
-    var playListName by remember { mutableStateOf("") }
+    var playListName by remember { mutableStateOf(oldName) }
 
     val onConfirmation = ({
         onDismiss(playListName)
@@ -605,7 +605,14 @@ fun AddMusicToPlayListDialog(
                         modifier = Modifier.horizontalScroll(rememberScrollState(0))
                     )
                 }
-                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                LazyColumn(modifier = Modifier.fillMaxWidth().height(300.dp).drawBehind() {
+                    drawLine(
+                        color = color,
+                        start = Offset(0f, size.height - 1.dp.toPx()),
+                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                        strokeWidth = 1.dp.toPx()
+                    )
+                }) {
                     items(playList.size) { index ->
                         val item = playList[index]
                         Row(
@@ -640,7 +647,7 @@ fun AddMusicToPlayListDialog(
                         .fillMaxWidth()
                         .height(50.dp)
                         .padding(0.dp)
-                        .drawBehind {
+                        .drawBehind() {
                             drawLine(
                                 color = color,
                                 start = Offset(0f, size.height - 1.dp.toPx()),

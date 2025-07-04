@@ -115,13 +115,16 @@ class MainActivity : ComponentActivity() {
                     val removeDuplicate = bundle.getBoolean("removeDuplicate")
                     if (u != null && v != null) {
 //                        resolver.bulkInsert(u, v.toTypedArray())
-                        PlaylistManager.addMusicsToPlaylist(
-                            this@MainActivity,
-                            id,
-                            v,
-                            removeDuplicate,
-                            true
-                        )
+                        if (PlaylistManager.addMusicsToPlaylist(
+                                this@MainActivity,
+                                id,
+                                v,
+                                removeDuplicate,
+                                true
+                            )
+                        ) {
+                            Utils.refreshPlaylist(musicViewModel)
+                        }
                     }
                 } else if (OperateTypeInActivity.RenamePlaylist.name == action) {
                     val u = bundle.getParcelable<Uri>("uri")

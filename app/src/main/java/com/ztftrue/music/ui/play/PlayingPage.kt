@@ -1,9 +1,6 @@
 package com.ztftrue.music.ui.play
 
-import android.content.ContentUris
-import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.view.MotionEvent
@@ -124,7 +121,6 @@ import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.ACTION_AddPlayQueue
-import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_RemoveFromQueue
 import com.ztftrue.music.play.ACTION_SEEK_TO
 import com.ztftrue.music.play.ACTION_SWITCH_SHUFFLE
@@ -151,7 +147,6 @@ import com.ztftrue.music.utils.trackManager.TracksManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlin.collections.ArrayList
 import kotlin.math.roundToLong
 
 const val CoverID = 0
@@ -370,15 +365,15 @@ fun PlayingPage(
                         } else {
                             val musics = java.util.ArrayList<MusicItem>(1)
                             musics.add(music)
-                            PlaylistManager.addMusicsToPlaylist(
-                                context,
-                                playListId,
-                                musics,
-                                removeDuplicate
-                            )
-                            musicViewModel.mediaBrowser?.sendCustomAction(
-                                ACTION_PlayLIST_CHANGE, null, null
-                            )
+                            if (PlaylistManager.addMusicsToPlaylist(
+                                    context,
+                                    playListId,
+                                    musics,
+                                    removeDuplicate
+                                )
+                            ) {
+                                Utils.refreshPlaylist(musicViewModel)
+                            }
                         }
                     }
                 })

@@ -636,6 +636,7 @@ class PlayService : MediaBrowserServiceCompat() {
         } else if (ACTION_PlayLIST_CHANGE == action) {
             playListLinkedHashMap.clear()
             playListTracksHashMap.clear()
+            result.detach()
             CoroutineScope(Dispatchers.IO).launch {
                 val sortData =
                     db.SortFiledDao().findSortByType(PlayListType.PlayLists.name)
@@ -643,11 +644,11 @@ class PlayService : MediaBrowserServiceCompat() {
                     this@PlayService,
                     playListLinkedHashMap,
                     tracksLinkedHashMap,
-                    null,
+                    result,
                     sortData?.filed, sortData?.method
                 )
             }
-            result.sendResult(null)
+
         } else if (ACTION_SEARCH == action) {
             search(extras, result)
         } else if (ACTION_GET_ALBUM_BY_ID == action) {

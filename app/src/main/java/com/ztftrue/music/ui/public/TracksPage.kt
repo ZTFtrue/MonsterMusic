@@ -115,6 +115,7 @@ fun TracksListPage(
     navController: NavHostController,
     type: PlayListType,
     id: Long,
+    path: String?
 ) {
     val tracksList = remember { mutableStateListOf<MusicItem>() }
     val showIndicator = remember { mutableStateOf(false) }
@@ -128,6 +129,8 @@ fun TracksListPage(
     var showAddPlayListDialog by remember { mutableStateOf(false) }
     var showCreatePlayListDialog by remember { mutableStateOf(false) }
     var showSortDialog by remember { mutableStateOf(false) }
+    var showRenameDialog by remember { mutableStateOf(false) }
+
 //    LaunchedEffect(key1 = musicViewModel.showIndicatorMap) {
     showIndicator.value = musicViewModel.showIndicatorMap.getOrDefault(type.toString(), false)
 //    }
@@ -535,7 +538,10 @@ fun TracksListPage(
             }
 
             PlayListType.PlayLists -> {
-                val item = MusicPlayList("", id, "", 0)
+                if (path.isNullOrEmpty()) {
+                    return
+                }
+                val item = MusicPlayList("", id, path, 0)
                 PlayListOperateDialog(
                     musicViewModel,
                     playList = item,
@@ -547,36 +553,48 @@ fun TracksListPage(
                             }
 
                             OperateType.RemoveDuplicate -> {
-                                PlaylistManager.cleanDuplicateTrackFromPlayList(
-                                    context,
-                                    item.id,
-                                    item.path,
-                                    musicViewModel.songsList.toList()
-                                )
-                                MediaScannerConnection.scanFile(
-                                    context,
-                                    arrayOf(item.path),
-                                    arrayOf("*/*"),
-                                    object : MediaScannerConnection.MediaScannerConnectionClient {
-                                        override fun onMediaScannerConnected() {}
-                                        override fun onScanCompleted(path: String, uri: Uri) {
-                                            musicViewModel.mediaBrowser?.sendCustomAction(
-                                                ACTION_PlayLIST_CHANGE,
-                                                null,
-                                                object : MediaBrowserCompat.CustomActionCallback() {
-                                                    override fun onResult(
-                                                        action: String?,
-                                                        extras: Bundle?,
-                                                        resultData: Bundle?
-                                                    ) {
-                                                        super.onResult(action, extras, resultData)
-                                                        musicViewModel.refreshPlayList.value =
-                                                            !musicViewModel.refreshPlayList.value
+                                if (PlaylistManager.cleanDuplicateTrackFromPlayList(
+                                        context,
+                                        item.id,
+                                        item.path,
+                                        musicViewModel.songsList.toList()
+                                    )
+                                ) {
+                                    MediaScannerConnection.scanFile(
+                                        context,
+                                        arrayOf(item.path),
+                                        arrayOf("*/*"),
+                                        object :
+                                            MediaScannerConnection.MediaScannerConnectionClient {
+                                            override fun onMediaScannerConnected() {}
+                                            override fun onScanCompleted(path: String, uri: Uri) {
+                                                musicViewModel.mediaBrowser?.sendCustomAction(
+                                                    ACTION_PlayLIST_CHANGE,
+                                                    null,
+                                                    object :
+                                                        MediaBrowserCompat.CustomActionCallback() {
+                                                        override fun onResult(
+                                                            action: String?,
+                                                            extras: Bundle?,
+                                                            resultData: Bundle?
+                                                        ) {
+                                                            super.onResult(
+                                                                action,
+                                                                extras,
+                                                                resultData
+                                                            )
+                                                            musicViewModel.refreshPlayList.value =
+                                                                !musicViewModel.refreshPlayList.value
+                                                        }
                                                     }
-                                                }
-                                            )
-                                        }
-                                    })
+                                                )
+                                            }
+                                        })
+                                }
+
+                            }
+                            OperateType.RenamePlayList -> {
+                                showRenameDialog = true
                             }
 
                             else -> {
@@ -586,6 +604,7 @@ fun TracksListPage(
                         }
                     },
                 )
+
             }
 
             PlayListType.Songs -> {}
@@ -593,6 +612,17 @@ fun TracksListPage(
             PlayListType.None -> {}
         }
 
+    }
+    if (showRenameDialog) {
+        val item = MusicPlayList("", id, "", 0)
+        RenamePlayListDialog(item.name, onDismiss = {
+            showRenameDialog = false
+            if (!it.isNullOrEmpty()) {
+                if (PlaylistManager.renamePlaylist(context, item.id, it)) {
+                    Utils.refreshPlaylist(musicViewModel)
+                }
+            }
+        })
     }
     if (showAddPlayListDialog) {
         AddMusicToPlayListDialog(musicViewModel, null, onDismiss = { playListId, removeDuplicate ->
@@ -739,9 +769,9 @@ fun TracksListPage(
                         val duration = tracksList.sumOf { it.duration }
                         durationAll.value = Utils.formatTimeWithUnit(duration)
                         albumsList.addAll(albumLists ?: emptyList())
-                        if (tracksList.isEmpty() && albumsList.isEmpty() && parentListMessage == null) {
-                            navController.popBackStack()
-                        }
+//                        if (tracksList.isEmpty() && albumsList.isEmpty() && parentListMessage == null) {
+//                            navController.popBackStack()
+//                        }
                     }
                 }
             }

@@ -1,9 +1,6 @@
 package com.ztftrue.music.ui.public
 
-import android.content.ContentUris
 import android.content.Context
-import android.net.Uri
-import android.provider.MediaStore
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -53,6 +50,7 @@ import com.ztftrue.music.play.ACTION_CLEAR_QUEUE
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.OperateType
+import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 
 
@@ -93,7 +91,7 @@ fun QueuePage(
         })
     }
     if (showAddPlayListDialog) {
-        AddMusicToPlayListDialog(musicViewModel, null) { playListId,removeDuplicate ->
+        AddMusicToPlayListDialog(musicViewModel, null) { playListId, removeDuplicate ->
             showAddPlayListDialog = false
             if (playListId != null) {
                 if (playListId == -1L) {
@@ -103,10 +101,15 @@ fun QueuePage(
                     musicList.forEach {
                         ids.add(it)
                     }
-                    PlaylistManager.addMusicsToPlaylist(context, playListId, ids,removeDuplicate)
-                    musicViewModel.mediaBrowser?.sendCustomAction(
-                        ACTION_PlayLIST_CHANGE, null, null
-                    )
+                    if (PlaylistManager.addMusicsToPlaylist(
+                            context,
+                            playListId,
+                            ids,
+                            removeDuplicate
+                        )
+                    ) {
+                        Utils.refreshPlaylist(musicViewModel)
+                    }
                 }
             }
         }
@@ -119,7 +122,7 @@ fun QueuePage(
                 musicList.forEach {
                     ids.add(it)
                 }
-                val idPlayList = PlaylistManager.createPlaylist(context, playListName,ids,false)
+                val idPlayList = PlaylistManager.createPlaylist(context, playListName, ids, false)
                 if (idPlayList != null) {
                     musicViewModel.mediaBrowser?.sendCustomAction(
                         ACTION_PlayLIST_CHANGE, null, null

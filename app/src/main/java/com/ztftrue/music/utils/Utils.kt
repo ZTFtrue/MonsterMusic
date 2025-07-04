@@ -1,6 +1,5 @@
 package com.ztftrue.music.utils
 
-import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ResolveInfo
@@ -9,7 +8,6 @@ import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.support.v4.media.MediaBrowserCompat
 import android.text.TextUtils
 import android.util.TypedValue
@@ -421,27 +419,15 @@ object Utils {
                             resultData.getParcelableArrayList<MusicItem>("list")
                         if (tracksList != null) {
                             val tIds = ArrayList(tracksList.map { item -> item })
-                            PlaylistManager.addMusicsToPlaylist(
-                                context,
-                                playListId,
-                                tIds,
-                                removeDuplicate
-                            )
-                            musicViewModel.mediaBrowser?.sendCustomAction(
-                                ACTION_PlayLIST_CHANGE,
-                                null,
-                                object : MediaBrowserCompat.CustomActionCallback() {
-                                    override fun onResult(
-                                        action: String?,
-                                        extras: Bundle?,
-                                        resultData: Bundle?
-                                    ) {
-                                        super.onResult(action, extras, resultData)
-                                        musicViewModel.refreshPlayList.value =
-                                            !musicViewModel.refreshPlayList.value
-                                    }
-                                }
-                            )
+                            if (PlaylistManager.addMusicsToPlaylist(
+                                    context,
+                                    playListId,
+                                    tIds,
+                                    removeDuplicate
+                                )
+                            ) {
+                                refreshPlaylist(musicViewModel)
+                            }
                         }
                     }
                 }
@@ -687,5 +673,23 @@ object Utils {
             .toInt()
     }
 
-
+    fun refreshPlaylist(musicViewModel: MusicViewModel) {
+        musicViewModel.mediaBrowser?.sendCustomAction(
+            ACTION_PlayLIST_CHANGE,
+            null,
+            object : MediaBrowserCompat.CustomActionCallback() {
+                override fun onResult(
+                    action: String?,
+                    extras: Bundle?,
+                    resultData: Bundle?
+                ) {
+                    super.onResult(action, extras, resultData)
+                    if (ACTION_PlayLIST_CHANGE == action) {
+                        musicViewModel.refreshPlayList.value =
+                            !musicViewModel.refreshPlayList.value
+                    }
+                }
+            }
+        )
+    }
 }

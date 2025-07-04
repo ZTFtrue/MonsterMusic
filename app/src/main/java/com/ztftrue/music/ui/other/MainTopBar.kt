@@ -1,9 +1,6 @@
 package com.ztftrue.music.ui.other
 
-import android.content.ContentUris
-import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.support.v4.media.MediaBrowserCompat
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -473,15 +470,16 @@ fun MainTopBar(
                         musicViewModel.musicQueue.forEach {
                             ids.add(it)
                         }
-                        PlaylistManager.addMusicsToPlaylist(
-                            context,
-                            playListId,
-                            ids,
-                            removeDuplicate
-                        )
-                        musicViewModel.mediaBrowser?.sendCustomAction(
-                            ACTION_PlayLIST_CHANGE, null, null
-                        )
+                        if (PlaylistManager.addMusicsToPlaylist(
+                                context,
+                                playListId,
+                                ids,
+                                removeDuplicate
+                            )
+                        ) {
+                            Utils.refreshPlaylist(musicViewModel)
+                        }
+
                     }
                 }
             }
@@ -499,7 +497,7 @@ fun MainTopBar(
                         val idPlayList =
                             PlaylistManager.createPlaylist(
                                 context,
-                                playListName, ids,false
+                                playListName, ids, false
                             )
                         if (idPlayList != null) {
                             musicViewModel.mediaBrowser?.sendCustomAction(

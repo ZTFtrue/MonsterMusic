@@ -69,6 +69,8 @@ import com.ztftrue.music.utils.Utils.operateDialogDeal
 import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.trackManager.PlaylistManager
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 
 @Composable
@@ -84,11 +86,6 @@ fun PlayListView(
             PlayListType.PlayLists.name,
             null,
             object : MediaBrowserCompat.CustomActionCallback() {
-                override fun onProgressUpdate(
-                    action: String?, extras: Bundle?, data: Bundle?
-                ) {
-                    super.onProgressUpdate(action, extras, data)
-                }
 
                 override fun onResult(
                     action: String?, extras: Bundle?, resultData: Bundle?
@@ -103,9 +100,6 @@ fun PlayListView(
                     }
                 }
 
-                override fun onError(action: String?, extras: Bundle?, data: Bundle?) {
-                    super.onError(action, extras, data)
-                }
             })
     }
     if (playList.isEmpty()) {
@@ -138,7 +132,8 @@ fun PlayListView(
     }
 }
 
-data class ListParameter(val id: Long, val type: PlayListType) : Navigator.Extras
+data class ListParameter(val id: Long, val type: PlayListType, val path: String? = null) :
+    Navigator.Extras
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -177,36 +172,38 @@ fun PlayListItemView(
                     }
 
                     OperateType.RemoveDuplicate -> {
-                        PlaylistManager.cleanDuplicateTrackFromPlayList(
-                            context,
-                            item.id,
-                            item.path,
-                            musicViewModel.songsList.toList()
-                        )
-                        MediaScannerConnection.scanFile(
-                            context,
-                            arrayOf(item.path),
-                            arrayOf("*/*"),
-                            object : MediaScannerConnection.MediaScannerConnectionClient {
-                                override fun onMediaScannerConnected() {}
-                                override fun onScanCompleted(path: String, uri: Uri) {
-                                    musicViewModel.mediaBrowser?.sendCustomAction(
-                                        ACTION_PlayLIST_CHANGE,
-                                        null,
-                                        object : MediaBrowserCompat.CustomActionCallback() {
-                                            override fun onResult(
-                                                action: String?,
-                                                extras: Bundle?,
-                                                resultData: Bundle?
-                                            ) {
-                                                super.onResult(action, extras, resultData)
-                                                musicViewModel.refreshPlayList.value =
-                                                    !musicViewModel.refreshPlayList.value
+                        if (PlaylistManager.cleanDuplicateTrackFromPlayList(
+                                context,
+                                item.id,
+                                item.path,
+                                musicViewModel.songsList.toList()
+                            )
+                        ) {
+                            MediaScannerConnection.scanFile(
+                                context,
+                                arrayOf(item.path),
+                                arrayOf("*/*"),
+                                object : MediaScannerConnection.MediaScannerConnectionClient {
+                                    override fun onMediaScannerConnected() {}
+                                    override fun onScanCompleted(path: String, uri: Uri) {
+                                        musicViewModel.mediaBrowser?.sendCustomAction(
+                                            ACTION_PlayLIST_CHANGE,
+                                            null,
+                                            object : MediaBrowserCompat.CustomActionCallback() {
+                                                override fun onResult(
+                                                    action: String?,
+                                                    extras: Bundle?,
+                                                    resultData: Bundle?
+                                                ) {
+                                                    super.onResult(action, extras, resultData)
+                                                    musicViewModel.refreshPlayList.value =
+                                                        !musicViewModel.refreshPlayList.value
+                                                }
                                             }
-                                        }
-                                    )
-                                }
-                            })
+                                        )
+                                    }
+                                })
+                        }
                     }
 
                     else -> {
@@ -244,26 +241,11 @@ fun PlayListItemView(
         })
     }
     if (showRenameDialog) {
-        RenamePlayListDialog(onDismiss = {
+        RenamePlayListDialog(item.name, onDismiss = {
             showRenameDialog = false
             if (!it.isNullOrEmpty()) {
                 if (PlaylistManager.renamePlaylist(context, item.id, it)) {
-                    musicViewModel.mediaBrowser?.sendCustomAction(
-                        ACTION_PlayLIST_CHANGE,
-                        null,
-                        object : MediaBrowserCompat.CustomActionCallback() {
-                            override fun onResult(
-                                action: String?,
-                                extras: Bundle?,
-                                resultData: Bundle?
-                            ) {
-                                super.onResult(action, extras, resultData)
-                                musicViewModel.refreshPlayList.value =
-                                    !musicViewModel.refreshPlayList.value
-                            }
-                        }
-                    )
-
+                    Utils.refreshPlaylist(musicViewModel)
                 }
             }
         })
@@ -305,9 +287,14 @@ fun PlayListItemView(
 
                 }
             ) {
+                val encodedPath = URLEncoder.encode(item.path, StandardCharsets.UTF_8.toString())
                 navController.navigate(
-                    Router.PlayListView.withArgs("${item.id}", enumToStringForPlayListType(type)),
-                    navigatorExtras = ListParameter(item.id, type)
+                    Router.PlayListView.withArgs(
+                        "${item.id}",
+                        enumToStringForPlayListType(type),
+                        encodedPath
+                    ),
+                    navigatorExtras = ListParameter(item.id, type, item.path)
                 )
             }, verticalAlignment = Alignment.CenterVertically
     ) {

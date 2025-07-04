@@ -294,18 +294,18 @@ fun MusicItemView(
                 } else {
                     val musics = ArrayList<MusicItem>()
                     musics.add(music)
-                    PlaylistManager.addMusicsToPlaylist(
+                    if(PlaylistManager.addMusicsToPlaylist(
                         context,
                         playListId,
                         musics,
                         removeDuplicate
-                    )
+                    )){
+                        Utils.refreshPlaylist(viewModel)
+                    }
                     if (playList.id == playListId) {
                         musicList.add(music)
                     }
-                    viewModel.mediaBrowser?.sendCustomAction(
-                        ACTION_PlayLIST_CHANGE, null, null
-                    )
+
                 }
             }
         })

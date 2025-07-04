@@ -24,6 +24,8 @@ import com.ztftrue.music.ui.play.PlayingPage
 import com.ztftrue.music.ui.public.QueuePage
 import com.ztftrue.music.ui.public.TracksListPage
 import com.ztftrue.music.utils.stringToEnumForPlayListType
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
@@ -59,16 +61,19 @@ fun BaseLayout(
                 }
             }
             composable(
-                route = Router.PlayListView.withArgs("{id}", "{itemType}"), arguments = listOf(),
+                route = Router.PlayListView.withArgs("{id}", "{itemType}","{path}"), arguments = listOf(),
             ) { backStackEntry ->
                 val arg = backStackEntry.arguments
                 key(Unit) {
                     if (arg != null) {
+                        val encodedPath = backStackEntry.arguments?.getString("path") ?: ""
+                        val originalPath = URLDecoder.decode(encodedPath, StandardCharsets.UTF_8.toString())
                         TracksListPage(
                             musicViewModel = musicViewModel,
                             navController,
                             stringToEnumForPlayListType(arg.getString("itemType") ?: ""),
-                            arg.getString("id")?.toLong() ?: 0
+                            arg.getString("id")?.toLong() ?: 0,
+                            originalPath
                         )
                     }
                 }
