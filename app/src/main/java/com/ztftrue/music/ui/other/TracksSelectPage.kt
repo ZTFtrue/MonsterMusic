@@ -1,7 +1,5 @@
 package com.ztftrue.music.ui.other
 
-import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,7 +36,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.play.ACTION_GET_TRACKS
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.BackButton
@@ -70,26 +67,8 @@ fun TracksSelectPage(
     val context = LocalContext.current
     val selectList = remember { mutableStateListOf<MusicItem>() }
     LaunchedEffect(Unit) {
-        val bundle = Bundle()
-        bundle.putString("type", PlayListType.Songs.name)
-        musicViewModel.mediaBrowser?.sendCustomAction(
-            ACTION_GET_TRACKS,
-            bundle,
-            object : MediaBrowserCompat.CustomActionCallback() {
-                override fun onResult(
-                    action: String?,
-                    extras: Bundle?,
-                    resultData: Bundle?
-                ) {
-                    super.onResult(action, extras, resultData)
-                    if (ACTION_GET_TRACKS == action && resultData != null) {
-                        val tracksList = resultData.getParcelableArrayList<MusicItem>("list")
-                        musicList.addAll(
-                            tracksList ?: emptyList()
-                        )
-                    }
-                }
-            }
+        musicList.addAll(
+             musicViewModel.songsList
         )
     }
 

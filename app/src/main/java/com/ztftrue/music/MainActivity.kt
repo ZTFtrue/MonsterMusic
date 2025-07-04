@@ -748,8 +748,6 @@ class MainActivity : ComponentActivity() {
             musicViewModel.mainTabList.addAll(it)
         }
 
-
-
         resultData.getSerializable("playListCurrent")?.also {
             musicViewModel.playListCurrent.value = it as AnyListBase
         }
