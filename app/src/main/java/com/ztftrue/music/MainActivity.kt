@@ -594,7 +594,7 @@ class MainActivity : ComponentActivity() {
                 if (type == EVENT_MEDIA_ITEM_Change) {
                     val index = it.getInt("index")
                     val reason = it.getInt("reason")
-                    if (index >= 0 && musicViewModel.musicQueue.size > index && musicViewModel.currentPlay.value?.id != musicViewModel.musicQueue[index].id) {
+                    if (index >= 0 && musicViewModel.musicQueue.size > index) {
                         musicViewModel.scheduleDealCurrentPlay(this@MainActivity, index, reason)
                     }
                 } else if (type == EVENT_SLEEP_TIME_Change) {

@@ -187,25 +187,31 @@ class MusicViewModel : ViewModel() {
     private var dealCurrentPlayJob: Job? = null
 
     fun scheduleDealCurrentPlay(context: Context, index: Int, reason: Int) {
-        dealCurrentPlayJob?.cancel() // 取消旧的
+        dealCurrentPlayJob?.cancel()
+        dealLyricsJob?.cancel()
         dealCurrentPlayJob = viewModelScope.launch {
+            // when reason is Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED
+            // sometimes index is 0 but this is not the real index
             if (index == 0 && reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
                 delay(100)
             }
-            currentCaptionList.clear()
-            currentMusicCover.value = null
-            currentPlay.value =
-                musicQueue[index]
-            currentPlayQueueIndex.intValue = index
-            sliderPosition.floatValue = 0f
-            currentDuration.longValue =
-                currentPlay.value?.duration ?: 0
-            scheduleDealLyrics(context, musicQueue[index])
+            if (currentPlay.value?.id != musicQueue[index].id) {
+                currentPlayQueueIndex.intValue = index
+                currentPlay.value =
+                    musicQueue[index]
+                currentCaptionList.clear()
+                scheduleDealLyrics(context, musicQueue[index])
+                currentMusicCover.value = null
+                sliderPosition.floatValue = 0f
+                currentDuration.longValue =
+                    currentPlay.value?.duration ?: 0
+            }
+
         }
     }
 
     fun scheduleDealLyrics(context: Context, music: MusicItem) {
-        dealLyricsJob?.cancel() // 取消旧的
+        dealLyricsJob?.cancel()
         dealLyricsJob = viewModelScope.launch {
             delay(300)
             dealLyrics(context, music)
