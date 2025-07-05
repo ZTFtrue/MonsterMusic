@@ -77,6 +77,7 @@ import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.trackManager.PlaylistManager
+import com.ztftrue.music.utils.trackManager.SongsUtils
 import com.ztftrue.music.utils.trackManager.TracksManager
 
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -300,7 +301,7 @@ fun MusicItemView(
                         musics,
                         removeDuplicate
                     )){
-                        Utils.refreshPlaylist(viewModel)
+                        SongsUtils.refreshPlaylist(viewModel)
                     }
                     if (playList.id == playListId) {
                         musicList.add(music)

@@ -9,7 +9,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import android.os.ParcelFileDescriptor
 import android.os.Process
 import android.provider.MediaStore
 import android.util.Log
@@ -23,7 +22,6 @@ import com.ztftrue.music.utils.OperateTypeInActivity
 import com.ztftrue.music.utils.model.MusicPlayList
 import java.io.BufferedReader
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
 
@@ -133,7 +131,7 @@ object PlaylistManager {
                             } else {
                                 Log.w(
                                     "PlaylistMatcher",
-                                    "Path not found after resolving to absolute: $absoluteSongPath (from raw: $rawSongPath)"
+                                    "Path not found after resolving to absolute: $absoluteSongPath (from raw: $playlistUri)"
                                 )
                             }
                         }
@@ -141,10 +139,10 @@ object PlaylistManager {
                 }
             }
         } catch (e: Exception) {
-            Log.e("PlaylistParser", "Error reading playlist file: ${playlistUri}", e)
+            Log.e("PlaylistParser", "Error reading playlist file: $playlistUri", e)
         }
 
-        return sortSongs(list, sortFiled, sortMethod)
+        return SongsUtils.sortSongs(list, sortFiled, sortMethod)
     }
 
     fun createPlaylist(
@@ -167,7 +165,6 @@ object PlaylistManager {
         try {
             newPlaylistUri = contentResolver.insert(collection, playlistValues)
             if (newPlaylistUri == null) {
-                Log.e("PlaylistCreator", "Failed to create new MediaStore entry.")
                 return null
             }
             val checkDuplicateMap = HashMap<String, Boolean>()
@@ -187,10 +184,6 @@ object PlaylistManager {
             playlistValues.clear()
             playlistValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
             contentResolver.update(newPlaylistUri, playlistValues, null, null)
-            Log.i(
-                "PlaylistCreator",
-                "Playlist '$playlistName' created successfully at $newPlaylistUri"
-            )
             return newPlaylistUri
 
         } catch (e: Exception) {
@@ -210,7 +203,7 @@ object PlaylistManager {
         permissionGranted: Boolean = false
     ): Boolean {
         if (musicIds.isEmpty()) {
-            return true // 没有新歌，也算成功
+            return true
         }
         val playlistUri = ContentUris.withAppendedId(
             MediaStore.Audio.Playlists.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
@@ -228,7 +221,7 @@ object PlaylistManager {
                 val existingPaths = if (removeDuplicate) {
                     mutableSetOf<String>()
                 } else {
-                    mutableListOf<String>()
+                    mutableListOf()
                 }
                 contentResolver.openInputStream(playlistUri)?.use { inputStream ->
                     BufferedReader(InputStreamReader(inputStream)).use { reader ->
@@ -248,7 +241,6 @@ object PlaylistManager {
                         }
                     }
                 }
-                contentResolver.notifyChange(playlistUri, null)
                 return true
             } catch (e: IOException) {
                 return false
@@ -268,20 +260,7 @@ object PlaylistManager {
                 bundle.putLong("id", playlistId)
                 bundle.putParcelableArrayList("values", musicIds)
                 bundle.putBoolean("removeDuplicate", removeDuplicate)
-                try {
-                    val pendingIntent =
-                        MediaStore.createWriteRequest(contentResolver, listOf(playlistUri))
-                    val intentSenderRequest: IntentSenderRequest =
-                        IntentSenderRequest.Builder(pendingIntent.intentSender)
-                            .setFlags(
-                                Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-                                Intent.FLAG_GRANT_READ_URI_PERMISSION
-                            )
-                            .build()
-                    context.modifyMediaLauncher.launch(intentSenderRequest)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+                SongsUtils.sendRequest(playlistUri, context)
             }
             return false
         }
@@ -350,7 +329,6 @@ object PlaylistManager {
         arrayList: ArrayList<MusicItem>,
         playListPath: String
     ): String? {
-        val contentResolver: ContentResolver = context.contentResolver
         val playlistUri = ContentUris.withAppendedId(
             MediaStore.Audio.Playlists.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
             playListId
@@ -362,7 +340,7 @@ object PlaylistManager {
                 Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
-            resortOrRemoveTrackFromM3U(context, playlistUri, playListPath, arrayList)
+            SongsUtils.resortOrRemoveTrackFromM3U(context, playlistUri, playListPath, arrayList)
             return playListPath
         } else {
             if (context is MainActivity) {
@@ -374,20 +352,7 @@ object PlaylistManager {
                 bundle.putString("playListPath", playListPath)
                 bundle.putString("uri", playlistUri.toString())
                 bundle.putParcelableArrayList("list", arrayList)
-                try {
-                    val pendingIntent =
-                        MediaStore.createWriteRequest(contentResolver, listOf(playlistUri))
-                    val intentSenderRequest: IntentSenderRequest =
-                        IntentSenderRequest.Builder(pendingIntent.intentSender)
-                            .setFlags(
-                                Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-                                Intent.FLAG_GRANT_READ_URI_PERMISSION
-                            )
-                            .build()
-                    context.modifyMediaLauncher.launch(intentSenderRequest)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+                SongsUtils.sendRequest(playlistUri, context)
             }
             return null
         }
@@ -416,19 +381,7 @@ object PlaylistManager {
                 bundle.putString("action", OperateTypeInActivity.RenamePlaylist.name)
                 bundle.putParcelable("uri", uri)
                 bundle.putParcelable("values", values)
-                try {
-                    val pendingIntent = MediaStore.createWriteRequest(resolver, setOf(uri))
-                    val intentSenderRequest: IntentSenderRequest =
-                        IntentSenderRequest.Builder(pendingIntent.intentSender)
-                            .setFlags(
-                                Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-                                Intent.FLAG_GRANT_READ_URI_PERMISSION
-                            )
-                            .build()
-                    context.modifyMediaLauncher.launch(intentSenderRequest)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+                SongsUtils.sendRequest(uri, context)
             }
             return false
         }
@@ -475,52 +428,6 @@ object PlaylistManager {
         return true
     }
 
-    fun resortOrRemoveTrackFromM3U(
-        context: Context, uri: Uri, m3uPath: String,
-        arrayList: ArrayList<MusicItem>,
-    ) {
-        val pfd: ParcelFileDescriptor? = context.contentResolver.openFileDescriptor(uri, "r")
-        val file = (File(m3uPath).parent ?: "") + "/"
-        val stringBu = StringBuilder("#EXTM3U").append("\n")
-        arrayList.forEach {
-            val p = it.path.replace(file, "")
-            stringBu.append(p).append("\n")
-        }
-        if (pfd != null) {
-            val pfdWT = context.contentResolver.openFileDescriptor(uri, "wt")
-            if (pfdWT != null) {
-                val fileOutputStream = FileOutputStream(pfdWT.fileDescriptor)
-                val a = stringBu.toString().toByteArray()
-                fileOutputStream.write(a)
-                fileOutputStream.flush()
-                fileOutputStream.close()
-                pfdWT.close()
-            }
-            pfd.close()
-        }
-    }
 
-    fun sortSongs(
-        list: ArrayList<MusicItem>,
-        field: String?,
-        order: String?
-    ): ArrayList<MusicItem> {
-        val comparator: Comparator<MusicItem> = when (field) {
-            MediaStore.Audio.Media.TITLE -> compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }
-            MediaStore.Audio.Media.ALBUM -> compareBy(String.CASE_INSENSITIVE_ORDER) { it.album }
-            MediaStore.Audio.Media.ARTIST -> compareBy(String.CASE_INSENSITIVE_ORDER) { it.artist }
-            MediaStore.Audio.Media.DURATION -> compareBy { it.duration }
-            MediaStore.Audio.Media.YEAR -> compareBy { it.year }
-            else -> {
-                return list
-            }
-        }
-        val sortedList = when (order?.uppercase()) {
-            "ASC" -> list.sortedWith(comparator)
-            "DESC" -> list.sortedWith(comparator.reversed())
-            else -> return list
-        }
-        return ArrayList(sortedList)
-    }
 
 }

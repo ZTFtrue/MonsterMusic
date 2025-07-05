@@ -50,8 +50,8 @@ import com.ztftrue.music.play.ACTION_CLEAR_QUEUE
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.OperateType
-import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.trackManager.PlaylistManager
+import com.ztftrue.music.utils.trackManager.SongsUtils
 
 
 /**
@@ -108,7 +108,7 @@ fun QueuePage(
                             removeDuplicate
                         )
                     ) {
-                        Utils.refreshPlaylist(musicViewModel)
+                        SongsUtils.refreshPlaylist(musicViewModel)
                     }
                 }
             }

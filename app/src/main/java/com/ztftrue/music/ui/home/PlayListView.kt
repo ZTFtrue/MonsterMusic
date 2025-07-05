@@ -69,6 +69,7 @@ import com.ztftrue.music.utils.Utils.operateDialogDeal
 import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.trackManager.PlaylistManager
+import com.ztftrue.music.utils.trackManager.SongsUtils
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -245,7 +246,7 @@ fun PlayListItemView(
             showRenameDialog = false
             if (!it.isNullOrEmpty()) {
                 if (PlaylistManager.renamePlaylist(context, item.id, it)) {
-                    Utils.refreshPlaylist(musicViewModel)
+                    SongsUtils.refreshPlaylist(musicViewModel)
                 }
             }
         })
@@ -255,7 +256,7 @@ fun PlayListItemView(
             showDeleteTip = false
             if (it) {
                 if (PlaylistManager.deletePlaylist(context, item.id)) {
-                    Utils.refreshPlaylist(musicViewModel)
+                    SongsUtils.refreshPlaylist(musicViewModel)
                 }
             }
         })
@@ -375,84 +376,81 @@ fun PlayListOperateDialog(
                 )
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
                     items(1) {
-                        if (!(musicViewModel.playListCurrent.value?.type?.equals(playList.type) == true
-                                    && musicViewModel.playListCurrent.value?.id?.equals(playList.id) == true)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
+                                .clickable {
+                                    musicViewModel.playListCurrent.value = null
+                                    onDismiss(OperateType.AddToQueue)
+                                },
+                            contentAlignment = Alignment.CenterStart
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(50.dp)
-                                    .padding(0.dp)
-                                    .drawBehind {
-                                        drawLine(
-                                            color = color,
-                                            start = Offset(0f, size.height - 1.dp.toPx()),
-                                            end = Offset(size.width, size.height - 1.dp.toPx()),
-                                            strokeWidth = 1.dp.toPx()
-                                        )
-                                    }
-                                    .clickable {
-                                        musicViewModel.playListCurrent.value = null
-                                        onDismiss(OperateType.AddToQueue)
-                                    },
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                Text(
-                                    text = stringResource(id = R.string.add_to_queue),
-                                    Modifier.padding(start = 10.dp),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(50.dp)
-                                    .padding(0.dp)
-                                    .drawBehind {
-                                        drawLine(
-                                            color = color,
-                                            start = Offset(0f, size.height - 1.dp.toPx()),
-                                            end = Offset(size.width, size.height - 1.dp.toPx()),
-                                            strokeWidth = 1.dp.toPx()
-                                        )
-                                    }
-                                    .clickable {
-                                        musicViewModel.playListCurrent.value = null
-                                        onDismiss(OperateType.RemoveDuplicate)
-                                    },
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                Text(
-                                    text = "Remove duplicate tracks",
-                                    Modifier.padding(start = 10.dp),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(50.dp)
-                                    .padding(0.dp)
-                                    .drawBehind {
-                                        drawLine(
-                                            color = color,
-                                            start = Offset(0f, size.height - 1.dp.toPx()),
-                                            end = Offset(size.width, size.height - 1.dp.toPx()),
-                                            strokeWidth = 1.dp.toPx()
-                                        )
-                                    }
-                                    .clickable {
-                                        musicViewModel.playListCurrent.value = null
-                                        onDismiss(OperateType.PlayNext)
-                                    },
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                Text(
-                                    text = stringResource(id = R.string.play_next),
-                                    Modifier.padding(start = 10.dp),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            }
+                            Text(
+                                text = stringResource(id = R.string.add_to_queue),
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
+                                .clickable {
+                                    musicViewModel.playListCurrent.value = null
+                                    onDismiss(OperateType.PlayNext)
+                                },
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.play_next),
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
+                                .clickable {
+                                    musicViewModel.playListCurrent.value = null
+                                    onDismiss(OperateType.RemoveDuplicate)
+                                },
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text(
+                                text = "Remove duplicate tracks",
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
                         }
                         Box(
                             modifier = Modifier

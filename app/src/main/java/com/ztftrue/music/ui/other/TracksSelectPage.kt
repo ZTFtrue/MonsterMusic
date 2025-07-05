@@ -41,9 +41,9 @@ import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.ui.public.TracksListView
 import com.ztftrue.music.utils.PlayListType
-import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.trackManager.PlaylistManager
+import com.ztftrue.music.utils.trackManager.SongsUtils
 
 
 /**
@@ -155,7 +155,7 @@ fun TracksSelectPage(
                                             )
                                         ) {
                                             selectList.clear()
-                                            Utils.refreshPlaylist(musicViewModel)
+                                            SongsUtils.refreshPlaylist(musicViewModel)
                                         }
                                         navController.popBackStack()
                                     }

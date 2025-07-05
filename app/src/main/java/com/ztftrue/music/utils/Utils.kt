@@ -30,6 +30,7 @@ import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.play.Lyrics
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.trackManager.PlaylistManager
+import com.ztftrue.music.utils.trackManager.SongsUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -67,6 +68,7 @@ fun stringToEnumForPlayListType(enumString: String): PlayListType {
     return try {
         PlayListType.valueOf(enumString)
     } catch (e: IllegalArgumentException) {
+
         PlayListType.Songs
     }
 }
@@ -426,7 +428,7 @@ object Utils {
                                     removeDuplicate
                                 )
                             ) {
-                                refreshPlaylist(musicViewModel)
+                                SongsUtils.refreshPlaylist(musicViewModel)
                             }
                         }
                     }
@@ -673,23 +675,5 @@ object Utils {
             .toInt()
     }
 
-    fun refreshPlaylist(musicViewModel: MusicViewModel) {
-        musicViewModel.mediaBrowser?.sendCustomAction(
-            ACTION_PlayLIST_CHANGE,
-            null,
-            object : MediaBrowserCompat.CustomActionCallback() {
-                override fun onResult(
-                    action: String?,
-                    extras: Bundle?,
-                    resultData: Bundle?
-                ) {
-                    super.onResult(action, extras, resultData)
-                    if (ACTION_PlayLIST_CHANGE == action) {
-                        musicViewModel.refreshPlayList.value =
-                            !musicViewModel.refreshPlayList.value
-                    }
-                }
-            }
-        )
-    }
+
 }

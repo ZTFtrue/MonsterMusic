@@ -6,6 +6,7 @@ import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.database.ContentObserver
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.AudioManager
@@ -49,7 +50,6 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.play.ACTION_IS_CONNECTED
-import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.play.ACTION_WILL_DISCONNECTED
 import com.ztftrue.music.play.EVENT_CHECK_MEDIA_ITEM_CHANGE
@@ -72,7 +72,7 @@ import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.deleteTrackUpdate
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.trackManager.PlaylistManager
-import com.ztftrue.music.utils.trackManager.PlaylistManager.resortOrRemoveTrackFromM3U
+import com.ztftrue.music.utils.trackManager.SongsUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -107,9 +107,12 @@ class MainActivity : ComponentActivity() {
                     val u = bundle.getParcelable<Uri>("uri")
                     if (u != null) {
                         resolver.delete(u, null, null)
-                        resolver.notifyChange(u, null)
-                        musicViewModel.refreshPlayList.value =
-                            !musicViewModel.refreshPlayList.value
+                        resolver.notifyChange(u, object : ContentObserver(null) {
+                            override fun onChange(selfChange: Boolean) {
+                                super.onChange(selfChange)
+                                SongsUtils.refreshPlaylist(musicViewModel)
+                            }
+                        })
                     }
                 } else if (OperateTypeInActivity.InsertTrackToPlaylist.name == action) {
                     val u = bundle.getParcelable<Uri>("uri")
@@ -126,7 +129,12 @@ class MainActivity : ComponentActivity() {
                                 true
                             )
                         ) {
-                            Utils.refreshPlaylist(musicViewModel)
+                            resolver.notifyChange(u,object : ContentObserver(null) {
+                                override fun onChange(selfChange: Boolean) {
+                                    super.onChange(selfChange)
+                                    SongsUtils.refreshPlaylist(musicViewModel)
+                                }
+                            })
                         }
                     }
                 } else if (OperateTypeInActivity.RenamePlaylist.name == action) {
@@ -141,7 +149,7 @@ class MainActivity : ComponentActivity() {
                     val arrayList: ArrayList<MusicItem> =
                         bundle.getParcelableArrayList("list") ?: ArrayList()
                     if (playListPath.isNotEmpty()) {
-                        resortOrRemoveTrackFromM3U(
+                        SongsUtils.resortOrRemoveTrackFromM3U(
                             this@MainActivity,
                             uri.toUri(),
                             playListPath,
@@ -154,23 +162,7 @@ class MainActivity : ComponentActivity() {
                             object : MediaScannerConnectionClient {
                                 override fun onMediaScannerConnected() {}
                                 override fun onScanCompleted(path: String, uri: Uri) {
-                                    musicViewModel.mediaBrowser?.sendCustomAction(
-                                        ACTION_PlayLIST_CHANGE,
-                                        null,
-                                        object : MediaBrowserCompat.CustomActionCallback() {
-                                            override fun onResult(
-                                                action: String?,
-                                                extras: Bundle?,
-                                                resultData: Bundle?
-                                            ) {
-                                                super.onResult(action, extras, resultData)
-                                                if (ACTION_PlayLIST_CHANGE == action) {
-                                                    musicViewModel.refreshPlayList.value =
-                                                        !musicViewModel.refreshPlayList.value
-                                                }
-                                            }
-                                        }
-                                    )
+                                    SongsUtils.refreshPlaylist(musicViewModel)
                                 }
                             })
                     }
@@ -203,23 +195,7 @@ class MainActivity : ComponentActivity() {
                 } else if (OperateTypeInActivity.EditTrackInfo.name == action) {
                     musicViewModel.editTrackEnable.value = true
                 }
-                musicViewModel.mediaBrowser?.sendCustomAction(
-                    ACTION_PlayLIST_CHANGE,
-                    null,
-                    object : MediaBrowserCompat.CustomActionCallback() {
-                        override fun onResult(
-                            action: String?,
-                            extras: Bundle?,
-                            resultData: Bundle?
-                        ) {
-                            super.onResult(action, extras, resultData)
-                            if (ACTION_PlayLIST_CHANGE == action) {
-                                musicViewModel.refreshPlayList.value =
-                                    !musicViewModel.refreshPlayList.value
-                            }
-                        }
-                    }
-                )
+                SongsUtils.refreshPlaylist(musicViewModel)
                 bundle.clear()
             } else {
                 bundle.clear()

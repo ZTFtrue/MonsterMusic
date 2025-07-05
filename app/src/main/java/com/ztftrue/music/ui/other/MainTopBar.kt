@@ -84,6 +84,7 @@ import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.trackManager.PlaylistManager
+import com.ztftrue.music.utils.trackManager.SongsUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -477,7 +478,7 @@ fun MainTopBar(
                                 removeDuplicate
                             )
                         ) {
-                            Utils.refreshPlaylist(musicViewModel)
+                            SongsUtils.refreshPlaylist(musicViewModel)
                         }
 
                     }

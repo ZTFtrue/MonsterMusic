@@ -143,6 +143,7 @@ import com.ztftrue.music.utils.Utils.deleteTrackUpdate
 import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.trackManager.PlaylistManager
+import com.ztftrue.music.utils.trackManager.SongsUtils
 import com.ztftrue.music.utils.trackManager.TracksManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -372,7 +373,7 @@ fun PlayingPage(
                                     removeDuplicate
                                 )
                             ) {
-                                Utils.refreshPlaylist(musicViewModel)
+                                SongsUtils.refreshPlaylist(musicViewModel)
                             }
                         }
                     }

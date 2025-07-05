@@ -97,6 +97,7 @@ import com.ztftrue.music.utils.model.ListBase
 import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.trackManager.ArtistManager
 import com.ztftrue.music.utils.trackManager.PlaylistManager
+import com.ztftrue.music.utils.trackManager.SongsUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -593,6 +594,7 @@ fun TracksListPage(
                                 }
 
                             }
+
                             OperateType.RenamePlayList -> {
                                 showRenameDialog = true
                             }
@@ -619,7 +621,7 @@ fun TracksListPage(
             showRenameDialog = false
             if (!it.isNullOrEmpty()) {
                 if (PlaylistManager.renamePlaylist(context, item.id, it)) {
-                    Utils.refreshPlaylist(musicViewModel)
+                    SongsUtils.refreshPlaylist(musicViewModel)
                 }
             }
         })
