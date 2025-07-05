@@ -123,7 +123,7 @@ fun MainTopBar(
                 showCreatePlayListDialog = false
                 if (!it.isNullOrEmpty()) {
                     navController.navigate(
-                        Router.TracksSelectPage.withArgs("-1", it)
+                        Router.TracksSelectPage.withArgs("id" to "-1","name" to it)
                     )
                 }
             })

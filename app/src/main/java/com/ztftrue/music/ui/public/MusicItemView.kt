@@ -211,8 +211,8 @@ fun MusicItemView(
                     OperateType.Artist -> {
                         viewModel.navController?.navigate(
                             Router.PlayListView.withArgs(
-                                "${music.artistId}",
-                                enumToStringForPlayListType(PlayListType.Artists)
+                             "id" to   "${music.artistId}",
+                             "itemType" to   enumToStringForPlayListType(PlayListType.Artists)
                             ),
                         ) {
                             popUpTo(Router.MainView.route) {
@@ -225,8 +225,8 @@ fun MusicItemView(
                     OperateType.Album -> {
                         viewModel.navController?.navigate(
                             Router.PlayListView.withArgs(
-                                "${music.albumId}",
-                                enumToStringForPlayListType(PlayListType.Albums)
+                               "id" to "${music.albumId}",
+                              "itemType" to  enumToStringForPlayListType(PlayListType.Albums)
                             )
                         ) {
                             popUpTo(Router.MainView.route) {
@@ -268,7 +268,7 @@ fun MusicItemView(
                     }
 
                     OperateType.EditMusicInfo -> {
-                        viewModel.navController?.navigate(Router.EditTrackPage.withArgs("${music.id}"))
+                        viewModel.navController?.navigate(Router.EditTrackPage.withArgs("id" to "${music.id}"))
                     }
 
                     OperateType.DeleteFromStorage -> {

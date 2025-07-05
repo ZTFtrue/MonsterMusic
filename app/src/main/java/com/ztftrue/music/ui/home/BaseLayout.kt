@@ -24,8 +24,6 @@ import com.ztftrue.music.ui.play.PlayingPage
 import com.ztftrue.music.ui.public.QueuePage
 import com.ztftrue.music.ui.public.TracksListPage
 import com.ztftrue.music.utils.stringToEnumForPlayListType
-import java.net.URLDecoder
-import java.nio.charset.StandardCharsets
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
@@ -61,25 +59,23 @@ fun BaseLayout(
                 }
             }
             composable(
-                route = Router.PlayListView.withArgs("{id}", "{itemType}","{path}"), arguments = listOf(),
+                route = Router.PlayListView.withArgs("id" to "{id}", "path" to "{path}", "itemType" to "{itemType}"),
             ) { backStackEntry ->
+
                 val arg = backStackEntry.arguments
-                key(Unit) {
-                    if (arg != null) {
-                        val encodedPath = backStackEntry.arguments?.getString("path") ?: ""
-                        val originalPath = URLDecoder.decode(encodedPath, StandardCharsets.UTF_8.toString())
-                        TracksListPage(
-                            musicViewModel = musicViewModel,
-                            navController,
-                            stringToEnumForPlayListType(arg.getString("itemType") ?: ""),
-                            arg.getString("id")?.toLong() ?: 0,
-                            originalPath
-                        )
-                    }
+                if (arg != null) {
+                    val encodedPath = backStackEntry.arguments?.getString("path") ?: ""
+                    TracksListPage(
+                        musicViewModel = musicViewModel,
+                        navController,
+                        stringToEnumForPlayListType(arg.getString("itemType") ?: ""),
+                        arg.getString("id")?.toLong() ?: 0,
+                        encodedPath
+                    )
                 }
             }
             composable(
-                route = Router.TracksSelectPage.withArgs("{id}", "{name}"), arguments = listOf(),
+                route = Router.TracksSelectPage.withArgs("id" to "{id}", "name" to "{name}"), arguments = listOf(),
             ) { backStackEntry ->
                 val arg = backStackEntry.arguments
                 key(Unit) {
@@ -94,7 +90,7 @@ fun BaseLayout(
                 }
             }
             composable(
-                route = Router.EditTrackPage.withArgs("{id}"), arguments = listOf(),
+                route = Router.EditTrackPage.withArgs("id" to "{id}"), arguments = listOf(),
             ) { backStackEntry ->
                 val arg = backStackEntry.arguments
                 key(Unit) {

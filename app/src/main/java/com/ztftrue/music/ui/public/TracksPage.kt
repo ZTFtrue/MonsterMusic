@@ -449,8 +449,8 @@ fun TracksListPage(
                                                     )?.let { artistId ->
                                                         navController.navigate(
                                                             Router.PlayListView.withArgs(
-                                                                artistId.toString(),
-                                                                enumToStringForPlayListType(
+                                                                "id" to artistId.toString(),
+                                                                "itemType" to enumToStringForPlayListType(
                                                                     PlayListType.Artists
                                                                 )
                                                             ),
@@ -868,10 +868,7 @@ fun TracksListPage(
                                 if (mListPlay.type == PlayListType.PlayLists) {
                                     IconButton(onClick = {
                                         navController.navigate(
-                                            Router.TracksSelectPage.withArgs(
-                                                "${mListPlay.id}",
-                                                "null"
-                                            )
+                                            Router.TracksSelectPage.withArgs("id" to "${mListPlay.id}")
                                         )
                                     }) {
                                         Icon(

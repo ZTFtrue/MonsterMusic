@@ -70,8 +70,6 @@ import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.SongsUtils
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 
 @Composable
@@ -274,14 +272,12 @@ fun PlayListItemView(
 
                 }
             ) {
-                val encodedPath = URLEncoder.encode(item.path, StandardCharsets.UTF_8.toString())
                 navController.navigate(
                     Router.PlayListView.withArgs(
-                        "${item.id}",
-                        enumToStringForPlayListType(type),
-                        encodedPath
+                        "id" to "${item.id}",
+                        "itemType" to enumToStringForPlayListType(type),
+                        "path" to item.path
                     ),
-                    navigatorExtras = ListParameter(item.id, type, item.path)
                 )
             }, verticalAlignment = Alignment.CenterVertically
     ) {

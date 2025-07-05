@@ -248,7 +248,7 @@ fun GenreItemView(
                 showOperateDialog = true
             }, onClick = {
                 navController.navigate(
-                    Router.PlayListView.withArgs("${item.id}", enumToStringForPlayListType(type)),
+                    Router.PlayListView.withArgs("id" to "${item.id}", "itemType" to enumToStringForPlayListType(type)),
                     navigatorExtras = ListParameter(item.id, type)
                 )
             })

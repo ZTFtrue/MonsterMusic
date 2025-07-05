@@ -215,8 +215,8 @@ fun FolderItemView(
                 }
             ) {
                 navController.navigate(
-                    Router.PlayListView.withArgs("${item.id}", enumToStringForPlayListType(type)),
-                    navigatorExtras = ListParameter(item.id, type)
+                    Router.PlayListView.withArgs("id" to "${item.id}", "itemType" to enumToStringForPlayListType(type)),
+                    navigatorExtras = ListParameter(item.id, type,)
                 )
             }, verticalAlignment = Alignment.CenterVertically
     ) {

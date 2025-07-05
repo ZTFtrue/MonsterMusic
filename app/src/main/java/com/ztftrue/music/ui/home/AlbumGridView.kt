@@ -225,8 +225,8 @@ fun AlbumItemView(
                         ArtistManager.getArtistIdByName(context, item.artist)?.let { artistId ->
                             navController.navigate(
                                 Router.PlayListView.withArgs(
-                                    artistId.toString(),
-                                    enumToStringForPlayListType(PlayListType.Artists)
+                                    "id" to artistId.toString(),
+                                   "itemType" to enumToStringForPlayListType(PlayListType.Artists)
                                 ),
                             ) {
 
@@ -279,7 +279,7 @@ fun AlbumItemView(
                 }
             ) {
                 navController.navigate(
-                    Router.PlayListView.withArgs("${item.id}", enumToStringForPlayListType(type)),
+                    Router.PlayListView.withArgs("id" to "${item.id}", "itemType" to enumToStringForPlayListType(type)),
                     navigatorExtras = ListParameter(item.id, type)
                 )
             }) {
