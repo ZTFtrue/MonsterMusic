@@ -195,25 +195,26 @@ class MusicViewModel : ViewModel() {
             if (index == 0 && reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
                 delay(100)
             }
+            currentPlayQueueIndex.intValue = index
             if (currentPlay.value?.id != musicQueue[index].id) {
-                currentPlayQueueIndex.intValue = index
                 currentPlay.value =
                     musicQueue[index]
                 currentCaptionList.clear()
-                scheduleDealLyrics(context, musicQueue[index])
+                scheduleDealLyrics(context, musicQueue[index], index, reason)
                 currentMusicCover.value = null
                 sliderPosition.floatValue = 0f
                 currentDuration.longValue =
                     currentPlay.value?.duration ?: 0
             }
-
         }
     }
 
-    fun scheduleDealLyrics(context: Context, music: MusicItem) {
+    fun scheduleDealLyrics(context: Context, music: MusicItem, index: Int, reason: Int) {
         dealLyricsJob?.cancel()
         dealLyricsJob = viewModelScope.launch {
-            delay(300)
+            if (index == 0 && reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
+                delay(300)
+            }
             dealLyrics(context, music)
         }
     }
