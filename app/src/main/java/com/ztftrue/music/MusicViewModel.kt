@@ -16,8 +16,10 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.text.style.TextAlign
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.media3.common.Player
 import androidx.navigation.NavHostController
 import com.ztftrue.music.sqlData.MusicDatabase
@@ -43,6 +45,7 @@ import com.ztftrue.music.utils.model.ListStringCaption
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.File
@@ -50,7 +53,6 @@ import java.io.FileOutputStream
 import java.io.InputStreamReader
 import java.nio.file.Files
 import java.util.concurrent.locks.ReentrantLock
-import androidx.core.net.toUri
 
 
 var SongsPlayList = AnyListBase(-1, PlayListType.Songs)
@@ -181,8 +183,38 @@ class MusicViewModel : ViewModel() {
     val tags = mutableStateMapOf<String, String>()
     private val lock = ReentrantLock()
     private var lyricsJob: Job? = null
+    private var dealLyricsJob: Job? = null
+    private var dealCurrentPlayJob: Job? = null
+
+    fun scheduleDealCurrentPlay(context: Context, index: Int, reason: Int) {
+        dealCurrentPlayJob?.cancel() // 取消旧的
+        dealCurrentPlayJob = viewModelScope.launch {
+            if (index == 0 && reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
+                delay(100)
+            }
+            currentCaptionList.clear()
+            currentMusicCover.value = null
+            currentPlay.value =
+                musicQueue[index]
+            currentPlayQueueIndex.intValue = index
+            sliderPosition.floatValue = 0f
+            currentDuration.longValue =
+                currentPlay.value?.duration ?: 0
+            scheduleDealLyrics(context, musicQueue[index])
+        }
+    }
+
+    fun scheduleDealLyrics(context: Context, music: MusicItem) {
+        dealLyricsJob?.cancel() // 取消旧的
+        dealLyricsJob = viewModelScope.launch {
+            delay(300)
+            dealLyrics(context, music)
+        }
+    }
+
     fun dealLyrics(context: Context, currentPlay: MusicItem) {
         lock.lock()
+
         currentCaptionList.clear()
         lyricsType = LyricsType.TEXT
         if (lyricsJob != null && lyricsJob?.isActive == true) {

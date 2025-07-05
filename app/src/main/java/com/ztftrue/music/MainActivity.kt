@@ -52,7 +52,6 @@ import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.play.ACTION_IS_CONNECTED
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.play.ACTION_WILL_DISCONNECTED
-import com.ztftrue.music.play.EVENT_CHECK_MEDIA_ITEM_CHANGE
 import com.ztftrue.music.play.EVENT_INPUT_FORTMAT_Change
 import com.ztftrue.music.play.EVENT_MEDIA_ITEM_Change
 import com.ztftrue.music.play.EVENT_SLEEP_TIME_Change
@@ -129,7 +128,7 @@ class MainActivity : ComponentActivity() {
                                 true
                             )
                         ) {
-                            resolver.notifyChange(u,object : ContentObserver(null) {
+                            resolver.notifyChange(u, object : ContentObserver(null) {
                                 override fun onChange(selfChange: Boolean) {
                                     super.onChange(selfChange)
                                     SongsUtils.refreshPlaylist(musicViewModel)
@@ -592,22 +591,11 @@ class MainActivity : ComponentActivity() {
             super.onExtrasChanged(extras)
             extras?.let {
                 val type = it.getInt("type")
-                if (type == EVENT_MEDIA_ITEM_Change || type == EVENT_CHECK_MEDIA_ITEM_CHANGE) {
-                    // before switch to another music, must clear lyrics
+                if (type == EVENT_MEDIA_ITEM_Change) {
                     val index = it.getInt("index")
+                    val reason = it.getInt("reason")
                     if (index >= 0 && musicViewModel.musicQueue.size > index && musicViewModel.currentPlay.value?.id != musicViewModel.musicQueue[index].id) {
-                        musicViewModel.currentCaptionList.clear()
-                        musicViewModel.currentMusicCover.value = null
-                        musicViewModel.currentPlay.value =
-                            musicViewModel.musicQueue[index]
-                        musicViewModel.currentPlayQueueIndex.intValue = index
-                        musicViewModel.sliderPosition.floatValue = 0f
-                        musicViewModel.currentDuration.longValue =
-                            musicViewModel.currentPlay.value?.duration ?: 0
-                        musicViewModel.dealLyrics(
-                            this@MainActivity,
-                            musicViewModel.musicQueue[index]
-                        )
+                        musicViewModel.scheduleDealCurrentPlay(this@MainActivity, index, reason)
                     }
                 } else if (type == EVENT_SLEEP_TIME_Change) {
                     val remainTime = it.getLong("remaining")
@@ -735,18 +723,11 @@ class MainActivity : ComponentActivity() {
         val index = resultData.getInt("index")
         if (index >= 0 && musicViewModel.musicQueue.size > index && index != musicViewModel.currentPlayQueueIndex.intValue
         ) {
-            musicViewModel.currentMusicCover.value = null
-            musicViewModel.currentPlay.value =
-                musicViewModel.musicQueue[index]
-            musicViewModel.currentPlayQueueIndex.intValue = index
-            musicViewModel.currentDuration.longValue =
-                musicViewModel.currentPlay.value?.duration ?: 0
-            if (musicViewModel.currentPlay.value != null) {
-                musicViewModel.dealLyrics(
-                    this@MainActivity,
-                    musicViewModel.currentPlay.value!!
-                )
-            }
+            musicViewModel.scheduleDealCurrentPlay(
+                this,
+                index,
+                Player.MEDIA_ITEM_TRANSITION_REASON_AUTO
+            )
         }
         val pitch = resultData.getFloat("pitch", 1f)
         val speed = resultData.getFloat("speed", 1f)

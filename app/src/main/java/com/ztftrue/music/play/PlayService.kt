@@ -129,7 +129,6 @@ const val EVENT_SLEEP_TIME_Change = 5
 const val EVENT_DATA_READY = 6
 const val EVENT_Visualization_Change = 7
 const val EVENT_INPUT_FORTMAT_Change = 8
-const val EVENT_CHECK_MEDIA_ITEM_CHANGE = 9
 
 //@Suppress("deprecation")
 @UnstableApi
@@ -1420,11 +1419,6 @@ class PlayService : MediaBrowserServiceCompat() {
                     this@PlayService,
                     exoPlayer.currentPosition
                 )
-                val bundle = Bundle()
-                bundle.putParcelable("current", currentPlayTrack)
-                bundle.putInt("type", EVENT_CHECK_MEDIA_ITEM_CHANGE)
-                bundle.putInt("index", exoPlayer.currentMediaItemIndex)
-                mediaSession?.setExtras(bundle)
                 updateNotify()
             }
 
@@ -1451,23 +1445,20 @@ class PlayService : MediaBrowserServiceCompat() {
                 }
             }
 
-            override fun onPositionDiscontinuity(
-                oldPosition: Player.PositionInfo,
-                newPosition: Player.PositionInfo,
-                reason: Int
-            ) {
-                super.onPositionDiscontinuity(oldPosition, newPosition, reason)
-                if (musicQueue.isEmpty() || newPosition.mediaItemIndex >= musicQueue.size) return
-                if (oldPosition.mediaItemIndex != newPosition.mediaItemIndex || reason >= 4 || currentPlayTrack?.id != musicQueue[newPosition.mediaItemIndex].id) {
+            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                super.onMediaItemTransition(mediaItem, reason)
+                if (musicQueue.isEmpty() || exoPlayer.currentMediaItemIndex >= musicQueue.size) return
+                if (currentPlayTrack?.id != musicQueue[exoPlayer.currentMediaItemIndex].id) {
                     SharedPreferencesUtils.saveSelectMusicId(
                         this@PlayService,
-                        musicQueue[newPosition.mediaItemIndex].id
+                        musicQueue[exoPlayer.currentMediaItemIndex].id
                     )
                     currentPlayTrack =
-                        musicQueue[newPosition.mediaItemIndex]
+                        musicQueue[exoPlayer.currentMediaItemIndex]
                     val bundle = Bundle()
                     bundle.putParcelable("current", currentPlayTrack)
                     bundle.putInt("type", EVENT_MEDIA_ITEM_Change)
+                    bundle.putInt("reason", reason)
                     bundle.putInt("index", exoPlayer.currentMediaItemIndex)
                     getSharedPreferences("Widgets", MODE_PRIVATE).getBoolean(
                         "enable",
@@ -1509,6 +1500,14 @@ class PlayService : MediaBrowserServiceCompat() {
                 }
                 // wait currentPlayTrack changed
                 updateNotify()
+            }
+
+            override fun onPositionDiscontinuity(
+                oldPosition: Player.PositionInfo,
+                newPosition: Player.PositionInfo,
+                reason: Int
+            ) {
+                super.onPositionDiscontinuity(oldPosition, newPosition, reason)
             }
 
             override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
