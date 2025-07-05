@@ -7,6 +7,7 @@
     android:theme="@style/Theme.MusicPitch.AppWidgetContainer">
 
     <ImageView
+        android:contentDescription="@string/music_cover"
         android:id="@+id/cover"
         android:layout_width="130dp"
         android:layout_height="130dp"
@@ -25,6 +26,7 @@
             android:orientation="horizontal">
 
             <ImageView
+                android:contentDescription="@string/music_cover"
                 android:id="@+id/small_cover"
                 android:layout_width="50dp"
                 android:layout_gravity="center"
