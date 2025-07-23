@@ -47,6 +47,7 @@ import androidx.compose.material.icons.automirrored.outlined.FormatAlignRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Adjust
+import androidx.compose.material.icons.outlined.CodeOff
 import androidx.compose.material.icons.outlined.Equalizer
 import androidx.compose.material.icons.outlined.FormatAlignCenter
 import androidx.compose.material.icons.outlined.FormatAlignJustify
@@ -1585,7 +1586,7 @@ fun PlayingPage(
                                         }
 
                                         else -> {
-                                            Icons.Outlined.Repeat
+                                            Icons.Outlined.CodeOff
                                         }
                                     },
                                     contentDescription = "Repeat model",

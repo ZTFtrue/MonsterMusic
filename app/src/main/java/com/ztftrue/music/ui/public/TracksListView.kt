@@ -273,21 +273,21 @@ fun TracksListView(
                             }
                         },
                         modifier = Modifier
-                            .padding(10.dp)
-                            .size(56.dp)
+                            .padding(0.dp)
+                            .size(50.dp)
                             .zIndex(10f)
                             .constrainAs(button) {
                                 bottom.linkTo(parent.bottom)
                                 end.linkTo(parent.end)
                             }
-                            .offset(x = (-1).dp, y = (-40).dp),
+                            .offset(x = (-10).dp, y = (-40).dp),
                         shape = CircleShape,
                     ) {
                         Icon(
                             imageVector= Icons.Default.MyLocation,
                             contentDescription = "find current playing music",
                             modifier = Modifier
-                                .size(30.dp),
+                                .size(20.dp),
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
