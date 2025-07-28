@@ -14,6 +14,7 @@ import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.utils.model.MusicPlayList
 import java.io.File
 import java.io.FileOutputStream
 
@@ -42,6 +43,23 @@ object SongsUtils {
         return ArrayList(sortedList)
     }
 
+    fun sortPlayList(
+        list: ArrayList<MusicPlayList>,
+        field: String?,
+        order: String?
+    ) {
+        val comparator: Comparator<MusicPlayList> = when (field) {
+            MediaStore.Audio.Playlists.NAME -> compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }
+            else -> {
+                return
+            }
+        }
+        when (order?.uppercase()) {
+            "ASC" -> list.sortWith(comparator)
+            "DESC" -> list.sortWith(comparator.reversed())
+            else -> return
+        }
+    }
 
     fun sendRequest(uri: Uri, context: MainActivity) {
         try {
@@ -58,6 +76,7 @@ object SongsUtils {
             e.printStackTrace()
         }
     }
+
     fun resortOrRemoveTrackFromM3U(
         context: Context, uri: Uri, m3uPath: String,
         arrayList: ArrayList<MusicItem>,
@@ -82,6 +101,7 @@ object SongsUtils {
             pfd.close()
         }
     }
+
     fun refreshPlaylist(musicViewModel: MusicViewModel) {
         musicViewModel.mediaBrowser?.sendCustomAction(
             ACTION_PlayLIST_CHANGE,

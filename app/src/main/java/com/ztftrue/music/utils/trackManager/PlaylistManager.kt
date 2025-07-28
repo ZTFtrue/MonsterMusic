@@ -48,7 +48,7 @@ object PlaylistManager {
         val selection = "${MediaStore.Files.FileColumns.DISPLAY_NAME} LIKE '%.m3u' OR " +
                 "${MediaStore.Files.FileColumns.DISPLAY_NAME} LIKE '%.m3u8'"
         val selectionArgs = null
-        val playList = LinkedHashMap<Long, MusicPlayList>()
+        val playList = ArrayList<MusicPlayList>()
 
         val contentResolver = context.contentResolver
         try {
@@ -84,17 +84,21 @@ object PlaylistManager {
                                 sortMethod
                             )
                         map[id] = tracks
-                        playList[id] =
+                        playList.add(
                             MusicPlayList(name.substringBeforeLast("."), id, path, tracks.size)
+                        )
                     }
                 }
             }
         } catch (e: Exception) {
             Log.e("PlaylistFinder", "Error finding playlist files", e)
         }
-        list.putAll(playList)
+        SongsUtils.sortPlayList(playList, sortFiled, sortMethod)
+        playList.forEach {
+            list.put(it.id, it)
+        }
         val bundle = Bundle()
-        bundle.putParcelableArrayList("list", ArrayList(list.values))
+        bundle.putParcelableArrayList("list", playList)
         result?.sendResult(bundle)
         return playlistFiles
     }
@@ -427,7 +431,6 @@ object PlaylistManager {
         }
         return true
     }
-
 
 
 }
