@@ -297,7 +297,7 @@ fun AlbumItemView(
                         item.id,
                         context
                     )
-                        ?: R.drawable.songs_thumbnail_cover
+                        ?:  musicViewModel.customMusicCover.value
                 ),
 //                model = musicViewModel.getAlbumCover(
 //                    item.id,

@@ -77,7 +77,7 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
                 key(musicViewModel.currentPlay.value) {
                     Image(
                         painter = rememberAsyncImagePainter(
-                            paint ?: R.drawable.songs_thumbnail_cover
+                            paint ?: musicViewModel.customMusicCover.value
                         ),
                         contentDescription = "song cover",
                         modifier = Modifier

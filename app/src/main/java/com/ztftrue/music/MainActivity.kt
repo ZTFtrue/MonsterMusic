@@ -255,7 +255,55 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    private val roseImagePickerLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val selectedFileUri: Uri? = result.data?.data
+                if (selectedFileUri != null) {
+                    val inputStream = contentResolver.openInputStream(selectedFileUri)
+                    if (inputStream != null) {
+                        try {
+                            //  read file name
+                            val fileName =
+                                Utils.getFileNameFromUri(this@MainActivity, selectedFileUri)
+                                    ?: "cover.jpg"
+                            val fileExtension = if (fileName.contains('.')) {
+                                fileName.substringAfterLast('.').lowercase()
+                            } else {
+                                "" // 没有后缀
+                            }
+                            val folderPath = "cover"
+                            val folder = this@MainActivity.getExternalFilesDir(
+                                folderPath
+                            )
+                            folder?.mkdirs()
+                            val tempPath: String? =
+                                this@MainActivity.getExternalFilesDir(folderPath)?.absolutePath
+                            // 创建目标文件
+                            val targetFile = File(tempPath, "track_cover.$fileExtension")
+                            musicViewModel.customMusicCover.value = targetFile.absolutePath
+                            SharedPreferencesUtils.setTrackCoverData(
+                                this@MainActivity,
+                                targetFile.absolutePath
+                            )
+                            val outputStream = FileOutputStream(targetFile)
+                            // 复制内容
+                            inputStream.copyTo(outputStream)
 
+                            // 关闭流
+                            inputStream.close()
+                            outputStream.close()
+
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+
+            }
+        }
     private val coverImagePickerLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
@@ -384,6 +432,14 @@ class MainActivity : ComponentActivity() {
         filePickerLauncher.launch(intent)
     }
 
+    fun roseImagPicker() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        intent.type = "image/*" // Specify the MIME type for text files
+//        intent.addCategory(Intent.CATEGORY_OPENABLE)
+//        intent.type = "text/plain|application/octet-stream";
+        roseImagePickerLauncher.launch(intent)
+    }
+
     private var coverBitmap: MutableState<Bitmap?>? = null
     fun openImagePicker(bitmap: MutableState<Bitmap?>) {
         coverBitmap = bitmap
@@ -467,6 +523,14 @@ class MainActivity : ComponentActivity() {
         compatSplashScreen?.setKeepOnScreenCondition { musicViewModel.mainTabList.isEmpty() }
         Utils.initSettingsData(musicViewModel, this)
         musicViewModel.prepareArtistAndGenreCover(this@MainActivity)
+        val customMusicCoverPath = SharedPreferencesUtils.getTrackCoverData(this@MainActivity)
+        musicViewModel.customMusicCover.value = if (customMusicCoverPath.isNullOrEmpty()) {
+            R.drawable.songs_thumbnail_cover
+        } else {
+            customMusicCoverPath
+        }
+
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
 
             if (ActivityCompat.checkSelfPermission(

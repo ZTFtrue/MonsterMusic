@@ -164,6 +164,8 @@ fun SettingsPage(
                     var showLyricsFolderDialog by remember { mutableStateOf(false) }
                     var showAboutDialog by remember { mutableStateOf(false) }
                     var showSetListIndicatorDialog by remember { mutableStateOf(false) }
+                    var showReplaceCoverDialog by remember { mutableStateOf(false) }
+
 
                     Box(
                         modifier = Modifier
@@ -270,7 +272,6 @@ fun SettingsPage(
                                     showSetListIndicatorDialog = !showSetListIndicatorDialog
                                 },
                         ) {
-
                             if (showSetListIndicatorDialog) {
                                 SetListIndicatorDialog(
                                     onDismiss = {
@@ -282,10 +283,7 @@ fun SettingsPage(
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
-
-
                         }
-
                     }
 //                    Box(
 //                        modifier = Modifier
@@ -337,6 +335,56 @@ fun SettingsPage(
 //                            )
 //                        }
 //                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .padding(0.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
+                                .clickable {
+                                    showReplaceCoverDialog = !showReplaceCoverDialog
+                                },
+                        ) {
+                            if (showReplaceCoverDialog) {
+                                ReplaceCoverDialog(
+                                    musicViewModel,
+                                    onDismiss = {
+                                        showReplaceCoverDialog = false
+                                    })
+                            }
+                            Text(
+                                text = "Replace cover(the rose)",
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
 
 
                     Box(
@@ -1778,7 +1826,7 @@ fun ManageFolderDialog(onDismiss: () -> Unit) {
             }
         }
         val sharedPreferences = context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
-        sharedPreferences.edit { putString("ignore_folders", hideFolderIds.toString())}
+        sharedPreferences.edit { putString("ignore_folders", hideFolderIds.toString()) }
         scopeMain.launch {
             onDismiss()
         }
@@ -2208,7 +2256,6 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
 @UnstableApi
 @Composable
 fun SwitchLanguageDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
-
     val context = LocalContext.current
     val scopeMain = CoroutineScope(Dispatchers.IO)
 
@@ -2217,7 +2264,7 @@ fun SwitchLanguageDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) 
     var selectIndex by remember { mutableIntStateOf(0) }
     var locale by remember { mutableStateOf(Locale.getDefault().language) }
     val supportedLanguages = listOf("en", "de", "eo", "hu") // App-supported languages
-    val systemLanguage = context.resources.configuration.locales[0].language
+    val systemLanguage = LocalConfiguration.current.locales[0].language
 
     LaunchedEffect(Unit) {
         scopeMain.launch {
@@ -2372,6 +2419,127 @@ fun SwitchLanguageDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) 
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                             }
+                        }
+                    }
+                }
+
+            }
+        }
+    )
+}
+
+
+@UnstableApi
+@Composable
+fun ReplaceCoverDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
+
+    val scopeMain = CoroutineScope(Dispatchers.IO)
+val context=LocalContext.current
+
+    LaunchedEffect(Unit) {
+        scopeMain.launch {
+
+        }
+    }
+    fun onConfirmation() {
+        scopeMain.launch {
+            onDismiss()
+        }
+    }
+
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = true, dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        ),
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(color = MaterialTheme.colorScheme.background),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(color = MaterialTheme.colorScheme.onBackground)
+                )
+                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .clickable {
+                                    onDismiss()
+                                    Utils.setCoverFile(musicViewModel,context)
+                                },
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(50.dp)
+                                    .padding(0.dp)
+                                    .drawBehind {
+
+                                    }
+
+                            ) {
+
+                                Text(
+                                    text = "Replace Cover the Rose",
+                                    modifier = Modifier
+                                        .padding(2.dp),
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                )
+                            }
+                        }
+
+                    }
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            TextButton(
+                                onClick = { onDismiss() },
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .fillMaxWidth(0.5f),
+                            ) {
+                                Text(
+                                    stringResource(R.string.cancel),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+//                            HorizontalDivider(
+//                                modifier = Modifier
+//                                    .background(MaterialTheme.colorScheme.onBackground)
+//                                    .width(1.dp)
+//                                    .height(50.dp)
+//                            )
+//                            TextButton(
+//                                onClick = {
+//                                    onConfirmation()
+//                                },
+//                                modifier = Modifier
+//                                    .padding(8.dp)
+//                                    .fillMaxWidth(),
+//
+//                                ) {
+//                                Text(
+//                                    stringResource(id = R.string.confirm),
+//                                    color = MaterialTheme.colorScheme.onBackground
+//                                )
+//                            }
                         }
                     }
                 }

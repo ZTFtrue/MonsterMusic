@@ -84,9 +84,9 @@ class MusicViewModel : ViewModel() {
     var musicVisualizationData = mutableStateListOf<Float>()
     var musicVisualizationEnable = mutableStateOf(false)
     var showMusicCover = mutableStateOf(false)
+    var customMusicCover = mutableStateOf<Any?>(null)
     // 当前播放的列表，应该换数据结构存储，每个列表设置变量 播放状态，album和 genres 也是，艺术家跳转到 album， 然后在下一步处理
     // 每次播放仅设置当前列表的状态
-
     var musicQueue = mutableStateListOf<MusicItem>()
 
     var currentMusicCover = mutableStateOf<Bitmap?>(null)

@@ -813,7 +813,7 @@ fun TracksListPage(
                                     is AlbumList -> {
                                         val albumList = musicPlayList.value as AlbumList
                                         musicViewModel.getAlbumCover(albumList.id, context)
-                                            ?: R.drawable.songs_thumbnail_cover
+                                            ?:  musicViewModel.customMusicCover.value
                                     }
 
                                     is ArtistList -> {
@@ -829,7 +829,7 @@ fun TracksListPage(
                                     }
 
                                     else -> {
-                                        R.drawable.songs_thumbnail_cover
+                                        musicViewModel.customMusicCover.value
                                     }
                                 }
                             ),

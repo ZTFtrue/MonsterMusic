@@ -192,4 +192,12 @@ object SharedPreferencesUtils {
             putString("language", value)
         }
     }
+    fun setTrackCoverData(context: Context, coverPath: String) {
+        context.getSharedPreferences("Cover", Context.MODE_PRIVATE).edit {
+              putString("path",coverPath)
+        }
+    }
+    fun getTrackCoverData(context: Context ): String? {
+       return context.getSharedPreferences("Cover", Context.MODE_PRIVATE).getString("path","")
+    }
 }

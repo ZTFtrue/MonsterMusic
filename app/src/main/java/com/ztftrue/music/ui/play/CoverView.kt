@@ -205,7 +205,7 @@ fun CoverView(musicViewModel: MusicViewModel) {
                     key(musicViewModel.currentPlay.value) {
                         Image(
                             painter = rememberAsyncImagePainter(
-                                coverPaint ?: R.drawable.songs_thumbnail_cover
+                                coverPaint ?: musicViewModel.customMusicCover.value
                             ), contentDescription = stringResource(R.string.cover),
                             modifier = Modifier
                                 .size(minOf(maxWidth, maxHeight))

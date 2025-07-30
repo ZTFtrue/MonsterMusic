@@ -109,7 +109,7 @@ fun DrawMenu(
                 Image(
                     painter = rememberAsyncImagePainter(
                         musicViewModel.getCurrentMusicCover(context = context)
-                            ?: R.drawable.songs_thumbnail_cover
+                            ?:  musicViewModel.customMusicCover.value
                     ),
                     contentDescription = stringResource(id = R.string.album_cover),
                     modifier = Modifier
