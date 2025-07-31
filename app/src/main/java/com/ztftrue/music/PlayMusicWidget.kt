@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.media.session.PlaybackStateCompat
@@ -13,7 +14,9 @@ import android.widget.RemoteViews
 import androidx.annotation.OptIn
 import androidx.media.session.MediaButtonReceiver
 import androidx.media3.common.util.UnstableApi
+import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils.getCover
+import java.io.File
 
 
 /**
@@ -46,10 +49,18 @@ class PlayMusicWidget : AppWidgetProvider() {
                         if (cover != null) {
                             it.setImageViewBitmap(R.id.cover, cover)
                         } else {
-                            it.setImageViewResource(
-                                R.id.cover,
-                                R.drawable.songs_thumbnail_cover
-                            )
+                            val customCoverPath = SharedPreferencesUtils.getTrackCoverData(context)
+                            val bitmap = customCoverPath
+                                ?.takeIf { File(it).exists() }
+                                ?.let { BitmapFactory.decodeFile(it) }
+                            if (bitmap != null) {
+                                it.setImageViewBitmap(R.id.cover, bitmap)
+                            } else {
+                                it.setImageViewResource(
+                                    R.id.cover,
+                                    R.drawable.songs_thumbnail_cover
+                                )
+                            }
                         }
                     }
                     it.setTextViewText(R.id.title, title)
@@ -238,14 +249,23 @@ class PlayMusicWidget : AppWidgetProvider() {
                         it.setImageViewBitmap(R.id.cover, cover)
                         it.setImageViewBitmap(R.id.small_cover, cover)
                     } else {
-                        it.setImageViewResource(
-                            R.id.cover,
-                            R.drawable.songs_thumbnail_cover
-                        )
-                        it.setImageViewResource(
-                            R.id.small_cover,
-                            R.drawable.songs_thumbnail_cover
-                        )
+                        val customCoverPath = SharedPreferencesUtils.getTrackCoverData(context)
+                        val bitmap = customCoverPath
+                            ?.takeIf { File(it).exists() }
+                            ?.let { BitmapFactory.decodeFile(it) }
+                        if (bitmap != null) {
+                            it.setImageViewBitmap(R.id.cover, bitmap)
+                            it.setImageViewBitmap(R.id.small_cover,bitmap)
+                        } else {
+                            it.setImageViewResource(
+                                R.id.cover,
+                                R.drawable.songs_thumbnail_cover
+                            )
+                            it.setImageViewResource(
+                                R.id.small_cover,
+                                R.drawable.songs_thumbnail_cover
+                            )
+                        }
                     }
                 }
                 it.setTextViewText(R.id.title, title)

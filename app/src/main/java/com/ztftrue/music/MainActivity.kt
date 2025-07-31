@@ -1,6 +1,7 @@
 package com.ztftrue.music
 
 import android.Manifest
+import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.ContentResolver
 import android.content.ContentValues
@@ -295,7 +296,32 @@ class MainActivity : ComponentActivity() {
                             // 关闭流
                             inputStream.close()
                             outputStream.close()
-
+                            getSharedPreferences("Widgets", MODE_PRIVATE).getBoolean(
+                                "enable",
+                                false
+                            )
+                                .let {
+                                    if (it) {
+                                        val intent = Intent(this@MainActivity, PlayMusicWidget::class.java)
+                                        intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+                                        intent.putExtra("source", this@MainActivity.packageName)
+                                        val ids = AppWidgetManager.getInstance(
+                                            application
+                                        ).getAppWidgetIds(
+                                            ComponentName(
+                                                application,
+                                                PlayMusicWidget::class.java
+                                            )
+                                        )
+                                        intent.putExtra("playingStatus", musicViewModel.playStatus.value)
+                                        intent.putExtra("title", musicViewModel.currentPlay.value?.name ?: "")
+                                        intent.putExtra("author", musicViewModel.currentPlay.value?.artist ?: "")
+                                        intent.putExtra("path", musicViewModel.currentPlay.value?.path ?: "")
+                                        intent.putExtra("id", musicViewModel.currentPlay.value?.id ?: 0L)
+                                        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+                                        sendBroadcast(intent)
+                                    }
+                                }
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
@@ -441,6 +467,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private var coverBitmap: MutableState<Bitmap?>? = null
+
+    /**
+     * for edit tracks cover
+     */
     fun openImagePicker(bitmap: MutableState<Bitmap?>) {
         coverBitmap = bitmap
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
@@ -524,11 +554,10 @@ class MainActivity : ComponentActivity() {
         Utils.initSettingsData(musicViewModel, this)
         musicViewModel.prepareArtistAndGenreCover(this@MainActivity)
         val customMusicCoverPath = SharedPreferencesUtils.getTrackCoverData(this@MainActivity)
-        musicViewModel.customMusicCover.value = if (customMusicCoverPath.isNullOrEmpty()) {
-            R.drawable.songs_thumbnail_cover
-        } else {
-            customMusicCoverPath
-        }
+
+        musicViewModel.customMusicCover.value = customMusicCoverPath?.takeIf {
+            File(it).exists()
+        } ?: R.drawable.songs_thumbnail_cover
 
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
