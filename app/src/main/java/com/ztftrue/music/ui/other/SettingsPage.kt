@@ -133,7 +133,7 @@ fun SettingsPage(
         )
     }
     LaunchedEffect(Unit) {
-
+        durationValue= SharedPreferencesUtils.getIgnoreDuration(context).toString()
     }
 
     Scaffold(
@@ -858,18 +858,8 @@ fun saveIgnoreDuration(
     if (durationValue.isEmpty()) {
         return
     }
-    val sharedPreferences =
-        context.getSharedPreferences(
-            "scan_config",
-            Context.MODE_PRIVATE
-        )
     // -1 don't ignore any,0 ignore duration less than or equal 0s,
-    sharedPreferences.edit {
-        putLong(
-            "ignore_duration",
-            durationValue.toLong()
-        )
-    }
+    SharedPreferencesUtils.setIgnoreDuration(context, durationValue.toLong())
     Toast.makeText(
         context,
         context.getString(

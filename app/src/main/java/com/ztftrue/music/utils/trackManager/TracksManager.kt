@@ -20,6 +20,7 @@ import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.OperateTypeInActivity
+import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.model.FolderList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -51,7 +52,7 @@ object TracksManager {
         allTracksHashMap?.clear()
         val sharedPreferences = context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
         // -1 don't ignore any,0 ignore duration less than or equal 0s,
-        val ignoreDuration = sharedPreferences.getLong("ignore_duration", 0)
+        val ignoreDuration = SharedPreferencesUtils.getIgnoreDuration(context)
         val ignoreFolders = sharedPreferences.getString("ignore_folders", "")
         val ignoreFoldersMap: List<Long> =
             if (ignoreFolders.isNullOrEmpty()) emptyList() else ignoreFolders.split(",")

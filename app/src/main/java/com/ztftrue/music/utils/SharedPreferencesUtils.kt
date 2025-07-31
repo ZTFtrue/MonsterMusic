@@ -182,6 +182,16 @@ object SharedPreferencesUtils {
             putBoolean("auto_to_top_when_random", enable)
         }
     }
+    fun getIgnoreDuration(context: Context): Long {
+        return context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
+            .getLong("ignore_duration", 0L)
+    }
+
+    fun setIgnoreDuration(context: Context, durationValue: Long) {
+        context.getSharedPreferences("scan_config", Context.MODE_PRIVATE).edit {
+            putLong("ignore_duration", durationValue)
+        }
+    }
     fun getCurrentLanguage(context: Context): String? {
         return context.getSharedPreferences("config", Context.MODE_PRIVATE)
             .getString("language", null)
