@@ -3,6 +3,10 @@ package com.ztftrue.music.ui.other
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
@@ -133,7 +137,7 @@ fun SettingsPage(
         )
     }
     LaunchedEffect(Unit) {
-        durationValue= SharedPreferencesUtils.getIgnoreDuration(context).toString()
+        durationValue = SharedPreferencesUtils.getIgnoreDuration(context).toString()
     }
 
     Scaffold(
@@ -165,7 +169,7 @@ fun SettingsPage(
                     var showAboutDialog by remember { mutableStateOf(false) }
                     var showSetListIndicatorDialog by remember { mutableStateOf(false) }
                     var showReplaceCoverDialog by remember { mutableStateOf(false) }
-
+                    var showSetLanguageDialog by remember { mutableStateOf(false) }
 
                     Box(
                         modifier = Modifier
@@ -285,56 +289,64 @@ fun SettingsPage(
                             )
                         }
                     }
-//                    Box(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .height(50.dp)
-//                            .padding(0.dp)
-//                            .drawBehind {
-//                                drawLine(
-//                                    color = color,
-//                                    start = Offset(0f, size.height - 1.dp.toPx()),
-//                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-//                                    strokeWidth = 1.dp.toPx()
-//                                )
-//                            }
-//                            .clickable {
-//
-//                            },
-//                        contentAlignment = Alignment.CenterStart
-//                    ) {
-//                        Row(
-//                            verticalAlignment = Alignment.CenterVertically,
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .height(50.dp)
-//                                .padding(0.dp)
-//                                .drawBehind {
-//                                    drawLine(
-//                                        color = color,
-//                                        start = Offset(0f, size.height - 1.dp.toPx()),
-//                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-//                                        strokeWidth = 1.dp.toPx()
-//                                    )
-//                                }
-//                                .clickable {
-//                                    showSetLanguageDialog = !showSetLanguageDialog
-//                                },
-//                        ) {
-//                            if (showSetLanguageDialog) {
-//                                SwitchLanguageDialog(
-//                                    musicViewModel,
-//                                    onDismiss = {
-//                                        showSetLanguageDialog = false
-//                                    })
-//                            }
-//                            Text(
-//                                text = "Set language",
-//                                Modifier.padding(start = 10.dp),
-//                                color = MaterialTheme.colorScheme.onBackground
-//                            )
-//                        }
-//                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .padding(0.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
+                                .clickable {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                        val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS)
+                                        intent.data =
+                                            Uri.fromParts("package", context.packageName, null)
+                                        context.startActivity(intent)
+                                    } else {
+                                        showSetLanguageDialog = !showSetLanguageDialog
+
+                                    }
+                                },
+                        ) {
+                            if (showSetLanguageDialog) {
+                                SwitchLanguageDialog(
+                                    musicViewModel,
+                                    onDismiss = {
+                                        showSetLanguageDialog = false
+                                    })
+                            }
+                            Text(
+                                text = "Set language",
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -2424,7 +2436,7 @@ fun SwitchLanguageDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) 
 fun ReplaceCoverDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 
     val scopeMain = CoroutineScope(Dispatchers.IO)
-val context=LocalContext.current
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         scopeMain.launch {
@@ -2467,7 +2479,7 @@ val context=LocalContext.current
                                 .padding(0.dp)
                                 .clickable {
                                     onDismiss()
-                                    Utils.setCoverFile(musicViewModel,context)
+                                    Utils.setCoverFile(musicViewModel, context)
                                 },
                             contentAlignment = Alignment.CenterStart
                         ) {
