@@ -7,9 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-import android.util.Log
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -82,7 +80,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.edit
-import androidx.core.os.LocaleListCompat
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
@@ -323,13 +320,20 @@ fun SettingsPage(
                                 }
                                 .clickable {
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                        val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS)
-                                        intent.data =
-                                            Uri.fromParts("package", context.packageName, null)
-                                        context.startActivity(intent)
+                                        try {
+                                            val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS)
+                                            intent.data =
+                                                Uri.fromParts("package", context.packageName, null)
+                                            context.startActivity(intent)
+                                        } catch (e: Exception) {
+                                            Toast.makeText(
+                                                context,
+                                                "Failed to open language settings",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
                                     } else {
                                         showSetLanguageDialog = !showSetLanguageDialog
-
                                     }
                                 },
                         ) {
@@ -2280,6 +2284,7 @@ fun SwitchLanguageDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) 
             language.add(LanguageModel("Deutsch", "de"))
             language.add(LanguageModel("Esperanto", "eo"))
             language.add(LanguageModel("Magyar", "hu"))
+            language.add(LanguageModel("Follow System", ""))
             SharedPreferencesUtils.getCurrentLanguage(context).let {
                 locale = if (it.isNullOrEmpty()) {
                     Locale.getDefault().language
@@ -2292,18 +2297,16 @@ fun SwitchLanguageDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) 
         }
     }
     fun onConfirmation() {
-        Locale(language[selectIndex].code)
-
         val activity = context as? Activity
-        val localeList = LocaleListCompat.forLanguageTags("en-US")
-        AppCompatDelegate.setApplicationLocales(localeList)
+        SharedPreferencesUtils.setCurrentLanguage(context, language[selectIndex].code)
         activity?.runOnUiThread {
             activity.recreate()
         }
-        Log.d("TAG", localeList.toString())
-        val currentLocale = AppCompatDelegate.getApplicationLocales()[0]
-        Log.d("LanguageChange", "Current Language: $currentLocale")
-
+//      Locale(language[selectIndex].code)
+//        val localeList = LocaleListCompat.forLanguageTags("en-US")
+//        AppCompatDelegate.setApplicationLocales(localeList)
+//        val currentLocale = AppCompatDelegate.getApplicationLocales()[0]
+//        Log.d("LanguageChange", "Current Language: $currentLocale")
         scopeMain.launch {
             onDismiss()
 

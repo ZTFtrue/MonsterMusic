@@ -5,8 +5,10 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.ContentResolver
 import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.database.ContentObserver
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -46,7 +48,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.net.toUri
-import androidx.core.os.LocaleListCompat
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.media3.common.Player
@@ -83,6 +84,7 @@ import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.util.Locale
 import java.util.concurrent.locks.ReentrantLock
 
 
@@ -303,7 +305,8 @@ class MainActivity : ComponentActivity() {
                             )
                                 .let {
                                     if (it) {
-                                        val intent = Intent(this@MainActivity, PlayMusicWidget::class.java)
+                                        val intent =
+                                            Intent(this@MainActivity, PlayMusicWidget::class.java)
                                         intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
                                         intent.putExtra("source", this@MainActivity.packageName)
                                         val ids = AppWidgetManager.getInstance(
@@ -314,11 +317,26 @@ class MainActivity : ComponentActivity() {
                                                 PlayMusicWidget::class.java
                                             )
                                         )
-                                        intent.putExtra("playingStatus", musicViewModel.playStatus.value)
-                                        intent.putExtra("title", musicViewModel.currentPlay.value?.name ?: "")
-                                        intent.putExtra("author", musicViewModel.currentPlay.value?.artist ?: "")
-                                        intent.putExtra("path", musicViewModel.currentPlay.value?.path ?: "")
-                                        intent.putExtra("id", musicViewModel.currentPlay.value?.id ?: 0L)
+                                        intent.putExtra(
+                                            "playingStatus",
+                                            musicViewModel.playStatus.value
+                                        )
+                                        intent.putExtra(
+                                            "title",
+                                            musicViewModel.currentPlay.value?.name ?: ""
+                                        )
+                                        intent.putExtra(
+                                            "author",
+                                            musicViewModel.currentPlay.value?.artist ?: ""
+                                        )
+                                        intent.putExtra(
+                                            "path",
+                                            musicViewModel.currentPlay.value?.path ?: ""
+                                        )
+                                        intent.putExtra(
+                                            "id",
+                                            musicViewModel.currentPlay.value?.id ?: 0L
+                                        )
                                         intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
                                         sendBroadcast(intent)
                                     }
@@ -529,6 +547,25 @@ class MainActivity : ComponentActivity() {
     }
 
     private var compatSplashScreen: SplashScreen? = null
+    override fun attachBaseContext(newBase: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            super.attachBaseContext(newBase)
+        } else {
+            val languageCode = SharedPreferencesUtils.getCurrentLanguage(newBase)
+            super.attachBaseContext(newBase.wrapInLocale(languageCode))
+        }
+    }
+
+    fun Context.wrapInLocale(language: String?): Context {
+        if (language.isNullOrEmpty()) {
+            return this
+        }
+        val locale = Locale(language)
+        Locale.setDefault(locale)
+        val config = Configuration(resources.configuration)
+        config.setLocale(locale)
+        return createConfigurationContext(config)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -540,13 +577,12 @@ class MainActivity : ComponentActivity() {
 //            configuration.setLocale(appLocale[0])
 //            resources.updateConfiguration(configuration, resources.displayMetrics)
 //        }
-//        val locale = Locale("en")
+//        val locale = Locale("zh")
 //        Locale.setDefault(locale)
 //        val config = resources.configuration
 //        config.setLocale(locale)
 //        resources.updateConfiguration(config, resources.displayMetrics)
-//        val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags("xx-YY")
-//        AppCompatDelegate.setApplicationLocales(appLocale)
+
 
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
