@@ -227,12 +227,13 @@ fun DrawMenu(
                     }
                     .clickable {
 
-                        musicViewModel.mediaBrowser?.sendCustomAction(
-                            "com.ztftrue.music.ACTION_EXIT",
-                            null,
-                            null
-                        )
-                        activity.finish()
+//                        browser?.sendCustomCommand(PlayService.COMMAND_APP_EXIT, Bundle.EMPTY)
+//
+//                        // 发送命令后，可以断开连接并关闭 Activity
+//                        if (browser != null) {
+//                            MediaBrowser.releaseFuture(browserFuture)
+//                        }
+//                        activity.finishAndRemoveTask() // 关闭应用
                     },
                 contentAlignment = Alignment.CenterStart
             ) {

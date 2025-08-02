@@ -152,14 +152,14 @@ object MediaItemUtils {
 
     fun createFullFeaturedRoot(): MediaItem {
         val metadata = MediaMetadata.Builder()
-            .setTitle("音乐库") // 这个标题通常不会在你的App里直接显示
+            .setTitle("Music") // 这个标题通常不会在你的App里直接显示
             .setIsBrowsable(true)
             .setIsPlayable(false)
             .build()
 
         return MediaItem.Builder()
             // 使用一个清晰的 Media ID
-            .setMediaId("full_root")
+            .setMediaId("root")
             .setMediaMetadata(metadata)
             .build()
     }
