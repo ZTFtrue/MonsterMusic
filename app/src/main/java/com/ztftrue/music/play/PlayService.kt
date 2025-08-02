@@ -31,6 +31,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
+import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -40,6 +41,16 @@ import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.ForwardingAudioSink
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
+import androidx.media3.session.LibraryResult
+import androidx.media3.session.MediaLibraryService
+import androidx.media3.session.MediaSession
+import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionError
+import androidx.media3.session.SessionResult
+import com.google.common.collect.ImmutableList
+import com.google.common.util.concurrent.Futures
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.SettableFuture
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.ztftrue.music.BuildConfig
@@ -132,10 +143,10 @@ const val EVENT_INPUT_FORTMAT_Change = 8
 
 //@Suppress("deprecation")
 @UnstableApi
-class PlayService : MediaBrowserServiceCompat() {
+class PlayService : MediaLibraryService() {
 
 
-    private var mediaSession: MediaSessionCompat? = null
+    private var mediaSession: MediaLibrarySession? = null
 
     val equalizerAudioProcessor: EqualizerAudioProcessor = EqualizerAudioProcessor()
 //    val sonicAudioProcessor = SonicAudioProcessor()
@@ -203,248 +214,307 @@ class PlayService : MediaBrowserServiceCompat() {
             this, 0, contentIntent,
             PendingIntent.FLAG_IMMUTABLE
         )
-        mediaSession = MediaSessionCompat(baseContext, PlayService::class.java.simpleName).apply {
-            isActive = true
-            val stateBuilder = PlaybackStateCompat.Builder()
-                .setActions(
-                    PlaybackStateCompat.ACTION_SEEK_TO
-                            or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
-                            or PlaybackStateCompat.ACTION_PLAY_PAUSE or
-                            PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+        mediaSession = MediaLibrarySession.Builder(
+            this,
+            exoPlayer,
+            // 3. 提供一个回调，用于处理浏览请求
+            MySessionCallback(this@PlayService),
+        ).build()
 
-                )
-            setPlaybackState(stateBuilder.build())
-            setSessionToken(sessionToken)
-            setSessionActivity(pendingContentIntent)
-            setRepeatMode(
-                when (exoPlayer.repeatMode) {
-                    Player.REPEAT_MODE_ALL -> {
-                        PlaybackStateCompat.REPEAT_MODE_ALL
-                    }
-
-                    Player.REPEAT_MODE_ONE -> {
-                        PlaybackStateCompat.REPEAT_MODE_ONE
-                    }
-
-                    else -> {
-                        PlaybackStateCompat.REPEAT_MODE_NONE
-                    }
-                }
-            )
-            mediaController = controller
-            setCallback(object : MediaSessionCompat.Callback() {
-//                override fun onSetShuffleMode(shuffleMode: Int) {
-//                    super.onSetShuffleMode(shuffleMode)
+//        mediaSession = MediaSessionCompat(baseContext, PlayService::class.java.simpleName).apply {
+//            isActive = true
+//            val stateBuilder = PlaybackStateCompat.Builder()
+//                .setActions(
+//                    PlaybackStateCompat.ACTION_SEEK_TO
+//                            or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+//                            or PlaybackStateCompat.ACTION_PLAY_PAUSE or
+//                            PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+//
+//                )
+//            setPlaybackState(stateBuilder.build())
+//            setSessionToken(sessionToken)
+//            setSessionActivity(pendingContentIntent)
+//            setRepeatMode(
+//                when (exoPlayer.repeatMode) {
+//                    Player.REPEAT_MODE_ALL -> {
+//                        PlaybackStateCompat.REPEAT_MODE_ALL
+//                    }
+//
+//                    Player.REPEAT_MODE_ONE -> {
+//                        PlaybackStateCompat.REPEAT_MODE_ONE
+//                    }
+//
+//                    else -> {
+//                        PlaybackStateCompat.REPEAT_MODE_NONE
+//                    }
 //                }
-
-                override fun onPlay() {
-                    pauseOrPlayMusic()
-                }
-
-                override fun onPause() {
-                    pauseOrPlayMusic()
-                }
-
-                override fun onStop() {
-//                    exoPlayer.stop()
-                    notify?.stop(this@PlayService)
-                } // Implement other media control callbacks as needed
-
-                override fun onSkipToNext() {
-                    super.onSkipToNext()
-                    playNext()
-                }
-
-                override fun onSkipToPrevious() {
-                    super.onSkipToPrevious()
-                    playPreview()
-                }
-
-                override fun onSeekTo(pos: Long) {
-                    super.onSeekTo(pos)
-                    exoPlayer.seekTo(pos)
-                }
-
-                override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean {
-                    return super.onMediaButtonEvent(mediaButtonEvent)
-                }
-
-
-                override fun onSetPlaybackSpeed(speed: Float) {
-                    super.onSetPlaybackSpeed(speed)
-                    val param1 = PlaybackParameters(
-                        speed, auxr.pitch
-                    )
-                    auxr.speed = speed
-                    CoroutineScope(Dispatchers.IO).launch {
-                        db.AuxDao().update(auxr)
-                    }
-                    exoPlayer.playbackParameters = param1
-                    notify?.updateNotification(
-                        this@PlayService,
-                        currentPlayTrack?.name ?: "",
-                        currentPlayTrack?.artist ?: "",
-                        exoPlayer.isPlaying,
-                        exoPlayer.playbackParameters.speed,
-                        exoPlayer.currentPosition,
-                        exoPlayer.duration
-                    )
-                }
-
-
-                override fun onSetRepeatMode(repeatMode: Int) {
-                    super.onSetRepeatMode(repeatMode)
-
-                    when (repeatMode) {
-                        PlaybackStateCompat.REPEAT_MODE_NONE -> {
-                            switchRepeatModel(Player.REPEAT_MODE_OFF)
-                        }
-
-                        PlaybackStateCompat.REPEAT_MODE_ALL -> {
-                            switchRepeatModel(Player.REPEAT_MODE_ALL)
-                        }
-
-                        PlaybackStateCompat.REPEAT_MODE_ONE -> {
-                            switchRepeatModel(Player.REPEAT_MODE_ONE)
-                        }
-
-                        PlaybackStateCompat.REPEAT_MODE_GROUP -> {
-                        }
-
-                        PlaybackStateCompat.REPEAT_MODE_INVALID -> {
-                        }
-                    }
-                }
-            })
-        }
+//            )
+//            mediaController = controller
+//            setCallback(object : MediaSessionCompat.Callback() {
+////                override fun onSetShuffleMode(shuffleMode: Int) {
+////                    super.onSetShuffleMode(shuffleMode)
+////                }
+//
+//                override fun onPlay() {
+//                    pauseOrPlayMusic()
+//                }
+//
+//                override fun onPause() {
+//                    pauseOrPlayMusic()
+//                }
+//
+//                override fun onStop() {
+////                    exoPlayer.stop()
+//                    notify?.stop(this@PlayService)
+//                } // Implement other media control callbacks as needed
+//
+//                override fun onSkipToNext() {
+//                    super.onSkipToNext()
+//                    playNext()
+//                }
+//
+//                override fun onSkipToPrevious() {
+//                    super.onSkipToPrevious()
+//                    playPreview()
+//                }
+//
+//                override fun onSeekTo(pos: Long) {
+//                    super.onSeekTo(pos)
+//                    exoPlayer.seekTo(pos)
+//                }
+//
+//                override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean {
+//                    return super.onMediaButtonEvent(mediaButtonEvent)
+//                }
+//
+//
+//                override fun onSetPlaybackSpeed(speed: Float) {
+//                    super.onSetPlaybackSpeed(speed)
+//                    val param1 = PlaybackParameters(
+//                        speed, auxr.pitch
+//                    )
+//                    auxr.speed = speed
+//                    CoroutineScope(Dispatchers.IO).launch {
+//                        db.AuxDao().update(auxr)
+//                    }
+//                    exoPlayer.playbackParameters = param1
+//                    notify?.updateNotification(
+//                        this@PlayService,
+//                        currentPlayTrack?.name ?: "",
+//                        currentPlayTrack?.artist ?: "",
+//                        exoPlayer.isPlaying,
+//                        exoPlayer.playbackParameters.speed,
+//                        exoPlayer.currentPosition,
+//                        exoPlayer.duration
+//                    )
+//                }
+//
+//
+//                override fun onSetRepeatMode(repeatMode: Int) {
+//                    super.onSetRepeatMode(repeatMode)
+//
+//                    when (repeatMode) {
+//                        PlaybackStateCompat.REPEAT_MODE_NONE -> {
+//                            switchRepeatModel(Player.REPEAT_MODE_OFF)
+//                        }
+//
+//                        PlaybackStateCompat.REPEAT_MODE_ALL -> {
+//                            switchRepeatModel(Player.REPEAT_MODE_ALL)
+//                        }
+//
+//                        PlaybackStateCompat.REPEAT_MODE_ONE -> {
+//                            switchRepeatModel(Player.REPEAT_MODE_ONE)
+//                        }
+//
+//                        PlaybackStateCompat.REPEAT_MODE_GROUP -> {
+//                        }
+//
+//                        PlaybackStateCompat.REPEAT_MODE_INVALID -> {
+//                        }
+//                    }
+//                }
+//            })
+//        }
 //        visualizationAudioProcessor.setMediaSession(mediaSession!!)
-        equalizerAudioProcessor.setMediaSession(mediaSession!!)
+//        equalizerAudioProcessor.setMediaSession(mediaSession!!)
 
     }
 
+    // 这是一个内部类，在你的 Service 里面
+    inner class MySessionCallback(private val context: Context) : MediaLibrarySession.Callback {
+        override fun onConnect(
+            session: MediaSession,
+            controller: MediaSession.ControllerInfo
+        ): MediaSession.ConnectionResult {
+            val availableCommands =
+                MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon()
+                    // 添加所有你定义的 SessionCommand
+                    .add(COMMAND_CHANGE_PITCH)
+                    .add(COMMAND_CHANGE_Q)
+                    .add(COMMAND_ADD_TO_QUEUE)
+                    // ... .add(...)
+                    .build()
+
+            return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
+                .setAvailableSessionCommands(availableCommands)
+                .build()
+        }
+
+        override fun onCustomCommand(
+            session: MediaSession,
+            controller: MediaSession.ControllerInfo,
+            customCommand: SessionCommand,
+            args: Bundle
+        ): ListenableFuture<SessionResult> {
+            when (customCommand.customAction) {
+                // --- DSP & Effects ---
+                COMMAND_CHANGE_PITCH.customAction -> {
+                    val pitch = args.getFloat("pitch", 1f)
+                    // ... 你的逻辑 ...
+                }
+
+                COMMAND_CHANGE_Q.customAction -> {
+                    val q = args.getFloat("Q", 3.2f)
+                    // ... 你的逻辑 ...
+                }
+
+                COMMAND_DSP_ENABLE.customAction -> {
+                    val enable = args.getBoolean("enable")
+                    // ... 你的逻辑 ...
+                }
+                // ... 所有 DSP/Echo/可视化/定时停止的 case ...
+
+                // --- Queue Management ---
+                COMMAND_ADD_TO_QUEUE.customAction -> {
+                    // ... 你的 addPlayQueue 逻辑 ...
+                }
+
+                COMMAND_REMOVE_FROM_QUEUE.customAction -> {
+                    // ... 你的 removePlayQueue 逻辑 ...
+                }
+
+                COMMAND_CLEAR_QUEUE.customAction -> {
+                    // ... 你的 clearQueue 逻辑 ...
+                }
+                // ... 其他队列管理的 case ...
+
+                // --- Other Actions ---
+                COMMAND_TRACK_DELETE.customAction -> {
+                    // ... 你的 trackDelete 逻辑 ...
+                }
+
+                COMMAND_REFRESH_ALL.customAction -> {
+                    // ... 你的 refreshAction 逻辑 ...
+                }
+
+                // ... 其他所有 case ...
+
+                else -> {
+                    // 如果不是我们认识的命令，交由父类处理
+                    return super.onCustomCommand(session, controller, customCommand, args)
+                }
+            }
+            return super.onCustomCommand(session, controller, customCommand, args)
+        }
+
+        override fun onAddMediaItems(
+            mediaSession: MediaSession,
+            controller: MediaSession.ControllerInfo,
+            mediaItems: List<MediaItem>
+        ): ListenableFuture<List<MediaItem>> {
+            return super.onAddMediaItems(mediaSession, controller, mediaItems)
+        }
+
+        override fun onSetMediaItems(
+            mediaSession: MediaSession,
+            controller: MediaSession.ControllerInfo,
+            mediaItems: List<MediaItem>,
+            startIndex: Int,
+            startPositionMs: Long
+        ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
+            return super.onSetMediaItems(
+                mediaSession,
+                controller,
+                mediaItems,
+                startIndex,
+                startPositionMs
+            )
+        }
+
+        override fun onPlaybackResumption(
+            mediaSession: MediaSession,
+            controller: MediaSession.ControllerInfo
+        ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
+            return super.onPlaybackResumption(mediaSession, controller)
+        }
+
+        override fun onMediaButtonEvent(
+            session: MediaSession,
+            controllerInfo: MediaSession.ControllerInfo,
+            intent: Intent
+        ): Boolean {
+            return super.onMediaButtonEvent(session, controllerInfo, intent)
+        }
+
+        override fun onGetLibraryRoot(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            params: LibraryParams?
+        ): ListenableFuture<LibraryResult<MediaItem>> {
+            val clientPackageName = browser.packageName
+            val future = SettableFuture.create<LibraryResult<ImmutableList<MediaItem>>>()
+            // 为 Android Auto 提供一个简化的根节点
+            if (clientPackageName == "com.google.android.projection.gearhead") {
+                Log.d("PlayService", "Android Auto is connecting.")
+                // 返回一个为驾驶场景优化的根节点
+                val autoRootItem = MediaItemUtils.createFullFeaturedRoot()
+                return Futures.immediateFuture(LibraryResult.ofItem(autoRootItem, null))
+            }
+            // 为你自己的 App 提供一个功能完整的根节点
+            else if (clientPackageName == context.packageName) {
+                Log.d("PlayService", "My own app is connecting.")
+                val fullFeaturedRootItem = MediaItemUtils.createFullFeaturedRoot()
+                return Futures.immediateFuture(LibraryResult.ofItem(fullFeaturedRootItem, null))
+            } else {
+                // 拒绝其他未知应用的连接
+                Log.w(
+                    "PlayService",
+                    "Rejecting connection from unknown package: $clientPackageName"
+                )
+                // 在新版 Media3 中，应该返回一个拒绝的 Future
+                return Futures.immediateFuture(LibraryResult.ofError(SessionError.ERROR_SESSION_DISCONNECTED))
+            }
+        }
+
+        override fun onGetChildren(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            parentId: String,
+            page: Int,
+            pageSize: Int,
+            params: LibraryParams?
+        ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
+            val future = SettableFuture.create<LibraryResult<ImmutableList<MediaItem>>>()
+            if (PlayListType.PlayLists.name == parentId) {
+                getPlayList(context, future)
+            } else if (PlayListType.Songs.name == parentId) {
+                getSongsAll(context, future)
+            } else if (PlayListType.Genres.name == parentId) {
+                getGenres(context, future)
+            } else if (PlayListType.Albums.name == parentId) {
+                getAlbums(context, future)
+            } else if (PlayListType.Artists.name == parentId) {
+                getArtists(context, future)
+            } else if (PlayListType.Folders.name == parentId) {
+                getFolders(context, future)
+            }
+            return super.onGetChildren(session, browser, parentId, page, pageSize, params)
+        }
+
+    }
 
     override fun onCustomAction(action: String, extras: Bundle?, result: Result<Bundle>) {
-        if (PlayListType.PlayLists.name == action) {
-            if (playListLinkedHashMap.isNotEmpty()) {
-                val bundle = Bundle()
-                bundle.putParcelableArrayList("list", ArrayList(playListLinkedHashMap.values))
-                result.sendResult(bundle)
-                return
-            } else {
-                result.detach()
-                CoroutineScope(Dispatchers.IO).launch {
-                    val sortData =
-                        db.SortFiledDao().findSortByType(PlayListType.PlayLists.name)
-                    PlaylistManager.getPlaylists(
-                        this@PlayService,
-                        playListLinkedHashMap,
-                        tracksLinkedHashMap,
-                        result,
-                        sortData?.filed,
-                        sortData?.method
-                    )
-                }
-            }
-        } else if (PlayListType.Songs.name == action) {
-            if (tracksLinkedHashMap.isNotEmpty()) {
-                val bundle = Bundle()
-                bundle.putParcelableArrayList("songsList", ArrayList(tracksLinkedHashMap.values))
-                result.sendResult(bundle)
-                return
-            } else {
-                result.detach()
-                CoroutineScope(Dispatchers.IO).launch {
-                    val sortData =
-                        db.SortFiledDao().findSortByType(PlayListType.Songs.name)
-                    TracksManager.getFolderList(
-                        this@PlayService,
-                        foldersLinkedHashMap,
-                        result,
-                        tracksLinkedHashMap,
-                        "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
-                        true
-                    )
-                }
-            }
-        } else if (PlayListType.Genres.name == action) {
-            if (genresLinkedHashMap.isNotEmpty()) {
-                val bundle = Bundle()
-                bundle.putParcelableArrayList("list", ArrayList(genresLinkedHashMap.values))
-                result.sendResult(bundle)
-                return
-            } else {
-                result.detach()
-                CoroutineScope(Dispatchers.IO).launch {
-                    val sortDataP =
-                        db.SortFiledDao().findSortByType(PlayListType.Genres.name)
-                    GenreManager.getGenresList(
-                        this@PlayService,
-                        genresLinkedHashMap,
-                        tracksLinkedHashMap,
-                        result,
-                        "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
-                    )
-                }
-            }
-        } else if (PlayListType.Albums.name == action) {
-            if (albumsLinkedHashMap.isNotEmpty()) {
-                val bundle = Bundle()
-                bundle.putParcelableArrayList("list", ArrayList(albumsLinkedHashMap.values))
-                result.sendResult(bundle)
-                return
-            } else {
-                result.detach()
-                CoroutineScope(Dispatchers.IO).launch {
-                    val sortDataP =
-                        db.SortFiledDao().findSortByType(PlayListType.Albums.name)
-                    AlbumManager.getAlbumList(
-                        this@PlayService,
-                        albumsLinkedHashMap,
-                        result,
-                        "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
-                    )
-                }
-            }
-        } else if (PlayListType.Artists.name == action) {
-            if (artistsLinkedHashMap.isNotEmpty()) {
-                val bundle = Bundle()
-                bundle.putParcelableArrayList("list", ArrayList(artistsLinkedHashMap.values))
-                result.sendResult(bundle)
-                return
-            } else {
-                result.detach()
-                CoroutineScope(Dispatchers.IO).launch {
-                    val sortDataP =
-                        db.SortFiledDao().findSortByType(PlayListType.Artists.name)
-                    ArtistManager.getArtistList(
-                        this@PlayService,
-                        artistsLinkedHashMap,
-                        result,
-                        "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
-                    )
-                }
-            }
-        } else if (PlayListType.Folders.name == action) {
-            if (foldersLinkedHashMap.isNotEmpty()) {
-                val bundle = Bundle()
-                bundle.putParcelableArrayList("list", ArrayList(foldersLinkedHashMap.values))
-                result.sendResult(bundle)
-                return
-            } else {
-                result.detach()
-                CoroutineScope(Dispatchers.IO).launch {
-                    val sortData =
-                        db.SortFiledDao().findSortByType(PlayListType.Songs.name)
-                    TracksManager.getFolderList(
-                        this@PlayService,
-                        foldersLinkedHashMap,
-                        result,
-                        tracksLinkedHashMap,
-                        "${sortData?.filed ?: ""} ${sortData?.method ?: ""}", false
-                    )
-                }
-            }
-        } else if (ACTION_SEEK_TO == action) {
+       if (ACTION_SEEK_TO == action) {
             if (extras != null) {
                 exoPlayer.seekTo(extras.getLong("position"))
             }
@@ -1376,6 +1446,8 @@ class PlayService : MediaBrowserServiceCompat() {
             @SuppressLint("ApplySharedPref")
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 super.onIsPlayingChanged(isPlaying)
+                mediaSession?.isActive = true
+
                 currentPlayTrack =
                     if (musicQueue.isNotEmpty() && exoPlayer.currentMediaItemIndex < musicQueue.size) {
                         musicQueue[exoPlayer.currentMediaItemIndex]
@@ -2153,5 +2225,200 @@ class PlayService : MediaBrowserServiceCompat() {
             }
         }
         result.sendResult(bundle)
+    }
+
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? {
+        TODO("Not yet implemented")
+    }
+
+    companion object {
+        // DSP & Effects
+        val COMMAND_CHANGE_PITCH = SessionCommand("dsp.CHANGE_PITCH", Bundle.EMPTY)
+        val COMMAND_CHANGE_Q = SessionCommand("dsp.CHANGE_Q", Bundle.EMPTY)
+        val COMMAND_DSP_ENABLE = SessionCommand("dsp.ENABLE", Bundle.EMPTY)
+        // ... 定义所有 DSP、Echo、可视化、定时停止的命令 ...
+
+        // Queue Management
+        val COMMAND_ADD_TO_QUEUE = SessionCommand("queue.ADD", Bundle.EMPTY)
+        val COMMAND_REMOVE_FROM_QUEUE = SessionCommand("queue.REMOVE", Bundle.EMPTY)
+        val COMMAND_SORT_QUEUE = SessionCommand("queue.SORT", Bundle.EMPTY)
+        val COMMAND_CLEAR_QUEUE = SessionCommand("queue.CLEAR", Bundle.EMPTY)
+        // ... 其他队列操作 ...
+
+        // Playback
+        // 注意：播放特定歌曲不再是自定义命令，而是通过 player.setMediaItems() 和 player.seekTo() 实现
+
+        // Other
+        val COMMAND_REFRESH_ALL = SessionCommand("app.REFRESH_ALL", Bundle.EMPTY)
+        val COMMAND_TRACK_DELETE = SessionCommand("app.TRACK_DELETE", Bundle.EMPTY)
+        // ... 其他命令 ...
+    }
+
+    fun getPlayList(
+        context: Context,
+        future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>
+    ) {
+        if (playListLinkedHashMap.isNotEmpty()) {
+            val mediaItems = ArrayList(playListLinkedHashMap.values).map { playlist ->
+                MediaItemUtils.playlistToMediaItem(playlist)
+            }
+            future.set(LibraryResult.ofItemList(mediaItems, null))
+        } else {
+            CoroutineScope(Dispatchers.IO).launch {
+                val sortData =
+                    db.SortFiledDao().findSortByType(PlayListType.PlayLists.name)
+                val result = PlaylistManager.getPlaylists(
+                    context,
+                    playListLinkedHashMap,
+                    tracksLinkedHashMap,
+                    sortData?.filed,
+                    sortData?.method
+                )
+                val mediaItems = result.map { playlist ->
+                    MediaItemUtils.playlistToMediaItem(playlist)
+                }
+                future.set(LibraryResult.ofItemList(mediaItems, null))
+            }
+        }
+    }
+
+    fun getSongsAll(
+        context: Context,
+        future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>
+    ) {
+        if (tracksLinkedHashMap.isNotEmpty()) {
+            val mediaItems = tracksLinkedHashMap.values.map { playlist ->
+                MediaItemUtils.musicItemToMediaItem(playlist)
+            }
+            future.set(LibraryResult.ofItemList(mediaItems, null))
+            return
+        } else {
+            CoroutineScope(Dispatchers.IO).launch {
+                val sortData =
+                    db.SortFiledDao().findSortByType(PlayListType.Songs.name)
+                TracksManager.getFolderList(
+                    this@PlayService,
+                    foldersLinkedHashMap,
+                    null,
+                    tracksLinkedHashMap,
+                    "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
+                    true
+                )
+                val mediaItems = tracksLinkedHashMap.values.map { playlist ->
+                    MediaItemUtils.musicItemToMediaItem(playlist)
+                }
+                future.set(LibraryResult.ofItemList(mediaItems, null))
+            }
+        }
+    }
+    fun getGenres(
+        context: Context,
+        future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>
+    ) {
+        if (genresLinkedHashMap.isNotEmpty()) {
+            val mediaItems = genresLinkedHashMap.values.map { playlist ->
+                MediaItemUtils.genreToMediaItem(playlist)
+            }
+            future.set(LibraryResult.ofItemList(mediaItems, null))
+            return
+        } else {
+            CoroutineScope(Dispatchers.IO).launch {
+                val sortDataP = db.SortFiledDao().findSortByType(PlayListType.Genres.name)
+                GenreManager.getGenresList(
+                    this@PlayService,
+                    genresLinkedHashMap,
+                    tracksLinkedHashMap,
+                    null,
+                    "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
+                )
+                val mediaItems = genresLinkedHashMap.values.map { playlist ->
+                    MediaItemUtils.genreToMediaItem(playlist)
+                }
+                future.set(LibraryResult.ofItemList(mediaItems, null))
+            }
+        }
+    }
+    fun getAlbums(
+        context: Context,
+        future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>
+    ) {
+        if (albumsLinkedHashMap.isNotEmpty()) {
+            val mediaItems = albumsLinkedHashMap.values.map { playlist ->
+                MediaItemUtils.albumToMediaItem(playlist)
+            }
+            future.set(LibraryResult.ofItemList(mediaItems, null))
+            return
+        } else {
+            CoroutineScope(Dispatchers.IO).launch {
+                val sortDataP =
+                    db.SortFiledDao().findSortByType(PlayListType.Albums.name)
+                AlbumManager.getAlbumList(
+                    this@PlayService,
+                    albumsLinkedHashMap,
+                    null,
+                    "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
+                )
+                val mediaItems = albumsLinkedHashMap.values.map { playlist ->
+                    MediaItemUtils.albumToMediaItem(playlist)
+                }
+                future.set(LibraryResult.ofItemList(mediaItems, null))
+            }
+        }
+    }
+    fun getArtists(
+        context: Context,
+        future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>
+    ) {
+        if (artistsLinkedHashMap.isNotEmpty()) {
+            val mediaItems = artistsLinkedHashMap.values.map { playlist ->
+                MediaItemUtils.artistToMediaItem(playlist)
+            }
+            future.set(LibraryResult.ofItemList(mediaItems, null))
+            return
+        } else {
+            CoroutineScope(Dispatchers.IO).launch {
+                val sortDataP =
+                    db.SortFiledDao().findSortByType(PlayListType.Artists.name)
+                ArtistManager.getArtistList(
+                    this@PlayService,
+                    artistsLinkedHashMap,
+                    null,
+                    "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
+                )
+                val mediaItems = artistsLinkedHashMap.values.map { playlist ->
+                    MediaItemUtils.artistToMediaItem(playlist)
+                }
+                future.set(LibraryResult.ofItemList(mediaItems, null))
+            }
+        }
+    }
+    fun getFolders(
+        context: Context,
+        future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>
+    ) {
+        if (foldersLinkedHashMap.isNotEmpty()) {
+            val mediaItems = foldersLinkedHashMap.values.map { playlist ->
+                MediaItemUtils.folderToMediaItem(playlist)
+            }
+            future.set(LibraryResult.ofItemList(mediaItems, null))
+            return
+        } else {
+            CoroutineScope(Dispatchers.IO).launch {
+                val sortData =
+                    db.SortFiledDao().findSortByType(PlayListType.Songs.name)
+                TracksManager.getFolderList(
+                    this@PlayService,
+                    foldersLinkedHashMap,
+                    null,
+                    tracksLinkedHashMap,
+                    "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
+                    true
+                )
+                val mediaItems = foldersLinkedHashMap.values.map { playlist ->
+                    MediaItemUtils.folderToMediaItem(playlist)
+                }
+                future.set(LibraryResult.ofItemList(mediaItems, null))
+            }
+        }
     }
 }

@@ -14,7 +14,6 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.result.IntentSenderRequest
 import androidx.annotation.OptIn
-import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.sqlData.model.MusicItem
@@ -32,7 +31,6 @@ object PlaylistManager {
         context: Context,
         list: LinkedHashMap<Long, MusicPlayList>,
         tracksHashMap: LinkedHashMap<Long, MusicItem>,
-        result: MediaBrowserServiceCompat.Result<Bundle>?,
         sortFiled: String?,
         sortMethod: String?
     ): List<MusicPlayList> {
@@ -99,7 +97,6 @@ object PlaylistManager {
         }
         val bundle = Bundle()
         bundle.putParcelableArrayList("list", playList)
-        result?.sendResult(bundle)
         return playlistFiles
     }
 

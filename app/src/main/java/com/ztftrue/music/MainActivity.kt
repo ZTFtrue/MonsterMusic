@@ -570,6 +570,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+//        val localeList = LocaleListCompat.forLanguageTags("zh-CN")
+//        AppCompatDelegate.setApplicationLocales(localeList)
 //        val languageCode = SharedPreferencesUtils.getCurrentLanguage(context = this)
 //        if (!languageCode.isNullOrEmpty()) {
 //            val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(languageCode)
@@ -604,7 +606,7 @@ class MainActivity : ComponentActivity() {
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
                 val i = Intent(this@MainActivity, PlayService::class.java)
-                startService(i)  // Start the service explicitly
+                startForegroundService(i)  // Start the service explicitly
                 setContent {
                     MusicPitchTheme(musicViewModel) {
                         BaseLayout(musicViewModel, this@MainActivity)
@@ -618,7 +620,7 @@ class MainActivity : ComponentActivity() {
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             val i = Intent(this@MainActivity, PlayService::class.java)
-            startService(i)  // Start the service explicitly
+            startForegroundService(i)  // Start the service explicitly
             setContent {
                 MusicPitchTheme(musicViewModel) {
                     BaseLayout(musicViewModel, this@MainActivity)
