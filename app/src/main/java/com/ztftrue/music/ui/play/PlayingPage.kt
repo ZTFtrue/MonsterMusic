@@ -3,6 +3,7 @@ package com.ztftrue.music.ui.play
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import android.view.MotionEvent
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -117,7 +118,10 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.SessionResult
 import androidx.navigation.NavHostController
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.MoreExecutors
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
@@ -127,6 +131,8 @@ import com.ztftrue.music.play.ACTION_SEEK_TO
 import com.ztftrue.music.play.ACTION_SWITCH_SHUFFLE
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.play.ACTION_VISUALIZATION_ENABLE
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_VISUALIZATION_ENABLE
 import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
@@ -201,23 +207,25 @@ fun PlayingPage(
                 if (TracksManager.removeMusicById(context, music!!.id)) {
                     val bundle = Bundle()
                     bundle.putLong("id", music!!.id)
-                    musicViewModel.mediaBrowser?.sendCustomAction(
-                        ACTION_TRACKS_DELETE,
-                        bundle,
-                        object : MediaBrowserCompat.CustomActionCallback() {
-                            override fun onResult(
-                                action: String?,
-                                extras: Bundle?,
-                                resultData: Bundle?
-                            ) {
-                                super.onResult(action, extras, resultData)
-                                if (ACTION_TRACKS_DELETE == action) {
-                                    deleteTrackUpdate(musicViewModel, resultData)
-                                }
+                    val futureResult: ListenableFuture<SessionResult>? =
+                        musicViewModel.browser?.sendCustomCommand(
+                            COMMAND_TRACK_DELETE,
+                            bundle
+                        )
+                    futureResult?.addListener({
+                        try {
+                            // a. 获取 SessionResult
+                            val sessionResult = futureResult.get()
+                            // b. 检查操作是否成功
+                            if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
+                                deleteTrackUpdate(musicViewModel, sessionResult.extras)
                                 navController.popBackStack()
                             }
+                        } catch (e: Exception) {
+                            // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                            Log.e("Client", "Failed to toggle favorite status", e)
                         }
-                    )
+                    }, MoreExecutors.directExecutor()) // 或者使用主线程的 Executor
                 }
 
             }
@@ -279,7 +287,7 @@ fun PlayingPage(
                             musicViewModel.navController?.navigate(
                                 Router.PlayListView.withArgs(
                                     "id" to "${music.artistId}",
-                                   "itemType" to  enumToStringForPlayListType(PlayListType.Artists)
+                                    "itemType" to enumToStringForPlayListType(PlayListType.Artists)
                                 ),
                             ) {
                                 popUpTo(Router.MainView.route) {
@@ -292,8 +300,8 @@ fun PlayingPage(
                         OperateType.Album -> {
                             musicViewModel.navController?.navigate(
                                 Router.PlayListView.withArgs(
-                                   "id" to "${music.albumId}",
-                                   "itemType" to enumToStringForPlayListType(PlayListType.Albums)
+                                    "id" to "${music.albumId}",
+                                    "itemType" to enumToStringForPlayListType(PlayListType.Albums)
                                 )
                             ) {
                                 popUpTo(Router.MainView.route) {
@@ -853,10 +861,9 @@ fun PlayingPage(
                                     musicViewModel.musicVisualizationEnable.value = it
                                     val bundleTemp = Bundle()
                                     bundleTemp.putBoolean("enable", it)
-                                    musicViewModel.mediaBrowser?.sendCustomAction(
-                                        ACTION_VISUALIZATION_ENABLE,
-                                        bundleTemp,
-                                        null
+                                    musicViewModel.browser?.sendCustomCommand(
+                                        COMMAND_VISUALIZATION_ENABLE,
+                                        bundleTemp
                                     )
                                 }
                             )
@@ -1381,16 +1388,7 @@ fun PlayingPage(
                                     valueRange = 0f..musicViewModel.currentDuration.longValue.toFloat(),
                                     steps = 100,
                                     onValueChangeFinished = {
-                                        val bundle = Bundle()
-                                        bundle.putLong(
-                                            "position",
-                                            musicViewModel.sliderPosition.floatValue.toLong()
-                                        )
-                                        musicViewModel.mediaBrowser?.sendCustomAction(
-                                            ACTION_SEEK_TO,
-                                            bundle,
-                                            null
-                                        )
+                                        musicViewModel.browser?.seekTo( musicViewModel.sliderPosition.floatValue.toLong())
                                         musicViewModel.sliderTouching = false
                                     },
                                 )
@@ -1440,6 +1438,7 @@ fun PlayingPage(
                                                 "enable",
                                                 musicViewModel.enableShuffleModel.value
                                             )
+                                            musicViewModel.browser?.sendCustomCommand()
                                             musicViewModel.mediaBrowser?.sendCustomAction(
                                                 ACTION_SWITCH_SHUFFLE,
                                                 bundle,
@@ -1487,7 +1486,7 @@ fun PlayingPage(
                                                                     )
                                                                 ) {
                                                                     TracksUtils.currentPlayToTop(
-                                                                        musicViewModel.mediaBrowser!!,
+                                                                        musicViewModel.browser!!,
                                                                         musicViewModel.musicQueue,
                                                                         music,
                                                                         qIndex
@@ -1530,7 +1529,7 @@ fun PlayingPage(
                                         contentDescription = "play previous song",
                                         modifier = Modifier
                                             .clickable {
-                                                musicViewModel.mediaController?.transportControls?.skipToPrevious()
+                                                musicViewModel.browser?.seekToPreviousMediaItem()
                                             }
                                             .width(50.dp)
                                             .height(50.dp)
@@ -1549,11 +1548,11 @@ fun PlayingPage(
                                         modifier = Modifier
                                             .clickable {
                                                 val pbState =
-                                                    musicViewModel.mediaController?.playbackState?.state
-                                                if (pbState == PlaybackStateCompat.STATE_PLAYING) {
-                                                    musicViewModel.mediaController?.transportControls?.pause()
+                                                    musicViewModel.browser?.isPlaying?:false
+                                                if (pbState) {
+                                                    musicViewModel.browser?.pause()
                                                 } else {
-                                                    musicViewModel.mediaController?.transportControls?.play()
+                                                    musicViewModel.browser?.play()
                                                 }
                                             }
                                             .width(60.dp)
@@ -1566,7 +1565,7 @@ fun PlayingPage(
                                         contentDescription = "Play next song",
                                         modifier = Modifier
                                             .clickable {
-                                                musicViewModel.mediaController?.transportControls?.skipToNext()
+                                                musicViewModel.browser?.seekToNextMediaItem()
                                             }
                                             .width(50.dp)
                                             .height(50.dp)
@@ -1597,8 +1596,8 @@ fun PlayingPage(
                                                     repeatModel = Player.REPEAT_MODE_ONE
                                                     musicViewModel.repeatModel.intValue =
                                                         Player.REPEAT_MODE_ONE
-                                                    musicViewModel.mediaController?.transportControls?.setRepeatMode(
-                                                        PlaybackStateCompat.REPEAT_MODE_ONE
+                                                    musicViewModel.browser?.setRepeatMode(
+                                                        Player.REPEAT_MODE_ONE
                                                     )
                                                 }
 
@@ -1606,8 +1605,8 @@ fun PlayingPage(
                                                     repeatModel = Player.REPEAT_MODE_OFF
                                                     musicViewModel.repeatModel.intValue =
                                                         Player.REPEAT_MODE_OFF
-                                                    musicViewModel.mediaController?.transportControls?.setRepeatMode(
-                                                        PlaybackStateCompat.REPEAT_MODE_NONE
+                                                    musicViewModel.browser?.setRepeatMode(
+                                                        Player.REPEAT_MODE_OFF
                                                     )
                                                 }
 
@@ -1615,8 +1614,8 @@ fun PlayingPage(
                                                     repeatModel = Player.REPEAT_MODE_ALL
                                                     musicViewModel.repeatModel.intValue =
                                                         Player.REPEAT_MODE_ALL
-                                                    musicViewModel.mediaController?.transportControls?.setRepeatMode(
-                                                        PlaybackStateCompat.REPEAT_MODE_ALL
+                                                    musicViewModel.browser?.setRepeatMode(
+                                                        Player.REPEAT_MODE_ALL
                                                     )
                                                 }
                                             }

@@ -25,6 +25,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -47,19 +48,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.media3.common.C
+import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
+import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
-import com.ztftrue.music.play.ACTION_IS_CONNECTED
-import com.ztftrue.music.play.ACTION_TRACKS_DELETE
-import com.ztftrue.music.play.ACTION_WILL_DISCONNECTED
+import androidx.media3.session.MediaBrowser
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionResult
+import androidx.media3.session.SessionToken
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.MoreExecutors
 import com.ztftrue.music.play.EVENT_INPUT_FORTMAT_Change
-import com.ztftrue.music.play.EVENT_MEDIA_ITEM_Change
 import com.ztftrue.music.play.EVENT_SLEEP_TIME_Change
 import com.ztftrue.music.play.EVENT_Visualization_Change
 import com.ztftrue.music.play.PlayService
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
 import com.ztftrue.music.sqlData.model.GENRE_TYPE
 import com.ztftrue.music.sqlData.model.MainTab
@@ -92,13 +102,21 @@ import java.util.concurrent.locks.ReentrantLock
 @UnstableApi
 class MainActivity : ComponentActivity() {
 
-    private var mediaBrowser: MediaBrowserCompat? = null
     private val musicViewModel: MusicViewModel by viewModels()
     private var jobSeek: Job? = null
     private val scopeMain = CoroutineScope(Dispatchers.Main)
     private var lyricsPath = ""
-
     val bundle = Bundle()
+
+    private lateinit var browserFuture: ListenableFuture<MediaBrowser>
+//    private val browser: MediaBrowser?
+//        get() = if (browserFuture.isDone && !browserFuture.isCancelled) {
+//            browserFuture.get()
+//        } else {
+//            null
+//        }
+
+    // ... 其他代码 ...
 
     @JvmField
     val modifyMediaLauncher =
@@ -177,22 +195,24 @@ class MainActivity : ComponentActivity() {
                         contentResolver.delete(u, null, null)
                         val bundleTemp = Bundle()
                         bundleTemp.putLong("id", id)
-                        musicViewModel.mediaBrowser?.sendCustomAction(
-                            ACTION_TRACKS_DELETE,
-                            bundleTemp,
-                            object : MediaBrowserCompat.CustomActionCallback() {
-                                override fun onResult(
-                                    action: String?,
-                                    extras: Bundle?,
-                                    resultData: Bundle?
-                                ) {
-                                    super.onResult(action, extras, resultData)
-                                    if (ACTION_TRACKS_DELETE == action) {
-                                        deleteTrackUpdate(musicViewModel, resultData)
-                                    }
+                        val futureResult: ListenableFuture<SessionResult>? =
+                            musicViewModel.browser?.sendCustomCommand(
+                                COMMAND_TRACK_DELETE,
+                                bundleTemp
+                            )
+                        futureResult?.addListener({
+                            try {
+                                // a. 获取 SessionResult
+                                val sessionResult = futureResult.get()
+                                // b. 检查操作是否成功
+                                if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
+                                    deleteTrackUpdate(musicViewModel, sessionResult.extras)
                                 }
+                            } catch (e: Exception) {
+                                // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                                Log.e("Client", "Failed to toggle favorite status", e)
                             }
-                        )
+                        }, MoreExecutors.directExecutor()) // 或者使用主线程的 Executor
                     }
                     return@registerForActivityResult
                 } else if (OperateTypeInActivity.EditTrackInfo.name == action) {
@@ -506,18 +526,11 @@ class MainActivity : ComponentActivity() {
         if (it) {
             val i = Intent(this@MainActivity, PlayService::class.java)
             startService(i)  // Start the service explicitly
-            mediaBrowser = MediaBrowserCompat(
-                this,
-                ComponentName(this, PlayService::class.java),
-                connectionCallbacks,
-                null // optional Bundle
-            )
-
             setContent {
                 MusicPitchTheme(musicViewModel) {
                     BaseLayout(musicViewModel, this@MainActivity)
                 }
-                mediaBrowser?.connect()
+                initializeAndConnect()
             }
         } else {
             compatSplashScreen?.setKeepOnScreenCondition { false }
@@ -570,24 +583,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-//        val localeList = LocaleListCompat.forLanguageTags("zh-CN")
-//        AppCompatDelegate.setApplicationLocales(localeList)
 //        val languageCode = SharedPreferencesUtils.getCurrentLanguage(context = this)
 //        if (!languageCode.isNullOrEmpty()) {
 //            val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(languageCode)
-//            val configuration = resources.configuration
-//            configuration.setLocale(appLocale[0])
-//            resources.updateConfiguration(configuration, resources.displayMetrics)
+//            val localeList = LocaleListCompat.forLanguageTags("zh-CN")
+//            AppCompatDelegate.setApplicationLocales(localeList)
 //        }
-//        val locale = Locale("zh")
-//        Locale.setDefault(locale)
-//        val config = resources.configuration
-//        config.setLocale(locale)
-//        resources.updateConfiguration(config, resources.displayMetrics)
-
-
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
-
         compatSplashScreen = installSplashScreen()
         compatSplashScreen?.setKeepOnScreenCondition { musicViewModel.mainTabList.isEmpty() }
         Utils.initSettingsData(musicViewModel, this)
@@ -639,32 +641,78 @@ class MainActivity : ComponentActivity() {
                     this@MainActivity, Manifest.permission.READ_EXTERNAL_STORAGE
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
-                mediaBrowser = MediaBrowserCompat(
-                    this,
-                    ComponentName(this, PlayService::class.java),
-                    connectionCallbacks,
-                    null // optional Bundle
-                )
-                mediaBrowser?.connect()
+
+                initializeAndConnect()
             }
         } else if (ActivityCompat.checkSelfPermission(
                 this@MainActivity, Manifest.permission.READ_MEDIA_AUDIO
             ) == PackageManager.PERMISSION_GRANTED
         ) {
-            mediaBrowser = MediaBrowserCompat(
-                this,
-                ComponentName(this, PlayService::class.java),
-                connectionCallbacks,
-                null // optional Bundle
-            )
-            mediaBrowser?.connect()
+            initializeAndConnect()
         }
+    }
+    private val browserListener = object : MediaBrowser.Listener {
+        override fun onCustomCommand(
+            controller: MediaController,
+            command: SessionCommand,
+            args: Bundle
+        ): ListenableFuture<SessionResult> {
+            if (command.customAction == PlayService.COMMAND_NOTIFY_STATE_UPDATE.customAction) {
+                // 收到了 Service 的主动推送
+                val stateBundle = args.getBundle(PlayService.KEY_STATE_UPDATE_BUNDLE)
+                if (stateBundle != null) {
+                    val remainingMs = stateBundle.getLong("sleep_timer_remaining_ms")
+                    _sleepTimerLiveData.postValue(remainingMs) // 更新 LiveData
+                }
+            }else if (command.customAction == PlayService.COMMAND_NOTIFY_PLAYLIST_UPDATE.customAction) {
+                val future = browser.getChildren("root", 0, 100, null)
+                future.addListener({
+                    val result = future.get()
+                    val children = result?.value
+                    browser.sendCustomCommand()
+                    getInitData(children)
+
+                }, ContextCompat.getMainExecutor(this))
+            }
+            return super.onCustomCommand(browser, command, args)
+        }
+    }
+    private fun initializeAndConnect() {
+        if (::browserFuture.isInitialized) return // 防止重复初始化
+        // 1. 创建 SessionToken，指定要连接的 Service
+        val sessionToken = SessionToken(this, ComponentName(this, PlayService::class.java))
+
+        // 2. 使用 Builder 构建 MediaBrowser，这是一个异步过程
+        browserFuture = MediaBrowser.Builder(this, sessionToken).setListener(browserListener).buildAsync()
+        // 3. (关键!) 添加一个监听器来处理连接的结果（成功或失败）
+        browserFuture.addListener({
+            // 这个代码块会在连接过程完成后（无论成功或失败）在主线程上执行
+            try {
+                // 检查连接是否成功，并获取 browser 实例
+                val connectedBrowser = browserFuture.get()
+                if (connectedBrowser != null) {
+                    musicViewModel.browser = connectedBrowser
+                    onBrowserConnected(connectedBrowser)
+//                    connectedBrowser.add
+                } else {
+                    // 连接失败或被取消
+                    onBrowserConnectionFailed()
+                }
+            } catch (e: Exception) {
+                // 在获取 browser 实例时可能抛出异常 (如 ExecutionException)
+                Log.e("MyMusicActivity", "Error getting MediaBrowser", e)
+                onBrowserConnectionFailed()
+            }
+        }, ContextCompat.getMainExecutor(this)) // 确保监听器在主线程执行
     }
 
     public override fun onResume() {
         super.onResume()
         getSeek()
         volumeControlStream = AudioManager.STREAM_MUSIC
+        musicViewModel.browser?.let {
+            updateUiWithCurrentState(it)
+        }
     }
 
     override fun onPause() {
@@ -673,11 +721,92 @@ class MainActivity : ComponentActivity() {
     }
 
     public override fun onStop() {
-        musicViewModel.mediaBrowser?.sendCustomAction(ACTION_WILL_DISCONNECTED, null, null)
-        MediaControllerCompat.getMediaController(this)?.unregisterCallback(callback)
-        musicViewModel.mediaController = null
-        mediaBrowser?.disconnect()
         super.onStop()
+        if (::browserFuture.isInitialized) {
+            musicViewModel.browser?.removeListener(playerListener)
+            MediaBrowser.releaseFuture(browserFuture)
+        }
+    }
+
+    private fun onBrowserConnected(browser: MediaBrowser) {
+        Log.d("MyMusicActivity", "MediaBrowser connected!")
+
+        // 现在你可以使用 browser 对象了！
+
+        // a. 添加 Player.Listener 来监听状态变化并更新 UI
+        browser.addListener(playerListener) // playerListener 是你定义的 Player.Listener 实例
+
+        // b. (可选) 获取初始状态并更新UI
+        updateUiWithCurrentState(browser)
+        // c. 开始浏览媒体库，例如获取顶级目录
+        fetchRootChildren(browser)
+        SharedPreferencesUtils.getEnableShuffle(this@MainActivity).also {
+            musicViewModel.enableShuffleModel.value = it
+        }
+    }
+
+    private fun onBrowserConnectionFailed() {
+        Log.e("MyMusicActivity", "MediaBrowser connection failed.")
+        // 在这里可以显示错误提示，或者禁用所有媒体控制UI
+        // Toast.makeText(this, "无法连接到播放服务", Toast.LENGTH_SHORT).show()
+    }
+
+    // 示例：获取根目录的子项
+    private fun fetchRootChildren(browser: MediaBrowser) {
+
+    }
+
+    // 示例：定义 Player.Listener
+    private val playerListener = object : Player.Listener {
+        override fun onTimelineChanged(
+            timeline: Timeline,
+            reason: Int
+        ) {
+            super.onTimelineChanged(timeline, reason)
+        }
+
+
+
+        override fun onVolumeChanged(volume: Float) {
+            val volumeInt = (volume * 100).toInt()
+            musicViewModel.volume.intValue = volumeInt
+        }
+
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            if (isPlaying) {
+                musicViewModel.playStatus.value = isPlaying
+                getSeek()
+            }
+        }
+
+        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            // 更新歌曲标题和封面
+            val index: Int = musicViewModel.browser?.currentMediaItemIndex ?: 0
+            val reason = reason
+            if (index >= 0 && musicViewModel.musicQueue.size > index) {
+                musicViewModel.scheduleDealCurrentPlay(this@MainActivity, index, reason)
+            }
+        }
+
+        override fun onTracksChanged(tracks: Tracks) {
+            super.onTracksChanged(tracks)
+            val formatMap = HashMap<String, String>()
+            val audioTrackGroups = tracks.groups.filter { it.type == C.TRACK_TYPE_AUDIO }
+            for (trackGroup in audioTrackGroups) {
+                for (i in 0 until trackGroup.length) {
+                    val format = trackGroup.getTrackFormat(i)
+                    formatMap["Codec"] = format.codecs ?: ""
+                    formatMap["SampleRate"] = format.sampleRate.toString()
+                    formatMap["ChannelCount"] = format.channelCount.toString()
+                    formatMap["Bitrate"] = format.bitrate.toString()
+                    break
+                }
+            }
+            val bundle = Bundle()
+            bundle.putSerializable("current", formatMap)
+            bundle.putInt("type", EVENT_INPUT_FORTMAT_Change)
+        }
+
     }
 
     override fun onDestroy() {
@@ -711,25 +840,12 @@ class MainActivity : ComponentActivity() {
     }
 
     val callback = object : MediaControllerCompat.Callback() {
-        override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
-            super.onPlaybackStateChanged(state)
-            if (state != null) {
-                musicViewModel.playStatus.value = state.state == PlaybackStateCompat.STATE_PLAYING
-                getSeek()
-            }
-        }
 
         override fun onExtrasChanged(extras: Bundle?) {
             super.onExtrasChanged(extras)
             extras?.let {
                 val type = it.getInt("type")
-                if (type == EVENT_MEDIA_ITEM_Change) {
-                    val index = it.getInt("index")
-                    val reason = it.getInt("reason")
-                    if (index >= 0 && musicViewModel.musicQueue.size > index) {
-                        musicViewModel.scheduleDealCurrentPlay(this@MainActivity, index, reason)
-                    }
-                } else if (type == EVENT_SLEEP_TIME_Change) {
+                if (type == EVENT_SLEEP_TIME_Change) {
                     val remainTime = it.getLong("remaining")
                     musicViewModel.remainTime.longValue = remainTime
                     if (remainTime == 0L) {
@@ -793,41 +909,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    private val connectionCallbacks = object : MediaBrowserCompat.ConnectionCallback() {
 
-        override fun onConnected() {
-            SharedPreferencesUtils.getEnableShuffle(this@MainActivity).also {
-                musicViewModel.enableShuffleModel.value = it
-            }
-            // Get the token for the MediaSession
-            mediaBrowser?.sessionToken.also { token ->
-                // Create a MediaControllerCompat
-                val mediaController = token?.let {
-                    MediaControllerCompat(
-                        this@MainActivity, // Context
-                        it
-                    )
-                }
-                musicViewModel.mediaBrowser = mediaBrowser
-                musicViewModel.mediaController = mediaController
-                val extras = mediaBrowser?.extras
-                if (extras != null) {
-                    getInitData(extras)
-                }
-                MediaControllerCompat.setMediaController(this@MainActivity, mediaController)
-                mediaController?.registerCallback(callback)
-                musicViewModel.mediaBrowser?.sendCustomAction(ACTION_IS_CONNECTED, null, null)
-            }
-        }
-
-        override fun onConnectionSuspended() {
-        }
-
-        override fun onConnectionFailed() {
-            // The Service has refused our connection
-        }
-
-    }
 
     fun getInitData(resultData: Bundle) {
         resultData.getParcelableArrayList<SortFiledData>("showIndicatorList")?.onEach { sort ->
@@ -902,6 +984,50 @@ class MainActivity : ComponentActivity() {
             resultData.getBoolean("play_completed")
         musicViewModel.volume.intValue = resultData.getInt("volume", 100)
         getSeek()
+    }
+
+    /**
+     * 根据播放器当前的状态，一次性更新所有相关的UI组件。
+     *
+     * @param player MediaBrowser 实例，它实现了 Player 接口。
+     */
+    private fun updateUiWithCurrentState(player: Player) {
+        // 1. 更新元数据 (歌曲信息和封面)
+        val currentMediaItem = player.currentMediaItem
+        if (currentMediaItem != null && musicViewModel.musicQueue.isNotEmpty() && musicViewModel.musicQueue.size > player.currentMediaItemIndex
+            && player.currentMediaItemIndex >= 0
+        ) {
+            // &&player.currentMediaItemIndex!=musicViewModel.currentPlayQueueIndex.intValue 如果是和当前相同就不解析
+            musicViewModel.currentPlayQueueIndex.intValue = player.currentMediaItemIndex
+            musicViewModel.currentPlay.value =
+                musicViewModel.musicQueue[musicViewModel.currentPlayQueueIndex.intValue]
+            // val uri = currentMediaItem.mediaMetadata.artworkUri
+            // if (uri != null) {
+            //     albumArtImageView.setImageURI(uri)
+            // }
+            // val metadata = currentMediaItem.mediaMetadata
+            // songTitleTextView.text = metadata.title ?: "未知标题"
+            // songArtistTextView.text = metadata.artist ?: "未知艺术家"
+        } else {
+            musicViewModel.currentPlayQueueIndex.intValue = -1
+            musicViewModel.currentPlay.value = null
+        }
+
+        // 2. 更新播放/暂停按钮的状态
+        musicViewModel.playStatus.value = player.isPlaying
+        // 3. 更新进度条和时间
+        // 获取总时长 (如果是直播流，可能为 C.TIME_UNSET)
+        val duration = if (player.duration == C.TIME_UNSET) 0 else player.duration
+        musicViewModel.currentDuration.longValue = duration
+
+        // 获取当前播放位置
+        val currentPosition = player.currentPosition
+        musicViewModel.currentDuration.longValue = currentPosition
+
+        // 4. 更新随机播放按钮的状态
+        musicViewModel.enableShuffleModel.value = player.shuffleModeEnabled
+        // 5. 更新重复模式按钮的状态
+        musicViewModel.repeatModel.intValue = player.repeatMode
     }
 
 

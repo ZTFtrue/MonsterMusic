@@ -247,29 +247,19 @@ object PlayUtils {
     }
 
     fun trackDelete(
-        extras: Bundle, result: Result<Bundle>,
+        id: Long,
         musicQueue: ArrayList<MusicItem>,
         exoPlayer: ExoPlayer,
         db: MusicDatabase,
         tracksLinkedHashMap: LinkedHashMap<Long, MusicItem>
-    ): Boolean {
-        val id = extras.getLong("id")
+    ): Long {
         tracksLinkedHashMap.remove(id)
-        val i = getItemInQueueIndex(musicQueue, id)
-        val bundle = Bundle()
+        val i = musicQueue.indexOfFirst { it.id == id }
         if (i > -1) {
             val musicItem = musicQueue.removeAt(i)
             changePriorityTableId(musicQueue, musicItem, db)
-            CoroutineScope(Dispatchers.Main).launch {
-                exoPlayer.removeMediaItem(i)
-            }
         }
-        bundle.putInt("playIndex", exoPlayer.currentMediaItemIndex)
-        bundle.putParcelableArrayList("songsList", ArrayList(tracksLinkedHashMap.values))
-        bundle.putLong("id", id)
-        bundle.putParcelableArrayList("queue", musicQueue)
-        result.sendResult(bundle)
-        return i > -1
+        return i.toLong()
     }
 
     fun removePlayQueue(
@@ -322,12 +312,4 @@ object PlayUtils {
         }
     }
 
-    private fun getItemInQueueIndex(musicQueue: ArrayList<MusicItem>, id: Long): Int {
-        for ((index, it) in musicQueue.withIndex()) {
-            if (it.id == id) {
-                return index
-            }
-        }
-        return -1
-    }
 }

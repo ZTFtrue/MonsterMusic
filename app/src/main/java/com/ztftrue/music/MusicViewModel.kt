@@ -6,7 +6,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.widget.Toast
 import androidx.compose.runtime.mutableFloatStateOf
@@ -21,6 +20,7 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.Player
+import androidx.media3.session.MediaBrowser
 import androidx.navigation.NavHostController
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
@@ -73,8 +73,8 @@ class MusicViewModel : ViewModel() {
 
     //    val albumItemsCount = mutableIntStateOf(2)
 //    val genreItemsCount = mutableIntStateOf(2)
-    var mediaController: MediaControllerCompat? = null
-    var mediaBrowser: MediaBrowserCompat? = null
+//    var mediaBrowser: MediaBrowserCompat? = null
+    var browser: MediaBrowser? =  null
     var currentInputFormat =
         mutableStateMapOf<String, String>() //mutableStateOf<LinkedHashMap<String, String>>(java.util.LinkedHashMap())
 
@@ -144,8 +144,6 @@ class MusicViewModel : ViewModel() {
         if (currentPlay.value != null) {
             currentCaptionList.clear()
         }
-        mediaBrowser = null
-        mediaController = null
         currentPlay.value = null
         currentMusicCover.value = null
         playListCurrent.value = null

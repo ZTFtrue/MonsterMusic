@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.widget.Toast
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.media3.session.MediaBrowser
 import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_Sort_Queue
 import com.ztftrue.music.sqlData.MusicDatabase
@@ -22,7 +23,7 @@ import kotlinx.coroutines.launch
 object TracksUtils {
 
     fun currentPlayToTop(
-        mediaBrowserCompat: MediaBrowserCompat, musicList: SnapshotStateList<MusicItem>,
+        mediaBrowserCompat: MediaBrowser, musicList: SnapshotStateList<MusicItem>,
         music: MusicItem, currentIndex: Int
     ) {
         sortQueue(
@@ -32,7 +33,7 @@ object TracksUtils {
     }
 
     fun sortQueue(
-        mediaBrowserCompat: MediaBrowserCompat, musicList: SnapshotStateList<MusicItem>,
+        mediaBrowserCompat: MediaBrowser, musicList: SnapshotStateList<MusicItem>,
         music: MusicItem, currentIndex: Int, targetIndex: Int
     ) {
         if (currentIndex == targetIndex) return
