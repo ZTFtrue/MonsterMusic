@@ -1,8 +1,11 @@
 package com.ztftrue.music.ui.other
 
 import android.graphics.Bitmap
+import android.media.MediaScannerConnection
+import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
@@ -51,14 +54,20 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.core.text.isDigitsOnly
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.SessionResult
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.ACTION_TRACKS_UPDATE
+import com.ztftrue.music.play.CustomMetadataKeys
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACKS_UPDATE
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.utils.Utils
@@ -141,67 +150,60 @@ fun EditTrackPage(
         if (success) {
             val bundleTemp = Bundle()
             bundleTemp.putLong("id", musicId)
-            musicViewModel.mediaBrowser?.sendCustomAction(
-                ACTION_TRACKS_UPDATE,
-                bundleTemp,
-                object : MediaBrowserCompat.CustomActionCallback() {
-                    override fun onResult(
-                        action: String?,
-                        extras: Bundle?,
-                        resultData: Bundle?
-                    ) {
-                        super.onResult(action, extras, resultData)
-                        if (ACTION_TRACKS_UPDATE == action) {
-                            musicViewModel.refreshPlayList.value =
-                                !musicViewModel.refreshPlayList.value
-                            musicViewModel.refreshAlbum.value =
-                                !musicViewModel.refreshAlbum.value
-                            musicViewModel.refreshArtist.value =
-                                !musicViewModel.refreshArtist.value
-                            musicViewModel.refreshGenre.value =
-                                !musicViewModel.refreshGenre.value
-                            musicViewModel.refreshFolder.value =
-                                !musicViewModel.refreshFolder.value
-                            if (resultData != null) {
-                                resultData.getParcelableArrayList<MusicItem>(
-                                    "songsList"
-                                )?.also {
-                                    musicViewModel.songsList.clear()
-                                    musicViewModel.songsList.addAll(it)
-                                }
-                                resultData.getParcelable<MusicItem>("item")?.also {
-                                    if (musicViewModel.currentPlay.value?.id != it.id) {
-                                        musicViewModel.currentPlay.value = it
-                                    }
-                                    musicViewModel.musicQueue.forEach { mIt ->
-                                        if (mIt.id == it.id) {
-                                            mIt.name = it.name
-                                            mIt.path = it.path
-                                            mIt.duration = it.duration
-                                            mIt.displayName = it.displayName
-                                            mIt.album = it.album
-                                            mIt.albumId = it.albumId
-                                            mIt.artist = it.artist
-                                            mIt.artistId = it.artistId
-                                            mIt.genre = it.genre
-                                            mIt.genreId = it.genreId
-                                            mIt.year = it.year
-                                            mIt.songNumber = it.songNumber
-                                        }
-                                    }
+            val futureResult: ListenableFuture<SessionResult>? =
+                musicViewModel.browser?.sendCustomCommand(
+                    COMMAND_TRACKS_UPDATE,
+                    Bundle().apply {
+                        bundleTemp
+                    },
+                )
+            futureResult?.addListener({
+                try {
+                    val sessionResult = futureResult.get()
+                    if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
+                        musicViewModel.refreshPlayList.value =
+                            !musicViewModel.refreshPlayList.value
+                        musicViewModel.refreshAlbum.value =
+                            !musicViewModel.refreshAlbum.value
+                        musicViewModel.refreshArtist.value =
+                            !musicViewModel.refreshArtist.value
+                        musicViewModel.refreshGenre.value =
+                            !musicViewModel.refreshGenre.value
+                        musicViewModel.refreshFolder.value =
+                            !musicViewModel.refreshFolder.value
+                        sessionResult.extras.getParcelableArrayList<MusicItem>(
+                            "songsList"
+                        )?.also {
+                            musicViewModel.songsList.clear()
+                            musicViewModel.songsList.addAll(it)
+                        }
+                        sessionResult.extras.getParcelable<MusicItem>("item")?.also {
+                            if (musicViewModel.currentPlay.value?.id != it.id) {
+                                musicViewModel.currentPlay.value = it
+                            }
+                            musicViewModel.musicQueue.forEach { mIt ->
+                                if (mIt.id == it.id) {
+                                    mIt.name = it.name
+                                    mIt.path = it.path
+                                    mIt.duration = it.duration
+                                    mIt.displayName = it.displayName
+                                    mIt.album = it.album
+                                    mIt.albumId = it.albumId
+                                    mIt.artist = it.artist
+                                    mIt.artistId = it.artistId
+                                    mIt.genre = it.genre
+                                    mIt.genreId = it.genreId
+                                    mIt.year = it.year
+                                    mIt.songNumber = it.songNumber
                                 }
                             }
-//                        musicViewModel..value =
-//                            !musicViewModel.refreshAlbum.value
-//                        musicViewModel..value =
-//                            !musicViewModel.refreshAlbum.value
-                            //   navController.popBackStack()
                         }
                     }
+                } catch (e: Exception) {
+                    Log.e("Client", "Failed to toggle favorite status", e)
                 }
-            )
+            }, ContextCompat.getMainExecutor(context))
         }
-
     }
     Scaffold(
         modifier = Modifier.padding(all = 0.dp),
@@ -221,7 +223,11 @@ fun EditTrackPage(
                                 saveTrackMessage()
                             } else {
                                 enableEdit =
-                                    TracksManager.requestEditPermission(context, musicId, musicPath)
+                                    TracksManager.requestEditPermission(
+                                        context,
+                                        musicId,
+                                        musicPath
+                                    )
                             }
                         }) {
                         Icon(
@@ -260,7 +266,7 @@ fun EditTrackPage(
                             val (cover, edit) = createRefs()
                             Image(
                                 painter = rememberAsyncImagePainter(
-                                    coverBitmap.value?:R.drawable.broken_image
+                                    coverBitmap.value ?: R.drawable.broken_image
                                 ),
                                 contentDescription = "Cover",
                                 modifier = Modifier
@@ -335,7 +341,9 @@ fun EditTrackPage(
                             colors = TextFieldDefaults.colors(
                                 errorTextColor = MaterialTheme.colorScheme.primary,
                                 focusedTextColor = MaterialTheme.colorScheme.primary,
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
                                 unfocusedTextColor = MaterialTheme.colorScheme.primary,
                                 focusedContainerColor = MaterialTheme.colorScheme.background,
                                 unfocusedContainerColor = MaterialTheme.colorScheme.background,
@@ -358,8 +366,12 @@ fun EditTrackPage(
                                 ),
                                 errorTrailingIconColor = MaterialTheme.colorScheme.error,
                                 focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
                                 errorLabelColor = MaterialTheme.colorScheme.error,
                                 disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
                                     alpha = 0.38f
@@ -402,7 +414,9 @@ fun EditTrackPage(
                             colors = TextFieldDefaults.colors(
                                 errorTextColor = MaterialTheme.colorScheme.primary,
                                 focusedTextColor = MaterialTheme.colorScheme.primary,
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
                                 unfocusedTextColor = MaterialTheme.colorScheme.primary,
                                 focusedContainerColor = MaterialTheme.colorScheme.background,
                                 unfocusedContainerColor = MaterialTheme.colorScheme.background,
@@ -425,8 +439,12 @@ fun EditTrackPage(
                                 ),
                                 errorTrailingIconColor = MaterialTheme.colorScheme.error,
                                 focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
                                 errorLabelColor = MaterialTheme.colorScheme.error,
                                 disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
                                     alpha = 0.38f
@@ -469,7 +487,9 @@ fun EditTrackPage(
                             colors = TextFieldDefaults.colors(
                                 errorTextColor = MaterialTheme.colorScheme.primary,
                                 focusedTextColor = MaterialTheme.colorScheme.primary,
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
                                 unfocusedTextColor = MaterialTheme.colorScheme.primary,
                                 focusedContainerColor = MaterialTheme.colorScheme.background,
                                 unfocusedContainerColor = MaterialTheme.colorScheme.background,
@@ -492,8 +512,12 @@ fun EditTrackPage(
                                 ),
                                 errorTrailingIconColor = MaterialTheme.colorScheme.error,
                                 focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
                                 errorLabelColor = MaterialTheme.colorScheme.error,
                                 disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
                                     alpha = 0.38f
@@ -536,7 +560,9 @@ fun EditTrackPage(
                             colors = TextFieldDefaults.colors(
                                 errorTextColor = MaterialTheme.colorScheme.primary,
                                 focusedTextColor = MaterialTheme.colorScheme.primary,
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
                                 unfocusedTextColor = MaterialTheme.colorScheme.primary,
                                 focusedContainerColor = MaterialTheme.colorScheme.background,
                                 unfocusedContainerColor = MaterialTheme.colorScheme.background,
@@ -559,8 +585,12 @@ fun EditTrackPage(
                                 ),
                                 errorTrailingIconColor = MaterialTheme.colorScheme.error,
                                 focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
                                 errorLabelColor = MaterialTheme.colorScheme.error,
                                 disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
                                     alpha = 0.38f
@@ -604,7 +634,9 @@ fun EditTrackPage(
                             colors = TextFieldDefaults.colors(
                                 errorTextColor = MaterialTheme.colorScheme.primary,
                                 focusedTextColor = MaterialTheme.colorScheme.primary,
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
                                 unfocusedTextColor = MaterialTheme.colorScheme.primary,
                                 focusedContainerColor = MaterialTheme.colorScheme.background,
                                 unfocusedContainerColor = MaterialTheme.colorScheme.background,
@@ -627,8 +659,12 @@ fun EditTrackPage(
                                 ),
                                 errorTrailingIconColor = MaterialTheme.colorScheme.error,
                                 focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
                                 errorLabelColor = MaterialTheme.colorScheme.error,
                                 disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
                                     alpha = 0.38f
@@ -665,7 +701,9 @@ fun EditTrackPage(
                             colors = TextFieldDefaults.colors(
                                 errorTextColor = MaterialTheme.colorScheme.primary,
                                 focusedTextColor = MaterialTheme.colorScheme.primary,
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
                                 unfocusedTextColor = MaterialTheme.colorScheme.primary,
                                 focusedContainerColor = MaterialTheme.colorScheme.background,
                                 unfocusedContainerColor = MaterialTheme.colorScheme.background,
@@ -688,8 +726,12 @@ fun EditTrackPage(
                                 ),
                                 errorTrailingIconColor = MaterialTheme.colorScheme.error,
                                 focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
                                 errorLabelColor = MaterialTheme.colorScheme.error,
                                 disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
                                     alpha = 0.38f

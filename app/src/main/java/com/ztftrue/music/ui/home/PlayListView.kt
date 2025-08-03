@@ -1,9 +1,6 @@
 package com.ztftrue.music.ui.home
 
-import android.media.MediaScannerConnection
-import android.net.Uri
-import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -52,12 +49,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.ContextCompat
+import androidx.media3.common.MediaItem
+import androidx.media3.session.LibraryResult
 import androidx.navigation.NavHostController
 import androidx.navigation.Navigator
+import com.google.common.collect.ImmutableList
+import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
-import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
+import com.ztftrue.music.play.CustomMetadataKeys
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.CreatePlayListDialog
 import com.ztftrue.music.ui.public.DeleteTip
@@ -80,26 +82,35 @@ fun PlayListView(
 ) {
     val listState = rememberLazyListState()
     val playList = remember { mutableStateListOf<MusicPlayList>() }
+    val context = LocalContext.current
     LaunchedEffect(musicViewModel.refreshPlayList.value) {
-        musicViewModel.mediaBrowser?.sendCustomAction(
-            PlayListType.PlayLists.name,
-            null,
-            object : MediaBrowserCompat.CustomActionCallback() {
-
-                override fun onResult(
-                    action: String?, extras: Bundle?, resultData: Bundle?
-                ) {
-                    super.onResult(action, extras, resultData)
-                    playList.clear()
-                    if (action == PlayListType.PlayLists.name) {
-                        resultData?.getParcelableArrayList<MusicPlayList>("list")
-                            ?.also { list ->
-                                playList.addAll(list)
-                            }
-                    }
+        playList.clear()
+        val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
+            musicViewModel.browser?.getChildren("playlists_root", 0, 1, null)
+        futureResult?.addListener({
+            try {
+                val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
+                if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
+                    return@addListener
                 }
-
-            })
+                val albumMediaItems: List<MediaItem> = result.value ?: listOf()
+                albumMediaItems.forEach { mediaItem ->
+                    val album = MusicPlayList(
+                        id = mediaItem.mediaId.toLong(),
+                        name = mediaItem.mediaMetadata.title.toString(),
+                        trackNumber = mediaItem.mediaMetadata.totalTrackCount ?: 0,
+                        path = mediaItem.mediaMetadata.extras?.getString(
+                            CustomMetadataKeys.KEY_PATH,
+                            ""
+                        ) ?: ""
+                    )
+                    playList.add(album)
+                }
+            } catch (e: Exception) {
+                // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                Log.e("Client", "Failed to toggle favorite status", e)
+            }
+        }, ContextCompat.getMainExecutor(context))
     }
     if (playList.isEmpty()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -178,30 +189,7 @@ fun PlayListItemView(
                                 musicViewModel.songsList.toList()
                             )
                         ) {
-                            MediaScannerConnection.scanFile(
-                                context,
-                                arrayOf(item.path),
-                                arrayOf("*/*"),
-                                object : MediaScannerConnection.MediaScannerConnectionClient {
-                                    override fun onMediaScannerConnected() {}
-                                    override fun onScanCompleted(path: String, uri: Uri) {
-                                        musicViewModel.mediaBrowser?.sendCustomAction(
-                                            ACTION_PlayLIST_CHANGE,
-                                            null,
-                                            object : MediaBrowserCompat.CustomActionCallback() {
-                                                override fun onResult(
-                                                    action: String?,
-                                                    extras: Bundle?,
-                                                    resultData: Bundle?
-                                                ) {
-                                                    super.onResult(action, extras, resultData)
-                                                    musicViewModel.refreshPlayList.value =
-                                                        !musicViewModel.refreshPlayList.value
-                                                }
-                                            }
-                                        )
-                                    }
-                                })
+                            musicViewModel.scanAndRefreshPlaylist(context, item.path)
                         }
                     }
 

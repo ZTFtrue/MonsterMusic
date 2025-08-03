@@ -118,20 +118,16 @@ const val ACTION_SET_SLEEP_TIME = "set_sleep_time"
 const val ACTION_AddPlayQueue = "AddPlayQueue"
 const val ACTION_RemoveFromQueue = "ACTION_RemoveFromQueue"
 const val ACTION_Sort_Queue = "ACTION_Sort_Queue"
-const val ACTION_PlayLIST_CHANGE = "ACTION_PlayLIST_CHANGE"
 const val ACTION_Volume_CHANGE = "ACTION_Volume_CHANGE"
-const val ACTION_TRACKS_DELETE = "ACTION_TRACKS_DELETE"
 const val ACTION_TRACKS_UPDATE = "ACTION_TRACKS_UPDATE"
 const val ACTION_CLEAR_QUEUE = "ACTION_CLEAR_QUEUE"
 const val ACTION_SORT = "ACTION_SORT"
-const val ACTION_REFRESH_ALL = "ACTION_REFRESH_ALL"
 const val ACTION_SHUFFLE_PLAY_QUEUE = "ACTION_SHUFFLE_PLAY_QUEUE"
 const val ACTION_GET_ALBUM_BY_ID = "GET_ARTIST_FROM_ALBUM"
 
 const val MY_MEDIA_ROOT_ID = "MY_MEDIA_ROOT_ID"
 
 const val EVENT_MEDIA_ITEM_Change = 3
-const val EVENT_SLEEP_TIME_Change = 5
 const val EVENT_DATA_READY = 6
 const val EVENT_Visualization_Change = 7
 const val EVENT_INPUT_FORTMAT_Change = 8
@@ -142,7 +138,8 @@ class PlayService : MediaLibraryService() {
 
 
     private var mediaSession: MediaLibrarySession? = null
-
+    private var mediaController: MediaControllerCompat? = null
+    private var mControllerInfo: MediaSession.ControllerInfo? = null
     val equalizerAudioProcessor: EqualizerAudioProcessor = EqualizerAudioProcessor()
 //    val sonicAudioProcessor = SonicAudioProcessor()
 
@@ -174,7 +171,7 @@ class PlayService : MediaLibraryService() {
     private val artistHasAlbumMap: HashMap<Long, ArrayList<AlbumList>> = HashMap()
     private val genreHasAlbumMap: HashMap<Long, ArrayList<AlbumList>> = HashMap()
 
-    private var mediaController: MediaControllerCompat? = null
+
     private val mainTab = ArrayList<MainTab>(7)
     private lateinit var db: MusicDatabase
     private var bandsValue =
@@ -215,7 +212,7 @@ class PlayService : MediaLibraryService() {
             // 3. 提供一个回调，用于处理浏览请求
             MySessionCallback(this@PlayService),
         ).build()
-        val notification=DefaultMediaNotificationProvider(this)
+        val notification = DefaultMediaNotificationProvider(this)
         setMediaNotificationProvider(notification)
 //        mediaSession = MediaSessionCompat(baseContext, PlayService::class.java.simpleName).apply {
 //            isActive = true
@@ -335,6 +332,7 @@ class PlayService : MediaLibraryService() {
 //        equalizerAudioProcessor.setMediaSession(mediaSession!!)
 
     }
+
     private val gson = Gson() // 创建一个 Gson 实例
 
     // 这是一个内部类，在你的 Service 里面
@@ -343,6 +341,7 @@ class PlayService : MediaLibraryService() {
             session: MediaSession,
             controller: MediaSession.ControllerInfo
         ): MediaSession.ConnectionResult {
+            mControllerInfo = controller
             val availableCommands =
                 MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon()
                     // 添加所有你定义的 SessionCommand
@@ -368,6 +367,7 @@ class PlayService : MediaLibraryService() {
                     .add(COMMAND_CLEAR_QUEUE)
                     .add(COMMAND_REFRESH_ALL)
                     .add(COMMAND_TRACK_DELETE)
+                    .add(COMMAND_PlAY_LIST_CHANGE)
                     .build()
 
             return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
@@ -537,6 +537,52 @@ class PlayService : MediaLibraryService() {
                     return future
                 }
 
+                COMMAND_PlAY_LIST_CHANGE.customAction -> {
+                    val future = SettableFuture.create<SessionResult>()
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            playListLinkedHashMap.clear()
+                            playListTracksHashMap.clear()
+                            val sortData =
+                                db.SortFiledDao().findSortByType(PlayListType.PlayLists.name)
+                            val newPlaylists: List<MusicPlayList> = PlaylistManager.getPlaylists(
+                                this@PlayService,
+                                playListLinkedHashMap,
+                                tracksLinkedHashMap,
+                                sortData?.filed,
+                                sortData?.method
+                            )
+                            newPlaylists.forEach { playListLinkedHashMap[it.id] = it }
+                            val resultData = Bundle().apply {
+                                putInt("new_playlist_count", newPlaylists.size)
+                            }
+                            future.set(SessionResult(SessionResult.RESULT_SUCCESS, resultData))
+                        } catch (e: Exception) {
+                            // 如果刷新过程中发生错误，将异常设置到 future
+                            Log.e("PlayService", "Error refreshing playlists", e)
+                            future.setException(e)
+                        }
+                    }
+                    return future
+                }
+                COMMAND_REFRESH_ALL.customAction -> {
+                    val future = SettableFuture.create<SessionResult>()
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            refreshAction()
+                            val resultData = Bundle().apply {
+                                putParcelableArrayList("songsList", ArrayList(allTracksLinkedHashMap.values))
+                            }
+                            future.set(SessionResult(SessionResult.RESULT_SUCCESS, resultData))
+                        } catch (e: Exception) {
+                            // 如果刷新过程中发生错误，将异常设置到 future
+                            Log.e("PlayService", "Error refreshing playlists", e)
+                            future.setException(e)
+                        }
+                    }
+                    return future
+                }
+
                 COMMAND_TRACK_DELETE.customAction -> {
                     val idsToDelete = args.getLong(KEY_TRACK_ID)
                     val c = PlayUtils.trackDelete(
@@ -630,16 +676,8 @@ class PlayService : MediaLibraryService() {
                 }
 
                 COMMAND_CLEAR_QUEUE.customAction -> {
-                    // ... 你的 clearQueue 逻辑 ...
-                }
-                // ... 其他队列管理的 case ...
-
-
-                COMMAND_REFRESH_ALL.customAction -> {
-                    // ... 你的 refreshAction 逻辑 ...
                 }
 
-                // ... 其他所有 case ...
 
                 else -> {
                     // 如果不是我们认识的命令，交由父类处理
@@ -728,78 +766,100 @@ class PlayService : MediaLibraryService() {
             params: LibraryParams?
         ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
             val future = SettableFuture.create<LibraryResult<ImmutableList<MediaItem>>>()
-            val childType = params?.extras?.getString(
-                "child_type",
-                ""
-            )
-            if (parentId == "root") {
-                // 返回根节点的子节点
-                if (PlayListType.PlayLists.name == childType) {
-                    getPlayList(context, future)
-                    return future
-                } else if (PlayListType.Songs.name == childType) {
-                    getSongsAll(context, future)
-                    return future
-                } else if (PlayListType.Genres.name == childType) {
-                    getGenres(context, future)
-                    return future
-                } else if (PlayListType.Albums.name == childType) {
-                    getAlbums(context, future)
-                    return future
-                } else if (PlayListType.Artists.name == childType) {
-                    getArtists(context, future)
-                    return future
-                } else if (PlayListType.Folders.name == childType) {
-                    getFolders(context, future)
-                    return future
-                }
-            } else if (parentId == PlayListType.Albums.name + "@LIST") {
-                val childId = params?.extras?.getLong(
-                    "child_id",
-                    -1L
-                )
-                if (childId != null && childId > 0L) {
-                    if (PlayListType.Genres.name == childType) {
-                        val list = genreHasAlbumMap[childId]
-                        val mediaItems: List<MediaItem> = list?.map { playlist ->
-                            MediaItemUtils.albumToMediaItem(playlist)
-                        } ?: emptyList()
-                        future.set(LibraryResult.ofItemList(mediaItems, null))
-                        return future
-                    } else if (PlayListType.Artists.name == childType) {
-                        val list = artistHasAlbumMap[childId]
-                        val mediaItems: List<MediaItem> = list?.map { playlist ->
-                            MediaItemUtils.albumToMediaItem(playlist)
-                        } ?: emptyList()
-                        future.set(LibraryResult.ofItemList(mediaItems, null))
-                        return future
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    when {
+                        parentId == "root" -> {
+//                            val topLevelItems = createTopLevelCategories()
+                            future.set(LibraryResult.ofItemList(listOf(), null))
+                        }
+
+                        parentId == "songs_root" -> {
+                            getSongsAll(context, future, params)
+                        }
+
+                        parentId == "albums_root" -> {
+                            getAlbums(context, future, params)
+                        }
+
+                        parentId == "artists_root" -> {
+                            getArtists(context, future, params)
+                        }
+
+                        parentId == "playlists_root" -> {
+                            getPlayList(context, future, params)
+                        }
+
+                        parentId == "genres_root" -> {
+                            getGenres(context, future, params)
+                        }
+
+                        parentId == "folders_root" -> {
+                            getFolders(context, future, params)
+                        }
+                        // genre includes albums
+                        parentId.startsWith("genre_album_") -> {
+                            handlePrefixedId(parentId, "genre_album_", future) { id ->
+                                val list = genreHasAlbumMap[id]
+                                val mediaItems: List<MediaItem> = list?.map { playlist ->
+                                    MediaItemUtils.albumToMediaItem(playlist)
+                                } ?: emptyList()
+                                future.set(LibraryResult.ofItemList(mediaItems, null))
+                            }
+                        }
+                        // artist includes albums
+                        parentId.startsWith("artist_album_") -> {
+                            handlePrefixedId(parentId, "artist_album_", future) { id ->
+                                val list = artistHasAlbumMap[id]
+                                val mediaItems: List<MediaItem> = list?.map { playlist ->
+                                    MediaItemUtils.albumToMediaItem(playlist)
+                                } ?: emptyList()
+                                future.set(LibraryResult.ofItemList(mediaItems, null))
+                            }
+                        }
+                        // --- 二级子列表（具体实体下的内容） ---
+                        parentId.startsWith("album_track_") -> {
+                            handlePrefixedId(parentId, "album_track_", future) { id ->
+                                getAlbumListTracks(context, id, future)
+                            }
+                        }
+
+                        parentId.startsWith("artist_track_") -> {
+                            handlePrefixedId(parentId, "artist_track_", future) { id ->
+                                getArtistListTracks(context, id, future)
+                            }
+                        }
+
+                        parentId.startsWith("genre_track_") -> {
+                            handlePrefixedId(parentId, "genre_track_", future) { id ->
+                                getGenreListTracks(context, id, future)
+                            }
+                        }
+
+                        parentId.startsWith("playlist_track_") -> {
+                            handlePrefixedId(parentId, "playlist_track_", future) { id ->
+                                getPlayListTracks(context, id, future)
+                            }
+                        }
+
+
+                        parentId.startsWith("folder_track_") -> {
+                            handlePrefixedId(parentId, "folder_track_", future) { id ->
+                                getFolderListTracks(context, id, future)
+                            }
+                        }
+
+                        else -> {
+                            Log.w("PlayService", "onGetChildren: Unknown parentId '$parentId'")
+                            future.set(LibraryResult.ofItemList(listOf(), null)) // 返回空列表
+                        }
                     }
-                }
-            } else {
-                val childId = params?.extras?.getLong(
-                    "child_id",
-                    -1L
-                )
-                if (childId != null && childId > 0L) {
-                    if (PlayListType.PlayLists.name == parentId) {
-                        getPlayListTracks(context, childId, future)
-                        return future
-                    } else if (PlayListType.Genres.name == parentId) {
-                        getGenreListTracks(context, childId, future)
-                        return future
-                    } else if (PlayListType.Albums.name == parentId) {
-                        getAlbumListTracks(context, childId, future)
-                        return future
-                    } else if (PlayListType.Artists.name == parentId) {
-                        getArtistListTracks(context, childId, future)
-                        return future
-                    } else if (PlayListType.Folders.name == parentId) {
-                        getFolderListTracks(context, childId, future)
-                        return future
-                    }
+                } catch (e: Exception) {
+                    Log.e("PlayService", "Error in onGetChildren for parentId: $parentId", e)
+                    future.setException(e)
                 }
             }
-            return super.onGetChildren(session, browser, parentId, page, pageSize, params)
+            return future
         }
 
         override fun onGetItem(
@@ -860,6 +920,21 @@ class PlayService : MediaLibraryService() {
                     }
                 }
                 return super.onGetItem(session, browser, mediaId)
+            }
+        }
+
+        private suspend fun handlePrefixedId(
+            parentId: String,
+            prefix: String,
+            future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>,
+            action: suspend (id: Long) -> Unit // 使用 suspend lambda 作为参数
+        ) {
+            val id = parentId.removePrefix(prefix).toLongOrNull()
+            if (id != null) {
+                action(id) // 调用传入的业务逻辑
+            } else {
+                // 使用 LibraryResult 的标准错误码
+                future.set(LibraryResult.ofError(SessionError.ERROR_BAD_VALUE))
             }
         }
 
@@ -975,23 +1050,7 @@ class PlayService : MediaLibraryService() {
 //            } else {
 //                result.sendResult(null)
 //            }
-//        } else if (ACTION_PlayLIST_CHANGE == action) {
-//            playListLinkedHashMap.clear()
-//            playListTracksHashMap.clear()
-//            result.detach()
-//            CoroutineScope(Dispatchers.IO).launch {
-//                val sortData =
-//                    db.SortFiledDao().findSortByType(PlayListType.PlayLists.name)
-//                PlaylistManager.getPlaylists(
-//                    this@PlayService,
-//                    playListLinkedHashMap,
-//                    tracksLinkedHashMap,
-//                    result,
-//                    sortData?.filed, sortData?.method
-//                )
-//            }
-//
-//        } else if (ACTION_CLEAR_QUEUE == action) {
+//        }    else if (ACTION_CLEAR_QUEUE == action) {
 //            playListCurrent = null
 //            currentPlayTrack = null
 //            exoPlayer.pause()
@@ -1009,7 +1068,7 @@ class PlayService : MediaLibraryService() {
 //        } else if (action == ACTION_SORT) {
 //            sortAction(extras, result)
 //        } else if (action == ACTION_REFRESH_ALL) {
-//            refreshAction(result)
+//
 //        }
 //    }
 
@@ -1028,9 +1087,15 @@ class PlayService : MediaLibraryService() {
                 override fun onTick(millisUntilFinished: Long) {
                     remainingTime = millisUntilFinished
                     val bundle = Bundle()
-                    bundle.putInt("type", EVENT_SLEEP_TIME_Change)
                     bundle.putLong("remaining", remainingTime)
-                    mediaSession?.setSessionExtras(bundle)
+//                    mediaSession?.connectedControllers?.find { it.packageName == this@PlayService.packageName }
+                    mControllerInfo?.let {
+                        mediaSession?.sendCustomCommand(
+                            it,
+                            COMMAND_SLEEP_STATE_UPDATE,
+                            bundle
+                        )
+                    }
                 }
 
                 override fun onFinish() {
@@ -1046,9 +1111,14 @@ class PlayService : MediaLibraryService() {
             remainingTime = 0
             countDownTimer?.cancel()
             val bundle = Bundle()
-            bundle.putInt("type", EVENT_SLEEP_TIME_Change)
             bundle.putLong("remaining", remainingTime)
-            mediaSession?.setSessionExtras(bundle)
+            mControllerInfo?.let {
+                mediaSession?.sendCustomCommand(
+                    it,
+                    COMMAND_SLEEP_STATE_UPDATE,
+                    bundle
+                )
+            }
         }
     }
 
@@ -1126,11 +1196,15 @@ class PlayService : MediaLibraryService() {
         sleepTime = 0
         exoPlayer.pause()
         val bundle = Bundle()
-        bundle.putInt("type", EVENT_SLEEP_TIME_Change)
         bundle.putLong("remaining", remainingTime)
         bundle.putLong("sleepTime", 0L)
-        mediaSession?.sessionExtras = bundle
-
+        mControllerInfo?.let {
+            mediaSession?.sendCustomCommand(
+                it,
+                COMMAND_SLEEP_STATE_UPDATE,
+                bundle
+            )
+        }
     }
 
 
@@ -1556,6 +1630,7 @@ class PlayService : MediaLibraryService() {
     var errorCount = 0
     private fun playerAddListener() {
         exoPlayer.addListener(@UnstableApi object : Player.Listener {
+
             override fun onVolumeChanged(volume: Float) {
                 val volumeInt = (volume * 100).toInt()
                 volumeValue = volumeInt
@@ -1808,7 +1883,6 @@ class PlayService : MediaLibraryService() {
     }
 
 
-
 //    private fun sortPlayQueue(extras: Bundle?, result: Result<Bundle>) {
 //        result.detach()
 //        if (extras != null) {
@@ -1854,39 +1928,38 @@ class PlayService : MediaLibraryService() {
 //        result.sendResult(null)
 //    }
 //
-//    private fun refreshAction(result: Result<Bundle>) {
-////        playListLinkedHashMap.clear()
-////        albumsLinkedHashMap.clear()
-////        artistsLinkedHashMap.clear()
-////        genresLinkedHashMap.clear()
-////        tracksLinkedHashMap.clear()
-////        playListTracksHashMap.clear()
-////        albumsListTracksHashMap.clear()
-////        artistsListTracksHashMap.clear()
-////        genresListTracksHashMap.clear()
-////        foldersListTracksHashMap.clear()
-//        clearCacheData()
-//        result.detach()
-//        CoroutineScope(Dispatchers.IO).launch {
-//            val sortData =
-//                db.SortFiledDao().findSortByType(PlayListType.Songs.name)
-//            TracksManager.getFolderList(
-//                this@PlayService,
-//                foldersLinkedHashMap,
-//                result,
-//                tracksLinkedHashMap,
-//                "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
-//                true
-//            )
-//            val sortData1 = db.SortFiledDao().findSortAll()
-//            showIndicatorList.clear()
-//            sortData1.forEach {
-//                if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
-//                    showIndicatorList.add(it)
-//                }
-//            }
-//        }
-//    }
+    private fun refreshAction() {
+        playListLinkedHashMap.clear()
+        albumsLinkedHashMap.clear()
+        artistsLinkedHashMap.clear()
+        genresLinkedHashMap.clear()
+        tracksLinkedHashMap.clear()
+        playListTracksHashMap.clear()
+        albumsListTracksHashMap.clear()
+        artistsListTracksHashMap.clear()
+        genresListTracksHashMap.clear()
+        foldersListTracksHashMap.clear()
+        clearCacheData()
+        CoroutineScope(Dispatchers.IO).launch {
+            val sortData =
+                db.SortFiledDao().findSortByType(PlayListType.Songs.name)
+            TracksManager.getFolderList(
+                this@PlayService,
+                foldersLinkedHashMap,
+                null,
+                tracksLinkedHashMap,
+                "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
+                true
+            )
+            val sortData1 = db.SortFiledDao().findSortAll()
+            showIndicatorList.clear()
+            sortData1.forEach {
+                if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                    showIndicatorList.add(it)
+                }
+            }
+        }
+    }
 //
 //    private fun sortAction(extras: Bundle?, result: Result<Bundle>) {
 //        val bundle = Bundle()
@@ -2037,6 +2110,7 @@ class PlayService : MediaLibraryService() {
 
         // Sleep Timer
         val COMMAND_SET_SLEEP_TIMER = SessionCommand("timer.SET_SLEEP", Bundle.EMPTY)
+        val COMMAND_SLEEP_STATE_UPDATE = SessionCommand("timer.SLEEP_STATE", Bundle.EMPTY)
 
         val COMMAND_VISUALIZATION_CONNECTED = SessionCommand("vis.CONNECTED", Bundle.EMPTY)
 
@@ -2047,6 +2121,7 @@ class PlayService : MediaLibraryService() {
         val COMMAND_APP_EXIT = SessionCommand("app.EXIT", Bundle.EMPTY)
         val COMMAND_TRACKS_UPDATE = SessionCommand("tracks.UPDATE", Bundle.EMPTY)
         val COMMAND_TRACK_DELETE = SessionCommand("app.TRACK_DELETE", Bundle.EMPTY)
+        val COMMAND_PlAY_LIST_CHANGE = SessionCommand("app.PlAY_LIST_CHANGE", Bundle.EMPTY)
 
         // --- 定义所有 Bundle Key ---
         const val KEY_INDEX = "index"
@@ -2076,7 +2151,7 @@ class PlayService : MediaLibraryService() {
 
     fun getPlayList(
         context: Context,
-        future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>
+        future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>, params: LibraryParams?
     ) {
         if (playListLinkedHashMap.isNotEmpty()) {
             val mediaItems = ArrayList(playListLinkedHashMap.values).map { playlist ->
@@ -2368,7 +2443,7 @@ class PlayService : MediaLibraryService() {
 
     fun getSongsAll(
         context: Context,
-        future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>
+        future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>, params: LibraryParams?
     ) {
         if (tracksLinkedHashMap.isNotEmpty()) {
             val mediaItems = tracksLinkedHashMap.values.map { playlist ->
@@ -2398,7 +2473,7 @@ class PlayService : MediaLibraryService() {
 
     fun getGenres(
         context: Context,
-        future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>
+        future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>, params: LibraryParams?
     ) {
         if (genresLinkedHashMap.isNotEmpty()) {
             val mediaItems = genresLinkedHashMap.values.map { playlist ->
@@ -2426,7 +2501,7 @@ class PlayService : MediaLibraryService() {
 
     fun getAlbums(
         context: Context,
-        future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>
+        future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>, params: LibraryParams?
     ) {
         if (albumsLinkedHashMap.isNotEmpty()) {
             val mediaItems = albumsLinkedHashMap.values.map { playlist ->
@@ -2454,7 +2529,7 @@ class PlayService : MediaLibraryService() {
 
     fun getArtists(
         context: Context,
-        future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>
+        future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>, params: LibraryParams?
     ) {
         if (artistsLinkedHashMap.isNotEmpty()) {
             val mediaItems = artistsLinkedHashMap.values.map { playlist ->
@@ -2482,7 +2557,7 @@ class PlayService : MediaLibraryService() {
 
     fun getFolders(
         context: Context,
-        future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>
+        future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>, params: LibraryParams?
     ) {
         if (foldersLinkedHashMap.isNotEmpty()) {
             val mediaItems = foldersLinkedHashMap.values.map { playlist ->

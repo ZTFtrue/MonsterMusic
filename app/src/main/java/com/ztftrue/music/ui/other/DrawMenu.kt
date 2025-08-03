@@ -1,7 +1,7 @@
 package com.ztftrue.music.ui.other
 
 import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
+import android.util.Log
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -43,15 +43,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.SessionResult
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
-import com.ztftrue.music.play.ACTION_REFRESH_ALL
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_REFRESH_ALL
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.Utils
 import kotlinx.coroutines.launch
@@ -109,7 +112,7 @@ fun DrawMenu(
                 Image(
                     painter = rememberAsyncImagePainter(
                         musicViewModel.getCurrentMusicCover(context = context)
-                            ?:  musicViewModel.customMusicCover.value
+                            ?: musicViewModel.customMusicCover.value
                     ),
                     contentDescription = stringResource(id = R.string.album_cover),
                     modifier = Modifier
@@ -282,37 +285,36 @@ fun DrawMenu(
                         )
                     }
                     .clickable {
-                        musicViewModel.mediaBrowser?.sendCustomAction(
-                            ACTION_REFRESH_ALL,
-                            null,
-                            object : MediaBrowserCompat.CustomActionCallback() {
-                                override fun onResult(
-                                    action: String?,
-                                    extras: Bundle?,
-                                    resultData: Bundle?
-                                ) {
-                                    super.onResult(action, extras, resultData)
-                                    if (ACTION_REFRESH_ALL == action) {
-                                        musicViewModel.refreshPlayList.value =
-                                            !musicViewModel.refreshPlayList.value
-                                        musicViewModel.refreshAlbum.value =
-                                            !musicViewModel.refreshAlbum.value
-                                        musicViewModel.refreshArtist.value =
-                                            !musicViewModel.refreshArtist.value
-                                        musicViewModel.refreshGenre.value =
-                                            !musicViewModel.refreshGenre.value
-                                        musicViewModel.refreshFolder.value =
-                                            !musicViewModel.refreshFolder.value
-                                        resultData?.getParcelableArrayList<MusicItem>(
-                                            "songsList"
-                                        )?.also {
-                                            musicViewModel.songsList.clear()
-                                            musicViewModel.songsList.addAll(it)
-                                        }
+                        val futureResult: ListenableFuture<SessionResult>? =
+                            musicViewModel.browser?.sendCustomCommand(
+                                COMMAND_REFRESH_ALL,
+                                Bundle().apply { },
+                            )
+                        futureResult?.addListener({
+                            try {
+                                val sessionResult = futureResult.get()
+                                if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
+                                    musicViewModel.refreshPlayList.value =
+                                        !musicViewModel.refreshPlayList.value
+                                    musicViewModel.refreshAlbum.value =
+                                        !musicViewModel.refreshAlbum.value
+                                    musicViewModel.refreshArtist.value =
+                                        !musicViewModel.refreshArtist.value
+                                    musicViewModel.refreshGenre.value =
+                                        !musicViewModel.refreshGenre.value
+                                    musicViewModel.refreshFolder.value =
+                                        !musicViewModel.refreshFolder.value
+                                    sessionResult.extras.getParcelableArrayList<MusicItem>(
+                                        "songsList"
+                                    )?.also {
+                                        musicViewModel.songsList.clear()
+                                        musicViewModel.songsList.addAll(it)
                                     }
                                 }
+                            } catch (e: Exception) {
+                                Log.e("Client", "Failed to toggle favorite status", e)
                             }
-                        )
+                        }, ContextCompat.getMainExecutor(context))
                     },
                 contentAlignment = Alignment.CenterStart
             ) {

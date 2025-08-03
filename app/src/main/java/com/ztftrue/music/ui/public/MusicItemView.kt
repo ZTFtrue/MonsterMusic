@@ -1,10 +1,9 @@
 package com.ztftrue.music.ui.public
 
 import android.content.Context
-import android.media.MediaScannerConnection
-import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -57,15 +56,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.ContextCompat
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.SessionResult
+import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.ACTION_AddPlayQueue
 import com.ztftrue.music.play.ACTION_PLAY_MUSIC
-import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_RemoveFromQueue
 import com.ztftrue.music.play.ACTION_TRACKS_DELETE
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
@@ -111,24 +113,22 @@ fun MusicItemView(
                 if (TracksManager.removeMusicById(context, music.id)) {
                     val bundle = Bundle()
                     bundle.putLong("id", music.id)
-                    viewModel.mediaBrowser?.sendCustomAction(
-                        ACTION_TRACKS_DELETE,
-                        bundle,
-                        object : MediaBrowserCompat.CustomActionCallback() {
-                            override fun onResult(
-                                action: String?,
-                                extras: Bundle?,
-                                resultData: Bundle?
-                            ) {
-                                super.onResult(action, extras, resultData)
-                                if (ACTION_TRACKS_DELETE == action) {
-                                    deleteTrackUpdate(viewModel, resultData)
-                                }
+                    val futureResult: ListenableFuture<SessionResult>? =
+                        viewModel.browser?.sendCustomCommand(
+                            COMMAND_TRACK_DELETE,
+                            bundle
+                        )
+                    futureResult?.addListener({
+                        try {
+                            val sessionResult = futureResult.get()
+                            if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
+                                deleteTrackUpdate(viewModel, sessionResult.extras)
                             }
+                        } catch (e: Exception) {
+                            Log.e("Client", "Failed to toggle favorite status", e)
                         }
-                    )
+                    }, ContextCompat.getMainExecutor(context)) // 或者使用主线程的 Executor
                 }
-
             }
         })
     }
@@ -176,30 +176,7 @@ fun MusicItemView(
                                     playList.path
                                 )
                             if (!playListPath.isNullOrEmpty()) {
-                                MediaScannerConnection.scanFile(
-                                    context,
-                                    arrayOf(playListPath),
-                                    arrayOf("*/*"),
-                                    object : MediaScannerConnection.MediaScannerConnectionClient {
-                                        override fun onMediaScannerConnected() {}
-                                        override fun onScanCompleted(path: String, uri: Uri) {
-                                            viewModel.mediaBrowser?.sendCustomAction(
-                                                ACTION_PlayLIST_CHANGE,
-                                                null,
-                                                object : MediaBrowserCompat.CustomActionCallback() {
-                                                    override fun onResult(
-                                                        action: String?,
-                                                        extras: Bundle?,
-                                                        resultData: Bundle?
-                                                    ) {
-                                                        super.onResult(action, extras, resultData)
-                                                        viewModel.refreshPlayList.value =
-                                                            !viewModel.refreshPlayList.value
-                                                    }
-                                                }
-                                            )
-                                        }
-                                    })
+                                viewModel.scanAndRefreshPlaylist(context, playListPath)
                             }
                         }
                     }
@@ -498,7 +475,7 @@ fun saveSortResult(
 ) {
 
     if (playList.type == PlayListType.PlayLists) {
-        viewModel.mediaBrowser?.let {
+        viewModel.browser?.let {
             TracksUtils.sortPlayLists(
                 it, context,
                 playList,
@@ -508,7 +485,7 @@ fun saveSortResult(
             )
         }
     } else if (playList.type == PlayListType.Queue) {
-        viewModel.mediaBrowser?.let {
+        viewModel.browser?.let {
             TracksUtils.sortQueue(
                 it, musicList,
                 music,

@@ -1,5 +1,6 @@
 package com.ztftrue.music.ui.other
 
+import android.os.Bundle
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,7 +37,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.ui.public.TracksListView
@@ -129,8 +130,9 @@ fun TracksSelectPage(
                                             )
                                         if (id != null) {
                                             selectList.clear()
-                                            musicViewModel.mediaBrowser?.sendCustomAction(
-                                                ACTION_PlayLIST_CHANGE, null, null
+                                            musicViewModel.browser?.sendCustomCommand(
+                                                COMMAND_PlAY_LIST_CHANGE,
+                                                Bundle().apply {},
                                             )
                                             navController.popBackStack()
 

@@ -1,7 +1,5 @@
 package com.ztftrue.music.ui.public
 
-import android.media.MediaScannerConnection
-import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import androidx.compose.foundation.Image
@@ -68,7 +66,6 @@ import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.ACTION_GET_ALBUM_BY_ID
 import com.ztftrue.music.play.ACTION_GET_TRACKS
-import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_SHUFFLE_PLAY_QUEUE
 import com.ztftrue.music.play.ACTION_SORT
 import com.ztftrue.music.play.PlayUtils
@@ -561,36 +558,7 @@ fun TracksListPage(
                                         musicViewModel.songsList.toList()
                                     )
                                 ) {
-                                    MediaScannerConnection.scanFile(
-                                        context,
-                                        arrayOf(item.path),
-                                        arrayOf("*/*"),
-                                        object :
-                                            MediaScannerConnection.MediaScannerConnectionClient {
-                                            override fun onMediaScannerConnected() {}
-                                            override fun onScanCompleted(path: String, uri: Uri) {
-                                                musicViewModel.mediaBrowser?.sendCustomAction(
-                                                    ACTION_PlayLIST_CHANGE,
-                                                    null,
-                                                    object :
-                                                        MediaBrowserCompat.CustomActionCallback() {
-                                                        override fun onResult(
-                                                            action: String?,
-                                                            extras: Bundle?,
-                                                            resultData: Bundle?
-                                                        ) {
-                                                            super.onResult(
-                                                                action,
-                                                                extras,
-                                                                resultData
-                                                            )
-                                                            musicViewModel.refreshPlayList.value =
-                                                                !musicViewModel.refreshPlayList.value
-                                                        }
-                                                    }
-                                                )
-                                            }
-                                        })
+                                   musicViewModel.scanAndRefreshPlaylist(context, item.path)
                                 }
 
                             }

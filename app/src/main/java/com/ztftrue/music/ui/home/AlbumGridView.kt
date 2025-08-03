@@ -1,7 +1,6 @@
 package com.ztftrue.music.ui.home
 
-import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -60,9 +59,14 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.core.content.ContextCompat
+import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.LibraryResult
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import com.google.common.collect.ImmutableList
+import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
@@ -91,35 +95,41 @@ fun AlbumGridView(
     if (albumListDefault != null) {
         albumList = albumListDefault
     }
+    val context = LocalContext.current
     LaunchedEffect(musicViewModel.refreshAlbum.value) {
         if (albumListDefault == null) {
             albumList.clear()
-            musicViewModel.mediaBrowser?.sendCustomAction(
-                type.name,
-                null,
-                object : MediaBrowserCompat.CustomActionCallback() {
-                    override fun onProgressUpdate(
-                        action: String?, extras: Bundle?, data: Bundle?
-                    ) {
-                        super.onProgressUpdate(action, extras, data)
+            val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
+                musicViewModel.browser?.getChildren("albums_root", 0, 1, null)
+            futureResult?.addListener({
+                try {
+                    val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
+                    if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
+                        return@addListener
                     }
-
-                    override fun onResult(
-                        action: String?, extras: Bundle?, resultData: Bundle?
-                    ) {
-                        super.onResult(action, extras, resultData)
-                        if (action == type.name) {
-                            resultData?.getParcelableArrayList<AlbumList>("list")
-                                ?.also { list ->
-                                    albumList.addAll(list)
-                                }
-                        }
+                    val albumMediaItems: List<MediaItem> = result.value ?: listOf()
+                    albumMediaItems.forEach { mediaItem ->
+                        val album = AlbumList(
+                            id = mediaItem.mediaId.toLong(),
+                            name = mediaItem.mediaMetadata.title.toString(),
+                            artist = mediaItem.mediaMetadata.artist.toString(),
+                            firstYear = mediaItem.mediaMetadata.extras?.getString(
+                                "album_first_year",
+                                ""
+                            ) ?: "",
+                            lastYear = mediaItem.mediaMetadata.extras?.getString(
+                                "album_last_year",
+                                ""
+                            ) ?: "",
+                            trackNumber = mediaItem.mediaMetadata.totalTrackCount ?: 0,
+                        )
+                        albumList.add(album)
                     }
-
-                    override fun onError(action: String?, extras: Bundle?, data: Bundle?) {
-                        super.onError(action, extras, data)
-                    }
-                })
+                } catch (e: Exception) {
+                    // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                    Log.e("Client", "Failed to toggle favorite status", e)
+                }
+            }, ContextCompat.getMainExecutor(context))
         }
     }
     if (albumList.isEmpty()) {
@@ -226,7 +236,7 @@ fun AlbumItemView(
                             navController.navigate(
                                 Router.PlayListView.withArgs(
                                     "id" to artistId.toString(),
-                                   "itemType" to enumToStringForPlayListType(PlayListType.Artists)
+                                    "itemType" to enumToStringForPlayListType(PlayListType.Artists)
                                 ),
                             ) {
 
@@ -279,7 +289,10 @@ fun AlbumItemView(
                 }
             ) {
                 navController.navigate(
-                    Router.PlayListView.withArgs("id" to "${item.id}", "itemType" to enumToStringForPlayListType(type)),
+                    Router.PlayListView.withArgs(
+                        "id" to "${item.id}",
+                        "itemType" to enumToStringForPlayListType(type)
+                    ),
                     navigatorExtras = ListParameter(item.id, type)
                 )
             }) {
@@ -297,7 +310,7 @@ fun AlbumItemView(
                         item.id,
                         context
                     )
-                        ?:  musicViewModel.customMusicCover.value
+                        ?: musicViewModel.customMusicCover.value
                 ),
 //                model = musicViewModel.getAlbumCover(
 //                    item.id,

@@ -11,21 +11,25 @@ import android.os.Bundle
 import android.provider.OpenableColumns
 import android.support.v4.media.MediaBrowserCompat
 import android.text.TextUtils
+import android.util.Log
 import android.util.TypedValue
 import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.compose.ui.unit.Dp
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.scale
 import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.SessionResult
+import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.BuildConfig
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.ACTION_AddPlayQueue
 import com.ztftrue.music.play.ACTION_GET_TRACKS
-import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
 import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.play.Lyrics
@@ -346,21 +350,24 @@ object Utils {
                                     ).show()
                                     return
                                 }
-                                musicViewModel.mediaBrowser?.sendCustomAction(
-                                    ACTION_PlayLIST_CHANGE,
-                                    null,
-                                    object : MediaBrowserCompat.CustomActionCallback() {
-                                        override fun onResult(
-                                            action: String?,
-                                            extras: Bundle?,
-                                            resultData: Bundle?
-                                        ) {
-                                            super.onResult(action, extras, resultData)
-                                            musicViewModel.refreshPlayList.value =
+                                val futureResult: ListenableFuture<SessionResult>? =
+                                  musicViewModel.  browser?.sendCustomCommand(
+                                        COMMAND_PlAY_LIST_CHANGE,
+                                        Bundle().apply {
+
+                                        },
+                                    )
+                                futureResult?.addListener({
+                                    try {
+                                        val sessionResult = futureResult.get()
+                                        if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
+                                            musicViewModel.  refreshPlayList.value =
                                                 !musicViewModel.refreshPlayList.value
                                         }
+                                    } catch (e: Exception) {
+                                        Log.e("Client", "Failed to toggle favorite status", e)
                                     }
-                                )
+                                }, ContextCompat.getMainExecutor(context))
                             }
                         }
                     }
@@ -382,8 +389,9 @@ object Utils {
             tIds.add(item)
             val idPlayList = PlaylistManager.createPlaylist(context, name, tIds, removeDuplicate)
             if (idPlayList != null) {
-                musicViewModel.mediaBrowser?.sendCustomAction(
-                    ACTION_PlayLIST_CHANGE, null, null
+                musicViewModel.browser?.sendCustomCommand(
+                    COMMAND_PlAY_LIST_CHANGE,
+                    Bundle().apply {},
                 )
             } else {
                 Toast.makeText(

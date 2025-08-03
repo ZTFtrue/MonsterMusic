@@ -68,8 +68,8 @@ import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.ACTION_CLEAR_QUEUE
-import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_SORT
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
 import com.ztftrue.music.play.PlayUtils
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.dao.SortFiledDao
@@ -123,7 +123,7 @@ fun MainTopBar(
                 showCreatePlayListDialog = false
                 if (!it.isNullOrEmpty()) {
                     navController.navigate(
-                        Router.TracksSelectPage.withArgs("id" to "-1","name" to it)
+                        Router.TracksSelectPage.withArgs("id" to "-1", "name" to it)
                     )
                 }
             })
@@ -501,8 +501,9 @@ fun MainTopBar(
                                 playListName, ids, false
                             )
                         if (idPlayList != null) {
-                            musicViewModel.mediaBrowser?.sendCustomAction(
-                                ACTION_PlayLIST_CHANGE, null, null
+                            musicViewModel.browser?.sendCustomCommand(
+                                COMMAND_PlAY_LIST_CHANGE,
+                                Bundle().apply {},
                             )
                         } else {
                             Toast.makeText(

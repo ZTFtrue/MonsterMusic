@@ -2,6 +2,7 @@ package com.ztftrue.music.ui.home
 
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -59,11 +60,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.core.content.ContextCompat
+import androidx.media3.common.MediaItem
+import androidx.media3.session.LibraryResult
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import com.google.common.collect.ImmutableList
+import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
+import com.ztftrue.music.play.CustomMetadataKeys
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.CreatePlayListDialog
 import com.ztftrue.music.utils.OperateType
@@ -84,6 +91,7 @@ fun ArtistsGridView(
     scrollDirection: ScrollDirectionType? = null
 ) {
     val listState = rememberLazyGridState()
+    val context = LocalContext.current
     var artistLists = remember { mutableStateListOf<ArtistList>() }
     if (artistListDefault != null) {
         artistLists = artistListDefault
@@ -92,40 +100,39 @@ fun ArtistsGridView(
         // if there has artist, don't get new artist
         if (artistListDefault == null) {
             artistLists.clear()
-            musicViewModel.mediaBrowser?.sendCustomAction(
-                type.name,
-                null,
-                object : MediaBrowserCompat.CustomActionCallback() {
-                    override fun onProgressUpdate(
-                        action: String?, extras: Bundle?, data: Bundle?
-                    ) {
-                        super.onProgressUpdate(action, extras, data)
+            val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
+                musicViewModel.browser?.getChildren("artists_root", 0, 1, null)
+            futureResult?.addListener({
+                try {
+                    val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
+                    if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
+                        return@addListener
                     }
-
-                    override fun onResult(
-                        action: String?, extras: Bundle?, resultData: Bundle?
-                    ) {
-                        super.onResult(action, extras, resultData)
-                        if (action == type.name) {
-
-                            resultData?.getParcelableArrayList<ArtistList>("list")
-                                ?.also { list ->
-                                    artistLists.addAll(list)
-                                }
-                        }
-
+                    val albumMediaItems: List<MediaItem> = result.value ?: listOf()
+                    albumMediaItems.forEach { mediaItem ->
+                        val album = ArtistList(
+                            id = mediaItem.mediaId.toLong(),
+                            name = mediaItem.mediaMetadata.title.toString(),
+                            trackNumber = mediaItem.mediaMetadata.totalTrackCount ?: 0,
+                            albumNumber = mediaItem.mediaMetadata.extras?.getInt(
+                                CustomMetadataKeys.KEY_ALBUM_COUNT,
+                                0
+                            ) ?: 0
+                        )
+                        artistLists.add(album)
                     }
-
-                    override fun onError(action: String?, extras: Bundle?, data: Bundle?) {
-                        super.onError(action, extras, data)
-                    }
-                })
+                } catch (e: Exception) {
+                    // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                    Log.e("Client", "Failed to toggle favorite status", e)
+                }
+            }, ContextCompat.getMainExecutor(context))
         }
     }
     if (artistLists.isEmpty()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Text(
-                text = stringResource(R.string.there_is_no_any_artist_in_here), Modifier.padding(start = 10.dp),
+                text = stringResource(R.string.there_is_no_any_artist_in_here),
+                Modifier.padding(start = 10.dp),
                 color = MaterialTheme.colorScheme.onBackground
             )
         }
@@ -227,13 +234,20 @@ fun ArtistItemView(
         )
     }
     if (showAddPlayListDialog) {
-        AddMusicToPlayListDialog(musicViewModel, null, onDismiss = {playListId,removeDuplicate ->
+        AddMusicToPlayListDialog(musicViewModel, null, onDismiss = { playListId, removeDuplicate ->
             showAddPlayListDialog = false
             if (playListId != null) {
                 if (playListId == -1L) {
                     showCreatePlayListDialog = true
                 } else {
-                    Utils.addTracksToPlayList(playListId, context, type, item.id, musicViewModel,removeDuplicate)
+                    Utils.addTracksToPlayList(
+                        playListId,
+                        context,
+                        type,
+                        item.id,
+                        musicViewModel,
+                        removeDuplicate
+                    )
                 }
             }
         })
@@ -242,25 +256,29 @@ fun ArtistItemView(
         CreatePlayListDialog(onDismiss = {
             showCreatePlayListDialog = false
             if (it != null) {
-                Utils.createPlayListAddTracks(it, context, type, item.id, musicViewModel,false)
+                Utils.createPlayListAddTracks(it, context, type, item.id, musicViewModel, false)
             }
         })
     }
     val number = item.trackNumber
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(5.dp))
-        .clip(RoundedCornerShape(5.dp))
-        .combinedClickable(
-            onLongClick = {
-                showOperateDialog = true
-            }
-        ) {
-            navController.navigate(
-                Router.PlayListView.withArgs("id" to "${item.id}", "itemType" to enumToStringForPlayListType(type)),
-                navigatorExtras = ListParameter(item.id, type)
-            )
-        }) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(5.dp))
+            .clip(RoundedCornerShape(5.dp))
+            .combinedClickable(
+                onLongClick = {
+                    showOperateDialog = true
+                }
+            ) {
+                navController.navigate(
+                    Router.PlayListView.withArgs(
+                        "id" to "${item.id}",
+                        "itemType" to enumToStringForPlayListType(type)
+                    ),
+                    navigatorExtras = ListParameter(item.id, type)
+                )
+            }) {
         ConstraintLayout {
             val (playIndicator) = createRefs()
             val model: Any? = musicViewModel.artistCover[item.name.lowercase().trim()]
@@ -309,7 +327,11 @@ fun ArtistItemView(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = stringResource(R.string.song, number, if (number <= 1L) "" else stringResource(id = R.string.s)),
+                    text = stringResource(
+                        R.string.song,
+                        number,
+                        if (number <= 1L) "" else stringResource(id = R.string.s)
+                    ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 IconButton(

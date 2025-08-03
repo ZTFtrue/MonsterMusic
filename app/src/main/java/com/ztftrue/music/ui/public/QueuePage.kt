@@ -1,6 +1,7 @@
 package com.ztftrue.music.ui.public
 
 import android.content.Context
+import android.os.Bundle
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -47,7 +48,7 @@ import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.QueuePlayList
 import com.ztftrue.music.R
 import com.ztftrue.music.play.ACTION_CLEAR_QUEUE
-import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.trackManager.PlaylistManager
@@ -124,8 +125,9 @@ fun QueuePage(
                 }
                 val idPlayList = PlaylistManager.createPlaylist(context, playListName, ids, false)
                 if (idPlayList != null) {
-                    musicViewModel.mediaBrowser?.sendCustomAction(
-                        ACTION_PlayLIST_CHANGE, null, null
+                    musicViewModel.browser?.sendCustomCommand(
+                        COMMAND_PlAY_LIST_CHANGE,
+                        Bundle().apply {},
                     )
                 } else {
                     Toast.makeText(

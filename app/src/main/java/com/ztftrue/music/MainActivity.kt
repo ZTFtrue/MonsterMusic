@@ -20,11 +20,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.provider.Settings
-import android.support.v4.media.MediaBrowserCompat
-import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
-import android.support.v4.media.session.MediaSessionCompat
-import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -64,9 +60,7 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
-import com.google.common.util.concurrent.MoreExecutors
 import com.ztftrue.music.play.EVENT_INPUT_FORTMAT_Change
-import com.ztftrue.music.play.EVENT_SLEEP_TIME_Change
 import com.ztftrue.music.play.EVENT_Visualization_Change
 import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
@@ -212,7 +206,7 @@ class MainActivity : ComponentActivity() {
                                 // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
                                 Log.e("Client", "Failed to toggle favorite status", e)
                             }
-                        }, MoreExecutors.directExecutor()) // 或者使用主线程的 Executor
+                        }, ContextCompat.getMainExecutor(this@MainActivity)) // 或者使用主线程的 Executor
                     }
                     return@registerForActivityResult
                 } else if (OperateTypeInActivity.EditTrackInfo.name == action) {
@@ -327,7 +321,7 @@ class MainActivity : ComponentActivity() {
                                     if (it) {
                                         val intent =
                                             Intent(this@MainActivity, PlayMusicWidget::class.java)
-                                        intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+                                        intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
                                         intent.putExtra("source", this@MainActivity.packageName)
                                         val ids = AppWidgetManager.getInstance(
                                             application
@@ -651,39 +645,31 @@ class MainActivity : ComponentActivity() {
             initializeAndConnect()
         }
     }
+
     private val browserListener = object : MediaBrowser.Listener {
         override fun onCustomCommand(
             controller: MediaController,
             command: SessionCommand,
             args: Bundle
         ): ListenableFuture<SessionResult> {
-            if (command.customAction == PlayService.COMMAND_NOTIFY_STATE_UPDATE.customAction) {
-                // 收到了 Service 的主动推送
-                val stateBundle = args.getBundle(PlayService.KEY_STATE_UPDATE_BUNDLE)
-                if (stateBundle != null) {
-                    val remainingMs = stateBundle.getLong("sleep_timer_remaining_ms")
-                    _sleepTimerLiveData.postValue(remainingMs) // 更新 LiveData
+            if (command.customAction == PlayService.COMMAND_SLEEP_STATE_UPDATE.customAction) {
+                val remainTime = args.getLong("remaining")
+                musicViewModel.remainTime.longValue = remainTime
+                if (remainTime == 0L) {
+                    musicViewModel.sleepTime.longValue = 0
                 }
-            }else if (command.customAction == PlayService.COMMAND_NOTIFY_PLAYLIST_UPDATE.customAction) {
-                val future = browser.getChildren("root", 0, 100, null)
-                future.addListener({
-                    val result = future.get()
-                    val children = result?.value
-                    browser.sendCustomCommand()
-                    getInitData(children)
-
-                }, ContextCompat.getMainExecutor(this))
             }
-            return super.onCustomCommand(browser, command, args)
+            return super.onCustomCommand(controller, command, args)
         }
     }
+
     private fun initializeAndConnect() {
         if (::browserFuture.isInitialized) return // 防止重复初始化
         // 1. 创建 SessionToken，指定要连接的 Service
         val sessionToken = SessionToken(this, ComponentName(this, PlayService::class.java))
-
         // 2. 使用 Builder 构建 MediaBrowser，这是一个异步过程
-        browserFuture = MediaBrowser.Builder(this, sessionToken).setListener(browserListener).buildAsync()
+        browserFuture = MediaBrowser.Builder(this, sessionToken).setListener(browserListener)
+            .buildAsync()
         // 3. (关键!) 添加一个监听器来处理连接的结果（成功或失败）
         browserFuture.addListener({
             // 这个代码块会在连接过程完成后（无论成功或失败）在主线程上执行
@@ -766,15 +752,14 @@ class MainActivity : ComponentActivity() {
         }
 
 
-
         override fun onVolumeChanged(volume: Float) {
             val volumeInt = (volume * 100).toInt()
             musicViewModel.volume.intValue = volumeInt
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
+            musicViewModel.playStatus.value = isPlaying
             if (isPlaying) {
-                musicViewModel.playStatus.value = isPlaying
                 getSeek()
             }
         }
@@ -845,13 +830,7 @@ class MainActivity : ComponentActivity() {
             super.onExtrasChanged(extras)
             extras?.let {
                 val type = it.getInt("type")
-                if (type == EVENT_SLEEP_TIME_Change) {
-                    val remainTime = it.getLong("remaining")
-                    musicViewModel.remainTime.longValue = remainTime
-                    if (remainTime == 0L) {
-                        musicViewModel.sleepTime.longValue = 0
-                    }
-                } else if (type == EVENT_Visualization_Change) {
+                if (type == EVENT_Visualization_Change) {
                     val magnitude = it.getFloatArray("magnitude")?.toList()
                     if (magnitude != null) {
                         musicViewModel.musicVisualizationData.clear()
@@ -866,45 +845,6 @@ class MainActivity : ComponentActivity() {
                             musicViewModel.currentInputFormat[formatItem.key] = formatItem.value
                         }
                     }
-                }
-            }
-        }
-
-        override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
-            super.onMetadataChanged(metadata)
-        }
-
-        override fun onQueueChanged(queue: MutableList<MediaSessionCompat.QueueItem>?) {
-            super.onQueueChanged(queue)
-        }
-
-        override fun onQueueTitleChanged(title: CharSequence?) {
-            super.onQueueTitleChanged(title)
-        }
-
-        override fun onAudioInfoChanged(info: MediaControllerCompat.PlaybackInfo?) {
-            super.onAudioInfoChanged(info)
-        }
-
-        override fun onRepeatModeChanged(repeatMode: Int) {
-            super.onRepeatModeChanged(repeatMode)
-            when (repeatMode) {
-                PlaybackStateCompat.REPEAT_MODE_NONE -> {
-                    musicViewModel.repeatModel.intValue = Player.REPEAT_MODE_OFF
-                }
-
-                PlaybackStateCompat.REPEAT_MODE_ALL -> {
-                    musicViewModel.repeatModel.intValue = Player.REPEAT_MODE_ALL
-                }
-
-                PlaybackStateCompat.REPEAT_MODE_ONE -> {
-                    musicViewModel.repeatModel.intValue = Player.REPEAT_MODE_ONE
-                }
-
-                PlaybackStateCompat.REPEAT_MODE_GROUP -> {
-                }
-
-                PlaybackStateCompat.REPEAT_MODE_INVALID -> {
                 }
             }
         }

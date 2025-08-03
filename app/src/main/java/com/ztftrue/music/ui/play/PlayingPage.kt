@@ -116,6 +116,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionResult
@@ -129,7 +130,6 @@ import com.ztftrue.music.play.ACTION_AddPlayQueue
 import com.ztftrue.music.play.ACTION_RemoveFromQueue
 import com.ztftrue.music.play.ACTION_SEEK_TO
 import com.ztftrue.music.play.ACTION_SWITCH_SHUFFLE
-import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.play.ACTION_VISUALIZATION_ENABLE
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_VISUALIZATION_ENABLE
@@ -225,7 +225,7 @@ fun PlayingPage(
                             // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
                             Log.e("Client", "Failed to toggle favorite status", e)
                         }
-                    }, MoreExecutors.directExecutor()) // 或者使用主线程的 Executor
+                    }, ContextCompat.getMainExecutor(context)) // 或者使用主线程的 Executor
                 }
 
             }

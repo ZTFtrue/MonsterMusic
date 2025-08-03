@@ -5,8 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.MediaScannerConnection
 import android.net.Uri
+import android.os.Bundle
 import android.support.v4.media.session.MediaControllerCompat
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -15,13 +18,19 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.text.style.TextAlign
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.Player
 import androidx.media3.session.MediaBrowser
+import androidx.media3.session.SessionResult
 import androidx.navigation.NavHostController
+import com.google.common.util.concurrent.ListenableFuture
+import com.ztftrue.music.play.CustomMetadataKeys
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
 import com.ztftrue.music.sqlData.model.DictionaryApp
@@ -42,6 +51,7 @@ import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.model.Caption
 import com.ztftrue.music.utils.model.EqualizerBand
 import com.ztftrue.music.utils.model.ListStringCaption
+import com.ztftrue.music.utils.model.MusicPlayList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -74,7 +84,7 @@ class MusicViewModel : ViewModel() {
     //    val albumItemsCount = mutableIntStateOf(2)
 //    val genreItemsCount = mutableIntStateOf(2)
 //    var mediaBrowser: MediaBrowserCompat? = null
-    var browser: MediaBrowser? =  null
+    var browser: MediaBrowser? = null
     var currentInputFormat =
         mutableStateMapOf<String, String>() //mutableStateOf<LinkedHashMap<String, String>>(java.util.LinkedHashMap())
 
@@ -85,6 +95,7 @@ class MusicViewModel : ViewModel() {
     var musicVisualizationEnable = mutableStateOf(false)
     var showMusicCover = mutableStateOf(false)
     var customMusicCover = mutableStateOf<Any?>(null)
+
     // 当前播放的列表，应该换数据结构存储，每个列表设置变量 播放状态，album和 genres 也是，艺术家跳转到 album， 然后在下一步处理
     // 每次播放仅设置当前列表的状态
     var musicQueue = mutableStateListOf<MusicItem>()
@@ -585,8 +596,42 @@ class MusicViewModel : ViewModel() {
                 }
             }
         }
-
     }
 
+    fun scanAndRefreshPlaylist(context: Context, playListPath: String) {
+        viewModelScope.launch {
+            MediaScannerConnection.scanFile(
+                context,
+                arrayOf(playListPath),
+                arrayOf("*/*"),
+                object : MediaScannerConnection.MediaScannerConnectionClient {
+                    override fun onMediaScannerConnected() {}
+                    override fun onScanCompleted(path: String, uri: Uri) {
+                        val futureResult: ListenableFuture<SessionResult>? =
+                            browser?.sendCustomCommand(
+                                COMMAND_PlAY_LIST_CHANGE,
+                                Bundle().apply {
+                                    putString(
+                                        CustomMetadataKeys.KEY_PATH,
+                                        playListPath
+                                    )
+                                },
+                            )
+                        futureResult?.addListener({
+                            try {
+                                val sessionResult = futureResult.get()
+                                if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
+                                    refreshPlayList.value =
+                                        !refreshPlayList.value
+                                }
+                            } catch (e: Exception) {
+                                Log.e("Client", "Failed to toggle favorite status", e)
+                            }
+                        }, ContextCompat.getMainExecutor(context))
+                    }
+                })
+        }
+
+    }
 
 }

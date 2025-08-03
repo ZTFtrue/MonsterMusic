@@ -3,6 +3,7 @@ package com.ztftrue.music.ui.home
 import android.content.Context
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -52,18 +53,26 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
+import androidx.media3.common.MediaItem
+import androidx.media3.session.LibraryResult
 import androidx.navigation.NavHostController
+import com.google.common.collect.ImmutableList
+import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
+import com.ztftrue.music.play.CustomMetadataKeys
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.CreatePlayListDialog
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.enumToStringForPlayListType
+import com.ztftrue.music.utils.model.ArtistList
 import com.ztftrue.music.utils.model.FolderList
+import kotlin.collections.forEach
 
 
 @Composable
@@ -76,34 +85,35 @@ fun FolderListView(
 
     val folderList = remember { mutableStateListOf<FolderList>() }
     val listState = rememberLazyListState()
+    val context = LocalContext.current
     LaunchedEffect(Unit, musicViewModel.refreshFolder.value ) {
         folderList.clear()
-        musicViewModel.mediaBrowser?.sendCustomAction(
-            type.name,
-            null,
-            object : MediaBrowserCompat.CustomActionCallback() {
-                override fun onProgressUpdate(
-                    action: String?, extras: Bundle?, data: Bundle?
-                ) {
-                    super.onProgressUpdate(action, extras, data)
+        val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
+            musicViewModel.browser?.getChildren("folders_root", 0, 1, null)
+        futureResult?.addListener({
+            try {
+                val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
+                if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
+                    return@addListener
                 }
-
-                override fun onResult(
-                    action: String?, extras: Bundle?, resultData: Bundle?
-                ) {
-                    super.onResult(action, extras, resultData)
-                    if (action == type.name) {
-                        resultData?.getParcelableArrayList<FolderList>("list")
-                            ?.also { list ->
-                                folderList.addAll(list)
-                            }
-                    }
+                val albumMediaItems: List<MediaItem> = result.value ?: listOf()
+                albumMediaItems.forEach { mediaItem ->
+                    val album = FolderList(
+                        id = mediaItem.mediaId.toLong(),
+                        name = mediaItem.mediaMetadata.title.toString(),
+                        trackNumber = mediaItem.mediaMetadata.totalTrackCount ?: 0,
+                        isShow = mediaItem.mediaMetadata.extras?.getBoolean(
+                            CustomMetadataKeys.FOLDER_IS_SHOW,
+                            true
+                        ) ?: true
+                    )
+                    folderList.add(album)
                 }
-
-                override fun onError(action: String?, extras: Bundle?, data: Bundle?) {
-                    super.onError(action, extras, data)
-                }
-            })
+            } catch (e: Exception) {
+                // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                Log.e("Client", "Failed to toggle favorite status", e)
+            }
+        }, ContextCompat.getMainExecutor(context))
     }
 
     Column {

@@ -12,11 +12,10 @@ import com.ztftrue.music.utils.model.GenresList
 import com.ztftrue.music.utils.model.MusicPlayList
 
 object CustomMetadataKeys {
-    const val KEY_ORIGINAL_ID = "com.ztftrue.music.metadata.ORIGINAL_ID"
-    const val KEY_ORIGINAL_TYPE = "com.ztftrue.music.metadata.ORIGINAL_TYPE"
     const val KEY_PATH = "com.ztftrue.music.metadata.PATH"
     const val KEY_ARTIST = "com.ztftrue.music.metadata.ARTIST"
     const val KEY_ALBUM_COUNT = "com.ztftrue.music.metadata.ALBUM_COUNT"
+    const val FOLDER_IS_SHOW = "com.ztftrue.music.metadata.FOLDER_IS_SHOW"
     const val KEY_FIRST_YEAR = "com.ztftrue.music.metadata.FIRST_YEAR"
     const val KEY_LAST_YEAR = "com.ztftrue.music.metadata.LAST_YEAR"
 
@@ -55,7 +54,7 @@ object MediaItemUtils {
         }
         metadataBuilder.setExtras(extras)
         val mediaItemBuilder = MediaItem.Builder()
-        mediaItemBuilder.setMediaId("album_${album.id}")
+        mediaItemBuilder.setMediaId(album.id.toString())
         mediaItemBuilder.setMediaMetadata(metadataBuilder.build())
         return mediaItemBuilder.build()
     }
@@ -71,14 +70,12 @@ object MediaItemUtils {
             .setIsPlayable(false) // 播放列表通常是浏览，也可以设为true以播放全部
             .setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
             .setExtras(Bundle().apply {
-                putLong(CustomMetadataKeys.KEY_ORIGINAL_ID, playlist.id)
-                putString(CustomMetadataKeys.KEY_ORIGINAL_TYPE, playlist.type.name)
                 putString(CustomMetadataKeys.KEY_PATH, playlist.path)
             })
             .build()
 
         return MediaItem.Builder()
-            .setMediaId("playlist_${playlist.id}")
+            .setMediaId(playlist.id.toString())
             .setMediaMetadata(metadata)
             .build()
     }
@@ -94,14 +91,13 @@ object MediaItemUtils {
             .setIsPlayable(false)
 //            .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER)
             .setExtras(Bundle().apply {
-                putLong(CustomMetadataKeys.KEY_ORIGINAL_ID, folder.id)
-                putString(CustomMetadataKeys.KEY_ORIGINAL_TYPE, folder.type.name)
+               putBoolean(CustomMetadataKeys.FOLDER_IS_SHOW, folder.isShow)
                 // folder.isShow 这种UI状态信息通常不放在这里，但如果需要也可以放
             })
             .build()
 
         return MediaItem.Builder()
-            .setMediaId("folder_${folder.id}")
+            .setMediaId(folder.id.toString())
             .setMediaMetadata(metadata)
             .build()
     }
@@ -114,14 +110,11 @@ object MediaItemUtils {
             .setIsPlayable(false)
             .setMediaType(MediaMetadata.MEDIA_TYPE_ARTIST)
             .setExtras(Bundle().apply {
-                putLong(CustomMetadataKeys.KEY_ORIGINAL_ID, artist.id)
-                putString(CustomMetadataKeys.KEY_ORIGINAL_TYPE, artist.type.name)
                 putInt(CustomMetadataKeys.KEY_ALBUM_COUNT, artist.albumNumber)
             })
             .build()
-
         return MediaItem.Builder()
-            .setMediaId("artist_${artist.id}")
+            .setMediaId(artist.id.toString())
             .setMediaMetadata(metadata)
             .build()
     }
@@ -138,14 +131,12 @@ object MediaItemUtils {
             .setIsPlayable(false)
             .setMediaType(MediaMetadata.MEDIA_TYPE_GENRE)
             .setExtras(Bundle().apply {
-                putLong(CustomMetadataKeys.KEY_ORIGINAL_ID, genre.id)
-                putString(CustomMetadataKeys.KEY_ORIGINAL_TYPE, genre.type.name)
                 putInt(CustomMetadataKeys.KEY_ALBUM_COUNT, genre.albumNumber)
             })
             .build()
 
         return MediaItem.Builder()
-            .setMediaId("genre_${genre.id}")
+            .setMediaId(genre.id.toString())
             .setMediaMetadata(metadata)
             .build()
     }
@@ -193,7 +184,6 @@ object MediaItemUtils {
             // 存储数据库的主键
             musicItem.tableId?.let { putLong(CustomMetadataKeys.KEY_TABLE_ID, it) }
             // 存储原始的媒体库ID
-            putLong(CustomMetadataKeys.KEY_ORIGINAL_ID, musicItem.id)
             // 存储自定义状态
             putBoolean(CustomMetadataKeys.KEY_IS_FAVORITE, musicItem.isFavorite)
             // 存储其他有用的信息
@@ -239,7 +229,6 @@ object MediaItemUtils {
         //     但又很有用的信息存入 extras Bundle。---
         val extras = Bundle().apply {
             // 保存原始的数据库 ID，以便调试或特殊用途
-            putLong(CustomMetadataKeys.KEY_ORIGINAL_ID, musicItem.id)
             // 保存艺术家和专辑的 ID，可能用于快速跳转
             putLong("artist_id", musicItem.artistId)
             putLong("album_id", musicItem.albumId)

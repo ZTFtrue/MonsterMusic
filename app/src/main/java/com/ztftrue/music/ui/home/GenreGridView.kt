@@ -2,6 +2,7 @@ package com.ztftrue.music.ui.home
 
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -59,11 +60,17 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.core.content.ContextCompat
+import androidx.media3.common.MediaItem
+import androidx.media3.session.LibraryResult
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import com.google.common.collect.ImmutableList
+import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
+import com.ztftrue.music.play.CustomMetadataKeys
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.CreatePlayListDialog
 import com.ztftrue.music.utils.OperateType
@@ -73,7 +80,9 @@ import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.addTracksToPlayList
 import com.ztftrue.music.utils.Utils.createPlayListAddTracks
 import com.ztftrue.music.utils.enumToStringForPlayListType
+import com.ztftrue.music.utils.model.FolderList
 import com.ztftrue.music.utils.model.GenresList
+import kotlin.collections.forEach
 
 
 @Composable
@@ -86,39 +95,41 @@ fun GenreGridView(
 ) {
     val listState = rememberLazyGridState()
     val genreList = remember { mutableStateListOf<GenresList>() }
+    val context = LocalContext.current
     LaunchedEffect(musicViewModel.refreshGenre.value) {
         genreList.clear()
-        musicViewModel.mediaBrowser?.sendCustomAction(
-            type.name,
-            null,
-            object : MediaBrowserCompat.CustomActionCallback() {
-                override fun onProgressUpdate(
-                    action: String?, extras: Bundle?, data: Bundle?
-                ) {
-                    super.onProgressUpdate(action, extras, data)
+        val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
+            musicViewModel.browser?.getChildren("genres_root", 0, 1, null)
+        futureResult?.addListener({
+            try {
+                val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
+                if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
+                    return@addListener
                 }
-
-                override fun onResult(
-                    action: String?, extras: Bundle?, resultData: Bundle?
-                ) {
-                    super.onResult(action, extras, resultData)
-                    if (action == type.name) {
-                        resultData?.getParcelableArrayList<GenresList>("list")
-                            ?.also { list ->
-                                genreList.addAll(list)
-                            }
-                    }
+                val albumMediaItems: List<MediaItem> = result.value ?: listOf()
+                albumMediaItems.forEach { mediaItem ->
+                    val album = GenresList(
+                        id = mediaItem.mediaId.toLong(),
+                        name = mediaItem.mediaMetadata.title.toString(),
+                        trackNumber = mediaItem.mediaMetadata.totalTrackCount ?: 0,
+                        albumNumber = mediaItem.mediaMetadata.extras?.getInt(
+                            CustomMetadataKeys.KEY_ALBUM_COUNT,
+                            0
+                        ) ?: 0
+                    )
+                    genreList.add(album)
                 }
-
-                override fun onError(action: String?, extras: Bundle?, data: Bundle?) {
-                    super.onError(action, extras, data)
-                }
-            })
+            } catch (e: Exception) {
+                // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                Log.e("Client", "Failed to toggle favorite status", e)
+            }
+        }, ContextCompat.getMainExecutor(context))
     }
     if (genreList.isEmpty()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Text(
-                text = stringResource(R.string.there_is_no_any_genre_in_here), Modifier.padding(start = 10.dp),
+                text = stringResource(R.string.there_is_no_any_genre_in_here),
+                Modifier.padding(start = 10.dp),
                 color = MaterialTheme.colorScheme.onBackground
             )
         }
@@ -219,13 +230,20 @@ fun GenreItemView(
         )
     }
     if (showAddPlayListDialog) {
-        AddMusicToPlayListDialog(musicViewModel, null, onDismiss = {playListId,removeDuplicate ->
+        AddMusicToPlayListDialog(musicViewModel, null, onDismiss = { playListId, removeDuplicate ->
             showAddPlayListDialog = false
             if (playListId != null) {
                 if (playListId == -1L) {
                     showCreatePlayListDialog = true
                 } else {
-                    addTracksToPlayList(playListId, context, type, item.id, musicViewModel,removeDuplicate)
+                    addTracksToPlayList(
+                        playListId,
+                        context,
+                        type,
+                        item.id,
+                        musicViewModel,
+                        removeDuplicate
+                    )
                 }
             }
         })
@@ -248,7 +266,10 @@ fun GenreItemView(
                 showOperateDialog = true
             }, onClick = {
                 navController.navigate(
-                    Router.PlayListView.withArgs("id" to "${item.id}", "itemType" to enumToStringForPlayListType(type)),
+                    Router.PlayListView.withArgs(
+                        "id" to "${item.id}",
+                        "itemType" to enumToStringForPlayListType(type)
+                    ),
                     navigatorExtras = ListParameter(item.id, type)
                 )
             })
@@ -302,7 +323,11 @@ fun GenreItemView(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = stringResource(R.string.song, number, if (number <= 1L) "" else stringResource(id = R.string.s)),
+                    text = stringResource(
+                        R.string.song,
+                        number,
+                        if (number <= 1L) "" else stringResource(id = R.string.s)
+                    ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 IconButton(

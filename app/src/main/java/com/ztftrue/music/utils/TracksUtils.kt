@@ -8,8 +8,8 @@ import android.support.v4.media.MediaBrowserCompat
 import android.widget.Toast
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.media3.session.MediaBrowser
-import com.ztftrue.music.play.ACTION_PlayLIST_CHANGE
 import com.ztftrue.music.play.ACTION_Sort_Queue
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.SortFiledData
@@ -63,7 +63,7 @@ object TracksUtils {
     }
 
     fun sortPlayLists(
-        mediaBrowserCompat: MediaBrowserCompat,
+        mediaBrowserCompat: MediaBrowser,
         context: Context,
         playList: AnyListBase,
         musicList: SnapshotStateList<MusicItem>,
@@ -123,23 +123,9 @@ object TracksUtils {
                                 path: String,
                                 uri: Uri
                             ) {
-                                mediaBrowserCompat.sendCustomAction(
-                                    ACTION_PlayLIST_CHANGE,
-                                    null,
-                                    object :
-                                        MediaBrowserCompat.CustomActionCallback() {
-                                        override fun onResult(
-                                            action: String?,
-                                            extras: Bundle?,
-                                            resultData: Bundle?
-                                        ) {
-                                            super.onResult(
-                                                action,
-                                                extras,
-                                                resultData
-                                            )
-                                        }
-                                    }
+                                mediaBrowserCompat.sendCustomCommand(
+                                    COMMAND_PlAY_LIST_CHANGE,
+                                    Bundle().apply {},
                                 )
                             }
                         })
