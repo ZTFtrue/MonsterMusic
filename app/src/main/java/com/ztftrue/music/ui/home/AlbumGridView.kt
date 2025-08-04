@@ -108,6 +108,7 @@ fun AlbumGridView(
                         return@addListener
                     }
                     val albumMediaItems: List<MediaItem> = result.value ?: listOf()
+                    val list = ArrayList<AlbumList>()
                     albumMediaItems.forEach { mediaItem ->
                         val album = AlbumList(
                             id = mediaItem.mediaId.toLong(),
@@ -123,8 +124,9 @@ fun AlbumGridView(
                             ) ?: "",
                             trackNumber = mediaItem.mediaMetadata.totalTrackCount ?: 0,
                         )
-                        albumList.add(album)
+                       list.add(album)
                     }
+                    albumList.addAll(list)
                 } catch (e: Exception) {
                     // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
                     Log.e("Client", "Failed to toggle favorite status", e)

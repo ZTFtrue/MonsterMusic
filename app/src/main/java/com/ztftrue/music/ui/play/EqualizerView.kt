@@ -58,11 +58,11 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.play.ACTION_CHANGE_Q
-import com.ztftrue.music.play.ACTION_DSP_BAND
-import com.ztftrue.music.play.ACTION_DSP_BANDS_SET
-import com.ztftrue.music.play.ACTION_DSP_BAND_FLATTEN
-import com.ztftrue.music.play.ACTION_DSP_ENABLE
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_CHANGE_Q
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_DSP_ENABLE
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_DSP_FLATTEN
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_DSP_SET_BAND
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_DSP_SET_BANDS
 import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.equalizerMax
@@ -146,10 +146,10 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                 musicViewModel.enableEqualizer.value = it
                                 val bundle = Bundle()
                                 bundle.putBoolean("enable", it)
-                                musicViewModel.mediaBrowser
-                                    ?.sendCustomAction(
-                                        ACTION_DSP_ENABLE, bundle, null
-                                    )
+                                musicViewModel.browser?.sendCustomCommand(
+                                    COMMAND_DSP_ENABLE,
+                                    bundle
+                                )
                             },
                         )
                     }
@@ -162,44 +162,24 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                         OutlinedButton(
                             enabled = musicViewModel.enableEqualizer.value,
                             onClick = {
-                                musicViewModel.mediaBrowser?.sendCustomAction(
-                                    ACTION_DSP_BAND_FLATTEN,
+                                musicViewModel.browser?.sendCustomCommand(
+                                    COMMAND_DSP_FLATTEN,
                                     Bundle().apply {
                                         putInt("value", 0)
-                                    },
-                                    object : MediaBrowserCompat.CustomActionCallback() {
-                                        override fun onResult(
-                                            action: String?,
-                                            extras: Bundle?,
-                                            resultData: Bundle?
-                                        ) {
-                                            super.onResult(action, extras, resultData)
-                                            if (ACTION_DSP_BAND_FLATTEN == action) {
-                                                if (resultData?.getBoolean("result") == true) {
-                                                    bands.forEach {
-                                                        it.value = 0
-                                                    }
-                                                    tempBandValue.forEach {
-                                                        it.floatValue = 0f
-                                                    }
-                                                    selectedIndex = Utils.custom
-                                                    context.getSharedPreferences(
-                                                        "SelectedPreset",
-                                                        Context.MODE_PRIVATE
-                                                    ).edit {
-                                                        putString("SelectedPreset", Utils.custom)
-                                                    }
-                                                } else {
-                                                    Toast.makeText(
-                                                        context,
-                                                        context.getString(R.string.flatten_failed),
-                                                        Toast.LENGTH_SHORT
-                                                    ).show()
-                                                }
-                                            }
-                                        }
-                                    }
-                                )
+                                    })
+                                bands.forEach {
+                                    it.value = 0
+                                }
+                                tempBandValue.forEach {
+                                    it.floatValue = 0f
+                                }
+                                selectedIndex = Utils.custom
+                                context.getSharedPreferences(
+                                    "SelectedPreset",
+                                    Context.MODE_PRIVATE
+                                ).edit {
+                                    putString("SelectedPreset", Utils.custom)
+                                }
                             },
                         ) {
                             Text(
@@ -253,17 +233,15 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                         Context.MODE_PRIVATE
                                     ).edit { putString("SelectedPreset", Utils.custom) }
                                     band.value = tempBandValue[index].floatValue.roundToInt()
-                                    musicViewModel.mediaBrowser?.sendCustomAction(
-                                        ACTION_DSP_BAND,
+                                    musicViewModel.browser?.sendCustomCommand(
+                                        COMMAND_DSP_SET_BAND,
                                         Bundle().apply {
                                             putInt("index", index)
                                             putInt(
                                                 "value",
                                                 tempBandValue[index].floatValue.roundToInt()
                                             )
-                                        },
-                                        null
-                                    )
+                                        })
                                 },
                             )
                             Text(
@@ -367,16 +345,14 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                         tempBandValue[i].floatValue = v.toFloat()
                                         bands[i] = EqualizerBand(bands[i].id, bands[i].name, v)
                                     }
-                                    musicViewModel.mediaBrowser?.sendCustomAction(
-                                        ACTION_DSP_BANDS_SET,
+                                    musicViewModel.browser?.sendCustomCommand(
+                                        COMMAND_DSP_SET_BANDS,
                                         Bundle().apply {
                                             putIntArray(
                                                 "value",
                                                 value
                                             )
-                                        },
-                                        null
-                                    )
+                                        })
                                     context.getSharedPreferences(
                                         "SelectedPreset",
                                         Context.MODE_PRIVATE
@@ -407,11 +383,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                             Q.floatValue = Utils.Q
                             val bundle = Bundle()
                             bundle.putFloat("Q", musicViewModel.Q.floatValue)
-                            musicViewModel.mediaBrowser?.sendCustomAction(
-                                ACTION_CHANGE_Q,
-                                bundle,
-                                null
-                            )
+                            musicViewModel.browser?.sendCustomCommand(COMMAND_CHANGE_Q, bundle)
                         },
                     ) {
                         Text(
@@ -436,14 +408,10 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                         musicViewModel.Q.floatValue = Q.floatValue
                         val bundle = Bundle()
                         bundle.putFloat("Q", musicViewModel.Q.floatValue)
-                        musicViewModel.mediaBrowser?.sendCustomAction(
-                            ACTION_CHANGE_Q,
-                            bundle,
-                            null
-                        )
+                        musicViewModel.browser?.sendCustomCommand(COMMAND_CHANGE_Q, bundle)
                     },
                 )
-                if( Q.floatValue < 2.0f) {
+                if (Q.floatValue < 2.0f) {
                     Text(
                         text = "Lower Q values will lead to a more pronounced effect, but with increased noise.",
                         color = MaterialTheme.colorScheme.onBackground

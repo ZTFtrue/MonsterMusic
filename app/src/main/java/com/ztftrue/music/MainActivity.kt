@@ -60,7 +60,6 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
-import com.ztftrue.music.play.EVENT_INPUT_FORTMAT_Change
 import com.ztftrue.music.play.EVENT_Visualization_Change
 import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
@@ -715,17 +714,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun onBrowserConnected(browser: MediaBrowser) {
-        Log.d("MyMusicActivity", "MediaBrowser connected!")
-
-        // 现在你可以使用 browser 对象了！
-
-        // a. 添加 Player.Listener 来监听状态变化并更新 UI
         browser.addListener(playerListener) // playerListener 是你定义的 Player.Listener 实例
-
-        // b. (可选) 获取初始状态并更新UI
         updateUiWithCurrentState(browser)
-        // c. 开始浏览媒体库，例如获取顶级目录
         fetchRootChildren(browser)
+//        getInitData()
         SharedPreferencesUtils.getEnableShuffle(this@MainActivity).also {
             musicViewModel.enableShuffleModel.value = it
         }
@@ -733,7 +725,6 @@ class MainActivity : ComponentActivity() {
 
     private fun onBrowserConnectionFailed() {
         Log.e("MyMusicActivity", "MediaBrowser connection failed.")
-        // 在这里可以显示错误提示，或者禁用所有媒体控制UI
         // Toast.makeText(this, "无法连接到播放服务", Toast.LENGTH_SHORT).show()
     }
 
@@ -787,9 +778,10 @@ class MainActivity : ComponentActivity() {
                     break
                 }
             }
-            val bundle = Bundle()
-            bundle.putSerializable("current", formatMap)
-            bundle.putInt("type", EVENT_INPUT_FORTMAT_Change)
+            musicViewModel.currentInputFormat.clear()
+            formatMap.forEach { formatItem ->
+                musicViewModel.currentInputFormat[formatItem.key] = formatItem.value
+            }
         }
 
     }
@@ -835,15 +827,6 @@ class MainActivity : ComponentActivity() {
                     if (magnitude != null) {
                         musicViewModel.musicVisualizationData.clear()
                         musicViewModel.musicVisualizationData.addAll(magnitude)
-                    }
-                } else if (type == EVENT_INPUT_FORTMAT_Change) {
-                    val data = it.getSerializable("current")
-                    musicViewModel.currentInputFormat.clear()
-                    if (data != null) {
-                        val d = data as HashMap<String, String>
-                        d.forEach { formatItem ->
-                            musicViewModel.currentInputFormat[formatItem.key] = formatItem.value
-                        }
                     }
                 }
             }

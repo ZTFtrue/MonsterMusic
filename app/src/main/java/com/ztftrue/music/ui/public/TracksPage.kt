@@ -63,6 +63,7 @@ import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.LibraryResult
+import androidx.media3.session.SessionResult
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.google.common.collect.ImmutableList
@@ -73,6 +74,7 @@ import com.ztftrue.music.Router
 import com.ztftrue.music.play.ACTION_SHUFFLE_PLAY_QUEUE
 import com.ztftrue.music.play.ACTION_SORT
 import com.ztftrue.music.play.MediaItemUtils
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_SORT_TRACKS
 import com.ztftrue.music.play.PlayUtils
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.dao.SortFiledDao
@@ -375,22 +377,25 @@ fun TracksListPage(
                                 "type",
                                 type.name + "@Tracks"
                             )
-                            musicViewModel.mediaBrowser?.sendCustomAction(
-                                ACTION_SORT,
-                                bundle,
-                                object : MediaBrowserCompat.CustomActionCallback() {
-                                    override fun onResult(
-                                        action: String?,
-                                        extras: Bundle?,
-                                        resultData: Bundle?
-                                    ) {
-                                        super.onResult(action, extras, resultData)
-                                        if (ACTION_SORT == action) {
-                                            refreshCurrentValueList = !refreshCurrentValueList
-                                        }
+                            COMMAND_SORT_TRACKS
+                            val futureResult: ListenableFuture<SessionResult>? =
+                                musicViewModel.browser?.sendCustomCommand(
+                                    COMMAND_SORT_TRACKS,
+                                    bundle
+                                )
+                            futureResult?.addListener({
+                                try {
+                                    // a. 获取 SessionResult
+                                    val sessionResult = futureResult.get()
+                                    // b. 检查操作是否成功
+                                    if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
+                                        refreshCurrentValueList = !refreshCurrentValueList
                                     }
+                                } catch (e: Exception) {
+                                    // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                                    Log.e("Client", "Failed to toggle favorite status", e)
                                 }
-                            )
+                            }, ContextCompat.getMainExecutor(context))
                         }) {
                         Icon(
                             imageVector = Icons.Default.Done,

@@ -1,13 +1,16 @@
 package com.ztftrue.music.ui.other
 
 import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
+import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.media3.session.SessionResult
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.MoreExecutors
 import com.ztftrue.music.MusicViewModel
-import com.ztftrue.music.play.ACTION_SEARCH
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_SEARCH
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.model.AlbumList
 import com.ztftrue.music.utils.model.ArtistList
@@ -98,39 +101,39 @@ class SearchScreenViewModel(
     private suspend fun performSearch(keyword: String): SearchResults {
         val bundle = Bundle().apply { putString("keyword", keyword) }
         return suspendCancellableCoroutine { continuation ->
-            musicViewModel.mediaBrowser?.sendCustomAction(
-                ACTION_SEARCH,
-                bundle,
-                object : MediaBrowserCompat.CustomActionCallback() {
-                    override fun onResult(
-                        action: String?,
-                        extras: Bundle?,
-                        resultData: Bundle?
-                    ) {
-                        if (action == ACTION_SEARCH && resultData != null) {
-                            val tracks = resultData.getParcelableArrayList<MusicItem>("tracks")
-                                ?: emptyList()
-                            val albums = resultData.getParcelableArrayList<AlbumList>("albums")
-                                ?: emptyList()
-                            val artists = resultData.getParcelableArrayList<ArtistList>("artist")
-                                ?: emptyList()
-                            continuation.resume(SearchResults(tracks, albums, artists))
-                        } else {
-                            // If action doesn't match or resultData is null, return empty results
-                            continuation.resume(
-                                SearchResults(
-                                    emptyList(),
-                                    emptyList(),
-                                    emptyList()
-                                )
+
+            val futureResult: ListenableFuture<SessionResult>? =
+                musicViewModel.browser?.sendCustomCommand(
+                    COMMAND_SEARCH,
+                    bundle
+                )
+            futureResult?.addListener({
+                try {
+                    // a. 获取 SessionResult
+                    val sessionResult = futureResult.get()
+                    // b. 检查操作是否成功
+                    if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
+                        val tracks = sessionResult.extras.getParcelableArrayList<MusicItem>("tracks")
+                            ?: emptyList()
+                        val albums = sessionResult.extras.getParcelableArrayList<AlbumList>("albums")
+                            ?: emptyList()
+                        val artists = sessionResult.extras.getParcelableArrayList<ArtistList>("artist")
+                            ?: emptyList()
+                        continuation.resume(SearchResults(tracks, albums, artists))
+                    }else{
+                        continuation.resume(
+                            SearchResults(
+                                emptyList(),
+                                emptyList(),
+                                emptyList()
                             )
-                        }
+                        )
                     }
-
-
-                    // No need to override onProgressUpdate if not handled
+                } catch (e: Exception) {
+                    // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                    Log.e("Client", "Failed to toggle favorite status", e)
                 }
-            ) ?: run {
+            }, MoreExecutors.directExecutor())  ?: run {
                 // If mediaBrowser is null, resume with empty results immediately
                 continuation.resume(SearchResults(emptyList(), emptyList(), emptyList()))
             }

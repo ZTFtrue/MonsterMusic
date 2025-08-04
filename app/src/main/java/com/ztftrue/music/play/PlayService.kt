@@ -18,6 +18,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
@@ -27,6 +28,7 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
@@ -97,34 +99,15 @@ import java.util.concurrent.locks.ReentrantLock
  * foldersList
  */
 const val ACTION_PLAY_MUSIC = "PLAY_MUSIC"
-const val ACTION_SEEK_TO = "SeekTo"
-const val ACTION_CHANGE_PITCH = "ChangePitch"
-const val ACTION_CHANGE_Q = "ChangeQ"
-const val ACTION_SEARCH = "ACTION_SEARCH"
 const val ACTION_SWITCH_SHUFFLE = "ACTION_SWITCH_SHUFFLE"
-const val ACTION_DSP_ENABLE = "DSP_ENABLE"
-const val ACTION_DSP_BAND = "ACTION_DSP_BAND"
-const val ACTION_DSP_BAND_FLATTEN = "ACTION_DSP_BAND_FLATTEN"
-const val ACTION_DSP_BANDS_SET = "ACTION_DSP_BANDS_SET"
-const val ACTION_ECHO_ENABLE = "ACTION_ECHO_ENABLE"
-const val ACTION_ECHO_DELAY = "ACTION_ECHO_DELAY"
-const val ACTION_ECHO_DECAY = "ACTION_ECHO_DECAY"
-const val ACTION_ECHO_FEEDBACK = "ACTION_ECHO_FEEDBACK"
-const val ACTION_SET_SLEEP_TIME = "set_sleep_time"
 const val ACTION_AddPlayQueue = "AddPlayQueue"
 const val ACTION_RemoveFromQueue = "ACTION_RemoveFromQueue"
 const val ACTION_Sort_Queue = "ACTION_Sort_Queue"
-const val ACTION_Volume_CHANGE = "ACTION_Volume_CHANGE"
-const val ACTION_CLEAR_QUEUE = "ACTION_CLEAR_QUEUE"
-const val ACTION_SORT = "ACTION_SORT"
 const val ACTION_SHUFFLE_PLAY_QUEUE = "ACTION_SHUFFLE_PLAY_QUEUE"
 
-const val MY_MEDIA_ROOT_ID = "MY_MEDIA_ROOT_ID"
 
-const val EVENT_MEDIA_ITEM_Change = 3
 const val EVENT_DATA_READY = 6
 const val EVENT_Visualization_Change = 7
-const val EVENT_INPUT_FORTMAT_Change = 8
 
 //@Suppress("deprecation")
 @UnstableApi
@@ -178,7 +161,6 @@ class PlayService : MediaLibraryService() {
         equalizerQ = Utils.Q
     )
 
-    //    private var subscribed = false
     var remainingTime = 0L
     var playCompleted = false
     var needPlayPause = false
@@ -203,133 +185,12 @@ class PlayService : MediaLibraryService() {
         mediaSession = MediaLibrarySession.Builder(
             this,
             exoPlayer,
-            // 3. 提供一个回调，用于处理浏览请求
             MySessionCallback(this@PlayService),
         ).build()
         val notification = DefaultMediaNotificationProvider(this)
         setMediaNotificationProvider(notification)
-//        mediaSession = MediaSessionCompat(baseContext, PlayService::class.java.simpleName).apply {
-//            isActive = true
-//            val stateBuilder = PlaybackStateCompat.Builder()
-//                .setActions(
-//                    PlaybackStateCompat.ACTION_SEEK_TO
-//                            or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
-//                            or PlaybackStateCompat.ACTION_PLAY_PAUSE or
-//                            PlaybackStateCompat.ACTION_SKIP_TO_NEXT
-//
-//                )
-//            setPlaybackState(stateBuilder.build())
-//            setSessionToken(sessionToken)
-//            setSessionActivity(pendingContentIntent)
-//            setRepeatMode(
-//                when (exoPlayer.repeatMode) {
-//                    Player.REPEAT_MODE_ALL -> {
-//                        PlaybackStateCompat.REPEAT_MODE_ALL
-//                    }
-//
-//                    Player.REPEAT_MODE_ONE -> {
-//                        PlaybackStateCompat.REPEAT_MODE_ONE
-//                    }
-//
-//                    else -> {
-//                        PlaybackStateCompat.REPEAT_MODE_NONE
-//                    }
-//                }
-//            )
-//            mediaController = controller
-//            setCallback(object : MediaSessionCompat.Callback() {
-////                override fun onSetShuffleMode(shuffleMode: Int) {
-////                    super.onSetShuffleMode(shuffleMode)
-////                }
-//
-//                override fun onPlay() {
-//                    pauseOrPlayMusic()
-//                }
-//
-//                override fun onPause() {
-//                    pauseOrPlayMusic()
-//                }
-//
-//                override fun onStop() {
-////                    exoPlayer.stop()
-//                    notify?.stop(this@PlayService)
-//                } // Implement other media control callbacks as needed
-//
-//                override fun onSkipToNext() {
-//                    super.onSkipToNext()
-//                    playNext()
-//                }
-//
-//                override fun onSkipToPrevious() {
-//                    super.onSkipToPrevious()
-//                    playPreview()
-//                }
-//
-//                override fun onSeekTo(pos: Long) {
-//                    super.onSeekTo(pos)
-//                    exoPlayer.seekTo(pos)
-//                }
-//
-//                override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean {
-//                    return super.onMediaButtonEvent(mediaButtonEvent)
-//                }
-//
-//
-//                override fun onSetPlaybackSpeed(speed: Float) {
-//                    super.onSetPlaybackSpeed(speed)
-//                    val param1 = PlaybackParameters(
-//                        speed, auxr.pitch
-//                    )
-//                    auxr.speed = speed
-//                    CoroutineScope(Dispatchers.IO).launch {
-//                        db.AuxDao().update(auxr)
-//                    }
-//                    exoPlayer.playbackParameters = param1
-//                    notify?.updateNotification(
-//                        this@PlayService,
-//                        currentPlayTrack?.name ?: "",
-//                        currentPlayTrack?.artist ?: "",
-//                        exoPlayer.isPlaying,
-//                        exoPlayer.playbackParameters.speed,
-//                        exoPlayer.currentPosition,
-//                        exoPlayer.duration
-//                    )
-//                }
-//
-//
-//                override fun onSetRepeatMode(repeatMode: Int) {
-//                    super.onSetRepeatMode(repeatMode)
-//
-//                    when (repeatMode) {
-//                        PlaybackStateCompat.REPEAT_MODE_NONE -> {
-//                            switchRepeatModel(Player.REPEAT_MODE_OFF)
-//                        }
-//
-//                        PlaybackStateCompat.REPEAT_MODE_ALL -> {
-//                            switchRepeatModel(Player.REPEAT_MODE_ALL)
-//                        }
-//
-//                        PlaybackStateCompat.REPEAT_MODE_ONE -> {
-//                            switchRepeatModel(Player.REPEAT_MODE_ONE)
-//                        }
-//
-//                        PlaybackStateCompat.REPEAT_MODE_GROUP -> {
-//                        }
-//
-//                        PlaybackStateCompat.REPEAT_MODE_INVALID -> {
-//                        }
-//                    }
-//                }
-//            })
-//        }
-//        visualizationAudioProcessor.setMediaSession(mediaSession!!)
-//        equalizerAudioProcessor.setMediaSession(mediaSession!!)
-
     }
 
-    private val gson = Gson() // 创建一个 Gson 实例
-
-    // 这是一个内部类，在你的 Service 里面
     inner class MySessionCallback(private val context: Context) : MediaLibrarySession.Callback {
         override fun onConnect(
             session: MediaSession,
@@ -358,6 +219,8 @@ class PlayService : MediaLibraryService() {
                     .add(COMMAND_TRACKS_UPDATE)
                     .add(COMMAND_ADD_TO_QUEUE)
                     .add(COMMAND_REMOVE_FROM_QUEUE)
+                    .add(COMMAND_SORT_TRACKS)
+                    .add(COMMAND_SORT_QUEUE)
                     .add(COMMAND_CLEAR_QUEUE)
                     .add(COMMAND_REFRESH_ALL)
                     .add(COMMAND_TRACK_DELETE)
@@ -405,6 +268,27 @@ class PlayService : MediaLibraryService() {
                     CoroutineScope(Dispatchers.IO).launch {
                         db.AuxDao().update(auxr)
                     }
+                }
+
+                COMMAND_SORT_TRACKS.customAction -> {
+                    sortAction(args)
+                }
+
+                COMMAND_SORT_QUEUE.customAction -> {
+                    val method = args.getString("method")
+//                    val bundle = Bundle()
+//                    bundle.putString(
+//                        "method",
+//                        PlayUtils.methodMap[methodSelected] ?: ""
+//                    )
+//                    bundle.putString(
+//                        "filed", sortFiledOptions[filedSelected]
+//                            ?: ""
+//                    )
+//                    bundle.putString(
+//                        "type",
+//                        musicViewModel.mainTabList[pagerState.currentPage].type.name
+//                    )
                 }
 
                 COMMAND_DSP_SET_BAND.customAction -> {
@@ -506,23 +390,17 @@ class PlayService : MediaLibraryService() {
                 }
 
                 COMMAND_SEARCH.customAction -> {
-                    // 立即返回成功，表示我们已经接受了这个搜索请求
-                    // 真正的搜索结果将通过 sendSearchResult() 异步发送
                     val future = SettableFuture.create<SessionResult>()
                     val query = args.getString(KEY_SEARCH_QUERY, "")
-                    // 在后台协程中执行搜索
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
-                            // --- 迁移你的 search(extras, result) 逻辑 ---
-                            // 假设你的 search 方法返回一个 List<MusicItem>
                             val searchResult = search(query)
-                            val searchResultJson = gson.toJson(searchResult)
-                            // 3. 将 JSON 字符串放入返回的 Bundle
                             val resultData = Bundle().apply {
-                                putString(KEY_SEARCH_RESULT_JSON, searchResultJson)
+                               putParcelableArrayList("tracks",searchResult.tracks)
+                               putParcelableArrayList("albums",searchResult.albums)
+                               putParcelableArrayList("artist",searchResult.artists)
                             }
                             future.set(SessionResult(SessionResult.RESULT_SUCCESS, resultData))
-
                         } catch (e: Exception) {
                             future.setException(e)
                         }
@@ -559,13 +437,17 @@ class PlayService : MediaLibraryService() {
                     }
                     return future
                 }
+
                 COMMAND_REFRESH_ALL.customAction -> {
                     val future = SettableFuture.create<SessionResult>()
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
                             refreshAction()
                             val resultData = Bundle().apply {
-                                putParcelableArrayList("songsList", ArrayList(allTracksLinkedHashMap.values))
+                                putParcelableArrayList(
+                                    "songsList",
+                                    ArrayList(allTracksLinkedHashMap.values)
+                                )
                             }
                             future.set(SessionResult(SessionResult.RESULT_SUCCESS, resultData))
                         } catch (e: Exception) {
@@ -670,8 +552,24 @@ class PlayService : MediaLibraryService() {
                 }
 
                 COMMAND_CLEAR_QUEUE.customAction -> {
+                    ContextCompat.getMainExecutor(this@PlayService).execute {
+                        exoPlayer.pause()
+                        exoPlayer.clearMediaItems()
+                        playListCurrent = null
+                    }
+                    SharedPreferencesUtils.saveSelectMusicId(this@PlayService, -1)
+                    playListCurrent = null
+                    musicQueue.clear()
+                    CoroutineScope(Dispatchers.IO).launch {
+                        db.QueueDao().deleteAllQueue()
+                        val c = db.CurrentListDao().findCurrentList()
+                        if (c != null) {
+                            db.CurrentListDao().delete()
+                        }
+                        SharedPreferencesUtils.saveSelectMusicId(this@PlayService, -1)
+                    }
+                    return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }
-
 
                 else -> {
                     // 如果不是我们认识的命令，交由父类处理
@@ -1045,20 +943,7 @@ class PlayService : MediaLibraryService() {
 //                result.sendResult(null)
 //            }
 //        }    else if (ACTION_CLEAR_QUEUE == action) {
-//            playListCurrent = null
-//            currentPlayTrack = null
-//            exoPlayer.pause()
-//            musicQueue.clear()
-//            exoPlayer.setMediaItems(ArrayList())
-//            CoroutineScope(Dispatchers.IO).launch {
-//                db.QueueDao().deleteAllQueue()
-//                val c = db.CurrentListDao().findCurrentList()
-//                if (c != null) {
-//                    db.CurrentListDao().delete()
-//                }
-//                SharedPreferencesUtils.saveSelectMusicId(this@PlayService, -1)
-//            }
-//            result.sendResult(null)
+//
 //        } else if (action == ACTION_SORT) {
 //            sortAction(extras, result)
 //        } else if (action == ACTION_REFRESH_ALL) {
@@ -1625,6 +1510,21 @@ class PlayService : MediaLibraryService() {
     private fun playerAddListener() {
         exoPlayer.addListener(@UnstableApi object : Player.Listener {
 
+            override fun onRepeatModeChanged(repeatMode: Int) {
+                super.onRepeatModeChanged(repeatMode)
+                CoroutineScope(Dispatchers.IO).launch {
+                    val config = db.PlayConfigDao().findConfig()
+                    if (config != null) {
+                        config.repeatModel = repeatMode
+                        db.PlayConfigDao().update(config)
+                    }
+                }
+            }
+
+            override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+                super.onTimelineChanged(timeline, reason)
+            }
+
             override fun onVolumeChanged(volume: Float) {
                 val volumeInt = (volume * 100).toInt()
                 volumeValue = volumeInt
@@ -1789,6 +1689,16 @@ class PlayService : MediaLibraryService() {
                     )
                 }
             }
+
+            override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
+                val newSpeed = playbackParameters.speed
+                val newPitch = playbackParameters.pitch
+                auxr.speed = newSpeed
+                auxr.pitch = newPitch
+                CoroutineScope(Dispatchers.IO).launch {
+                    db.AuxDao().update(auxr)
+                }
+            }
         })
     }
 
@@ -1837,26 +1747,16 @@ class PlayService : MediaLibraryService() {
         genreHasAlbumMap.clear()
     }
 
-    fun switchRepeatModel(repeatModel: Int) {
-        exoPlayer.repeatMode = repeatModel
-        CoroutineScope(Dispatchers.IO).launch {
-            val config = db.PlayConfigDao().findConfig()
-            if (config != null) {
-                config.repeatModel = repeatModel
-                db.PlayConfigDao().update(config)
-            }
-        }
-    }
 
     data class SearchResult(
-        val tracks: List<MusicItem>,
-        val albums: List<AlbumList>,
-        val artists: List<ArtistList>
+        val tracks: ArrayList<MusicItem>,
+        val albums: ArrayList<AlbumList>,
+        val artists: ArrayList<ArtistList>
     )
 
     private suspend fun search(query: String): SearchResult {
         if (query.isEmpty() || query.length <= 1) {
-            return SearchResult(emptyList(), emptyList(), emptyList())
+            return SearchResult(ArrayList(), ArrayList(), ArrayList())
         }
         return coroutineScope {
             val tracksDeferred = async(Dispatchers.IO) {
@@ -1877,7 +1777,7 @@ class PlayService : MediaLibraryService() {
     }
 
 
-//    private fun sortPlayQueue(extras: Bundle?, result: Result<Bundle>) {
+    //    private fun sortPlayQueue(extras: Bundle?, result: Result<Bundle>) {
 //        result.detach()
 //        if (extras != null) {
 //            val index = extras.getInt("index")
@@ -1954,126 +1854,119 @@ class PlayService : MediaLibraryService() {
             }
         }
     }
-//
-//    private fun sortAction(extras: Bundle?, result: Result<Bundle>) {
-//        val bundle = Bundle()
-//        if (extras != null) {
-//            // method
-//            //filed
-//            val typeString = extras.getString("type")
-//            if (!typeString.isNullOrEmpty()) {
-//                when (typeString) {
-//                    PlayListType.PlayLists.name -> {
-//                        playListLinkedHashMap.clear()
-//                    }
-//
-//                    PlayListType.Albums.name -> {
-//                        albumsLinkedHashMap.clear()
-//                    }
-//
-//                    PlayListType.Artists.name -> {
-//                        artistsLinkedHashMap.clear()
-//                    }
-//
-//                    PlayListType.Genres.name -> {
-//                        genresLinkedHashMap.clear()
-//                    }
-//
-//                    PlayListType.Songs.name -> {
-//                        tracksLinkedHashMap.clear()
-//                        result.detach()
-//                        CoroutineScope(Dispatchers.IO).launch {
-//                            val sortData =
-//                                db.SortFiledDao().findSortByType(PlayListType.Songs.name)
-//                            TracksManager.getFolderList(
-//                                this@PlayService,
-//                                foldersLinkedHashMap,
-//                                result,
-//                                tracksLinkedHashMap,
-//                                "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
-//                                true
-//                            )
-//                            val sortData1 = db.SortFiledDao().findSortAll()
-//                            showIndicatorList.clear()
-//                            sortData1.forEach {
-//                                if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
-//                                    showIndicatorList.add(it)
-//                                }
-//                            }
-//                        }
-//                        return
-//                    }
-//
-//                    PlayUtils.ListTypeTracks.PlayListsTracks -> {
-//                        playListTracksHashMap.clear()
-//                        CoroutineScope(Dispatchers.IO).launch {
-//                            val sortData1 = db.SortFiledDao().findSortAll()
-//                            showIndicatorList.clear()
-//                            sortData1.forEach {
-//                                if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
-//                                    showIndicatorList.add(it)
-//                                }
-//                            }
-//                        }
-//                    }
-//
-//                    PlayUtils.ListTypeTracks.AlbumsTracks -> {
-//                        albumsListTracksHashMap.clear()
-//                        CoroutineScope(Dispatchers.IO).launch {
-//                            val sortData1 = db.SortFiledDao().findSortAll()
-//                            showIndicatorList.clear()
-//                            sortData1.forEach {
-//                                if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
-//                                    showIndicatorList.add(it)
-//                                }
-//                            }
-//                        }
-//                    }
-//
-//                    PlayUtils.ListTypeTracks.ArtistsTracks -> {
-//                        artistsListTracksHashMap.clear()
-//                        CoroutineScope(Dispatchers.IO).launch {
-//                            val sortData1 = db.SortFiledDao().findSortAll()
-//                            showIndicatorList.clear()
-//                            sortData1.forEach {
-//                                if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
-//                                    showIndicatorList.add(it)
-//                                }
-//                            }
-//                        }
-//                    }
-//
-//                    PlayUtils.ListTypeTracks.GenresTracks -> {
-//                        genresListTracksHashMap.clear()
-//                        CoroutineScope(Dispatchers.IO).launch {
-//                            val sortData1 = db.SortFiledDao().findSortAll()
-//                            showIndicatorList.clear()
-//                            sortData1.forEach {
-//                                if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
-//                                    showIndicatorList.add(it)
-//                                }
-//                            }
-//                        }
-//                    }
-//
-//                    PlayUtils.ListTypeTracks.FoldersTracks -> {
-//                        foldersListTracksHashMap.clear()
-//                        CoroutineScope(Dispatchers.IO).launch {
-//                            val sortData1 = db.SortFiledDao().findSortAll()
-//                            showIndicatorList.clear()
-//                            sortData1.forEach {
-//                                if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
-//                                    showIndicatorList.add(it)
-//                                }
-//                            }
-//                        }
-//                    }
-//
-//                }
-//            }
-//        }
-//        result.sendResult(bundle)
-//    }
+
+    //
+    private fun sortAction(extras: Bundle) {
+        val typeString = extras.getString("type")
+        if (!typeString.isNullOrEmpty()) {
+            when (typeString) {
+                PlayListType.PlayLists.name -> {
+                    playListLinkedHashMap.clear()
+                }
+
+                PlayListType.Albums.name -> {
+                    albumsLinkedHashMap.clear()
+                }
+
+                PlayListType.Artists.name -> {
+                    artistsLinkedHashMap.clear()
+                }
+
+                PlayListType.Genres.name -> {
+                    genresLinkedHashMap.clear()
+                }
+
+                PlayListType.Songs.name -> {
+                    tracksLinkedHashMap.clear()
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val sortData =
+                            db.SortFiledDao().findSortByType(PlayListType.Songs.name)
+                        TracksManager.getFolderList(
+                            this@PlayService,
+                            foldersLinkedHashMap,
+                            null,
+                            tracksLinkedHashMap,
+                            "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
+                            true
+                        )
+                        val sortData1 = db.SortFiledDao().findSortAll()
+                        showIndicatorList.clear()
+                        sortData1.forEach {
+                            if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                showIndicatorList.add(it)
+                            }
+                        }
+                    }
+                }
+
+                PlayUtils.ListTypeTracks.PlayListsTracks -> {
+                    playListTracksHashMap.clear()
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val sortData1 = db.SortFiledDao().findSortAll()
+                        showIndicatorList.clear()
+                        sortData1.forEach {
+                            if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                showIndicatorList.add(it)
+                            }
+                        }
+                    }
+                }
+
+                PlayUtils.ListTypeTracks.AlbumsTracks -> {
+                    albumsListTracksHashMap.clear()
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val sortData1 = db.SortFiledDao().findSortAll()
+                        showIndicatorList.clear()
+                        sortData1.forEach {
+                            if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                showIndicatorList.add(it)
+                            }
+                        }
+                    }
+                }
+
+                PlayUtils.ListTypeTracks.ArtistsTracks -> {
+                    artistsListTracksHashMap.clear()
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val sortData1 = db.SortFiledDao().findSortAll()
+                        showIndicatorList.clear()
+                        sortData1.forEach {
+                            if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                showIndicatorList.add(it)
+                            }
+                        }
+                    }
+                }
+
+                PlayUtils.ListTypeTracks.GenresTracks -> {
+                    genresListTracksHashMap.clear()
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val sortData1 = db.SortFiledDao().findSortAll()
+                        showIndicatorList.clear()
+                        sortData1.forEach {
+                            if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                showIndicatorList.add(it)
+                            }
+                        }
+                    }
+                }
+
+                PlayUtils.ListTypeTracks.FoldersTracks -> {
+                    foldersListTracksHashMap.clear()
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val sortData1 = db.SortFiledDao().findSortAll()
+                        showIndicatorList.clear()
+                        sortData1.forEach {
+                            if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                                showIndicatorList.add(it)
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+    }
 
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? {
@@ -2117,6 +2010,15 @@ class PlayService : MediaLibraryService() {
         val COMMAND_TRACK_DELETE = SessionCommand("app.TRACK_DELETE", Bundle.EMPTY)
         val COMMAND_PlAY_LIST_CHANGE = SessionCommand("app.PlAY_LIST_CHANGE", Bundle.EMPTY)
 
+        val COMMAND_SORT_QUEUE = SessionCommand("queue.SORT", Bundle.EMPTY)
+        val COMMAND_SORT_TRACKS = SessionCommand("queue.SORT_TRACKS", Bundle.EMPTY)
+
+        // Key：用于指定排序方式的参数
+        const val KEY_SORT_BY = "key_sort_by"
+        const val VALUE_SORT_BY_TITLE_ASC = "sort_title_asc"
+        const val VALUE_SORT_BY_ARTIST_ASC = "sort_artist_asc"
+        const val VALUE_SORT_BY_CUSTOM = "sort_custom" // 例如，用户手动拖拽后的顺序
+
         // --- 定义所有 Bundle Key ---
         const val KEY_INDEX = "index"
         const val KEY_VALUE = "value"
@@ -2131,7 +2033,6 @@ class PlayService : MediaLibraryService() {
         // Queue Management
         val COMMAND_ADD_TO_QUEUE = SessionCommand("queue.ADD", Bundle.EMPTY)
         val COMMAND_REMOVE_FROM_QUEUE = SessionCommand("queue.REMOVE", Bundle.EMPTY)
-        val COMMAND_SORT_QUEUE = SessionCommand("queue.SORT", Bundle.EMPTY)
         val COMMAND_CLEAR_QUEUE = SessionCommand("queue.CLEAR", Bundle.EMPTY)
         // ... 其他队列操作 ...
 

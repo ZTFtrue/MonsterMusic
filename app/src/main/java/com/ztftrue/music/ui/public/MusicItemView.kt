@@ -66,7 +66,6 @@ import com.ztftrue.music.Router
 import com.ztftrue.music.play.ACTION_AddPlayQueue
 import com.ztftrue.music.play.ACTION_PLAY_MUSIC
 import com.ztftrue.music.play.ACTION_RemoveFromQueue
-import com.ztftrue.music.play.ACTION_TRACKS_DELETE
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.OperateType

@@ -1,6 +1,5 @@
 package com.ztftrue.music.ui.play
 
-import android.content.Context
 import android.os.Bundle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,13 +19,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableFloatState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,16 +32,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.play.ACTION_CHANGE_PITCH
-import com.ztftrue.music.play.ACTION_ECHO_DECAY
-import com.ztftrue.music.play.ACTION_ECHO_DELAY
-import com.ztftrue.music.play.ACTION_ECHO_ENABLE
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_CHANGE_PITCH
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_ECHO_SET_DECAY
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_ECHO_SET_DELAY
+import com.ztftrue.music.play.PlayService.Companion.KEY_ENABLE
 import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.Utils
 import kotlin.math.roundToInt
 
+@UnstableApi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EffectView(musicViewModel: MusicViewModel) {
@@ -60,19 +57,9 @@ fun EffectView(musicViewModel: MusicViewModel) {
         val bandValue = remember { mutableFloatStateOf(band.value.toFloat()) }
         tempBandValue.add(bandValue)
     }
-    var selectedIndex by remember {
-        mutableStateOf(Utils.custom)
-    }
-    LaunchedEffect(key1 = Unit) {
-        selectedIndex = context.getSharedPreferences(
-            "SelectedPreset",
-            Context.MODE_PRIVATE
-        ).getString("SelectedPreset", Utils.custom) ?: Utils.custom
-    }
     val delayTime = remember { mutableFloatStateOf(musicViewModel.delayTime.floatValue) }
     val decay = remember { mutableFloatStateOf(musicViewModel.decay.floatValue) }
     val color = MaterialTheme.colorScheme.onBackground
-
     LazyColumn(
         state = listState,
         modifier = Modifier
@@ -105,11 +92,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                             pitch.floatValue = 1f
                             val bundle = Bundle()
                             bundle.putFloat("pitch", musicViewModel.pitch.floatValue)
-                            musicViewModel.mediaBrowser?.sendCustomAction(
-                                ACTION_CHANGE_PITCH,
-                                bundle,
-                                null
-                            )
+                            musicViewModel.browser?.sendCustomCommand(COMMAND_CHANGE_PITCH, bundle)
                         },
                     ) {
                         Text(
@@ -133,11 +116,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         musicViewModel.pitch.floatValue = pitch.floatValue
                         val bundle = Bundle()
                         bundle.putFloat("pitch", musicViewModel.pitch.floatValue)
-                        musicViewModel.mediaBrowser?.sendCustomAction(
-                            ACTION_CHANGE_PITCH,
-                            bundle,
-                            null
-                        )
+                        musicViewModel.browser?.sendCustomCommand(COMMAND_CHANGE_PITCH, bundle)
                     },
                 )
                 Row(
@@ -153,9 +132,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         onClick = {
                             musicViewModel.speed.floatValue = 1f
                             speed.floatValue = 1f
-                            musicViewModel.mediaController?.transportControls?.setPlaybackSpeed(
-                                speed.floatValue
-                            )
+                            musicViewModel.browser?.setPlaybackSpeed(speed.floatValue)
                         },
                     ) {
                         Text(
@@ -177,9 +154,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                     steps = 15,
                     onValueChangeFinished = {
                         musicViewModel.speed.floatValue = speed.floatValue
-                        musicViewModel.mediaController?.transportControls?.setPlaybackSpeed(
-                            speed.floatValue
-                        )
+                        musicViewModel.browser?.setPlaybackSpeed(speed.floatValue)
                     },
                 )
             }
@@ -212,11 +187,11 @@ fun EffectView(musicViewModel: MusicViewModel) {
                             onCheckedChange = {
                                 musicViewModel.enableEcho.value = it
                                 val bundle = Bundle()
-                                bundle.putBoolean("enable", it)
-                                musicViewModel.mediaBrowser
-                                    ?.sendCustomAction(
-                                        ACTION_ECHO_ENABLE, bundle, null
-                                    )
+                                bundle.putBoolean(KEY_ENABLE, it)
+                                musicViewModel.browser?.sendCustomCommand(
+                                    COMMAND_CHANGE_PITCH,
+                                    bundle
+                                )
                             }
                         )
                     }
@@ -266,11 +241,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         musicViewModel.delayTime.floatValue = delayTime.floatValue
                         val bundle = Bundle()
                         bundle.putFloat("delay", musicViewModel.delayTime.floatValue)
-                        musicViewModel.mediaBrowser?.sendCustomAction(
-                            ACTION_ECHO_DELAY,
-                            bundle,
-                            null
-                        )
+                        musicViewModel.browser?.sendCustomCommand(COMMAND_ECHO_SET_DELAY, bundle)
                     },
                 )
                 Text(
@@ -291,11 +262,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         musicViewModel.decay.floatValue = decay.floatValue
                         val bundle = Bundle()
                         bundle.putFloat("decay", musicViewModel.decay.floatValue)
-                        musicViewModel.mediaBrowser?.sendCustomAction(
-                            ACTION_ECHO_DECAY,
-                            bundle,
-                            null
-                        )
+                        musicViewModel.browser?.sendCustomCommand(COMMAND_ECHO_SET_DECAY, bundle)
                     },
                 )
             }

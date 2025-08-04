@@ -128,9 +128,7 @@ import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.ACTION_AddPlayQueue
 import com.ztftrue.music.play.ACTION_RemoveFromQueue
-import com.ztftrue.music.play.ACTION_SEEK_TO
 import com.ztftrue.music.play.ACTION_SWITCH_SHUFFLE
-import com.ztftrue.music.play.ACTION_VISUALIZATION_ENABLE
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_VISUALIZATION_ENABLE
 import com.ztftrue.music.sqlData.model.DictionaryApp

@@ -47,7 +47,7 @@ import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.QueuePlayList
 import com.ztftrue.music.R
-import com.ztftrue.music.play.ACTION_CLEAR_QUEUE
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_CLEAR_QUEUE
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.OperateType
@@ -79,13 +79,13 @@ fun QueuePage(
         QueueOperateDialog(onDismiss = {
             showDialog = false
             if (it == OperateType.ClearQueue) {
-                musicViewModel.mediaBrowser?.sendCustomAction(ACTION_CLEAR_QUEUE, null, null)
+                musicViewModel.browser?.sendCustomCommand( COMMAND_CLEAR_QUEUE, Bundle.EMPTY)
                 musicViewModel.musicQueue.clear()
-                musicList.clear()
                 musicViewModel.currentPlay.value = null
                 musicViewModel.playListCurrent.value = null
                 musicViewModel.currentPlayQueueIndex.intValue = 0
                 musicViewModel.currentCaptionList.clear()
+                musicList.clear()
             } else if (it == OperateType.SaveQueueToPlayList) {
                 showAddPlayListDialog = true
             }

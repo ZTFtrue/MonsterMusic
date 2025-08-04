@@ -112,7 +112,7 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
                         contentDescription = "play previous song",
                         modifier = Modifier
                             .clickable {
-                                musicViewModel.mediaController?.transportControls?.skipToPrevious()
+                                musicViewModel.browser?.seekToPreviousMediaItem()
                             }
                             .width(50.dp)
                             .height(50.dp)
@@ -135,11 +135,11 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
                         },
                         modifier = Modifier
                             .clickable {
-                                val pbState = musicViewModel.mediaController?.playbackState?.state
-                                if (pbState == PlaybackStateCompat.STATE_PLAYING) {
-                                    musicViewModel.mediaController?.transportControls?.pause()
+                                val pbState = musicViewModel.browser?.isPlaying ?: false
+                                if (pbState) {
+                                    musicViewModel.browser?.pause()
                                 } else {
-                                    musicViewModel.mediaController?.transportControls?.play()
+                                    musicViewModel.browser?.play()
                                 }
                             }
                             .width(50.dp)
@@ -152,7 +152,7 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
                         contentDescription = "Play next song",
                         modifier = Modifier
                             .clickable {
-                                musicViewModel.mediaController?.transportControls?.skipToNext()
+                                musicViewModel.browser?.seekToNextMediaItem()
                             }
                             .width(50.dp)
                             .height(50.dp)

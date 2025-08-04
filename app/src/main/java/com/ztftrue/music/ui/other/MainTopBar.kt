@@ -1,7 +1,7 @@
 package com.ztftrue.music.ui.other
 
 import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -63,13 +63,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import androidx.core.content.ContextCompat
+import androidx.media3.session.SessionResult
 import androidx.navigation.NavHostController
+import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
-import com.ztftrue.music.play.ACTION_CLEAR_QUEUE
-import com.ztftrue.music.play.ACTION_SORT
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_CLEAR_QUEUE
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_SORT_TRACKS
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
 import com.ztftrue.music.play.PlayUtils
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.dao.SortFiledDao
@@ -369,54 +373,56 @@ fun MainTopBar(
                                     "type",
                                     musicViewModel.mainTabList[pagerState.currentPage].type.name
                                 )
-                                musicViewModel.mediaBrowser?.sendCustomAction(
-                                    ACTION_SORT,
-                                    bundle,
-                                    object : MediaBrowserCompat.CustomActionCallback() {
-                                        override fun onResult(
-                                            action: String?,
-                                            extras: Bundle?,
-                                            resultData: Bundle?
-                                        ) {
-                                            super.onResult(action, extras, resultData)
-                                            if (ACTION_SORT == action) {
-                                                when (musicViewModel.mainTabList[pagerState.currentPage].type.name) {
-                                                    PlayListType.PlayLists.name -> {
-                                                        musicViewModel.refreshPlayList.value =
-                                                            !musicViewModel.refreshPlayList.value
-                                                    }
+                                val futureResult: ListenableFuture<SessionResult>? =
+                                    musicViewModel.browser?.sendCustomCommand(
+                                        COMMAND_SORT_TRACKS,
+                                        bundle
+                                    )
+                                futureResult?.addListener({
+                                    try {
+                                        // a. 获取 SessionResult
+                                        val sessionResult = futureResult.get()
+                                        // b. 检查操作是否成功
+                                        if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
+                                            when (musicViewModel.mainTabList[pagerState.currentPage].type.name) {
+                                                PlayListType.PlayLists.name -> {
+                                                    musicViewModel.refreshPlayList.value =
+                                                        !musicViewModel.refreshPlayList.value
+                                                }
 
-                                                    PlayListType.Albums.name -> {
-                                                        musicViewModel.refreshAlbum.value =
-                                                            !musicViewModel.refreshAlbum.value
-                                                    }
+                                                PlayListType.Albums.name -> {
+                                                    musicViewModel.refreshAlbum.value =
+                                                        !musicViewModel.refreshAlbum.value
+                                                }
 
-                                                    PlayListType.Artists.name -> {
-                                                        musicViewModel.refreshArtist.value =
-                                                            !musicViewModel.refreshArtist.value
-                                                    }
+                                                PlayListType.Artists.name -> {
+                                                    musicViewModel.refreshArtist.value =
+                                                        !musicViewModel.refreshArtist.value
+                                                }
 
-                                                    PlayListType.Genres.name -> {
-                                                        musicViewModel.refreshGenre.value =
-                                                            !musicViewModel.refreshGenre.value
-                                                    }
+                                                PlayListType.Genres.name -> {
+                                                    musicViewModel.refreshGenre.value =
+                                                        !musicViewModel.refreshGenre.value
+                                                }
 
-                                                    PlayListType.Songs.name -> {
-                                                        resultData?.getParcelableArrayList<MusicItem>(
-                                                            "songsList"
-                                                        )?.also {
-                                                            musicViewModel.songsList.clear()
-                                                            musicViewModel.songsList.addAll(it)
-                                                        }
-                                                    }
+                                                PlayListType.Songs.name -> {
+                                                    musicViewModel.songsList.clear()
+//                                                    resultData?.getParcelableArrayList<MusicItem>(
+//                                                        "songsList"
+//                                                    )?.also {
+//                                                        musicViewModel.songsList.addAll(it)
+//                                                    }
+                                                }
 
-                                                    else -> {
-                                                    }
+                                                else -> {
                                                 }
                                             }
                                         }
+                                    } catch (e: Exception) {
+                                        // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                                        Log.e("Client", "Failed to toggle favorite status", e)
                                     }
-                                )
+                                }, ContextCompat.getMainExecutor(context)) //
                             }) {
                             Icon(
                                 imageVector = Icons.Default.Done,
@@ -444,11 +450,7 @@ fun MainTopBar(
             QueueOperateDialog(onDismiss = {
                 showDialogForQueue = false
                 if (it == OperateType.ClearQueue) {
-                    musicViewModel.mediaBrowser?.sendCustomAction(
-                        ACTION_CLEAR_QUEUE,
-                        null,
-                        null
-                    )
+                    musicViewModel.browser?.sendCustomCommand( COMMAND_CLEAR_QUEUE, Bundle.EMPTY)
                     musicViewModel.musicQueue.clear()
                     musicViewModel.currentPlay.value = null
                     musicViewModel.playListCurrent.value = null

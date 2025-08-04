@@ -2,6 +2,7 @@ package com.ztftrue.music.ui.public
 
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -40,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -48,11 +50,18 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.ContextCompat
+import androidx.media3.common.MediaItem
+import androidx.media3.session.LibraryResult
+import com.google.common.collect.ImmutableList
+import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
+import com.ztftrue.music.play.CustomMetadataKeys
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.model.MusicPlayList
+import kotlin.collections.forEach
 
 @Composable
 fun CreatePlayListDialog(
@@ -496,42 +505,44 @@ fun AddMusicToPlayListDialog(
 ) {
     val removeDuplicate = remember { mutableStateOf(true) }
     fun onConfirmation(id: Long) {
-        onDismiss(id,removeDuplicate.value)
+        onDismiss(id, removeDuplicate.value)
     }
 
     val onDis = {
-        onDismiss(null,removeDuplicate.value)
+        onDismiss(null, removeDuplicate.value)
     }
     val color = MaterialTheme.colorScheme.onBackground
-
+    val context = LocalContext.current
     val playList = remember { mutableStateListOf<MusicPlayList>() }
     LaunchedEffect(Unit) {
-        musicViewModel.mediaBrowser?.sendCustomAction(
-            PlayListType.PlayLists.name,
-            null,
-            object : MediaBrowserCompat.CustomActionCallback() {
-                override fun onProgressUpdate(
-                    action: String?, extras: Bundle?, data: Bundle?
-                ) {
-                    super.onProgressUpdate(action, extras, data)
+        val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
+            musicViewModel.browser?.getChildren("playlists_root", 0, 1, null)
+        futureResult?.addListener({
+            try {
+                val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
+                if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
+                    return@addListener
                 }
-
-                override fun onResult(
-                    action: String?, extras: Bundle?, resultData: Bundle?
-                ) {
-                    super.onResult(action, extras, resultData)
-                    if (action == PlayListType.PlayLists.name) {
-                        resultData?.getParcelableArrayList<MusicPlayList>("list")
-                            ?.also { list ->
-                                playList.addAll(list)
-                            }
-                    }
+                val items: List<MediaItem> = result.value ?: listOf()
+                val list = mutableListOf<MusicPlayList>()
+                items.forEach { mediaItem ->
+                    val item = MusicPlayList(
+                        id = mediaItem.mediaId.toLong(),
+                        name = mediaItem.mediaMetadata.title.toString(),
+                        trackNumber = mediaItem.mediaMetadata.totalTrackCount ?: 0,
+                        path = mediaItem.mediaMetadata.extras?.getString(
+                            CustomMetadataKeys.KEY_PATH,
+                            ""
+                        ) ?: ""
+                    )
+                    list.add(item)
                 }
-
-                override fun onError(action: String?, extras: Bundle?, data: Bundle?) {
-                    super.onError(action, extras, data)
-                }
-            })
+                playList.addAll(list)
+            } catch (e: Exception) {
+                // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                Log.e("Client", "Failed to toggle favorite status", e)
+            }
+        }, ContextCompat.getMainExecutor(context))
     }
     Dialog(
         onDismissRequest = onDis,
@@ -553,30 +564,30 @@ fun AddMusicToPlayListDialog(
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )
-               Row {
-                   Checkbox(
-                       checked = removeDuplicate.value,
-                       onCheckedChange = { v ->
+                Row {
+                    Checkbox(
+                        checked = removeDuplicate.value,
+                        onCheckedChange = { v ->
 
-                           removeDuplicate.value = v
-                       },
-                       modifier = Modifier
-                           .padding(8.dp)
-                           .semantics {
-                               contentDescription =
-                                   if (removeDuplicate.value) {
-                                       "Auto remove duplicate songs"
-                                   } else {
-                                       "Don't remove duplicate songs"
-                                   }
-                           }
-                   )
-                   Text(
-                       text = "Auto remove duplicate songs",
-                       modifier = Modifier.padding(8.dp),
-                       color = MaterialTheme.colorScheme.onBackground
-                   )
-               }
+                            removeDuplicate.value = v
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .semantics {
+                                contentDescription =
+                                    if (removeDuplicate.value) {
+                                        "Auto remove duplicate songs"
+                                    } else {
+                                        "Don't remove duplicate songs"
+                                    }
+                            }
+                    )
+                    Text(
+                        text = "Auto remove duplicate songs",
+                        modifier = Modifier.padding(8.dp),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
                 HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -605,14 +616,18 @@ fun AddMusicToPlayListDialog(
                         modifier = Modifier.horizontalScroll(rememberScrollState(0))
                     )
                 }
-                LazyColumn(modifier = Modifier.fillMaxWidth().height(300.dp).drawBehind() {
-                    drawLine(
-                        color = color,
-                        start = Offset(0f, size.height - 1.dp.toPx()),
-                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                        strokeWidth = 1.dp.toPx()
-                    )
-                }) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp)
+                        .drawBehind() {
+                            drawLine(
+                                color = color,
+                                start = Offset(0f, size.height - 1.dp.toPx()),
+                                end = Offset(size.width, size.height - 1.dp.toPx()),
+                                strokeWidth = 1.dp.toPx()
+                            )
+                        }) {
                     items(playList.size) { index ->
                         val item = playList[index]
                         Row(
@@ -623,10 +638,10 @@ fun AddMusicToPlayListDialog(
                                 }, verticalAlignment = Alignment.CenterVertically
                         ) {
                             Box(
-                                contentAlignment= Alignment.CenterStart,
+                                contentAlignment = Alignment.CenterStart,
                                 modifier = Modifier
                                     .fillMaxWidth(0.9f)
-                                    .padding(10.dp,0.dp,0.dp,10.dp)
+                                    .padding(10.dp, 0.dp, 0.dp, 10.dp)
                                     .height(50.dp)
                             ) {
                                 Text(

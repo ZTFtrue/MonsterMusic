@@ -94,6 +94,7 @@ fun PlayListView(
                     return@addListener
                 }
                 val albumMediaItems: List<MediaItem> = result.value ?: listOf()
+                val list = ArrayList<MusicPlayList>()
                 albumMediaItems.forEach { mediaItem ->
                     val album = MusicPlayList(
                         id = mediaItem.mediaId.toLong(),
@@ -104,8 +105,9 @@ fun PlayListView(
                             ""
                         ) ?: ""
                     )
-                    playList.add(album)
+                    list.add(album)
                 }
+                playList.addAll(list)
             } catch (e: Exception) {
                 // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
                 Log.e("Client", "Failed to toggle favorite status", e)

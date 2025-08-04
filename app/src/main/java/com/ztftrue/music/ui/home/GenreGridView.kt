@@ -107,6 +107,7 @@ fun GenreGridView(
                     return@addListener
                 }
                 val albumMediaItems: List<MediaItem> = result.value ?: listOf()
+                val list = mutableListOf<GenresList>()
                 albumMediaItems.forEach { mediaItem ->
                     val album = GenresList(
                         id = mediaItem.mediaId.toLong(),
@@ -117,8 +118,9 @@ fun GenreGridView(
                             0
                         ) ?: 0
                     )
-                    genreList.add(album)
+                    list.add(album)
                 }
+                genreList.addAll(list)
             } catch (e: Exception) {
                 // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
                 Log.e("Client", "Failed to toggle favorite status", e)

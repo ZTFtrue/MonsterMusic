@@ -83,7 +83,6 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.play.ACTION_SEEK_TO
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.toPx
@@ -117,7 +116,7 @@ fun LyricsView(
             var cIndex = 0
             for (index in musicViewModel.currentCaptionList.size - 1 downTo 0) {
                 val entry = musicViewModel.currentCaptionList[index]
-                cIndex= index
+                cIndex = index
                 if (timeState > entry.timeStart) {
                     break
                 }
@@ -462,19 +461,10 @@ fun LyricsView(
                                         if (showSlideIndicators) {
                                             IconButton(
                                                 modifier = Modifier.width(40.dp), onClick = {
-                                                    val bundle = Bundle()
-                                                    bundle.putLong(
-                                                        "position",
-                                                        musicViewModel.currentCaptionList[listIndex].timeStart
-                                                    )
                                                     // TODO
                                                     musicViewModel.sliderPosition.floatValue =
                                                         musicViewModel.currentCaptionList[listIndex].timeStart.toFloat() + 100
-                                                    musicViewModel.mediaBrowser?.sendCustomAction(
-                                                        ACTION_SEEK_TO,
-                                                        bundle,
-                                                        null
-                                                    )
+                                                    musicViewModel.browser?.seekTo(musicViewModel.currentCaptionList[listIndex].timeStart)
                                                 }) {
                                                 Icon(
                                                     imageVector = Icons.Outlined.Adjust,

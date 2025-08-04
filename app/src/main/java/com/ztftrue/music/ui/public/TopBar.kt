@@ -71,8 +71,7 @@ import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
-import com.ztftrue.music.play.ACTION_SET_SLEEP_TIME
-import com.ztftrue.music.play.ACTION_Volume_CHANGE
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_SET_SLEEP_TIMER
 import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.toPx
@@ -153,24 +152,8 @@ fun TopBar(
                                 valueRange = 0f..100f,
                                 steps = 100,
                                 onValueChangeFinished = {
-                                    val bundle = Bundle()
-                                    bundle.putInt(
-                                        "volume",
-                                        musicViewModel.volume.intValue
-                                    )
-                                    musicViewModel.mediaBrowser?.sendCustomAction(
-                                        ACTION_Volume_CHANGE,
-                                        bundle,
-                                        object : MediaBrowserCompat.CustomActionCallback() {
-                                            override fun onResult(
-                                                action: String?,
-                                                extras: Bundle?,
-                                                resultData: Bundle?
-                                            ) {
-                                                super.onResult(action, extras, resultData)
-//
-                                            }
-                                        }
+                                    musicViewModel.browser?.setVolume(
+                                        musicViewModel.volume.intValue.toFloat()
                                     )
                                 },
                             )
@@ -294,7 +277,7 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
         val bundle = Bundle()
         bundle.putLong("time", time)
         bundle.putBoolean("play_completed", musicViewModel.playCompleted.value)
-        musicViewModel.mediaBrowser?.sendCustomAction(ACTION_SET_SLEEP_TIME, bundle, null)
+        musicViewModel.browser?.sendCustomCommand(COMMAND_SET_SLEEP_TIMER, bundle)
         onDismiss()
     }
     Dialog(
