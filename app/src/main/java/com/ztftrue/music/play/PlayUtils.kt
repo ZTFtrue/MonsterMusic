@@ -165,7 +165,7 @@ object PlayUtils {
         var index = 0
         val enable = extras.getBoolean("enable", false)
         if (enable) {
-            if (musicQueue.size > 0) {
+            if (musicQueue.isNotEmpty()) {
                 if (musicQueue[0].priority == 0) {
                     val dbArrayList = ArrayList<MusicItem>()
                     dbArrayList.addAll(musicQueue)

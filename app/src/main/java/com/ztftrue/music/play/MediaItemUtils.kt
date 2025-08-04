@@ -1,6 +1,7 @@
 package com.ztftrue.music.play
 
 import android.os.Bundle
+import android.util.Log
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -25,6 +26,7 @@ object CustomMetadataKeys {
     const val KEY_DISPLAY_NAME = "com.ztftrue.music.metadata.DISPLAY_NAME"
     const val KEY_GENRE = "com.ztftrue.music.metadata.GENRE"
     const val KEY_GENRE_ID = "com.ztftrue.music.metadata.GENRE_ID"
+    const val KEY_PRIORITY = "com.ztftrue.music.metadata.KEY_PRIORITY"
     const val KEY_ARTIST_ID = "com.ztftrue.music.metadata.ARTIST_ID"
     const val KEY_ALBUM_ID = "com.ztftrue.music.metadata.ALBUM_ID"
 }
@@ -167,47 +169,27 @@ object MediaItemUtils {
             .setTrackNumber(musicItem.songNumber)   // 轨道号
             .setReleaseYear(musicItem.year)         // 发行年份
             .setGenre(musicItem.genre)              // 流派（这是一个标准字段）
-
-        // (可选) 如果你能从 albumId 获取到专辑封面 URI，在这里设置
-        // val artworkUri = getArtworkUriForAlbum(musicItem.albumId)
-        // metadataBuilder.setArtworkUri(artworkUri)
-
-        // 设置媒体类型，明确这是一首歌曲
         metadataBuilder.setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
-
-        // 对于歌曲，它通常是可播放的，但不可浏览（它下面没有子项）
         metadataBuilder.setIsPlayable(true)
         metadataBuilder.setIsBrowsable(false)
-
-        // --- 2. 将非标准或需要额外保留的字段存入 extras ---
         val extras = Bundle().apply {
             // 存储数据库的主键
             musicItem.tableId?.let { putLong(CustomMetadataKeys.KEY_TABLE_ID, it) }
-            // 存储原始的媒体库ID
-            // 存储自定义状态
             putBoolean(CustomMetadataKeys.KEY_IS_FAVORITE, musicItem.isFavorite)
-            // 存储其他有用的信息
             putString(CustomMetadataKeys.KEY_DISPLAY_NAME, musicItem.displayName)
             putLong(CustomMetadataKeys.KEY_ALBUM_ID, musicItem.albumId)
             putLong(CustomMetadataKeys.KEY_ARTIST_ID, musicItem.artistId)
             putLong(CustomMetadataKeys.KEY_GENRE_ID, musicItem.genreId)
+            putInt(CustomMetadataKeys.KEY_PRIORITY, musicItem.priority)
         }
         metadataBuilder.setExtras(extras)
 
 
         // --- 3. 构建 MediaItem 本身 ---
         return MediaItem.Builder()
-            // 关键！将你的唯一 ID 设置为 MediaItem 的 mediaId。
-            // 使用 toString() 确保类型为 String。
             .setMediaId(musicItem.id.toString())
-
-            // 关键！设置播放 URI，这样 ExoPlayer 才知道要播放哪个文件。
-            // 假设 'path' 是一个文件路径或 content:// URI 字符串。
             .setUri(musicItem.path.toUri())
-
-            // 将上面构建好的元数据设置给 MediaItem
             .setMediaMetadata(metadataBuilder.build())
-
             .build()
     }
     fun musicItemToMediaMetadata(musicItem: MusicItem): MediaMetadata {
@@ -247,5 +229,72 @@ object MediaItemUtils {
 
         return metadataBuilder.build()
     }
+    fun mediaItemToMusicItem(mediaItem: MediaItem): MusicItem? {
+        val metadata = mediaItem.mediaMetadata
 
+        // mediaId 是必须的，我们用它来填充 id 字段
+        val id = mediaItem.mediaId.toLongOrNull() ?: return null
+
+        val extras = metadata.extras ?: Bundle.EMPTY
+
+        return MusicItem(
+            // tableId 是数据库主键，通常在插入时由 Room 自动生成或在队列同步时设置，
+            // 这里我们从 extras 中尝试读取，如果不存在则设为 null。
+            tableId = extras.getLong(CustomMetadataKeys.KEY_TABLE_ID).takeIf { it != 0L },
+
+            id = id,
+
+            // 从标准元数据字段获取信息，并提供默认值
+            name = metadata.title?.toString() ?: "Unknown Title",
+            path = mediaItem.requestMetadata.mediaUri?.toString() ?: "",
+            // duration 在 MediaItem 中不直接可用，需要播放器准备好后才能获取。
+            // 如果你之前把它存入了 extras，可以在这里读取。
+            duration = extras.getLong("duration", 0L),
+            displayName = extras.getString(CustomMetadataKeys.KEY_DISPLAY_NAME, "Unknown Display Name"),
+            album = metadata.albumTitle?.toString() ?: "Unknown Album",
+            albumId = extras.getLong(CustomMetadataKeys.KEY_ALBUM_ID, 0L),
+            artist = metadata.artist?.toString() ?: "Unknown Artist",
+            artistId = extras.getLong(CustomMetadataKeys.KEY_ARTIST_ID, 0L),
+            genre = metadata.genre?.toString() ?: "Unknown Genre",
+            genreId = extras.getLong(CustomMetadataKeys.KEY_GENRE_ID, 0L),
+            year = metadata.releaseYear ?: 0,
+            songNumber = metadata.trackNumber ?: 0,
+            priority = extras.getInt(CustomMetadataKeys.KEY_PRIORITY, 0),
+            isFavorite = extras.getBoolean(CustomMetadataKeys.KEY_IS_FAVORITE, false)
+        )
+    }
+    fun mediaItemToAlbumList(mediaItem: MediaItem): AlbumList? {
+        val metadata = mediaItem.mediaMetadata
+
+        // 1. 确保这是一个专辑类型的 MediaItem (可选但推荐)
+        if (metadata.mediaType != MediaMetadata.MEDIA_TYPE_ALBUM) {
+            // 或者可以只打印警告而不是直接返回 null，取决于你的业务逻辑
+            Log.w("Converter", "Attempted to convert a non-album MediaItem to AlbumList. mediaId: ${mediaItem.mediaId}")
+        }
+
+        // 2. mediaId 是必须的，我们用它来填充 id 字段
+        val id = mediaItem.mediaId.toLongOrNull()
+        if (id == null) {
+            // 如果 mediaId 不是 "album_123" 这种格式，而是 "albums_root" 这种，转换会失败
+            // 这种情况下我们不认为它是一个具体的专辑，返回 null
+            return null
+        }
+
+        val extras = metadata.extras ?: Bundle.EMPTY
+
+        return AlbumList(
+            id = id,
+            name = metadata.title?.toString() ?: "Unknown Album",
+            artist = metadata.artist?.toString()
+            // 如果标准 artist 字段为空，尝试从 extras 回退
+                ?: extras.getString("album_artist", "Unknown Artist"),
+
+            trackNumber = metadata.totalTrackCount?.toInt() ?: 0,
+
+            // 从 extras 中获取我们自定义存储的信息
+            firstYear = extras.getString("album_first_year", metadata.releaseYear?.toString() ?: "0"),
+            lastYear = extras.getString("album_last_year", metadata.releaseYear?.toString() ?: "0"),
+
+        )
+    }
 }

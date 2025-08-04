@@ -6,11 +6,9 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
-import android.support.v4.media.MediaBrowserCompat
 import android.util.Log
 import androidx.activity.result.IntentSenderRequest
 import androidx.annotation.OptIn
-import androidx.core.content.ContextCompat
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionResult
 import com.google.common.util.concurrent.ListenableFuture

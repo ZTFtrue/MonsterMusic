@@ -1,10 +1,7 @@
 package com.ztftrue.music.ui.other
 
 import android.graphics.Bitmap
-import android.media.MediaScannerConnection
-import android.net.Uri
 import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -64,9 +61,6 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.play.ACTION_TRACKS_UPDATE
-import com.ztftrue.music.play.CustomMetadataKeys
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACKS_UPDATE
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.BackButton

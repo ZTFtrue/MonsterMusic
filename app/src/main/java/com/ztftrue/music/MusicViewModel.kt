@@ -8,7 +8,6 @@ import android.graphics.BitmapFactory
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
-import android.support.v4.media.session.MediaControllerCompat
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.mutableFloatStateOf
@@ -30,7 +29,6 @@ import androidx.navigation.NavHostController
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.play.CustomMetadataKeys
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
 import com.ztftrue.music.sqlData.model.DictionaryApp
@@ -51,7 +49,6 @@ import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.model.Caption
 import com.ztftrue.music.utils.model.EqualizerBand
 import com.ztftrue.music.utils.model.ListStringCaption
-import com.ztftrue.music.utils.model.MusicPlayList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -633,5 +630,4 @@ class MusicViewModel : ViewModel() {
         }
 
     }
-
 }

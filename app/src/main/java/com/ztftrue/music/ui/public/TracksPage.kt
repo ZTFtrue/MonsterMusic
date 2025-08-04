@@ -2,6 +2,7 @@ package com.ztftrue.music.ui.public
 
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -58,16 +59,20 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import androidx.core.content.ContextCompat
+import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.LibraryResult
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import com.google.common.collect.ImmutableList
+import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
-import com.ztftrue.music.play.ACTION_GET_ALBUM_BY_ID
-import com.ztftrue.music.play.ACTION_GET_TRACKS
 import com.ztftrue.music.play.ACTION_SHUFFLE_PLAY_QUEUE
 import com.ztftrue.music.play.ACTION_SORT
+import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.PlayUtils
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.dao.SortFiledDao
@@ -404,7 +409,6 @@ fun TracksListPage(
     if (showMoreOperateDialog) {
         when (type) {
             PlayListType.Albums -> {
-                // TODO this can avoid use an error dialog
                 val item =
                     if (musicPlayList.value is AlbumList) {
                         val a = (musicPlayList.value as AlbumList)
@@ -424,42 +428,19 @@ fun TracksListPage(
                             }
 
                             OperateType.ShowArtist -> {
-                                val bundle = Bundle()
-                                bundle.putLong("albumId", id)
-                                musicViewModel.mediaBrowser?.sendCustomAction(
-                                    ACTION_GET_ALBUM_BY_ID,
-                                    bundle,
-                                    object : MediaBrowserCompat.CustomActionCallback() {
-                                        override fun onResult(
-                                            action: String?,
-                                            extras: Bundle?,
-                                            resultData: Bundle?
-                                        ) {
-                                            super.onResult(action, extras, resultData)
-                                            if (action == ACTION_GET_ALBUM_BY_ID) {
-                                                val albumList =
-                                                    resultData?.getParcelable<AlbumList>("album")
-                                                if (albumList != null) {
-                                                    ArtistManager.getArtistIdByName(
-                                                        context,
-                                                        albumList.artist
-                                                    )?.let { artistId ->
-                                                        navController.navigate(
-                                                            Router.PlayListView.withArgs(
-                                                                "id" to artistId.toString(),
-                                                                "itemType" to enumToStringForPlayListType(
-                                                                    PlayListType.Artists
-                                                                )
-                                                            ),
-                                                        ) {
-
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    })
-
+                                ArtistManager.getArtistIdByName(
+                                    context,
+                                    item.artist
+                                )?.let { artistId ->
+                                    navController.navigate(
+                                        Router.PlayListView.withArgs(
+                                            "id" to artistId.toString(),
+                                            "itemType" to enumToStringForPlayListType(
+                                                PlayListType.Artists
+                                            )
+                                        ),
+                                    )
+                                }
                             }
 
                             else -> {
@@ -558,7 +539,7 @@ fun TracksListPage(
                                         musicViewModel.songsList.toList()
                                     )
                                 ) {
-                                   musicViewModel.scanAndRefreshPlaylist(context, item.path)
+                                    musicViewModel.scanAndRefreshPlaylist(context, item.path)
                                 }
 
                             }
@@ -714,38 +695,54 @@ fun TracksListPage(
         val bundle = Bundle()
         bundle.putString("type", type.name)
         bundle.putLong("id", id)
-        musicViewModel.mediaBrowser?.sendCustomAction(
-            ACTION_GET_TRACKS,
-            bundle,
-            object : MediaBrowserCompat.CustomActionCallback() {
-                override fun onResult(
-                    action: String?,
-                    extras: Bundle?,
-                    resultData: Bundle?
-                ) {
-                    super.onResult(action, extras, resultData)
-                    if (ACTION_GET_TRACKS == action && resultData != null) {
-                        tracksList.clear()
-                        albumsList.clear()
-                        val tracksListResult = resultData.getParcelableArrayList<MusicItem>("list")
-                        val albumLists = resultData.getParcelableArrayList<AlbumList>("albums")
-                        val parentListMessage = resultData.getParcelable<AnyListBase>("message")
-                        if (parentListMessage != null) {
-                            musicPlayList.value = parentListMessage
-                        }
-                        tracksList.addAll(
-                            tracksListResult ?: emptyList()
-                        )
-                        val duration = tracksList.sumOf { it.duration }
-                        durationAll.value = Utils.formatTimeWithUnit(duration)
-                        albumsList.addAll(albumLists ?: emptyList())
-//                        if (tracksList.isEmpty() && albumsList.isEmpty() && parentListMessage == null) {
-//                            navController.popBackStack()
-//                        }
-                    }
+        val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
+            musicViewModel.browser?.getChildren(type.name + "_track_" + id, 0, 1, null)
+        futureResult?.addListener({
+            try {
+                val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
+                if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
+                    return@addListener
                 }
+                val albumMediaItems: List<MediaItem> = result.value ?: listOf()
+                val tracksListResult = ArrayList<MusicItem>()
+                albumMediaItems.forEach { mediaItem ->
+                    MediaItemUtils.mediaItemToMusicItem(mediaItem)?.let { tracksListResult.add(it) }
+                }
+                tracksList.clear()
+                tracksList.addAll(
+                    tracksListResult
+                )
+                val duration = tracksList.sumOf { it.duration }
+                durationAll.value = Utils.formatTimeWithUnit(duration)
+            } catch (e: Exception) {
+                // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                Log.e("Client", "Failed to toggle favorite status", e)
             }
-        )
+        }, ContextCompat.getMainExecutor(context))
+        val futureResultAlbum: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
+            musicViewModel.browser?.getChildren(type.name + "_track_" + id, 0, 1, null)
+        futureResultAlbum?.addListener({
+            try {
+                val result: LibraryResult<ImmutableList<MediaItem>>? = futureResultAlbum.get()
+                if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
+                    return@addListener
+                }
+                val albumMediaItems: List<MediaItem> = result.value ?: listOf()
+                val tracksListResult = ArrayList<AlbumList>()
+                albumMediaItems.forEach { mediaItem ->
+                    MediaItemUtils.mediaItemToAlbumList(mediaItem)?.let { tracksListResult.add(it) }
+                }
+                albumsList.clear()
+//                val parentListMessage = resultData.getParcelable<AnyListBase>("message")
+//                if (parentListMessage != null) {
+//                    musicPlayList.value = parentListMessage
+//                }
+                albumsList.addAll(tracksListResult)
+            } catch (e: Exception) {
+                // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                Log.e("Client", "Failed to toggle favorite status", e)
+            }
+        }, ContextCompat.getMainExecutor(context))
     }
 
     Scaffold(
@@ -781,7 +778,7 @@ fun TracksListPage(
                                     is AlbumList -> {
                                         val albumList = musicPlayList.value as AlbumList
                                         musicViewModel.getAlbumCover(albumList.id, context)
-                                            ?:  musicViewModel.customMusicCover.value
+                                            ?: musicViewModel.customMusicCover.value
                                     }
 
                                     is ArtistList -> {
