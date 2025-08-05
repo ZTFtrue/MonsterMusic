@@ -513,12 +513,12 @@ object Utils {
             index,
             tracksList
         )
-        val mediaItem = tracksList.map { music ->
+        val mediaItems = tracksList.map { music ->
             MediaItemUtils.musicItemToMediaItem(music)
         }
         musicViewModel.browser?.addMediaItems(
             index,
-            mediaItem
+            mediaItems
         )
     }
 

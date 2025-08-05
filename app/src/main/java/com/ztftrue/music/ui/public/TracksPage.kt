@@ -71,9 +71,8 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
-import com.ztftrue.music.play.ACTION_SHUFFLE_PLAY_QUEUE
-import com.ztftrue.music.play.ACTION_SORT
 import com.ztftrue.music.play.MediaItemUtils
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_CHANGE_PLAYLIST
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_SORT_TRACKS
 import com.ztftrue.music.play.PlayUtils
 import com.ztftrue.music.sqlData.MusicDatabase
@@ -858,51 +857,65 @@ fun TracksListPage(
                                 musicViewModel.playListCurrent.value = musicPlayList.value
                                 musicViewModel.musicQueue.clear()
                                 musicViewModel.currentPlayQueueIndex.intValue = -1
-                                bundle.putBoolean("switch_queue", true)
+                                musicViewModel.browser?.pause()
+                                musicViewModel.browser?.clearMediaItems()
+                                musicViewModel.browser?.shuffleModeEnabled=true
+                                musicViewModel.browser?.playWhenReady=false
+                                val mediaItems =
+                                    tracksList.map { MediaItemUtils.musicItemToMediaItem(it) }
+                                musicViewModel.browser?.addMediaItems(mediaItems)
+                                musicViewModel.browser?.playWhenReady=true
+                                musicViewModel.browser?.prepare()
+//                            bundle.putParcelableArrayList("musicItems", ArrayList(musicList))
+//                            bundle.putInt("index", index)
+//                                bundle.putBoolean("switch_queue", true)
                                 bundle.putParcelable("playList", musicPlayList.value)
-                                bundle.putParcelableArrayList("musicItems", ArrayList(tracksList))
-                                musicViewModel.mediaBrowser?.sendCustomAction(
-                                    ACTION_SHUFFLE_PLAY_QUEUE,
-                                    bundle,
-                                    object : MediaBrowserCompat.CustomActionCallback() {
-                                        override fun onResult(
-                                            action: String?,
-                                            extras: Bundle?,
-                                            resultData: Bundle?
-                                        ) {
-                                            super.onResult(action, extras, resultData)
-                                            if (ACTION_SHUFFLE_PLAY_QUEUE == action && resultData != null) {
-                                                val qList =
-                                                    resultData.getParcelableArrayList<MusicItem>(
-                                                        "list"
-                                                    )
-                                                if (qList != null) {
-                                                    musicViewModel.musicQueue.addAll(qList)
-                                                    if (musicViewModel.currentPlayQueueIndex.intValue == -1) {
-                                                        musicViewModel.currentPlayQueueIndex.intValue =
-                                                            0
-                                                        musicViewModel.currentPlay.value =
-                                                            musicViewModel.musicQueue[0]
-                                                        musicViewModel.currentCaptionList.clear()
-                                                        musicViewModel.currentMusicCover.value =
-                                                            null
-                                                        musicViewModel.currentPlay.value =
-                                                            musicViewModel.musicQueue[0]
-                                                        musicViewModel.sliderPosition.floatValue =
-                                                            0f
-                                                        musicViewModel.currentDuration.longValue =
-                                                            musicViewModel.currentPlay.value?.duration
-                                                                ?: 0
-                                                        musicViewModel.dealLyrics(
-                                                            context,
-                                                            musicViewModel.musicQueue[0]
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
+                                musicViewModel.browser?.sendCustomCommand(
+                                    COMMAND_CHANGE_PLAYLIST,
+                                    bundle
                                 )
+//                                musicViewModel.mediaBrowser?.sendCustomAction(
+//                                    ACTION_SHUFFLE_PLAY_QUEUE,
+//                                    bundle,
+//                                    object : MediaBrowserCompat.CustomActionCallback() {
+//                                        override fun onResult(
+//                                            action: String?,
+//                                            extras: Bundle?,
+//                                            resultData: Bundle?
+//                                        ) {
+//                                            super.onResult(action, extras, resultData)
+//                                            if (ACTION_SHUFFLE_PLAY_QUEUE == action && resultData != null) {
+//                                                val qList =
+//                                                    resultData.getParcelableArrayList<MusicItem>(
+//                                                        "list"
+//                                                    )
+//                                                if (qList != null) {
+//                                                    musicViewModel.musicQueue.addAll(qList)
+//                                                    if (musicViewModel.currentPlayQueueIndex.intValue == -1) {
+//                                                        musicViewModel.currentPlayQueueIndex.intValue =
+//                                                            0
+//                                                        musicViewModel.currentPlay.value =
+//                                                            musicViewModel.musicQueue[0]
+//                                                        musicViewModel.currentCaptionList.clear()
+//                                                        musicViewModel.currentMusicCover.value =
+//                                                            null
+//                                                        musicViewModel.currentPlay.value =
+//                                                            musicViewModel.musicQueue[0]
+//                                                        musicViewModel.sliderPosition.floatValue =
+//                                                            0f
+//                                                        musicViewModel.currentDuration.longValue =
+//                                                            musicViewModel.currentPlay.value?.duration
+//                                                                ?: 0
+//                                                        musicViewModel.dealLyrics(
+//                                                            context,
+//                                                            musicViewModel.musicQueue[0]
+//                                                        )
+//                                                    }
+//                                                }
+//                                            }
+//                                        }
+//                                    }
+//                                )
                             }) {
                                 Icon(
                                     imageVector = Icons.Outlined.Shuffle,

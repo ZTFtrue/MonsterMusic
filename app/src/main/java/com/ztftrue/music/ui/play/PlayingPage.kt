@@ -1,8 +1,6 @@
 package com.ztftrue.music.ui.play
 
 import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
-import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.view.MotionEvent
 import android.widget.Toast
@@ -122,12 +120,9 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionResult
 import androidx.navigation.NavHostController
 import com.google.common.util.concurrent.ListenableFuture
-import com.google.common.util.concurrent.MoreExecutors
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
-import com.ztftrue.music.play.ACTION_RemoveFromQueue
-import com.ztftrue.music.play.ACTION_SWITCH_SHUFFLE
 import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_VISUALIZATION_ENABLE
@@ -142,7 +137,6 @@ import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.SharedPreferencesUtils
-import com.ztftrue.music.utils.TracksUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.deleteTrackUpdate
 import com.ztftrue.music.utils.Utils.toPx
@@ -248,14 +242,14 @@ fun PlayingPage(
                         }
 
                         OperateType.PlayNext -> {
-                            val position=musicViewModel.currentPlayQueueIndex.intValue + 1
+                            val position = musicViewModel.currentPlayQueueIndex.intValue + 1
                             musicViewModel.musicQueue.add(
                                 position,
                                 music
                             )
                             val mediaItem = MediaItemUtils.musicItemToMediaItem(music)
                             musicViewModel.browser?.addMediaItem(
-                                position ,
+                                position,
                                 mediaItem
                             )
                         }
@@ -306,29 +300,37 @@ fun PlayingPage(
                             if (index == -1) return@OperateDialog
                             val bundle = Bundle()
                             bundle.putInt("index", index)
-                            musicViewModel.mediaBrowser?.sendCustomAction(
-                                ACTION_RemoveFromQueue,
-                                bundle,
-                                object : MediaBrowserCompat.CustomActionCallback() {
-                                    override fun onResult(
-                                        action: String?,
-                                        extras: Bundle?,
-                                        resultData: Bundle?
-                                    ) {
-                                        super.onResult(action, extras, resultData)
-                                        if (ACTION_RemoveFromQueue == action) {
-                                            if (musicViewModel.currentPlay.value?.id == music.id) {
-                                                musicViewModel.currentMusicCover.value = null
-                                                musicViewModel.currentPlayQueueIndex.intValue =
-                                                    (index) % (musicViewModel.musicQueue.size + 1)
-                                                musicViewModel.currentPlay.value =
-                                                    musicViewModel.musicQueue[musicViewModel.currentPlayQueueIndex.intValue]
-                                            }
-                                        }
-                                    }
-                                }
-                            )
                             musicViewModel.musicQueue.removeAt(index)
+                            musicViewModel.browser?.removeMediaItem(index)
+                            //                PlayUtils.removePlayQueue(
+//                extras, result, musicQueue,
+//                exoPlayer,
+//                db, this@PlayService
+//            )
+                            if (musicViewModel.currentPlay.value?.id == music.id) {
+                                musicViewModel.currentMusicCover.value = null
+                                musicViewModel.currentPlayQueueIndex.intValue =
+                                    (index) % (musicViewModel.musicQueue.size + 1)
+                                musicViewModel.currentPlay.value =
+                                    musicViewModel.musicQueue[musicViewModel.currentPlayQueueIndex.intValue]
+                            }
+//                            musicViewModel.mediaBrowser?.sendCustomAction(
+//                                ACTION_RemoveFromQueue,
+//                                bundle,
+//                                object : MediaBrowserCompat.CustomActionCallback() {
+//                                    override fun onResult(
+//                                        action: String?,
+//                                        extras: Bundle?,
+//                                        resultData: Bundle?
+//                                    ) {
+//                                        super.onResult(action, extras, resultData)
+//                                        if (ACTION_RemoveFromQueue == action) {
+//
+//                                        }
+//                                    }
+//                                }
+//                            )
+
                         }
 
                         OperateType.EditMusicInfo -> {
@@ -1428,66 +1430,8 @@ fun PlayingPage(
                                                 "enable",
                                                 musicViewModel.enableShuffleModel.value
                                             )
-                                            musicViewModel.browser?.sendCustomCommand()
-                                            musicViewModel.mediaBrowser?.sendCustomAction(
-                                                ACTION_SWITCH_SHUFFLE,
-                                                bundle,
-                                                object : MediaBrowserCompat.CustomActionCallback() {
-                                                    override fun onResult(
-                                                        action: String?,
-                                                        extras: Bundle?,
-                                                        resultData: Bundle?
-                                                    ) {
-                                                        super.onResult(action, extras, resultData)
-                                                        if (ACTION_SWITCH_SHUFFLE == action && resultData != null) {
-                                                            val qList =
-                                                                resultData.getParcelableArrayList<MusicItem>(
-                                                                    "list"
-                                                                )
-                                                            val qIndex =
-                                                                resultData.getInt("index", -1)
-                                                            if (qList != null && qIndex != -1) {
-                                                                musicViewModel.musicQueue.clear()
-                                                                musicViewModel.musicQueue.addAll(
-                                                                    qList
-                                                                )
-                                                                if (musicViewModel.currentPlayQueueIndex.intValue == -1) {
-                                                                    musicViewModel.currentPlayQueueIndex.intValue =
-                                                                        qIndex
-                                                                    musicViewModel.currentPlay.value =
-                                                                        musicViewModel.musicQueue[qIndex]
-                                                                    musicViewModel.currentCaptionList.clear()
-                                                                    musicViewModel.currentMusicCover.value =
-                                                                        null
-                                                                    musicViewModel.currentPlay.value =
-                                                                        musicViewModel.musicQueue[qIndex]
-                                                                    musicViewModel.sliderPosition.floatValue =
-                                                                        0f
-                                                                    musicViewModel.currentDuration.longValue =
-                                                                        musicViewModel.currentPlay.value?.duration
-                                                                            ?: 0
-                                                                    musicViewModel.dealLyrics(
-                                                                        context,
-                                                                        musicViewModel.musicQueue[qIndex]
-                                                                    )
-                                                                }
-                                                                if (musicViewModel.enableShuffleModel.value && music != null && SharedPreferencesUtils.getAutoToTopRandom(
-                                                                        context
-                                                                    )
-                                                                ) {
-                                                                    TracksUtils.currentPlayToTop(
-                                                                        musicViewModel.browser!!,
-                                                                        musicViewModel.musicQueue,
-                                                                        music,
-                                                                        qIndex
-                                                                    )
-                                                                }
-
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            )
+                                            musicViewModel.browser?.shuffleModeEnabled =
+                                                !musicViewModel.enableShuffleModel.value
                                         }) {
                                             Icon(
                                                 imageVector = if (musicViewModel.enableShuffleModel.value) Icons.Outlined.Shuffle else Icons.Outlined.Shuffle,

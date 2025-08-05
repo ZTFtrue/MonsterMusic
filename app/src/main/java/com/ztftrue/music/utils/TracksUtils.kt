@@ -4,11 +4,9 @@ import android.content.Context
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
 import android.widget.Toast
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.media3.session.MediaBrowser
-import com.ztftrue.music.play.ACTION_Sort_Queue
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.MusicItem
@@ -42,24 +40,44 @@ object TracksUtils {
         val bundle = Bundle()
         bundle.putInt("index", currentIndex)
         bundle.putInt("targetIndex", targetIndex)
-        mediaBrowserCompat.sendCustomAction(
-            ACTION_Sort_Queue,
-            bundle,
-            object :
-                MediaBrowserCompat.CustomActionCallback() {
-                override fun onResult(
-                    action: String?,
-                    extras: Bundle?,
-                    resultData: Bundle?
-                ) {
-                    super.onResult(
-                        action,
-                        extras,
-                        resultData
-                    )
-                }
-            }
-        )
+//            val index = extras.getInt("index")
+//            val targetIndex = extras.getInt("targetIndex")
+//            val m = musicQueue.removeAt(index)
+//            musicQueue.add(targetIndex, m)
+//
+//            val currentPlayIndex = exoPlayer.currentMediaItemIndex
+//            val currentPosition = exoPlayer.currentPosition
+//            if (currentPlayIndex == index) {
+//                exoPlayer.pause()
+//            }
+//            val im = exoPlayer.getMediaItemAt(index)
+//            exoPlayer.removeMediaItem(index)
+//            exoPlayer.addMediaItem(targetIndex, im)
+//            if (currentPlayIndex == index) {
+//                exoPlayer.seekTo(targetIndex, currentPosition)
+//                exoPlayer.play()
+//            }
+//            val start = FastMath.min(index, targetIndex)
+//            val end = FastMath.max(index, targetIndex)
+//            if (SharedPreferencesUtils.getEnableShuffle(this@PlayService)) {
+//                val changedQueueArray = ArrayList<MusicItem>(end - start + 1)
+//                for (i in start..end) {
+//                    musicQueue[i].priority = i + 1
+//                    changedQueueArray.add(musicQueue[i])
+//                }
+//                CoroutineScope(Dispatchers.IO).launch {
+//                    db.QueueDao().updateList(changedQueueArray)
+//                }
+//            } else {
+//                val changedQueueArray = ArrayList<MusicItem>(end - start + 1)
+//                for (i in start..end) {
+//                    musicQueue[i].tableId = i.toLong() + 1
+//                    changedQueueArray.add(musicQueue[i])
+//                }
+//                CoroutineScope(Dispatchers.IO).launch {
+//                    db.QueueDao().updateList(changedQueueArray)
+//                }
+//            }
     }
 
     fun sortPlayLists(

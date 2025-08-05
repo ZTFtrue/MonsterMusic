@@ -51,6 +51,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED
 import androidx.media3.common.Timeline
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
@@ -61,7 +62,9 @@ import androidx.media3.session.SessionResult
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.play.EVENT_Visualization_Change
+import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.PlayService
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_GET_INITIALIZED_DATA
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
 import com.ztftrue.music.sqlData.model.GENRE_TYPE
@@ -73,6 +76,7 @@ import com.ztftrue.music.ui.home.BaseLayout
 import com.ztftrue.music.ui.theme.MusicPitchTheme
 import com.ztftrue.music.utils.OperateTypeInActivity
 import com.ztftrue.music.utils.SharedPreferencesUtils
+import com.ztftrue.music.utils.TracksUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.deleteTrackUpdate
 import com.ztftrue.music.utils.model.AnyListBase
@@ -717,6 +721,7 @@ class MainActivity : ComponentActivity() {
         browser.addListener(playerListener) // playerListener 是你定义的 Player.Listener 实例
         updateUiWithCurrentState(browser)
         fetchRootChildren(browser)
+//        browser.sendCustomCommand(COMMAND_GET_INITIALIZED_DATA)
 //        getInitData()
         SharedPreferencesUtils.getEnableShuffle(this@MainActivity).also {
             musicViewModel.enableShuffleModel.value = it
@@ -739,6 +744,38 @@ class MainActivity : ComponentActivity() {
             timeline: Timeline,
             reason: Int
         ) {
+            if (!timeline.isEmpty && TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED == reason) {
+                val newQueue = mutableListOf<MediaItem>()
+                for (i in 0 until timeline.windowCount) {
+                    // a. 获取指定索引的窗口信息，为了效率，我们重用一个 Window 对象
+                    val window = timeline.getWindow(i, Timeline.Window())
+                    val mediaItem = window.mediaItem
+                    newQueue.add(mediaItem)
+                }
+                val qList: Collection<MusicItem> =
+                    (newQueue.map { MediaItemUtils.mediaItemToMusicItem(it) }).filterNotNull()
+                val qIndex = musicViewModel.browser?.currentMediaItemIndex ?: 0
+                musicViewModel.currentPlayQueueIndex.intValue = qIndex
+                musicViewModel.musicQueue.clear()
+                musicViewModel.musicQueue.addAll(qList)
+                val music = musicViewModel.musicQueue[qIndex]
+                if (musicViewModel.enableShuffleModel.value && SharedPreferencesUtils.getAutoToTopRandom(
+                        this@MainActivity
+                    )
+                ) {
+                    if (qIndex == 0) return
+                    musicViewModel.musicQueue.remove(music)
+                    musicViewModel.musicQueue.add(0, music)
+                    TracksUtils.currentPlayToTop(
+                        musicViewModel.browser!!,
+                        musicViewModel.musicQueue,
+                        music,
+                        qIndex
+                    )
+                }
+            }
+
+
             super.onTimelineChanged(timeline, reason)
         }
 
@@ -839,33 +876,26 @@ class MainActivity : ComponentActivity() {
             musicViewModel.showIndicatorMap[sort.type.replace("@Tracks", "")] =
                 sort.filedName == "Alphabetical"
         }
-        resultData.getParcelableArrayList<MusicItem>("musicQueue")?.also {
-            musicViewModel.musicQueue.clear()
-            musicViewModel.musicQueue.addAll(it)
-        }
-        resultData.getParcelableArrayList<MusicItem>("songsList")?.also {
-            musicViewModel.songsList.clear()
-            musicViewModel.songsList.addAll(it)
-        }
         resultData.getParcelableArrayList<MainTab>("mainTabList")?.also {
             musicViewModel.mainTabList.clear()
             musicViewModel.mainTabList.addAll(it)
         }
-
         resultData.getSerializable("playListCurrent")?.also {
             musicViewModel.playListCurrent.value = it as AnyListBase
         }
-        val isPlaying = resultData.getBoolean("isPlaying")
-        musicViewModel.playStatus.value = isPlaying
-        val index = resultData.getInt("index")
-        if (index >= 0 && musicViewModel.musicQueue.size > index && index != musicViewModel.currentPlayQueueIndex.intValue
-        ) {
-            musicViewModel.scheduleDealCurrentPlay(
-                this,
-                index,
-                Player.MEDIA_ITEM_TRANSITION_REASON_AUTO
-            )
-        }
+//        resultData.getParcelableArrayList<MusicItem>("songsList")?.also {
+//            musicViewModel.songsList.clear()
+//            musicViewModel.songsList.addAll(it)
+//        }
+//        val index = resultData.getInt("index")
+//        if (index >= 0 && musicViewModel.musicQueue.size > index && index != musicViewModel.currentPlayQueueIndex.intValue
+//        ) {
+//            musicViewModel.scheduleDealCurrentPlay(
+//                this,
+//                index,
+//                Player.MEDIA_ITEM_TRANSITION_REASON_AUTO
+//            )
+//        }
         val pitch = resultData.getFloat("pitch", 1f)
         val speed = resultData.getFloat("speed", 1f)
         val Q = resultData.getFloat("Q", Utils.Q)

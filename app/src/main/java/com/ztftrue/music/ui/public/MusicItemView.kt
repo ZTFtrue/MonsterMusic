@@ -2,7 +2,6 @@ package com.ztftrue.music.ui.public
 
 import android.content.Context
 import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -57,19 +56,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
+import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionResult
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
-import com.ztftrue.music.play.ACTION_PLAY_MUSIC
-import com.ztftrue.music.play.ACTION_RemoveFromQueue
 import com.ztftrue.music.play.MediaItemUtils
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_CHANGE_PLAYLIST
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
+import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.TracksUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.deleteTrackUpdate
@@ -80,6 +81,7 @@ import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.SongsUtils
 import com.ztftrue.music.utils.trackManager.TracksManager
+import java.io.File
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalFoundationApi::class)
@@ -148,14 +150,14 @@ fun MusicItemView(
                     }
 
                     OperateType.PlayNext -> {
-                        val position=viewModel.currentPlayQueueIndex.intValue + 1
+                        val position = viewModel.currentPlayQueueIndex.intValue + 1
                         viewModel.musicQueue.add(
                             position,
                             music
                         )
                         val mediaItem = MediaItemUtils.musicItemToMediaItem(music)
                         viewModel.browser?.addMediaItem(
-                            position ,
+                            position,
                             mediaItem
                         )
                     }
@@ -188,8 +190,8 @@ fun MusicItemView(
                     OperateType.Artist -> {
                         viewModel.navController?.navigate(
                             Router.PlayListView.withArgs(
-                             "id" to   "${music.artistId}",
-                             "itemType" to   enumToStringForPlayListType(PlayListType.Artists)
+                                "id" to "${music.artistId}",
+                                "itemType" to enumToStringForPlayListType(PlayListType.Artists)
                             ),
                         ) {
                             popUpTo(Router.MainView.route) {
@@ -202,8 +204,8 @@ fun MusicItemView(
                     OperateType.Album -> {
                         viewModel.navController?.navigate(
                             Router.PlayListView.withArgs(
-                               "id" to "${music.albumId}",
-                              "itemType" to  enumToStringForPlayListType(PlayListType.Albums)
+                                "id" to "${music.albumId}",
+                                "itemType" to enumToStringForPlayListType(PlayListType.Albums)
                             )
                         ) {
                             popUpTo(Router.MainView.route) {
@@ -219,29 +221,20 @@ fun MusicItemView(
                         if (indexM == -1) return@OperateDialog
                         val bundle = Bundle()
                         bundle.putInt("index", indexM)
-                        viewModel.mediaBrowser?.sendCustomAction(
-                            ACTION_RemoveFromQueue,
-                            bundle,
-                            object : MediaBrowserCompat.CustomActionCallback() {
-                                override fun onResult(
-                                    action: String?,
-                                    extras: Bundle?,
-                                    resultData: Bundle?
-                                ) {
-                                    super.onResult(action, extras, resultData)
-                                    if (ACTION_RemoveFromQueue == action && resultData == null) {
-                                        if (viewModel.currentPlay.value?.id == music.id) {
-                                            viewModel.currentMusicCover.value = null
-                                            viewModel.currentPlayQueueIndex.intValue =
-                                                (index) % (viewModel.musicQueue.size + 1)
-                                            viewModel.currentPlay.value =
-                                                viewModel.musicQueue[viewModel.currentPlayQueueIndex.intValue]
-                                        }
-                                    }
-                                }
-                            }
-                        )
                         viewModel.musicQueue.removeAt(indexM)
+                        viewModel.browser?.removeMediaItem(indexM)
+//                        PlayUtils.removePlayQueue(
+//                extras, result, musicQueue,
+//                exoPlayer,
+//                db, this@PlayService
+//            )
+//                        if (viewModel.currentPlay.value?.id == music.id) {
+//                            viewModel.currentMusicCover.value = null
+//                            viewModel.currentPlayQueueIndex.intValue =
+//                                (index) % (viewModel.musicQueue.size + 1)
+//                            viewModel.currentPlay.value =
+//                                viewModel.musicQueue[viewModel.currentPlayQueueIndex.intValue]
+//                        }
                     }
 
                     OperateType.EditMusicInfo -> {
@@ -272,12 +265,13 @@ fun MusicItemView(
                 } else {
                     val musics = ArrayList<MusicItem>()
                     musics.add(music)
-                    if(PlaylistManager.addMusicsToPlaylist(
-                        context,
-                        playListId,
-                        musics,
-                        removeDuplicate
-                    )){
+                    if (PlaylistManager.addMusicsToPlaylist(
+                            context,
+                            playListId,
+                            musics,
+                            removeDuplicate
+                        )
+                    ) {
                         SongsUtils.refreshPlaylist(viewModel)
                     }
                     if (playList.id == playListId) {
@@ -305,39 +299,87 @@ fun MusicItemView(
             )
             .combinedClickable(
                 onClick = {
-                    // in select tracks status for add playlist
+
                     if (selectStatus) {
+                        // in select tracks (status) for add playlist
                         if (selectList?.contains(music) == true) {
                             selectList.remove(music)
                         } else {
                             selectList?.add(music)
                         }
                     } else {
+                        // for play
                         val bundle = Bundle()
                         if (playList.type != PlayListType.Queue) {
-                            viewModel.playListCurrent.value = playList
                             viewModel.musicQueue.clear()
                             viewModel.currentPlayQueueIndex.intValue = -1
                             viewModel.musicQueue.addAll(musicList)
                             bundle.putBoolean("switch_queue", true)
+                            SharedPreferencesUtils.enableShuffle(context, false)
+                            viewModel.enableShuffleModel.value = false
+                            viewModel.playListCurrent.value = playList
+//                            viewModel.browser?.shuffleModeEnabled = false
+                            if (viewModel.playListCurrent.value == null) {
+//                            viewModel.playListCurrent.value = playList
+//                            viewModel.currentMusicCover.value = null
+//                            viewModel.currentPlay.value = music
+                            }
+//                            bundle.putParcelable("musicItem", music)
+                            bundle.putParcelable("playList", playList)
+//                            bundle.putParcelableArrayList("musicItems", ArrayList(musicList))
+//                            bundle.putInt("index", index)
+                            viewModel.browser?.sendCustomCommand(
+                                COMMAND_CHANGE_PLAYLIST,
+                                bundle
+                            )
+                            val t1 = ArrayList<MediaItem>()
+                            viewModel.musicQueue.forEachIndexed { index, it ->
+                                it.tableId = index + 1L
+                                t1.add(MediaItem.fromUri(File(it.path).toUri()))
+                            }
+                            var needPlay = true
+                            val currentPosition: Long =
+                                if (viewModel.currentPlay.value?.id == music.id) {
+                                    if (viewModel.browser?.isPlaying == true) {
+                                        viewModel.browser?.pause()
+                                        needPlay = false
+                                    }
+                                    viewModel.browser?.currentPosition ?: 0L
+                                } else {
+                                    0L
+                                }
+                            viewModel.browser?.clearMediaItems()
+                            viewModel.browser?.setMediaItems(t1)
+                            SharedPreferencesUtils.saveSelectMusicId(
+                                context,
+                                viewModel.musicQueue[index].id
+                            )
+                            viewModel.browser?.seekTo(index, currentPosition)
+                            viewModel.browser?.playWhenReady = needPlay
+                            viewModel.browser?.prepare()
+//                if(needPlay){
+//                    mediaController?.transportControls?.play()
+//                }else{
+//                    mediaController?.transportControls?.pause()
+//                }
+//                            viewModel.mediaBrowser?.sendCustomAction(
+//                                ACTION_PLAY_MUSIC,
+//                                bundle,
+//                                null
+//                            )
                         } else {
                             bundle.putBoolean("switch_queue", false)
+                            val index =
+                                viewModel.musicQueue.indexOfFirst { musicItem -> musicItem.id == music.id }
+                            if (index == viewModel.currentPlayQueueIndex.intValue) {
+                                viewModel.browser?.playWhenReady = true
+                                viewModel.browser?.prepare()
+                            } else {
+                                viewModel.browser?.seekTo(index, 0)
+                                viewModel.browser?.playWhenReady = true
+                                viewModel.browser?.prepare()
+                            }
                         }
-                        viewModel.enableShuffleModel.value = false
-                        if (viewModel.playListCurrent.value == null) {
-                            viewModel.playListCurrent.value = playList
-                            viewModel.currentMusicCover.value = null
-                            viewModel.currentPlay.value = music
-                        }
-                        bundle.putParcelable("musicItem", music)
-                        bundle.putParcelable("playList", playList)
-                        bundle.putParcelableArrayList("musicItems", ArrayList(musicList))
-                        bundle.putInt("index", index)
-                        viewModel.mediaBrowser?.sendCustomAction(
-                            ACTION_PLAY_MUSIC,
-                            bundle,
-                            null
-                        )
                     }
                 },
                 onLongClick = {
