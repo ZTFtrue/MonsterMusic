@@ -29,7 +29,6 @@ import com.ztftrue.music.BuildConfig
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.play.ACTION_AddPlayQueue
 import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
 import com.ztftrue.music.sqlData.model.DictionaryApp
@@ -449,12 +448,11 @@ object Utils {
                                 ?.let { tracksList.add(it) }
                         }
                         musicViewModel.musicQueue.addAll(tracksList)
-                        val bundleAddTracks = Bundle()
-                        bundleAddTracks.putParcelableArrayList("musicItems", tracksList)
-                        musicViewModel.mediaBrowser?.sendCustomAction(
-                            ACTION_AddPlayQueue,
-                            bundleAddTracks,
-                            null
+                        val mediaItems = tracksList.map { musicItem ->
+                            MediaItemUtils.musicItemToMediaItem(musicItem)
+                        }
+                        musicViewModel.browser?.addMediaItems(
+                            mediaItems
                         )
                     } catch (e: Exception) {
                         // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
@@ -515,16 +513,12 @@ object Utils {
             index,
             tracksList
         )
-        val bundleAddTracks = Bundle()
-        bundleAddTracks.putParcelableArrayList("musicItems", tracksList)
-        bundleAddTracks.putInt(
-            "index",
-            index
-        )
-        musicViewModel.mediaBrowser?.sendCustomAction(
-            ACTION_AddPlayQueue,
-            bundleAddTracks,
-            null
+        val mediaItem = tracksList.map { music ->
+            MediaItemUtils.musicItemToMediaItem(music)
+        }
+        musicViewModel.browser?.addMediaItems(
+            index,
+            mediaItem
         )
     }
 

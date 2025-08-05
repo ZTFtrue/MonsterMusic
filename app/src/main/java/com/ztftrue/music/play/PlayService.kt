@@ -47,6 +47,7 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionError
 import androidx.media3.session.SessionResult
 import com.google.common.collect.ImmutableList
+import com.google.common.reflect.TypeToken
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
@@ -100,7 +101,6 @@ import java.util.concurrent.locks.ReentrantLock
  */
 const val ACTION_PLAY_MUSIC = "PLAY_MUSIC"
 const val ACTION_SWITCH_SHUFFLE = "ACTION_SWITCH_SHUFFLE"
-const val ACTION_AddPlayQueue = "AddPlayQueue"
 const val ACTION_RemoveFromQueue = "ACTION_RemoveFromQueue"
 const val ACTION_Sort_Queue = "ACTION_Sort_Queue"
 const val ACTION_SHUFFLE_PLAY_QUEUE = "ACTION_SHUFFLE_PLAY_QUEUE"
@@ -217,7 +217,6 @@ class PlayService : MediaLibraryService() {
                     .add(COMMAND_VISUALIZATION_DISCONNECTED)
                     .add(COMMAND_APP_EXIT)
                     .add(COMMAND_TRACKS_UPDATE)
-                    .add(COMMAND_ADD_TO_QUEUE)
                     .add(COMMAND_REMOVE_FROM_QUEUE)
                     .add(COMMAND_SORT_TRACKS)
                     .add(COMMAND_SORT_QUEUE)
@@ -544,7 +543,7 @@ class PlayService : MediaLibraryService() {
                 }
                 // --- Queue Management ---
                 COMMAND_ADD_TO_QUEUE.customAction -> {
-                    // ... 你的 addPlayQueue 逻辑 ...
+
                 }
 
                 COMMAND_REMOVE_FROM_QUEUE.customAction -> {
@@ -880,12 +879,7 @@ class PlayService : MediaLibraryService() {
     }
 
 //      fun onCustomAction(action: String, extras: Bundle?, result: Result<Bundle>) {
-//        if (ACTION_AddPlayQueue == action) {
-//            // add tracks to queue
-//            if (extras != null) {
-//
-//            }
-//        } else if (ACTION_RemoveFromQueue == action) {
+//      if (ACTION_RemoveFromQueue == action) {
 //            // remove tracks from queue
 //            playListCurrent = null
 //            PlayUtils.removePlayQueue(
@@ -2477,6 +2471,93 @@ class PlayService : MediaLibraryService() {
                 }
                 future.set(LibraryResult.ofItemList(mediaItems, null))
             }
+        }
+    }
+
+    private fun addPlayQueue(extras: Bundle) {
+        var musicItem = extras.getParcelable<MusicItem>("musicItem")
+        var musicItems = extras.getParcelableArrayList<MusicItem>("musicItems")
+        val index = extras.getInt("index", musicQueue.size)
+        val gson = Gson()
+        val musicItemListType = object : TypeToken<ArrayList<MusicItem?>?>() {}.type
+        musicItems = if (musicItems != null) {
+            gson.fromJson(gson.toJson(musicItems), musicItemListType)
+        } else null
+        if (musicItem != null) {
+            musicItem = gson.fromJson(gson.toJson(musicItem), MusicItem::class.java)
+        }
+        if (musicItems == null && musicItem != null) {
+            musicItems = ArrayList<MusicItem>()
+            musicItems.add(musicItem)
+        }
+        val enableShuffle = SharedPreferencesUtils.getEnableShuffle(this@PlayService)
+        // check this queue had shuffle
+        val histShuffle = if (musicQueue.isEmpty()) {
+            false
+        } else {
+            musicQueue[0].priority > 0
+        }
+        if (musicItems != null) {
+            val list = ArrayList<MediaItem>()
+            musicItems.forEachIndexed { index1, it ->
+                it.tableId = index1.toLong() + index + 1L
+                if (histShuffle) {
+                    it.priority = index1 + index + 1
+                }
+                list.add(MediaItem.fromUri(File(it.path).toUri()))
+            }
+//                musicQueue.forEachIndexed() { index1, it ->
+//                    if (it.tableId!! >= index.toLong()) {
+//                        it.tableId =  it.tableId!! + 1L + index
+//                    }
+//                    if(it.priority >= index){
+//                        it.priority = it.priority  + index + 1
+//                    }
+//                }
+
+            playListCurrent = null
+            CoroutineScope(Dispatchers.IO).launch {
+                db.CurrentListDao().delete()
+            }
+            if (index == musicQueue.size) {
+                musicQueue.addAll(musicItems)
+                CoroutineScope(Dispatchers.IO).launch {
+                    db.QueueDao().insertAll(musicItems)
+                }
+            } else {
+                if (enableShuffle) {
+                    val pList = ArrayList<MusicItem>(musicQueue)
+                    pList.addAll(index, musicItems)
+                    for (i in index until pList.size) {
+                        pList[i].priority = i + 1
+                    }
+                    val tList = ArrayList<MusicItem>(musicQueue)
+                    tList.sortBy { it.tableId }
+                    tList.addAll(index, musicItems)
+                    for (i in index until pList.size) {
+                        tList[i].tableId = i + 1L
+                    }
+                    musicQueue.clear()
+                    musicQueue.addAll(pList)
+                    CoroutineScope(Dispatchers.IO).launch {
+                        db.QueueDao().deleteAllQueue()
+                        db.QueueDao().insertAll(tList)
+                    }
+                } else {
+                    musicQueue.addAll(index, musicItems)
+                    for (i in index until musicQueue.size) {
+                        musicQueue[i].tableId = i + 1L
+                    }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        db.QueueDao().deleteAllQueue()
+                        db.QueueDao().insertAll(musicQueue)
+                    }
+                }
+            }
+            if (!exoPlayer.isPlaying) {
+                exoPlayer.playWhenReady = false
+            }
+            exoPlayer.addMediaItems(index, list)
         }
     }
 }

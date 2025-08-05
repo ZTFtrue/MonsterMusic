@@ -63,9 +63,9 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
-import com.ztftrue.music.play.ACTION_AddPlayQueue
 import com.ztftrue.music.play.ACTION_PLAY_MUSIC
 import com.ztftrue.music.play.ACTION_RemoveFromQueue
+import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.OperateType
@@ -141,22 +141,23 @@ fun MusicItemView(
                 when (it) {
                     OperateType.AddToQueue -> {
                         viewModel.musicQueue.add(music)
-                        val bundle = Bundle()
-                        bundle.putParcelable("musicItem", music)
-                        viewModel.mediaBrowser?.sendCustomAction(ACTION_AddPlayQueue, bundle, null)
+                        val mediaItem = MediaItemUtils.musicItemToMediaItem(music)
+                        viewModel.browser?.addMediaItem(
+                            mediaItem
+                        )
                     }
 
                     OperateType.PlayNext -> {
-                        val indexAdd =
-                            if (viewModel.musicQueue.isEmpty()) 0 else viewModel.currentPlayQueueIndex.intValue + 1
+                        val position=viewModel.currentPlayQueueIndex.intValue + 1
                         viewModel.musicQueue.add(
-                            indexAdd,
+                            position,
                             music
                         )
-                        val bundle = Bundle()
-                        bundle.putParcelable("musicItem", music)
-                        bundle.putInt("index", indexAdd)
-                        viewModel.mediaBrowser?.sendCustomAction(ACTION_AddPlayQueue, bundle, null)
+                        val mediaItem = MediaItemUtils.musicItemToMediaItem(music)
+                        viewModel.browser?.addMediaItem(
+                            position ,
+                            mediaItem
+                        )
                     }
 
                     OperateType.AddToPlaylist -> {

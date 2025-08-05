@@ -126,9 +126,9 @@ import com.google.common.util.concurrent.MoreExecutors
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
-import com.ztftrue.music.play.ACTION_AddPlayQueue
 import com.ztftrue.music.play.ACTION_RemoveFromQueue
 import com.ztftrue.music.play.ACTION_SWITCH_SHUFFLE
+import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_VISUALIZATION_ENABLE
 import com.ztftrue.music.sqlData.model.DictionaryApp
@@ -241,30 +241,22 @@ fun PlayingPage(
                     when (operateType) {
                         OperateType.AddToQueue -> {
                             musicViewModel.musicQueue.add(music)
-                            val bundle = Bundle()
-                            bundle.putParcelable("musicItem", music)
-                            musicViewModel.mediaBrowser?.sendCustomAction(
-                                ACTION_AddPlayQueue,
-                                bundle,
-                                null
+                            val mediaItem = MediaItemUtils.musicItemToMediaItem(music)
+                            musicViewModel.browser?.addMediaItem(
+                                mediaItem
                             )
                         }
 
                         OperateType.PlayNext -> {
+                            val position=musicViewModel.currentPlayQueueIndex.intValue + 1
                             musicViewModel.musicQueue.add(
-                                musicViewModel.currentPlayQueueIndex.intValue + 1,
+                                position,
                                 music
                             )
-                            val bundle = Bundle()
-                            bundle.putParcelable("musicItem", music)
-                            bundle.putInt(
-                                "index",
-                                musicViewModel.currentPlayQueueIndex.intValue + 1
-                            )
-                            musicViewModel.mediaBrowser?.sendCustomAction(
-                                ACTION_AddPlayQueue,
-                                bundle,
-                                null
+                            val mediaItem = MediaItemUtils.musicItemToMediaItem(music)
+                            musicViewModel.browser?.addMediaItem(
+                                position ,
+                                mediaItem
                             )
                         }
 
@@ -1386,7 +1378,7 @@ fun PlayingPage(
                                     valueRange = 0f..musicViewModel.currentDuration.longValue.toFloat(),
                                     steps = 100,
                                     onValueChangeFinished = {
-                                        musicViewModel.browser?.seekTo( musicViewModel.sliderPosition.floatValue.toLong())
+                                        musicViewModel.browser?.seekTo(musicViewModel.sliderPosition.floatValue.toLong())
                                         musicViewModel.sliderTouching = false
                                     },
                                 )
@@ -1546,7 +1538,7 @@ fun PlayingPage(
                                         modifier = Modifier
                                             .clickable {
                                                 val pbState =
-                                                    musicViewModel.browser?.isPlaying?:false
+                                                    musicViewModel.browser?.isPlaying ?: false
                                                 if (pbState) {
                                                     musicViewModel.browser?.pause()
                                                 } else {
