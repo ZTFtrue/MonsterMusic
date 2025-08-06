@@ -80,6 +80,7 @@ import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.TracksManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -87,6 +88,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.text.toFloat
 
 /**
  * playList
@@ -1025,6 +1027,10 @@ class PlayService : MediaLibraryService() {
         }
     }
 
+    private val serviceJob = SupervisorJob()
+    // 使用主线程作为默认调度器，因为很多操作最终需要和 Player 交互
+    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
+
 
     private var sqlDataInitialized = false
     private var config: PlayConfig? = null
@@ -1032,180 +1038,27 @@ class PlayService : MediaLibraryService() {
     private val lock = ReentrantLock()
 
     private fun initSqlData(bundle: Bundle) {
-        runBlocking {
-            awaitAll(
-                async(Dispatchers.IO) {
-                    db = MusicDatabase.getDatabase(this@PlayService)
-                    val sortDataDao =
-                        db.SortFiledDao()
-                    val sortData =
-                        sortDataDao.findSortByType(PlayListType.Songs.name)
-                    TracksManager.getFolderList(
-                        this@PlayService,
-                        foldersLinkedHashMap,
-                        null,
-                        tracksLinkedHashMap,
-                        "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
-                        false,
-                        allTracksLinkedHashMap
-                    )
-                    runBlocking {
-                        awaitAll(
-                            async {
-                                val sortData1 = db.SortFiledDao().findSortAll()
-                                showIndicatorList.clear()
-                                sortData1.forEach {
-                                    if (it.type == PlayListType.Songs.name || it.type.endsWith(
-                                            "@Tracks"
-                                        )
-                                    ) {
-                                        showIndicatorList.add(it)
-                                    }
-                                }
-                            },
-                            async {
-                                val auxTemp = db.AuxDao().findFirstAux()
-                                if (auxTemp == null) {
-                                    db.AuxDao().insert(auxr)
-                                } else {
-                                    auxr = auxTemp
-                                }
-                                equalizerAudioProcessor.setDaleyTime(auxr.echoDelay)
-                                equalizerAudioProcessor.setDecay(auxr.echoDecay)
-                                equalizerAudioProcessor.setFeedBack(auxr.echoRevert)
-                                equalizerAudioProcessor.setEchoActive(auxr.echo)
-                                equalizerAudioProcessor.setEqualizerActive(auxr.equalizer)
-                                equalizerAudioProcessor.setQ(auxr.equalizerQ, false)
-                                val selectedPreset = this@PlayService.getSharedPreferences(
-                                    "SelectedPreset",
-                                    MODE_PRIVATE
-                                ).getString("SelectedPreset", Utils.custom)
-                                if (selectedPreset == Utils.custom) {
-                                    for (i in 0 until 10) {
-                                        equalizerAudioProcessor.setBand(
-                                            i,
-                                            auxr.equalizerBand[i]
-                                        )
-                                    }
-                                } else {
-                                    Utils.eqPreset[selectedPreset]?.forEachIndexed { index, i ->
-                                        equalizerAudioProcessor.setBand(
-                                            index,
-                                            i
-                                        )
-                                    }
-                                }
-                            },
-                            async {
-                                val queue =
-                                    if (SharedPreferencesUtils.getEnableShuffle(this@PlayService)) {
-                                        // don't need to check shuffle, should not no shuffle, on first time
-                                        db.QueueDao().findQueueShuffle()
-                                    } else {
-                                        db.QueueDao().findQueue()
-                                    }
-                                musicQueue.clear()
-                                if (queue.isNotEmpty()) {
-                                    val idCurrent =
-                                        SharedPreferencesUtils.getCurrentPlayId(this@PlayService)
-                                    var id = -1L
-                                    queue.forEach {
-                                        // check has this tracks, avoid user remove it in storage
-                                        if (allTracksLinkedHashMap[it.id] != null) {
-                                            musicQueue.add(it)
-                                            if (it.id == idCurrent) {
-                                                currentPlayTrack = allTracksLinkedHashMap[it.id]
-                                                id = idCurrent
-                                            }
-                                        }
-                                    }
-                                    if (musicQueue.isNotEmpty() && id >= 0) {
-                                        val plaC = db.CurrentListDao().findCurrentList()
-                                        if (plaC != null) {
-                                            playListCurrent =
-                                                AnyListBase(
-                                                    plaC.listID,
-                                                    enumValueOf(plaC.type)
-                                                )
-                                        }
-                                        if (currentPlayTrack == null) {
-                                            playListCurrent = null
-                                            SharedPreferencesUtils.saveSelectMusicId(
-                                                this@PlayService,
-                                                -1
-                                            )
-                                            SharedPreferencesUtils.saveCurrentDuration(
-                                                this@PlayService,
-                                                0
-                                            )
-                                        }
-                                    }
-                                }
-                            },
-                            async {
-                                config = db.PlayConfigDao().findConfig()
-                                if (config == null) {
-                                    config = PlayConfig(0, Player.REPEAT_MODE_ALL)
-                                    db.PlayConfigDao().insert(config!!)
-                                }
-                            },
-                            async {
-                                // TODO move to   val auxTemp = db.AuxDao().findFirstAux()
-                                musicVisualizationEnable =
-                                    SharedPreferencesUtils.getEnableMusicVisualization(this@PlayService)
-//                                visualizationAudioProcessor.isActive = musicVisualizationEnable
-                                equalizerAudioProcessor.setVisualizationAudioActive(
-                                    musicVisualizationEnable
-                                )
-                            },
-                            async {
-                                val list =
-                                    db.MainTabDao().findAllIsShowMainTabSortByPriority()
-                                if (list.isEmpty()) {
-                                    PlayUtils.addDefaultMainTab(mainTab)
-                                    db.MainTabDao().insertAll(mainTab)
-                                } else {
-                                    mainTab.addAll(list)
-                                }
-                            }
-                        )
-                    }
-                    sqlDataInitialized = true
-                }
-            )
+        // 启动一个非阻塞的协程来执行所有初始化工作
+        serviceScope.launch {
+            Log.d("PlayService", "Starting player data initialization...")
+            val loadingJob = launch(Dispatchers.IO) {
+                db = MusicDatabase.getDatabase(this@PlayService)
+                loadAllTracksAndFolders()
+                awaitAll(
+                    async { loadAuxSettings() },
+                    async { loadPlayConfig() },
+                    async { loadMainTabs() },
+                    async { loadShowIndicatorList() },
+                    async { loadVisualizationSettings() },
+                    async { loadLastQueue() }
+                )
+            }
+            loadingJob.join()
+            applyLoadedDataToPlayer()
+            sqlDataInitialized = true
+            Log.d("PlayService", "Player data initialization finished.")
         }
 
-        volumeValue = SharedPreferencesUtils.getVolume(this@PlayService)
-        exoPlayer.volume = volumeValue / 100f
-        exoPlayer.repeatMode = config?.repeatModel ?: Player.REPEAT_MODE_ALL
-        val p = PlaybackParameters(
-            auxr.speed,
-            auxr.pitch
-        )
-        var position = 0L
-        exoPlayer.playbackParameters = p
-        if (musicQueue.isNotEmpty()) {
-            val t1 = ArrayList<MediaItem>()
-            var currentIndex = 0
-            musicQueue.forEachIndexed { index, it ->
-                t1.add(MediaItem.fromUri(File(it.path).toUri()))
-                if (it.id == currentPlayTrack?.id) {
-                    currentIndex = index
-                }
-            }
-            exoPlayer.setMediaItems(t1)
-            if (currentPlayTrack != null) {
-                position = SharedPreferencesUtils.getCurrentPosition(this@PlayService)
-                if (position >= (currentPlayTrack?.duration ?: 0)) {
-                    position = 0
-                }
-                exoPlayer.seekTo(currentIndex, position)
-                updateNotify(position, currentPlayTrack?.duration)
-            }
-            exoPlayer.playWhenReady = false
-            exoPlayer.prepare()
-        }
-        setData(bundle, position.toFloat())
     }
 
     private fun getData(bundle: Bundle): Bundle? {
@@ -1264,6 +1117,7 @@ class PlayService : MediaLibraryService() {
             mediaSession?.release()
             exoPlayer.stop()
             exoPlayer.release()
+            serviceJob.cancel() // 在 Service 销毁时取消所有协程
         } catch (_: Exception) {
         }
         if (receiver != null) {
@@ -2444,6 +2298,182 @@ class PlayService : MediaLibraryService() {
                 exoPlayer.playWhenReady = false
             }
             exoPlayer.addMediaItems(index, list)
+        }
+    }
+    // 这个函数在 PlayService 内部定义，在主线程上调用
+    private fun applyLoadedDataToPlayer() {
+        volumeValue = SharedPreferencesUtils.getVolume(this@PlayService)
+        exoPlayer.volume = volumeValue / 100f
+        exoPlayer.repeatMode = config?.repeatModel ?: Player.REPEAT_MODE_ALL
+        val p = PlaybackParameters(
+            auxr.speed,
+            auxr.pitch
+        )
+        var position = 0L
+        exoPlayer.playbackParameters = p
+        if (musicQueue.isNotEmpty()) {
+            val t1 = ArrayList<MediaItem>()
+            var currentIndex = 0
+            musicQueue.forEachIndexed { index, it ->
+                t1.add(MediaItem.fromUri(File(it.path).toUri()))
+                if (it.id == currentPlayTrack?.id) {
+                    currentIndex = index
+                }
+            }
+            exoPlayer.setMediaItems(t1)
+            if (currentPlayTrack != null) {
+                position = SharedPreferencesUtils.getCurrentPosition(this@PlayService)
+                if (position >= (currentPlayTrack?.duration ?: 0)) {
+                    position = 0
+                }
+                exoPlayer.seekTo(currentIndex, position)
+                updateNotify(position, currentPlayTrack?.duration)
+            }
+            exoPlayer.playWhenReady = false
+            exoPlayer.prepare()
+        }
+        setData(bundle, position.toFloat())
+    }
+
+
+
+    private suspend fun loadAllTracksAndFolders() {
+        db = MusicDatabase.getDatabase(this@PlayService)
+        val sortDataDao =
+            db.SortFiledDao()
+        val sortData =
+            sortDataDao.findSortByType(PlayListType.Songs.name)
+        TracksManager.getFolderList(
+            this@PlayService,
+            foldersLinkedHashMap,
+            null,
+            tracksLinkedHashMap,
+            "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
+            false,
+            allTracksLinkedHashMap
+        )
+    }
+
+    private suspend fun loadAuxSettings() {
+        val auxTemp = db.AuxDao().findFirstAux()
+        if (auxTemp == null) {
+            db.AuxDao().insert(auxr)
+        } else {
+            auxr = auxTemp
+        }
+        equalizerAudioProcessor.setDaleyTime(auxr.echoDelay)
+        equalizerAudioProcessor.setDecay(auxr.echoDecay)
+        equalizerAudioProcessor.setFeedBack(auxr.echoRevert)
+        equalizerAudioProcessor.setEchoActive(auxr.echo)
+        equalizerAudioProcessor.setEqualizerActive(auxr.equalizer)
+        equalizerAudioProcessor.setQ(auxr.equalizerQ, false)
+        val selectedPreset = this@PlayService.getSharedPreferences(
+            "SelectedPreset",
+            MODE_PRIVATE
+        ).getString("SelectedPreset", Utils.custom)
+        if (selectedPreset == Utils.custom) {
+            for (i in 0 until 10) {
+                equalizerAudioProcessor.setBand(
+                    i,
+                    auxr.equalizerBand[i]
+                )
+            }
+        } else {
+            Utils.eqPreset[selectedPreset]?.forEachIndexed { index, i ->
+                equalizerAudioProcessor.setBand(
+                    index,
+                    i
+                )
+            }
+        }
+    }
+
+    private suspend fun loadPlayConfig() {
+        config = db.PlayConfigDao().findConfig()
+        if (config == null) {
+            config = PlayConfig(0, Player.REPEAT_MODE_ALL)
+            db.PlayConfigDao().insert(config!!)
+        }
+    }
+
+    private suspend fun loadMainTabs() {
+        val list =
+            db.MainTabDao().findAllIsShowMainTabSortByPriority()
+        if (list.isEmpty()) {
+            PlayUtils.addDefaultMainTab(mainTab)
+            db.MainTabDao().insertAll(mainTab)
+        } else {
+            mainTab.addAll(list)
+        }
+    }
+
+    private suspend fun loadShowIndicatorList() {
+        val sortData1 = db.SortFiledDao().findSortAll()
+        showIndicatorList.clear()
+        sortData1.forEach {
+            if (it.type == PlayListType.Songs.name || it.type.endsWith(
+                    "@Tracks"
+                )
+            ) {
+                showIndicatorList.add(it)
+            }
+        }
+    }
+
+    private suspend fun loadVisualizationSettings() {
+        // TODO move to   val auxTemp = db.AuxDao().findFirstAux()
+        musicVisualizationEnable =
+            SharedPreferencesUtils.getEnableMusicVisualization(this@PlayService)
+//                                visualizationAudioProcessor.isActive = musicVisualizationEnable
+        equalizerAudioProcessor.setVisualizationAudioActive(
+            musicVisualizationEnable
+        )
+    }
+
+    private suspend fun loadLastQueue() {
+        val queue =
+            if (SharedPreferencesUtils.getEnableShuffle(this@PlayService)) {
+                // don't need to check shuffle, should not no shuffle, on first time
+                db.QueueDao().findQueueShuffle()
+            } else {
+                db.QueueDao().findQueue()
+            }
+        musicQueue.clear()
+        if (queue.isNotEmpty()) {
+            val idCurrent =
+                SharedPreferencesUtils.getCurrentPlayId(this@PlayService)
+            var id = -1L
+            queue.forEach {
+                // check has this tracks, avoid user remove it in storage
+                if (allTracksLinkedHashMap[it.id] != null) {
+                    musicQueue.add(it)
+                    if (it.id == idCurrent) {
+                        currentPlayTrack = allTracksLinkedHashMap[it.id]
+                        id = idCurrent
+                    }
+                }
+            }
+            if (musicQueue.isNotEmpty() && id >= 0) {
+                val plaC = db.CurrentListDao().findCurrentList()
+                if (plaC != null) {
+                    playListCurrent =
+                        AnyListBase(
+                            plaC.listID,
+                            enumValueOf(plaC.type)
+                        )
+                }
+                if (currentPlayTrack == null) {
+                    playListCurrent = null
+                    SharedPreferencesUtils.saveSelectMusicId(
+                        this@PlayService,
+                        -1
+                    )
+                    SharedPreferencesUtils.saveCurrentDuration(
+                        this@PlayService,
+                        0
+                    )
+                }
+            }
         }
     }
 }
