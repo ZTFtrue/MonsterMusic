@@ -1,8 +1,6 @@
 package com.ztftrue.music.ui.home
 
 import android.content.Context
-import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -70,9 +68,7 @@ import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.enumToStringForPlayListType
-import com.ztftrue.music.utils.model.ArtistList
 import com.ztftrue.music.utils.model.FolderList
-import kotlin.collections.forEach
 
 
 @Composable
@@ -89,7 +85,7 @@ fun FolderListView(
     LaunchedEffect(Unit, musicViewModel.refreshFolder.value ) {
         folderList.clear()
         val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
-            musicViewModel.browser?.getChildren("folders_root", 0, 1, null)
+            musicViewModel.browser?.getChildren("folders_root", 0, Integer.MAX_VALUE, null)
         futureResult?.addListener({
             try {
                 val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()

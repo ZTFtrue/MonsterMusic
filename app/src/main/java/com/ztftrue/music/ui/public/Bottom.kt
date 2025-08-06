@@ -1,7 +1,6 @@
 package com.ztftrue.music.ui.public
 
 import android.graphics.Bitmap
-import android.support.v4.media.session.PlaybackStateCompat
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll

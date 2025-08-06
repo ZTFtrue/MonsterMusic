@@ -15,7 +15,6 @@ import android.provider.MediaStore
 import androidx.activity.result.IntentSenderRequest
 import androidx.annotation.OptIn
 import androidx.core.text.isDigitsOnly
-import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.sqlData.model.MusicItem
@@ -41,7 +40,6 @@ object TracksManager {
     fun getFolderList(
         context: Context,
         folderListLinkedHashMap: LinkedHashMap<Long, FolderList>,
-        result: MediaBrowserServiceCompat.Result<Bundle>?,
         tracksHashMap: LinkedHashMap<Long, MusicItem>,
         sortOrder1: String,
         needTracks: Boolean = false,
@@ -174,14 +172,12 @@ object TracksManager {
         folderListLinkedHashMap.clear()
         folderListLinkedHashMap.putAll(mapFolder)
         cursor?.close()
-        if (result == null) return
         val bundle = Bundle()
         if (needTracks) {
             bundle.putParcelableArrayList("songsList", ArrayList(tracksHashMap.values))
         } else {
             bundle.putParcelableArrayList("list", ArrayList(folderListLinkedHashMap.values))
         }
-        result.sendResult(bundle)
     }
 
 

@@ -1,7 +1,5 @@
 package com.ztftrue.music.ui.public
 
-import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -59,9 +57,7 @@ import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.CustomMetadataKeys
 import com.ztftrue.music.sqlData.model.MusicItem
-import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.model.MusicPlayList
-import kotlin.collections.forEach
 
 @Composable
 fun CreatePlayListDialog(
@@ -516,7 +512,7 @@ fun AddMusicToPlayListDialog(
     val playList = remember { mutableStateListOf<MusicPlayList>() }
     LaunchedEffect(Unit) {
         val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
-            musicViewModel.browser?.getChildren("playlists_root", 0, 1, null)
+            musicViewModel.browser?.getChildren("playlists_root", 0, Integer.MAX_VALUE, null)
         futureResult?.addListener({
             try {
                 val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()

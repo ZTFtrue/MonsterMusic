@@ -95,9 +95,7 @@ object PlaylistManager {
         playList.forEach {
             list.put(it.id, it)
         }
-        val bundle = Bundle()
-        bundle.putParcelableArrayList("list", playList)
-        return playlistFiles
+        return playList
     }
 
 

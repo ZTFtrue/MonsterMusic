@@ -3,17 +3,25 @@ package com.ztftrue.music
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Bundle
-import android.support.v4.media.session.PlaybackStateCompat
+import android.view.KeyEvent
 import android.view.View
 import android.widget.RemoteViews
 import androidx.annotation.OptIn
-import androidx.media.session.MediaButtonReceiver
+import androidx.core.content.ContextCompat
+import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaButtonReceiver
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
+import androidx.media3.session.legacy.PlaybackStateCompat
+import com.google.common.util.concurrent.ListenableFuture
+import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils.getCover
 import java.io.File
@@ -85,7 +93,7 @@ class PlayMusicWidget : AppWidgetProvider() {
 //            val maxHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT)
 //            val density = context.resources?.displayMetrics?.density ?: 1f
 //            val columnCount = (minWidth / (60.dp.toPx(context)))
-            updateAppWidget(context, appWidgetManager, appWidgetId)
+            updateAppWidget(context, appWidgetManager, appWidgetId,)
         }
 
 //        val remoteViews = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -114,6 +122,24 @@ class PlayMusicWidget : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
+//        val sessionToken = SessionToken(context, ComponentName(context, PlayService::class.java))
+//        val controllerFuture: ListenableFuture<MediaController> =
+//            MediaController.Builder(context, sessionToken).buildAsync()
+//
+//        controllerFuture.addListener({
+//            try {
+//                val controller = controllerFuture.get()
+//                // 使用获取到的 controller 更新所有小部件实例
+//                appWidgetIds.forEach { appWidgetId ->
+//                    updateAppWidget(context, appWidgetManager, appWidgetId, controller)
+//                }
+//            } catch (e: Exception) {
+//                // 处理连接失败的情况
+//            } finally {
+//                // (重要) 释放 controller future
+//                MediaController.releaseFuture(controllerFuture)
+//            }
+//        }, ContextCompat.getMainExecutor(context))
         //this line replace the original
         for (appWidgetId in appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId)
@@ -170,23 +196,43 @@ class PlayMusicWidget : AppWidgetProvider() {
                     "setBackgroundColor",
                     context.resources.getColor(R.color.light_blue_900)
                 )
-                it.setOnClickPendingIntent(
-                    R.id.preview, MediaButtonReceiver.buildMediaButtonPendingIntent(
-                        context,
-                        PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
-                    )
+                val prevIntent = Intent(context, MediaButtonReceiver::class.java).apply {
+                    // 创建一个“上一首”的媒体按键事件
+                    putExtra(Intent.EXTRA_KEY_EVENT, KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PREVIOUS))
+                }
+                val prevPendingIntent = PendingIntent.getBroadcast(
+                    context,
+                    KeyEvent.KEYCODE_MEDIA_PREVIOUS, // 使用按键码作为 requestCode 以保证唯一性
+                    prevIntent,
+                    PendingIntent.FLAG_IMMUTABLE
                 )
                 it.setOnClickPendingIntent(
-                    R.id.pause, MediaButtonReceiver.buildMediaButtonPendingIntent(
-                        context,
-                        PlaybackStateCompat.ACTION_PLAY_PAUSE
-                    )
+                    R.id.preview,  prevPendingIntent
+                )
+                val playPauseIntent = Intent(context, MediaButtonReceiver::class.java).apply {
+                    putExtra(Intent.EXTRA_KEY_EVENT, KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE))
+                }
+                val playPausePendingIntent = PendingIntent.getBroadcast(
+                    context,
+                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+                    playPauseIntent,
+                    PendingIntent.FLAG_IMMUTABLE
                 )
                 it.setOnClickPendingIntent(
-                    R.id.next, MediaButtonReceiver.buildMediaButtonPendingIntent(
-                        context,
-                        PlaybackStateCompat.ACTION_SKIP_TO_NEXT
-                    )
+                    R.id.pause, playPausePendingIntent
+                )
+                val nextIntent = Intent(context, MediaButtonReceiver::class.java).apply {
+                    putExtra(Intent.EXTRA_KEY_EVENT, KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT))
+                }
+
+                val nextPendingIntent = PendingIntent.getBroadcast(
+                    context,
+                    KeyEvent.KEYCODE_MEDIA_NEXT,
+                    nextIntent,
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+                it.setOnClickPendingIntent(
+                    R.id.next, nextPendingIntent
                 )
                 val intent = Intent(context, MainActivity::class.java)
                 val pendingIntent = PendingIntent.getActivity(

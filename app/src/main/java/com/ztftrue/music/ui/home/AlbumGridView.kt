@@ -100,7 +100,7 @@ fun AlbumGridView(
         if (albumListDefault == null) {
             albumList.clear()
             val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
-                musicViewModel.browser?.getChildren("albums_root", 0, 1, null)
+                musicViewModel.browser?.getChildren("albums_root", 0, Integer.MAX_VALUE, null)
             futureResult?.addListener({
                 try {
                     val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()

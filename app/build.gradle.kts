@@ -67,8 +67,8 @@ android {
         }
         getByName("debug") {
             applicationIdSuffix = ".debug" // Appends ".debug" to the
-//            isMinifyEnabled = true
-//            isShrinkResources = true
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -118,7 +118,7 @@ dependencies {
 
     implementation("androidx.appcompat:appcompat:1.7.1")
 
-    implementation("androidx.media:media:1.7.0")
+//    implementation("androidx.media:media:1.7.0")
     implementation("androidx.media3:media3-exoplayer:1.8.0")
     implementation("androidx.media3:media3-session:1.8.0")
     implementation("androidx.media3:media3-ui:1.8.0")

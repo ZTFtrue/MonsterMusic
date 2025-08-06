@@ -40,3 +40,10 @@
 -keep public class * implements java.lang.reflect.Type
 
 -keep class org.jaudiotagger.** {*;}
+
+
+-keep class com.ztftrue.music.play.PlayService { *; }
+-keep class com.ztftrue.music.play.PlayService$* { *; }
+
+-keep class androidx.media3.** { *; }
+-keep interface androidx.media3.** { *; }

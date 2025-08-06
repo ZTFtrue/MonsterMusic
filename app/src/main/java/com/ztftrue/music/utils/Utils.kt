@@ -324,7 +324,7 @@ object Utils {
     ) {
         if (name.isNotEmpty()) {
             val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
-                musicViewModel.browser?.getChildren(type.name + "_track_" + id, 0, 1, null)
+                musicViewModel.browser?.getChildren(type.name + "_track_" + id, 0, Integer.MAX_VALUE, null)
             futureResult?.addListener({
                 try {
                     val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
@@ -391,7 +391,7 @@ object Utils {
         removeDuplicate: Boolean
     ) {
         val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
-            musicViewModel.browser?.getChildren(type.name + "_track_" + id, 0, 1, null)
+            musicViewModel.browser?.getChildren(type.name + "_track_" + id, 0, Integer.MAX_VALUE, null)
         futureResult?.addListener({
             try {
                 val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
@@ -432,7 +432,7 @@ object Utils {
                     musicViewModel.browser?.getChildren(
                         item.type.name + "_track_" + item.id,
                         0,
-                        1,
+                        Integer.MAX_VALUE,
                         null
                     )
                 futureResult?.addListener({
@@ -466,7 +466,7 @@ object Utils {
                     musicViewModel.browser?.getChildren(
                         item.type.name + "_track_" + item.id,
                         0,
-                        1,
+                        Integer.MAX_VALUE,
                         null
                     )
                 futureResult?.addListener({

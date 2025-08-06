@@ -5,17 +5,14 @@ import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import androidx.media.MediaBrowserServiceCompat
 import com.ztftrue.music.utils.model.AlbumList
 
 object AlbumManager {
     fun getAlbumList(
         context: Context,
         list: LinkedHashMap<Long, AlbumList>,
-        result: MediaBrowserServiceCompat.Result<Bundle>?,
         sortOrder1: String
     ) {
-
         val playListProjection = arrayOf(
             MediaStore.Audio.Albums.ALBUM,
             MediaStore.Audio.Albums.ALBUM_ID,
@@ -63,11 +60,6 @@ object AlbumManager {
         }
         list.putAll(playList)
         cursor?.close()
-        if (result == null) return
-        val bundle = Bundle()
-        bundle.putParcelableArrayList("list", ArrayList(list.values))
-        result.sendResult(bundle)
-
     }
 
     fun getAlbumByName(context: Context, name: String): ArrayList<AlbumList> {

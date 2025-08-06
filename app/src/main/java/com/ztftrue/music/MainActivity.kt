@@ -20,7 +20,6 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.provider.Settings
-import android.support.v4.media.session.MediaControllerCompat
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -55,13 +54,21 @@ import androidx.media3.common.Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED
 import androidx.media3.common.Timeline
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.LibraryResult
+import androidx.media3.session.LibraryResult.RESULT_ERROR_BAD_VALUE
+import androidx.media3.session.LibraryResult.RESULT_ERROR_INVALID_STATE
+import androidx.media3.session.LibraryResult.RESULT_ERROR_IO
+import androidx.media3.session.LibraryResult.RESULT_ERROR_PERMISSION_DENIED
+import androidx.media3.session.LibraryResult.RESULT_ERROR_UNKNOWN
+import androidx.media3.session.LibraryResult.RESULT_INFO_SKIPPED
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionError
 import androidx.media3.session.SessionResult
 import androidx.media3.session.SessionToken
+import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.ListenableFuture
-import com.ztftrue.music.play.EVENT_Visualization_Change
 import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_GET_INITIALIZED_DATA
@@ -605,7 +612,7 @@ class MainActivity : ComponentActivity() {
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
                 val i = Intent(this@MainActivity, PlayService::class.java)
-                startForegroundService(i)  // Start the service explicitly
+                startService(i)  // Start the service explicitly
                 setContent {
                     MusicPitchTheme(musicViewModel) {
                         BaseLayout(musicViewModel, this@MainActivity)
@@ -619,7 +626,7 @@ class MainActivity : ComponentActivity() {
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             val i = Intent(this@MainActivity, PlayService::class.java)
-            startForegroundService(i)  // Start the service explicitly
+            startService(i)  // Start the service explicitly
             setContent {
                 MusicPitchTheme(musicViewModel) {
                     BaseLayout(musicViewModel, this@MainActivity)
@@ -661,12 +668,18 @@ class MainActivity : ComponentActivity() {
                 if (remainTime == 0L) {
                     musicViewModel.sleepTime.longValue = 0
                 }
+            } else if (command.customAction == PlayService.COMMAND_VISUALIZATION_DATA.customAction) {
+                val magnitude = args.getFloatArray("magnitude")?.toList()
+                if (magnitude != null) {
+                    musicViewModel.musicVisualizationData.clear()
+                    musicViewModel.musicVisualizationData.addAll(magnitude)
+                }
             }
             return super.onCustomCommand(controller, command, args)
         }
     }
 
-    private fun initializeAndConnect() {
+    private   fun initializeAndConnect() {
         if (::browserFuture.isInitialized) return // 防止重复初始化
         // 1. 创建 SessionToken，指定要连接的 Service
         val sessionToken = SessionToken(this, ComponentName(this, PlayService::class.java))
@@ -680,9 +693,19 @@ class MainActivity : ComponentActivity() {
                 // 检查连接是否成功，并获取 browser 实例
                 val connectedBrowser = browserFuture.get()
                 if (connectedBrowser != null) {
-                    musicViewModel.browser = connectedBrowser
-                    onBrowserConnected(connectedBrowser)
-//                    connectedBrowser.add
+                    val rootResult:ListenableFuture<LibraryResult<MediaItem>> = connectedBrowser.getLibraryRoot(null)
+                    val result: LibraryResult<MediaItem>? = rootResult.get()
+                    if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
+                        Log.e("MyMusicActivity", "Error getting MediaBrowser root${result?.resultCode }")
+                        Log.e("MyMusicActivity",
+                           "${ RESULT_ERROR_PERMISSION_DENIED},${RESULT_ERROR_IO},${SessionResult.RESULT_ERROR_NOT_SUPPORTED},${SessionResult. RESULT_ERROR_SESSION_DISCONNECTED},                            ${ SessionResult.RESULT_ERROR_SESSION_AUTHENTICATION_EXPIRED},                            ${SessionResult. RESULT_ERROR_SESSION_PREMIUM_ACCOUNT_REQUIRED},                            ${SessionResult. RESULT_ERROR_SESSION_CONCURRENT_STREAM_LIMIT},${SessionResult.RESULT_ERROR_SESSION_PARENTAL_CONTROL_RESTRICTED},${SessionResult.RESULT_ERROR_SESSION_NOT_AVAILABLE_IN_REGION},${SessionResult.RESULT_ERROR_SESSION_SKIP_LIMIT_REACHED},${SessionResult.RESULT_ERROR_SESSION_SETUP_REQUIRED},"
+                            )
+                        return@addListener
+                    }
+                    rootResult.addListener({
+                        musicViewModel.browser = connectedBrowser
+                        onBrowserConnected(connectedBrowser)
+                    }, ContextCompat.getMainExecutor(this))
                 } else {
                     // 连接失败或被取消
                     onBrowserConnectionFailed()
@@ -720,9 +743,23 @@ class MainActivity : ComponentActivity() {
     private fun onBrowserConnected(browser: MediaBrowser) {
         browser.addListener(playerListener) // playerListener 是你定义的 Player.Listener 实例
         updateUiWithCurrentState(browser)
+
+        val futureResult: ListenableFuture<SessionResult>? =
+            musicViewModel.browser?.sendCustomCommand(
+                COMMAND_GET_INITIALIZED_DATA,
+                Bundle().apply { },
+            )
+        futureResult?.addListener({
+            try {
+                val sessionResult = futureResult.get()
+                if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
+                    getInitData(sessionResult.extras)
+                }
+            } catch (e: Exception) {
+                Log.e("Client", "Failed to toggle favorite status", e)
+            }
+        }, ContextCompat.getMainExecutor(this@MainActivity))
         fetchRootChildren(browser)
-//        browser.sendCustomCommand(COMMAND_GET_INITIALIZED_DATA)
-//        getInitData()
         SharedPreferencesUtils.getEnableShuffle(this@MainActivity).also {
             musicViewModel.enableShuffleModel.value = it
         }
@@ -755,6 +792,11 @@ class MainActivity : ComponentActivity() {
                 val qList: Collection<MusicItem> =
                     (newQueue.map { MediaItemUtils.mediaItemToMusicItem(it) }).filterNotNull()
                 val qIndex = musicViewModel.browser?.currentMediaItemIndex ?: 0
+
+                if (qIndex >= qList.size) {
+                    Log.e("MusicViewModel", "onTimelineChanged: qIndex >= qList.size")
+                    return
+                }
                 musicViewModel.currentPlayQueueIndex.intValue = qIndex
                 musicViewModel.musicQueue.clear()
                 musicViewModel.musicQueue.addAll(qList)
@@ -853,23 +895,6 @@ class MainActivity : ComponentActivity() {
         lock.unlock()
     }
 
-    val callback = object : MediaControllerCompat.Callback() {
-
-        override fun onExtrasChanged(extras: Bundle?) {
-            super.onExtrasChanged(extras)
-            extras?.let {
-                val type = it.getInt("type")
-                if (type == EVENT_Visualization_Change) {
-                    val magnitude = it.getFloatArray("magnitude")?.toList()
-                    if (magnitude != null) {
-                        musicViewModel.musicVisualizationData.clear()
-                        musicViewModel.musicVisualizationData.addAll(magnitude)
-                    }
-                }
-            }
-        }
-    }
-
 
     fun getInitData(resultData: Bundle) {
         resultData.getParcelableArrayList<SortFiledData>("showIndicatorList")?.onEach { sort ->
@@ -931,7 +956,7 @@ class MainActivity : ComponentActivity() {
         musicViewModel.enableEcho.value = resultData.getBoolean("echoActive")
         musicViewModel.echoFeedBack.value = resultData.getBoolean("echoFeedBack")
         musicViewModel.repeatModel.intValue = resultData.getInt("repeat", Player.REPEAT_MODE_ALL)
-        musicViewModel.sliderPosition.floatValue = resultData.getFloat("position", 0F)
+        musicViewModel.sliderPosition.floatValue = resultData.getLong("position", 0L).toFloat()
         // SleepTime wait when play next
         musicViewModel.playCompleted.value =
             resultData.getBoolean("play_completed")

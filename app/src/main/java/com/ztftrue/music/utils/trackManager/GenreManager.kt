@@ -3,7 +3,6 @@ package com.ztftrue.music.utils.trackManager
 import android.content.Context
 import android.os.Bundle
 import android.provider.MediaStore
-import androidx.media.MediaBrowserServiceCompat
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.model.GenresList
 import com.ztftrue.music.utils.PlayListType
@@ -13,7 +12,6 @@ object GenreManager {
         context: Context,
         list: LinkedHashMap<Long, GenresList>,
         tracksHashMap: LinkedHashMap<Long, MusicItem>,
-        result: MediaBrowserServiceCompat.Result<Bundle>?,
         sortOrder1: String
     ) {
         val playListProjection = arrayOf(
@@ -53,9 +51,6 @@ object GenreManager {
         }
         list.putAll(playList)
         cursor?.close()
-        val bundle = Bundle()
-        bundle.putParcelableArrayList("list", ArrayList(list.values))
-        result?.sendResult(bundle)
     }
 
 }

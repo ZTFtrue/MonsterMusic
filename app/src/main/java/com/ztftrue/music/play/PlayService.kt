@@ -9,12 +9,10 @@ import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.provider.MediaStore
-import android.support.v4.media.MediaMetadataCompat
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -78,6 +76,7 @@ import com.ztftrue.music.utils.trackManager.ArtistManager
 import com.ztftrue.music.utils.trackManager.GenreManager
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.TracksManager
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -87,8 +86,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.text.toFloat
 
 /**
  * playList
@@ -100,15 +97,12 @@ import kotlin.text.toFloat
  */
 
 
-const val EVENT_DATA_READY = 6
-const val EVENT_Visualization_Change = 7
-
-//@Suppress("deprecation")
+@Suppress("deprecation")
 @UnstableApi
 class PlayService : MediaLibraryService() {
 
 
-    private var mediaSession: MediaLibrarySession? = null
+    private lateinit var mediaSession: MediaLibrarySession
     private var mControllerInfo: MediaSession.ControllerInfo? = null
     val equalizerAudioProcessor: EqualizerAudioProcessor = EqualizerAudioProcessor()
 //    val sonicAudioProcessor = SonicAudioProcessor()
@@ -141,6 +135,7 @@ class PlayService : MediaLibraryService() {
     private val artistHasAlbumMap: HashMap<Long, ArrayList<AlbumList>> = HashMap()
     private val genreHasAlbumMap: HashMap<Long, ArrayList<AlbumList>> = HashMap()
 
+    private val isInitialized = CompletableDeferred<Unit>()
 
     private val mainTab = ArrayList<MainTab>(7)
     private lateinit var db: MusicDatabase
@@ -163,6 +158,7 @@ class PlayService : MediaLibraryService() {
     override fun onCreate() {
         super.onCreate()
         initExo(this@PlayService)
+        initializePlayerData()
         if (SharedPreferencesUtils.getAutoPlayEnable(this)) {
             receiver = BluetoothConnectionReceiver(exoPlayer)
             val filter = IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED)
@@ -189,9 +185,10 @@ class PlayService : MediaLibraryService() {
             session: MediaSession,
             controller: MediaSession.ControllerInfo
         ): MediaSession.ConnectionResult {
+            Log.e("MY_APP_DEBUG", "SERVICE: onConnect called by package: ${controller.packageName}")
             mControllerInfo = controller
             val availableCommands =
-                MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon()
+                MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS.buildUpon()
                     // 添加所有你定义的 SessionCommand
                     .add(COMMAND_CHANGE_PITCH)
                     .add(COMMAND_CHANGE_Q)
@@ -223,6 +220,7 @@ class PlayService : MediaLibraryService() {
 
             return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                 .setAvailableSessionCommands(availableCommands)
+//                .setAvailablePlayerCommands(availableCommands)
                 .build()
         }
 
@@ -232,6 +230,7 @@ class PlayService : MediaLibraryService() {
             customCommand: SessionCommand,
             args: Bundle
         ): ListenableFuture<SessionResult> {
+            Log.d("PlayService", "onCustomCommand: ${customCommand.customAction}")
             when (customCommand.customAction) {
                 // --- DSP & Effects ---
                 COMMAND_CHANGE_PITCH.customAction -> {
@@ -358,8 +357,16 @@ class PlayService : MediaLibraryService() {
                         equalizerAudioProcessor.setVisualizationAudioActive(true)
                     }
                 }
+
                 COMMAND_GET_INITIALIZED_DATA.customAction -> {
-                  getInitializedData()
+                    val future = SettableFuture.create<SessionResult>()
+                    serviceScope.async  {
+                        isInitialized.await()
+                        val bundle = Bundle()
+                        setData(bundle, exoPlayer.currentPosition)
+                        future.set(SessionResult(SessionResult.RESULT_SUCCESS, bundle))
+                    }
+                    return future;
                 }
 
                 COMMAND_VISUALIZATION_DISCONNECTED.customAction -> {
@@ -388,7 +395,7 @@ class PlayService : MediaLibraryService() {
 
                 COMMAND_CHANGE_PLAYLIST.customAction -> {
                     CoroutineScope(Dispatchers.IO).launch {
-                        val playList = args.getParcelable<MusicPlayList>("playList")
+                        val playList = args.getParcelable<AnyListBase>("playList")
                         if (playList != null) {
                             var currentList = db.CurrentListDao().findCurrentList()
                             if (currentList == null) {
@@ -629,13 +636,7 @@ class PlayService : MediaLibraryService() {
             browser: MediaSession.ControllerInfo,
             params: LibraryParams?
         ): ListenableFuture<LibraryResult<MediaItem>> {
-            lock.lock()
-            var bundle = getData(Bundle())
-            if (bundle == null) {
-                bundle = Bundle()
-                initSqlData(bundle)
-            }
-            lock.unlock()
+            Log.d("PlayService", "onGetLibraryRoot")
             val clientPackageName = browser.packageName
             val future = SettableFuture.create<LibraryResult<ImmutableList<MediaItem>>>()
             // 为 Android Auto 提供一个简化的根节点
@@ -670,13 +671,16 @@ class PlayService : MediaLibraryService() {
             pageSize: Int,
             params: LibraryParams?
         ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
+            Log.e("MY_APP_DEBUG", "SERVICE: onGetChildren called with parentId: '$parentId'")
+            Log.d("PlayService", "onGetChildren: $parentId")
             val future = SettableFuture.create<LibraryResult<ImmutableList<MediaItem>>>()
             CoroutineScope(Dispatchers.IO).launch {
                 try {
+                    isInitialized.await()
                     when {
                         parentId == "root" -> {
-//                            val topLevelItems = createTopLevelCategories()
-                            future.set(LibraryResult.ofItemList(listOf(), null))
+                            val topLevelItems = createTopLevelCategories()
+                            future.set(LibraryResult.ofItemList(topLevelItems, null))
                         }
 
                         parentId == "songs_root" -> {
@@ -723,33 +727,32 @@ class PlayService : MediaLibraryService() {
                             }
                         }
                         // --- 二级子列表（具体实体下的内容） ---
-                        parentId.startsWith("album_track_") -> {
-                            handlePrefixedId(parentId, "album_track_", future) { id ->
+                        parentId.startsWith(PlayListType.Albums.name+"_track_") -> {
+                            handlePrefixedId(parentId, PlayListType.Albums.name+"_track_", future) { id ->
                                 getAlbumListTracks(context, id, future)
                             }
                         }
 
-                        parentId.startsWith("artist_track_") -> {
-                            handlePrefixedId(parentId, "artist_track_", future) { id ->
+                        parentId.startsWith(PlayListType.Artists.name+"_track_") -> {
+                            handlePrefixedId(parentId, PlayListType.Artists.name+"_track_", future) { id ->
                                 getArtistListTracks(context, id, future)
                             }
                         }
 
-                        parentId.startsWith("genre_track_") -> {
-                            handlePrefixedId(parentId, "genre_track_", future) { id ->
+                        parentId.startsWith(PlayListType.Genres.name+"_track_") -> {
+                            handlePrefixedId(parentId, PlayListType.Genres.name+"_track_", future) { id ->
                                 getGenreListTracks(context, id, future)
                             }
                         }
 
-                        parentId.startsWith("playlist_track_") -> {
-                            handlePrefixedId(parentId, "playlist_track_", future) { id ->
+                        parentId.startsWith(PlayListType.PlayLists.name+"_track_") -> {
+                            handlePrefixedId(parentId, PlayListType.PlayLists.name+"_track_", future) { id ->
                                 getPlayListTracks(context, id, future)
                             }
                         }
 
-
-                        parentId.startsWith("folder_track_") -> {
-                            handlePrefixedId(parentId, "folder_track_", future) { id ->
+                        parentId.startsWith(PlayListType.Folders.name+"_track_") -> {
+                            handlePrefixedId(parentId, PlayListType.Folders.name+"_track_", future) { id ->
                                 getFolderListTracks(context, id, future)
                             }
                         }
@@ -1028,16 +1031,15 @@ class PlayService : MediaLibraryService() {
     }
 
     private val serviceJob = SupervisorJob()
+
     // 使用主线程作为默认调度器，因为很多操作最终需要和 Player 交互
     private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
 
 
-    private var sqlDataInitialized = false
     private var config: PlayConfig? = null
     private var musicVisualizationEnable = false
-    private val lock = ReentrantLock()
 
-    private fun initSqlData(bundle: Bundle) {
+    private fun initializePlayerData() {
         // 启动一个非阻塞的协程来执行所有初始化工作
         serviceScope.launch {
             Log.d("PlayService", "Starting player data initialization...")
@@ -1055,23 +1057,12 @@ class PlayService : MediaLibraryService() {
             }
             loadingJob.join()
             applyLoadedDataToPlayer()
-            sqlDataInitialized = true
-            Log.d("PlayService", "Player data initialization finished.")
-        }
-
-    }
-
-    private fun getData(bundle: Bundle): Bundle? {
-        return if (sqlDataInitialized) {
-            setData(bundle, null)
-            bundle
-        } else {
-            null
+            isInitialized.complete(Unit)
         }
     }
 
-    private fun setData(bundle: Bundle, position: Float?) {
-        bundle.putInt("type", EVENT_DATA_READY)
+
+    private fun setData(bundle: Bundle, position: Long?) {
         bundle.putInt("volume", volumeValue)
         bundle.putLong("playListID", playListCurrent?.id ?: -1)
         bundle.putString("playListType", playListCurrent?.type?.name)
@@ -1094,7 +1085,7 @@ class PlayService : MediaLibraryService() {
         bundle.putBoolean("echoActive", auxr.echo)
         bundle.putBoolean("echoFeedBack", auxr.echoRevert)
         bundle.putInt("repeat", exoPlayer.repeatMode)
-        bundle.putFloat("position", position ?: exoPlayer.currentPosition.toFloat())
+        bundle.putLong("position", position ?: exoPlayer.currentPosition)
         bundle.putParcelableArrayList("mainTabList", mainTab)
         bundle.putParcelableArrayList("showIndicatorList", showIndicatorList)
     }
@@ -1444,26 +1435,26 @@ class PlayService : MediaLibraryService() {
             override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
                 super.onMediaMetadataChanged(mediaMetadata)
                 val bitArray = exoPlayer.mediaMetadata.artworkData
-                val metadataBuilder = MediaMetadataCompat.Builder()
-                metadataBuilder.putLong(
-                    MediaMetadataCompat.METADATA_KEY_DURATION,
-                    exoPlayer.duration
-                )
-                metadataBuilder.putText(
-                    MediaMetadataCompat.METADATA_KEY_TITLE,
-                    currentPlayTrack?.name
-                )
-                metadataBuilder.putText(
-                    MediaMetadataCompat.METADATA_KEY_ARTIST,
-                    currentPlayTrack?.artist
-                )
-                if (bitArray != null) {
-                    val bit = BitmapFactory.decodeByteArray(bitArray, 0, bitArray.size)
-                    metadataBuilder.putBitmap(
-                        MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON,
-                        bit
-                    )
-                }
+//                val metadataBuilder = MediaMetadataCompat.Builder()
+//                metadataBuilder.putLong(
+//                    MediaMetadataCompat.METADATA_KEY_DURATION,
+//                    exoPlayer.duration
+//                )
+//                metadataBuilder.putText(
+//                    MediaMetadataCompat.METADATA_KEY_TITLE,
+//                    currentPlayTrack?.name
+//                )
+//                metadataBuilder.putText(
+//                    MediaMetadataCompat.METADATA_KEY_ARTIST,
+//                    currentPlayTrack?.artist
+//                )
+//                if (bitArray != null) {
+//                    val bit = BitmapFactory.decodeByteArray(bitArray, 0, bitArray.size)
+//                    metadataBuilder.putBitmap(
+//                        MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON,
+//                        bit
+//                    )
+//                }
             }
 
             override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
@@ -1570,7 +1561,6 @@ class PlayService : MediaLibraryService() {
             TracksManager.getFolderList(
                 this@PlayService,
                 foldersLinkedHashMap,
-                null,
                 tracksLinkedHashMap,
                 "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
                 true
@@ -1614,7 +1604,6 @@ class PlayService : MediaLibraryService() {
                         TracksManager.getFolderList(
                             this@PlayService,
                             foldersLinkedHashMap,
-                            null,
                             tracksLinkedHashMap,
                             "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
                             true
@@ -1724,6 +1713,7 @@ class PlayService : MediaLibraryService() {
 
         // Visualization
         val COMMAND_VISUALIZATION_ENABLE = SessionCommand("vis.ENABLE", Bundle.EMPTY)
+        val COMMAND_VISUALIZATION_DATA = SessionCommand("vis.VISUALIZATION_DATA", Bundle.EMPTY)
 
         // Sleep Timer
         val COMMAND_SET_SLEEP_TIMER = SessionCommand("timer.SET_SLEEP", Bundle.EMPTY)
@@ -1884,7 +1874,6 @@ class PlayService : MediaLibraryService() {
                                 AlbumManager.getAlbumList(
                                     this@PlayService,
                                     albumsLinkedHashMap,
-                                    null,
                                     "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
                                 )
                             }
@@ -1989,7 +1978,6 @@ class PlayService : MediaLibraryService() {
                                 AlbumManager.getAlbumList(
                                     this@PlayService,
                                     albumsLinkedHashMap,
-                                    null,
                                     "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
                                 )
                             }
@@ -2087,7 +2075,6 @@ class PlayService : MediaLibraryService() {
                 TracksManager.getFolderList(
                     this@PlayService,
                     foldersLinkedHashMap,
-                    null,
                     tracksLinkedHashMap,
                     "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
                     true
@@ -2117,7 +2104,6 @@ class PlayService : MediaLibraryService() {
                     this@PlayService,
                     genresLinkedHashMap,
                     tracksLinkedHashMap,
-                    null,
                     "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
                 )
                 val mediaItems = genresLinkedHashMap.values.map { playlist ->
@@ -2145,7 +2131,6 @@ class PlayService : MediaLibraryService() {
                 AlbumManager.getAlbumList(
                     this@PlayService,
                     albumsLinkedHashMap,
-                    null,
                     "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
                 )
                 val mediaItems = albumsLinkedHashMap.values.map { playlist ->
@@ -2173,7 +2158,6 @@ class PlayService : MediaLibraryService() {
                 ArtistManager.getArtistList(
                     this@PlayService,
                     artistsLinkedHashMap,
-                    null,
                     "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
                 )
                 val mediaItems = artistsLinkedHashMap.values.map { playlist ->
@@ -2201,7 +2185,6 @@ class PlayService : MediaLibraryService() {
                 TracksManager.getFolderList(
                     this@PlayService,
                     foldersLinkedHashMap,
-                    null,
                     tracksLinkedHashMap,
                     "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
                     true
@@ -2300,6 +2283,7 @@ class PlayService : MediaLibraryService() {
             exoPlayer.addMediaItems(index, list)
         }
     }
+
     // 这个函数在 PlayService 内部定义，在主线程上调用
     private fun applyLoadedDataToPlayer() {
         volumeValue = SharedPreferencesUtils.getVolume(this@PlayService)
@@ -2332,9 +2316,7 @@ class PlayService : MediaLibraryService() {
             exoPlayer.playWhenReady = false
             exoPlayer.prepare()
         }
-        setData(bundle, position.toFloat())
     }
-
 
 
     private suspend fun loadAllTracksAndFolders() {
@@ -2346,7 +2328,6 @@ class PlayService : MediaLibraryService() {
         TracksManager.getFolderList(
             this@PlayService,
             foldersLinkedHashMap,
-            null,
             tracksLinkedHashMap,
             "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
             false,
@@ -2475,5 +2456,24 @@ class PlayService : MediaLibraryService() {
                 }
             }
         }
+    }
+    fun createTopLevelCategories(): List<MediaItem> {
+        return listOf(
+            createCategoryMediaItem("songs_root", "歌曲"),
+            createCategoryMediaItem("albums_root", "专辑"),
+            createCategoryMediaItem("artists_root", "艺术家"),
+            createCategoryMediaItem("playlists_root", "播放列表"),
+            createCategoryMediaItem("genres_root", "流派"),
+            createCategoryMediaItem("folders_root", "文件夹")
+        )
+    }
+
+    private fun createCategoryMediaItem(id: String, title: String): MediaItem {
+        val metadata = MediaMetadata.Builder()
+            .setTitle(title)
+            .setIsBrowsable(true) // 关键！必须是可浏览的
+            .setIsPlayable(false)
+            .build()
+        return MediaItem.Builder().setMediaId(id).setMediaMetadata(metadata).build()
     }
 }

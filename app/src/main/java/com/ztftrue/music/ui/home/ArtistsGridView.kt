@@ -1,7 +1,5 @@
 package com.ztftrue.music.ui.home
 
-import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -101,7 +99,7 @@ fun ArtistsGridView(
         if (artistListDefault == null) {
             artistLists.clear()
             val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
-                musicViewModel.browser?.getChildren("artists_root", 0, 1, null)
+                musicViewModel.browser?.getChildren("artists_root", 0, Integer.MAX_VALUE, null)
             futureResult?.addListener({
                 try {
                     val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()

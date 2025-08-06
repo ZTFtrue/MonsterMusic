@@ -4,7 +4,6 @@ import android.content.ContentResolver
 import android.content.Context
 import android.os.Bundle
 import android.provider.MediaStore
-import androidx.media.MediaBrowserServiceCompat
 import com.ztftrue.music.utils.model.ArtistList
 
 object ArtistManager {
@@ -79,7 +78,6 @@ object ArtistManager {
     fun getArtistList(
         context: Context,
         list: LinkedHashMap<Long, ArtistList>,
-        result: MediaBrowserServiceCompat.Result<Bundle>?,
         sortOrder1: String
     ) {
         val playListProjection = arrayOf(
@@ -120,8 +118,5 @@ object ArtistManager {
         }
         list.putAll(playList)
         cursor?.close()
-        val bundle = Bundle()
-        bundle.putParcelableArrayList("list", ArrayList(list.values))
-        result?.sendResult(bundle)
     }
 }

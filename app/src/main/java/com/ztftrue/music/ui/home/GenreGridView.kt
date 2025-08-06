@@ -1,7 +1,5 @@
 package com.ztftrue.music.ui.home
 
-import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -80,9 +78,7 @@ import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.addTracksToPlayList
 import com.ztftrue.music.utils.Utils.createPlayListAddTracks
 import com.ztftrue.music.utils.enumToStringForPlayListType
-import com.ztftrue.music.utils.model.FolderList
 import com.ztftrue.music.utils.model.GenresList
-import kotlin.collections.forEach
 
 
 @Composable
@@ -99,7 +95,7 @@ fun GenreGridView(
     LaunchedEffect(musicViewModel.refreshGenre.value) {
         genreList.clear()
         val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
-            musicViewModel.browser?.getChildren("genres_root", 0, 1, null)
+            musicViewModel.browser?.getChildren("genres_root", 0, Integer.MAX_VALUE, null)
         futureResult?.addListener({
             try {
                 val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()

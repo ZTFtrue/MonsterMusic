@@ -63,9 +63,8 @@
         <service
             android:name=".play.PlayService"
             android:enabled="true"
-            android:exported="false"
+            android:exported="true"
             android:stopWithTask="false"
-            android:permission="android.permission.BIND_MEDIA_BROWSER_SERVICE"
             android:foregroundServiceType="mediaPlayback">
             <intent-filter>
                 <action android:name="androidx.media3.session.MediaSessionService" />
@@ -80,7 +79,7 @@
                 android:value="true" />
         </service>
         <receiver
-            android:name="androidx.media.session.MediaButtonReceiver"
+            android:name="androidx.media3.session.MediaButtonReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />

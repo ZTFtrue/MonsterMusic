@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.core.net.toUri
-import androidx.media.MediaBrowserServiceCompat.Result
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import com.ztftrue.music.sqlData.MusicDatabase
@@ -243,7 +242,6 @@ object PlayUtils {
         val bundle = Bundle()
         bundle.putParcelableArrayList("list", musicQueue)
         bundle.putInt("index", index)
-        result.sendResult(bundle)
     }
 
     fun trackDelete(
@@ -263,7 +261,7 @@ object PlayUtils {
     }
 
     fun removePlayQueue(
-        extras: Bundle?, result: Result<Bundle>, musicQueue: ArrayList<MusicItem>,
+        extras: Bundle?, musicQueue: ArrayList<MusicItem>,
         exoPlayer: ExoPlayer, db: MusicDatabase, context: Context
     ) {
         if (extras != null) {
@@ -281,12 +279,10 @@ object PlayUtils {
                             musicQueue[currentIndex].id
                         )
                     }
-                    result.sendResult(null)
                     return
                 }
             }
         }
-        result.sendResult(null)
     }
 
     private fun changePriorityTableId(
