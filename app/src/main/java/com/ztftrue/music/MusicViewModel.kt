@@ -227,7 +227,6 @@ class MusicViewModel : ViewModel() {
 
     fun dealLyrics(context: Context, currentPlay: MusicItem) {
         lock.lock()
-
         currentCaptionList.clear()
         lyricsType = LyricsType.TEXT
         if (lyricsJob != null && lyricsJob?.isActive == true) {

@@ -726,9 +726,6 @@ fun TracksListPage(
         }
     }
     LaunchedEffect(musicViewModel.refreshPlayList.value, refreshCurrentValueList) {
-        val bundle = Bundle()
-        bundle.putString("type", type.name)
-        bundle.putLong("id", id)
         val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
             musicViewModel.browser?.getChildren(
                 type.name + "_track_" + id,

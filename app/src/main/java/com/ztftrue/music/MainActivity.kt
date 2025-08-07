@@ -834,6 +834,8 @@ class MainActivity : ComponentActivity() {
             val index: Int = musicViewModel.browser?.currentMediaItemIndex ?: 0
             val reason = reason
             if (index >= 0 && musicViewModel.musicQueue.size > index) {
+                musicViewModel.currentPlay.value= musicViewModel.musicQueue[index]
+                musicViewModel.currentPlayQueueIndex.intValue= index
                 musicViewModel.scheduleDealCurrentPlay(this@MainActivity, index, reason)
             }
         }

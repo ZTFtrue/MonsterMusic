@@ -176,7 +176,7 @@ object PlayUtils {
                             if (it.id == currentPlayTrack?.id) {
                                 index = i
                             }
-                            t1.add(MediaItem.fromUri(File(it.path).toUri()))
+                            t1.add(MediaItemUtils.musicItemToMediaItem(it))
                         }
                         CoroutineScope(Dispatchers.IO).launch {
                             db.QueueDao().updateList(dbArrayList)
@@ -200,7 +200,7 @@ object PlayUtils {
                             if (it.id == currentPlayTrack?.id) {
                                 index = i
                             }
-                            t1.add(MediaItem.fromUri(File(it.path).toUri()))
+                            t1.add(MediaItemUtils.musicItemToMediaItem(it))
                         }
                         CoroutineScope(Dispatchers.Main).launch {
                             exoPlayer.pause()
@@ -224,7 +224,7 @@ object PlayUtils {
                     if (it.id == currentPlayTrack?.id) {
                         index = i
                     }
-                    t1.add(MediaItem.fromUri(File(it.path).toUri()))
+                    t1.add(MediaItemUtils.musicItemToMediaItem(it))
                 }
                 CoroutineScope(Dispatchers.Main).launch {
                     exoPlayer.pause()

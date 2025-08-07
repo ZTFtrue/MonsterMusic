@@ -15,7 +15,6 @@ import android.os.CountDownTimer
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.Format
@@ -1057,7 +1056,7 @@ class PlayService : MediaLibraryService() {
 //                if (musicQueue.isNotEmpty()) {
 //                    musicQueue.forEachIndexed { i, musicItem ->
 //                        musicItem.priority = i + 1
-//                        t1.add(MediaItem.fromUri(File(musicItem.path).toUri()))
+//                        t1.add(MediaItemUtils.musicItemToMediaItem(it))
 //                    }
 //                    val bundle = Bundle()
 //                    bundle.putParcelableArrayList("list", musicQueue)
@@ -1213,7 +1212,7 @@ class PlayService : MediaLibraryService() {
                 val t1 = ArrayList<MediaItem>()
                 musicQueue.forEachIndexed { index, it ->
                     it.tableId = index + 1L
-                    t1.add(MediaItem.fromUri(File(it.path).toUri()))
+                    t1.add(MediaItemUtils.musicItemToMediaItem(it))
                 }
                 var needPlay = true
                 val currentPosition = if (currentPlayTrack?.id == musicQueue[index].id) {
@@ -1343,7 +1342,7 @@ class PlayService : MediaLibraryService() {
             }
 
             override fun onTimelineChanged(timeline: Timeline, reason: Int) {
-                super.onTimelineChanged(timeline, reason)
+
                 if (!timeline.isEmpty && TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED == reason) {
                     val newQueue = mutableListOf<MediaItem>()
                     for (i in 0 until timeline.windowCount) {
@@ -1371,6 +1370,7 @@ class PlayService : MediaLibraryService() {
                         db.QueueDao().insertAll(musicQueue)
                     }
                 }
+                super.onTimelineChanged(timeline, reason)
             }
 
             override fun onVolumeChanged(volume: Float) {
@@ -1859,6 +1859,7 @@ class PlayService : MediaLibraryService() {
             val mediaItems = ArrayList(playListLinkedHashMap.values).map { playlist ->
                 MediaItemUtils.playlistToMediaItem(playlist)
             }
+            Log.d("", "set f getPlayList: $mediaItems")
             future.set(LibraryResult.ofItemList(mediaItems, null))
         } else {
             val sortData =
@@ -1873,6 +1874,7 @@ class PlayService : MediaLibraryService() {
             val mediaItems = result.map { playlist ->
                 MediaItemUtils.playlistToMediaItem(playlist)
             }
+            Log.d("", "set f getPlayList: $mediaItems")
             future.set(LibraryResult.ofItemList(mediaItems, null))
         }
     }
@@ -1890,6 +1892,7 @@ class PlayService : MediaLibraryService() {
             // playListLinkedHashMap[id]
             //   bundle.putParcelable("message", playListLinkedHashMap[id])
             future.set(LibraryResult.ofItemList(mediaItems, null))
+            return
         } else {
             val sortData =
                 db.SortFiledDao()
@@ -1915,10 +1918,13 @@ class PlayService : MediaLibraryService() {
                 }
                 // bundle.putParcelable("message", playListLinkedHashMap[id])
                 future.set(LibraryResult.ofItemList(mediaItems, null))
+                return
             } else {
                 future.set(LibraryResult.ofItemList(emptyList(), null))
+                return
             }
         }
+        future.set(LibraryResult.ofItemList(emptyList(), null))
     }
 
     fun getGenreListTracks(
@@ -2287,7 +2293,7 @@ class PlayService : MediaLibraryService() {
                 if (histShuffle) {
                     it.priority = index1 + index + 1
                 }
-                list.add(MediaItem.fromUri(File(it.path).toUri()))
+                list.add(MediaItemUtils.musicItemToMediaItem(it))
             }
 //                musicQueue.forEachIndexed() { index1, it ->
 //                    if (it.tableId!! >= index.toLong()) {
@@ -2359,7 +2365,7 @@ class PlayService : MediaLibraryService() {
             val t1 = ArrayList<MediaItem>()
             var currentIndex = 0
             musicQueue.forEachIndexed { index, it ->
-                t1.add(MediaItem.fromUri(File(it.path).toUri()))
+                t1.add(MediaItemUtils.musicItemToMediaItem(it))
                 if (it.id == currentPlayTrack?.id) {
                     currentIndex = index
                 }
@@ -2536,5 +2542,10 @@ class PlayService : MediaLibraryService() {
             .setIsPlayable(false)
             .build()
         return MediaItem.Builder().setMediaId(id).setMediaMetadata(metadata).build()
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        Log.d("PlayService", "onTaskRemoved")
     }
 }

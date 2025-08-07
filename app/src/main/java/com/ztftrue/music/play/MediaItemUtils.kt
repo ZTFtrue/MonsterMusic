@@ -182,6 +182,7 @@ object MediaItemUtils {
             putLong(CustomMetadataKeys.KEY_ARTIST_ID, musicItem.artistId)
             putLong(CustomMetadataKeys.KEY_GENRE_ID, musicItem.genreId)
             putInt(CustomMetadataKeys.KEY_PRIORITY, musicItem.priority)
+            putString("PATH", musicItem.path)
         }
         metadataBuilder.setExtras(extras)
 
@@ -247,7 +248,7 @@ object MediaItemUtils {
 
             // 从标准元数据字段获取信息，并提供默认值
             name = metadata.title?.toString() ?: "Unknown Title",
-            path = mediaItem.requestMetadata.mediaUri?.toString() ?: "",
+            path = extras.getString("PATH", ""),
             // duration 在 MediaItem 中不直接可用，需要播放器准备好后才能获取。
             // 如果你之前把它存入了 extras，可以在这里读取。
             duration = metadata.durationMs ?: 0L,

@@ -56,7 +56,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionResult
@@ -81,7 +80,6 @@ import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.SongsUtils
 import com.ztftrue.music.utils.trackManager.TracksManager
-import java.io.File
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalFoundationApi::class)
@@ -334,8 +332,8 @@ fun MusicItemView(
                             )
                             val t1 = ArrayList<MediaItem>()
                             viewModel.musicQueue.forEachIndexed { index, it ->
-                                it.tableId = index + 1L
-                                t1.add(MediaItem.fromUri(File(it.path).toUri()))
+//                                it.tableId = index + 1L
+                                t1.add(MediaItemUtils.musicItemToMediaItem(it))
                             }
                             var needPlay = true
                             val currentPosition: Long =
