@@ -707,8 +707,8 @@ class PlayService : MediaLibraryService() {
                             getFolders(context, future, params)
                         }
                         // genre includes albums
-                        parentId.startsWith("genre_album_") -> {
-                            handlePrefixedId(parentId, "genre_album_", future) { id ->
+                        parentId.startsWith(PlayListType.Genres.name+"_album_" ) -> {
+                            handlePrefixedId(parentId, PlayListType.Genres.name+"_album_", future) { id ->
                                 val list = genreHasAlbumMap[id]
                                 val mediaItems: List<MediaItem> = list?.map { playlist ->
                                     MediaItemUtils.albumToMediaItem(playlist)
@@ -717,8 +717,8 @@ class PlayService : MediaLibraryService() {
                             }
                         }
                         // artist includes albums
-                        parentId.startsWith("artist_album_") -> {
-                            handlePrefixedId(parentId, "artist_album_", future) { id ->
+                        parentId.startsWith(PlayListType.Artists.name+"_album_") -> {
+                            handlePrefixedId(parentId, PlayListType.Artists.name+"_album_", future) { id ->
                                 val list = artistHasAlbumMap[id]
                                 val mediaItems: List<MediaItem> = list?.map { playlist ->
                                     MediaItemUtils.albumToMediaItem(playlist)
@@ -1858,7 +1858,7 @@ class PlayService : MediaLibraryService() {
             future.set(LibraryResult.ofItemList(mediaItems, null))
         } else {
             CoroutineScope(Dispatchers.IO).launch {
-                val playList = playListLinkedHashMap[id]
+                val playList = genresLinkedHashMap[id]
                 if (playList != null) {
                     val sortData =
                         db.SortFiledDao()
@@ -1963,7 +1963,7 @@ class PlayService : MediaLibraryService() {
             future.set(LibraryResult.ofItemList(mediaItems, null))
         } else {
             CoroutineScope(Dispatchers.IO).launch {
-                val playList = playListLinkedHashMap[id]
+                val playList = artistsLinkedHashMap[id]
                 if (playList != null) {
                     val sortData =
                         db.SortFiledDao()

@@ -699,7 +699,12 @@ fun TracksListPage(
         bundle.putString("type", type.name)
         bundle.putLong("id", id)
         val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
-            musicViewModel.browser?.getChildren(type.name + "_track_" + id, 0, Integer.MAX_VALUE, null)
+            musicViewModel.browser?.getChildren(
+                type.name + "_track_" + id,
+                0,
+                Integer.MAX_VALUE,
+                null
+            )
         futureResult?.addListener({
             try {
                 val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
@@ -722,30 +727,38 @@ fun TracksListPage(
                 Log.e("Client", "Failed to toggle favorite status", e)
             }
         }, ContextCompat.getMainExecutor(context))
-        val futureResultAlbum: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
-            musicViewModel.browser?.getChildren(type.name + "_track_" + id, 0, Integer.MAX_VALUE, null)
-        futureResultAlbum?.addListener({
-            try {
-                val result: LibraryResult<ImmutableList<MediaItem>>? = futureResultAlbum.get()
-                if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
-                    return@addListener
-                }
-                val albumMediaItems: List<MediaItem> = result.value ?: listOf()
-                val tracksListResult = ArrayList<AlbumList>()
-                albumMediaItems.forEach { mediaItem ->
-                    MediaItemUtils.mediaItemToAlbumList(mediaItem)?.let { tracksListResult.add(it) }
-                }
-                albumsList.clear()
+        if (type.name.equals(PlayListType.Artists.name) || type.name.equals(PlayListType.Genres.name)) {
+            val futureResultAlbum: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
+                musicViewModel.browser?.getChildren(
+                    type.name + "_album_" + id,
+                    0,
+                    Integer.MAX_VALUE,
+                    null
+                )
+            futureResultAlbum?.addListener({
+                try {
+                    val result: LibraryResult<ImmutableList<MediaItem>>? = futureResultAlbum.get()
+                    if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
+                        return@addListener
+                    }
+                    val albumMediaItems: List<MediaItem> = result.value ?: listOf()
+                    val tracksListResult = ArrayList<AlbumList>()
+                    albumMediaItems.forEach { mediaItem ->
+                        MediaItemUtils.mediaItemToAlbumList(mediaItem)
+                            ?.let { tracksListResult.add(it) }
+                    }
+                    albumsList.clear()
 //                val parentListMessage = resultData.getParcelable<AnyListBase>("message")
 //                if (parentListMessage != null) {
 //                    musicPlayList.value = parentListMessage
 //                }
-                albumsList.addAll(tracksListResult)
-            } catch (e: Exception) {
-                // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
-                Log.e("Client", "Failed to toggle favorite status", e)
-            }
-        }, ContextCompat.getMainExecutor(context))
+                    albumsList.addAll(tracksListResult)
+                } catch (e: Exception) {
+                    // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                    Log.e("Client", "Failed to toggle favorite status", e)
+                }
+            }, ContextCompat.getMainExecutor(context))
+        }
     }
 
     Scaffold(
@@ -858,12 +871,12 @@ fun TracksListPage(
                                 musicViewModel.currentPlayQueueIndex.intValue = -1
                                 musicViewModel.browser?.pause()
                                 musicViewModel.browser?.clearMediaItems()
-                                musicViewModel.browser?.shuffleModeEnabled=true
-                                musicViewModel.browser?.playWhenReady=false
+                                musicViewModel.browser?.shuffleModeEnabled = true
+                                musicViewModel.browser?.playWhenReady = false
                                 val mediaItems =
                                     tracksList.map { MediaItemUtils.musicItemToMediaItem(it) }
                                 musicViewModel.browser?.addMediaItems(mediaItems)
-                                musicViewModel.browser?.playWhenReady=true
+                                musicViewModel.browser?.playWhenReady = true
                                 musicViewModel.browser?.prepare()
 //                            bundle.putParcelableArrayList("musicItems", ArrayList(musicList))
 //                            bundle.putInt("index", index)
