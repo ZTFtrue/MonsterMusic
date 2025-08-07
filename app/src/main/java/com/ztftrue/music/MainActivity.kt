@@ -55,19 +55,13 @@ import androidx.media3.common.Timeline
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.LibraryResult
-import androidx.media3.session.LibraryResult.RESULT_ERROR_BAD_VALUE
-import androidx.media3.session.LibraryResult.RESULT_ERROR_INVALID_STATE
 import androidx.media3.session.LibraryResult.RESULT_ERROR_IO
 import androidx.media3.session.LibraryResult.RESULT_ERROR_PERMISSION_DENIED
-import androidx.media3.session.LibraryResult.RESULT_ERROR_UNKNOWN
-import androidx.media3.session.LibraryResult.RESULT_INFO_SKIPPED
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionCommand
-import androidx.media3.session.SessionError
 import androidx.media3.session.SessionResult
 import androidx.media3.session.SessionToken
-import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.PlayService
@@ -697,11 +691,12 @@ class MainActivity : ComponentActivity() {
                     val result: LibraryResult<MediaItem>? = rootResult.get()
                     if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
                         Log.e("MyMusicActivity", "Error getting MediaBrowser root${result?.resultCode }")
-                        Log.e("MyMusicActivity",
-                           "${ RESULT_ERROR_PERMISSION_DENIED},${RESULT_ERROR_IO},${SessionResult.RESULT_ERROR_NOT_SUPPORTED},${SessionResult. RESULT_ERROR_SESSION_DISCONNECTED},                            ${ SessionResult.RESULT_ERROR_SESSION_AUTHENTICATION_EXPIRED},                            ${SessionResult. RESULT_ERROR_SESSION_PREMIUM_ACCOUNT_REQUIRED},                            ${SessionResult. RESULT_ERROR_SESSION_CONCURRENT_STREAM_LIMIT},${SessionResult.RESULT_ERROR_SESSION_PARENTAL_CONTROL_RESTRICTED},${SessionResult.RESULT_ERROR_SESSION_NOT_AVAILABLE_IN_REGION},${SessionResult.RESULT_ERROR_SESSION_SKIP_LIMIT_REACHED},${SessionResult.RESULT_ERROR_SESSION_SETUP_REQUIRED},"
-                            )
+
                         return@addListener
                     }
+                    Log.e("MyMusicActivity",
+                        "${ RESULT_ERROR_PERMISSION_DENIED},${RESULT_ERROR_IO},${SessionResult.RESULT_ERROR_NOT_SUPPORTED},${SessionResult. RESULT_ERROR_SESSION_DISCONNECTED},                            ${ SessionResult.RESULT_ERROR_SESSION_AUTHENTICATION_EXPIRED},                            ${SessionResult. RESULT_ERROR_SESSION_PREMIUM_ACCOUNT_REQUIRED},                            ${SessionResult. RESULT_ERROR_SESSION_CONCURRENT_STREAM_LIMIT},${SessionResult.RESULT_ERROR_SESSION_PARENTAL_CONTROL_RESTRICTED},${SessionResult.RESULT_ERROR_SESSION_NOT_AVAILABLE_IN_REGION},${SessionResult.RESULT_ERROR_SESSION_SKIP_LIMIT_REACHED},${SessionResult.RESULT_ERROR_SESSION_SETUP_REQUIRED},"
+                    )
                     rootResult.addListener({
                         musicViewModel.browser = connectedBrowser
                         onBrowserConnected(connectedBrowser)

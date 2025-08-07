@@ -72,6 +72,7 @@ import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_CHANGE_PLAYLIST
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_GET_PLAY_LIST_ITEM
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_SORT_TRACKS
 import com.ztftrue.music.play.PlayUtils
 import com.ztftrue.music.sqlData.MusicDatabase
@@ -694,40 +695,9 @@ fun TracksListPage(
             }
         }
     }
-    LaunchedEffect(musicViewModel.refreshPlayList.value, refreshCurrentValueList) {
-        val bundle = Bundle()
-        bundle.putString("type", type.name)
-        bundle.putLong("id", id)
-        val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
-            musicViewModel.browser?.getChildren(
-                type.name + "_track_" + id,
-                0,
-                Integer.MAX_VALUE,
-                null
-            )
-        futureResult?.addListener({
-            try {
-                val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
-                if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
-                    return@addListener
-                }
-                val albumMediaItems: List<MediaItem> = result.value ?: listOf()
-                val tracksListResult = ArrayList<MusicItem>()
-                albumMediaItems.forEach { mediaItem ->
-                    MediaItemUtils.mediaItemToMusicItem(mediaItem)?.let { tracksListResult.add(it) }
-                }
-                tracksList.clear()
-                tracksList.addAll(
-                    tracksListResult
-                )
-                val duration = tracksList.sumOf { it.duration }
-                durationAll.value = Utils.formatTimeWithUnit(duration)
-            } catch (e: Exception) {
-                // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
-                Log.e("Client", "Failed to toggle favorite status", e)
-            }
-        }, ContextCompat.getMainExecutor(context))
-        if (type.name.equals(PlayListType.Artists.name) || type.name.equals(PlayListType.Genres.name)) {
+    fun getHaveAlbums(){
+        if (type.name == PlayListType.Artists.name || type.name == PlayListType.Genres.name) {
+            albumsList.clear()
             val futureResultAlbum: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
                 musicViewModel.browser?.getChildren(
                     type.name + "_album_" + id,
@@ -747,11 +717,6 @@ fun TracksListPage(
                         MediaItemUtils.mediaItemToAlbumList(mediaItem)
                             ?.let { tracksListResult.add(it) }
                     }
-                    albumsList.clear()
-//                val parentListMessage = resultData.getParcelable<AnyListBase>("message")
-//                if (parentListMessage != null) {
-//                    musicPlayList.value = parentListMessage
-//                }
                     albumsList.addAll(tracksListResult)
                 } catch (e: Exception) {
                     // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
@@ -759,6 +724,65 @@ fun TracksListPage(
                 }
             }, ContextCompat.getMainExecutor(context))
         }
+    }
+    LaunchedEffect(musicViewModel.refreshPlayList.value, refreshCurrentValueList) {
+        val bundle = Bundle()
+        bundle.putString("type", type.name)
+        bundle.putLong("id", id)
+        val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
+            musicViewModel.browser?.getChildren(
+                type.name + "_track_" + id,
+                0,
+                Integer.MAX_VALUE,
+                null
+            )
+        futureResult?.addListener({
+            try {
+                val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
+                if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
+                    return@addListener
+                }
+                getHaveAlbums()
+                val albumMediaItems: List<MediaItem> = result.value ?: listOf()
+                val tracksListResult = ArrayList<MusicItem>()
+                albumMediaItems.forEach { mediaItem ->
+                    MediaItemUtils.mediaItemToMusicItem(mediaItem)?.let { tracksListResult.add(it) }
+                }
+                tracksList.clear()
+                tracksList.addAll(
+                    tracksListResult
+                )
+
+                val duration = tracksList.sumOf { it.duration }
+                durationAll.value = Utils.formatTimeWithUnit(duration)
+            } catch (e: Exception) {
+                // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                Log.e("Client", "Failed to toggle favorite status", e)
+            }
+        }, ContextCompat.getMainExecutor(context))
+
+        val futureResultItem: ListenableFuture<SessionResult>? =
+            musicViewModel.browser?.sendCustomCommand(
+                COMMAND_GET_PLAY_LIST_ITEM,
+                Bundle().apply {
+                    putString("type", type.name)
+                    putLong("id", id)
+                }
+            )
+        futureResultItem?.addListener({
+            try {
+                val result: SessionResult? = futureResultItem.get()
+                if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
+                    return@addListener
+                }
+                result.extras.getParcelable<AnyListBase>("data")?.let {
+                    musicPlayList.value = it
+                }
+            } catch (e: Exception) {
+                // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                Log.e("Client", "Failed to toggle favorite status", e)
+            }
+        }, ContextCompat.getMainExecutor(context))
     }
 
     Scaffold(

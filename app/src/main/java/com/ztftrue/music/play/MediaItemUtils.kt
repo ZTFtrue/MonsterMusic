@@ -168,7 +168,8 @@ object MediaItemUtils {
             .setAlbumTitle(musicItem.album)         // 专辑标题
             .setTrackNumber(musicItem.songNumber)   // 轨道号
             .setReleaseYear(musicItem.year)         // 发行年份
-            .setGenre(musicItem.genre)              // 流派（这是一个标准字段）
+            .setGenre(musicItem.genre)
+            .setDurationMs(musicItem.duration)
         metadataBuilder.setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
         metadataBuilder.setIsPlayable(true)
         metadataBuilder.setIsBrowsable(false)
@@ -249,7 +250,7 @@ object MediaItemUtils {
             path = mediaItem.requestMetadata.mediaUri?.toString() ?: "",
             // duration 在 MediaItem 中不直接可用，需要播放器准备好后才能获取。
             // 如果你之前把它存入了 extras，可以在这里读取。
-            duration = extras.getLong("duration", 0L),
+            duration = metadata.durationMs ?: 0L,
             displayName = extras.getString(CustomMetadataKeys.KEY_DISPLAY_NAME, "Unknown Display Name"),
             album = metadata.albumTitle?.toString() ?: "Unknown Album",
             albumId = extras.getLong(CustomMetadataKeys.KEY_ALBUM_ID, 0L),
