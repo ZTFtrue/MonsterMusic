@@ -656,6 +656,7 @@ class MainActivity : ComponentActivity() {
             command: SessionCommand,
             args: Bundle
         ): ListenableFuture<SessionResult> {
+            Log.e("DEBUG_LISTENER", ">>>>>>> onCustomCommand RECEIVED! Action: ${command.customAction}")
             if (command.customAction == PlayService.COMMAND_SLEEP_STATE_UPDATE.customAction) {
                 val remainTime = args.getLong("remaining")
                 musicViewModel.remainTime.longValue = remainTime
@@ -671,9 +672,16 @@ class MainActivity : ComponentActivity() {
             }
             return super.onCustomCommand(controller, command, args)
         }
+
+        override fun onExtrasChanged(
+            controller: MediaController,
+            extras: Bundle
+        ) {
+            super.onExtrasChanged(controller, extras)
+        }
     }
 
-    private   fun initializeAndConnect() {
+    private fun initializeAndConnect() {
         if (::browserFuture.isInitialized) return // 防止重复初始化
         // 1. 创建 SessionToken，指定要连接的 Service
         val sessionToken = SessionToken(this, ComponentName(this, PlayService::class.java))
@@ -687,15 +695,20 @@ class MainActivity : ComponentActivity() {
                 // 检查连接是否成功，并获取 browser 实例
                 val connectedBrowser = browserFuture.get()
                 if (connectedBrowser != null) {
-                    val rootResult:ListenableFuture<LibraryResult<MediaItem>> = connectedBrowser.getLibraryRoot(null)
+                    val rootResult: ListenableFuture<LibraryResult<MediaItem>> =
+                        connectedBrowser.getLibraryRoot(null)
                     val result: LibraryResult<MediaItem>? = rootResult.get()
                     if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
-                        Log.e("MyMusicActivity", "Error getting MediaBrowser root${result?.resultCode }")
+                        Log.e(
+                            "MyMusicActivity",
+                            "Error getting MediaBrowser root${result?.resultCode}"
+                        )
 
                         return@addListener
                     }
-                    Log.e("MyMusicActivity",
-                        "${ RESULT_ERROR_PERMISSION_DENIED},${RESULT_ERROR_IO},${SessionResult.RESULT_ERROR_NOT_SUPPORTED},${SessionResult. RESULT_ERROR_SESSION_DISCONNECTED},                            ${ SessionResult.RESULT_ERROR_SESSION_AUTHENTICATION_EXPIRED},                            ${SessionResult. RESULT_ERROR_SESSION_PREMIUM_ACCOUNT_REQUIRED},                            ${SessionResult. RESULT_ERROR_SESSION_CONCURRENT_STREAM_LIMIT},${SessionResult.RESULT_ERROR_SESSION_PARENTAL_CONTROL_RESTRICTED},${SessionResult.RESULT_ERROR_SESSION_NOT_AVAILABLE_IN_REGION},${SessionResult.RESULT_ERROR_SESSION_SKIP_LIMIT_REACHED},${SessionResult.RESULT_ERROR_SESSION_SETUP_REQUIRED},"
+                    Log.e(
+                        "MyMusicActivity",
+                        "${RESULT_ERROR_PERMISSION_DENIED},${RESULT_ERROR_IO},${SessionResult.RESULT_ERROR_NOT_SUPPORTED},${SessionResult.RESULT_ERROR_SESSION_DISCONNECTED},                            ${SessionResult.RESULT_ERROR_SESSION_AUTHENTICATION_EXPIRED},                            ${SessionResult.RESULT_ERROR_SESSION_PREMIUM_ACCOUNT_REQUIRED},                            ${SessionResult.RESULT_ERROR_SESSION_CONCURRENT_STREAM_LIMIT},${SessionResult.RESULT_ERROR_SESSION_PARENTAL_CONTROL_RESTRICTED},${SessionResult.RESULT_ERROR_SESSION_NOT_AVAILABLE_IN_REGION},${SessionResult.RESULT_ERROR_SESSION_SKIP_LIMIT_REACHED},${SessionResult.RESULT_ERROR_SESSION_SETUP_REQUIRED},"
                     )
                     rootResult.addListener({
                         musicViewModel.browser = connectedBrowser
@@ -834,8 +847,9 @@ class MainActivity : ComponentActivity() {
             val index: Int = musicViewModel.browser?.currentMediaItemIndex ?: 0
             val reason = reason
             if (index >= 0 && musicViewModel.musicQueue.size > index) {
-                musicViewModel.currentPlay.value= musicViewModel.musicQueue[index]
-                musicViewModel.currentPlayQueueIndex.intValue= index
+                musicViewModel.currentPlay.value = musicViewModel.musicQueue[index]
+                musicViewModel.currentPlayQueueIndex.intValue = index
+                musicViewModel.currentDuration.longValue = musicViewModel.musicQueue[index].duration
                 musicViewModel.scheduleDealCurrentPlay(this@MainActivity, index, reason)
             }
         }
@@ -877,7 +891,7 @@ class MainActivity : ComponentActivity() {
                 // this code is working (when it invoke cancel) also. who can tell me,this is why?
                 while (isActive) {
                     delay(1000)
-                    val f = mediaController.playbackState?.position ?: 0
+                    val f = musicViewModel.browser?.currentPosition ?: 0
                     if (f < 0) {
                         continue
                     }

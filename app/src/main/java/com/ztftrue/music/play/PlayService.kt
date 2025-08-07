@@ -215,7 +215,8 @@ class PlayService : MediaLibraryService() {
                     .add(COMMAND_REFRESH_ALL)
                     .add(COMMAND_TRACK_DELETE)
                     .add(COMMAND_PlAY_LIST_CHANGE)
-                    .add(COMMAND_GET_PLAY_LIST_ITEM)
+                    .add(COMMAND_SLEEP_STATE_UPDATE)
+                    .add(COMMAND_VISUALIZATION_DATA)
                     .build()
 
             return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
@@ -318,6 +319,7 @@ class PlayService : MediaLibraryService() {
                         future.set(SessionResult(SessionResult.RESULT_SUCCESS, bundle))
                         return future
                     }
+                    return future
                 }
 
                 COMMAND_SORT_QUEUE.customAction -> {

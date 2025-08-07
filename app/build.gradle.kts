@@ -136,6 +136,7 @@ dependencies {
     // load image
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("androidx.browser:browser:1.9.0")
+    implementation("androidx.compose.runtime:runtime-livedata:1.8.3")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")

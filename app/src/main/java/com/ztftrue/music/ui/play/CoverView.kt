@@ -2,6 +2,7 @@ package com.ztftrue.music.ui.play
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import android.os.Bundle
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -28,6 +29,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +49,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.rememberAsyncImagePainter
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_VISUALIZATION_CONNECTED
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_VISUALIZATION_DISCONNECTED
 import com.ztftrue.music.ui.play.Drop.Companion.generateRandomChars
 import kotlinx.coroutines.delay
 import org.jaudiotagger.tag.FieldKey
@@ -61,7 +65,7 @@ fun CoverView(musicViewModel: MusicViewModel) {
     val context = LocalContext.current
     val musicVisualizationEnable = remember { musicViewModel.musicVisualizationEnable }
     val showOtherMessage = remember { mutableStateOf(true) }
-
+    val magnitudes by musicViewModel.visualizationData.observeAsState(initial = emptyList())
     val drops = remember { mutableStateListOf<MutableList<Drop>>() }
     val columnSpacing = 80f // 列之间的间隔
     val dropHeight = 80f // 字符的高度间隔
@@ -122,12 +126,16 @@ fun CoverView(musicViewModel: MusicViewModel) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_START -> {
-                    // Resume the loop when the activity starts
+                    musicViewModel.browser?.sendCustomCommand(COMMAND_VISUALIZATION_CONNECTED,
+                        Bundle()
+                    )
                     shouldRun = true
                 }
 
                 Lifecycle.Event.ON_STOP -> {
-                    // Stop the loop when the activity stops
+                    musicViewModel.browser?.sendCustomCommand(COMMAND_VISUALIZATION_DISCONNECTED,
+                        Bundle()
+                    )
                     shouldRun = false
                 }
 
@@ -141,29 +149,35 @@ fun CoverView(musicViewModel: MusicViewModel) {
             lifecycle.removeObserver(observer)
         }
     }
+//    private fun calculateNextFrame(
+//        currentDrops: List<List<Drop>>,
+//        magnitudes: List<Float>,
+//        canvasHeight: Float,
+//        dropHeight: Float
+//    ): List<List<Drop>> {
+//        // 返回一个新的列表，而不是修改旧的列表
+//        return currentDrops.mapIndexed { colIndex, column ->
+//            val magnitudeForColumn = magnitudes.getOrNull(colIndex) ?: 0f
+//
+//            column.map { drop ->
+//                // 创建一个新的 drop 对象，而不是修改旧的
+//                val newY = drop.y + calculateSpeed(magnitudeForColumn)
+//                if (newY > canvasHeight + dropHeight) {
+//                    // 如果超出屏幕，重置到顶部
+//                    drop.copy(
+//                        y = 0f, // 或者一个随机的负值
+//                        char = generateRandomChars()
+//                    )
+//                } else {
+//                    drop.copy(y = newY)
+//                }
+//            }
+//        }
+//    }
     // 动画更新
     LaunchedEffect(musicViewModel.playStatus.value, musicVisualizationEnable.value, shouldRun) {
         while (musicViewModel.playStatus.value && musicVisualizationEnable.value && shouldRun) {
-            if (!musicViewModel.playStatus.value || !shouldRun) break
-//            drops.forEach { columnDrops ->
-//                val cDrops = ArrayList<Int>()
-//                // 更新每一列的雨滴
-//                columnDrops.forEachIndexed { index3, drop ->
-//                    drop.update(1f)
-//                    // 检查是否超出屏幕
-//                    if (drop.y > canvasHeight.floatValue + dropHeight) {
-//                        cDrops.add(index3)
-//                        drop.char = generateRandomChars()
-//                    }
-//                }
-//
-//                cDrops.forEach { index3 ->
-//                    val d = columnDrops.removeAt(index3)
-//                    d.y = columnDrops[columnDrops.size - 1].y - dropHeight
-//                    columnDrops.add(d)
-//                }
-//            }
-            musicViewModel.musicVisualizationData.forEachIndexed { index, magnitude ->
+            magnitudes.forEachIndexed { index, magnitude ->
                 drops.forEachIndexed { index2, columnDrops ->
                     // 更新每一列的雨滴
                     val cDrops = ArrayList<Int>()

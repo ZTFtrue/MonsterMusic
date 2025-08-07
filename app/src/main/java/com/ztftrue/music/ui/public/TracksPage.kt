@@ -770,6 +770,7 @@ fun TracksListPage(
             try {
                 val result: SessionResult? = futureResultItem.get()
                 if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
+                  Log.e("Client", "Failed COMMAND_GET_PLAY_LIST_ITEM ${result?.resultCode}")
                     return@addListener
                 }
                 result.extras.getParcelable<AnyListBase>("data")?.let {

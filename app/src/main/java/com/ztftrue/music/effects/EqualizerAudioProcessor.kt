@@ -13,6 +13,7 @@ import be.tarsos.dsp.io.TarsosDSPAudioFormat
 import com.ztftrue.music.effects.SoundUtils.downsampleMagnitudes
 import com.ztftrue.music.effects.SoundUtils.expandBuffer
 import com.ztftrue.music.effects.SoundUtils.getBytePerSample
+import com.ztftrue.music.play.AudioDataRepository
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_VISUALIZATION_DATA
 import com.ztftrue.music.utils.Utils
 import kotlinx.coroutines.CoroutineScope
@@ -348,9 +349,10 @@ class EqualizerAudioProcessor : AudioProcessor {
                                 val magnitude: FloatArray =
                                     pcmToFrequencyDomain.process(visualizationBuffer)
                                 val m = downsampleMagnitudes(magnitude, 32)
-                                val bundle = Bundle()
-                                bundle.putFloatArray("magnitude", m)
-                                mediaSession?.sendCustomCommand(COMMAND_VISUALIZATION_DATA,bundle)
+//                                val bundle = Bundle()
+//                                bundle.putFloatArray("magnitude", m)
+                                AudioDataRepository.postVisualizationData(m)
+//                                mediaSession?.sendCustomCommand(COMMAND_VISUALIZATION_DATA,bundle)
                             }
                         }
                     }

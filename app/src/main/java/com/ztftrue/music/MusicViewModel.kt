@@ -20,6 +20,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.Player
@@ -27,6 +29,7 @@ import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionResult
 import androidx.navigation.NavHostController
 import com.google.common.util.concurrent.ListenableFuture
+import com.ztftrue.music.play.AudioDataRepository
 import com.ztftrue.music.play.CustomMetadataKeys
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
 import com.ztftrue.music.sqlData.MusicDatabase
@@ -53,6 +56,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.File
@@ -77,7 +81,8 @@ class MusicViewModel : ViewModel() {
     var navController: NavHostController? = null
     var themeSelected = mutableIntStateOf(0)
     var editTrackEnable = mutableStateOf(false)
-
+    private val _visualizationData = MutableLiveData<List<Float>>()
+    val visualizationData: LiveData<List<Float>> = _visualizationData
     //    val albumItemsCount = mutableIntStateOf(2)
 //    val genreItemsCount = mutableIntStateOf(2)
 //    var mediaBrowser: MediaBrowserCompat? = null
@@ -165,8 +170,21 @@ class MusicViewModel : ViewModel() {
         playCompleted.value = false
         repeatModel.intValue = Player.REPEAT_MODE_ALL
     }
-
+    private fun subscribeToVisualizationData() {
+        viewModelScope.launch {
+            // a. 订阅 (collect) 来自 Repository 的数据流
+            AudioDataRepository.visualizationDataFlow
+                // b. (可选) 使用 .flowOn(Dispatchers.Default) 可以在后台线程处理数据转换
+                // c. (可选) 使用 .buffer() 进一步增强背压处理
+                .collectLatest { fftArray -> // collectLatest 确保我们只处理最新的数据
+                    // d. 当收到新数据时，这个代码块会被执行
+                    //    我们在这里将 FloatArray 转换为 List<Float> 并更新 LiveData
+                    _visualizationData.postValue(fftArray.toList())
+                }
+        }
+    }
     init {
+        subscribeToVisualizationData()
         val band = ArrayList<EqualizerBand>()
         for (index in 0 until Utils.bandsCenter.size) {
             val hz = if (Utils.bandsCenter[index] < 1000) {
