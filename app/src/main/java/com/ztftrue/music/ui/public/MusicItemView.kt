@@ -348,10 +348,10 @@ fun MusicItemView(
                                 }
                             viewModel.browser?.clearMediaItems()
                             viewModel.browser?.setMediaItems(t1)
-                            SharedPreferencesUtils.saveSelectMusicId(
-                                context,
-                                viewModel.musicQueue[index].id
-                            )
+//                            SharedPreferencesUtils.saveSelectMusicId(
+//                                context,
+//                                viewModel.musicQueue[index].id
+//                            )
                             viewModel.browser?.seekTo(index, currentPosition)
                             viewModel.browser?.playWhenReady = needPlay
                             viewModel.browser?.prepare()

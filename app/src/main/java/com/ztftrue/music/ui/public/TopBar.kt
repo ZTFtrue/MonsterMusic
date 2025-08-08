@@ -152,7 +152,7 @@ fun TopBar(
                                 steps = 100,
                                 onValueChangeFinished = {
                                     musicViewModel.browser?.setVolume(
-                                        musicViewModel.volume.intValue.toFloat()
+                                        musicViewModel.volume.intValue.toFloat()/100
                                     )
                                 },
                             )

@@ -1,6 +1,7 @@
 package com.ztftrue.music.ui.home
 
 import android.content.Context
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -22,13 +23,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.util.fastFilterNotNull
+import androidx.core.content.ContextCompat
+import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.LibraryResult
 import androidx.navigation.NavHostController
+import com.google.common.collect.ImmutableList
+import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.QueuePlayList
 import com.ztftrue.music.R
 import com.ztftrue.music.SongsPlayList
+import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.ui.other.DrawMenu
 import com.ztftrue.music.ui.other.MainTopBar
@@ -70,7 +78,29 @@ fun MainView(
             }
         }
     }
+    LaunchedEffect(musicViewModel.songsList ) {
+        if (musicViewModel.songsList.isEmpty()) {
+            val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
+                musicViewModel.browser?.getChildren("songs_root", 0, Integer.MAX_VALUE, null)
+            futureResult?.addListener({
+                try {
+                    val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
+                    if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
+                        return@addListener
+                    }
+                    val albumMediaItems: List<MediaItem> = result.value ?: listOf()
+                    val list  = albumMediaItems.map { mediaItem ->
+                        MediaItemUtils.mediaItemToMusicItem(mediaItem)
+                   }.fastFilterNotNull()
+                    musicViewModel.songsList.addAll(list)
+                } catch (e: Exception) {
+                    // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                    Log.e("Client", "Failed to toggle favorite status", e)
+                }
+            }, ContextCompat.getMainExecutor(context))
 
+        }
+    }
 //    LaunchedEffect(key1 = musicViewModel.showIndicatorMap) {
     showIndicator.value =
         musicViewModel.showIndicatorMap.getOrDefault(PlayListType.Songs.toString(), false)

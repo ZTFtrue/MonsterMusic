@@ -218,10 +218,14 @@ class MusicViewModel : ViewModel() {
         dealLyricsJob?.cancel()
         dealCurrentPlayJob = viewModelScope.launch {
             // when reason is Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED
-            // sometimes index is 0 but this is not the real index
+            // sometimes index is 0 but this is not the real index, because User click the item is not 0
             if (index == 0 && reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
                 delay(100)
             }
+            currentPlay.value = musicQueue[index]
+            currentPlayQueueIndex.intValue = index
+            currentMusicCover.value = null
+            currentDuration.longValue = musicQueue[index].duration
             currentPlay.value =
                 musicQueue[index]
             currentCaptionList.clear()

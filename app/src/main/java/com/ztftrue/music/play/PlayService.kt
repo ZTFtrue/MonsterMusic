@@ -1470,12 +1470,18 @@ class PlayService : MediaLibraryService() {
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 super.onMediaItemTransition(mediaItem, reason)
                 if (musicQueue.isEmpty() || exoPlayer.currentMediaItemIndex >= musicQueue.size) return
+                Log.e("`", """${Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT},
+                    ${Player.MEDIA_ITEM_TRANSITION_REASON_AUTO},
+                    ${Player.MEDIA_ITEM_TRANSITION_REASON_SEEK},
+                    ${Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED},-----${reason}""")
                 if (currentPlayTrack?.id != musicQueue[exoPlayer.currentMediaItemIndex].id) {
                     SharedPreferencesUtils.saveSelectMusicId(
                         this@PlayService,
                         musicQueue[exoPlayer.currentMediaItemIndex].id
                     )
-                    SharedPreferencesUtils.saveCurrentDuration(this@PlayService, 0)
+                    if(reason!=Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED&&reason!=Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT){
+                        SharedPreferencesUtils.saveCurrentDuration(this@PlayService, 0)
+                    }
                     currentPlayTrack =
                         musicQueue[exoPlayer.currentMediaItemIndex]
                     getSharedPreferences("Widgets", MODE_PRIVATE).getBoolean(
@@ -2393,7 +2399,6 @@ class PlayService : MediaLibraryService() {
                     position = 0
                 }
                 exoPlayer.seekTo(currentIndex, position)
-                updateNotify(position, currentPlayTrack?.duration)
             }
             exoPlayer.playWhenReady = false
             exoPlayer.prepare()
