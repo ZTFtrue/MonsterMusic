@@ -83,6 +83,7 @@ class MusicViewModel : ViewModel() {
     var editTrackEnable = mutableStateOf(false)
     private val _visualizationData = MutableLiveData<List<Float>>()
     val visualizationData: LiveData<List<Float>> = _visualizationData
+
     //    val albumItemsCount = mutableIntStateOf(2)
 //    val genreItemsCount = mutableIntStateOf(2)
 //    var mediaBrowser: MediaBrowserCompat? = null
@@ -170,6 +171,7 @@ class MusicViewModel : ViewModel() {
         playCompleted.value = false
         repeatModel.intValue = Player.REPEAT_MODE_ALL
     }
+
     private fun subscribeToVisualizationData() {
         viewModelScope.launch {
             // a. 订阅 (collect) 来自 Repository 的数据流
@@ -183,6 +185,7 @@ class MusicViewModel : ViewModel() {
                 }
         }
     }
+
     init {
         subscribeToVisualizationData()
         val band = ArrayList<EqualizerBand>()
@@ -219,17 +222,14 @@ class MusicViewModel : ViewModel() {
             if (index == 0 && reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
                 delay(100)
             }
-            currentPlayQueueIndex.intValue = index
-            if (currentPlay.value?.id != musicQueue[index].id) {
-                currentPlay.value =
-                    musicQueue[index]
-                currentCaptionList.clear()
-                scheduleDealLyrics(context, musicQueue[index], index, reason)
-                currentMusicCover.value = null
-                sliderPosition.floatValue = 0f
-                currentDuration.longValue =
-                    currentPlay.value?.duration ?: 0
-            }
+            currentPlay.value =
+                musicQueue[index]
+            currentCaptionList.clear()
+            scheduleDealLyrics(context, musicQueue[index], index, reason)
+            currentMusicCover.value = null
+            sliderPosition.floatValue = 0f
+            currentDuration.longValue =
+                currentPlay.value?.duration ?: 0
         }
     }
 

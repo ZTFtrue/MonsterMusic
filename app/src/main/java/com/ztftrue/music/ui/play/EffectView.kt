@@ -36,6 +36,7 @@ import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_CHANGE_PITCH
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_ECHO_ENABLE
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_ECHO_SET_DECAY
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_ECHO_SET_DELAY
 import com.ztftrue.music.play.PlayService.Companion.KEY_ENABLE
@@ -189,7 +190,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                                 val bundle = Bundle()
                                 bundle.putBoolean(KEY_ENABLE, it)
                                 musicViewModel.browser?.sendCustomCommand(
-                                    COMMAND_CHANGE_PITCH,
+                                    COMMAND_ECHO_ENABLE,
                                     bundle
                                 )
                             }

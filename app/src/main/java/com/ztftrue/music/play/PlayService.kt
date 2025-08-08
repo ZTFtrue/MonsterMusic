@@ -101,7 +101,7 @@ import java.io.File
 class PlayService : MediaLibraryService() {
 
 
-    private   var mediaSession: MediaLibrarySession? = null
+    private var mediaSession: MediaLibrarySession? = null
     private var mControllerInfo: MediaSession.ControllerInfo? = null
     val equalizerAudioProcessor: EqualizerAudioProcessor = EqualizerAudioProcessor()
 //    val sonicAudioProcessor = SonicAudioProcessor()
@@ -191,6 +191,7 @@ class PlayService : MediaLibraryService() {
                     // 添加所有你定义的 SessionCommand
                     .add(COMMAND_CHANGE_PITCH)
                     .add(COMMAND_CHANGE_Q)
+                    .add(COMMAND_DSP_ENABLE)
                     .add(COMMAND_ADD_TO_QUEUE)
                     .add(COMMAND_DSP_SET_BAND)
                     .add(COMMAND_DSP_FLATTEN)
@@ -210,8 +211,10 @@ class PlayService : MediaLibraryService() {
                     .add(COMMAND_REMOVE_FROM_QUEUE)
                     .add(COMMAND_SORT_TRACKS)
                     .add(COMMAND_CHANGE_PLAYLIST)
+                    .add(COMMAND_GET_CURRENT_PLAYLIST)
                     .add(COMMAND_SORT_QUEUE)
                     .add(COMMAND_CLEAR_QUEUE)
+                    .add(COMMAND_GET_PLAY_LIST_ITEM)
                     .add(COMMAND_REFRESH_ALL)
                     .add(COMMAND_TRACK_DELETE)
                     .add(COMMAND_PlAY_LIST_CHANGE)
@@ -365,7 +368,7 @@ class PlayService : MediaLibraryService() {
                 }
 
                 COMMAND_DSP_SET_BANDS.customAction -> {
-                    args.getIntArray(KEY_INT_ARRAY_VALUE)?.forEachIndexed { index, v ->
+                    args.getIntArray("value")?.forEachIndexed { index, v ->
                         equalizerAudioProcessor.setBand(index, v)
                     }
                 }
@@ -448,6 +451,14 @@ class PlayService : MediaLibraryService() {
                     session.release()
                 }
 
+                COMMAND_GET_CURRENT_PLAYLIST.customAction -> {
+                    val future = SettableFuture.create<SessionResult>()
+                    future.set(SessionResult(SessionResult.RESULT_SUCCESS, Bundle().apply {
+                        putParcelable("playList", playListCurrent)
+                    }))
+                    return future
+                }
+
                 COMMAND_CHANGE_PLAYLIST.customAction -> {
                     CoroutineScope(Dispatchers.IO).launch {
                         val playList = args.getParcelable<AnyListBase>("playList")
@@ -461,6 +472,7 @@ class PlayService : MediaLibraryService() {
                                 currentList.type = playList.type.name
                                 db.CurrentListDao().update(currentList)
                             }
+                            playListCurrent = playList
                         }
 //                                db.QueueDao().deleteAllQueue()
 //                                db.QueueDao().insertAll(musicQueue)
@@ -1820,6 +1832,8 @@ class PlayService : MediaLibraryService() {
         val COMMAND_SORT_TRACKS = SessionCommand("queue.SORT_TRACKS", Bundle.EMPTY)
 
         val COMMAND_CHANGE_PLAYLIST = SessionCommand("queue.CHANGE_PLAYLIST", Bundle.EMPTY)
+        val COMMAND_GET_CURRENT_PLAYLIST =
+            SessionCommand("queue.GET_CURRENT_PLAYLIST", Bundle.EMPTY)
 
 
         // Key：用于指定排序方式的参数

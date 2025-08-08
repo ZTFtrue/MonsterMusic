@@ -65,6 +65,7 @@ import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.PlayService
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_GET_CURRENT_PLAYLIST
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_GET_INITIALIZED_DATA
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
@@ -682,7 +683,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun initializeAndConnect() {
-        if (::browserFuture.isInitialized) return // 防止重复初始化
+        Log.e("DEBUG_LISTENER", ">>>>>>> initializeAndConnect")
+        if (musicViewModel.browser != null || (::browserFuture.isInitialized && !browserFuture.isDone)) {
+            // 如果已经连接了，或者正在连接中，就直接返回
+            return
+        }
+        Log.e("DEBUG_LISTENER", ">>>>>>> initializeAndConnect 恢复链接")
         // 1. 创建 SessionToken，指定要连接的 Service
         val sessionToken = SessionToken(this, ComponentName(this, PlayService::class.java))
         // 2. 使用 Builder 构建 MediaBrowser，这是一个异步过程
@@ -728,8 +734,8 @@ class MainActivity : ComponentActivity() {
 
     public override fun onResume() {
         super.onResume()
-        getSeek()
         volumeControlStream = AudioManager.STREAM_MUSIC
+        getSeek()
         musicViewModel.browser?.let {
             updateUiWithCurrentState(it)
         }
@@ -745,13 +751,14 @@ class MainActivity : ComponentActivity() {
         if (::browserFuture.isInitialized) {
             musicViewModel.browser?.removeListener(playerListener)
             MediaBrowser.releaseFuture(browserFuture)
+            Log.e("MyMusicActivity", "MediaBrowser released 丢失链接")
+            musicViewModel.browser=null
         }
     }
 
     private fun onBrowserConnected(browser: MediaBrowser) {
         browser.addListener(playerListener) // playerListener 是你定义的 Player.Listener 实例
         updateUiWithCurrentState(browser)
-
         val futureResult: ListenableFuture<SessionResult>? =
             musicViewModel.browser?.sendCustomCommand(
                 COMMAND_GET_INITIALIZED_DATA,
@@ -980,12 +987,32 @@ class MainActivity : ComponentActivity() {
      *
      * @param player MediaBrowser 实例，它实现了 Player 接口。
      */
-    private fun updateUiWithCurrentState(player: Player) {
-        // 1. 更新元数据 (歌曲信息和封面)
+    private fun updateUiWithCurrentState(player: MediaBrowser) {
+        musicViewModel.musicQueue.addAll(getCurrentPlaylist(player).mapNotNull {
+            MediaItemUtils.mediaItemToMusicItem(
+                it
+            )
+        })
         val currentMediaItem = player.currentMediaItem
         if (currentMediaItem != null && musicViewModel.musicQueue.isNotEmpty() && musicViewModel.musicQueue.size > player.currentMediaItemIndex
             && player.currentMediaItemIndex >= 0
         ) {
+            val futureResult: ListenableFuture<SessionResult>? =
+                musicViewModel.browser?.sendCustomCommand(
+                    COMMAND_GET_CURRENT_PLAYLIST,
+                    Bundle().apply { },
+                )
+            futureResult?.addListener({
+                try {
+                    val sessionResult = futureResult.get()
+                    if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
+                      musicViewModel.playListCurrent.value=  sessionResult.extras.getParcelable<AnyListBase>("playList")
+                    }
+                } catch (e: Exception) {
+                    Log.e("Client", "Failed to toggle favorite status", e)
+                }
+            }, ContextCompat.getMainExecutor(this@MainActivity))
+
             // &&player.currentMediaItemIndex!=musicViewModel.currentPlayQueueIndex.intValue 如果是和当前相同就不解析
             musicViewModel.currentPlayQueueIndex.intValue = player.currentMediaItemIndex
             musicViewModel.currentPlay.value =
@@ -1011,7 +1038,7 @@ class MainActivity : ComponentActivity() {
 
         // 获取当前播放位置
         val currentPosition = player.currentPosition
-        musicViewModel.currentDuration.longValue = currentPosition
+        musicViewModel.sliderPosition.floatValue = currentPosition.toFloat()
 
         // 4. 更新随机播放按钮的状态
         musicViewModel.enableShuffleModel.value = player.shuffleModeEnabled
@@ -1019,5 +1046,24 @@ class MainActivity : ComponentActivity() {
         musicViewModel.repeatModel.intValue = player.repeatMode
     }
 
+    fun getCurrentPlaylist(browser: MediaBrowser): List<MediaItem> {
+        // 1. 获取当前的 Timeline
+        val timeline: Timeline = browser.currentTimeline
 
+        // 2. 检查 Timeline 是否为空
+        if (timeline.isEmpty) {
+            return emptyList()
+        }
+
+        // 3. 遍历 Timeline，提取出所有的 MediaItem
+        val playlist = mutableListOf<MediaItem>()
+        val window = Timeline.Window() // 创建一个可重用的 Window 对象以提高效率
+
+        for (i in 0 until timeline.windowCount) {
+            timeline.getWindow(i, window)
+            playlist.add(window.mediaItem)
+        }
+
+        return playlist
+    }
 }
