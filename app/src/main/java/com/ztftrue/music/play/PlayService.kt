@@ -174,7 +174,8 @@ class PlayService : MediaLibraryService() {
             this,
             exoPlayer,
             MySessionCallback(this@PlayService),
-        ).build()
+        ).setSessionActivity(pendingContentIntent)
+            .build()
         val notification = DefaultMediaNotificationProvider(this)
         setMediaNotificationProvider(notification)
     }
