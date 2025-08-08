@@ -370,8 +370,12 @@ fun MusicItemView(
                             val index =
                                 viewModel.musicQueue.indexOfFirst { musicItem -> musicItem.id == music.id }
                             if (index == viewModel.currentPlayQueueIndex.intValue) {
-                                viewModel.browser?.playWhenReady = true
-                                viewModel.browser?.prepare()
+                                if (viewModel.browser?.isPlaying == true) {
+                                    viewModel.browser?.pause()
+                                } else {
+                                    viewModel.browser?.playWhenReady = true
+                                    viewModel.browser?.prepare()
+                                }
                             } else {
                                 viewModel.browser?.seekTo(index, 0)
                                 viewModel.browser?.playWhenReady = true
