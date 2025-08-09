@@ -440,10 +440,8 @@ class PlayService : MediaLibraryService() {
                 }
 
                 COMMAND_APP_EXIT.customAction -> {
-                    exoPlayer.pause()
-                    exoPlayer.clearMediaItems()
-                    // musicQueue.clear()
-                    session.release()
+                    stopForeground(true)
+                    stopSelf()
                 }
 
                 COMMAND_GET_CURRENT_PLAYLIST.customAction -> {
