@@ -85,7 +85,6 @@ fun PlayListView(
     val context = LocalContext.current
     LaunchedEffect(musicViewModel.refreshPlayList.value) {
         playList.clear()
-        Log.e("MY_APP_DEBUG", "CLIENT: Preparing to call getChildren with parentId: playlists_root")
         val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
             musicViewModel.browser?.getChildren("playlists_root", 0, Integer.MAX_VALUE, null)
         futureResult?.addListener({

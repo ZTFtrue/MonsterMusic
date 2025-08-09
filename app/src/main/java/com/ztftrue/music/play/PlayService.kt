@@ -185,7 +185,6 @@ class PlayService : MediaLibraryService() {
             session: MediaSession,
             controller: MediaSession.ControllerInfo
         ): MediaSession.ConnectionResult {
-            Log.e("MY_APP_DEBUG", "SERVICE: onConnect called by package: ${controller.packageName}")
             mControllerInfo = controller
             val availableCommands =
                 MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS.buildUpon()
@@ -235,15 +234,13 @@ class PlayService : MediaLibraryService() {
             customCommand: SessionCommand,
             args: Bundle
         ): ListenableFuture<SessionResult> {
-            Log.d("PlayService", "onCustomCommand: ${customCommand.customAction}")
             when (customCommand.customAction) {
                 // --- DSP & Effects ---
                 COMMAND_CHANGE_PITCH.customAction -> {
                     val pitch = args.getFloat("pitch", 1f)
-                    val param1 = PlaybackParameters(
+                    exoPlayer.playbackParameters = PlaybackParameters(
                         auxr.speed, pitch
                     )
-                    exoPlayer.playbackParameters = param1
                     auxr.pitch = pitch
                     CoroutineScope(Dispatchers.IO).launch {
                         db.AuxDao().update(auxr)
@@ -413,7 +410,6 @@ class PlayService : MediaLibraryService() {
                 }
 
                 COMMAND_VISUALIZATION_CONNECTED.customAction -> {
-                    Log.d("PlayService", "Visualization component connected. Enabling processing.")
                     if (musicVisualizationEnable) { // musicVisualizationEnable 是 Service 的一个状态变量
                         equalizerAudioProcessor.setVisualizationAudioActive(true)
                     }
@@ -431,10 +427,6 @@ class PlayService : MediaLibraryService() {
                 }
 
                 COMMAND_VISUALIZATION_DISCONNECTED.customAction -> {
-                    Log.d(
-                        "PlayService",
-                        "Visualization component disconnected. Disabling processing."
-                    )
                     equalizerAudioProcessor.setVisualizationAudioActive(false)
                 }
 
@@ -706,12 +698,10 @@ class PlayService : MediaLibraryService() {
             browser: MediaSession.ControllerInfo,
             params: LibraryParams?
         ): ListenableFuture<LibraryResult<MediaItem>> {
-            Log.d("PlayService", "onGetLibraryRoot")
             val clientPackageName = browser.packageName
             val future = SettableFuture.create<LibraryResult<ImmutableList<MediaItem>>>()
             // 为 Android Auto 提供一个简化的根节点
 //            if (clientPackageName == "com.google.android.projection.gearhead") {
-//                Log.d("PlayService", "Android Auto is connecting.")
 //                // 返回一个为驾驶场景优化的根节点
 //                val autoRootItem = MediaItemUtils.createFullFeaturedRoot()
 //                return Futures.immediateFuture(LibraryResult.ofItem(autoRootItem, null))
@@ -719,16 +709,9 @@ class PlayService : MediaLibraryService() {
 //            // 为你自己的 App 提供一个功能完整的根节点
 //            else
             if (clientPackageName == context.packageName) {
-                Log.d("PlayService", "My own app is connecting.")
                 val fullFeaturedRootItem = MediaItemUtils.createFullFeaturedRoot()
                 return Futures.immediateFuture(LibraryResult.ofItem(fullFeaturedRootItem, null))
             } else {
-                // 拒绝其他未知应用的连接
-                Log.w(
-                    "PlayService",
-                    "Rejecting connection from unknown package: $clientPackageName"
-                )
-                // 在新版 Media3 中，应该返回一个拒绝的 Future
                 return Futures.immediateFuture(LibraryResult.ofError(SessionError.ERROR_SESSION_DISCONNECTED))
             }
         }
@@ -741,8 +724,6 @@ class PlayService : MediaLibraryService() {
             pageSize: Int,
             params: LibraryParams?
         ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
-            Log.e("MY_APP_DEBUG", "SERVICE: onGetChildren called with parentId: '$parentId'")
-            Log.d("PlayService", "onGetChildren: $parentId")
             val future = SettableFuture.create<LibraryResult<ImmutableList<MediaItem>>>()
             CoroutineScope(Dispatchers.IO).launch {
                 try {
@@ -1140,7 +1121,6 @@ class PlayService : MediaLibraryService() {
     private fun initializePlayerData() {
         // 启动一个非阻塞的协程来执行所有初始化工作
         serviceScope.launch {
-            Log.d("PlayService", "Starting player data initialization...")
             val loadingJob = launch(Dispatchers.IO) {
                 db = MusicDatabase.getDatabase(this@PlayService)
                 loadAllTracksAndFolders()
@@ -1473,10 +1453,6 @@ class PlayService : MediaLibraryService() {
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 super.onMediaItemTransition(mediaItem, reason)
                 if (musicQueue.isEmpty() || exoPlayer.currentMediaItemIndex >= musicQueue.size) return
-                Log.e("`", """${Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT},
-                    ${Player.MEDIA_ITEM_TRANSITION_REASON_AUTO},
-                    ${Player.MEDIA_ITEM_TRANSITION_REASON_SEEK},
-                    ${Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED},-----${reason}""")
                 if (currentPlayTrack?.id != musicQueue[exoPlayer.currentMediaItemIndex].id) {
                     SharedPreferencesUtils.saveSelectMusicId(
                         this@PlayService,
@@ -1897,7 +1873,6 @@ class PlayService : MediaLibraryService() {
             val mediaItems = ArrayList(playListLinkedHashMap.values).map { playlist ->
                 MediaItemUtils.playlistToMediaItem(playlist)
             }
-            Log.d("", "set f getPlayList: $mediaItems")
             future.set(LibraryResult.ofItemList(mediaItems, null))
         } else {
             val sortData =
@@ -1912,7 +1887,6 @@ class PlayService : MediaLibraryService() {
             val mediaItems = result.map { playlist ->
                 MediaItemUtils.playlistToMediaItem(playlist)
             }
-            Log.d("", "set f getPlayList: $mediaItems")
             future.set(LibraryResult.ofItemList(mediaItems, null))
         }
     }
@@ -2583,6 +2557,5 @@ class PlayService : MediaLibraryService() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        Log.d("PlayService", "onTaskRemoved")
     }
 }

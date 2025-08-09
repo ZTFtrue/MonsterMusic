@@ -216,7 +216,6 @@ class MusicViewModel : ViewModel() {
     private var dealCurrentPlayJob: Job? = null
 
     fun scheduleDealCurrentPlay(context: Context, index: Int, reason: Int) {
-        Log.e("LYrics", "scheduleDealCurrentPlay")
         dealCurrentPlayJob?.cancel()
         dealCurrentPlayJob = viewModelScope.launch {
             // when reason is Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED
@@ -224,7 +223,6 @@ class MusicViewModel : ViewModel() {
             if (index == 0 && reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
                 delay(100)
             }
-            Log.e("LYrics", "scheduleDealCurrentPlay----------start")
             currentPlay.value = musicQueue[index]
             currentPlayQueueIndex.intValue = index
             currentMusicCover.value = null
@@ -247,22 +245,22 @@ class MusicViewModel : ViewModel() {
         return DocumentFile.fromSingleUri(context, targetFileUri)
     }
 
-    fun matchesWithAnyLanguage(fileName: String, musicName: String, ext: String): Boolean {
+    fun matchedExtension(fileName: String, musicName: String, ext: String): String? {
         val lowerName = fileName.lowercase()
         val lowerMusic = musicName.lowercase()
         val lowerExt = ext.lowercase()
 
         // 必须以扩展名结尾
-        if (!lowerName.endsWith(lowerExt)) return false
+        if (!lowerName.endsWith(lowerExt)) return null
 
         val baseName = lowerName.removeSuffix(lowerExt)
 
-        // 1. 完全匹配
-        if (baseName == lowerMusic) return true
+        // 完全匹配
+        if (baseName == lowerMusic) return lowerExt
 
-        // 2. 匹配带任意语言标记的情况
+        // 带语言标记
         val regex = Regex("^${Regex.escape(lowerMusic)}\\.[a-z0-9]{2,8}(-[a-z0-9]{2,8})?$")
-        return regex.matches(baseName)
+        return if (regex.matches(baseName)) lowerExt else null
     }
 
     fun loadLyrics(
@@ -270,7 +268,7 @@ class MusicViewModel : ViewModel() {
         storageFolder: StorageFolder,
         musicName: String,
         fileLyrics: MutableList<ListStringCaption>
-    ) {
+    ):Boolean {
         val treeUri = storageFolder.uri.toUri()
 
         context.contentResolver.takePersistableUriPermission(
@@ -289,19 +287,21 @@ class MusicViewModel : ViewModel() {
                 fileLyrics.addAll(
                     fileRead(targetFile.uri, context, type)
                 )
-                break
-            }
-            val pickedDir = DocumentFile.fromTreeUri(context, treeUri)
-            val match = pickedDir?.listFiles()?.firstOrNull {
-                it.name?.let { name -> matchesWithAnyLanguage(name, musicName, ext) } == true
-            }
-            if (match != null) {
-                fileLyrics.addAll(
-                    fileRead(match.uri, context, getLyricsTypeFromExtension(ext))
-                )
-                break
+                return true
             }
         }
+        // for vtt any language
+        val pickedDir = DocumentFile.fromTreeUri(context, treeUri)
+        pickedDir?.listFiles()?.forEach { file ->
+            if (!file.isFile || !file.canRead()) return@forEach
+            val name = file.name ?: return@forEach
+            val match = matchedExtension(name, musicName, ".vtt")
+            if (match != null) {
+                fileLyrics.addAll(fileRead(file.uri, context, LyricsType.VTT))
+                return true
+            }
+        }
+        return false
     }
 
     fun dealLyrics(context: Context, currentPlay: MusicItem) {
@@ -384,10 +384,11 @@ class MusicViewModel : ViewModel() {
                         ""
                     }
                     val files = getDb(context).StorageFolderDao().findAllByType(LYRICS_TYPE)
-                    Log.e("LYrics", "33333embeddedLyrics:$files")
                     outer@ for (storageFolder in files) {
                         try {
-                            loadLyrics(context, storageFolder, musicName, fileLyrics)
+                            if(loadLyrics(context, storageFolder, musicName, fileLyrics)){
+                                break@outer
+                            }
                         } catch (e: Exception) {
                             e.printStackTrace()
                             getDb(context).StorageFolderDao().deleteById(storageFolder.id!!)

@@ -751,7 +751,6 @@ class MainActivity : ComponentActivity() {
         if (::browserFuture.isInitialized) {
             musicViewModel.browser?.removeListener(playerListener)
             MediaBrowser.releaseFuture(browserFuture)
-            Log.e("MyMusicActivity", "MediaBrowser released 丢失链接")
             musicViewModel.browser=null
         }
     }

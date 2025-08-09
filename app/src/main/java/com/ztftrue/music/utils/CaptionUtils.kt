@@ -28,7 +28,7 @@ object CaptionUtils {
                 LyricsType.LRC
             } else if (fileNameWithSuffix.endsWith(".srt")) {
                 LyricsType.SRT
-            } else if (fileNameWithSuffix.endsWith(".vtt")) {
+            } else if (fileNameWithSuffix.endsWith(".vtt")||fileNameWithSuffix.endsWith(".en.vtt")) {
                 LyricsType.VTT
             } else if (fileNameWithSuffix.endsWith(".txt")) {
                 LyricsType.TEXT
