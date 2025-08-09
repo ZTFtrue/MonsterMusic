@@ -61,19 +61,23 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastFilterNotNull
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.content.ContextCompat
+import androidx.media3.common.MediaItem
+import androidx.media3.session.LibraryResult
 import androidx.media3.session.SessionResult
 import androidx.navigation.NavHostController
+import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
+import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_CLEAR_QUEUE
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_SORT_TRACKS
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
 import com.ztftrue.music.play.PlayUtils
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.dao.SortFiledDao
@@ -407,11 +411,24 @@ fun MainTopBar(
 
                                                 PlayListType.Songs.name -> {
                                                     musicViewModel.songsList.clear()
-//                                                    resultData?.getParcelableArrayList<MusicItem>(
-//                                                        "songsList"
-//                                                    )?.also {
-//                                                        musicViewModel.songsList.addAll(it)
-//                                                    }
+                                                    val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
+                                                        musicViewModel.browser?.getChildren("songs_root", 0, Integer.MAX_VALUE, null)
+                                                    futureResult?.addListener({
+                                                        try {
+                                                            val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
+                                                            if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
+                                                                return@addListener
+                                                            }
+                                                            val albumMediaItems: List<MediaItem> = result.value ?: listOf()
+                                                            val list  = albumMediaItems.map { mediaItem ->
+                                                                MediaItemUtils.mediaItemToMusicItem(mediaItem)
+                                                            }.fastFilterNotNull()
+                                                            musicViewModel.songsList.addAll(list)
+                                                        } catch (e: Exception) {
+                                                            // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                                                            Log.e("Client", "Failed to toggle favorite status", e)
+                                                        }
+                                                    }, ContextCompat.getMainExecutor(context))
                                                 }
 
                                                 else -> {

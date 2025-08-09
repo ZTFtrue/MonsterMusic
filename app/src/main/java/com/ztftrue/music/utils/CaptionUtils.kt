@@ -22,6 +22,46 @@ enum class LyricsType {
 }
 
 object CaptionUtils {
+    fun getLyricsTypeFromExtension(fileNameWithSuffix: String): LyricsType {
+        val type =
+            if (fileNameWithSuffix.endsWith(".lrc")) {
+                LyricsType.LRC
+            } else if (fileNameWithSuffix.endsWith(".srt")) {
+                LyricsType.SRT
+            } else if (fileNameWithSuffix.endsWith(".vtt")) {
+                LyricsType.VTT
+            } else if (fileNameWithSuffix.endsWith(".txt")) {
+                LyricsType.TEXT
+            }  else {
+                LyricsType.TEXT
+            }
+        return type
+    }
+    // 创建一个正则表达式，匹配所有非字母、非数字、非空格的字符
+    private val nonAlphanumericRegex = Regex("[^a-zA-Z0-9\\s]")
+    // 创建一个正则表达式，匹配多个连续的空格
+    private val multipleSpacesRegex = Regex("\\s+")
+
+    /**
+     * 将字符串规范化，以便进行“宽容”的精确匹配。
+     * - 转换为小写
+     * - 移除开头/结尾的空格
+     * - 移除所有符号（保留字母、数字和空格）
+     * - 将多个空格合并为一个
+     *
+     * 示例: "  (Queen) - Bohemian_Rhapsody. " -> "queen bohemian rhapsody"
+     *
+     * @param input 输入字符串
+     * @return 规范化后的字符串
+     */
+    fun normalizeForMatching(input: String): String {
+        return input
+            .trim() // 1. 移除开头和结尾的空格
+            .lowercase() // 2. 转换为小写
+            .replace(nonAlphanumericRegex, " ") // 3. 将所有非字母数字字符替换为空格
+            .replace(multipleSpacesRegex, " ") // 4. 将多个连续空格合并为一个
+            .trim() // 5. 再次 trim，以防替换后开头结尾出现新空格
+    }
     fun parseVttFile(bufferedReader: BufferedReader): List<Caption> {
         val captions = mutableListOf<Caption>()
         bufferedReader.useLines { lines ->

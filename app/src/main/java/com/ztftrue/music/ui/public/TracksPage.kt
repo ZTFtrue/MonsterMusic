@@ -726,6 +726,7 @@ fun TracksListPage(
         }
     }
     LaunchedEffect(musicViewModel.refreshPlayList.value, refreshCurrentValueList) {
+        Log.d("Client", "result tracks: ${id}")
         val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
             musicViewModel.browser?.getChildren(
                 type.name + "_track_" + id,
@@ -736,9 +737,11 @@ fun TracksListPage(
         futureResult?.addListener({
             try {
                 val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
+                Log.d("Client", "result tracks: ${result?.resultCode}")
                 if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
                     return@addListener
                 }
+
                 getHaveAlbums()
                 val albumMediaItems: List<MediaItem> = result.value ?: listOf()
                 val tracksListResult = ArrayList<MusicItem>()

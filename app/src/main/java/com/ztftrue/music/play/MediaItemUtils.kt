@@ -11,6 +11,7 @@ import com.ztftrue.music.utils.model.ArtistList
 import com.ztftrue.music.utils.model.FolderList
 import com.ztftrue.music.utils.model.GenresList
 import com.ztftrue.music.utils.model.MusicPlayList
+import java.io.File
 
 object CustomMetadataKeys {
     const val KEY_PATH = "com.ztftrue.music.metadata.PATH"
@@ -93,7 +94,7 @@ object MediaItemUtils {
             .setIsPlayable(false)
 //            .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER)
             .setExtras(Bundle().apply {
-               putBoolean(CustomMetadataKeys.FOLDER_IS_SHOW, folder.isShow)
+                putBoolean(CustomMetadataKeys.FOLDER_IS_SHOW, folder.isShow)
                 // folder.isShow 这种UI状态信息通常不放在这里，但如果需要也可以放
             })
             .build()
@@ -190,10 +191,11 @@ object MediaItemUtils {
         // --- 3. 构建 MediaItem 本身 ---
         return MediaItem.Builder()
             .setMediaId(musicItem.id.toString())
-            .setUri(musicItem.path.toUri())
+            .setUri(File(musicItem.path).toUri())
             .setMediaMetadata(metadataBuilder.build())
             .build()
     }
+
     fun musicItemToMediaMetadata(musicItem: MusicItem): MediaMetadata {
         val metadataBuilder = MediaMetadata.Builder()
 
@@ -231,6 +233,7 @@ object MediaItemUtils {
 
         return metadataBuilder.build()
     }
+
     fun mediaItemToMusicItem(mediaItem: MediaItem): MusicItem? {
         val metadata = mediaItem.mediaMetadata
 
@@ -252,7 +255,10 @@ object MediaItemUtils {
             // duration 在 MediaItem 中不直接可用，需要播放器准备好后才能获取。
             // 如果你之前把它存入了 extras，可以在这里读取。
             duration = metadata.durationMs ?: 0L,
-            displayName = extras.getString(CustomMetadataKeys.KEY_DISPLAY_NAME, "Unknown Display Name"),
+            displayName = extras.getString(
+                CustomMetadataKeys.KEY_DISPLAY_NAME,
+                "Unknown Display Name"
+            ),
             album = metadata.albumTitle?.toString() ?: "Unknown Album",
             albumId = extras.getLong(CustomMetadataKeys.KEY_ALBUM_ID, 0L),
             artist = metadata.artist?.toString() ?: "Unknown Artist",
@@ -265,13 +271,17 @@ object MediaItemUtils {
             isFavorite = extras.getBoolean(CustomMetadataKeys.KEY_IS_FAVORITE, false)
         )
     }
+
     fun mediaItemToAlbumList(mediaItem: MediaItem): AlbumList? {
         val metadata = mediaItem.mediaMetadata
 
         // 1. 确保这是一个专辑类型的 MediaItem (可选但推荐)
         if (metadata.mediaType != MediaMetadata.MEDIA_TYPE_ALBUM) {
             // 或者可以只打印警告而不是直接返回 null，取决于你的业务逻辑
-            Log.w("Converter", "Attempted to convert a non-album MediaItem to AlbumList. mediaId: ${mediaItem.mediaId}")
+            Log.w(
+                "Converter",
+                "Attempted to convert a non-album MediaItem to AlbumList. mediaId: ${mediaItem.mediaId}"
+            )
         }
 
         // 2. mediaId 是必须的，我们用它来填充 id 字段
@@ -294,9 +304,12 @@ object MediaItemUtils {
             trackNumber = metadata.totalTrackCount?.toInt() ?: 0,
 
             // 从 extras 中获取我们自定义存储的信息
-            firstYear = extras.getString("album_first_year", metadata.releaseYear?.toString() ?: "0"),
+            firstYear = extras.getString(
+                "album_first_year",
+                metadata.releaseYear?.toString() ?: "0"
+            ),
             lastYear = extras.getString("album_last_year", metadata.releaseYear?.toString() ?: "0"),
 
-        )
+            )
     }
 }

@@ -269,7 +269,9 @@ class PlayService : MediaLibraryService() {
                 }
 
                 COMMAND_SORT_TRACKS.customAction -> {
-                    sortAction(args)
+                    val future = SettableFuture.create<SessionResult>()
+                    sortAction(args,future)
+                    return future
                 }
 
                 COMMAND_GET_PLAY_LIST_ITEM.customAction -> {
@@ -1679,24 +1681,28 @@ class PlayService : MediaLibraryService() {
     }
 
     //
-    private fun sortAction(extras: Bundle) {
+    private fun sortAction(extras: Bundle,future: SettableFuture<SessionResult>) {
         val typeString = extras.getString("type")
         if (!typeString.isNullOrEmpty()) {
             when (typeString) {
                 PlayListType.PlayLists.name -> {
                     playListLinkedHashMap.clear()
+                    future.set(SessionResult(SessionResult.RESULT_SUCCESS, Bundle()))
                 }
 
                 PlayListType.Albums.name -> {
                     albumsLinkedHashMap.clear()
+                    future.set(SessionResult(SessionResult.RESULT_SUCCESS, Bundle()))
                 }
 
                 PlayListType.Artists.name -> {
                     artistsLinkedHashMap.clear()
+                    future.set(SessionResult(SessionResult.RESULT_SUCCESS, Bundle()))
                 }
 
                 PlayListType.Genres.name -> {
                     genresLinkedHashMap.clear()
+                    future.set(SessionResult(SessionResult.RESULT_SUCCESS, Bundle()))
                 }
 
                 PlayListType.Songs.name -> {
@@ -1718,6 +1724,7 @@ class PlayService : MediaLibraryService() {
                                 showIndicatorList.add(it)
                             }
                         }
+                        future.set(SessionResult(SessionResult.RESULT_SUCCESS, Bundle()))
                     }
                 }
 
@@ -1731,6 +1738,7 @@ class PlayService : MediaLibraryService() {
                                 showIndicatorList.add(it)
                             }
                         }
+                        future.set(SessionResult(SessionResult.RESULT_SUCCESS, Bundle()))
                     }
                 }
 
@@ -1744,6 +1752,9 @@ class PlayService : MediaLibraryService() {
                                 showIndicatorList.add(it)
                             }
                         }
+                        future.set(SessionResult(SessionResult.RESULT_SUCCESS, Bundle()))
+
+
                     }
                 }
 
@@ -1757,6 +1768,8 @@ class PlayService : MediaLibraryService() {
                                 showIndicatorList.add(it)
                             }
                         }
+                        future.set(SessionResult(SessionResult.RESULT_SUCCESS, Bundle()))
+
                     }
                 }
 
@@ -1770,6 +1783,7 @@ class PlayService : MediaLibraryService() {
                                 showIndicatorList.add(it)
                             }
                         }
+                        future.set(SessionResult(SessionResult.RESULT_SUCCESS, Bundle()))
                     }
                 }
 
@@ -1783,6 +1797,7 @@ class PlayService : MediaLibraryService() {
                                 showIndicatorList.add(it)
                             }
                         }
+                        future.set(SessionResult(SessionResult.RESULT_SUCCESS, Bundle()))
                     }
                 }
 
