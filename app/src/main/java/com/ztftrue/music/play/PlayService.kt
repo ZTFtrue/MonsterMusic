@@ -3,15 +3,16 @@ package com.ztftrue.music.play
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
-import android.bluetooth.BluetoothDevice
 import android.content.ComponentName
 import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
+import android.media.AudioManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -60,7 +61,6 @@ import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.PlayConfig
 import com.ztftrue.music.sqlData.model.SortFiledData
-import com.ztftrue.music.utils.BluetoothConnectionReceiver
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
@@ -152,19 +152,15 @@ class PlayService : MediaLibraryService() {
     var playCompleted = false
     var needPlayPause = false
     var sleepTime = 0L
-    private var receiver: BluetoothConnectionReceiver? = null
     private var countDownTimer: CountDownTimer? = null
+    private var headsetCallback:HeadsetConnectionCallback?=null;
+    private lateinit var audioManager: AudioManager
+
     override fun onCreate() {
         super.onCreate()
         initExo(this@PlayService)
         initializePlayerData()
-        if (SharedPreferencesUtils.getAutoPlayEnable(this)) {
-            receiver = BluetoothConnectionReceiver(exoPlayer)
-            val filter = IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED)
-            filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
-            filter.addAction(Intent.ACTION_HEADSET_PLUG)
-            registerReceiver(receiver, filter)
-        }
+
         val contentIntent = Intent(this, MainActivity::class.java)
         val pendingContentIntent = PendingIntent.getActivity(
             this, 0, contentIntent,
@@ -176,6 +172,11 @@ class PlayService : MediaLibraryService() {
             MySessionCallback(this@PlayService),
         ).setSessionActivity(pendingContentIntent)
             .build()
+        if (SharedPreferencesUtils.getAutoPlayEnable(this)) {
+            headsetCallback = HeadsetConnectionCallback(mediaSession?.player,this@PlayService)
+            audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            audioManager.registerAudioDeviceCallback(headsetCallback, Handler(Looper.getMainLooper()))
+        }
         val notification = DefaultMediaNotificationProvider(this)
         setMediaNotificationProvider(notification)
     }
@@ -267,7 +268,7 @@ class PlayService : MediaLibraryService() {
 
                 COMMAND_SORT_TRACKS.customAction -> {
                     val future = SettableFuture.create<SessionResult>()
-                    sortAction(args,future)
+                    sortAction(args, future)
                     return future
                 }
 
@@ -1187,8 +1188,9 @@ class PlayService : MediaLibraryService() {
             serviceJob.cancel() // 在 Service 销毁时取消所有协程
         } catch (_: Exception) {
         }
-        if (receiver != null) {
-            unregisterReceiver(receiver)
+        if (headsetCallback!=null){
+            audioManager.unregisterAudioDeviceCallback(headsetCallback)
+            headsetCallback=null
         }
         super.onDestroy()
     }
@@ -1456,7 +1458,7 @@ class PlayService : MediaLibraryService() {
                         this@PlayService,
                         musicQueue[exoPlayer.currentMediaItemIndex].id
                     )
-                    if(reason!=Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED&&reason!=Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT){
+                    if (reason != Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED && reason != Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT) {
                         SharedPreferencesUtils.saveCurrentDuration(this@PlayService, 0)
                     }
                     currentPlayTrack =
@@ -1655,7 +1657,7 @@ class PlayService : MediaLibraryService() {
     }
 
     //
-    private fun sortAction(extras: Bundle,future: SettableFuture<SessionResult>) {
+    private fun sortAction(extras: Bundle, future: SettableFuture<SessionResult>) {
         val typeString = extras.getString("type")
         if (!typeString.isNullOrEmpty()) {
             when (typeString) {
