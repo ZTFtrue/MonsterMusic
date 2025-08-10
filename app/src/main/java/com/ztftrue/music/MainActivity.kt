@@ -18,6 +18,7 @@ import android.media.MediaScannerConnection.MediaScannerConnectionClient
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Looper
 import android.provider.OpenableColumns
 import android.provider.Settings
 import android.util.Log
@@ -47,6 +48,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -182,7 +184,10 @@ class MainActivity : ComponentActivity() {
                             object : MediaScannerConnectionClient {
                                 override fun onMediaScannerConnected() {}
                                 override fun onScanCompleted(path: String, uri: Uri) {
-                                    SongsUtils.refreshPlaylist(musicViewModel)
+                                    lifecycleScope.launch(Dispatchers.Main) {
+                                        SongsUtils.refreshPlaylist(musicViewModel)
+
+                                    }
                                 }
                             })
                     }
@@ -657,7 +662,10 @@ class MainActivity : ComponentActivity() {
             command: SessionCommand,
             args: Bundle
         ): ListenableFuture<SessionResult> {
-            Log.e("DEBUG_LISTENER", ">>>>>>> onCustomCommand RECEIVED! Action: ${command.customAction}")
+            Log.e(
+                "DEBUG_LISTENER",
+                ">>>>>>> onCustomCommand RECEIVED! Action: ${command.customAction}"
+            )
             if (command.customAction == PlayService.COMMAND_SLEEP_STATE_UPDATE.customAction) {
                 val remainTime = args.getLong("remaining")
                 musicViewModel.remainTime.longValue = remainTime
@@ -693,6 +701,7 @@ class MainActivity : ComponentActivity() {
         val sessionToken = SessionToken(this, ComponentName(this, PlayService::class.java))
         // 2. 使用 Builder 构建 MediaBrowser，这是一个异步过程
         browserFuture = MediaBrowser.Builder(this, sessionToken).setListener(browserListener)
+            .setApplicationLooper(Looper.getMainLooper())
             .buildAsync()
         // 3. (关键!) 添加一个监听器来处理连接的结果（成功或失败）
         browserFuture.addListener({
@@ -751,7 +760,7 @@ class MainActivity : ComponentActivity() {
         if (::browserFuture.isInitialized) {
             musicViewModel.browser?.removeListener(playerListener)
             MediaBrowser.releaseFuture(browserFuture)
-            musicViewModel.browser=null
+            musicViewModel.browser = null
         }
     }
 
@@ -1002,7 +1011,8 @@ class MainActivity : ComponentActivity() {
                 try {
                     val sessionResult = futureResult.get()
                     if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
-                      musicViewModel.playListCurrent.value=  sessionResult.extras.getParcelable<AnyListBase>("playList")
+                        musicViewModel.playListCurrent.value =
+                            sessionResult.extras.getParcelable<AnyListBase>("playList")
                     }
                 } catch (e: Exception) {
                     Log.e("Client", "Failed to toggle favorite status", e)

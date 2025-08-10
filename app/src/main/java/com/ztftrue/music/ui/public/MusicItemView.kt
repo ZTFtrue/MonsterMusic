@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionResult
@@ -525,7 +526,8 @@ fun saveSortResult(
                 playList,
                 musicList,
                 music,
-                targetIndex
+                targetIndex,
+                viewModel.viewModelScope
             )
         }
     } else if (playList.type == PlayListType.Queue) {

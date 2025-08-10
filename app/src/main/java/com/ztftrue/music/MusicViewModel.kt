@@ -642,27 +642,30 @@ class MusicViewModel : ViewModel() {
                 object : MediaScannerConnection.MediaScannerConnectionClient {
                     override fun onMediaScannerConnected() {}
                     override fun onScanCompleted(path: String, uri: Uri) {
-                        val futureResult: ListenableFuture<SessionResult>? =
-                            browser?.sendCustomCommand(
-                                COMMAND_PlAY_LIST_CHANGE,
-                                Bundle().apply {
-                                    putString(
-                                        CustomMetadataKeys.KEY_PATH,
-                                        playListPath
-                                    )
-                                },
-                            )
-                        futureResult?.addListener({
-                            try {
-                                val sessionResult = futureResult.get()
-                                if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
-                                    refreshPlayList.value =
-                                        !refreshPlayList.value
+                        viewModelScope.launch(Dispatchers.Main) {
+                            val futureResult: ListenableFuture<SessionResult>? =
+                                browser?.sendCustomCommand(
+                                    COMMAND_PlAY_LIST_CHANGE,
+                                    Bundle().apply {
+                                        putString(
+                                            CustomMetadataKeys.KEY_PATH,
+                                            playListPath
+                                        )
+                                    },
+                                )
+                            futureResult?.addListener({
+                                try {
+                                    val sessionResult = futureResult.get()
+                                    if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
+                                        refreshPlayList.value =
+                                            !refreshPlayList.value
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("Client", "Failed to toggle favorite status", e)
                                 }
-                            } catch (e: Exception) {
-                                Log.e("Client", "Failed to toggle favorite status", e)
-                            }
-                        }, ContextCompat.getMainExecutor(context))
+                            }, ContextCompat.getMainExecutor(context))
+                        }
+
                     }
                 })
         }

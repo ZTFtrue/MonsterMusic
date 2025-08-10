@@ -86,7 +86,8 @@ object TracksUtils {
         playList: AnyListBase,
         musicList: SnapshotStateList<MusicItem>,
         music: MusicItem,
-        targetIndex: Int = 0
+        targetIndex: Int = 0,
+        lifecycleScope: CoroutineScope
     ) {
         if (playList is MusicPlayList) {
             musicList.remove(music)
@@ -141,10 +142,12 @@ object TracksUtils {
                                 path: String,
                                 uri: Uri
                             ) {
-                                mediaBrowserCompat.sendCustomCommand(
-                                    COMMAND_PlAY_LIST_CHANGE,
-                                    Bundle().apply {},
-                                )
+                                lifecycleScope.launch(Dispatchers.Main) {
+                                    mediaBrowserCompat.sendCustomCommand(
+                                        COMMAND_PlAY_LIST_CHANGE,
+                                        Bundle().apply {},
+                                    )
+                                }
                             }
                         })
                 }
