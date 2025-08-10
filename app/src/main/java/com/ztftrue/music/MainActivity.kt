@@ -484,7 +484,7 @@ class MainActivity : ComponentActivity() {
 
     private fun openAppSettings() {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-        intent.setData(Uri.fromParts("package", packageName, null))
+        intent.data = Uri.fromParts("package", packageName, null)
         if (intent.resolveActivity(packageManager) != null) {
             startActivity(intent)
             finish()
@@ -682,12 +682,6 @@ class MainActivity : ComponentActivity() {
             return super.onCustomCommand(controller, command, args)
         }
 
-        override fun onExtrasChanged(
-            controller: MediaController,
-            extras: Bundle
-        ) {
-            super.onExtrasChanged(controller, extras)
-        }
     }
 
     private fun initializeAndConnect() {
@@ -946,8 +940,8 @@ class MainActivity : ComponentActivity() {
 //        }
         val pitch = resultData.getFloat("pitch", 1f)
         val speed = resultData.getFloat("speed", 1f)
-        val Q = resultData.getFloat("Q", Utils.Q)
-        musicViewModel.Q.floatValue = Q
+        val q = resultData.getFloat("Q", Utils.Q)
+        musicViewModel.Q.floatValue = q
         musicViewModel.pitch.floatValue = pitch
         musicViewModel.speed.floatValue = speed
         musicViewModel.sleepTime.longValue =
@@ -1012,7 +1006,7 @@ class MainActivity : ComponentActivity() {
                     val sessionResult = futureResult.get()
                     if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
                         musicViewModel.playListCurrent.value =
-                            sessionResult.extras.getParcelable<AnyListBase>("playList")
+                            sessionResult.extras.getParcelable("playList")
                     }
                 } catch (e: Exception) {
                     Log.e("Client", "Failed to toggle favorite status", e)

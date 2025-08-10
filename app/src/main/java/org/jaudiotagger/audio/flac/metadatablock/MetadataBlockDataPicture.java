@@ -1,5 +1,7 @@
 package org.jaudiotagger.audio.flac.metadatablock;
 
+import androidx.annotation.NonNull;
+
 import org.jaudiotagger.audio.generic.Utils;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.InvalidFrameException;
@@ -17,15 +19,12 @@ import java.util.logging.Logger;
 
 /**
  * Picture Block
- *
- *
  * pThis block is for storing pictures associated with the file, most commonly cover art from CDs.
  * There may be more than one PICTURE block in a file. The picture format is similar to the APIC frame in ID3v2.
  * The PICTURE block has a type, MIME type, and UTF-8 description like ID3v2, and supports external linking via URL
  * (though this is discouraged). The differences are that there is no uniqueness constraint on the description field,
  * and the MIME type is mandatory. The FLAC PICTURE block also includes the resolution, color depth, and palette size
  * so that the client can search for a suitable picture without having to scan them all
- *
  * Format:
  * Size in bits Info
  * 32 The picture type according to the ID3v2 APIC frame: (There may only be one each of picture type 1 and 2 in a file)
@@ -265,6 +264,7 @@ public class MetadataBlockDataPicture implements MetadataBlockData, TagField
         }
     }
 
+    @NonNull
     public String toString()
     {
         return PictureTypes.getInstanceOf().getValueForId(pictureType) + ":" + mimeType + ":" + description + ":" + "width:" + width + ":height:" + height + ":colourdepth:" + colourDepth + ":indexedColourCount:" + indexedColouredCount

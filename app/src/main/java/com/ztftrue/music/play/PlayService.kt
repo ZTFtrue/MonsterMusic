@@ -153,7 +153,7 @@ class PlayService : MediaLibraryService() {
     var needPlayPause = false
     var sleepTime = 0L
     private var countDownTimer: CountDownTimer? = null
-    private var headsetCallback: HeadsetConnectionCallback? = null;
+    private var headsetCallback: HeadsetConnectionCallback? = null
     private lateinit var audioManager: AudioManager
 
     override fun onCreate() {
@@ -174,7 +174,7 @@ class PlayService : MediaLibraryService() {
             .build()
         if (SharedPreferencesUtils.getAutoPlayEnable(this)) {
             headsetCallback = HeadsetConnectionCallback(mediaSession?.player, this@PlayService)
-            audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
             audioManager.registerAudioDeviceCallback(
                 headsetCallback,
                 Handler(Looper.getMainLooper())
@@ -330,7 +330,7 @@ class PlayService : MediaLibraryService() {
                 }
 
                 COMMAND_SORT_QUEUE.customAction -> {
-                    val method = args.getString("method")
+                    args.getString("method")
 //                    val bundle = Bundle()
 //                    bundle.putString(
 //                        "method",
@@ -427,7 +427,7 @@ class PlayService : MediaLibraryService() {
                         setData(bundle, exoPlayer.currentPosition)
                         future.set(SessionResult(SessionResult.RESULT_SUCCESS, bundle))
                     }
-                    return future;
+                    return future
                 }
 
                 COMMAND_VISUALIZATION_DISCONNECTED.customAction -> {
@@ -656,44 +656,12 @@ class PlayService : MediaLibraryService() {
         }
 
 
-        override fun onSetMediaItems(
-            mediaSession: MediaSession,
-            controller: MediaSession.ControllerInfo,
-            mediaItems: List<MediaItem>,
-            startIndex: Int,
-            startPositionMs: Long
-        ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
-            return super.onSetMediaItems(
-                mediaSession,
-                controller,
-                mediaItems,
-                startIndex,
-                startPositionMs
-            )
-        }
-
-        override fun onPlaybackResumption(
-            mediaSession: MediaSession,
-            controller: MediaSession.ControllerInfo
-        ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
-            return super.onPlaybackResumption(mediaSession, controller)
-        }
-
-        override fun onMediaButtonEvent(
-            session: MediaSession,
-            controllerInfo: MediaSession.ControllerInfo,
-            intent: Intent
-        ): Boolean {
-            return super.onMediaButtonEvent(session, controllerInfo, intent)
-        }
-
         override fun onGetLibraryRoot(
             session: MediaLibrarySession,
             browser: MediaSession.ControllerInfo,
             params: LibraryParams?
         ): ListenableFuture<LibraryResult<MediaItem>> {
             val clientPackageName = browser.packageName
-            val future = SettableFuture.create<LibraryResult<ImmutableList<MediaItem>>>()
             // 为 Android Auto 提供一个简化的根节点
 //            if (clientPackageName == "com.google.android.projection.gearhead") {
 //                // 返回一个为驾驶场景优化的根节点
@@ -1406,7 +1374,7 @@ class PlayService : MediaLibraryService() {
                     .let {
                         if (it) {
                             val intent = Intent(this@PlayService, PlayMusicWidget::class.java)
-                            intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+                            intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
                             intent.putExtra("source", this@PlayService.packageName)
                             val ids = AppWidgetManager.getInstance(
                                 application
@@ -1436,7 +1404,6 @@ class PlayService : MediaLibraryService() {
                     this@PlayService,
                     exoPlayer.currentPosition
                 )
-                updateNotify()
             }
 
             override fun onPlayerError(error: PlaybackException) {
@@ -1483,7 +1450,7 @@ class PlayService : MediaLibraryService() {
                             if (it) {
                                 val intent =
                                     Intent(this@PlayService, PlayMusicWidget::class.java)
-                                intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+                                intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
                                 intent.putExtra("source", this@PlayService.packageName)
                                 val ids = AppWidgetManager.getInstance(
                                     application
@@ -1514,20 +1481,11 @@ class PlayService : MediaLibraryService() {
                     }
                 }
                 // wait currentPlayTrack changed
-//                updateNotify()
-            }
-
-            override fun onPositionDiscontinuity(
-                oldPosition: Player.PositionInfo,
-                newPosition: Player.PositionInfo,
-                reason: Int
-            ) {
-                super.onPositionDiscontinuity(oldPosition, newPosition, reason)
             }
 
             override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
                 super.onMediaMetadataChanged(mediaMetadata)
-                val bitArray = exoPlayer.mediaMetadata.artworkData
+                exoPlayer.mediaMetadata.artworkData
 //                val metadataBuilder = MediaMetadataCompat.Builder()
 //                metadataBuilder.putLong(
 //                    MediaMetadataCompat.METADATA_KEY_DURATION,
@@ -1560,36 +1518,6 @@ class PlayService : MediaLibraryService() {
                 }
             }
         })
-    }
-
-    fun updateNotify(position: Long? = null, duration: Long? = null) {
-//        notify?.updateNotification(
-//            this@PlayService,
-//            currentPlayTrack?.name ?: "",
-//            currentPlayTrack?.artist ?: "",
-//            exoPlayer.isPlaying,
-//            exoPlayer.playbackParameters.speed,
-//            position ?: exoPlayer.currentPosition,
-//            duration ?: exoPlayer.duration
-//        )
-//        val metadataBuilder = MediaMetadataCompat.Builder()
-//        metadataBuilder.putLong(
-//            MediaMetadataCompat.METADATA_KEY_DURATION,
-//            exoPlayer.duration
-//        )
-//        metadataBuilder.putText(
-//            MediaMetadataCompat.METADATA_KEY_TITLE,
-//            currentPlayTrack?.name
-//        )
-//        metadataBuilder.putText(
-//            MediaMetadataCompat.METADATA_KEY_ARTIST,
-//            currentPlayTrack?.artist
-//        )
-//        val bitArray = exoPlayer.mediaMetadata.artworkData
-//        if (bitArray != null) {
-//            val bit = BitmapFactory.decodeByteArray(bitArray, 0, bitArray.size)
-//            metadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, bit)
-//        }
     }
 
 
@@ -1928,7 +1856,6 @@ class PlayService : MediaLibraryService() {
             val sortData =
                 db.SortFiledDao()
                     .findSortByType(PlayUtils.ListTypeTracks.PlayListsTracks)
-
             val playList = playListLinkedHashMap[id]
             if (playList != null) {
                 val file = File(playList.path)
@@ -1955,7 +1882,6 @@ class PlayService : MediaLibraryService() {
                 return
             }
         }
-        future.set(LibraryResult.ofItemList(emptyList(), null))
     }
 
     fun getGenreListTracks(
@@ -2388,7 +2314,7 @@ class PlayService : MediaLibraryService() {
             auxr.speed,
             auxr.pitch
         )
-        var position = 0L
+        var position: Long
         exoPlayer.playbackParameters = p
         if (musicQueue.isNotEmpty()) {
             val t1 = ArrayList<MediaItem>()
