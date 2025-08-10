@@ -19,9 +19,11 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.scale
 import androidx.core.net.toUri
+import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.LibraryResult
+import androidx.media3.session.SessionResult
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
@@ -31,6 +33,7 @@ import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_REFRESH_ALL
 import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.play.Lyrics
@@ -533,32 +536,56 @@ object Utils {
             !musicViewModel.refreshGenre.value
         musicViewModel.refreshFolder.value =
             !musicViewModel.refreshFolder.value
+        musicViewModel.songsList.clear()
         musicViewModel.playListCurrent.value = null
-        if (resultData != null) {
-            resultData.getParcelableArrayList<MusicItem>(
-                "songsList"
-            )?.also {
-                musicViewModel.songsList.clear()
-                musicViewModel.songsList.addAll(it)
-            }
-            resultData.getLong("id", -1).also {
-                if (it == -1L) return
-                musicViewModel.musicQueue.removeAll { mIt ->
-                    mIt.id == it
-                }
-                if (it == musicViewModel.currentPlay.value?.id) {
-                    musicViewModel.currentPlayQueueIndex.intValue = -1
-                    musicViewModel.currentPlay.value = null
-                } else {
-                    resultData.getInt(
-                        "playIndex"
-                    ).also { indexPlay ->
-                        if (indexPlay > -1)
-                            musicViewModel.currentPlayQueueIndex.intValue = indexPlay
+        musicViewModel.viewModelScope .launch(Dispatchers.Main) {
+            val futureResult: ListenableFuture<SessionResult>? =
+                musicViewModel.browser?.sendCustomCommand(
+                    COMMAND_REFRESH_ALL,
+                    Bundle().apply { },
+                )
+            futureResult?.addListener({
+                try {
+                    val sessionResult = futureResult.get()
+                    if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
+                        musicViewModel.refreshPlayList.value =
+                            !musicViewModel.refreshPlayList.value
+                        musicViewModel.refreshAlbum.value =
+                            !musicViewModel.refreshAlbum.value
+                        musicViewModel.refreshArtist.value =
+                            !musicViewModel.refreshArtist.value
+                        musicViewModel.refreshGenre.value =
+                            !musicViewModel.refreshGenre.value
+                        musicViewModel.refreshFolder.value =
+                            !musicViewModel.refreshFolder.value
+                        sessionResult.extras.getParcelableArrayList<MusicItem>(
+                            "songsList"
+                        )?.also {
+                            musicViewModel.songsList.clear()
+                            musicViewModel.songsList.addAll(it)
+                        }
                     }
+                } catch (e: Exception) {
+                    Log.e("Client", "Failed to toggle favorite status", e)
+                }
+            }, MoreExecutors.directExecutor())
+        }
+        resultData?.getLong("id", -1)?.also {
+            if (it == -1L) return
+            musicViewModel.musicQueue.removeAll { mIt ->
+                mIt.id == it
+            }
+            if (it == musicViewModel.currentPlay.value?.id) {
+                musicViewModel.currentPlayQueueIndex.intValue = -1
+                musicViewModel.currentPlay.value = null
+            } else {
+                resultData.getInt(
+                    "playIndex"
+                ).also { indexPlay ->
+                    if (indexPlay > -1)
+                        musicViewModel.currentPlayQueueIndex.intValue = indexPlay
                 }
             }
-
         }
     }
 

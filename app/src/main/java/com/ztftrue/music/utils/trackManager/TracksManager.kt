@@ -8,7 +8,6 @@ import android.graphics.Bitmap
 import android.media.MediaScannerConnection
 import android.media.MediaScannerConnection.MediaScannerConnectionClient
 import android.net.Uri
-import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.os.Process
 import android.provider.MediaStore
@@ -42,7 +41,6 @@ object TracksManager {
         folderListLinkedHashMap: LinkedHashMap<Long, FolderList>,
         tracksHashMap: LinkedHashMap<Long, MusicItem>,
         sortOrder1: String,
-        needTracks: Boolean = false,
         allTracksHashMap: LinkedHashMap<Long, MusicItem>? = null,
     ) {
         tracksHashMap.clear()
@@ -172,12 +170,6 @@ object TracksManager {
         folderListLinkedHashMap.clear()
         folderListLinkedHashMap.putAll(mapFolder)
         cursor?.close()
-        val bundle = Bundle()
-        if (needTracks) {
-            bundle.putParcelableArrayList("songsList", ArrayList(tracksHashMap.values))
-        } else {
-            bundle.putParcelableArrayList("list", ArrayList(folderListLinkedHashMap.values))
-        }
     }
 
 

@@ -3,7 +3,6 @@ package com.ztftrue.music.play
 import android.content.Context
 import android.os.Bundle
 import android.provider.MediaStore
-import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import com.ztftrue.music.sqlData.MusicDatabase
@@ -14,7 +13,6 @@ import com.ztftrue.music.utils.SharedPreferencesUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.File
 
 object PlayUtils {
 
@@ -254,8 +252,8 @@ object PlayUtils {
         tracksLinkedHashMap.remove(id)
         val i = musicQueue.indexOfFirst { it.id == id }
         if (i > -1) {
-            val musicItem = musicQueue.removeAt(i)
-            changePriorityTableId(musicQueue, musicItem, db)
+//            val musicItem = musicQueue.removeAt(i)
+//            changePriorityTableId(musicQueue, musicItem, db)
         }
         return i.toLong()
     }
@@ -293,7 +291,7 @@ object PlayUtils {
         CoroutineScope(Dispatchers.IO).launch {
             val tId = musicItem.tableId!!
             val priority = musicItem.priority
-            if (musicQueue.isNotEmpty())
+            if (musicQueue.isNotEmpty()) {
                 musicQueue.forEach {
                     if (it.tableId!! >= tId) {
                         it.tableId = it.tableId!! - 1
@@ -302,9 +300,13 @@ object PlayUtils {
                         it.priority -= 1
                     }
                 }
-            db.QueueDao().deleteAllQueue()
-            db.QueueDao().insertAll(musicQueue)
-            db.CurrentListDao().delete()
+                db.QueueDao().deleteAllQueue()
+                db.QueueDao().insertAll(musicQueue)
+                db.CurrentListDao().delete()
+            }else{
+                db.QueueDao().deleteAllQueue()
+                db.CurrentListDao().delete()
+            }
         }
     }
 

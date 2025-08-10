@@ -153,7 +153,7 @@ class PlayService : MediaLibraryService() {
     var needPlayPause = false
     var sleepTime = 0L
     private var countDownTimer: CountDownTimer? = null
-    private var headsetCallback:HeadsetConnectionCallback?=null;
+    private var headsetCallback: HeadsetConnectionCallback? = null;
     private lateinit var audioManager: AudioManager
 
     override fun onCreate() {
@@ -173,9 +173,12 @@ class PlayService : MediaLibraryService() {
         ).setSessionActivity(pendingContentIntent)
             .build()
         if (SharedPreferencesUtils.getAutoPlayEnable(this)) {
-            headsetCallback = HeadsetConnectionCallback(mediaSession?.player,this@PlayService)
+            headsetCallback = HeadsetConnectionCallback(mediaSession?.player, this@PlayService)
             audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            audioManager.registerAudioDeviceCallback(headsetCallback, Handler(Looper.getMainLooper()))
+            audioManager.registerAudioDeviceCallback(
+                headsetCallback,
+                Handler(Looper.getMainLooper())
+            )
         }
         val notification = DefaultMediaNotificationProvider(this)
         setMediaNotificationProvider(notification)
@@ -526,14 +529,7 @@ class PlayService : MediaLibraryService() {
                     val future = SettableFuture.create<SessionResult>()
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
-                            refreshAction()
-                            val resultData = Bundle().apply {
-                                putParcelableArrayList(
-                                    "songsList",
-                                    ArrayList(allTracksLinkedHashMap.values)
-                                )
-                            }
-                            future.set(SessionResult(SessionResult.RESULT_SUCCESS, resultData))
+                            refreshAction(future)
                         } catch (e: Exception) {
                             // 如果刷新过程中发生错误，将异常设置到 future
                             Log.e("PlayService", "Error refreshing playlists", e)
@@ -544,7 +540,7 @@ class PlayService : MediaLibraryService() {
                 }
 
                 COMMAND_TRACK_DELETE.customAction -> {
-                    val idsToDelete = args.getLong(KEY_TRACK_ID)
+                    val idsToDelete = args.getLong("id")
                     val c = PlayUtils.trackDelete(
                         idsToDelete,
                         musicQueue,
@@ -566,7 +562,6 @@ class PlayService : MediaLibraryService() {
                         putBoolean("success", true)
                         putBoolean("wasInQueue", c > -1)
                         putInt("playIndex", exoPlayer.currentMediaItemIndex)
-                        putParcelableArrayList("songsList", ArrayList(tracksLinkedHashMap.values))
                         putLong("id", c)
                         putParcelableArrayList("queue", musicQueue)
                     }
@@ -1188,9 +1183,9 @@ class PlayService : MediaLibraryService() {
             serviceJob.cancel() // 在 Service 销毁时取消所有协程
         } catch (_: Exception) {
         }
-        if (headsetCallback!=null){
+        if (headsetCallback != null) {
             audioManager.unregisterAudioDeviceCallback(headsetCallback)
-            headsetCallback=null
+            headsetCallback = null
         }
         super.onDestroy()
     }
@@ -1348,20 +1343,37 @@ class PlayService : MediaLibraryService() {
                         val mediaItem = window.mediaItem
                         newQueue.add(mediaItem)
                     }
-                    val qList: Collection<MusicItem> =
-                        (newQueue.map { MediaItemUtils.mediaItemToMusicItem(it) }).filterNotNull()
-                    val qIndex = exoPlayer.currentMediaItemIndex
+                    val qList: ArrayList<MusicItem> =
+                        ArrayList((newQueue.map { MediaItemUtils.mediaItemToMusicItem(it) }).filterNotNull())
+                    val maxTableId = qList.maxOfOrNull { it.tableId ?: 0 } ?: 0
+                    val maxPriority = qList.maxOfOrNull { it.priority } ?: 0
+                    if (exoPlayer.shuffleModeEnabled) {
+                        val qIndex = exoPlayer.currentMediaItemIndex
+                        if (SharedPreferencesUtils.getAutoToTopRandom(
+                                this@PlayService
+                            )
+                        ) {
+                            if (qIndex == 0) return
+                            val music = qList[qIndex]
+                            qList.removeAt(qIndex)
+                            qList.add(0, music)
+                        }
+                        qList.forEachIndexed { index, musicItem ->
+                            musicItem.priority = index
+                            if (musicItem.tableId == null) {
+                                musicItem.tableId = maxTableId + 1
+                            }
+                        }
+                    } else {
+                        qList.forEachIndexed { index, musicItem ->
+                            musicItem.tableId = index.toLong()
+                            if (musicItem.priority == 0) {
+                                musicItem.priority = maxPriority + 1
+                            }
+                        }
+                    }
                     musicQueue.clear()
                     musicQueue.addAll(qList)
-                    if (exoPlayer.shuffleModeEnabled && SharedPreferencesUtils.getAutoToTopRandom(
-                            this@PlayService
-                        )
-                    ) {
-                        if (qIndex == 0) return
-                        val music = musicQueue[qIndex]
-                        musicQueue.removeAt(qIndex)
-                        musicQueue.add(0, music)
-                    }
                     CoroutineScope(Dispatchers.IO).launch {
                         db.QueueDao().deleteAllQueue()
                         db.QueueDao().insertAll(musicQueue)
@@ -1624,38 +1636,6 @@ class PlayService : MediaLibraryService() {
         }
     }
 
-    private fun refreshAction() {
-        playListLinkedHashMap.clear()
-        albumsLinkedHashMap.clear()
-        artistsLinkedHashMap.clear()
-        genresLinkedHashMap.clear()
-        tracksLinkedHashMap.clear()
-        playListTracksHashMap.clear()
-        albumsListTracksHashMap.clear()
-        artistsListTracksHashMap.clear()
-        genresListTracksHashMap.clear()
-        foldersListTracksHashMap.clear()
-        clearCacheData()
-        CoroutineScope(Dispatchers.IO).launch {
-            val sortData =
-                db.SortFiledDao().findSortByType(PlayListType.Songs.name)
-            TracksManager.getFolderList(
-                this@PlayService,
-                foldersLinkedHashMap,
-                tracksLinkedHashMap,
-                "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
-                true
-            )
-            val sortData1 = db.SortFiledDao().findSortAll()
-            showIndicatorList.clear()
-            sortData1.forEach {
-                if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
-                    showIndicatorList.add(it)
-                }
-            }
-        }
-    }
-
     //
     private fun sortAction(extras: Bundle, future: SettableFuture<SessionResult>) {
         val typeString = extras.getString("type")
@@ -1690,8 +1670,7 @@ class PlayService : MediaLibraryService() {
                             this@PlayService,
                             foldersLinkedHashMap,
                             tracksLinkedHashMap,
-                            "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
-                            true
+                            "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
                         )
                         val sortData1 = db.SortFiledDao().findSortAll()
                         showIndicatorList.clear()
@@ -1778,6 +1757,46 @@ class PlayService : MediaLibraryService() {
                 }
 
             }
+        }
+    }
+
+    private fun refreshAction(future: SettableFuture<SessionResult>) {
+        playListLinkedHashMap.clear()
+        albumsLinkedHashMap.clear()
+        artistsLinkedHashMap.clear()
+        genresLinkedHashMap.clear()
+        tracksLinkedHashMap.clear()
+        playListTracksHashMap.clear()
+        albumsListTracksHashMap.clear()
+        artistsListTracksHashMap.clear()
+        genresListTracksHashMap.clear()
+        foldersListTracksHashMap.clear()
+        allTracksLinkedHashMap.clear()
+        clearCacheData()
+        CoroutineScope(Dispatchers.IO).launch {
+            val sortData =
+                db.SortFiledDao().findSortByType(PlayListType.Songs.name)
+            TracksManager.getFolderList(
+                this@PlayService,
+                foldersLinkedHashMap,
+                tracksLinkedHashMap,
+                "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
+                allTracksLinkedHashMap
+            )
+            val sortData1 = db.SortFiledDao().findSortAll()
+            showIndicatorList.clear()
+            sortData1.forEach {
+                if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+                    showIndicatorList.add(it)
+                }
+            }
+            val resultData = Bundle().apply {
+                putParcelableArrayList(
+                    "songsList",
+                    ArrayList(allTracksLinkedHashMap.values)
+                )
+            }
+            future.set(SessionResult(SessionResult.RESULT_SUCCESS, resultData))
         }
     }
 
@@ -2164,8 +2183,7 @@ class PlayService : MediaLibraryService() {
                 this@PlayService,
                 foldersLinkedHashMap,
                 tracksLinkedHashMap,
-                "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
-                true
+                "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
             )
             val mediaItems = tracksLinkedHashMap.values.map { playlist ->
                 MediaItemUtils.musicItemToMediaItem(playlist)
@@ -2265,8 +2283,7 @@ class PlayService : MediaLibraryService() {
                 this@PlayService,
                 foldersLinkedHashMap,
                 tracksLinkedHashMap,
-                "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
-                true
+                "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
             )
             val mediaItems = foldersLinkedHashMap.values.map { playlist ->
                 MediaItemUtils.folderToMediaItem(playlist)
@@ -2407,7 +2424,6 @@ class PlayService : MediaLibraryService() {
             foldersLinkedHashMap,
             tracksLinkedHashMap,
             "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
-            false,
             allTracksLinkedHashMap
         )
     }
