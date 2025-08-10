@@ -65,6 +65,7 @@
             android:enabled="true"
             android:exported="true"
             android:stopWithTask="false"
+            android:permission="android.permission.BIND_MEDIA_SESSION_SERVICE"
             android:foregroundServiceType="mediaPlayback">
             <intent-filter>
                 <action android:name="androidx.media3.session.MediaSessionService" />
