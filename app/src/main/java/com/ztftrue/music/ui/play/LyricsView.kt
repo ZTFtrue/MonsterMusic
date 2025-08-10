@@ -1,7 +1,6 @@
 package com.ztftrue.music.ui.play
 
 import android.content.Intent
-import android.os.Bundle
 import android.view.MotionEvent
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -25,7 +24,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Adjust
@@ -298,30 +296,46 @@ fun LyricsView(
 
     if (musicViewModel.currentCaptionList.isEmpty()) {
         Column {
-            Text(
-                text = stringResource(R.string.no_lyrics_import_tip),
-                color = MaterialTheme.colorScheme.onBackground,
-                fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(2.dp)
-                    .clickable {
-                        Utils.setLyricsFile(musicViewModel, context)
-                    }
-            )
-            Text(
-                text = stringResource(R.string.no_lyrics_set_folder),
-                color = MaterialTheme.colorScheme.onBackground,
-                fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(2.dp)
-                    .clickable {
-                        Utils.setLyricsFolder(context)
-                    }
-            )
+            if (musicViewModel.currentCaptionListLoading.value) {
+                Text(
+                    text = "Loading...",
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(2.dp)
+                        .clickable {
+                            Utils.setLyricsFile(musicViewModel, context)
+                        }
+                )
+            } else {
+                Text(
+                    text = stringResource(R.string.no_lyrics_import_tip),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(2.dp)
+                        .clickable {
+                            Utils.setLyricsFile(musicViewModel, context)
+                        }
+                )
+                Text(
+                    text = stringResource(R.string.no_lyrics_set_folder),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(2.dp)
+                        .clickable {
+                            Utils.setLyricsFolder(context)
+                        }
+                )
+            }
+
         }
 
     } else {
@@ -339,7 +353,7 @@ fun LyricsView(
             val focusManager = LocalFocusManager.current
             val textToolbar = textToolbarProvider.value
             ConstraintLayout {
-                val (embededIndicator) = createRefs()
+                val (embeddedIndicator) = createRefs()
                 SelectionContainer(
                     modifier = Modifier
                         .onGloballyPositioned { coordinates ->
@@ -358,8 +372,7 @@ fun LyricsView(
 
                                 MotionEvent.ACTION_UP -> {
                                     longpress = System.currentTimeMillis() - downtime >= 200
-                                    val a =
-                                        it.y - 115.dp.toPx(context)
+                                    val a = it.y - 115.dp.toPx(context)
                                     popupOffset =
                                         IntOffset(it.x.toInt() - 60.dp.toPx(context), a.toInt())
                                     if (showMenu) {
@@ -536,7 +549,7 @@ fun LyricsView(
                                         )
                                         .show()
                                 }
-                                .constrainAs(embededIndicator) {
+                                .constrainAs(embeddedIndicator) {
                                     top.linkTo(anchor = parent.top, margin = 5.dp)
                                     start.linkTo(anchor = parent.start, margin = 10.dp)
                                 },

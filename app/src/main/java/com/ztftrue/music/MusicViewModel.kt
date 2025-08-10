@@ -145,6 +145,7 @@ class MusicViewModel : ViewModel() {
     var itemDuration: Long = 1
     var lyricsType: LyricsType = LyricsType.TEXT
     var currentCaptionList = mutableStateListOf<ListStringCaption>()
+    var currentCaptionListLoading = mutableStateOf<Boolean>(false)
     var isEmbeddedLyrics = mutableStateOf(false)
     var fontSize = mutableIntStateOf(18)
     var textAlign = mutableStateOf(TextAlign.Center)
@@ -216,6 +217,7 @@ class MusicViewModel : ViewModel() {
     private var dealCurrentPlayJob: Job? = null
 
     fun scheduleDealCurrentPlay(context: Context, index: Int, reason: Int) {
+        currentCaptionListLoading.value=true
         dealCurrentPlayJob?.cancel()
         dealCurrentPlayJob = viewModelScope.launch {
             // when reason is Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED
@@ -306,6 +308,7 @@ class MusicViewModel : ViewModel() {
 
     fun dealLyrics(context: Context, currentPlay: MusicItem) {
         lock.lock()
+        currentCaptionListLoading.value=true
         currentCaptionList.clear()
         lyricsType = LyricsType.TEXT
         if (lyricsJob != null && lyricsJob?.isActive == true) {
@@ -424,8 +427,10 @@ class MusicViewModel : ViewModel() {
             // every lyrics line duration
             itemDuration =
                 duration / if (currentCaptionList.isEmpty()) 1 else currentCaptionList.size
+            currentCaptionListLoading.value=false
         }
         lock.unlock()
+
     }
 
     private fun fileRead(
