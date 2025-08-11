@@ -20,15 +20,6 @@ import kotlinx.coroutines.launch
 
 object TracksUtils {
 
-    fun currentPlayToTop(
-        mediaBrowserCompat: MediaBrowser, musicList: SnapshotStateList<MusicItem>,
-        music: MusicItem, currentIndex: Int
-    ) {
-        sortQueue(
-            mediaBrowserCompat, musicList,
-            music, currentIndex, 0
-        )
-    }
 
     fun sortQueue(
         mediaBrowserCompat: MediaBrowser, musicList: SnapshotStateList<MusicItem>,
@@ -152,7 +143,6 @@ object TracksUtils {
                         })
                 }
             }
-
         }
     }
 }

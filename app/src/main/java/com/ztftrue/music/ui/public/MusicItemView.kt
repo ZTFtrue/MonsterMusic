@@ -367,7 +367,7 @@ fun MusicItemView(
 //                                null
 //                            )
                         } else {
-                            bundle.putBoolean("switch_queue", false)
+                            // don't need switch queue
                             val index =
                                 viewModel.musicQueue.indexOfFirst { musicItem -> musicItem.id == music.id }
                             if (index == viewModel.currentPlayQueueIndex.intValue) {

@@ -801,7 +801,6 @@ class MainActivity : ComponentActivity() {
             if (!timeline.isEmpty && TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED == reason) {
                 val newQueue = mutableListOf<MediaItem>()
                 for (i in 0 until timeline.windowCount) {
-                    // a. 获取指定索引的窗口信息，为了效率，我们重用一个 Window 对象
                     val window = timeline.getWindow(i, Timeline.Window())
                     val mediaItem = window.mediaItem
                     newQueue.add(mediaItem)
@@ -809,32 +808,13 @@ class MainActivity : ComponentActivity() {
                 val qList: Collection<MusicItem> =
                     (newQueue.map { MediaItemUtils.mediaItemToMusicItem(it) }).filterNotNull()
                 val qIndex = musicViewModel.browser?.currentMediaItemIndex ?: 0
-
                 if (qIndex >= qList.size) {
-                    Log.e("MusicViewModel", "onTimelineChanged: qIndex >= qList.size")
                     return
                 }
                 musicViewModel.currentPlayQueueIndex.intValue = qIndex
                 musicViewModel.musicQueue.clear()
                 musicViewModel.musicQueue.addAll(qList)
-                val music = musicViewModel.musicQueue[qIndex]
-                if (musicViewModel.enableShuffleModel.value && SharedPreferencesUtils.getAutoToTopRandom(
-                        this@MainActivity
-                    )
-                ) {
-                    if (qIndex == 0) return
-                    musicViewModel.musicQueue.remove(music)
-                    musicViewModel.musicQueue.add(0, music)
-                    TracksUtils.currentPlayToTop(
-                        musicViewModel.browser!!,
-                        musicViewModel.musicQueue,
-                        music,
-                        qIndex
-                    )
-                }
             }
-
-
             super.onTimelineChanged(timeline, reason)
         }
 

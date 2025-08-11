@@ -1425,13 +1425,7 @@ fun PlayingPage(
                                         IconButton(onClick = {
                                             musicViewModel.enableShuffleModel.value =
                                                 !musicViewModel.enableShuffleModel.value
-                                            val bundle = Bundle()
-                                            bundle.putBoolean(
-                                                "enable",
-                                                musicViewModel.enableShuffleModel.value
-                                            )
-                                            musicViewModel.browser?.shuffleModeEnabled =
-                                                !musicViewModel.enableShuffleModel.value
+                                            musicViewModel.playShuffled(musicViewModel.musicQueue,musicViewModel.currentPlay.value)
                                         }) {
                                             Icon(
                                                 imageVector = if (musicViewModel.enableShuffleModel.value) Icons.Outlined.Shuffle else Icons.Outlined.Shuffle,

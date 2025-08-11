@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.provider.DocumentsContract
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.OptIn
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -26,12 +27,14 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionResult
 import androidx.navigation.NavHostController
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.play.AudioDataRepository
 import com.ztftrue.music.play.CustomMetadataKeys
+import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
@@ -225,13 +228,13 @@ class MusicViewModel : ViewModel() {
             if (index == 0 && reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
                 delay(100)
             }
-            currentPlay.value = musicQueue[index]
-            currentPlayQueueIndex.intValue = index
             currentMusicCover.value = null
             sliderPosition.floatValue = 0f
             currentDuration.longValue =
                 currentPlay.value?.duration ?: 0
             currentCaptionList.clear()
+            currentPlay.value = musicQueue[index]
+            currentPlayQueueIndex.intValue = index
             dealLyrics(context, musicQueue[index])
         }
     }
@@ -670,5 +673,18 @@ class MusicViewModel : ViewModel() {
                 })
         }
 
+    }
+
+    @OptIn(UnstableApi::class)
+    fun playShuffled(itemsToPlay: List<MusicItem>, startItem: MusicItem?) {
+        val browser = this.browser ?: return
+        val args = Bundle().apply {
+            putParcelableArrayList(PlayService.KEY_MEDIA_ITEM_LIST, ArrayList(itemsToPlay))
+            val startId = startItem?.id
+            if (startId != null) {
+                putLong(PlayService.KEY_START_MEDIA_ID, startId)
+            }
+        }
+        browser.sendCustomCommand(PlayService.COMMAND_SMART_SHUFFLE, args)
     }
 }
