@@ -41,9 +41,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -735,9 +736,13 @@ fun EditTrackPage(
                         )
                     }
                     item {
+                        val windowInfo = LocalWindowInfo.current
+                        val density = LocalDensity.current
+                        val containerHeightDp =
+                            with(density) { windowInfo.containerSize.height.toDp() }
                         Box(
                             modifier = Modifier
-                                .height((LocalConfiguration.current.screenHeightDp / 2).dp)
+                                .height(containerHeightDp / 2)
                                 .fillMaxWidth()
                         ) {
 
@@ -745,9 +750,12 @@ fun EditTrackPage(
                     }
                 }
                 if (saving) {
+                    val windowInfo = LocalWindowInfo.current
+                    val density = LocalDensity.current
+                    val containerWidthDp = with(density) { windowInfo.containerSize.width.toDp() }
                     LinearProgressIndicator(
                         modifier = Modifier
-                            .width((LocalConfiguration.current.screenWidthDp / 2).dp)
+                            .width(containerWidthDp / 2)
                             .constrainAs(progress) {
                                 top.linkTo(parent.top)
                                 bottom.linkTo(parent.bottom)

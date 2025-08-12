@@ -52,12 +52,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED
 import androidx.media3.common.Timeline
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.LibraryResult
-import androidx.media3.session.LibraryResult.RESULT_ERROR_IO
-import androidx.media3.session.LibraryResult.RESULT_ERROR_PERMISSION_DENIED
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionCommand
@@ -208,7 +207,7 @@ class MainActivity : ComponentActivity() {
                                 val sessionResult = futureResult.get()
                                 // b. 检查操作是否成功
                                 if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
-                                    deleteTrackUpdate(musicViewModel, sessionResult.extras)
+                                    deleteTrackUpdate(musicViewModel)
                                 }
                             } catch (e: Exception) {
                                 // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
@@ -660,10 +659,6 @@ class MainActivity : ComponentActivity() {
             command: SessionCommand,
             args: Bundle
         ): ListenableFuture<SessionResult> {
-            Log.e(
-                "DEBUG_LISTENER",
-                ">>>>>>> onCustomCommand RECEIVED! Action: ${command.customAction}"
-            )
             if (command.customAction == PlayService.COMMAND_SLEEP_STATE_UPDATE.customAction) {
                 val remainTime = args.getLong("remaining")
                 musicViewModel.remainTime.longValue = remainTime
@@ -681,9 +676,8 @@ class MainActivity : ComponentActivity() {
                 if (queue != null && queue.isNotEmpty()) {
                     val qIndex = musicViewModel.browser?.currentMediaItemIndex ?: 0
                     if (qIndex < queue.size) {
-                        musicViewModel.currentPlayQueueIndex.intValue = qIndex
-
                         musicViewModel.musicQueue.addAll(queue)
+                        musicViewModel.currentPlay.value = musicViewModel.musicQueue[qIndex]
                     }
                 }
             } else if (command.customAction == PlayService.COMMAND_VISUALIZATION_DATA.customAction) {
@@ -699,23 +693,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun initializeAndConnect() {
-        Log.e("DEBUG_LISTENER", ">>>>>>> initializeAndConnect")
         if (musicViewModel.browser != null || (::browserFuture.isInitialized && !browserFuture.isDone)) {
-            // 如果已经连接了，或者正在连接中，就直接返回
             return
         }
-        Log.e("DEBUG_LISTENER", ">>>>>>> initializeAndConnect 恢复链接")
-        // 1. 创建 SessionToken，指定要连接的 Service
         val sessionToken = SessionToken(this, ComponentName(this, PlayService::class.java))
-        // 2. 使用 Builder 构建 MediaBrowser，这是一个异步过程
         browserFuture = MediaBrowser.Builder(this, sessionToken).setListener(browserListener)
             .setApplicationLooper(Looper.getMainLooper())
             .buildAsync()
-        // 3. (关键!) 添加一个监听器来处理连接的结果（成功或失败）
         browserFuture.addListener({
-            // 这个代码块会在连接过程完成后（无论成功或失败）在主线程上执行
             try {
-                // 检查连接是否成功，并获取 browser 实例
                 val connectedBrowser = browserFuture.get()
                 if (connectedBrowser != null) {
                     val rootResult: ListenableFuture<LibraryResult<MediaItem>> =
@@ -726,23 +712,20 @@ class MainActivity : ComponentActivity() {
                             "MyMusicActivity",
                             "Error getting MediaBrowser root${result?.resultCode}"
                         )
-
                         return@addListener
                     }
-                    Log.e(
-                        "MyMusicActivity",
-                        "${RESULT_ERROR_PERMISSION_DENIED},${RESULT_ERROR_IO},${SessionResult.RESULT_ERROR_NOT_SUPPORTED},${SessionResult.RESULT_ERROR_SESSION_DISCONNECTED},                            ${SessionResult.RESULT_ERROR_SESSION_AUTHENTICATION_EXPIRED},                            ${SessionResult.RESULT_ERROR_SESSION_PREMIUM_ACCOUNT_REQUIRED},                            ${SessionResult.RESULT_ERROR_SESSION_CONCURRENT_STREAM_LIMIT},${SessionResult.RESULT_ERROR_SESSION_PARENTAL_CONTROL_RESTRICTED},${SessionResult.RESULT_ERROR_SESSION_NOT_AVAILABLE_IN_REGION},${SessionResult.RESULT_ERROR_SESSION_SKIP_LIMIT_REACHED},${SessionResult.RESULT_ERROR_SESSION_SETUP_REQUIRED},"
-                    )
+//                    Log.e(
+//                        "MyMusicActivity",
+//                        "${RESULT_ERROR_PERMISSION_DENIED},${RESULT_ERROR_IO},${SessionResult.RESULT_ERROR_NOT_SUPPORTED},${SessionResult.RESULT_ERROR_SESSION_DISCONNECTED},                            ${SessionResult.RESULT_ERROR_SESSION_AUTHENTICATION_EXPIRED},                            ${SessionResult.RESULT_ERROR_SESSION_PREMIUM_ACCOUNT_REQUIRED},                            ${SessionResult.RESULT_ERROR_SESSION_CONCURRENT_STREAM_LIMIT},${SessionResult.RESULT_ERROR_SESSION_PARENTAL_CONTROL_RESTRICTED},${SessionResult.RESULT_ERROR_SESSION_NOT_AVAILABLE_IN_REGION},${SessionResult.RESULT_ERROR_SESSION_SKIP_LIMIT_REACHED},${SessionResult.RESULT_ERROR_SESSION_SETUP_REQUIRED},"
+//                    )
                     rootResult.addListener({
                         musicViewModel.browser = connectedBrowser
                         onBrowserConnected(connectedBrowser)
                     }, ContextCompat.getMainExecutor(this))
                 } else {
-                    // 连接失败或被取消
                     onBrowserConnectionFailed()
                 }
             } catch (e: Exception) {
-                // 在获取 browser 实例时可能抛出异常 (如 ExecutionException)
                 Log.e("MyMusicActivity", "Error getting MediaBrowser", e)
                 onBrowserConnectionFailed()
             }
@@ -774,7 +757,6 @@ class MainActivity : ComponentActivity() {
 
     private fun onBrowserConnected(browser: MediaBrowser) {
         browser.addListener(playerListener) // playerListener 是你定义的 Player.Listener 实例
-        updateUiWithCurrentState(browser)
         val futureResult: ListenableFuture<SessionResult>? =
             musicViewModel.browser?.sendCustomCommand(
                 COMMAND_GET_INITIALIZED_DATA,
@@ -785,15 +767,13 @@ class MainActivity : ComponentActivity() {
                 val sessionResult = futureResult.get()
                 if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
                     getInitData(sessionResult.extras)
+                    updateUiWithCurrentState(browser)
                 }
             } catch (e: Exception) {
                 Log.e("Client", "Failed to toggle favorite status", e)
             }
         }, ContextCompat.getMainExecutor(this@MainActivity))
         fetchRootChildren(browser)
-        SharedPreferencesUtils.getEnableShuffle(this@MainActivity).also {
-            musicViewModel.enableShuffleModel.value = it
-        }
     }
 
     private fun onBrowserConnectionFailed() {
@@ -801,20 +781,29 @@ class MainActivity : ComponentActivity() {
         // Toast.makeText(this, "无法连接到播放服务", Toast.LENGTH_SHORT).show()
     }
 
-    // 示例：获取根目录的子项
     private fun fetchRootChildren(browser: MediaBrowser) {
 
     }
 
-    // 示例：定义 Player.Listener
     private val playerListener = object : Player.Listener {
-//        override fun onTimelineChanged(
-//            timeline: Timeline,
-//            reason: Int
-//        ) {
-//
-//            super.onTimelineChanged(timeline, reason)
-//        }
+        override fun onTimelineChanged(
+            timeline: Timeline,
+            reason: Int
+        ) {
+            if (!timeline.isEmpty && TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED == reason) {
+                val newQueue = mutableListOf<MediaItem>()
+                for (i in 0 until timeline.windowCount) {
+                    val window = timeline.getWindow(i, Timeline.Window())
+                    val mediaItem = window.mediaItem
+                    newQueue.add(mediaItem)
+                }
+                val qList: ArrayList<MusicItem> =
+                    ArrayList((newQueue.map { MediaItemUtils.mediaItemToMusicItem(it) }).filterNotNull())
+                musicViewModel.musicQueue.clear()
+                musicViewModel.musicQueue.addAll(qList)
+            }
+            super.onTimelineChanged(timeline, reason)
+        }
 
 
         override fun onVolumeChanged(volume: Float) {
@@ -830,7 +819,6 @@ class MainActivity : ComponentActivity() {
         }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-            // 更新歌曲标题和封面
             val index: Int = musicViewModel.browser?.currentMediaItemIndex ?: 0
             val reason = reason
             if (index >= 0 && musicViewModel.musicQueue.size > index) {
@@ -861,7 +849,6 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        // should invoke in onStop()
         musicViewModel.reset()
         super.onDestroy()
     }
@@ -871,8 +858,6 @@ class MainActivity : ComponentActivity() {
         lock.lock()
         if (musicViewModel.playStatus.value) {
             jobSeek = scopeMain.launch {
-                // i debug it, when i set it while(true),
-                // this code is working (when it invoke cancel) also. who can tell me,this is why?
                 while (isActive) {
                     delay(1000)
                     val f = musicViewModel.browser?.currentPosition ?: 0
@@ -890,7 +875,6 @@ class MainActivity : ComponentActivity() {
         lock.unlock()
     }
 
-
     fun getInitData(resultData: Bundle) {
         resultData.getParcelableArrayList<SortFiledData>("showIndicatorList")?.onEach { sort ->
             musicViewModel.showIndicatorMap[sort.type.replace("@Tracks", "")] =
@@ -903,19 +887,6 @@ class MainActivity : ComponentActivity() {
         resultData.getSerializable("playListCurrent")?.also {
             musicViewModel.playListCurrent.value = it as AnyListBase
         }
-//        resultData.getParcelableArrayList<MusicItem>("songsList")?.also {
-//            musicViewModel.songsList.clear()
-//            musicViewModel.songsList.addAll(it)
-//        }
-//        val index = resultData.getInt("index")
-//        if (index >= 0 && musicViewModel.musicQueue.size > index && index != musicViewModel.currentPlayQueueIndex.intValue
-//        ) {
-//            musicViewModel.scheduleDealCurrentPlay(
-//                this,
-//                index,
-//                Player.MEDIA_ITEM_TRANSITION_REASON_AUTO
-//            )
-//        }
         val pitch = resultData.getFloat("pitch", 1f)
         val speed = resultData.getFloat("speed", 1f)
         val q = resultData.getFloat("Q", Utils.Q)
@@ -926,7 +897,6 @@ class MainActivity : ComponentActivity() {
             resultData.getLong("sleepTime", 0)
         musicViewModel.remainTime.longValue =
             resultData.getLong("remaining")
-
         musicViewModel.enableEqualizer.value =
             resultData.getBoolean("equalizerEnable")
         val equalizerValue =
@@ -952,18 +922,12 @@ class MainActivity : ComponentActivity() {
         musicViewModel.echoFeedBack.value = resultData.getBoolean("echoFeedBack")
         musicViewModel.repeatModel.intValue = resultData.getInt("repeat", Player.REPEAT_MODE_ALL)
         musicViewModel.sliderPosition.floatValue = resultData.getLong("position", 0L).toFloat()
-        // SleepTime wait when play next
         musicViewModel.playCompleted.value =
             resultData.getBoolean("play_completed")
         musicViewModel.volume.intValue = resultData.getInt("volume", 100)
         getSeek()
     }
 
-    /**
-     * 根据播放器当前的状态，一次性更新所有相关的UI组件。
-     *
-     * @param player MediaBrowser 实例，它实现了 Player 接口。
-     */
     private fun updateUiWithCurrentState(player: MediaBrowser) {
         musicViewModel.musicQueue.addAll(getCurrentPlaylist(player).mapNotNull {
             MediaItemUtils.mediaItemToMusicItem(
@@ -990,58 +954,31 @@ class MainActivity : ComponentActivity() {
                     Log.e("Client", "Failed to toggle favorite status", e)
                 }
             }, ContextCompat.getMainExecutor(this@MainActivity))
-
-            // &&player.currentMediaItemIndex!=musicViewModel.currentPlayQueueIndex.intValue 如果是和当前相同就不解析
-            musicViewModel.currentPlayQueueIndex.intValue = player.currentMediaItemIndex
             musicViewModel.currentPlay.value =
                 musicViewModel.musicQueue[player.currentMediaItemIndex]
-            // val uri = currentMediaItem.mediaMetadata.artworkUri
-            // if (uri != null) {
-            //     albumArtImageView.setImageURI(uri)
-            // }
-            // val metadata = currentMediaItem.mediaMetadata
-            // songTitleTextView.text = metadata.title ?: "未知标题"
-            // songArtistTextView.text = metadata.artist ?: "未知艺术家"
         } else {
-            musicViewModel.currentPlayQueueIndex.intValue = -1
             musicViewModel.currentPlay.value = null
         }
-
-        // 2. 更新播放/暂停按钮的状态
         musicViewModel.playStatus.value = player.isPlaying
-        // 3. 更新进度条和时间
-        // 获取总时长 (如果是直播流，可能为 C.TIME_UNSET)
-        val duration = if (player.duration == C.TIME_UNSET) 0 else player.duration
-        musicViewModel.currentDuration.longValue = duration
-
-        // 获取当前播放位置
+//        val duration = if (player.duration == C.TIME_UNSET) 0 else player.duration
+//        musicViewModel.currentDuration.longValue = duration
         val currentPosition = player.currentPosition
         musicViewModel.sliderPosition.floatValue = currentPosition.toFloat()
-
-        // 4. 更新随机播放按钮的状态
         musicViewModel.enableShuffleModel.value = player.shuffleModeEnabled
-        // 5. 更新重复模式按钮的状态
         musicViewModel.repeatModel.intValue = player.repeatMode
     }
 
     fun getCurrentPlaylist(browser: MediaBrowser): List<MediaItem> {
-        // 1. 获取当前的 Timeline
         val timeline: Timeline = browser.currentTimeline
-
-        // 2. 检查 Timeline 是否为空
         if (timeline.isEmpty) {
             return emptyList()
         }
-
-        // 3. 遍历 Timeline，提取出所有的 MediaItem
         val playlist = mutableListOf<MediaItem>()
         val window = Timeline.Window() // 创建一个可重用的 Window 对象以提高效率
-
         for (i in 0 until timeline.windowCount) {
             timeline.getWindow(i, window)
             playlist.add(window.mediaItem)
         }
-
         return playlist
     }
 }

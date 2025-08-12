@@ -97,8 +97,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -115,6 +116,7 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionResult
@@ -211,7 +213,7 @@ fun PlayingPage(
                             val sessionResult = futureResult.get()
                             // b. 检查操作是否成功
                             if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
-                                deleteTrackUpdate(musicViewModel, sessionResult.extras)
+                                deleteTrackUpdate(musicViewModel)
                                 navController.popBackStack()
                             }
                         } catch (e: Exception) {
@@ -243,7 +245,16 @@ fun PlayingPage(
                         }
 
                         OperateType.PlayNext -> {
-                            val position = musicViewModel.currentPlayQueueIndex.intValue + 1
+                            val i = musicViewModel.browser?.currentMediaItemIndex
+                            val position = if (i != null) {
+                                if (i == C.INDEX_UNSET) {
+                                    0
+                                } else {
+                                    i + 1
+                                }
+                            } else {
+                                0
+                            }
                             musicViewModel.musicQueue.add(
                                 position,
                                 music
@@ -299,39 +310,13 @@ fun PlayingPage(
                         OperateType.RemoveFromQueue -> {
                             val index = musicViewModel.musicQueue.indexOfFirst { it.id == music.id }
                             if (index == -1) return@OperateDialog
-                            val bundle = Bundle()
-                            bundle.putInt("index", index)
                             musicViewModel.musicQueue.removeAt(index)
                             musicViewModel.browser?.removeMediaItem(index)
-                            //                PlayUtils.removePlayQueue(
-//                extras, result, musicQueue,
-//                exoPlayer,
-//                db, this@PlayService
-//            )
-                            if (musicViewModel.currentPlay.value?.id == music.id) {
-                                musicViewModel.currentMusicCover.value = null
-                                musicViewModel.currentPlayQueueIndex.intValue =
-                                    (index) % (musicViewModel.musicQueue.size + 1)
-                                musicViewModel.currentPlay.value =
-                                    musicViewModel.musicQueue[(index) % (musicViewModel.musicQueue.size + 1)]
-                            }
-//                            musicViewModel.mediaBrowser?.sendCustomAction(
-//                                ACTION_RemoveFromQueue,
-//                                bundle,
-//                                object : MediaBrowserCompat.CustomActionCallback() {
-//                                    override fun onResult(
-//                                        action: String?,
-//                                        extras: Bundle?,
-//                                        resultData: Bundle?
-//                                    ) {
-//                                        super.onResult(action, extras, resultData)
-//                                        if (ACTION_RemoveFromQueue == action) {
-//
-//                                        }
-//                                    }
-//                                }
-//                            )
-
+//                            if (musicViewModel.currentPlay.value?.id == music.id) {
+//                                musicViewModel.currentMusicCover.value = null
+//                                musicViewModel.currentPlay.value =
+//                                    musicViewModel.musicQueue[(index) % (musicViewModel.musicQueue.size + 1)]
+//                            }
                         }
 
                         OperateType.EditMusicInfo -> {
@@ -416,11 +401,12 @@ fun PlayingPage(
             }
         ) {
             val color = MaterialTheme.colorScheme.secondary
-            val configuration = LocalConfiguration.current
+            val windowInfo = LocalWindowInfo.current
+            val containerWidth = windowInfo.containerSize.width
             Column(
                 modifier = Modifier
                     .width(
-                        (configuration.screenWidthDp - 20.dp.toPx(
+                        (containerWidth - 20.dp.toPx(
                             context
                         )).dp
                     )
@@ -813,13 +799,13 @@ fun PlayingPage(
                 popupWindow = false
             }
         ) {
-            val configuration = LocalConfiguration.current
+            val windowInfo = LocalWindowInfo.current
+            val density = LocalDensity.current
+            val containerWidthDp = with(density) { windowInfo.containerSize.width.toDp() }
             Column(
                 modifier = Modifier
                     .width(
-                        (configuration.screenWidthDp - 20.dp.toPx(
-                            context
-                        )).dp
+                        (containerWidthDp - 20.dp)
                     )
                     .padding(top = 5.dp)
                     .background(
@@ -1356,7 +1342,7 @@ fun PlayingPage(
                                 )
                                 .background(MaterialTheme.colorScheme.surface)
                         ) {
-                            if (musicViewModel.currentDuration.longValue > 0) {
+                            if ((musicViewModel.currentPlay.value?.duration ?: 0) > 0) {
                                 CustomSlider(
                                     modifier = Modifier
                                         .semantics { contentDescription = "Slider" }
@@ -1378,7 +1364,8 @@ fun PlayingPage(
                                         musicViewModel.sliderPosition.floatValue =
                                             it.roundToLong().toFloat()
                                     },
-                                    valueRange = 0f..musicViewModel.currentDuration.longValue.toFloat(),
+                                    valueRange = 0f..(musicViewModel.currentPlay.value?.duration?.toFloat()
+                                        ?: 0f),
                                     steps = 100,
                                     onValueChangeFinished = {
                                         musicViewModel.browser?.seekTo(musicViewModel.sliderPosition.floatValue.toLong())
@@ -1394,7 +1381,9 @@ fun PlayingPage(
                                         color = MaterialTheme.colorScheme.onBackground
                                     )
                                     Text(
-                                        text = Utils.formatTime(musicViewModel.currentDuration.longValue),
+                                        text = Utils.formatTime(
+                                            musicViewModel.currentPlay.value?.duration ?: 0
+                                        ),
                                         color = MaterialTheme.colorScheme.onBackground
                                     )
                                 }
@@ -1428,7 +1417,10 @@ fun PlayingPage(
                                                 !musicViewModel.enableShuffleModel.value
                                             val args = Bundle().apply {
                                                 putBoolean("queue", true)
-                                                putBoolean("enable", musicViewModel.enableShuffleModel.value)
+                                                putBoolean(
+                                                    "enable",
+                                                    musicViewModel.enableShuffleModel.value
+                                                )
                                                 val startId = musicViewModel.currentPlay.value?.id
                                                 if (startId != null) {
                                                     putLong(PlayService.KEY_START_MEDIA_ID, startId)

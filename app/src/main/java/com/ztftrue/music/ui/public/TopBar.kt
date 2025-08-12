@@ -51,8 +51,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -115,14 +116,12 @@ fun TopBar(
                 popupVolumeWindow = false
             }
         ) {
-            val configuration = LocalConfiguration.current
+            val windowInfo = LocalWindowInfo.current
+            val density = LocalDensity.current
+            val containerWidthDp = with(density) { windowInfo.containerSize.width.toDp() }
             Column(
                 modifier = Modifier
-                    .width(
-                        (configuration.screenWidthDp - 20.dp.toPx(
-                            context
-                        )).dp
-                    )
+                    .width(containerWidthDp - 20.dp)
                     .padding(top = 5.dp)
                     .background(
                         color = MaterialTheme.colorScheme.background,
@@ -152,7 +151,7 @@ fun TopBar(
                                 steps = 100,
                                 onValueChangeFinished = {
                                     musicViewModel.browser?.setVolume(
-                                        musicViewModel.volume.intValue.toFloat()/100
+                                        musicViewModel.volume.intValue.toFloat() / 100
                                     )
                                 },
                             )

@@ -57,6 +57,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionResult
@@ -122,7 +123,7 @@ fun MusicItemView(
                         try {
                             val sessionResult = futureResult.get()
                             if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
-                                deleteTrackUpdate(viewModel, sessionResult.extras)
+                                deleteTrackUpdate(viewModel)
                             }
                         } catch (e: Exception) {
                             Log.e("Client", "Failed to toggle favorite status", e)
@@ -149,7 +150,16 @@ fun MusicItemView(
                     }
 
                     OperateType.PlayNext -> {
-                        val position = viewModel.currentPlayQueueIndex.intValue + 1
+                        val i=viewModel.browser?.currentMediaItemIndex
+                        val position =if(i!=null) {
+                            if(i== C.INDEX_UNSET){
+                                0
+                            }else{
+                                i+1
+                            }
+                        } else{
+                            0
+                        }
                         viewModel.musicQueue.add(
                             position,
                             music
@@ -311,18 +321,17 @@ fun MusicItemView(
                         val bundle = Bundle()
                         if (playList.type != PlayListType.Queue) {
                             viewModel.musicQueue.clear()
-                            viewModel.currentPlayQueueIndex.intValue = -1
                             viewModel.musicQueue.addAll(musicList)
                             bundle.putBoolean("switch_queue", true)
                             SharedPreferencesUtils.enableShuffle(context, false)
                             viewModel.enableShuffleModel.value = false
                             viewModel.playListCurrent.value = playList
 //                            viewModel.browser?.shuffleModeEnabled = false
-                            if (viewModel.playListCurrent.value == null) {
+//                            if (viewModel.playListCurrent.value == null) {
 //                            viewModel.playListCurrent.value = playList
 //                            viewModel.currentMusicCover.value = null
 //                            viewModel.currentPlay.value = music
-                            }
+//                            }
 //                            bundle.putParcelable("musicItem", music)
                             bundle.putParcelable("playList", playList)
 //                            bundle.putParcelableArrayList("musicItems", ArrayList(musicList))

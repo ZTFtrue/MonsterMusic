@@ -48,8 +48,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -726,7 +726,6 @@ fun TracksListPage(
         }
     }
     LaunchedEffect(musicViewModel.refreshPlayList.value, refreshCurrentValueList) {
-        Log.d("Client", "result tracks: ${id}")
         val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
             musicViewModel.browser?.getChildren(
                 type.name + "_track_" + id,
@@ -893,7 +892,6 @@ fun TracksListPage(
                                 val bundle = Bundle()
                                 musicViewModel.playListCurrent.value = musicPlayList.value
                                 musicViewModel.musicQueue.clear()
-                                musicViewModel.currentPlayQueueIndex.intValue = -1
                                 musicViewModel.browser?.pause()
                                 musicViewModel.browser?.clearMediaItems()
                                 musicViewModel.browser?.shuffleModeEnabled = true
@@ -1061,8 +1059,11 @@ fun TracksListPage(
                     .padding(it)
             ) {
                 if (albumsList.isNotEmpty()) {
-                    val configuration = LocalConfiguration.current
-                    val width = (configuration.screenWidthDp / 2.5) + 70
+                    val windowInfo = LocalWindowInfo.current
+                    val containerWidth = windowInfo.containerSize.width
+//                    val density = LocalDensity.current
+//                    val containerWidthDp = with(density) { windowInfo.containerSize.width.toDp() }
+                    val width = (containerWidth / 2.5) + 70
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()

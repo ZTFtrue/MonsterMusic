@@ -46,8 +46,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -266,7 +267,7 @@ fun TracksListView(
                                 for ((index, entry) in tracksList.withIndex()) {
                                     if (entry.id == musicViewModel.currentPlay.value?.id) {
                                         // TODO calculate the scroll position by　
-                                        listState.animateScrollToItem(if ((index - 4) < 0) 0 else (index - 4))
+                                        listState.animateScrollToItem(if ((index - 2) < 0) 0 else (index - 2))
                                         break
                                     }
                                 }
@@ -332,11 +333,15 @@ fun ItemFilterDialog(
                         .height(1.dp)
                         .background(color = MaterialTheme.colorScheme.onBackground)
                 )
+                val windowInfo = LocalWindowInfo.current
+//                val containerHeightPx = windowInfo.containerSize.height
+                val density = LocalDensity.current
+                val containerHeightDp = with(density) { windowInfo.containerSize.height.toDp() }
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(4),
                     contentPadding = PaddingValues(10.dp),
                     modifier = Modifier
-                        .height((LocalConfiguration.current.screenHeightDp / 2f).dp)
+                        .height(containerHeightDp / 2f)
                 ) {
                     items(itemFilterList.size) { item ->
                         val iFilter = itemFilterList[item]

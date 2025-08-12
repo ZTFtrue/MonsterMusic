@@ -150,97 +150,6 @@ object PlayUtils {
         )
     }
 
-    fun shuffleModelSwitch(
-        extras: Bundle, result: Result<Bundle>,
-        musicQueue: ArrayList<MusicItem>,
-        currentPlayTrack: MusicItem?,
-        exoPlayer: ExoPlayer,
-        context: Context,
-        db: MusicDatabase
-    ) {
-
-        var index = 0
-        val enable = extras.getBoolean("enable", false)
-        if (enable) {
-            if (musicQueue.isNotEmpty()) {
-                if (musicQueue[0].priority == 0) {
-                    val dbArrayList = ArrayList<MusicItem>()
-                    dbArrayList.addAll(musicQueue)
-                    musicQueue.shuffle()
-                    val t1 = ArrayList<MediaItem>()
-                    if (musicQueue.isNotEmpty()) {
-                        musicQueue.forEachIndexed { i, it ->
-                            it.priority = i + 1
-                            if (it.id == currentPlayTrack?.id) {
-                                index = i
-                            }
-                            t1.add(MediaItemUtils.musicItemToMediaItem(it))
-                        }
-                        CoroutineScope(Dispatchers.IO).launch {
-                            db.QueueDao().updateList(dbArrayList)
-                        }
-                        CoroutineScope(Dispatchers.Main).launch {
-                            exoPlayer.pause()
-                            val cp = exoPlayer.currentPosition
-                            exoPlayer.clearMediaItems()
-                            exoPlayer.setMediaItems(t1)
-                            exoPlayer.seekToDefaultPosition(index)
-                            exoPlayer.seekTo(cp)
-                            exoPlayer.playWhenReady = true
-                            exoPlayer.prepare()
-                        }
-                    }
-                } else {
-                    musicQueue.sortBy { it.priority }
-                    val t1 = ArrayList<MediaItem>()
-                    if (musicQueue.isNotEmpty()) {
-                        musicQueue.forEachIndexed { i, it ->
-                            if (it.id == currentPlayTrack?.id) {
-                                index = i
-                            }
-                            t1.add(MediaItemUtils.musicItemToMediaItem(it))
-                        }
-                        CoroutineScope(Dispatchers.Main).launch {
-                            exoPlayer.pause()
-                            val cp = exoPlayer.currentPosition
-                            exoPlayer.clearMediaItems()
-                            exoPlayer.setMediaItems(t1)
-                            exoPlayer.seekToDefaultPosition(index)
-                            exoPlayer.seekTo(cp)
-                            exoPlayer.playWhenReady = true
-                            exoPlayer.prepare()
-                        }
-                    }
-                }
-            }
-            SharedPreferencesUtils.enableShuffle(context, true)
-        } else {
-            musicQueue.sortBy { it.tableId }
-            val t1 = ArrayList<MediaItem>()
-            if (musicQueue.isNotEmpty()) {
-                musicQueue.forEachIndexed { i, it ->
-                    if (it.id == currentPlayTrack?.id) {
-                        index = i
-                    }
-                    t1.add(MediaItemUtils.musicItemToMediaItem(it))
-                }
-                CoroutineScope(Dispatchers.Main).launch {
-                    exoPlayer.pause()
-                    val cp = exoPlayer.currentPosition
-                    exoPlayer.clearMediaItems()
-                    exoPlayer.setMediaItems(t1)
-                    exoPlayer.seekToDefaultPosition(index)
-                    exoPlayer.seekTo(cp)
-                    exoPlayer.playWhenReady = true
-                    exoPlayer.prepare()
-                }
-            }
-        }
-        SharedPreferencesUtils.enableShuffle(context, enable)
-        val bundle = Bundle()
-        bundle.putParcelableArrayList("list", musicQueue)
-        bundle.putInt("index", index)
-    }
 
     fun trackDelete(
         id: Long,
@@ -251,10 +160,10 @@ object PlayUtils {
     ): Long {
         tracksLinkedHashMap.remove(id)
         val i = musicQueue.indexOfFirst { it.id == id }
-        if (i > -1) {
+//        if (i > -1) {
 //            val musicItem = musicQueue.removeAt(i)
 //            changePriorityTableId(musicQueue, musicItem, db)
-        }
+//        }
         return i.toLong()
     }
 
@@ -303,11 +212,33 @@ object PlayUtils {
                 db.QueueDao().deleteAllQueue()
                 db.QueueDao().insertAll(musicQueue)
                 db.CurrentListDao().delete()
-            }else{
+            } else {
                 db.QueueDao().deleteAllQueue()
                 db.CurrentListDao().delete()
             }
         }
     }
 
+    fun areQueuesContentAndOrderEqual(list1: List<MusicItem>, list2: List<MusicItem>): Boolean {
+        if (list1.size != list2.size) {
+            return false // 数量不同，肯定不一致
+        }
+        val l2 = list2.sortedBy {
+            it.tableId
+        }
+
+        // 注意：我们只比较那些代表歌曲本身的字段，忽略 tableId 和 priority
+        for (i in list1.indices) {
+            val item1 = list1[i]
+            val item2 = l2[i]
+
+            // 比较歌曲的核心唯一标识符（例如，id）
+            if (item1.id != item2.id) return false
+
+            // (可选) 比较其他关键字段，以确保它是同一首歌的完全相同版本
+            if (item1.name != item2.name) return false
+            if (item1.path != item2.path) return false
+        }
+        return true // 所有歌曲都相同且顺序一致
+    }
 }

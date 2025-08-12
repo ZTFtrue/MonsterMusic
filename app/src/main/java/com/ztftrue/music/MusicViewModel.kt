@@ -114,7 +114,7 @@ class MusicViewModel : ViewModel() {
     var currentMusicCover = mutableStateOf<Bitmap?>(null)
     var currentPlay = mutableStateOf<MusicItem?>(null)
 
-    var currentPlayQueueIndex = mutableIntStateOf(-1)
+    //    var currentPlayQueueIndex = mutableIntStateOf(-1)
     var songsList = mutableStateListOf<MusicItem>()
     var playListCurrent = mutableStateOf<AnyListBase?>(null)
 
@@ -125,7 +125,6 @@ class MusicViewModel : ViewModel() {
     var pitch = mutableFloatStateOf(1f)
     var Q = mutableFloatStateOf(Utils.Q)
     var speed = mutableFloatStateOf(1f)
-    var currentDuration = mutableLongStateOf(0)
 
     var mainTabList = mutableStateListOf<MainTab>()
 
@@ -150,7 +149,7 @@ class MusicViewModel : ViewModel() {
     var itemDuration: Long = 1
     var lyricsType: LyricsType = LyricsType.TEXT
     var currentCaptionList = mutableStateListOf<ListStringCaption>()
-    var currentCaptionListLoading = mutableStateOf<Boolean>(false)
+    var currentCaptionListLoading = mutableStateOf(false)
     var isEmbeddedLyrics = mutableStateOf(false)
     var fontSize = mutableIntStateOf(18)
     var textAlign = mutableStateOf(TextAlign.Center)
@@ -176,7 +175,6 @@ class MusicViewModel : ViewModel() {
         sliderPosition.floatValue = 0f
         sleepTime.longValue = 0
         remainTime.longValue = 0
-        currentPlayQueueIndex.intValue = -1
         playCompleted.value = false
         repeatModel.intValue = Player.REPEAT_MODE_ALL
     }
@@ -221,8 +219,8 @@ class MusicViewModel : ViewModel() {
     private var lyricsJob: Job? = null
     private var dealCurrentPlayJob: Job? = null
 
-    fun scheduleDealCurrentPlay(context: Context, index: Int,mediaItem: MediaItem?, reason: Int) {
-        currentCaptionListLoading.value=true
+    fun scheduleDealCurrentPlay(context: Context, index: Int, mediaItem: MediaItem?, reason: Int) {
+        currentCaptionListLoading.value = true
         dealCurrentPlayJob?.cancel()
         dealCurrentPlayJob = viewModelScope.launch {
             // when reason is Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED
@@ -232,13 +230,10 @@ class MusicViewModel : ViewModel() {
             }
             currentMusicCover.value = null
             sliderPosition.floatValue = 0f
-            currentDuration.longValue =
-                currentPlay.value?.duration ?: 0
             currentCaptionList.clear()
-            if(mediaItem!=null){
-                val music=MediaItemUtils.mediaItemToMusicItem(mediaItem)
+            if (mediaItem != null) {
+                val music = MediaItemUtils.mediaItemToMusicItem(mediaItem)
                 currentPlay.value = music
-                currentPlayQueueIndex.intValue = index
                 if (music != null) {
                     dealLyrics(context, music)
                 }
@@ -280,7 +275,7 @@ class MusicViewModel : ViewModel() {
         storageFolder: StorageFolder,
         musicName: String,
         fileLyrics: MutableList<ListStringCaption>
-    ):Boolean {
+    ): Boolean {
         val treeUri = storageFolder.uri.toUri()
 
         context.contentResolver.takePersistableUriPermission(
@@ -318,7 +313,7 @@ class MusicViewModel : ViewModel() {
 
     fun dealLyrics(context: Context, currentPlay: MusicItem) {
         lock.lock()
-        currentCaptionListLoading.value=true
+        currentCaptionListLoading.value = true
         currentCaptionList.clear()
         lyricsType = LyricsType.TEXT
         if (lyricsJob != null && lyricsJob?.isActive == true) {
@@ -399,7 +394,7 @@ class MusicViewModel : ViewModel() {
                     val files = getDb(context).StorageFolderDao().findAllByType(LYRICS_TYPE)
                     outer@ for (storageFolder in files) {
                         try {
-                            if(loadLyrics(context, storageFolder, musicName, fileLyrics)){
+                            if (loadLyrics(context, storageFolder, musicName, fileLyrics)) {
                                 break@outer
                             }
                         } catch (e: Exception) {
@@ -437,7 +432,7 @@ class MusicViewModel : ViewModel() {
             // every lyrics line duration
             itemDuration =
                 duration / if (currentCaptionList.isEmpty()) 1 else currentCaptionList.size
-            currentCaptionListLoading.value=false
+            currentCaptionListLoading.value = false
         }
         lock.unlock()
 
@@ -683,15 +678,13 @@ class MusicViewModel : ViewModel() {
     }
 
     @OptIn(UnstableApi::class)
-    fun playShuffled( startItem: MusicItem?,playListType: PlayListType,playListId: Long) {
+    fun playShuffled(startItem: MusicItem?, playListType: PlayListType, playListId: Long) {
         val browser = this.browser ?: return
         val args = Bundle().apply {
-//            putParcelableArrayList(PlayService.KEY_MEDIA_ITEM_LIST, ArrayList(itemsToPlay))
             putBoolean("queue", false)
-            val startId = startItem?.id
-            if (startId != null) {
-                putLong(PlayService.KEY_START_MEDIA_ID, startId)
-            }
+            putBoolean("enable", true)
+            putString("playListType", playListType.name)
+            putLong("playListId", playListId)
         }
         browser.sendCustomCommand(PlayService.COMMAND_SMART_SHUFFLE, args)
     }

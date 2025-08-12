@@ -50,8 +50,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -147,8 +147,9 @@ fun ArtistsGridView(
 
         ScrollDirectionType.GRID_HORIZONTAL -> {
             val rowListSate = rememberLazyListState()
-            val configuration = LocalConfiguration.current
-            val width = (configuration.screenWidthDp - 10 - 10 - 10 - 5) / 2.5
+            val windowInfo = LocalWindowInfo.current
+            val containerWidth = windowInfo.containerSize.width
+            val width = (containerWidth - 10 - 10 - 10 - 5) / 2.5
             LazyRow(
                 contentPadding = PaddingValues(5.dp),
                 state = rowListSate,

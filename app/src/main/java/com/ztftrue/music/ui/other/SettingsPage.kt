@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -68,6 +69,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -326,6 +328,7 @@ fun SettingsPage(
                                                 Uri.fromParts("package", context.packageName, null)
                                             context.startActivity(intent)
                                         } catch (e: Exception) {
+                                            Log.e("SettingsPage", "Failed to open language settings",e)
                                             Toast.makeText(
                                                 context,
                                                 "Failed to open language settings",
@@ -1575,8 +1578,10 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
 
     val context = LocalContext.current
     val scopeMain = CoroutineScope(Dispatchers.IO)
-    val configuration = LocalConfiguration.current
-    val screenHeightDp = configuration.screenHeightDp
+    val windowInfo = LocalWindowInfo.current
+                val containerHeightPx = windowInfo.containerSize.height
+//    val density = LocalDensity.current
+//    val screenHeightDp = with(density) { windowInfo.containerSize.height.toDp() }
     val folderList = remember { mutableStateListOf<StorageFolder>() }
 
     LaunchedEffect(Unit) {
@@ -1709,7 +1714,7 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = (screenHeightDp - 203).dp)
+                        .heightIn(max = (containerHeightPx - 203).dp)
                 ) {
                     items(folderList.size) {
                         val item = folderList[it]

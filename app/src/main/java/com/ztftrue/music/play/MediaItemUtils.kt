@@ -301,7 +301,7 @@ object MediaItemUtils {
             // 如果标准 artist 字段为空，尝试从 extras 回退
                 ?: extras.getString("album_artist", "Unknown Artist"),
 
-            trackNumber = metadata.totalTrackCount?.toInt() ?: 0,
+            trackNumber = metadata.totalTrackCount ?: 0,
 
             // 从 extras 中获取我们自定义存储的信息
             firstYear = extras.getString(

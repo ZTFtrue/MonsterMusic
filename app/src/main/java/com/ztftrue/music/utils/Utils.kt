@@ -20,6 +20,7 @@ import androidx.core.content.FileProvider
 import androidx.core.graphics.scale
 import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.LibraryResult
@@ -77,7 +78,7 @@ fun stringToEnumForPlayListType(enumString: String): PlayListType {
     return try {
         PlayListType.valueOf(enumString)
     } catch (e: IllegalArgumentException) {
-
+        Log.e("Utils", "stringToEnumForPlayListType: $enumString", e)
         PlayListType.Songs
     }
 }
@@ -484,10 +485,20 @@ object Utils {
                             MediaItemUtils.mediaItemToMusicItem(mediaItem)
                                 ?.let { tracksList.add(it) }
                         }
+                        val i=musicViewModel.browser?.currentMediaItemIndex
+                        val position =if(i!=null) {
+                            if(i== C.INDEX_UNSET){
+                                0
+                            }else{
+                                i+1
+                            }
+                        } else{
+                            0
+                        }
                         addTracksToQueue(
                             musicViewModel,
                             tracksList,
-                            musicViewModel.currentPlayQueueIndex.intValue + 1
+                            position
                         )
                     } catch (e: Exception) {
                         // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
@@ -525,7 +536,7 @@ object Utils {
         )
     }
 
-    fun deleteTrackUpdate(musicViewModel: MusicViewModel, resultData: Bundle?) {
+    fun deleteTrackUpdate(musicViewModel: MusicViewModel) {
         musicViewModel.refreshPlayList.value =
             !musicViewModel.refreshPlayList.value
         musicViewModel.refreshAlbum.value =
@@ -570,23 +581,15 @@ object Utils {
                 }
             }, MoreExecutors.directExecutor())
         }
-        resultData?.getLong("id", -1)?.also {
-            if (it == -1L) return
-            musicViewModel.musicQueue.removeAll { mIt ->
-                mIt.id == it
-            }
-            if (it == musicViewModel.currentPlay.value?.id) {
-                musicViewModel.currentPlayQueueIndex.intValue = -1
-                musicViewModel.currentPlay.value = null
-            } else {
-                resultData.getInt(
-                    "playIndex"
-                ).also { indexPlay ->
-                    if (indexPlay > -1)
-                        musicViewModel.currentPlayQueueIndex.intValue = indexPlay
-                }
-            }
-        }
+//        resultData?.getLong("id", -1)?.also {
+//            if (it == -1L) return
+//            musicViewModel.musicQueue.removeAll { mIt ->
+//                mIt.id == it
+//            }
+//            if (it == musicViewModel.currentPlay.value?.id) {
+//                musicViewModel.currentPlay.value = null
+//            }
+//        }
     }
 
     fun getAllDictionaryActivity(context: Context): List<ResolveInfo> {
@@ -685,7 +688,6 @@ object Utils {
 
     @OptIn(UnstableApi::class)
     fun setCoverFile(musicViewModel: MusicViewModel, context: Context) {
-
         (context as MainActivity).roseImagPicker()
     }
 

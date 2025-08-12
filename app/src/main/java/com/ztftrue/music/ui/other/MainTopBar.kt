@@ -52,7 +52,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -178,7 +177,6 @@ fun MainTopBar(
                     showSortDialog = false
                 }
             ) {
-                LocalConfiguration.current
                 Column(
                     modifier = Modifier
                         .wrapContentSize()
@@ -412,21 +410,35 @@ fun MainTopBar(
                                                 PlayListType.Songs.name -> {
                                                     musicViewModel.songsList.clear()
                                                     val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
-                                                        musicViewModel.browser?.getChildren("songs_root", 0, Integer.MAX_VALUE, null)
+                                                        musicViewModel.browser?.getChildren(
+                                                            "songs_root",
+                                                            0,
+                                                            Integer.MAX_VALUE,
+                                                            null
+                                                        )
                                                     futureResult?.addListener({
                                                         try {
-                                                            val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
+                                                            val result: LibraryResult<ImmutableList<MediaItem>>? =
+                                                                futureResult.get()
                                                             if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
                                                                 return@addListener
                                                             }
-                                                            val albumMediaItems: List<MediaItem> = result.value ?: listOf()
-                                                            val list  = albumMediaItems.map { mediaItem ->
-                                                                MediaItemUtils.mediaItemToMusicItem(mediaItem)
-                                                            }.fastFilterNotNull()
+                                                            val albumMediaItems: List<MediaItem> =
+                                                                result.value ?: listOf()
+                                                            val list =
+                                                                albumMediaItems.map { mediaItem ->
+                                                                    MediaItemUtils.mediaItemToMusicItem(
+                                                                        mediaItem
+                                                                    )
+                                                                }.fastFilterNotNull()
                                                             musicViewModel.songsList.addAll(list)
                                                         } catch (e: Exception) {
                                                             // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
-                                                            Log.e("Client", "Failed to toggle favorite status", e)
+                                                            Log.e(
+                                                                "Client",
+                                                                "Failed to toggle favorite status",
+                                                                e
+                                                            )
                                                         }
                                                     }, ContextCompat.getMainExecutor(context))
                                                 }
@@ -467,11 +479,10 @@ fun MainTopBar(
             QueueOperateDialog(onDismiss = {
                 showDialogForQueue = false
                 if (it == OperateType.ClearQueue) {
-                    musicViewModel.browser?.sendCustomCommand( COMMAND_CLEAR_QUEUE, Bundle.EMPTY)
+                    musicViewModel.browser?.sendCustomCommand(COMMAND_CLEAR_QUEUE, Bundle.EMPTY)
                     musicViewModel.musicQueue.clear()
                     musicViewModel.currentPlay.value = null
                     musicViewModel.playListCurrent.value = null
-                    musicViewModel.currentPlayQueueIndex.intValue = 0
                     musicViewModel.currentCaptionList.clear()
                 } else if (it == OperateType.SaveQueueToPlayList) {
                     showAddPlayListDialog = true

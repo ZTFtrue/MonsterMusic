@@ -31,9 +31,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -58,7 +59,7 @@ import com.ztftrue.music.utils.model.AnyListBase
  * Handles user input for search, displays search results (tracks, albums, artists).
  */
 @androidx.annotation.OptIn(UnstableApi::class)
-@OptIn(ExperimentalMaterial3Api::class, UnstableApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchPage(
     musicViewModel: MusicViewModel,
@@ -77,9 +78,10 @@ fun SearchPage(
 
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
-    val configuration = LocalConfiguration.current
+    val windowInfo = LocalWindowInfo.current
+    val containerWidth = windowInfo.containerSize.width
     // Calculate item width for horizontal scrollable grids (albums, artists)
-    val width = (configuration.screenWidthDp / 2.5) + 70
+    val width = (containerWidth / 2.5) + 70
     val rootView = LocalView.current
     val localViewHeight by remember { mutableIntStateOf(rootView.height) }
     LaunchedEffect(Unit) {
@@ -93,9 +95,11 @@ fun SearchPage(
                 navigationIcon = { BackButton(navController) },
                 title = { /* Empty title, search bar is in actions */ },
                 actions = {
+                    val density = LocalDensity.current
+                    val containerWidthDp = with(density) { windowInfo.containerSize.width.toDp() }
                     Row(
                         modifier = Modifier
-                            .width(configuration.screenWidthDp.dp - 60.dp),
+                            .width(containerWidthDp - 60.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {

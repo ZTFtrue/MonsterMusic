@@ -43,9 +43,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -76,7 +76,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
     val context = LocalContext.current
     val minEQLevel = remember { equalizerMin }
     val maxEQLevel = remember { equalizerMax }
-    val Q = remember { mutableFloatStateOf(musicViewModel.Q.floatValue) }
+    val equalizerQ = remember { mutableFloatStateOf(musicViewModel.Q.floatValue) }
     val tempBandValue = ArrayList<MutableFloatState>(Utils.bandsCenter.size)
     bands.forEach { band ->
         val bandValue = remember { mutableFloatStateOf(band.value.toFloat()) }
@@ -92,6 +92,9 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
         ).getString("SelectedPreset", Utils.custom) ?: Utils.custom
     }
     val color = MaterialTheme.colorScheme.onBackground
+    val windowInfo = LocalWindowInfo.current
+    val density = LocalDensity.current
+    val containerHeightDp = with(density) { windowInfo.containerSize.height.toDp() }
 
     LazyColumn(
         state = listState,
@@ -299,7 +302,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                         onDismissRequest = { expanded = false },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height((LocalConfiguration.current.screenHeightDp / 2f).dp)
+                            .height(containerHeightDp / 2)
                             .background(
                                 MaterialTheme.colorScheme.tertiaryContainer
                             ),
@@ -370,7 +373,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Equalizer Q: " + (Q.floatValue).toString(),
+                        text = "Equalizer Q: " + (equalizerQ.floatValue).toString(),
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     OutlinedButton(
@@ -378,7 +381,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                         modifier = Modifier.padding(0.dp),
                         onClick = {
                             musicViewModel.Q.floatValue = Utils.Q
-                            Q.floatValue = Utils.Q
+                            equalizerQ.floatValue = Utils.Q
                             val bundle = Bundle()
                             bundle.putFloat("Q", musicViewModel.Q.floatValue)
                             musicViewModel.browser?.sendCustomCommand(COMMAND_CHANGE_Q, bundle)
@@ -396,20 +399,20 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                         .semantics {
                             contentDescription = "Q"
                         },
-                    value = Q.floatValue,
+                    value = equalizerQ.floatValue,
                     onValueChange = {
-                        Q.floatValue = (it * 10f).roundToInt() / 10f
+                        equalizerQ.floatValue = (it * 10f).roundToInt() / 10f
                     },
                     valueRange = 0.7f..4.3f,
                     steps = 36,
                     onValueChangeFinished = {
-                        musicViewModel.Q.floatValue = Q.floatValue
+                        musicViewModel.Q.floatValue = equalizerQ.floatValue
                         val bundle = Bundle()
                         bundle.putFloat("Q", musicViewModel.Q.floatValue)
                         musicViewModel.browser?.sendCustomCommand(COMMAND_CHANGE_Q, bundle)
                     },
                 )
-                if (Q.floatValue < 2.0f) {
+                if (equalizerQ.floatValue < 2.0f) {
                     Text(
                         text = "Lower Q values will lead to a more pronounced effect, but with increased noise.",
                         color = MaterialTheme.colorScheme.onBackground

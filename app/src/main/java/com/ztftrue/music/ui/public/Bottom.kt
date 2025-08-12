@@ -27,8 +27,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
@@ -84,11 +84,14 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
                             .height(60.dp)
                             .aspectRatio(1f),
                     )
-                    val configuration = LocalConfiguration.current
+
+                    val windowInfo = LocalWindowInfo.current
+                    val containerWidth = windowInfo.containerSize.width
+
                     Column(
                         Modifier
                             .padding(start = 5.dp, end = 5.dp, top = 5.dp, bottom = 5.dp)
-                            .width((configuration.screenWidthDp - 220).dp)
+                            .width((containerWidth - 220).dp)
                     ) {
                         Text(
                             text = currentMusic?.name ?: "",
