@@ -26,6 +26,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaBrowser
@@ -34,6 +35,7 @@ import androidx.navigation.NavHostController
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.play.AudioDataRepository
 import com.ztftrue.music.play.CustomMetadataKeys
+import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
 import com.ztftrue.music.sqlData.MusicDatabase
@@ -219,7 +221,7 @@ class MusicViewModel : ViewModel() {
     private var lyricsJob: Job? = null
     private var dealCurrentPlayJob: Job? = null
 
-    fun scheduleDealCurrentPlay(context: Context, index: Int, reason: Int) {
+    fun scheduleDealCurrentPlay(context: Context, index: Int,mediaItem: MediaItem?, reason: Int) {
         currentCaptionListLoading.value=true
         dealCurrentPlayJob?.cancel()
         dealCurrentPlayJob = viewModelScope.launch {
@@ -233,9 +235,14 @@ class MusicViewModel : ViewModel() {
             currentDuration.longValue =
                 currentPlay.value?.duration ?: 0
             currentCaptionList.clear()
-            currentPlay.value = musicQueue[index]
-            currentPlayQueueIndex.intValue = index
-            dealLyrics(context, musicQueue[index])
+            if(mediaItem!=null){
+                val music=MediaItemUtils.mediaItemToMusicItem(mediaItem)
+                currentPlay.value = music
+                currentPlayQueueIndex.intValue = index
+                if (music != null) {
+                    dealLyrics(context, music)
+                }
+            }
         }
     }
 
@@ -676,10 +683,11 @@ class MusicViewModel : ViewModel() {
     }
 
     @OptIn(UnstableApi::class)
-    fun playShuffled(itemsToPlay: List<MusicItem>, startItem: MusicItem?) {
+    fun playShuffled( startItem: MusicItem?,playListType: PlayListType,playListId: Long) {
         val browser = this.browser ?: return
         val args = Bundle().apply {
-            putParcelableArrayList(PlayService.KEY_MEDIA_ITEM_LIST, ArrayList(itemsToPlay))
+//            putParcelableArrayList(PlayService.KEY_MEDIA_ITEM_LIST, ArrayList(itemsToPlay))
+            putBoolean("queue", false)
             val startId = startItem?.id
             if (startId != null) {
                 putLong(PlayService.KEY_START_MEDIA_ID, startId)

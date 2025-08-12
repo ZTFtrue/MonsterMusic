@@ -347,6 +347,7 @@ fun MusicItemView(
                                 } else {
                                     0L
                                 }
+                            viewModel.browser?.shuffleModeEnabled = false
                             viewModel.browser?.clearMediaItems()
                             viewModel.browser?.setMediaItems(t1)
 //                            SharedPreferencesUtils.saveSelectMusicId(
@@ -370,7 +371,7 @@ fun MusicItemView(
                             // don't need switch queue
                             val index =
                                 viewModel.musicQueue.indexOfFirst { musicItem -> musicItem.id == music.id }
-                            if (index == viewModel.currentPlayQueueIndex.intValue) {
+                            if (music.id == viewModel.currentPlay.value?.id) {
                                 if (viewModel.browser?.isPlaying == true) {
                                     viewModel.browser?.pause()
                                 } else {

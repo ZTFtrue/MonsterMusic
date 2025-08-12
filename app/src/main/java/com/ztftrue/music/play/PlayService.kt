@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.Handler
@@ -46,11 +45,9 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionError
 import androidx.media3.session.SessionResult
 import com.google.common.collect.ImmutableList
-import com.google.common.reflect.TypeToken
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
-import com.google.gson.Gson
 import com.ztftrue.music.BuildConfig
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.PlayMusicWidget
@@ -266,57 +263,92 @@ class PlayService : MediaLibraryService() {
                 }
 
                 COMMAND_SMART_SHUFFLE.customAction -> {
-                    val newMusicItems: ArrayList<MusicItem>? =
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            args.getParcelableArrayList(KEY_MEDIA_ITEM_LIST, MusicItem::class.java)
-                        } else {
-                            args.getParcelableArrayList(KEY_MEDIA_ITEM_LIST)
-                        }
-                    val startMediaId: Long? = args.getLong(KEY_START_MEDIA_ID)
-                    if (newMusicItems.isNullOrEmpty()) {
-                        return Futures.immediateFuture(SessionResult(SessionError.ERROR_BAD_VALUE))
-                    }
-                    ContextCompat.getMainExecutor(this@PlayService).execute {
-                        val currentPlayer = this@PlayService.exoPlayer
-                        val autoToTopEnabled =
-                            SharedPreferencesUtils.getAutoToTopRandom(this@PlayService)
-                        val currentMusicItem = newMusicItems.find { it.id == startMediaId }
-                            ?: newMusicItems.first()
-                        var finalShuffledQueue: List<MusicItem>
-                        if (autoToTopEnabled) {
-                            val otherItems = newMusicItems.filter { it.id != currentMusicItem.id }
-                            val shuffledOtherItems = otherItems.shuffled()
-                            finalShuffledQueue = mutableListOf<MusicItem>().apply {
-                                add(currentMusicItem) // 置顶
-                                addAll(shuffledOtherItems)
+                    val enable = args.getBoolean("enable")
+                    if (enable) {
+                        val isQueue = args.getBoolean("queue")
+                        val newMusicItems: ArrayList<MusicItem>? =
+                            if (isQueue) {
+                                musicQueue
+                            } else {
+                                args.getParcelableArrayList(KEY_MEDIA_ITEM_LIST)
                             }
-                        } else {
-                            finalShuffledQueue = newMusicItems.shuffled()
+                        val startMediaId: Long? = args.getLong(KEY_START_MEDIA_ID)
+                        if (newMusicItems.isNullOrEmpty()) {
+                            return Futures.immediateFuture(SessionResult(SessionError.ERROR_BAD_VALUE))
                         }
-                        finalShuffledQueue.forEachIndexed { index, item ->
-                            item.priority = index + 1
+                        ContextCompat.getMainExecutor(this@PlayService).execute {
+                            val currentPlayer = this@PlayService.exoPlayer
+                            val position = if (isQueue) {
+                                currentPlayer.currentPosition
+                            } else {
+                                0
+                            }
+                            val autoToTopEnabled =
+                                SharedPreferencesUtils.getAutoToTopRandom(this@PlayService)
+                            val currentMusicItem = newMusicItems.find { it.id == startMediaId }
+                                ?: newMusicItems.first()
+                            var finalShuffledQueue: List<MusicItem>
+                            if (autoToTopEnabled) {
+                                val otherItems =
+                                    newMusicItems.filter { it.id != currentMusicItem.id }
+                                val shuffledOtherItems = otherItems.shuffled()
+                                finalShuffledQueue = mutableListOf<MusicItem>().apply {
+                                    add(currentMusicItem) // 置顶
+                                    addAll(shuffledOtherItems)
+                                }
+                            } else {
+                                finalShuffledQueue = newMusicItems.shuffled()
+                            }
+                            finalShuffledQueue.forEachIndexed { index, item ->
+                                item.priority = index + 1
+                            }
+                            val originalUnshuffledQueue = this@PlayService.musicQueue
+                            val shuffledIndices = finalShuffledQueue.map { shuffledItem ->
+                                originalUnshuffledQueue.indexOfFirst { it.id == shuffledItem.id }
+                            }.filter { it != -1 }.toIntArray()
+                            val customShuffleOrder =
+                                ShuffleOrder.DefaultShuffleOrder(shuffledIndices, 0L)
+                            currentPlayer.shuffleOrder = customShuffleOrder
+                            currentPlayer.shuffleModeEnabled = true
+                            val newMediaItems =
+                                finalShuffledQueue.map { MediaItemUtils.musicItemToMediaItem(it) }
+                            val newStartIndex =
+                                finalShuffledQueue.indexOfFirst { it.id == currentMusicItem.id }
+                                    .let { if (it == -1) 0 else it }
+                            currentPlayer.setMediaItems(
+                                newMediaItems,
+                                newStartIndex,
+                                position
+                            )
+                            currentPlayer.prepare()
+                            currentPlayer.play()
                         }
-                        val originalUnshuffledQueue = this@PlayService.musicQueue
-                        val shuffledIndices = finalShuffledQueue.map { shuffledItem ->
-                            originalUnshuffledQueue.indexOfFirst { it.id == shuffledItem.id }
-                        }.filter { it != -1 }.toIntArray()
-                        val customShuffleOrder =
-                            ShuffleOrder.DefaultShuffleOrder(shuffledIndices, 0L)
-                        currentPlayer.shuffleOrder = customShuffleOrder
-                        currentPlayer.shuffleModeEnabled = true
-                        val newMediaItems =
-                            finalShuffledQueue.map { MediaItemUtils.musicItemToMediaItem(it) }
-                        val newStartIndex =
-                            finalShuffledQueue.indexOfFirst { it.id == currentMusicItem.id }
-                                .let { if (it == -1) 0 else it }
-                        currentPlayer.setMediaItems(
-                            newMediaItems,
-                            newStartIndex,
-                            C.TIME_UNSET
-                        )
-                        currentPlayer.prepare()
-                        currentPlayer.play()
+                    } else {
+                        ContextCompat.getMainExecutor(this@PlayService).execute {
+                            val currentPlayer = this@PlayService.exoPlayer
+                            val position = currentPlayer.currentPosition
+
+                            musicQueue.sortBy { it.tableId }
+                            val newStartIndex =
+                                musicQueue.indexOfFirst { it.id == currentPlayer.currentMediaItem?.mediaId?.toLong() }
+
+                            val newMediaItems =
+                                musicQueue.map { MediaItemUtils.musicItemToMediaItem(it) }
+                            currentPlayer.setMediaItems(
+                                newMediaItems,
+                                if (newStartIndex < 0) {
+                                    0
+                                } else {
+                                    newStartIndex
+                                },
+                                position
+                            )
+                            currentPlayer.prepare()
+                            currentPlayer.play()
+                        }
                     }
+
+
                     return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }
 
@@ -1262,6 +1294,18 @@ class PlayService : MediaLibraryService() {
                             db.QueueDao().insertAll(qList.sortedBy { it.tableId })
                         }
                     }
+                    mControllerInfo?.let {
+                        mediaSession?.sendCustomCommand(
+                            it,
+                            COMMAND_TIME_LINE_CHANGED,
+                            Bundle().apply {
+                                putParcelableArrayList(
+                                    "queue",
+                                    ArrayList(musicQueue)
+                                )
+                            }
+                        )
+                    }
                 }
                 super.onTimelineChanged(timeline, reason)
             }
@@ -1642,6 +1686,9 @@ class PlayService : MediaLibraryService() {
         // Visualization
         val COMMAND_VISUALIZATION_ENABLE = SessionCommand("vis.ENABLE", Bundle.EMPTY)
         val COMMAND_VISUALIZATION_DATA = SessionCommand("vis.VISUALIZATION_DATA", Bundle.EMPTY)
+
+        val COMMAND_TIME_LINE_CHANGED =
+            SessionCommand("queue.COMMAND_TIME_LINE_CHANGED", Bundle.EMPTY)
 
         // Sleep Timer
         val COMMAND_SET_SLEEP_TIMER = SessionCommand("timer.SET_SLEEP", Bundle.EMPTY)

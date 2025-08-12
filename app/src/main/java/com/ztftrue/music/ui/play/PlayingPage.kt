@@ -124,6 +124,7 @@ import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.MediaItemUtils
+import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_VISUALIZATION_ENABLE
 import com.ztftrue.music.sqlData.model.DictionaryApp
@@ -312,7 +313,7 @@ fun PlayingPage(
                                 musicViewModel.currentPlayQueueIndex.intValue =
                                     (index) % (musicViewModel.musicQueue.size + 1)
                                 musicViewModel.currentPlay.value =
-                                    musicViewModel.musicQueue[musicViewModel.currentPlayQueueIndex.intValue]
+                                    musicViewModel.musicQueue[(index) % (musicViewModel.musicQueue.size + 1)]
                             }
 //                            musicViewModel.mediaBrowser?.sendCustomAction(
 //                                ACTION_RemoveFromQueue,
@@ -1425,7 +1426,18 @@ fun PlayingPage(
                                         IconButton(onClick = {
                                             musicViewModel.enableShuffleModel.value =
                                                 !musicViewModel.enableShuffleModel.value
-                                            musicViewModel.playShuffled(musicViewModel.musicQueue,musicViewModel.currentPlay.value)
+                                            val args = Bundle().apply {
+                                                putBoolean("queue", true)
+                                                putBoolean("enable", musicViewModel.enableShuffleModel.value)
+                                                val startId = musicViewModel.currentPlay.value?.id
+                                                if (startId != null) {
+                                                    putLong(PlayService.KEY_START_MEDIA_ID, startId)
+                                                }
+                                            }
+                                            musicViewModel.browser?.sendCustomCommand(
+                                                PlayService.COMMAND_SMART_SHUFFLE,
+                                                args
+                                            )
                                         }) {
                                             Icon(
                                                 imageVector = if (musicViewModel.enableShuffleModel.value) Icons.Outlined.Shuffle else Icons.Outlined.Shuffle,

@@ -52,7 +52,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import androidx.media3.common.Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED
 import androidx.media3.common.Timeline
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
@@ -80,7 +79,6 @@ import com.ztftrue.music.ui.home.BaseLayout
 import com.ztftrue.music.ui.theme.MusicPitchTheme
 import com.ztftrue.music.utils.OperateTypeInActivity
 import com.ztftrue.music.utils.SharedPreferencesUtils
-import com.ztftrue.music.utils.TracksUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.deleteTrackUpdate
 import com.ztftrue.music.utils.model.AnyListBase
@@ -672,6 +670,22 @@ class MainActivity : ComponentActivity() {
                 if (remainTime == 0L) {
                     musicViewModel.sleepTime.longValue = 0
                 }
+            } else if (command.customAction == PlayService.COMMAND_TIME_LINE_CHANGED.customAction) {
+                val queue: ArrayList<MusicItem>? =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        args.getParcelableArrayList("queue", MusicItem::class.java)
+                    } else {
+                        args.getParcelableArrayList("queue")
+                    }
+                musicViewModel.musicQueue.clear()
+                if (queue != null && queue.isNotEmpty()) {
+                    val qIndex = musicViewModel.browser?.currentMediaItemIndex ?: 0
+                    if (qIndex < queue.size) {
+                        musicViewModel.currentPlayQueueIndex.intValue = qIndex
+
+                        musicViewModel.musicQueue.addAll(queue)
+                    }
+                }
             } else if (command.customAction == PlayService.COMMAND_VISUALIZATION_DATA.customAction) {
                 val magnitude = args.getFloatArray("magnitude")?.toList()
                 if (magnitude != null) {
@@ -794,29 +808,13 @@ class MainActivity : ComponentActivity() {
 
     // 示例：定义 Player.Listener
     private val playerListener = object : Player.Listener {
-        override fun onTimelineChanged(
-            timeline: Timeline,
-            reason: Int
-        ) {
-            if (!timeline.isEmpty && TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED == reason) {
-                val newQueue = mutableListOf<MediaItem>()
-                for (i in 0 until timeline.windowCount) {
-                    val window = timeline.getWindow(i, Timeline.Window())
-                    val mediaItem = window.mediaItem
-                    newQueue.add(mediaItem)
-                }
-                val qList: Collection<MusicItem> =
-                    (newQueue.map { MediaItemUtils.mediaItemToMusicItem(it) }).filterNotNull()
-                val qIndex = musicViewModel.browser?.currentMediaItemIndex ?: 0
-                if (qIndex >= qList.size) {
-                    return
-                }
-                musicViewModel.currentPlayQueueIndex.intValue = qIndex
-                musicViewModel.musicQueue.clear()
-                musicViewModel.musicQueue.addAll(qList)
-            }
-            super.onTimelineChanged(timeline, reason)
-        }
+//        override fun onTimelineChanged(
+//            timeline: Timeline,
+//            reason: Int
+//        ) {
+//
+//            super.onTimelineChanged(timeline, reason)
+//        }
 
 
         override fun onVolumeChanged(volume: Float) {
@@ -836,7 +834,7 @@ class MainActivity : ComponentActivity() {
             val index: Int = musicViewModel.browser?.currentMediaItemIndex ?: 0
             val reason = reason
             if (index >= 0 && musicViewModel.musicQueue.size > index) {
-                musicViewModel.scheduleDealCurrentPlay(this@MainActivity, index, reason)
+                musicViewModel.scheduleDealCurrentPlay(this@MainActivity, index, mediaItem, reason)
             }
         }
 
@@ -996,7 +994,7 @@ class MainActivity : ComponentActivity() {
             // &&player.currentMediaItemIndex!=musicViewModel.currentPlayQueueIndex.intValue 如果是和当前相同就不解析
             musicViewModel.currentPlayQueueIndex.intValue = player.currentMediaItemIndex
             musicViewModel.currentPlay.value =
-                musicViewModel.musicQueue[musicViewModel.currentPlayQueueIndex.intValue]
+                musicViewModel.musicQueue[player.currentMediaItemIndex]
             // val uri = currentMediaItem.mediaMetadata.artworkUri
             // if (uri != null) {
             //     albumArtImageView.setImageURI(uri)
