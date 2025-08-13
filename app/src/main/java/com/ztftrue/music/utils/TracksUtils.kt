@@ -7,7 +7,10 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.media3.session.MediaBrowser
+import com.ztftrue.music.MusicViewModel
+import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
+import com.ztftrue.music.play.PlayService.Companion.COMMAND_SORT_QUEUE
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.SortFiledData
@@ -22,7 +25,7 @@ object TracksUtils {
 
 
     fun sortQueue(
-        mediaBrowserCompat: MediaBrowser, musicList: SnapshotStateList<MusicItem>,
+        musicViewModel: MusicViewModel, musicList: SnapshotStateList<MusicItem>,
         music: MusicItem, currentIndex: Int, targetIndex: Int
     ) {
         if (currentIndex == targetIndex) return
@@ -31,6 +34,8 @@ object TracksUtils {
         val bundle = Bundle()
         bundle.putInt("index", currentIndex)
         bundle.putInt("targetIndex", targetIndex)
+        musicViewModel.browser?.sendCustomCommand(COMMAND_SORT_QUEUE, bundle)
+        //
 //            val index = extras.getInt("index")
 //            val targetIndex = extras.getInt("targetIndex")
 //            val m = musicQueue.removeAt(index)

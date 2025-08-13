@@ -236,8 +236,8 @@ object PlayUtils {
             if (item1.id != item2.id) return false
 
             // (可选) 比较其他关键字段，以确保它是同一首歌的完全相同版本
-            if (item1.name != item2.name) return false
-            if (item1.path != item2.path) return false
+            if (item1.priority != item2.priority) return false
+//            if (item1.path != item2.path) return false
         }
         return true // 所有歌曲都相同且顺序一致
     }

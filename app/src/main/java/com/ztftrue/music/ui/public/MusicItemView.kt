@@ -150,14 +150,14 @@ fun MusicItemView(
                     }
 
                     OperateType.PlayNext -> {
-                        val i=viewModel.browser?.currentMediaItemIndex
-                        val position =if(i!=null) {
-                            if(i== C.INDEX_UNSET){
+                        val i = viewModel.browser?.currentMediaItemIndex
+                        val position = if (i != null) {
+                            if (i == C.INDEX_UNSET) {
                                 0
-                            }else{
-                                i+1
+                            } else {
+                                i + 1
                             }
-                        } else{
+                        } else {
                             0
                         }
                         viewModel.musicQueue.add(
@@ -541,13 +541,11 @@ fun saveSortResult(
             )
         }
     } else if (playList.type == PlayListType.Queue) {
-        viewModel.browser?.let {
-            TracksUtils.sortQueue(
-                it, musicList,
-                music,
-                index, targetIndex
-            )
-        }
+        TracksUtils.sortQueue(
+            viewModel, musicList,
+            music,
+            index, targetIndex
+        )
     }
 }
 

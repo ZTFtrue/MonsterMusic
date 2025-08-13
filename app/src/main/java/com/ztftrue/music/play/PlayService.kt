@@ -481,7 +481,62 @@ class PlayService : MediaLibraryService() {
                 }
 
                 COMMAND_SORT_QUEUE.customAction -> {
-                    args.getString("method")
+                    val index = args.getInt("index", 0)
+                    val targetIndex = args.getInt("targetIndex", 0)
+                    if (index == targetIndex) {
+                        return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                    }
+                    if (exoPlayer.shuffleModeEnabled) {
+                        val startMediaId = musicQueue[exoPlayer.currentMediaItemIndex].id
+                        val position = exoPlayer.currentPosition
+                        val needPlay = exoPlayer.isPlaying
+                        val tempQueue = ArrayList(musicQueue)
+                        val music = tempQueue.removeAt(index)
+                        tempQueue.add(targetIndex, music)
+//                        tempQueue.forEachIndexed { index, musicItem ->
+//                            musicItem.priority = index + 1
+//                        }
+                        val newStartIndex = tempQueue.indexOfFirst { it.id == startMediaId }
+                            .let { if (it == -1) 0 else it }
+                        val newMediaItems =
+                            tempQueue.map { MediaItemUtils.musicItemToMediaItem(it) }
+                        exoPlayer.setMediaItems(
+                            newMediaItems,
+                            newStartIndex,
+                            position
+                        )
+                        exoPlayer.playWhenReady = needPlay
+                        exoPlayer.prepare()
+                        if (needPlay) {
+                            exoPlayer.play()
+                        }
+                    } else {
+                        val startMediaId = musicQueue[exoPlayer.currentMediaItemIndex].id
+                        val position = exoPlayer.currentPosition
+                        val needPlay = exoPlayer.isPlaying
+                        val tempQueue = ArrayList(musicQueue)
+                        val music = tempQueue.removeAt(index)
+                        tempQueue.add(targetIndex, music)
+//                        tempQueue.forEachIndexed { index, musicItem ->
+//                            musicItem.priority = index + 1
+//                        }
+                        val newStartIndex = tempQueue.indexOfFirst { it.id == startMediaId }
+                            .let { if (it == -1) 0 else it }
+
+                        val newMediaItems =
+                            tempQueue.map { MediaItemUtils.musicItemToMediaItem(it) }
+                        exoPlayer.setMediaItems(
+                            newMediaItems,
+                            newStartIndex,
+                            position
+                        )
+                        exoPlayer.playWhenReady = needPlay
+                        exoPlayer.prepare()
+                        if (needPlay) {
+                            exoPlayer.play()
+                        }
+                    }
+
 //                    val bundle = Bundle()
 //                    bundle.putString(
 //                        "method",
@@ -1326,9 +1381,8 @@ class PlayService : MediaLibraryService() {
                     }
                     val qList: ArrayList<MusicItem> =
                         ArrayList((newQueue.map { MediaItemUtils.mediaItemToMusicItem(it) }).filterNotNull())
-                    var maxTableId = qList.maxOfOrNull { it.tableId ?: 0 } ?: 0
-                    var maxPriority = qList.maxOfOrNull { it.priority } ?: 0
                     if (exoPlayer.shuffleModeEnabled) {
+                        var maxTableId = qList.maxOfOrNull { it.tableId ?: 0 } ?: 0
                         qList.forEachIndexed { index, musicItem ->
                             musicItem.priority = index + 1
                             if (musicItem.tableId == null) {
@@ -1338,6 +1392,7 @@ class PlayService : MediaLibraryService() {
                         }
                         Log.e("TAG-e", qList.map { it.tableId }.toString())
                     } else {
+                        var maxPriority = qList.maxOfOrNull { it.priority } ?: 0
                         qList.forEachIndexed { index, musicItem ->
                             musicItem.tableId = index.toLong() + 1
                             if (musicItem.priority == 0) {
@@ -2223,9 +2278,9 @@ class PlayService : MediaLibraryService() {
                     currentIndex = index
                 }
             }
-            exoPlayer.setMediaItems(t1)
-            exoPlayer.shuffleOrder = NoShuffleOrder(musicQueue.size)
+            exoPlayer.shuffleOrder = NoShuffleOrder(0)
             exoPlayer.shuffleModeEnabled = SharedPreferencesUtils.getEnableShuffle(this@PlayService)
+            exoPlayer.setMediaItems(t1)
             if (currentPlayTrack != null) {
                 position = SharedPreferencesUtils.getCurrentPosition(this@PlayService)
                 if (position >= (currentPlayTrack?.duration ?: 0)) {
