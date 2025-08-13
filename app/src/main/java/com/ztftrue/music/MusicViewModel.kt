@@ -678,11 +678,12 @@ class MusicViewModel : ViewModel() {
     }
 
     @OptIn(UnstableApi::class)
-    fun playShuffled(startItem: MusicItem?, playListType: PlayListType, playListId: Long) {
+    fun playShuffled(playListType: PlayListType, playListId: Long) {
         val browser = this.browser ?: return
         val args = Bundle().apply {
             putBoolean("queue", false)
             putBoolean("enable", true)
+            putBoolean("autoPlay", true)
             putString("playListType", playListType.name)
             putLong("playListId", playListId)
         }

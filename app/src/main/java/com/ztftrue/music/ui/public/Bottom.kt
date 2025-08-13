@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -86,12 +87,12 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
                     )
 
                     val windowInfo = LocalWindowInfo.current
-                    val containerWidth = windowInfo.containerSize.width
-
+                    val density = LocalDensity.current
+                    val containerWidthDp = with(density) { windowInfo.containerSize.width.toDp() }
                     Column(
                         Modifier
                             .padding(start = 5.dp, end = 5.dp, top = 5.dp, bottom = 5.dp)
-                            .width((containerWidth - 220).dp)
+                            .width((containerWidthDp - 220.dp))
                     ) {
                         Text(
                             text = currentMusic?.name ?: "",

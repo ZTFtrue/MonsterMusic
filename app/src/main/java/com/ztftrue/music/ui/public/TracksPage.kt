@@ -71,7 +71,6 @@ import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.MediaItemUtils
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_CHANGE_PLAYLIST
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_GET_PLAY_LIST_ITEM
 import com.ztftrue.music.play.PlayService.Companion.COMMAND_SORT_TRACKS
 import com.ztftrue.music.play.PlayUtils
@@ -889,26 +888,27 @@ fun TracksListPage(
                             }
                             IconButton(onClick = {
                                 musicViewModel.enableShuffleModel.value = true
-                                val bundle = Bundle()
-                                musicViewModel.playListCurrent.value = musicPlayList.value
-                                musicViewModel.musicQueue.clear()
-                                musicViewModel.browser?.pause()
-                                musicViewModel.browser?.clearMediaItems()
-                                musicViewModel.browser?.shuffleModeEnabled = true
-                                musicViewModel.browser?.playWhenReady = false
-                                val mediaItems =
-                                    tracksList.map { MediaItemUtils.musicItemToMediaItem(it) }
-                                musicViewModel.browser?.addMediaItems(mediaItems)
-                                musicViewModel.browser?.playWhenReady = true
-                                musicViewModel.browser?.prepare()
+                                musicViewModel.playShuffled(  mListPlay.type, mListPlay.id)
+//                                val bundle = Bundle()
+//                                musicViewModel.playListCurrent.value = musicPlayList.value
+//                                musicViewModel.musicQueue.clear()
+//                                musicViewModel.browser?.pause()
+//                                musicViewModel.browser?.clearMediaItems()
+//                                musicViewModel.browser?.shuffleModeEnabled = true
+//                                musicViewModel.browser?.playWhenReady = false
+//                                val mediaItems =
+//                                    tracksList.map { MediaItemUtils.musicItemToMediaItem(it) }
+//                                musicViewModel.browser?.addMediaItems(mediaItems)
+//                                musicViewModel.browser?.playWhenReady = true
+//                                musicViewModel.browser?.prepare()
 //                            bundle.putParcelableArrayList("musicItems", ArrayList(musicList))
 //                            bundle.putInt("index", index)
 //                                bundle.putBoolean("switch_queue", true)
-                                bundle.putParcelable("playList", musicPlayList.value)
-                                musicViewModel.browser?.sendCustomCommand(
-                                    COMMAND_CHANGE_PLAYLIST,
-                                    bundle
-                                )
+//                                bundle.putParcelable("playList", musicPlayList.value)
+//                                musicViewModel.browser?.sendCustomCommand(
+//                                    COMMAND_CHANGE_PLAYLIST,
+//                                    bundle
+//                                )
 //                                musicViewModel.mediaBrowser?.sendCustomAction(
 //                                    ACTION_SHUFFLE_PLAY_QUEUE,
 //                                    bundle,

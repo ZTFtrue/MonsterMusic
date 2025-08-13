@@ -268,30 +268,61 @@ class PlayService : MediaLibraryService() {
                     val enable = args.getBoolean("enable")
                     if (enable) {
                         val isQueue = args.getBoolean("queue")
+                        val autoPlay = args.getBoolean("autoPlay")
                         val newMusicItems: ArrayList<MusicItem>? =
                             if (isQueue) {
                                 musicQueue
                             } else {
                                 val playListType = args.getString("playListType", "")
                                 val playListId = args.getLong("playListId", 0L)
+                                var result: ArrayList<MusicItem>? = null
                                 if (playListType.isNullOrEmpty() || playListId == 0L) {
                                     return Futures.immediateFuture(SessionResult(SessionError.ERROR_BAD_VALUE))
                                 }
                                 if (playListType == PlayListType.Songs.name) {
-                                    ArrayList(tracksLinkedHashMap.values)
+                                    result = ArrayList(tracksLinkedHashMap.values)
                                 } else if (playListType == PlayListType.PlayLists.name) {
-                                    ArrayList<MusicItem>(playListTracksHashMap[playListId])
+                                    val playList = playListTracksHashMap[playListId]
+                                    if (playList != null) {
+                                        result = ArrayList(playList)
+                                    } else {
+                                        null
+                                    }
                                 } else if (playListType == PlayListType.Albums.name) {
-                                    ArrayList(albumsListTracksHashMap[playListId])
+                                    val playList = albumsListTracksHashMap[playListId]
+                                    if (playList != null) {
+                                        result = ArrayList(playList)
+                                    } else {
+                                        null
+                                    }
                                 } else if (playListType == PlayListType.Artists.name) {
-                                    ArrayList(artistsListTracksHashMap[playListId])
+                                    val playList = artistsListTracksHashMap[playListId]
+                                    if (playList != null) {
+                                        result = ArrayList(playList)
+                                    } else {
+                                        null
+                                    }
                                 } else if (playListType == PlayListType.Genres.name) {
-                                    ArrayList(genresListTracksHashMap[playListId])
+                                    val playList = genresListTracksHashMap[playListId]
+                                    if (playList != null) {
+                                        result = ArrayList(playList)
+                                    } else {
+                                        null
+                                    }
                                 } else if (playListType == PlayListType.Folders.name) {
-                                    ArrayList(foldersListTracksHashMap[playListId]?.values)
-                                }else{
-                                    ArrayList()
+                                    val playList = foldersListTracksHashMap[playListId]?.values
+                                    if (playList != null) {
+                                        result = ArrayList(playList)
+                                    } else {
+                                        null
+                                    }
+                                } else {
+                                    null
                                 }
+                                result?.forEachIndexed { index, musicItem ->
+                                    musicItem.tableId = index.toLong() + 1
+                                }
+                                result
                             }
                         val startMediaId: Long? = args.getLong(KEY_START_MEDIA_ID)
                         if (newMusicItems.isNullOrEmpty()) {
@@ -305,13 +336,14 @@ class PlayService : MediaLibraryService() {
                             } else {
                                 0
                             }
-                            val needPlay = currentPlayer.isPlaying
+                            val needPlay = currentPlayer.isPlaying || autoPlay
                             val autoToTopEnabled =
                                 SharedPreferencesUtils.getAutoToTopRandom(this@PlayService)
-                            val currentMusicItem = newMusicItems.find { it.id == startMediaId }
-                                ?: newMusicItems.first()
+                            val currentMusicItem: MusicItem? =
+                                newMusicItems.find { it.id == startMediaId }
+
                             var finalShuffledQueue: List<MusicItem>
-                            if (autoToTopEnabled) {
+                            if (autoToTopEnabled && currentMusicItem != null) {
                                 val otherItems =
                                     newMusicItems.filter { it.id != currentMusicItem.id }
                                 val shuffledOtherItems = otherItems.shuffled()
@@ -328,8 +360,12 @@ class PlayService : MediaLibraryService() {
                             val newMediaItems =
                                 finalShuffledQueue.map { MediaItemUtils.musicItemToMediaItem(it) }
                             val newStartIndex =
-                                finalShuffledQueue.indexOfFirst { it.id == currentMusicItem.id }
-                                    .let { if (it == -1) 0 else it }
+                                if (currentMusicItem != null) {
+                                    finalShuffledQueue.indexOfFirst { it.id == currentMusicItem.id }
+                                        .let { if (it == -1) 0 else it }
+                                } else {
+                                    0
+                                }
                             currentPlayer.shuffleModeEnabled = true
                             currentPlayer.setMediaItems(
                                 newMediaItems,
@@ -1750,7 +1786,6 @@ class PlayService : MediaLibraryService() {
         val COMMAND_SMART_SHUFFLE = SessionCommand("queue.SMART_SHUFFLE", Bundle.EMPTY)
 
         // Key for the new playlist
-        const val KEY_MEDIA_ITEM_LIST = "key_media_item_list"
 
         // Key for the item to start playing from
         const val KEY_START_MEDIA_ID = "key_start_media_id"
