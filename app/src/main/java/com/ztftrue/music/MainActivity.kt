@@ -954,6 +954,8 @@ class MainActivity : ComponentActivity() {
                     Log.e("Client", "Failed to toggle favorite status", e)
                 }
             }, ContextCompat.getMainExecutor(this@MainActivity))
+            musicViewModel.currentMusicCover.value=null
+            musicViewModel.currentCaptionList.clear()
             musicViewModel.currentPlay.value =
                 musicViewModel.musicQueue[player.currentMediaItemIndex]
         } else {
