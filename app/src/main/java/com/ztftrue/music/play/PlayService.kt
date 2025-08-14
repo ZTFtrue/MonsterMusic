@@ -354,9 +354,9 @@ class PlayService : MediaLibraryService() {
                             } else {
                                 finalShuffledQueue = newMusicItems.shuffled()
                             }
-                            finalShuffledQueue.forEachIndexed { index, item ->
-                                item.priority = index + 1
-                            }
+//                            finalShuffledQueue.forEachIndexed { index, item ->
+//                                item.priority = index + 1
+//                            }
                             val newMediaItems =
                                 finalShuffledQueue.map { MediaItemUtils.musicItemToMediaItem(it) }
                             val newStartIndex =
@@ -1297,13 +1297,11 @@ class PlayService : MediaLibraryService() {
                     enableFloatOutput: Boolean,
                     enableAudioTrackPlaybackParams: Boolean,
                 ): AudioSink {
-//                    sonicAudioProcessor.setPitch(0.9f)
                     val au = DefaultAudioSink.Builder(context)
                         .setEnableFloatOutput(enableFloatOutput)
                         .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
                         .setAudioProcessors(
                             arrayOf(
-//                                sonicAudioProcessor,
                                 equalizerAudioProcessor,
                             )
                         )
@@ -1390,7 +1388,6 @@ class PlayService : MediaLibraryService() {
                                 musicItem.tableId = maxTableId
                             }
                         }
-                        Log.e("TAG-e", qList.map { it.tableId }.toString())
                     } else {
                         var maxPriority = qList.maxOfOrNull { it.priority } ?: 0
                         qList.forEachIndexed { index, musicItem ->
@@ -1400,23 +1397,10 @@ class PlayService : MediaLibraryService() {
                                 musicItem.priority = maxPriority
                             }
                         }
-                        Log.e("TAG-d", qList.map { it.tableId }.toString())
                     }
                     val l1 = musicQueue.sortedBy {
                         it.tableId
                     }
-//                    mControllerInfo?.let {
-//                        mediaSession?.sendCustomCommand(
-//                            it,
-//                            COMMAND_TIME_LINE_CHANGED,
-//                            Bundle().apply {
-//                                putParcelableArrayList(
-//                                    "queue",
-//                                    ArrayList(musicQueue)
-//                                )
-//                            }
-//                        )
-//                    }
                     if (!PlayUtils.areQueuesContentAndOrderEqual(l1, qList)) {
                         musicQueue.clear()
                         musicQueue.addAll(qList)
