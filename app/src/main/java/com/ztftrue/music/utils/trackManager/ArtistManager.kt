@@ -2,7 +2,6 @@ package com.ztftrue.music.utils.trackManager
 
 import android.content.ContentResolver
 import android.content.Context
-import android.os.Bundle
 import android.provider.MediaStore
 import com.ztftrue.music.utils.model.ArtistList
 

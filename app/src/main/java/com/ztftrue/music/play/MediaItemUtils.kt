@@ -198,8 +198,6 @@ object MediaItemUtils {
 
     fun musicItemToMediaMetadata(musicItem: MusicItem): MediaMetadata {
         val metadataBuilder = MediaMetadata.Builder()
-
-        // --- 1. 设置所有可用的标准元数据字段 ---
         metadataBuilder
             .setTitle(musicItem.name)
             .setArtist(musicItem.artist)

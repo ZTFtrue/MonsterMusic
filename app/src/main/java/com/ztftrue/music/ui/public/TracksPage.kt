@@ -70,9 +70,8 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
+import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.play.MediaItemUtils
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_GET_PLAY_LIST_ITEM
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_SORT_TRACKS
 import com.ztftrue.music.play.PlayUtils
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.dao.SortFiledDao
@@ -375,10 +374,9 @@ fun TracksListPage(
                                 "type",
                                 type.name + "@Tracks"
                             )
-                            COMMAND_SORT_TRACKS
                             val futureResult: ListenableFuture<SessionResult>? =
                                 musicViewModel.browser?.sendCustomCommand(
-                                    COMMAND_SORT_TRACKS,
+                                    MediaCommands.COMMAND_SORT_TRACKS,
                                     bundle
                                 )
                             futureResult?.addListener({
@@ -761,7 +759,7 @@ fun TracksListPage(
 
         val futureResultItem: ListenableFuture<SessionResult>? =
             musicViewModel.browser?.sendCustomCommand(
-                COMMAND_GET_PLAY_LIST_ITEM,
+                MediaCommands.COMMAND_GET_PLAY_LIST_ITEM,
                 Bundle().apply {
                     putString("type", type.name)
                     putLong("id", id)

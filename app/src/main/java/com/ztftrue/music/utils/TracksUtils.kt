@@ -8,9 +8,7 @@ import android.widget.Toast
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.media3.session.MediaBrowser
 import com.ztftrue.music.MusicViewModel
-import com.ztftrue.music.play.PlayService
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_SORT_QUEUE
+import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.SortFiledData
@@ -34,46 +32,7 @@ object TracksUtils {
         val bundle = Bundle()
         bundle.putInt("index", currentIndex)
         bundle.putInt("targetIndex", targetIndex)
-        musicViewModel.browser?.sendCustomCommand(COMMAND_SORT_QUEUE, bundle)
-        //
-//            val index = extras.getInt("index")
-//            val targetIndex = extras.getInt("targetIndex")
-//            val m = musicQueue.removeAt(index)
-//            musicQueue.add(targetIndex, m)
-//
-//            val currentPlayIndex = exoPlayer.currentMediaItemIndex
-//            val currentPosition = exoPlayer.currentPosition
-//            if (currentPlayIndex == index) {
-//                exoPlayer.pause()
-//            }
-//            val im = exoPlayer.getMediaItemAt(index)
-//            exoPlayer.removeMediaItem(index)
-//            exoPlayer.addMediaItem(targetIndex, im)
-//            if (currentPlayIndex == index) {
-//                exoPlayer.seekTo(targetIndex, currentPosition)
-//                exoPlayer.play()
-//            }
-//            val start = FastMath.min(index, targetIndex)
-//            val end = FastMath.max(index, targetIndex)
-//            if (SharedPreferencesUtils.getEnableShuffle(this@PlayService)) {
-//                val changedQueueArray = ArrayList<MusicItem>(end - start + 1)
-//                for (i in start..end) {
-//                    musicQueue[i].priority = i + 1
-//                    changedQueueArray.add(musicQueue[i])
-//                }
-//                CoroutineScope(Dispatchers.IO).launch {
-//                    db.QueueDao().updateList(changedQueueArray)
-//                }
-//            } else {
-//                val changedQueueArray = ArrayList<MusicItem>(end - start + 1)
-//                for (i in start..end) {
-//                    musicQueue[i].tableId = i.toLong() + 1
-//                    changedQueueArray.add(musicQueue[i])
-//                }
-//                CoroutineScope(Dispatchers.IO).launch {
-//                    db.QueueDao().updateList(changedQueueArray)
-//                }
-//            }
+        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_SORT_QUEUE, bundle)
     }
 
     fun sortPlayLists(
@@ -140,7 +99,7 @@ object TracksUtils {
                             ) {
                                 lifecycleScope.launch(Dispatchers.Main) {
                                     mediaBrowserCompat.sendCustomCommand(
-                                        COMMAND_PlAY_LIST_CHANGE,
+                                        MediaCommands.COMMAND_PlAY_LIST_CHANGE,
                                         Bundle().apply {},
                                     )
                                 }

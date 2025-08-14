@@ -645,6 +645,7 @@ public class ID3v24Tag extends AbstractID3v2Tag
      * @throws TagException
      * @deprecated use {@link #ID3v24Tag(ByteBuffer,String)} instead
      */
+    @Deprecated
     public ID3v24Tag(ByteBuffer buffer) throws TagException
     {
         this(buffer, "");

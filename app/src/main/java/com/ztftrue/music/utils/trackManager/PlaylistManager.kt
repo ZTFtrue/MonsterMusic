@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Bundle
 import android.os.Environment
 import android.os.Process
 import android.provider.MediaStore
@@ -34,7 +33,6 @@ object PlaylistManager {
         sortFiled: String?,
         sortMethod: String?
     ): List<MusicPlayList> {
-        val playlistFiles = mutableListOf<MusicPlayList>()
         val map: HashMap<Long, ArrayList<MusicItem>> = HashMap()
         val collection =
             MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL)

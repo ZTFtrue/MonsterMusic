@@ -335,6 +335,7 @@ public class MetadataBlockDataPicture implements MetadataBlockData, TagField
      * @deprecated As for now is of no use. Implementations should use another
      *             way of setting this property.
      */
+    @Deprecated
     public void isBinary(boolean b)
     {
         //Do nothing, always true

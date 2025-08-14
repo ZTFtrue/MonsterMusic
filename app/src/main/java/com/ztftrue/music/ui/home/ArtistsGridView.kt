@@ -1,7 +1,6 @@
 package com.ztftrue.music.ui.home
 
 import android.util.Log
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -51,6 +50,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -148,8 +148,9 @@ fun ArtistsGridView(
         ScrollDirectionType.GRID_HORIZONTAL -> {
             val rowListSate = rememberLazyListState()
             val windowInfo = LocalWindowInfo.current
-            val containerWidth = windowInfo.containerSize.width
-            val width = (containerWidth - 10 - 10 - 10 - 5) / 2.5
+            val density = LocalDensity.current
+            val containerWidthDp = with(density) { windowInfo.containerSize.width.toDp() }
+            val width = (containerWidthDp) / 2.8f
             LazyRow(
                 contentPadding = PaddingValues(5.dp),
                 state = rowListSate,
@@ -163,7 +164,7 @@ fun ArtistsGridView(
                         modifier = Modifier
                             .padding(5.dp)
                             .fillMaxSize()
-                            .width(width.dp)
+                            .width(width)
                     ) {
                         ArtistItemView(
                             item,
@@ -204,7 +205,6 @@ fun ArtistsGridView(
 }
 
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ArtistItemView(
     item: ArtistList,

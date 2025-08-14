@@ -23,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -33,7 +32,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -79,11 +77,9 @@ fun SearchPage(
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     val windowInfo = LocalWindowInfo.current
-    val containerWidth = windowInfo.containerSize.width
-    // Calculate item width for horizontal scrollable grids (albums, artists)
-    val width = (containerWidth / 2.5) + 70
-    val rootView = LocalView.current
-    val localViewHeight by remember { mutableIntStateOf(rootView.height) }
+    val density = LocalDensity.current
+    val containerWidthDp = with(density) { windowInfo.containerSize.width.toDp() }
+    val width = (containerWidthDp) / 2.5f + 10.dp + 75.dp
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
@@ -199,7 +195,6 @@ fun SearchPage(
                     )
                 }
             } else if (hasResults) {
-                var height = localViewHeight
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -211,22 +206,21 @@ fun SearchPage(
                             mutableStateOf(true)
                         }
                     ) {
-                        if ( searchScreenViewModel._albumsList.isNotEmpty()) {
-                            height -= width.toInt()
+                        if (searchScreenViewModel._albumsList.isNotEmpty()) {
                             Text(
                                 text = stringResource(R.string.album, ""),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Box(
                                 modifier = Modifier
-                                    .height(width.dp)
+                                    .height(width)
                                     .background(MaterialTheme.colorScheme.secondary)
                                     .fillMaxWidth()
                             ) {
                                 AlbumGridView(
                                     musicViewModel = musicViewModel,
                                     navController = navController,
-                                    albumListDefault =  searchScreenViewModel._albumsList,
+                                    albumListDefault = searchScreenViewModel._albumsList,
                                     scrollDirection = ScrollDirectionType.GRID_HORIZONTAL
                                 )
                             }
@@ -239,21 +233,20 @@ fun SearchPage(
                             )
                         }
                         if (searchScreenViewModel._artistList.isNotEmpty()) {
-                            height -= width.toInt()
                             Text(
                                 text = stringResource(R.string.artist, ""),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Box(
                                 modifier = Modifier
-                                    .height(width.dp)
+                                    .height(width)
                                     .background(MaterialTheme.colorScheme.secondary)
                                     .fillMaxWidth()
                             ) {
                                 ArtistsGridView(
                                     musicViewModel = musicViewModel,
                                     navController = navController,
-                                    artistListDefault =  searchScreenViewModel._artistList,
+                                    artistListDefault = searchScreenViewModel._artistList,
                                     scrollDirection = ScrollDirectionType.GRID_HORIZONTAL
                                 )
                             }

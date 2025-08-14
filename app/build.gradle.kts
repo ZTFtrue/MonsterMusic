@@ -18,7 +18,11 @@ android {
     }
     namespace = "com.ztftrue.music"
     compileSdk = 36
-
+    bundle {
+        language {
+            enableSplit = false // don't split language, for google play app bundle
+        }
+    }
     defaultConfig {
         applicationId = "com.ztftrue.music"
         minSdk = 30
@@ -106,7 +110,7 @@ ksp {
 }
 dependencies {
 
-    implementation("androidx.core:core-ktx:1.16.0")
+    implementation("androidx.core:core-ktx:1.17.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.2")
@@ -126,8 +130,8 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
-    implementation("androidx.compose.material3:material3:1.4.0-beta01")
-    implementation("androidx.compose.material3:material3-window-size-class:1.4.0-beta01")
+    implementation("androidx.compose.material3:material3:1.4.0-beta02")
+    implementation("androidx.compose.material3:material3-window-size-class:1.4.0-beta02")
 
     // splash
     implementation("androidx.core:core-splashscreen:1.0.1")
@@ -136,19 +140,19 @@ dependencies {
     // load image
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("androidx.browser:browser:1.9.0")
-    implementation("androidx.compose.runtime:runtime-livedata:1.8.3")
+    implementation("androidx.compose.runtime:runtime-livedata:1.9.0")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2025.07.00"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2025.08.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
 
     implementation("androidx.collection:collection-ktx:1.5.0")
-    implementation("androidx.fragment:fragment-ktx:1.8.8")
+    implementation("androidx.fragment:fragment-ktx:1.8.9")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.2")
     implementation("androidx.palette:palette-ktx:1.0.0")
 

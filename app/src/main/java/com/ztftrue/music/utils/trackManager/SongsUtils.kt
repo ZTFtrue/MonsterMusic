@@ -15,7 +15,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
+import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.model.MusicPlayList
 import java.io.File
@@ -108,7 +108,7 @@ object SongsUtils {
     fun refreshPlaylist(musicViewModel: MusicViewModel) {
         val futureResult: ListenableFuture<SessionResult>? =
             musicViewModel.browser?.sendCustomCommand(
-                COMMAND_PlAY_LIST_CHANGE,
+                MediaCommands.COMMAND_PlAY_LIST_CHANGE,
                 Bundle().apply {
 
                 },

@@ -111,7 +111,5 @@ object SoundUtils {
         newBuffer.put(oldBuffer) // 复制内容
         return newBuffer
     }
-    fun dealSound(){
 
-    }
 }

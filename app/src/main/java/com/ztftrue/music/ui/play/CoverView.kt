@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.os.Bundle
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -49,16 +48,13 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.rememberAsyncImagePainter
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_VISUALIZATION_CONNECTED
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_VISUALIZATION_DISCONNECTED
+import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.ui.play.Drop.Companion.generateRandomChars
 import kotlinx.coroutines.delay
 import org.jaudiotagger.tag.FieldKey
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 fun CoverView(musicViewModel: MusicViewModel) {
     val listState = rememberLazyListState()
     var coverPaint by remember { mutableStateOf<Bitmap?>(null) }
@@ -126,14 +122,15 @@ fun CoverView(musicViewModel: MusicViewModel) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_START -> {
-                    musicViewModel.browser?.sendCustomCommand(COMMAND_VISUALIZATION_CONNECTED,
+                    musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_VISUALIZATION_CONNECTED,
                         Bundle()
                     )
                     shouldRun = true
                 }
 
                 Lifecycle.Event.ON_STOP -> {
-                    musicViewModel.browser?.sendCustomCommand(COMMAND_VISUALIZATION_DISCONNECTED,
+                    musicViewModel.browser?.sendCustomCommand(
+                        MediaCommands.COMMAND_VISUALIZATION_DISCONNECTED,
                         Bundle()
                     )
                     shouldRun = false

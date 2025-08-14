@@ -56,11 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_CHANGE_Q
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_DSP_ENABLE
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_DSP_FLATTEN
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_DSP_SET_BAND
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_DSP_SET_BANDS
+import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.equalizerMax
@@ -76,7 +72,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
     val context = LocalContext.current
     val minEQLevel = remember { equalizerMin }
     val maxEQLevel = remember { equalizerMax }
-    val equalizerQ = remember { mutableFloatStateOf(musicViewModel.Q.floatValue) }
+    val equalizerQ = remember { mutableFloatStateOf(musicViewModel.equalizerQ.floatValue) }
     val tempBandValue = ArrayList<MutableFloatState>(Utils.bandsCenter.size)
     bands.forEach { band ->
         val bandValue = remember { mutableFloatStateOf(band.value.toFloat()) }
@@ -148,7 +144,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                 val bundle = Bundle()
                                 bundle.putBoolean("enable", it)
                                 musicViewModel.browser?.sendCustomCommand(
-                                    COMMAND_DSP_ENABLE,
+                                    MediaCommands.COMMAND_DSP_ENABLE,
                                     bundle
                                 )
                             },
@@ -164,7 +160,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                             enabled = musicViewModel.enableEqualizer.value,
                             onClick = {
                                 musicViewModel.browser?.sendCustomCommand(
-                                    COMMAND_DSP_FLATTEN,
+                                    MediaCommands.COMMAND_DSP_FLATTEN,
                                     Bundle().apply {
                                         putInt("value", 0)
                                     })
@@ -235,7 +231,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                     ).edit { putString("SelectedPreset", Utils.custom) }
                                     band.value = tempBandValue[index].floatValue.roundToInt()
                                     musicViewModel.browser?.sendCustomCommand(
-                                        COMMAND_DSP_SET_BAND,
+                                        MediaCommands.COMMAND_DSP_SET_BAND,
                                         Bundle().apply {
                                             putInt("index", index)
                                             putInt(
@@ -347,7 +343,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                         bands[i] = EqualizerBand(bands[i].id, bands[i].name, v)
                                     }
                                     musicViewModel.browser?.sendCustomCommand(
-                                        COMMAND_DSP_SET_BANDS,
+                                        MediaCommands.COMMAND_DSP_SET_BANDS,
                                         Bundle().apply {
                                             putIntArray(
                                                 "value",
@@ -380,11 +376,11 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                         enabled = musicViewModel.enableEqualizer.value,
                         modifier = Modifier.padding(0.dp),
                         onClick = {
-                            musicViewModel.Q.floatValue = Utils.Q
+                            musicViewModel.equalizerQ.floatValue = Utils.Q
                             equalizerQ.floatValue = Utils.Q
                             val bundle = Bundle()
-                            bundle.putFloat("Q", musicViewModel.Q.floatValue)
-                            musicViewModel.browser?.sendCustomCommand(COMMAND_CHANGE_Q, bundle)
+                            bundle.putFloat("Q", musicViewModel.equalizerQ.floatValue)
+                            musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_CHANGE_Q, bundle)
                         },
                     ) {
                         Text(
@@ -406,10 +402,10 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     valueRange = 0.7f..4.3f,
                     steps = 36,
                     onValueChangeFinished = {
-                        musicViewModel.Q.floatValue = equalizerQ.floatValue
+                        musicViewModel.equalizerQ.floatValue = equalizerQ.floatValue
                         val bundle = Bundle()
-                        bundle.putFloat("Q", musicViewModel.Q.floatValue)
-                        musicViewModel.browser?.sendCustomCommand(COMMAND_CHANGE_Q, bundle)
+                        bundle.putFloat("Q", musicViewModel.equalizerQ.floatValue)
+                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_CHANGE_Q, bundle)
                     },
                 )
                 if (equalizerQ.floatValue < 2.0f) {

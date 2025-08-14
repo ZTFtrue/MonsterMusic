@@ -3,7 +3,6 @@ package com.ztftrue.music.ui.home
 import android.content.Context
 import android.util.Log
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
@@ -46,7 +45,6 @@ import com.ztftrue.music.utils.PlayListType
 import kotlinx.coroutines.launch
 
 @androidx.annotation.OptIn(UnstableApi::class)
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainView(
     musicViewModel: MusicViewModel,

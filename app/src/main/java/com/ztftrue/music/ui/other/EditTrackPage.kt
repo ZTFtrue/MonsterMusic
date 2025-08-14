@@ -62,7 +62,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACKS_UPDATE
+import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.utils.Utils
@@ -147,7 +147,7 @@ fun EditTrackPage(
             bundleTemp.putLong("id", musicId)
             val futureResult: ListenableFuture<SessionResult>? =
                 musicViewModel.browser?.sendCustomCommand(
-                    COMMAND_TRACKS_UPDATE,
+                    MediaCommands.COMMAND_TRACKS_UPDATE,
                     Bundle().apply {
                         bundleTemp
                     },

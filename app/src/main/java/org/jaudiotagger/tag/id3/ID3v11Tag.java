@@ -252,6 +252,7 @@ public class ID3v11Tag extends ID3v1Tag
      * @throws IOException
      * @deprecated use {@link #ID3v11Tag(RandomAccessFile,String)} instead
      */
+    @Deprecated
     public ID3v11Tag(RandomAccessFile file) throws TagNotFoundException, IOException
     {
         this(file, "");

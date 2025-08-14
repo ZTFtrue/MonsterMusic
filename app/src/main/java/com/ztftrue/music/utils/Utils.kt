@@ -32,9 +32,8 @@ import com.ztftrue.music.BuildConfig
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
+import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.play.MediaItemUtils
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_REFRESH_ALL
 import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.play.Lyrics
@@ -372,7 +371,7 @@ object Utils {
             val idPlayList = PlaylistManager.createPlaylist(context, name, tIds, removeDuplicate)
             if (idPlayList != null) {
                 musicViewModel.browser?.sendCustomCommand(
-                    COMMAND_PlAY_LIST_CHANGE,
+                    MediaCommands.COMMAND_PlAY_LIST_CHANGE,
                     Bundle().apply {},
                 )
             } else {
@@ -552,7 +551,7 @@ object Utils {
         musicViewModel.viewModelScope .launch(Dispatchers.Main) {
             val futureResult: ListenableFuture<SessionResult>? =
                 musicViewModel.browser?.sendCustomCommand(
-                    COMMAND_REFRESH_ALL,
+                    MediaCommands.COMMAND_REFRESH_ALL,
                     Bundle().apply { },
                 )
             futureResult?.addListener({

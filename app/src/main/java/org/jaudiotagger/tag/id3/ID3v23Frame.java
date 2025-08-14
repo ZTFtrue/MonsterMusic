@@ -309,6 +309,7 @@ public class ID3v23Frame extends AbstractID3v2Frame
      * @deprecated use {@link #ID3v23Frame(ByteBuffer,String)} instead
      * @throws org.jaudiotagger.tag.InvalidFrameException
      */
+    @Deprecated
     public ID3v23Frame(ByteBuffer byteBuffer) throws InvalidFrameException, InvalidDataTypeException
     {
         this(byteBuffer, "");

@@ -49,6 +49,7 @@ public class FrameBodyUnsupported extends AbstractID3v2FrameBody implements ID3v
     /**
      * @deprecated because no identifier set
      */
+    @Deprecated
     public FrameBodyUnsupported()
     {
 
@@ -81,6 +82,7 @@ public class FrameBodyUnsupported extends AbstractID3v2FrameBody implements ID3v
      * @param value
      * @deprecated because no identifier set
      */
+    @Deprecated
     public FrameBodyUnsupported(byte[] value)
     {
         setObjectValue(DataTypes.OBJ_DATA, value);
@@ -103,7 +105,7 @@ public class FrameBodyUnsupported extends AbstractID3v2FrameBody implements ID3v
      *
      * @param byteBuffer
      * @param frameSize
-     * @throws InvalidFrameException if unable to create framebody from buffer
+     * @throws InvalidTagException if unable to create framebody from buffer
      * @throws org.jaudiotagger.tag.InvalidTagException
      */
     public FrameBodyUnsupported(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException

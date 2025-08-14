@@ -53,7 +53,6 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -192,20 +191,14 @@ fun LyricsView(
     var popupOffset by remember {
         mutableStateOf(IntOffset(0, 0))
     }
-    var viewPosition by remember { mutableStateOf(Offset.Zero) }
 
-//    DisposableEffect(Unit) {
-//        onDispose {
-//
-//        }
-//    }
     LaunchedEffect(showMenu) {
         if (showMenu) {
             val list = musicViewModel.dictionaryAppList
             list.forEach {
                 if (it.autoGo) {
                     val intent = Intent()
-                    intent.setAction(Intent.ACTION_PROCESS_TEXT)
+                    intent.action = Intent.ACTION_PROCESS_TEXT
                     intent.setClassName(
                         it.packageName,
                         it.name
@@ -268,7 +261,7 @@ fun LyricsView(
                                 Button(
                                     onClick = {
                                         val intent = Intent()
-                                        intent.setAction(Intent.ACTION_PROCESS_TEXT)
+                                        intent.action = Intent.ACTION_PROCESS_TEXT
                                         intent.setClassName(
                                             resolveInfo.packageName,
                                             resolveInfo.name
@@ -343,6 +336,7 @@ fun LyricsView(
             LocalView.current,
             musicViewModel.dictionaryAppList,
             LocalFocusManager.current,
+            // TODO deprecated
             LocalClipboardManager.current
         )
         var longpress = false
@@ -357,9 +351,6 @@ fun LyricsView(
                 SelectionContainer(
                     modifier = Modifier
                         .onGloballyPositioned { coordinates ->
-                            // 获取视图在屏幕中的位置
-                            val positionInWindow = coordinates.positionInWindow()
-                            viewPosition = positionInWindow
                         }
                         .motionEventSpy {
                             when (it.action) {

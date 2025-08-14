@@ -3,7 +3,6 @@ package com.ztftrue.music
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -13,15 +12,8 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.RemoteViews
 import androidx.annotation.OptIn
-import androidx.core.content.ContextCompat
-import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaButtonReceiver
-import androidx.media3.session.MediaController
-import androidx.media3.session.SessionToken
-import androidx.media3.session.legacy.PlaybackStateCompat
-import com.google.common.util.concurrent.ListenableFuture
-import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils.getCover
 import java.io.File
@@ -93,7 +85,7 @@ class PlayMusicWidget : AppWidgetProvider() {
 //            val maxHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT)
 //            val density = context.resources?.displayMetrics?.density ?: 1f
 //            val columnCount = (minWidth / (60.dp.toPx(context)))
-            updateAppWidget(context, appWidgetManager, appWidgetId,)
+            updateAppWidget(context, appWidgetManager, appWidgetId)
         }
 
 //        val remoteViews = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -111,10 +103,10 @@ class PlayMusicWidget : AppWidgetProvider() {
 //        Log.d("PlayMusicWidget", "onAppWidgetOptionsChanged")
     }
 
-    override fun onRestored(context: Context?, oldWidgetIds: IntArray?, newWidgetIds: IntArray?) {
-        super.onRestored(context, oldWidgetIds, newWidgetIds)
-//        Log.d("PlayMusicWidget", "onRestored")
-    }
+//    override fun onRestored(context: Context?, oldWidgetIds: IntArray?, newWidgetIds: IntArray?) {
+//        super.onRestored(context, oldWidgetIds, newWidgetIds)
+////        Log.d("PlayMusicWidget", "onRestored")
+//    }
 
     @OptIn(UnstableApi::class)
     override fun onUpdate(

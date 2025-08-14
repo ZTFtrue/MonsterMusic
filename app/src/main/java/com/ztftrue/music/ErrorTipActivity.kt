@@ -95,7 +95,7 @@ class ErrorTipActivity : ComponentActivity() {
                     Button(
                         onClick = {
                             val intent = Intent(Intent.ACTION_SEND)
-                            intent.setType("text/plain")
+                            intent.type = "text/plain"
                             intent.putExtra(Intent.EXTRA_SUBJECT, "Crash report")
                             intent.putExtra(Intent.EXTRA_TEXT, errorMessage)
                             startActivity(

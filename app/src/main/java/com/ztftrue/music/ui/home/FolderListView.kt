@@ -3,7 +3,6 @@ package com.ztftrue.music.ui.home
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -142,7 +141,6 @@ fun FolderListView(
 }
 
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FolderItemView(
     item: FolderList,
@@ -222,7 +220,7 @@ fun FolderItemView(
             ) {
                 navController.navigate(
                     Router.PlayListView.withArgs("id" to "${item.id}", "itemType" to enumToStringForPlayListType(type)),
-                    navigatorExtras = ListParameter(item.id, type,)
+                    navigatorExtras = ListParameter(item.id, type)
                 )
             }, verticalAlignment = Alignment.CenterVertically
     ) {

@@ -101,7 +101,6 @@ import java.io.File
 @UnstableApi
 class PlayService : MediaLibraryService() {
 
-
     private var mediaSession: MediaLibrarySession? = null
     private var mControllerInfo: MediaSession.ControllerInfo? = null
     val equalizerAudioProcessor: EqualizerAudioProcessor = EqualizerAudioProcessor()
@@ -161,7 +160,6 @@ class PlayService : MediaLibraryService() {
         super.onCreate()
         initExo(this@PlayService)
         initializePlayerData()
-
         val contentIntent = Intent(this, MainActivity::class.java)
         val pendingContentIntent = PendingIntent.getActivity(
             this, 0, contentIntent,
@@ -196,38 +194,37 @@ class PlayService : MediaLibraryService() {
             val availableCommands =
                 MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS.buildUpon()
                     // 添加所有你定义的 SessionCommand
-                    .add(COMMAND_CHANGE_PITCH)
-                    .add(COMMAND_CHANGE_Q)
-                    .add(COMMAND_DSP_ENABLE)
-                    .add(COMMAND_ADD_TO_QUEUE)
-                    .add(COMMAND_DSP_SET_BAND)
-                    .add(COMMAND_DSP_FLATTEN)
-                    .add(COMMAND_DSP_SET_BANDS)
-                    .add(COMMAND_ECHO_ENABLE)
-                    .add(COMMAND_ECHO_SET_DELAY)
-                    .add(COMMAND_ECHO_SET_DECAY)
-                    .add(COMMAND_ECHO_SET_FEEDBACK)
-                    .add(COMMAND_SEARCH)
-                    .add(COMMAND_VISUALIZATION_ENABLE)
-                    .add(COMMAND_SET_SLEEP_TIMER)
-                    .add(COMMAND_VISUALIZATION_CONNECTED)
-                    .add(COMMAND_VISUALIZATION_DISCONNECTED)
-                    .add(COMMAND_GET_INITIALIZED_DATA)
-                    .add(COMMAND_APP_EXIT)
-                    .add(COMMAND_TRACKS_UPDATE)
-                    .add(COMMAND_REMOVE_FROM_QUEUE)
-                    .add(COMMAND_SORT_TRACKS)
-                    .add(COMMAND_CHANGE_PLAYLIST)
-                    .add(COMMAND_GET_CURRENT_PLAYLIST)
-                    .add(COMMAND_SMART_SHUFFLE)
-                    .add(COMMAND_SORT_QUEUE)
-                    .add(COMMAND_CLEAR_QUEUE)
-                    .add(COMMAND_GET_PLAY_LIST_ITEM)
-                    .add(COMMAND_REFRESH_ALL)
-                    .add(COMMAND_TRACK_DELETE)
-                    .add(COMMAND_PlAY_LIST_CHANGE)
-                    .add(COMMAND_SLEEP_STATE_UPDATE)
-                    .add(COMMAND_VISUALIZATION_DATA)
+                    .add(MediaCommands.COMMAND_CHANGE_PITCH)
+                    .add(MediaCommands.COMMAND_CHANGE_Q)
+                    .add(MediaCommands.COMMAND_DSP_ENABLE)
+                    .add(MediaCommands.COMMAND_ADD_TO_QUEUE)
+                    .add(MediaCommands.COMMAND_DSP_SET_BAND)
+                    .add(MediaCommands.COMMAND_DSP_FLATTEN)
+                    .add(MediaCommands.COMMAND_DSP_SET_BANDS)
+                    .add(MediaCommands.COMMAND_ECHO_ENABLE)
+                    .add(MediaCommands.COMMAND_ECHO_SET_DELAY)
+                    .add(MediaCommands.COMMAND_ECHO_SET_DECAY)
+                    .add(MediaCommands.COMMAND_ECHO_SET_FEEDBACK)
+                    .add(MediaCommands.COMMAND_SEARCH)
+                    .add(MediaCommands.COMMAND_VISUALIZATION_ENABLE)
+                    .add(MediaCommands.COMMAND_SET_SLEEP_TIMER)
+                    .add(MediaCommands.COMMAND_VISUALIZATION_CONNECTED)
+                    .add(MediaCommands.COMMAND_VISUALIZATION_DISCONNECTED)
+                    .add(MediaCommands.COMMAND_GET_INITIALIZED_DATA)
+                    .add(MediaCommands.COMMAND_APP_EXIT)
+                    .add(MediaCommands.COMMAND_TRACKS_UPDATE)
+                    .add(MediaCommands.COMMAND_REMOVE_FROM_QUEUE)
+                    .add(MediaCommands.COMMAND_SORT_TRACKS)
+                    .add(MediaCommands.COMMAND_CHANGE_PLAYLIST)
+                    .add(MediaCommands.COMMAND_GET_CURRENT_PLAYLIST)
+                    .add(MediaCommands.COMMAND_SMART_SHUFFLE)
+                    .add(MediaCommands.COMMAND_SORT_QUEUE)
+                    .add(MediaCommands.COMMAND_CLEAR_QUEUE)
+                    .add(MediaCommands.COMMAND_GET_PLAY_LIST_ITEM)
+                    .add(MediaCommands.COMMAND_REFRESH_ALL)
+                    .add(MediaCommands.COMMAND_TRACK_DELETE)
+                    .add(MediaCommands.COMMAND_PlAY_LIST_CHANGE)
+                    .add(MediaCommands.COMMAND_SLEEP_STATE_UPDATE)
                     .build()
 
             return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
@@ -244,7 +241,7 @@ class PlayService : MediaLibraryService() {
         ): ListenableFuture<SessionResult> {
             when (customCommand.customAction) {
                 // --- DSP & Effects ---
-                COMMAND_CHANGE_PITCH.customAction -> {
+                MediaCommands.COMMAND_CHANGE_PITCH.customAction -> {
                     val pitch = args.getFloat("pitch", 1f)
                     exoPlayer.playbackParameters = PlaybackParameters(
                         auxr.speed, pitch
@@ -255,7 +252,7 @@ class PlayService : MediaLibraryService() {
                     }
                 }
 
-                COMMAND_CHANGE_Q.customAction -> {
+                MediaCommands.COMMAND_CHANGE_Q.customAction -> {
                     val q = args.getFloat("Q", 3.2f)
                     equalizerAudioProcessor.setQ(q)
                     auxr.equalizerQ = q
@@ -264,7 +261,7 @@ class PlayService : MediaLibraryService() {
                     }
                 }
 
-                COMMAND_SMART_SHUFFLE.customAction -> {
+                MediaCommands.COMMAND_SMART_SHUFFLE.customAction -> {
                     val enable = args.getBoolean("enable")
                     if (enable) {
                         val isQueue = args.getBoolean("queue")
@@ -324,7 +321,7 @@ class PlayService : MediaLibraryService() {
                                 }
                                 result
                             }
-                        val startMediaId: Long? = args.getLong(KEY_START_MEDIA_ID)
+                        val startMediaId: Long? = args.getLong(MediaCommands.KEY_START_MEDIA_ID)
                         if (newMusicItems.isNullOrEmpty()) {
                             return Futures.immediateFuture(SessionResult(SessionError.ERROR_BAD_VALUE))
                         }
@@ -411,7 +408,7 @@ class PlayService : MediaLibraryService() {
                     return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }
 
-                COMMAND_DSP_ENABLE.customAction -> {
+                MediaCommands.COMMAND_DSP_ENABLE.customAction -> {
                     val enable = args.getBoolean("enable")
                     equalizerAudioProcessor.setEqualizerActive(enable)
                     auxr.equalizer = equalizerAudioProcessor.isSetActive()
@@ -420,13 +417,13 @@ class PlayService : MediaLibraryService() {
                     }
                 }
 
-                COMMAND_SORT_TRACKS.customAction -> {
+                MediaCommands.COMMAND_SORT_TRACKS.customAction -> {
                     val future = SettableFuture.create<SessionResult>()
                     sortAction(args, future)
                     return future
                 }
 
-                COMMAND_GET_PLAY_LIST_ITEM.customAction -> {
+                MediaCommands.COMMAND_GET_PLAY_LIST_ITEM.customAction -> {
                     val future = SettableFuture.create<SessionResult>()
                     val type = args.getString("type")
                     val id = args.getLong("id")
@@ -480,7 +477,7 @@ class PlayService : MediaLibraryService() {
                     return future
                 }
 
-                COMMAND_SORT_QUEUE.customAction -> {
+                MediaCommands.COMMAND_SORT_QUEUE.customAction -> {
                     val index = args.getInt("index", 0)
                     val targetIndex = args.getInt("targetIndex", 0)
                     if (index == targetIndex) {
@@ -552,15 +549,15 @@ class PlayService : MediaLibraryService() {
 //                    )
                 }
 
-                COMMAND_DSP_SET_BAND.customAction -> {
-                    val index = args.getInt(KEY_INDEX)
-                    val value = args.getInt(KEY_VALUE)
+                MediaCommands.COMMAND_DSP_SET_BAND.customAction -> {
+                    val index = args.getInt(MediaCommands.KEY_INDEX)
+                    val value = args.getInt(MediaCommands.KEY_VALUE)
                     equalizerAudioProcessor.setBand(index, value)
                     auxr.equalizerBand[index] = value
                     CoroutineScope(Dispatchers.IO).launch { db.AuxDao().update(auxr) }
                 }
 
-                COMMAND_DSP_FLATTEN.customAction -> {
+                MediaCommands.COMMAND_DSP_FLATTEN.customAction -> {
                     if (equalizerAudioProcessor.flatBand()) {
                         repeat(auxr.equalizerBand.size) {
                             auxr.equalizerBand[it] = 0
@@ -577,71 +574,71 @@ class PlayService : MediaLibraryService() {
                     }
                 }
 
-                COMMAND_DSP_SET_BANDS.customAction -> {
+                MediaCommands.COMMAND_DSP_SET_BANDS.customAction -> {
                     args.getIntArray("value")?.forEachIndexed { index, v ->
                         equalizerAudioProcessor.setBand(index, v)
                     }
                 }
 
-                COMMAND_ECHO_ENABLE.customAction -> {
-                    val enable = args.getBoolean(KEY_ENABLE)
+                MediaCommands.COMMAND_ECHO_ENABLE.customAction -> {
+                    val enable = args.getBoolean(MediaCommands.KEY_ENABLE)
                     equalizerAudioProcessor.setEchoActive(enable)
                     auxr.echo = enable
                     CoroutineScope(Dispatchers.IO).launch { db.AuxDao().update(auxr) }
                 }
 
-                COMMAND_ECHO_SET_DELAY.customAction -> {
-                    val delay = args.getFloat(KEY_DELAY)
+                MediaCommands.COMMAND_ECHO_SET_DELAY.customAction -> {
+                    val delay = args.getFloat(MediaCommands.KEY_DELAY)
                     equalizerAudioProcessor.setDaleyTime(delay)
                     auxr.echoDelay = delay
                     CoroutineScope(Dispatchers.IO).launch { db.AuxDao().update(auxr) }
                 }
 
-                COMMAND_ECHO_SET_DECAY.customAction -> {
-                    val decay = args.getFloat(KEY_DECAY)
+                MediaCommands.COMMAND_ECHO_SET_DECAY.customAction -> {
+                    val decay = args.getFloat(MediaCommands.KEY_DECAY)
                     equalizerAudioProcessor.setDecay(decay)
                     auxr.echoDecay = decay
                     CoroutineScope(Dispatchers.IO).launch { db.AuxDao().update(auxr) }
                 }
 
-                COMMAND_ECHO_SET_FEEDBACK.customAction -> {
-                    val enable = args.getBoolean(KEY_ENABLE)
+                MediaCommands.COMMAND_ECHO_SET_FEEDBACK.customAction -> {
+                    val enable = args.getBoolean(MediaCommands.KEY_ENABLE)
                     equalizerAudioProcessor.setFeedBack(enable)
                     auxr.echoRevert = enable
                     CoroutineScope(Dispatchers.IO).launch { db.AuxDao().update(auxr) }
                 }
 
                 // --- Visualization ---
-                COMMAND_VISUALIZATION_ENABLE.customAction -> {
-                    val enable = args.getBoolean(KEY_ENABLE)
+                MediaCommands.COMMAND_VISUALIZATION_ENABLE.customAction -> {
+                    val enable = args.getBoolean(MediaCommands.KEY_ENABLE)
                     musicVisualizationEnable = enable
                     equalizerAudioProcessor.setVisualizationAudioActive(enable)
                     SharedPreferencesUtils.saveEnableMusicVisualization(this@PlayService, enable)
                 }
 
-                COMMAND_VISUALIZATION_CONNECTED.customAction -> {
+                MediaCommands.COMMAND_VISUALIZATION_CONNECTED.customAction -> {
                     if (musicVisualizationEnable) { // musicVisualizationEnable 是 Service 的一个状态变量
                         equalizerAudioProcessor.setVisualizationAudioActive(true)
                     }
                 }
 
-                COMMAND_GET_INITIALIZED_DATA.customAction -> {
+                MediaCommands.COMMAND_GET_INITIALIZED_DATA.customAction -> {
                     val future = SettableFuture.create<SessionResult>()
                     serviceScope.async {
                         isInitialized.await()
                         val bundle = Bundle()
-                        setData(bundle, exoPlayer.currentPosition)
+                        setData(bundle)
                         future.set(SessionResult(SessionResult.RESULT_SUCCESS, bundle))
                     }
                     return future
                 }
 
-                COMMAND_VISUALIZATION_DISCONNECTED.customAction -> {
+                MediaCommands.COMMAND_VISUALIZATION_DISCONNECTED.customAction -> {
                     equalizerAudioProcessor.setVisualizationAudioActive(false)
                 }
 
                 // --- Sleep Timer ---
-                COMMAND_SET_SLEEP_TIMER.customAction -> {
+                MediaCommands.COMMAND_SET_SLEEP_TIMER.customAction -> {
                     // 注意：旧的 timeSet 方法需要改造
                     // 它不能再直接调用 result.sendResult()
                     // 而是应该返回一个结果，或者我们在这里处理
@@ -649,12 +646,12 @@ class PlayService : MediaLibraryService() {
                     timeSet(args) // 改造 timeSet，让它不再需要 Result 参数
                 }
 
-                COMMAND_APP_EXIT.customAction -> {
+                MediaCommands.COMMAND_APP_EXIT.customAction -> {
                     stopForeground(true)
                     stopSelf()
                 }
 
-                COMMAND_GET_CURRENT_PLAYLIST.customAction -> {
+                MediaCommands.COMMAND_GET_CURRENT_PLAYLIST.customAction -> {
                     val future = SettableFuture.create<SessionResult>()
                     future.set(SessionResult(SessionResult.RESULT_SUCCESS, Bundle().apply {
                         putParcelable("playList", playListCurrent)
@@ -662,7 +659,7 @@ class PlayService : MediaLibraryService() {
                     return future
                 }
 
-                COMMAND_CHANGE_PLAYLIST.customAction -> {
+                MediaCommands.COMMAND_CHANGE_PLAYLIST.customAction -> {
                     CoroutineScope(Dispatchers.IO).launch {
                         val playList = args.getParcelable<AnyListBase>("playList")
                         if (playList != null) {
@@ -682,9 +679,9 @@ class PlayService : MediaLibraryService() {
                     }
                 }
 
-                COMMAND_SEARCH.customAction -> {
+                MediaCommands.COMMAND_SEARCH.customAction -> {
                     val future = SettableFuture.create<SessionResult>()
-                    val query = args.getString(KEY_SEARCH_QUERY, "")
+                    val query = args.getString(MediaCommands.KEY_SEARCH_QUERY, "")
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
                             val searchResult = search(query)
@@ -702,7 +699,7 @@ class PlayService : MediaLibraryService() {
                     return future
                 }
 
-                COMMAND_PlAY_LIST_CHANGE.customAction -> {
+                MediaCommands.COMMAND_PlAY_LIST_CHANGE.customAction -> {
                     val future = SettableFuture.create<SessionResult>()
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
@@ -731,7 +728,7 @@ class PlayService : MediaLibraryService() {
                     return future
                 }
 
-                COMMAND_REFRESH_ALL.customAction -> {
+                MediaCommands.COMMAND_REFRESH_ALL.customAction -> {
                     val future = SettableFuture.create<SessionResult>()
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
@@ -745,13 +742,11 @@ class PlayService : MediaLibraryService() {
                     return future
                 }
 
-                COMMAND_TRACK_DELETE.customAction -> {
+                MediaCommands.COMMAND_TRACK_DELETE.customAction -> {
                     val idsToDelete = args.getLong("id")
                     val c = PlayUtils.trackDelete(
                         idsToDelete,
                         musicQueue,
-                        exoPlayer,
-                        db,
                         tracksLinkedHashMap
                     )
                     clearCacheData()
@@ -779,11 +774,11 @@ class PlayService : MediaLibraryService() {
                     )
                 }
 
-                COMMAND_TRACKS_UPDATE.customAction -> {
+                MediaCommands.COMMAND_TRACKS_UPDATE.customAction -> {
                     val future = SettableFuture.create<SessionResult>()
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
-                            val id = args.getLong(KEY_TRACK_ID)
+                            val id = args.getLong(MediaCommands.KEY_TRACK_ID)
                             val musicTrack = TracksManager.getMusicById(this@PlayService, id)
                             if (musicTrack != null) {
                                 tracksLinkedHashMap[id] = musicTrack
@@ -828,12 +823,12 @@ class PlayService : MediaLibraryService() {
                     return future
                 }
                 // --- Queue Management ---
-                COMMAND_ADD_TO_QUEUE.customAction -> {
+                MediaCommands.COMMAND_ADD_TO_QUEUE.customAction -> {
 
                 }
 
 
-                COMMAND_CLEAR_QUEUE.customAction -> {
+                MediaCommands.COMMAND_CLEAR_QUEUE.customAction -> {
                     ContextCompat.getMainExecutor(this@PlayService).execute {
                         exoPlayer.pause()
                         exoPlayer.clearMediaItems()
@@ -1161,7 +1156,7 @@ class PlayService : MediaLibraryService() {
                     mControllerInfo?.let {
                         mediaSession?.sendCustomCommand(
                             it,
-                            COMMAND_SLEEP_STATE_UPDATE,
+                            MediaCommands.COMMAND_SLEEP_STATE_UPDATE,
                             bundle
                         )
                     }
@@ -1184,7 +1179,7 @@ class PlayService : MediaLibraryService() {
             mControllerInfo?.let {
                 mediaSession?.sendCustomCommand(
                     it,
-                    COMMAND_SLEEP_STATE_UPDATE,
+                    MediaCommands.COMMAND_SLEEP_STATE_UPDATE,
                     bundle
                 )
             }
@@ -1202,7 +1197,7 @@ class PlayService : MediaLibraryService() {
         mControllerInfo?.let {
             mediaSession?.sendCustomCommand(
                 it,
-                COMMAND_SLEEP_STATE_UPDATE,
+                MediaCommands.COMMAND_SLEEP_STATE_UPDATE,
                 bundle
             )
         }
@@ -1234,7 +1229,7 @@ class PlayService : MediaLibraryService() {
     }
 
 
-    private fun setData(bundle: Bundle, position: Long?) {
+    private fun setData(bundle: Bundle) {
         bundle.putInt("volume", volumeValue)
         bundle.putLong("playListID", playListCurrent?.id ?: -1)
         bundle.putString("playListType", playListCurrent?.type?.name)
@@ -1257,7 +1252,6 @@ class PlayService : MediaLibraryService() {
         bundle.putBoolean("echoActive", auxr.echo)
         bundle.putBoolean("echoFeedBack", auxr.echoRevert)
         bundle.putInt("repeat", exoPlayer.repeatMode)
-        bundle.putLong("position", position ?: exoPlayer.currentPosition)
         bundle.putParcelableArrayList("mainTabList", mainTab)
         bundle.putParcelableArrayList("showIndicatorList", showIndicatorList)
     }
@@ -1341,6 +1335,7 @@ class PlayService : MediaLibraryService() {
             .setTrackSelector(trackSelector)
             .setHandleAudioBecomingNoisy(true)
             .build()
+        exoPlayer.shuffleOrder = NoShuffleOrder(0)
         exoPlayer.playWhenReady = true
         exoPlayer.repeatMode = config?.repeatModel ?: Player.REPEAT_MODE_ALL
         exoPlayer.setAudioAttributes(
@@ -1774,79 +1769,6 @@ class PlayService : MediaLibraryService() {
         return mediaSession
     }
 
-    companion object {
-        // DSP & Effects
-        val COMMAND_CHANGE_PITCH = SessionCommand("dsp.CHANGE_PITCH", Bundle.EMPTY)
-        val COMMAND_CHANGE_Q = SessionCommand("dsp.CHANGE_Q", Bundle.EMPTY)
-        val COMMAND_DSP_ENABLE = SessionCommand("dsp.ENABLE", Bundle.EMPTY)
-
-        // DSP
-        val COMMAND_DSP_SET_BAND = SessionCommand("dsp.SET_BAND", Bundle.EMPTY)
-        val COMMAND_DSP_FLATTEN = SessionCommand("dsp.FLATTEN", Bundle.EMPTY)
-        val COMMAND_DSP_SET_BANDS = SessionCommand("dsp.SET_BANDS", Bundle.EMPTY)
-
-        // Echo
-        val COMMAND_ECHO_ENABLE = SessionCommand("echo.ENABLE", Bundle.EMPTY)
-        val COMMAND_ECHO_SET_DELAY = SessionCommand("echo.SET_DELAY", Bundle.EMPTY)
-        val COMMAND_ECHO_SET_DECAY = SessionCommand("echo.SET_DECAY", Bundle.EMPTY)
-        val COMMAND_ECHO_SET_FEEDBACK = SessionCommand("echo.SET_FEEDBACK", Bundle.EMPTY)
-
-        val COMMAND_SEARCH = SessionCommand("app.SEARCH", Bundle.EMPTY)
-
-        // Visualization
-        val COMMAND_VISUALIZATION_ENABLE = SessionCommand("vis.ENABLE", Bundle.EMPTY)
-        val COMMAND_VISUALIZATION_DATA = SessionCommand("vis.VISUALIZATION_DATA", Bundle.EMPTY)
-
-        val COMMAND_TIME_LINE_CHANGED =
-            SessionCommand("queue.COMMAND_TIME_LINE_CHANGED", Bundle.EMPTY)
-
-        // Sleep Timer
-        val COMMAND_SET_SLEEP_TIMER = SessionCommand("timer.SET_SLEEP", Bundle.EMPTY)
-        val COMMAND_SLEEP_STATE_UPDATE = SessionCommand("timer.SLEEP_STATE", Bundle.EMPTY)
-
-        val COMMAND_VISUALIZATION_CONNECTED = SessionCommand("vis.CONNECTED", Bundle.EMPTY)
-        val COMMAND_GET_INITIALIZED_DATA = SessionCommand("vis.GET_INITIALIZED_DATA", Bundle.EMPTY)
-
-        // 命令：通知 Service 可视化组件将要断开/不可见
-        val COMMAND_VISUALIZATION_DISCONNECTED = SessionCommand("vis.DISCONNECTED", Bundle.EMPTY)
-
-        val COMMAND_APP_EXIT = SessionCommand("app.EXIT", Bundle.EMPTY)
-        val COMMAND_TRACKS_UPDATE = SessionCommand("tracks.UPDATE", Bundle.EMPTY)
-        val COMMAND_TRACK_DELETE = SessionCommand("app.TRACK_DELETE", Bundle.EMPTY)
-        val COMMAND_PlAY_LIST_CHANGE = SessionCommand("app.PlAY_LIST_CHANGE", Bundle.EMPTY)
-        val COMMAND_GET_PLAY_LIST_ITEM = SessionCommand("app.GET_PLAY_LIST_ITEM", Bundle.EMPTY)
-
-        val COMMAND_SORT_QUEUE = SessionCommand("queue.SORT_QUEUE", Bundle.EMPTY)
-        val COMMAND_SORT_TRACKS = SessionCommand("queue.SORT_TRACKS", Bundle.EMPTY)
-
-        val COMMAND_CHANGE_PLAYLIST = SessionCommand("queue.CHANGE_PLAYLIST", Bundle.EMPTY)
-        val COMMAND_GET_CURRENT_PLAYLIST =
-            SessionCommand("queue.GET_CURRENT_PLAYLIST", Bundle.EMPTY)
-        val COMMAND_SMART_SHUFFLE = SessionCommand("queue.SMART_SHUFFLE", Bundle.EMPTY)
-
-        // Key for the new playlist
-
-        // Key for the item to start playing from
-        const val KEY_START_MEDIA_ID = "key_start_media_id"
-
-
-        // --- 定义所有 Bundle Key ---
-        const val KEY_INDEX = "index"
-        const val KEY_VALUE = "value"
-        const val KEY_TRACK_ID = "long_id_value"
-        const val KEY_ENABLE = "enable"
-        const val KEY_DELAY = "delay"
-        const val KEY_DECAY = "decay"
-        const val KEY_SEARCH_QUERY = "search_query"
-
-        val COMMAND_ADD_TO_QUEUE = SessionCommand("queue.ADD", Bundle.EMPTY)
-        val COMMAND_REMOVE_FROM_QUEUE = SessionCommand("queue.REMOVE", Bundle.EMPTY)
-        val COMMAND_CLEAR_QUEUE = SessionCommand("queue.CLEAR", Bundle.EMPTY)
-
-        val COMMAND_REFRESH_ALL = SessionCommand("app.REFRESH_ALL", Bundle.EMPTY)
-
-    }
-
     fun getPlayList(
         context: Context,
         future: SettableFuture<LibraryResult<ImmutableList<MediaItem>>>, params: LibraryParams?
@@ -2262,7 +2184,6 @@ class PlayService : MediaLibraryService() {
                     currentIndex = index
                 }
             }
-            exoPlayer.shuffleOrder = NoShuffleOrder(0)
             exoPlayer.shuffleModeEnabled = SharedPreferencesUtils.getEnableShuffle(this@PlayService)
             exoPlayer.setMediaItems(t1)
             if (currentPlayTrack != null) {

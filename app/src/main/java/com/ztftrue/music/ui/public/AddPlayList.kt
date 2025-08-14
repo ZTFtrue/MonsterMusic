@@ -616,7 +616,7 @@ fun AddMusicToPlayListDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(300.dp)
-                        .drawBehind() {
+                        .drawBehind {
                             drawLine(
                                 color = color,
                                 start = Offset(0f, size.height - 1.dp.toPx()),
@@ -658,7 +658,7 @@ fun AddMusicToPlayListDialog(
                         .fillMaxWidth()
                         .height(50.dp)
                         .padding(0.dp)
-                        .drawBehind() {
+                        .drawBehind {
                             drawLine(
                                 color = color,
                                 start = Offset(0f, size.height - 1.dp.toPx()),

@@ -22,7 +22,7 @@ class Limiter(// 限制阈值 (-3 dB = 0.707)
             var max = 1.0f
             buffer.forEachIndexed { index, it ->
                 buffer[index] = processData(it, 0.8f)
-                max = Math.max(max, buffer[index].absoluteValue)
+                max = max.coerceAtLeast(buffer[index].absoluteValue)
             }
             return max
         }

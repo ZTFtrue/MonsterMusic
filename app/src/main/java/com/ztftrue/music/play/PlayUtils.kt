@@ -1,18 +1,9 @@
 package com.ztftrue.music.play
 
-import android.content.Context
-import android.os.Bundle
 import android.provider.MediaStore
-import androidx.media3.common.MediaItem
-import androidx.media3.exoplayer.ExoPlayer
-import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.PlayListType
-import com.ztftrue.music.utils.SharedPreferencesUtils
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 object PlayUtils {
 
@@ -154,8 +145,6 @@ object PlayUtils {
     fun trackDelete(
         id: Long,
         musicQueue: ArrayList<MusicItem>,
-        exoPlayer: ExoPlayer,
-        db: MusicDatabase,
         tracksLinkedHashMap: LinkedHashMap<Long, MusicItem>
     ): Long {
         tracksLinkedHashMap.remove(id)
@@ -167,57 +156,6 @@ object PlayUtils {
         return i.toLong()
     }
 
-    fun removePlayQueue(
-        extras: Bundle?, musicQueue: ArrayList<MusicItem>,
-        exoPlayer: ExoPlayer, db: MusicDatabase, context: Context
-    ) {
-        if (extras != null) {
-            val index = extras.getInt("index")
-            if (index < musicQueue.size) {
-                val musicItem = musicQueue[index]
-                musicQueue.removeAt(index)
-                changePriorityTableId(musicQueue, musicItem, db)
-                exoPlayer.removeMediaItem(index)
-                if (musicQueue.isNotEmpty()) {
-                    val currentIndex = exoPlayer.currentMediaItemIndex
-                    CoroutineScope(Dispatchers.IO).launch {
-                        SharedPreferencesUtils.saveSelectMusicId(
-                            context,
-                            musicQueue[currentIndex].id
-                        )
-                    }
-                    return
-                }
-            }
-        }
-    }
-
-    private fun changePriorityTableId(
-        musicQueue: ArrayList<MusicItem>,
-        musicItem: MusicItem,
-        db: MusicDatabase
-    ) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val tId = musicItem.tableId!!
-            val priority = musicItem.priority
-            if (musicQueue.isNotEmpty()) {
-                musicQueue.forEach {
-                    if (it.tableId!! >= tId) {
-                        it.tableId = it.tableId!! - 1
-                    }
-                    if (it.priority >= priority && it.priority > 0) {
-                        it.priority -= 1
-                    }
-                }
-                db.QueueDao().deleteAllQueue()
-                db.QueueDao().insertAll(musicQueue)
-                db.CurrentListDao().delete()
-            } else {
-                db.QueueDao().deleteAllQueue()
-                db.CurrentListDao().delete()
-            }
-        }
-    }
 
     fun areQueuesContentAndOrderEqual(list1: List<MusicItem>, list2: List<MusicItem>): Boolean {
         if (list1.size != list2.size) {

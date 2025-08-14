@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.provider.DocumentsContract
 import android.util.Log
 import android.widget.Toast
-import androidx.annotation.OptIn
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -28,16 +27,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionResult
 import androidx.navigation.NavHostController
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.play.AudioDataRepository
 import com.ztftrue.music.play.CustomMetadataKeys
+import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.play.MediaItemUtils
-import com.ztftrue.music.play.PlayService
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
 import com.ztftrue.music.sqlData.model.DictionaryApp
@@ -123,7 +120,7 @@ class MusicViewModel : ViewModel() {
     var echoFeedBack = mutableStateOf(false)
     var enableShuffleModel = mutableStateOf(false)
     var pitch = mutableFloatStateOf(1f)
-    var Q = mutableFloatStateOf(Utils.Q)
+    var equalizerQ = mutableFloatStateOf(Utils.Q)
     var speed = mutableFloatStateOf(1f)
 
     var mainTabList = mutableStateListOf<MainTab>()
@@ -650,7 +647,7 @@ class MusicViewModel : ViewModel() {
                         viewModelScope.launch(Dispatchers.Main) {
                             val futureResult: ListenableFuture<SessionResult>? =
                                 browser?.sendCustomCommand(
-                                    COMMAND_PlAY_LIST_CHANGE,
+                                    MediaCommands.COMMAND_PlAY_LIST_CHANGE,
                                     Bundle().apply {
                                         putString(
                                             CustomMetadataKeys.KEY_PATH,
@@ -677,7 +674,6 @@ class MusicViewModel : ViewModel() {
 
     }
 
-    @OptIn(UnstableApi::class)
     fun playShuffled(playListType: PlayListType, playListId: Long) {
         val browser = this.browser ?: return
         val args = Bundle().apply {
@@ -687,6 +683,6 @@ class MusicViewModel : ViewModel() {
             putString("playListType", playListType.name)
             putLong("playListId", playListId)
         }
-        browser.sendCustomCommand(PlayService.COMMAND_SMART_SHUFFLE, args)
+        browser.sendCustomCommand(MediaCommands.COMMAND_SMART_SHUFFLE, args)
     }
 }

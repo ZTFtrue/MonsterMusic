@@ -1,7 +1,6 @@
 package com.ztftrue.music.ui.public
 
 import android.content.Context
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -71,7 +70,6 @@ import kotlinx.coroutines.launch
  * all songs and queue list
  */
 
-@OptIn(ExperimentalFoundationApi::class)
 @UnstableApi
 @Composable
 fun TracksListView(

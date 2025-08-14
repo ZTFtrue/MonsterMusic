@@ -29,7 +29,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -63,11 +62,9 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
+import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.PlayService
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_GET_CURRENT_PLAYLIST
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_GET_INITIALIZED_DATA
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
 import com.ztftrue.music.sqlData.model.GENRE_TYPE
 import com.ztftrue.music.sqlData.model.MainTab
@@ -86,14 +83,16 @@ import com.ztftrue.music.utils.trackManager.SongsUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Locale
-import java.util.concurrent.locks.ReentrantLock
 
 
 @Suppress("DEPRECATION")
@@ -102,19 +101,11 @@ class MainActivity : ComponentActivity() {
 
     private val musicViewModel: MusicViewModel by viewModels()
     private var jobSeek: Job? = null
-    private val scopeMain = CoroutineScope(Dispatchers.Main)
     private var lyricsPath = ""
     val bundle = Bundle()
 
     private lateinit var browserFuture: ListenableFuture<MediaBrowser>
-//    private val browser: MediaBrowser?
-//        get() = if (browserFuture.isDone && !browserFuture.isCancelled) {
-//            browserFuture.get()
-//        } else {
-//            null
-//        }
 
-    // ... 其他代码 ...
 
     @JvmField
     val modifyMediaLauncher =
@@ -198,7 +189,7 @@ class MainActivity : ComponentActivity() {
                         bundleTemp.putLong("id", id)
                         val futureResult: ListenableFuture<SessionResult>? =
                             musicViewModel.browser?.sendCustomCommand(
-                                COMMAND_TRACK_DELETE,
+                                MediaCommands.COMMAND_TRACK_DELETE,
                                 bundleTemp
                             )
                         futureResult?.addListener({
@@ -520,7 +511,6 @@ class MainActivity : ComponentActivity() {
         coverImagePickerLauncher.launch(intent)
     }
 
-    @OptIn(ExperimentalFoundationApi::class)
     private val audioPermissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) {
@@ -659,13 +649,13 @@ class MainActivity : ComponentActivity() {
             command: SessionCommand,
             args: Bundle
         ): ListenableFuture<SessionResult> {
-            if (command.customAction == PlayService.COMMAND_SLEEP_STATE_UPDATE.customAction) {
+            if (command.customAction ==   MediaCommands.COMMAND_SLEEP_STATE_UPDATE.customAction) {
                 val remainTime = args.getLong("remaining")
                 musicViewModel.remainTime.longValue = remainTime
                 if (remainTime == 0L) {
                     musicViewModel.sleepTime.longValue = 0
                 }
-            } else if (command.customAction == PlayService.COMMAND_TIME_LINE_CHANGED.customAction) {
+            } else if (command.customAction ==   MediaCommands.COMMAND_TIME_LINE_CHANGED.customAction) {
                 val queue: ArrayList<MusicItem>? =
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         args.getParcelableArrayList("queue", MusicItem::class.java)
@@ -679,12 +669,6 @@ class MainActivity : ComponentActivity() {
                         musicViewModel.musicQueue.addAll(queue)
                         musicViewModel.currentPlay.value = musicViewModel.musicQueue[qIndex]
                     }
-                }
-            } else if (command.customAction == PlayService.COMMAND_VISUALIZATION_DATA.customAction) {
-                val magnitude = args.getFloatArray("magnitude")?.toList()
-                if (magnitude != null) {
-                    musicViewModel.musicVisualizationData.clear()
-                    musicViewModel.musicVisualizationData.addAll(magnitude)
                 }
             }
             return super.onCustomCommand(controller, command, args)
@@ -735,7 +719,6 @@ class MainActivity : ComponentActivity() {
     public override fun onResume() {
         super.onResume()
         volumeControlStream = AudioManager.STREAM_MUSIC
-        getSeek()
         musicViewModel.browser?.let {
             updateUiWithCurrentState(it)
         }
@@ -759,7 +742,7 @@ class MainActivity : ComponentActivity() {
         browser.addListener(playerListener) // playerListener 是你定义的 Player.Listener 实例
         val futureResult: ListenableFuture<SessionResult>? =
             musicViewModel.browser?.sendCustomCommand(
-                COMMAND_GET_INITIALIZED_DATA,
+                MediaCommands.COMMAND_GET_INITIALIZED_DATA,
                 Bundle().apply { },
             )
         futureResult?.addListener({
@@ -813,9 +796,7 @@ class MainActivity : ComponentActivity() {
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             musicViewModel.playStatus.value = isPlaying
-            if (isPlaying) {
-                getSeek()
-            }
+            getSeek()
         }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
@@ -845,7 +826,27 @@ class MainActivity : ComponentActivity() {
                 musicViewModel.currentInputFormat[formatItem.key] = formatItem.value
             }
         }
+        override fun onPositionDiscontinuity(
+            oldPosition: Player.PositionInfo,
+            newPosition: Player.PositionInfo,
+            @Player.DiscontinuityReason reason: Int
+        ) {
+            super.onPositionDiscontinuity(oldPosition, newPosition, reason)
 
+            // 我们通常只关心由 seek 引起的跳转
+            if (reason == Player.DISCONTINUITY_REASON_SEEK) {
+                val actualNewPositionMs = newPosition.positionMs // 获取精确的新位置
+//                val actualNewWindowIndex = newPosition.windowIndex // 获取精确的新窗口索引
+                musicViewModel.sliderPosition.floatValue =actualNewPositionMs.toFloat()
+                // (可选) 广播给 ViewModel，更新 UI 进度条的 LiveData
+                // (this@PlayService.application as? Application)?.let { app ->
+                //     val viewModel = ViewModelProvider(app).get(MusicPlayerViewModel::class.java)
+                //     viewModel.onPositionDiscontinuity(actualNewPositionMs) // 假设 ViewModel 有这个方法
+                // }
+            }
+            // 您也可以在其他 reason (如 MEDIA_ITEM_TRANSITION) 中处理位置更新，
+            // 但 DISCONTINUITY_REASON_SEEK 是最明确的。
+        }
     }
 
     override fun onDestroy() {
@@ -853,26 +854,32 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
     }
 
-    private val lock = ReentrantLock()
+    private val mutex = Mutex()
+    private val seekScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     fun getSeek() {
-        lock.lock()
-        if (musicViewModel.playStatus.value) {
-            jobSeek = scopeMain.launch {
-                while (isActive) {
-                    delay(1000)
-                    val f = musicViewModel.browser?.currentPosition ?: 0
-                    if (f < 0) {
-                        continue
+        seekScope.launch {
+            mutex.withLock {
+                if (musicViewModel.playStatus.value) {
+                    if (jobSeek?.isActive == true) return@withLock
+                    jobSeek = launch {
+                        while (isActive) {
+                            delay(1000)
+                            val f = musicViewModel.browser?.currentPosition ?: 0
+                            if (f < 0) {
+                                continue
+                            }
+                            if (!musicViewModel.sliderTouching) {
+                                musicViewModel.sliderPosition.floatValue = f.toFloat()
+                            }
+                        }
                     }
-                    if (!musicViewModel.sliderTouching) {
-                        musicViewModel.sliderPosition.floatValue = f.toFloat()
-                    }
+                } else {
+                    jobSeek?.cancel()
+                    jobSeek = null
                 }
             }
-        } else {
-            jobSeek?.cancel()
         }
-        lock.unlock()
     }
 
     fun getInitData(resultData: Bundle) {
@@ -890,7 +897,7 @@ class MainActivity : ComponentActivity() {
         val pitch = resultData.getFloat("pitch", 1f)
         val speed = resultData.getFloat("speed", 1f)
         val q = resultData.getFloat("Q", Utils.Q)
-        musicViewModel.Q.floatValue = q
+        musicViewModel.equalizerQ.floatValue = q
         musicViewModel.pitch.floatValue = pitch
         musicViewModel.speed.floatValue = speed
         musicViewModel.sleepTime.longValue =
@@ -921,11 +928,9 @@ class MainActivity : ComponentActivity() {
         musicViewModel.enableEcho.value = resultData.getBoolean("echoActive")
         musicViewModel.echoFeedBack.value = resultData.getBoolean("echoFeedBack")
         musicViewModel.repeatModel.intValue = resultData.getInt("repeat", Player.REPEAT_MODE_ALL)
-        musicViewModel.sliderPosition.floatValue = resultData.getLong("position", 0L).toFloat()
         musicViewModel.playCompleted.value =
             resultData.getBoolean("play_completed")
         musicViewModel.volume.intValue = resultData.getInt("volume", 100)
-        getSeek()
     }
 
     private fun updateUiWithCurrentState(player: MediaBrowser) {
@@ -940,7 +945,7 @@ class MainActivity : ComponentActivity() {
         ) {
             val futureResult: ListenableFuture<SessionResult>? =
                 musicViewModel.browser?.sendCustomCommand(
-                    COMMAND_GET_CURRENT_PLAYLIST,
+                    MediaCommands.COMMAND_GET_CURRENT_PLAYLIST,
                     Bundle().apply { },
                 )
             futureResult?.addListener({
@@ -954,9 +959,9 @@ class MainActivity : ComponentActivity() {
                     Log.e("Client", "Failed to toggle favorite status", e)
                 }
             }, ContextCompat.getMainExecutor(this@MainActivity))
-            val currentIndex=player.currentMediaItemIndex
+            val currentIndex = player.currentMediaItemIndex
             val currentMusic = musicViewModel.currentPlay.value
-            if(musicViewModel.musicQueue.size>currentIndex){
+            if (musicViewModel.musicQueue.size > currentIndex) {
                 if (currentMusic == null || currentMusic.id != musicViewModel.musicQueue[currentIndex].id) {
                     musicViewModel.currentMusicCover.value = null
                     musicViewModel.currentCaptionList.clear()
@@ -967,13 +972,12 @@ class MainActivity : ComponentActivity() {
                         musicViewModel.musicQueue[player.currentMediaItemIndex]
                     )
                 }
+                getSeek()
             }
         } else {
             musicViewModel.currentPlay.value = null
         }
         musicViewModel.playStatus.value = player.isPlaying
-//        val duration = if (player.duration == C.TIME_UNSET) 0 else player.duration
-//        musicViewModel.currentDuration.longValue = duration
         val currentPosition = player.currentPosition
         musicViewModel.sliderPosition.floatValue = currentPosition.toFloat()
         musicViewModel.enableShuffleModel.value = player.shuffleModeEnabled

@@ -10,7 +10,7 @@ import androidx.media3.session.SessionResult
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.ztftrue.music.MusicViewModel
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_SEARCH
+import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.model.AlbumList
 import com.ztftrue.music.utils.model.ArtistList
@@ -99,12 +99,12 @@ class SearchScreenViewModel(
      * @return SearchResults containing lists of tracks, albums, and artists.
      */
     private suspend fun performSearch(keyword: String): SearchResults {
-        val bundle = Bundle().apply { putString("keyword", keyword) }
+        val bundle = Bundle().apply { putString(MediaCommands.KEY_SEARCH_QUERY, keyword) }
         return suspendCancellableCoroutine { continuation ->
 
             val futureResult: ListenableFuture<SessionResult>? =
                 musicViewModel.browser?.sendCustomCommand(
-                    COMMAND_SEARCH,
+                    MediaCommands.COMMAND_SEARCH,
                     bundle
                 )
             futureResult?.addListener({
@@ -113,14 +113,17 @@ class SearchScreenViewModel(
                     val sessionResult = futureResult.get()
                     // b. 检查操作是否成功
                     if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
-                        val tracks = sessionResult.extras.getParcelableArrayList<MusicItem>("tracks")
-                            ?: emptyList()
-                        val albums = sessionResult.extras.getParcelableArrayList<AlbumList>("albums")
-                            ?: emptyList()
-                        val artists = sessionResult.extras.getParcelableArrayList<ArtistList>("artist")
-                            ?: emptyList()
+                        val tracks =
+                            sessionResult.extras.getParcelableArrayList<MusicItem>("tracks")
+                                ?: emptyList()
+                        val albums =
+                            sessionResult.extras.getParcelableArrayList<AlbumList>("albums")
+                                ?: emptyList()
+                        val artists =
+                            sessionResult.extras.getParcelableArrayList<ArtistList>("artist")
+                                ?: emptyList()
                         continuation.resume(SearchResults(tracks, albums, artists))
-                    }else{
+                    } else {
                         continuation.resume(
                             SearchResults(
                                 emptyList(),
@@ -133,7 +136,7 @@ class SearchScreenViewModel(
                     // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
                     Log.e("Client", "Failed to toggle favorite status", e)
                 }
-            }, MoreExecutors.directExecutor())  ?: run {
+            }, MoreExecutors.directExecutor()) ?: run {
                 // If mediaBrowser is null, resume with empty results immediately
                 continuation.resume(SearchResults(emptyList(), emptyList(), emptyList()))
             }

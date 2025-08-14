@@ -46,7 +46,6 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionResult
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
@@ -55,8 +54,7 @@ import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
-import com.ztftrue.music.play.PlayService
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_REFRESH_ALL
+import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.Utils
 import kotlinx.coroutines.launch
@@ -232,7 +230,7 @@ fun DrawMenu(
                     }
                     .clickable {
 
-                      musicViewModel.  browser?.sendCustomCommand(PlayService.COMMAND_APP_EXIT, Bundle.EMPTY)
+                      musicViewModel.  browser?.sendCustomCommand(  MediaCommands.COMMAND_APP_EXIT, Bundle.EMPTY)
 //                        // 发送命令后，可以断开连接并关闭 Activity
 //                        if (browser != null) {
 //                            MediaBrowser.releaseFuture(browserFuture)
@@ -288,7 +286,7 @@ fun DrawMenu(
                     .clickable {
                         val futureResult: ListenableFuture<SessionResult>? =
                             musicViewModel.browser?.sendCustomCommand(
-                                COMMAND_REFRESH_ALL,
+                                MediaCommands.COMMAND_REFRESH_ALL,
                                 Bundle().apply { },
                             )
                         futureResult?.addListener({

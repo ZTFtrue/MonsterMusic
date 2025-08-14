@@ -73,10 +73,8 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
+import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.play.MediaItemUtils
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_CLEAR_QUEUE
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_PlAY_LIST_CHANGE
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_SORT_TRACKS
 import com.ztftrue.music.play.PlayUtils
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.dao.SortFiledDao
@@ -377,7 +375,7 @@ fun MainTopBar(
                                 )
                                 val futureResult: ListenableFuture<SessionResult>? =
                                     musicViewModel.browser?.sendCustomCommand(
-                                        COMMAND_SORT_TRACKS,
+                                        MediaCommands.COMMAND_SORT_TRACKS,
                                         bundle
                                     )
                                 futureResult?.addListener({
@@ -479,7 +477,7 @@ fun MainTopBar(
             QueueOperateDialog(onDismiss = {
                 showDialogForQueue = false
                 if (it == OperateType.ClearQueue) {
-                    musicViewModel.browser?.sendCustomCommand(COMMAND_CLEAR_QUEUE, Bundle.EMPTY)
+                    musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_CLEAR_QUEUE, Bundle.EMPTY)
                     musicViewModel.musicQueue.clear()
                     musicViewModel.currentPlay.value = null
                     musicViewModel.playListCurrent.value = null
@@ -532,7 +530,7 @@ fun MainTopBar(
                             )
                         if (idPlayList != null) {
                             musicViewModel.browser?.sendCustomCommand(
-                                COMMAND_PlAY_LIST_CHANGE,
+                                MediaCommands.COMMAND_PlAY_LIST_CHANGE,
                                 Bundle().apply {},
                             )
                         } else {

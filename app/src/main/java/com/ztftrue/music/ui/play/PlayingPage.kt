@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
 import android.widget.Toast
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -84,7 +83,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -125,10 +123,8 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
+import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.play.MediaItemUtils
-import com.ztftrue.music.play.PlayService
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_VISUALIZATION_ENABLE
 import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
@@ -165,7 +161,6 @@ data class PlayingViewTab(
 
 
 @OptIn(
-    ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class,
     ExperimentalMaterial3Api::class
 )
 @UnstableApi
@@ -204,7 +199,7 @@ fun PlayingPage(
                     bundle.putLong("id", music!!.id)
                     val futureResult: ListenableFuture<SessionResult>? =
                         musicViewModel.browser?.sendCustomCommand(
-                            COMMAND_TRACK_DELETE,
+                            MediaCommands.COMMAND_TRACK_DELETE,
                             bundle
                         )
                     futureResult?.addListener({
@@ -402,13 +397,12 @@ fun PlayingPage(
         ) {
             val color = MaterialTheme.colorScheme.secondary
             val windowInfo = LocalWindowInfo.current
-            val containerWidth = windowInfo.containerSize.width
+            val density = LocalDensity.current
+            val containerWidthDp = with(density) { windowInfo.containerSize.width.toDp() }
             Column(
                 modifier = Modifier
                     .width(
-                        (containerWidth - 20.dp.toPx(
-                            context
-                        )).dp
+                        (containerWidthDp - 20.dp)
                     )
                     .padding(top = 5.dp)
                     .background(
@@ -841,7 +835,7 @@ fun PlayingPage(
                                     val bundleTemp = Bundle()
                                     bundleTemp.putBoolean("enable", it)
                                     musicViewModel.browser?.sendCustomCommand(
-                                        COMMAND_VISUALIZATION_ENABLE,
+                                        MediaCommands.COMMAND_VISUALIZATION_ENABLE,
                                         bundleTemp
                                     )
                                 }
@@ -1423,11 +1417,11 @@ fun PlayingPage(
                                                 )
                                                 val startId = musicViewModel.currentPlay.value?.id
                                                 if (startId != null) {
-                                                    putLong(PlayService.KEY_START_MEDIA_ID, startId)
+                                                    putLong(  MediaCommands.KEY_START_MEDIA_ID, startId)
                                                 }
                                             }
                                             musicViewModel.browser?.sendCustomCommand(
-                                                PlayService.COMMAND_SMART_SHUFFLE,
+                                                MediaCommands.COMMAND_SMART_SHUFFLE,
                                                 args
                                             )
                                         }) {

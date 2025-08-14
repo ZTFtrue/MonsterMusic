@@ -71,7 +71,7 @@ import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_SET_SLEEP_TIMER
+import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.toPx
@@ -275,7 +275,7 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
         val bundle = Bundle()
         bundle.putLong("time", time)
         bundle.putBoolean("play_completed", musicViewModel.playCompleted.value)
-        musicViewModel.browser?.sendCustomCommand(COMMAND_SET_SLEEP_TIMER, bundle)
+        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_SET_SLEEP_TIMER, bundle)
         onDismiss()
     }
     Dialog(

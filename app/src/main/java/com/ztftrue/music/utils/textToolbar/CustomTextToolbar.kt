@@ -64,7 +64,7 @@ internal class CustomTextToolbar(
                 val t = clipboardManager.getText()
                 clipboardManager.setText(buildAnnotatedString { append("")})
                 val intent = Intent()
-                intent.setAction(Intent.ACTION_PROCESS_TEXT)
+                intent.action = Intent.ACTION_PROCESS_TEXT
                 intent.setClassName(
                     it.packageName,
                     it.name

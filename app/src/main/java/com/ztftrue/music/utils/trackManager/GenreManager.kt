@@ -1,7 +1,6 @@
 package com.ztftrue.music.utils.trackManager
 
 import android.content.Context
-import android.os.Bundle
 import android.provider.MediaStore
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.model.GenresList
@@ -38,7 +37,7 @@ object GenreManager {
                 val trackUri = MediaStore.Audio.Genres.Members.getContentUri("external", id)
                 val listT: ArrayList<MusicItem> =
                     TracksManager.getTracksById(context, trackUri, tracksHashMap, null, null, null)
-                if (listT.size == 0) continue
+                if (listT.isEmpty()) continue
                 val albumList = GenresList(
                     id,
                     name ?: "unknown",

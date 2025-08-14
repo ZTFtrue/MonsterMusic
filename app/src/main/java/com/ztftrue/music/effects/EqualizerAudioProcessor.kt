@@ -1,20 +1,17 @@
 package com.ztftrue.music.effects
 
-import android.os.Bundle
 import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
-import androidx.media3.session.MediaBrowser
 import be.tarsos.dsp.io.TarsosDSPAudioFloatConverter
 import be.tarsos.dsp.io.TarsosDSPAudioFormat
 import com.ztftrue.music.effects.SoundUtils.downsampleMagnitudes
 import com.ztftrue.music.effects.SoundUtils.expandBuffer
 import com.ztftrue.music.effects.SoundUtils.getBytePerSample
 import com.ztftrue.music.play.AudioDataRepository
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_VISUALIZATION_DATA
 import com.ztftrue.music.utils.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -205,12 +202,6 @@ class EqualizerAudioProcessor : AudioProcessor {
         this.outputBuffer = processedBuffer
         dataBuffer.compact()
         inputEnded = true
-    }
-
-    private var mediaSession: MediaBrowser? = null
-
-    fun setMediaSession(mediaSession: MediaBrowser) {
-        this.mediaSession = mediaSession
     }
 
     private var changeDb = false
@@ -420,7 +411,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         this.Q = value
         if (needChange) {
             for (i in 0 until 10) {
-                Log.d("CHANGE_Q", gainDBArray[i].toString()+","+Q)
+                Log.d("CHANGE_Q", gainDBArray[i].toString() + "," + Q)
                 setBand(
                     i,
                     gainDBArray[i]

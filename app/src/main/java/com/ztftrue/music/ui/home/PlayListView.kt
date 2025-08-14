@@ -1,7 +1,6 @@
 package com.ztftrue.music.ui.home
 
 import android.util.Log
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -147,7 +146,6 @@ fun PlayListView(
 data class ListParameter(val id: Long, val type: PlayListType, val path: String? = null) :
     Navigator.Extras
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PlayListItemView(
     item: MusicPlayList,

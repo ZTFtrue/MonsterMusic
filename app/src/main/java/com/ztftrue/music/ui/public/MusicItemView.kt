@@ -3,7 +3,6 @@ package com.ztftrue.music.ui.public
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -65,9 +64,8 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
+import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.play.MediaItemUtils
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_CHANGE_PLAYLIST
-import com.ztftrue.music.play.PlayService.Companion.COMMAND_TRACK_DELETE
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
@@ -83,8 +81,7 @@ import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.SongsUtils
 import com.ztftrue.music.utils.trackManager.TracksManager
 
-@androidx.annotation.OptIn(UnstableApi::class)
-@OptIn(ExperimentalFoundationApi::class)
+@UnstableApi
 @Composable
 fun MusicItemView(
     music: MusicItem,
@@ -116,7 +113,7 @@ fun MusicItemView(
                     bundle.putLong("id", music.id)
                     val futureResult: ListenableFuture<SessionResult>? =
                         viewModel.browser?.sendCustomCommand(
-                            COMMAND_TRACK_DELETE,
+                            MediaCommands.COMMAND_TRACK_DELETE,
                             bundle
                         )
                     futureResult?.addListener({
@@ -232,18 +229,6 @@ fun MusicItemView(
                         bundle.putInt("index", indexM)
                         viewModel.musicQueue.removeAt(indexM)
                         viewModel.browser?.removeMediaItem(indexM)
-//                        PlayUtils.removePlayQueue(
-//                extras, result, musicQueue,
-//                exoPlayer,
-//                db, this@PlayService
-//            )
-//                        if (viewModel.currentPlay.value?.id == music.id) {
-//                            viewModel.currentMusicCover.value = null
-//                            viewModel.currentPlayQueueIndex.intValue =
-//                                (index) % (viewModel.musicQueue.size + 1)
-//                            viewModel.currentPlay.value =
-//                                viewModel.musicQueue[viewModel.currentPlayQueueIndex.intValue]
-//                        }
                     }
 
                     OperateType.EditMusicInfo -> {
@@ -326,23 +311,14 @@ fun MusicItemView(
                             SharedPreferencesUtils.enableShuffle(context, false)
                             viewModel.enableShuffleModel.value = false
                             viewModel.playListCurrent.value = playList
-//                            viewModel.browser?.shuffleModeEnabled = false
-//                            if (viewModel.playListCurrent.value == null) {
-//                            viewModel.playListCurrent.value = playList
-//                            viewModel.currentMusicCover.value = null
-//                            viewModel.currentPlay.value = music
-//                            }
-//                            bundle.putParcelable("musicItem", music)
+                            // TODO just parma for data,then get tracks in service
                             bundle.putParcelable("playList", playList)
-//                            bundle.putParcelableArrayList("musicItems", ArrayList(musicList))
-//                            bundle.putInt("index", index)
                             viewModel.browser?.sendCustomCommand(
-                                COMMAND_CHANGE_PLAYLIST,
+                                MediaCommands.COMMAND_CHANGE_PLAYLIST,
                                 bundle
                             )
                             val t1 = ArrayList<MediaItem>()
                             viewModel.musicQueue.forEachIndexed { index, it ->
-//                                it.tableId = index + 1L
                                 t1.add(MediaItemUtils.musicItemToMediaItem(it))
                             }
                             var needPlay = true
@@ -359,23 +335,9 @@ fun MusicItemView(
                             viewModel.browser?.shuffleModeEnabled = false
                             viewModel.browser?.clearMediaItems()
                             viewModel.browser?.setMediaItems(t1)
-//                            SharedPreferencesUtils.saveSelectMusicId(
-//                                context,
-//                                viewModel.musicQueue[index].id
-//                            )
                             viewModel.browser?.seekTo(index, currentPosition)
                             viewModel.browser?.playWhenReady = needPlay
                             viewModel.browser?.prepare()
-//                if(needPlay){
-//                    mediaController?.transportControls?.play()
-//                }else{
-//                    mediaController?.transportControls?.pause()
-//                }
-//                            viewModel.mediaBrowser?.sendCustomAction(
-//                                ACTION_PLAY_MUSIC,
-//                                bundle,
-//                                null
-//                            )
                         } else {
                             // don't need switch queue
                             val index =
