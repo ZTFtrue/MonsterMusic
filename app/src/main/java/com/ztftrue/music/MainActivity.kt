@@ -954,10 +954,20 @@ class MainActivity : ComponentActivity() {
                     Log.e("Client", "Failed to toggle favorite status", e)
                 }
             }, ContextCompat.getMainExecutor(this@MainActivity))
-            musicViewModel.currentMusicCover.value=null
-            musicViewModel.currentCaptionList.clear()
-            musicViewModel.currentPlay.value =
-                musicViewModel.musicQueue[player.currentMediaItemIndex]
+            val currentIndex=player.currentMediaItemIndex
+            val currentMusic = musicViewModel.currentPlay.value
+            if(musicViewModel.musicQueue.size>currentIndex){
+                if (currentMusic == null || currentMusic.id != musicViewModel.musicQueue[currentIndex].id) {
+                    musicViewModel.currentMusicCover.value = null
+                    musicViewModel.currentCaptionList.clear()
+                    musicViewModel.currentPlay.value =
+                        musicViewModel.musicQueue[currentIndex]
+                    musicViewModel.dealLyrics(
+                        this@MainActivity,
+                        musicViewModel.musicQueue[player.currentMediaItemIndex]
+                    )
+                }
+            }
         } else {
             musicViewModel.currentPlay.value = null
         }
