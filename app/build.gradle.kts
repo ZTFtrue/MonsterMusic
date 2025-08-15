@@ -7,6 +7,19 @@ plugins {
 }
 
 android {
+
+    defaultConfig {
+        applicationId = "com.ztftrue.music"
+        minSdk = 30
+        targetSdk = 35
+        versionCode = 50
+        versionName = "0.1.50"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary = true
+        }
+    }
+
     signingConfigs {
         getByName("debug") {
             storeFile = file("../keystore.jks")
@@ -14,38 +27,29 @@ android {
             keyPassword = "111111"
             keyAlias = "music"
         }
-
     }
+
     namespace = "com.ztftrue.music"
     compileSdk = 36
+
     bundle {
         language {
             enableSplit = false // don't split language, for google play app bundle
         }
     }
-    defaultConfig {
-        applicationId = "com.ztftrue.music"
-        minSdk = 30
-        targetSdk = 35
-        versionCode = 49
-        versionName = "0.1.49"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary = true
-        }
 
-    }
+
     dependenciesInfo {
         // Disables dependency metadata when building APKs.
         includeInApk = false
         // Disables dependency metadata when building Android App Bundles.
         includeInBundle = true
     }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -67,7 +71,6 @@ android {
                 }
             }
             signingConfig = signingConfigs.getByName("debug")
-
         }
         getByName("debug") {
             applicationIdSuffix = ".debug" // Appends ".debug" to the
@@ -81,6 +84,7 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -98,9 +102,11 @@ android {
         viewBinding = true
         buildConfig = true
     }
+
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.3"
     }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
