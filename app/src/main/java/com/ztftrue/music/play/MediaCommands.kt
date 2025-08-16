@@ -25,9 +25,6 @@ object MediaCommands {
     // Visualization
     val COMMAND_VISUALIZATION_ENABLE = SessionCommand("vis.ENABLE", Bundle.EMPTY)
 
-    val COMMAND_TIME_LINE_CHANGED =
-        SessionCommand("queue.COMMAND_TIME_LINE_CHANGED", Bundle.EMPTY)
-
     // Sleep Timer
     val COMMAND_SET_SLEEP_TIMER = SessionCommand("timer.SET_SLEEP", Bundle.EMPTY)
     val COMMAND_SLEEP_STATE_UPDATE = SessionCommand("timer.SLEEP_STATE", Bundle.EMPTY)

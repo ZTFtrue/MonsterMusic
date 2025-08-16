@@ -655,21 +655,6 @@ class MainActivity : ComponentActivity() {
                 if (remainTime == 0L) {
                     musicViewModel.sleepTime.longValue = 0
                 }
-            } else if (command.customAction ==   MediaCommands.COMMAND_TIME_LINE_CHANGED.customAction) {
-                val queue: ArrayList<MusicItem>? =
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        args.getParcelableArrayList("queue", MusicItem::class.java)
-                    } else {
-                        args.getParcelableArrayList("queue")
-                    }
-                musicViewModel.musicQueue.clear()
-                if (queue != null && queue.isNotEmpty()) {
-                    val qIndex = musicViewModel.browser?.currentMediaItemIndex ?: 0
-                    if (qIndex < queue.size) {
-                        musicViewModel.musicQueue.addAll(queue)
-                        musicViewModel.currentPlay.value = musicViewModel.musicQueue[qIndex]
-                    }
-                }
             }
             return super.onCustomCommand(controller, command, args)
         }
@@ -934,6 +919,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun updateUiWithCurrentState(player: MediaBrowser) {
+        musicViewModel.musicQueue.clear()
         musicViewModel.musicQueue.addAll(getCurrentPlaylist(player).mapNotNull {
             MediaItemUtils.mediaItemToMusicItem(
                 it
