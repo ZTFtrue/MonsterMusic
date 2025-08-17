@@ -63,11 +63,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStreamReader
 import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.util.concurrent.locks.ReentrantLock
 
 
@@ -89,6 +91,7 @@ class MusicViewModel : ViewModel() {
     private val _visualizationData = MutableLiveData<List<Float>>()
     val visualizationData: LiveData<List<Float>> = _visualizationData
     var loadingTracks = mutableStateOf(false)
+
     //    val albumItemsCount = mutableIntStateOf(2)
 //    val genreItemsCount = mutableIntStateOf(2)
 //    var mediaBrowser: MediaBrowserCompat? = null
@@ -99,10 +102,9 @@ class MusicViewModel : ViewModel() {
     //    val albumScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
 //    val artistScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
 //    val genreScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
-    var musicVisualizationData = mutableStateListOf<Float>()
     var musicVisualizationEnable = mutableStateOf(false)
     var showMusicCover = mutableStateOf(false)
-    var customMusicCover = mutableStateOf<Any?>(null)
+    var customMusicCover = mutableStateOf<Any>(R.drawable.songs_thumbnail_cover)
 
     // 当前播放的列表，应该换数据结构存储，每个列表设置变量 播放状态，album和 genres 也是，艺术家跳转到 album， 然后在下一步处理
     // 每次播放仅设置当前列表的状态
@@ -502,68 +504,51 @@ class MusicViewModel : ViewModel() {
         return null
     }
 
-    fun getAlbumCover(id: Long, context: Context): Any? {
-        try {
-            var result: Any? = null
-            val folder = File(context.externalCacheDir, "album_cover")
-            folder.mkdirs()
-            val coverPath = File(folder, "$id.jpg")
-            if (coverPath.exists()) {
-                return coverPath.path
-            } else {
-                //            coverPath.createNewFile()
-            }
+    suspend fun getAlbumCover(id: Long, context: Context): Any {
+        return withContext(Dispatchers.IO) {
             try {
-                val albumUri = ContentUris.withAppendedId(
-                    "content://media/external/audio/albumart".toUri(),
-                    id
-                )
-                val s = context.contentResolver.openInputStream(
-                    albumUri
-                )
-                if (s == null) {
-                    val bm =
-                        BitmapFactory.decodeResource(
-                            context.resources,
-                            R.drawable.songs_thumbnail_cover
-                        )
-                    val outStream = FileOutputStream(coverPath)
-
-                    bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
-                    outStream.flush()
-                    outStream.close()
-                    bm.recycle()
-                    result =
-                        R.drawable.songs_thumbnail_cover
-                } else {
-                    s.use { input ->
-                        Files.copy(input, coverPath.toPath())
-                    }
-                    result = coverPath.path
-                    s.close()
+                val folder = File(context.externalCacheDir, "album_cover")
+                folder.mkdirs()
+                val coverPath = File(folder, "$id.jpg")
+                if (coverPath.exists()) {
+                    Log.d("AlbumCover", "Loaded from cache: ${coverPath.path}")
+                    return@withContext coverPath.path
                 }
-
-            } catch (_: Exception) {
-                //                        e.printStackTrace()
-            }
-            if (result == null) {
-                val bm =
-                    BitmapFactory.decodeResource(
-                        context.resources,
-                        R.drawable.songs_thumbnail_cover
+                try {
+                    val albumUri = ContentUris.withAppendedId(
+                        "content://media/external/audio/albumart".toUri(),
+                        id
                     )
-                val outStream = FileOutputStream(coverPath)
-                bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
-                outStream.flush()
-                outStream.close()
-                bm.recycle()
-                return R.drawable.songs_thumbnail_cover
-            }
-            return result
-        } catch (_: Exception) {
+                    context.contentResolver.openInputStream(albumUri)?.use { s ->
+                        Files.copy(s, coverPath.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                        Log.d("AlbumCover", "Loaded from MediaStore: ${coverPath.path}")
+                        return@withContext coverPath.path
+                    }
+                } catch (e: Exception) {
+                    Log.e(
+                        "AlbumCover",
+                        "Error getting album art from MediaStore for ID $id: ${e.message}",
+                        e
+                    )
+                }
+                val defaultCoverResId = customMusicCover.value
+                if (defaultCoverResId is Int) {
+                    val bm = BitmapFactory.decodeResource(context.resources, defaultCoverResId)
+                    FileOutputStream(coverPath).use { outStream ->
+                        bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
+                    }
+                    bm.recycle()
+                }else if(defaultCoverResId is String){
+                    val sourceFile = File(defaultCoverResId)
+                    Files.copy(sourceFile.toPath(), coverPath.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                }
+                return@withContext defaultCoverResId
 
+            } catch (e: Exception) {
+                Log.e("AlbumCover", "Unexpected error in getAlbumCover for ID $id: ${e.message}", e)
+                return@withContext R.drawable.songs_thumbnail_cover // 替换为你的默认封面资源
+            }
         }
-        return R.drawable.songs_thumbnail_cover
     }
 
     fun prepareArtistAndGenreCover(context: Context) {

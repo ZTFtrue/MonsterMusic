@@ -40,6 +40,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -65,6 +66,8 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.LibraryResult
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import coil.size.Size
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
@@ -124,7 +127,7 @@ fun AlbumGridView(
                             ) ?: "",
                             trackNumber = mediaItem.mediaMetadata.totalTrackCount ?: 0,
                         )
-                       list.add(album)
+                        list.add(album)
                     }
                     albumList.addAll(list)
                 } catch (e: Exception) {
@@ -281,6 +284,27 @@ fun AlbumItemView(
             }
         })
     }
+
+    // 使用 produceState 来异步获取专辑封面模型
+    // initialValue 是在协程完成之前显示的占位符
+    // key1 = albumId 意味着当 albumId 改变时，produceState 内部的协程会重新启动
+    val albumCoverModel by produceState<Any>(
+        initialValue = R.drawable.songs_thumbnail_cover, // 初始显示默认封面
+        key1 = item.id
+    ) {
+        // 这个lambda块在 produceState 内部的协程中执行
+        value = musicViewModel.getAlbumCover(item.id, context)
+    }
+
+    // rememberAsyncImagePainter 会观察 albumCoverModel 的变化，并重新加载图片
+    val painter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(context)
+            .data(albumCoverModel) // 传入异步获取到的model (路径或资源ID)
+//            .size(Size.ORIGINAL) // 可以根据需要设置图片大小
+//            .crossfade(true) // 添加交叉淡入效果
+//            .error(R.drawable.songs_thumbnail_cover)
+            .build()
+    )
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -302,23 +326,7 @@ fun AlbumItemView(
         ConstraintLayout {
             val (playIndicator) = createRefs()
             Image(
-//                painter = painterResource(
-//                    musicViewModel.getAlbumCover(
-//                        item.id,
-//                        context
-//                    )
-//                ),
-                painter = rememberAsyncImagePainter(
-                    musicViewModel.getAlbumCover(
-                        item.id,
-                        context
-                    )
-                        ?: musicViewModel.customMusicCover.value
-                ),
-//                model = musicViewModel.getAlbumCover(
-//                    item.id,
-//                    context
-//                ),
+                painter = painter,
                 contentDescription = stringResource(id = R.string.album_cover),
                 modifier = Modifier
                     .zIndex(0f)

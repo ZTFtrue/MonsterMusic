@@ -43,6 +43,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -65,6 +66,7 @@ import androidx.media3.session.LibraryResult
 import androidx.media3.session.SessionResult
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
@@ -826,8 +828,17 @@ fun TracksListPage(
                                 when (musicPlayList.value) {
                                     is AlbumList -> {
                                         val albumList = musicPlayList.value as AlbumList
-                                        musicViewModel.getAlbumCover(albumList.id, context)
-                                            ?: musicViewModel.customMusicCover.value
+                                        val albumCoverModel by produceState(
+                                            initialValue = musicViewModel.customMusicCover.value, // 初始显示默认封面
+                                            key1 = albumList.id
+                                        ) {
+                                            value =
+                                                musicViewModel.getAlbumCover(albumList.id, context)
+                                        }
+                                        ImageRequest.Builder(context)
+                                            .data(albumCoverModel)
+                                            .error(R.drawable.songs_thumbnail_cover) // 可选：设置加载失败时的错误图片
+                                            .build()
                                     }
 
                                     is ArtistList -> {
