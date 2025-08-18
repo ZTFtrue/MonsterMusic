@@ -114,7 +114,7 @@ fun EditTrackPage(
         val musicItem = TracksManager.getMusicById(context, musicId)
         if (musicItem != null) {
             musicPath = musicItem.path
-            coverBitmap.value = getCover(context, musicId, musicPath)
+            coverBitmap.value = getCover(null,context, musicId, musicPath)
             title = musicItem.name
             album = musicItem.album
             artist = musicItem.artist

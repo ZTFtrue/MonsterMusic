@@ -498,7 +498,7 @@ class MusicViewModel : ViewModel() {
         }
         val v = currentPlay.value
         if (v != null) {
-            currentMusicCover.value = getCover(context, v.id, v.path)
+            currentMusicCover.value = getCover(this@MusicViewModel, context, v.id, v.path)
             return currentMusicCover.value
         }
         return null

@@ -47,6 +47,8 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.util.Locale
 
 enum class OperateTypeInActivity {
@@ -259,7 +261,12 @@ object Utils {
     }
 
     private val retriever = MediaMetadataRetriever()
-    fun getCover(context: Context, musicId: Long, path: String): Bitmap? {
+    fun getCover(
+        musicViewModel: MusicViewModel?,
+        context: Context,
+        musicId: Long,
+        path: String
+    ): Bitmap? {
 //        try {
 //            var uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
 //            uri = ContentUris.withAppendedId(uri, musicId)
@@ -280,7 +287,22 @@ object Utils {
             }
         } catch (_: Exception) {
         }
-        return null
+        val defaultCoverResId = musicViewModel?.customMusicCover?.value
+        when (defaultCoverResId) {
+            null -> {
+                return null
+            }
+            is Int -> {
+                return BitmapFactory.decodeResource(context.resources, defaultCoverResId)
+            }
+
+            is String -> {
+                val sourceFile = File(defaultCoverResId)
+                return BitmapFactory.decodeFile(sourceFile.absolutePath).scale(512, 512, false)
+            }
+
+            else -> return null
+        }
     }
 
     @Suppress("unused")
@@ -327,7 +349,12 @@ object Utils {
     ) {
         if (name.isNotEmpty()) {
             val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
-                musicViewModel.browser?.getChildren(type.name + "_track_" + id, 0, Integer.MAX_VALUE, null)
+                musicViewModel.browser?.getChildren(
+                    type.name + "_track_" + id,
+                    0,
+                    Integer.MAX_VALUE,
+                    null
+                )
             futureResult?.addListener({
                 try {
                     val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
@@ -394,7 +421,12 @@ object Utils {
         removeDuplicate: Boolean
     ) {
         val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
-            musicViewModel.browser?.getChildren(type.name + "_track_" + id, 0, Integer.MAX_VALUE, null)
+            musicViewModel.browser?.getChildren(
+                type.name + "_track_" + id,
+                0,
+                Integer.MAX_VALUE,
+                null
+            )
         futureResult?.addListener({
             try {
                 val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
@@ -484,14 +516,14 @@ object Utils {
                             MediaItemUtils.mediaItemToMusicItem(mediaItem)
                                 ?.let { tracksList.add(it) }
                         }
-                        val i=musicViewModel.browser?.currentMediaItemIndex
-                        val position =if(i!=null) {
-                            if(i== C.INDEX_UNSET){
+                        val i = musicViewModel.browser?.currentMediaItemIndex
+                        val position = if (i != null) {
+                            if (i == C.INDEX_UNSET) {
                                 0
-                            }else{
-                                i+1
+                            } else {
+                                i + 1
                             }
-                        } else{
+                        } else {
                             0
                         }
                         addTracksToQueue(
@@ -548,7 +580,7 @@ object Utils {
             !musicViewModel.refreshFolder.value
         musicViewModel.songsList.clear()
         musicViewModel.playListCurrent.value = null
-        musicViewModel.viewModelScope .launch(Dispatchers.Main) {
+        musicViewModel.viewModelScope.launch(Dispatchers.Main) {
             val futureResult: ListenableFuture<SessionResult>? =
                 musicViewModel.browser?.sendCustomCommand(
                     MediaCommands.COMMAND_REFRESH_ALL,
