@@ -112,14 +112,11 @@ fun MusicPitchTheme(
 
     fun generateAndApplyColorScheme(
         bitmap: Bitmap,
-        currentColorScheme: MutableState<ColorScheme>, // 如果是 MutableState
-        // 或者如果 `colorScheme` 是 ViewModel 的 StateFlow，你可以这样传递 lambda
-        // updateColorScheme: (ColorScheme) -> Unit,
-        defaultColorScheme: ColorScheme // 传入应用默认的ColorScheme
+        currentColorScheme: MutableState<ColorScheme>,
+        defaultColorScheme: ColorScheme
     ) {
         Palette.from(bitmap).generate { palette ->
             if (palette == null) {
-                // 如果 Palette 无法生成 (例如图片太小或无效)，直接使用默认颜色
                 Log.w(
                     "ColorPalette",
                     "Palette could not be generated from bitmap. Using default ColorScheme."
@@ -128,37 +125,29 @@ fun MusicPitchTheme(
                 return@generate
             }
 
-            // --- 核心颜色提取逻辑 ---
             val dominantColor =
                 palette.dominantSwatch?.rgb ?: defaultColorScheme.background.toArgb()
             val primaryColor = palette.lightMutedSwatch?.rgb
                 ?: palette.mutedSwatch?.rgb
                 ?: palette.vibrantSwatch?.rgb
-                ?: dominantColor // 尝试多种，最后回退到主色或默认色
+                ?: dominantColor
             val secondaryColor = palette.darkVibrantSwatch?.rgb
                 ?: palette.vibrantSwatch?.rgb
-                ?: primaryColor // 尝试多种，最后回退到 primaryColor
+                ?: primaryColor
 
-            // 辅助函数：获取文本颜色，如果Swatch为空或文本颜色接近背景色，则使用默认的对比色
             fun Palette.Swatch?.getTextColor(fallbackColor: Color): Color {
                 return if (this != null && this.bodyTextColor != 0 && this.titleTextColor != 0) {
-                    // 优先使用 bodyTextColor，确保与背景有对比
                     Color(this.bodyTextColor)
                 } else {
-                    // 如果Swatch为空或者文本颜色是纯黑/纯白 (0)，使用一个安全的默认色
                     fallbackColor
                 }
             }
 
-            // --- 应用提取的颜色到 ColorScheme ---
             currentColorScheme.value = currentColorScheme.value.copy(
-                // 背景和表面颜色：优先使用主色调，如果不存在，回退到应用的默认背景色
                 background = Color(dominantColor),
                 surface = Color(dominantColor),
-
                 onBackground = palette.dominantSwatch.getTextColor(defaultColorScheme.onBackground),
                 onSurface = palette.dominantSwatch.getTextColor(defaultColorScheme.onSurface),
-
                 primary = Color(primaryColor),
                 onPrimary = palette.lightMutedSwatch.getTextColor(defaultColorScheme.onPrimary),
                 primaryContainer = Color(
@@ -190,11 +179,7 @@ fun MusicPitchTheme(
         }
     }
 
-    // 辅助函数：将 Compose Color 转换为 Int (ARGB)
-    fun Color.toArgb(): Int = (alpha * 255.0f + 0.5f).toInt() shl 24 or
-            ((red * 255.0f + 0.5f).toInt() shl 16) or
-            ((green * 255.0f + 0.5f).toInt() shl 8) or
-            (blue * 255.0f + 0.5f).toInt()
+
     LaunchedEffect(
         musicViewModel.themeSelected.intValue,
         musicViewModel.needRefreshTheme.value
@@ -233,8 +218,6 @@ fun MusicPitchTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-//            window.statusBarColor = colorScheme.value.background.toArgb()
-//            window.navigationBarColor = colorScheme.value.background.toArgb()
             val darkColor = !CustomColorUtils.isColorDark(colorScheme.value.background.toArgb())
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkColor
             WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars =

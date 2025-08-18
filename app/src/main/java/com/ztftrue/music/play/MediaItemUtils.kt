@@ -196,41 +196,6 @@ object MediaItemUtils {
             .build()
     }
 
-    fun musicItemToMediaMetadata(musicItem: MusicItem): MediaMetadata {
-        val metadataBuilder = MediaMetadata.Builder()
-        metadataBuilder
-            .setTitle(musicItem.name)
-            .setArtist(musicItem.artist)
-            .setAlbumTitle(musicItem.album)
-            .setAlbumArtist(musicItem.artist) // 通常专辑艺术家和曲目艺术家是同一个人
-            .setGenre(musicItem.genre)
-            .setTrackNumber(musicItem.songNumber)
-            .setReleaseYear(musicItem.year)
-        // (可选) 如果你能从 ContentResolver 获取到专辑封面 URI
-        // .setArtworkUri(getAlbumArtUri(musicItem.albumId))
-
-        // --- 2. (可选但推荐) 将一些无法在标准字段中表示的、
-        //     但又很有用的信息存入 extras Bundle。---
-        val extras = Bundle().apply {
-            // 保存原始的数据库 ID，以便调试或特殊用途
-            // 保存艺术家和专辑的 ID，可能用于快速跳转
-            putLong("artist_id", musicItem.artistId)
-            putLong("album_id", musicItem.albumId)
-            // 保存其他自定义数据
-            // putBoolean(CustomMetadataKeys.KEY_IS_FAVORITE, musicItem.isFavorite)
-            // putInt(CustomMetadataKeys.KEY_BITRATE, musicItem.bitrate)
-        }
-        metadataBuilder.setExtras(extras)
-
-        // --- 3. 对于歌曲，明确其媒体类型 ---
-        // 它们是可播放的，但不可浏览（下面没有子项）
-        metadataBuilder
-            .setIsPlayable(true)
-            .setIsBrowsable(false)
-            .setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
-
-        return metadataBuilder.build()
-    }
 
     fun mediaItemToMusicItem(mediaItem: MediaItem): MusicItem? {
         val metadata = mediaItem.mediaMetadata

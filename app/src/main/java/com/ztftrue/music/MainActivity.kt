@@ -589,7 +589,6 @@ class MainActivity : ComponentActivity() {
         Utils.initSettingsData(musicViewModel, this)
         musicViewModel.prepareArtistAndGenreCover(this@MainActivity)
         val customMusicCoverPath = SharedPreferencesUtils.getTrackCoverData(this@MainActivity)
-        val b = File(customMusicCoverPath).exists()
         musicViewModel.customMusicCover.value = customMusicCoverPath?.takeIf {
             File(it).exists()
         } ?: R.drawable.songs_thumbnail_cover

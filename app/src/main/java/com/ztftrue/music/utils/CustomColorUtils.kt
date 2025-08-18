@@ -11,5 +11,8 @@ object CustomColorUtils {
         // 根据阈值判断是深色还是浅色
         return darkness >= 0.5
     }
-
+    fun androidx.compose.ui.graphics.Color.toArgb(): Int = (alpha * 255.0f + 0.5f).toInt() shl 24 or
+            ((red * 255.0f + 0.5f).toInt() shl 16) or
+            ((green * 255.0f + 0.5f).toInt() shl 8) or
+            (blue * 255.0f + 0.5f).toInt()
 }

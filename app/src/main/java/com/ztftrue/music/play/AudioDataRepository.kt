@@ -30,7 +30,7 @@ object AudioDataRepository {
         // tryEmit 是一个非挂起的、线程安全的方法。
         // 如果缓冲区满了，它会失败并返回 false，但不会阻塞生产者。
         // 这对于实时音频处理至关重要，我们宁愿丢弃一帧，也不愿阻塞音频线程。
-        val emitted = _visualizationDataFlow.tryEmit(data)
+       /* val emitted =*/ _visualizationDataFlow.tryEmit(data)
         // if (!emitted) {
         //     Log.w("AudioDataRepository", "Visualization data buffer overflow. Dropping frame.")
         // }
