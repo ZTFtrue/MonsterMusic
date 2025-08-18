@@ -78,6 +78,7 @@ fun MainView(
     }
     LaunchedEffect(musicViewModel.songsList ) {
         if (musicViewModel.songsList.isEmpty()) {
+            musicViewModel.loadingTracks.value = true
             val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
                 musicViewModel.browser?.getChildren("songs_root", 0, Integer.MAX_VALUE, null)
             futureResult?.addListener({
@@ -95,6 +96,7 @@ fun MainView(
                     // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
                     Log.e("Client", "Failed to toggle favorite status", e)
                 }
+                musicViewModel.loadingTracks.value = false
             }, ContextCompat.getMainExecutor(context))
 
         }

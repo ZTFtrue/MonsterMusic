@@ -61,6 +61,7 @@ import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.model.ItemFilterModel
 import kotlinx.coroutines.launch
@@ -124,16 +125,29 @@ fun TracksListView(
     }
     key(tracksList, itemFilterList, showSlideIndicator, showTopIndicator) {
         if (tracksList.isEmpty() && header == null) {
-            Text(
-                text = stringResource(R.string.no_music),
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .horizontalScroll(rememberScrollState(0))
-                    .semantics {
-                        contentDescription = "No music"
-                    }
-            )
+            if (musicViewModel.loadingTracks.value) {
+                Text(
+                    text = "Loading...",
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(2.dp)
+                )
+            } else {
+                Text(
+                    text = stringResource(R.string.no_music),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .horizontalScroll(rememberScrollState(0))
+                        .semantics {
+                            contentDescription = "No music"
+                        }
+                )
+            }
+
         } else {
             ConstraintLayout(
                 modifier = Modifier
@@ -141,11 +155,12 @@ fun TracksListView(
                     .padding(0.dp),
             ) {
                 val (list, button) = createRefs()
-                Row(modifier = Modifier
-                    .constrainAs(list) {
-                        top.linkTo(parent.top)
-                    }
-                    .fillMaxSize()) {
+                Row(
+                    modifier = Modifier
+                        .constrainAs(list) {
+                            top.linkTo(parent.top)
+                        }
+                        .fillMaxSize()) {
                     key(itemFilterList, showSlideIndicator) {
                         if (showSlideIndicator) {
                             LazyColumn(
@@ -283,7 +298,7 @@ fun TracksListView(
                         shape = CircleShape,
                     ) {
                         Icon(
-                            imageVector= Icons.Default.MyLocation,
+                            imageVector = Icons.Default.MyLocation,
                             contentDescription = "find current playing music",
                             modifier = Modifier
                                 .size(20.dp),

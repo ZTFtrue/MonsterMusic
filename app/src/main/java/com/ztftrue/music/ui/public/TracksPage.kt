@@ -692,7 +692,33 @@ fun TracksListPage(
             }
         }
     }
-    fun getHaveAlbums(){
+    fun getPlayListMessage() {
+        val futureResultItem: ListenableFuture<SessionResult>? =
+            musicViewModel.browser?.sendCustomCommand(
+                MediaCommands.COMMAND_GET_PLAY_LIST_ITEM,
+                Bundle().apply {
+                    putString("type", type.name)
+                    putLong("id", id)
+                }
+            )
+        futureResultItem?.addListener({
+            try {
+                val result: SessionResult? = futureResultItem.get()
+                if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
+                    Log.e("Client", "Failed COMMAND_GET_PLAY_LIST_ITEM ${result?.resultCode}")
+                    return@addListener
+                }
+                result.extras.getParcelable<AnyListBase>("data")?.let {
+                    musicPlayList.value = it
+                }
+            } catch (e: Exception) {
+                // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                Log.e("Client", "Failed to toggle favorite status", e)
+            }
+        }, ContextCompat.getMainExecutor(context))
+    }
+
+    fun getHaveAlbums() {
         if (type.name == PlayListType.Artists.name || type.name == PlayListType.Genres.name) {
             albumsList.clear()
             val futureResultAlbum: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
@@ -723,63 +749,49 @@ fun TracksListPage(
         }
     }
     LaunchedEffect(musicViewModel.refreshPlayList.value, refreshCurrentValueList) {
-        val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
-            musicViewModel.browser?.getChildren(
-                type.name + "_track_" + id,
-                0,
-                Integer.MAX_VALUE,
-                null
-            )
-        futureResult?.addListener({
-            try {
-                val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
-                Log.d("Client", "result tracks: ${result?.resultCode}")
-                if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
-                    return@addListener
-                }
-
-                getHaveAlbums()
-                val albumMediaItems: List<MediaItem> = result.value ?: listOf()
-                val tracksListResult = ArrayList<MusicItem>()
-                albumMediaItems.forEach { mediaItem ->
-                    MediaItemUtils.mediaItemToMusicItem(mediaItem)?.let { tracksListResult.add(it) }
-                }
-                tracksList.clear()
-                tracksList.addAll(
-                    tracksListResult
+        if (musicViewModel.browser == null) {
+            navController.navigateUp()
+            return@LaunchedEffect
+        } else {
+            musicViewModel.loadingTracks.value = true
+            val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
+                musicViewModel.browser?.getChildren(
+                    type.name + "_track_" + id,
+                    0,
+                    Integer.MAX_VALUE,
+                    null
                 )
+            futureResult?.addListener({
+                try {
+                    val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
+                    Log.d("Client", "result tracks: ${result?.resultCode}")
+                    if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
+                        navController.navigateUp()
+                        return@addListener
+                    }
 
-                val duration = tracksList.sumOf { it.duration }
-                durationAll.value = Utils.formatTimeWithUnit(duration)
-            } catch (e: Exception) {
-                // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
-                Log.e("Client", "Failed to toggle favorite status", e)
-            }
-        }, ContextCompat.getMainExecutor(context))
+                    getHaveAlbums()
+                    val albumMediaItems: List<MediaItem> = result.value ?: listOf()
+                    val tracksListResult = ArrayList<MusicItem>()
+                    albumMediaItems.forEach { mediaItem ->
+                        MediaItemUtils.mediaItemToMusicItem(mediaItem)
+                            ?.let { tracksListResult.add(it) }
+                    }
+                    tracksList.clear()
+                    tracksList.addAll(
+                        tracksListResult
+                    )
 
-        val futureResultItem: ListenableFuture<SessionResult>? =
-            musicViewModel.browser?.sendCustomCommand(
-                MediaCommands.COMMAND_GET_PLAY_LIST_ITEM,
-                Bundle().apply {
-                    putString("type", type.name)
-                    putLong("id", id)
+                    val duration = tracksList.sumOf { it.duration }
+                    durationAll.value = Utils.formatTimeWithUnit(duration)
+                } catch (e: Exception) {
+                    // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                    Log.e("Client", "Failed to toggle favorite status", e)
                 }
-            )
-        futureResultItem?.addListener({
-            try {
-                val result: SessionResult? = futureResultItem.get()
-                if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
-                  Log.e("Client", "Failed COMMAND_GET_PLAY_LIST_ITEM ${result?.resultCode}")
-                    return@addListener
-                }
-                result.extras.getParcelable<AnyListBase>("data")?.let {
-                    musicPlayList.value = it
-                }
-            } catch (e: Exception) {
-                // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
-                Log.e("Client", "Failed to toggle favorite status", e)
-            }
-        }, ContextCompat.getMainExecutor(context))
+                musicViewModel.loadingTracks.value = false
+            }, ContextCompat.getMainExecutor(context))
+            getPlayListMessage()
+        }
     }
 
     Scaffold(
@@ -886,69 +898,7 @@ fun TracksListPage(
                             }
                             IconButton(onClick = {
                                 musicViewModel.enableShuffleModel.value = true
-                                musicViewModel.playShuffled(  mListPlay.type, mListPlay.id)
-//                                val bundle = Bundle()
-//                                musicViewModel.playListCurrent.value = musicPlayList.value
-//                                musicViewModel.musicQueue.clear()
-//                                musicViewModel.browser?.pause()
-//                                musicViewModel.browser?.clearMediaItems()
-//                                musicViewModel.browser?.shuffleModeEnabled = true
-//                                musicViewModel.browser?.playWhenReady = false
-//                                val mediaItems =
-//                                    tracksList.map { MediaItemUtils.musicItemToMediaItem(it) }
-//                                musicViewModel.browser?.addMediaItems(mediaItems)
-//                                musicViewModel.browser?.playWhenReady = true
-//                                musicViewModel.browser?.prepare()
-//                            bundle.putParcelableArrayList("musicItems", ArrayList(musicList))
-//                            bundle.putInt("index", index)
-//                                bundle.putBoolean("switch_queue", true)
-//                                bundle.putParcelable("playList", musicPlayList.value)
-//                                musicViewModel.browser?.sendCustomCommand(
-//                                    COMMAND_CHANGE_PLAYLIST,
-//                                    bundle
-//                                )
-//                                musicViewModel.mediaBrowser?.sendCustomAction(
-//                                    ACTION_SHUFFLE_PLAY_QUEUE,
-//                                    bundle,
-//                                    object : MediaBrowserCompat.CustomActionCallback() {
-//                                        override fun onResult(
-//                                            action: String?,
-//                                            extras: Bundle?,
-//                                            resultData: Bundle?
-//                                        ) {
-//                                            super.onResult(action, extras, resultData)
-//                                            if (ACTION_SHUFFLE_PLAY_QUEUE == action && resultData != null) {
-//                                                val qList =
-//                                                    resultData.getParcelableArrayList<MusicItem>(
-//                                                        "list"
-//                                                    )
-//                                                if (qList != null) {
-//                                                    musicViewModel.musicQueue.addAll(qList)
-//                                                    if (musicViewModel.currentPlayQueueIndex.intValue == -1) {
-//                                                        musicViewModel.currentPlayQueueIndex.intValue =
-//                                                            0
-//                                                        musicViewModel.currentPlay.value =
-//                                                            musicViewModel.musicQueue[0]
-//                                                        musicViewModel.currentCaptionList.clear()
-//                                                        musicViewModel.currentMusicCover.value =
-//                                                            null
-//                                                        musicViewModel.currentPlay.value =
-//                                                            musicViewModel.musicQueue[0]
-//                                                        musicViewModel.sliderPosition.floatValue =
-//                                                            0f
-//                                                        musicViewModel.currentDuration.longValue =
-//                                                            musicViewModel.currentPlay.value?.duration
-//                                                                ?: 0
-//                                                        musicViewModel.dealLyrics(
-//                                                            context,
-//                                                            musicViewModel.musicQueue[0]
-//                                                        )
-//                                                    }
-//                                                }
-//                                            }
-//                                        }
-//                                    }
-//                                )
+                                musicViewModel.playShuffled(mListPlay.type, mListPlay.id)
                             }) {
                                 Icon(
                                     imageVector = Icons.Outlined.Shuffle,

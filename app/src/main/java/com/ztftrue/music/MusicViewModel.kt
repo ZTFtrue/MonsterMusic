@@ -88,7 +88,7 @@ class MusicViewModel : ViewModel() {
     var editTrackEnable = mutableStateOf(false)
     private val _visualizationData = MutableLiveData<List<Float>>()
     val visualizationData: LiveData<List<Float>> = _visualizationData
-
+    var loadingTracks = mutableStateOf(false)
     //    val albumItemsCount = mutableIntStateOf(2)
 //    val genreItemsCount = mutableIntStateOf(2)
 //    var mediaBrowser: MediaBrowserCompat? = null

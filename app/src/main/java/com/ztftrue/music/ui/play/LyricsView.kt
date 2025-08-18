@@ -298,9 +298,6 @@ fun LyricsView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(2.dp)
-                        .clickable {
-                            Utils.setLyricsFile(musicViewModel, context)
-                        }
                 )
             } else {
                 Text(
