@@ -1,13 +1,17 @@
 package com.ztftrue.music.effects
 
 import be.tarsos.dsp.util.fft.FFT
+import be.tarsos.dsp.util.fft.HannWindow
 
 
 class PCMToFrequencyDomain(private val bufferSize: Int, private val sampleRate: Float) {
     private val fft: FFT = FFT(bufferSize)
+    private val window = HannWindow() // 或者 val window = HammingWindow()
+
     private val fftSize: Int = bufferSize / 2
     fun process(pcmData: FloatArray): FloatArray {
         val paddedData = pcmData.copyOf(bufferSize)
+        window.apply(paddedData)
         fft.forwardTransform(paddedData)
         // Retrieve magnitudes
         val amplitudes = FloatArray(fftSize)

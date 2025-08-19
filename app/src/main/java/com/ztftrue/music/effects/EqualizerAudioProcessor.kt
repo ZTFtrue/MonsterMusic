@@ -339,11 +339,11 @@ class EqualizerAudioProcessor : AudioProcessor {
                             CoroutineScope(Dispatchers.IO).launch {
                                 val magnitude: FloatArray =
                                     pcmToFrequencyDomain.process(visualizationBuffer)
-                                val m = downsampleMagnitudes(magnitude, 32)
-//                                val bundle = Bundle()
-//                                bundle.putFloatArray("magnitude", m)
+                                val m = downsampleMagnitudes(
+                                    magnitude, 32, -60f, needNormalize=false,
+                                    needPositive = true
+                                )
                                 AudioDataRepository.postVisualizationData(m)
-//                                mediaSession?.sendCustomCommand(COMMAND_VISUALIZATION_DATA,bundle)
                             }
                         }
                     }
