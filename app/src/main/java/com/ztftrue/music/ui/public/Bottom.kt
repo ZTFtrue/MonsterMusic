@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
@@ -52,12 +54,21 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
             }
         }
     }
-    var paint by remember { mutableStateOf<Bitmap?>(null) }
     val context = LocalContext.current
     LaunchedEffect(musicViewModel.currentPlay.value) {
         currentMusic = musicViewModel.currentPlay.value
-        paint = musicViewModel.getCurrentMusicCover(context)
     }
+    val currentCoverBitmap: Bitmap? by musicViewModel.currentMusicCover
+
+    val imageModel: Any? = remember(currentCoverBitmap) {
+        currentCoverBitmap
+    }
+
+    val imageRequest = ImageRequest.Builder(context)
+        .data(imageModel)
+        .build()
+
+    val painter = rememberAsyncImagePainter(model = imageRequest)
     if (currentMusic == null) return
     BottomAppBar(
         modifier = Modifier
@@ -76,9 +87,7 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
             ) {
                 key(musicViewModel.currentPlay.value) {
                     Image(
-                        painter = rememberAsyncImagePainter(
-                            paint ?: musicViewModel.customMusicCover.value
-                        ),
+                        painter = painter,
                         contentDescription = "song cover",
                         modifier = Modifier
                             .width(60.dp)

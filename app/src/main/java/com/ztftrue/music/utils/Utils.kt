@@ -293,7 +293,7 @@ object Utils {
                 return null
             }
             is Int -> {
-                return BitmapFactory.decodeResource(context.resources, defaultCoverResId)
+                return BitmapFactory.decodeResource(context.resources, defaultCoverResId).scale(512, 512, false)
             }
 
             is String -> {

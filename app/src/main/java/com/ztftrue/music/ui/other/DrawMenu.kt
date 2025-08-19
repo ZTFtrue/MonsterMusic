@@ -1,5 +1,6 @@
 package com.ztftrue.music.ui.other
 
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log
 import androidx.browser.customtabs.CustomTabsIntent
@@ -27,6 +28,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -49,6 +51,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionResult
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
@@ -72,6 +75,14 @@ fun DrawMenu(
     val scope = rememberCoroutineScope()
     val color = MaterialTheme.colorScheme.onBackground
     val context = LocalContext.current
+    val currentCoverBitmap: Bitmap? by musicViewModel.currentMusicCover
+    val imageModel: Any? = remember(currentCoverBitmap) {
+        currentCoverBitmap
+    }
+    val imageRequest = ImageRequest.Builder(context)
+        .data(imageModel)
+        .build()
+    val painter = rememberAsyncImagePainter(model = imageRequest)
     ModalDrawerSheet(
         modifier = Modifier
             .width(drawerWidth)
@@ -110,10 +121,7 @@ fun DrawMenu(
                     alignment = Alignment.BottomStart
                 )
                 Image(
-                    painter = rememberAsyncImagePainter(
-                        musicViewModel.getCurrentMusicCover(context = context)
-                            ?: musicViewModel.customMusicCover.value
-                    ),
+                    painter = painter,
                     contentDescription = stringResource(id = R.string.album_cover),
                     modifier = Modifier
                         .width(80.dp)

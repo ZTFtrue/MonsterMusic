@@ -285,24 +285,16 @@ fun AlbumItemView(
         })
     }
 
-    // 使用 produceState 来异步获取专辑封面模型
-    // initialValue 是在协程完成之前显示的占位符
-    // key1 = albumId 意味着当 albumId 改变时，produceState 内部的协程会重新启动
     val albumCoverModel by produceState<Any>(
         initialValue = R.drawable.songs_thumbnail_cover, // 初始显示默认封面
         key1 = item.id
     ) {
-        // 这个lambda块在 produceState 内部的协程中执行
         value = musicViewModel.getAlbumCover(item.id, context)
     }
 
-    // rememberAsyncImagePainter 会观察 albumCoverModel 的变化，并重新加载图片
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(context)
-            .data(albumCoverModel) // 传入异步获取到的model (路径或资源ID)
-//            .size(Size.ORIGINAL) // 可以根据需要设置图片大小
-//            .crossfade(true) // 添加交叉淡入效果
-//            .error(R.drawable.songs_thumbnail_cover)
+            .data(albumCoverModel)
             .build()
     )
     Column(

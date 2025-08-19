@@ -46,6 +46,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.MediaCommands
@@ -57,7 +58,6 @@ import org.jaudiotagger.tag.FieldKey
 @Composable
 fun CoverView(musicViewModel: MusicViewModel) {
     val listState = rememberLazyListState()
-    var coverPaint by remember { mutableStateOf<Bitmap?>(null) }
     val context = LocalContext.current
     val musicVisualizationEnable = remember { musicViewModel.musicVisualizationEnable }
     val showOtherMessage = remember { mutableStateOf(true) }
@@ -76,8 +76,18 @@ fun CoverView(musicViewModel: MusicViewModel) {
         textSize = textSizeSet
         typeface = android.graphics.Typeface.MONOSPACE // 指定为等宽字体
     }
+    val currentCoverBitmap: Bitmap? by musicViewModel.currentMusicCover
+
+    val imageModel: Any? = remember(currentCoverBitmap) {
+        currentCoverBitmap
+    }
+
+    val imageRequest = ImageRequest.Builder(context)
+        .data(imageModel)
+        .build()
+
+    val painter = rememberAsyncImagePainter(model = imageRequest)
     LaunchedEffect(musicViewModel.currentPlay.value) {
-        coverPaint = musicViewModel.getCurrentMusicCover(context)
         initDrops.value = false
     }
     LaunchedEffect(
@@ -122,7 +132,8 @@ fun CoverView(musicViewModel: MusicViewModel) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_START -> {
-                    musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_VISUALIZATION_CONNECTED,
+                    musicViewModel.browser?.sendCustomCommand(
+                        MediaCommands.COMMAND_VISUALIZATION_CONNECTED,
                         Bundle()
                     )
                     shouldRun = true
@@ -215,9 +226,7 @@ fun CoverView(musicViewModel: MusicViewModel) {
                 if (!musicVisualizationEnable.value || musicViewModel.showMusicCover.value) {
                     key(musicViewModel.currentPlay.value) {
                         Image(
-                            painter = rememberAsyncImagePainter(
-                                coverPaint ?: musicViewModel.customMusicCover.value
-                            ), contentDescription = stringResource(R.string.cover),
+                            painter = painter, contentDescription = stringResource(R.string.cover),
                             modifier = Modifier
                                 .size(minOf(maxWidth, maxHeight))
                                 .aspectRatio(1f)

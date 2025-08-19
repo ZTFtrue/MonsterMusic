@@ -112,7 +112,7 @@ class MusicViewModel : ViewModel() {
 
     var currentMusicCover = mutableStateOf<Bitmap?>(null)
     var currentPlay = mutableStateOf<MusicItem?>(null)
-
+    var needRefreshTheme=mutableStateOf(false)
     //    var currentPlayQueueIndex = mutableIntStateOf(-1)
     var songsList = mutableStateListOf<MusicItem>()
     var playListCurrent = mutableStateOf<AnyListBase?>(null)
@@ -227,7 +227,7 @@ class MusicViewModel : ViewModel() {
             if (index == 0 && reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
                 delay(100)
             }
-            currentMusicCover.value = null
+
             sliderPosition.floatValue = 0f
             currentCaptionList.clear()
             if (mediaItem != null) {
@@ -235,6 +235,7 @@ class MusicViewModel : ViewModel() {
                 currentPlay.value = music
                 if (music != null) {
                     dealLyrics(context, music)
+                    getCurrentMusicCover(context)
                 }
             }
         }
@@ -309,7 +310,6 @@ class MusicViewModel : ViewModel() {
         }
         return false
     }
-
     fun dealLyrics(context: Context, currentPlay: MusicItem) {
         lock.lock()
         currentCaptionListLoading.value = true
@@ -493,15 +493,14 @@ class MusicViewModel : ViewModel() {
 
 
     fun getCurrentMusicCover(context: Context): Bitmap? {
-        if (currentMusicCover.value != null) {
-            return currentMusicCover.value
-        }
         val v = currentPlay.value
         if (v != null) {
             currentMusicCover.value = getCover(this@MusicViewModel, context, v.id, v.path)
-            return currentMusicCover.value
         }
-        return null
+        if(themeSelected.intValue == 3){
+            needRefreshTheme.value=!needRefreshTheme.value
+        }
+        return currentMusicCover.value
     }
 
     suspend fun getAlbumCover(id: Long, context: Context): Any {

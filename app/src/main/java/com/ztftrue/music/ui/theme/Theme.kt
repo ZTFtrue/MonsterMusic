@@ -197,7 +197,7 @@ fun MusicPitchTheme(
             (blue * 255.0f + 0.5f).toInt()
     LaunchedEffect(
         musicViewModel.themeSelected.intValue,
-        musicViewModel.currentPlay.value
+        musicViewModel.needRefreshTheme.value
     ) {
         // "Follow System", "Light", "Dark", "Follow Music Cover","material you"
         if (musicViewModel.themeSelected.intValue == 0) {
@@ -207,7 +207,7 @@ fun MusicPitchTheme(
         } else if (musicViewModel.themeSelected.intValue == 2) {
             colorScheme.value = DarkColorScheme
         } else if (musicViewModel.themeSelected.intValue == 3) {
-            val bitmap = musicViewModel.getCurrentMusicCover(context)
+            val bitmap = musicViewModel.currentMusicCover.value
             if (bitmap != null) {
                 generateAndApplyColorScheme(
                     bitmap,

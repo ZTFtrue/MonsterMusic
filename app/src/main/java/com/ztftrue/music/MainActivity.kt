@@ -311,6 +311,7 @@ class MainActivity : ComponentActivity() {
                             // 关闭流
                             inputStream.close()
                             outputStream.close()
+                            musicViewModel.getCurrentMusicCover(this@MainActivity)
                             getSharedPreferences("Widgets", MODE_PRIVATE).getBoolean(
                                 "enable",
                                 false
@@ -417,11 +418,13 @@ class MainActivity : ComponentActivity() {
                             StorageFolder(null, treeUri.toString())
                         )
                         val c = musicViewModel.currentPlay.value
-                        if (c != null)
+                        if (c != null){
                             musicViewModel.dealLyrics(
                                 this@MainActivity,
                                 c
                             )
+                        }
+
                     }
 
                 }
@@ -586,11 +589,10 @@ class MainActivity : ComponentActivity() {
         Utils.initSettingsData(musicViewModel, this)
         musicViewModel.prepareArtistAndGenreCover(this@MainActivity)
         val customMusicCoverPath = SharedPreferencesUtils.getTrackCoverData(this@MainActivity)
-
+        val b = File(customMusicCoverPath).exists()
         musicViewModel.customMusicCover.value = customMusicCoverPath?.takeIf {
             File(it).exists()
         } ?: R.drawable.songs_thumbnail_cover
-
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
 
@@ -649,7 +651,7 @@ class MainActivity : ComponentActivity() {
             command: SessionCommand,
             args: Bundle
         ): ListenableFuture<SessionResult> {
-            if (command.customAction ==   MediaCommands.COMMAND_SLEEP_STATE_UPDATE.customAction) {
+            if (command.customAction == MediaCommands.COMMAND_SLEEP_STATE_UPDATE.customAction) {
                 val remainTime = args.getLong("remaining")
                 musicViewModel.remainTime.longValue = remainTime
                 if (remainTime == 0L) {
@@ -811,6 +813,7 @@ class MainActivity : ComponentActivity() {
                 musicViewModel.currentInputFormat[formatItem.key] = formatItem.value
             }
         }
+
         override fun onPositionDiscontinuity(
             oldPosition: Player.PositionInfo,
             newPosition: Player.PositionInfo,
@@ -822,7 +825,7 @@ class MainActivity : ComponentActivity() {
             if (reason == Player.DISCONTINUITY_REASON_SEEK) {
                 val actualNewPositionMs = newPosition.positionMs // 获取精确的新位置
 //                val actualNewWindowIndex = newPosition.windowIndex // 获取精确的新窗口索引
-                musicViewModel.sliderPosition.floatValue =actualNewPositionMs.toFloat()
+                musicViewModel.sliderPosition.floatValue = actualNewPositionMs.toFloat()
                 // (可选) 广播给 ViewModel，更新 UI 进度条的 LiveData
                 // (this@PlayService.application as? Application)?.let { app ->
                 //     val viewModel = ViewModelProvider(app).get(MusicPlayerViewModel::class.java)
@@ -949,10 +952,10 @@ class MainActivity : ComponentActivity() {
             val currentMusic = musicViewModel.currentPlay.value
             if (musicViewModel.musicQueue.size > currentIndex) {
                 if (currentMusic == null || currentMusic.id != musicViewModel.musicQueue[currentIndex].id) {
-                    musicViewModel.currentMusicCover.value = null
                     musicViewModel.currentCaptionList.clear()
                     musicViewModel.currentPlay.value =
                         musicViewModel.musicQueue[currentIndex]
+                    musicViewModel.getCurrentMusicCover(this@MainActivity)
                     musicViewModel.dealLyrics(
                         this@MainActivity,
                         musicViewModel.musicQueue[player.currentMediaItemIndex]
