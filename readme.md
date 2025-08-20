@@ -45,7 +45,8 @@ Or download the latest APK from the [Releases Section](https://github.com/ZTFtru
 <img alt="dic" src="./Picture/dic.png" width="200px"/><img alt="lyrics" src="./Picture/lyrics.png" width="200px"/><img alt="songs" src="./Picture/artist.png" width="200px"/>
 <img alt="songs" src="./Picture/genre.png" width="200px"/><img alt="songs" src="./Picture/index.jpg" width="200px"/>
 <img alt="songs" src="./Picture/matrix.gif" width="200px"/>
-<img alt="songs" src="./Picture/equalizer-open.gif" width="200px"/>
+
+
 
 <!-- <video width="320px" controls>
   <source src="./Picture/MonstrMusicExample.mp4" type="video/mp4">
@@ -78,3 +79,8 @@ Other Icons from: <https://fonts.google.com/icons>.
 [crowdin](https://crowdin.com/project/monstermusic/invite?h=d58c9ddb1dea6fafb617327d66a529b52178797)
 
 Thanks: @`Libervole`
+
+
+## How to open equalizer
+
+<img alt="songs" src="./Picture/equalizer-open.gif" width="200px"/>
