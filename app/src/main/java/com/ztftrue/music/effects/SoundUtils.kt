@@ -97,38 +97,6 @@ object SoundUtils {
         return 1
     }
 
-    fun adjustFrequencies(magnitudes: FloatArray, sampleRate: Int, fftSize: Int): FloatArray {
-        val adjustedMagnitudes = mutableListOf<Float>()
-        val totalBands = 32 // 例如，将可视化划分为 32 段
-        val lowFreqCutoff = 200 // 200 Hz 以下为低频
-        val highFreqCutoff = 2000 // 2000 Hz 以上为高频
-
-        val bandStepLow = (lowFreqCutoff / sampleRate.toFloat()) * fftSize
-        val bandStepHigh = (highFreqCutoff / sampleRate.toFloat()) * fftSize
-
-        // 低频分段 (更细致)
-        for (i in 0 until bandStepLow.toInt()) {
-            adjustedMagnitudes.add(magnitudes[i])
-        }
-
-        // 高频合并 (将多个频段合并)
-        var i = bandStepLow.toInt()
-        while (i < magnitudes.size) {
-            var sum = 0f
-            var count = 0
-            for (j in 0 until bandStepHigh.toInt()) {
-                if (i + j < magnitudes.size) {
-                    sum += magnitudes[i + j]
-                    count++
-                }
-            }
-            adjustedMagnitudes.add(sum / count) // 合并
-            i += bandStepHigh.toInt()
-        }
-
-        return adjustedMagnitudes.toFloatArray()
-    }
-
     fun expandBuffer(newCapacity: Int, oldBuffer: ByteBuffer): ByteBuffer {
         val newBuffer = ByteBuffer.allocate(newCapacity)
         oldBuffer.flip() // 切换到读取模式
