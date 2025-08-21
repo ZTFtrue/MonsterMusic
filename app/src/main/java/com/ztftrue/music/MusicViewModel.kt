@@ -537,12 +537,16 @@ class MusicViewModel : ViewModel() {
                         bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
                     }
                     bm.recycle()
+                    return@withContext defaultCoverResId
                 }else if(defaultCoverResId is String){
                     val sourceFile = File(defaultCoverResId)
-                    Files.copy(sourceFile.toPath(), coverPath.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                    if(sourceFile.exists()){
+                        sourceFile.copyTo(coverPath,true)
+                        return@withContext defaultCoverResId
+                    }
+//                    Files.copy(sourceFile.toPath(), coverPath.toPath(), StandardCopyOption.REPLACE_EXISTING)
                 }
-                return@withContext defaultCoverResId
-
+                return@withContext R.drawable.songs_thumbnail_cover
             } catch (e: Exception) {
                 Log.e("AlbumCover", "Unexpected error in getAlbumCover for ID $id: ${e.message}", e)
                 return@withContext R.drawable.songs_thumbnail_cover // 替换为你的默认封面资源

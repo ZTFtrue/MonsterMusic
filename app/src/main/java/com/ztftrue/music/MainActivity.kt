@@ -294,66 +294,73 @@ class MainActivity : ComponentActivity() {
                             val folder = this@MainActivity.getExternalFilesDir(
                                 folderPath
                             )
-                            folder?.mkdirs()
-                            val tempPath: String? =
-                                this@MainActivity.getExternalFilesDir(folderPath)?.absolutePath
-                            // 创建目标文件
-                            val targetFile = File(tempPath, "track_cover.$fileExtension")
-                            musicViewModel.customMusicCover.value = targetFile.absolutePath
-                            SharedPreferencesUtils.setTrackCoverData(
-                                this@MainActivity,
-                                targetFile.absolutePath
-                            )
-                            val outputStream = FileOutputStream(targetFile)
-                            // 复制内容
-                            inputStream.copyTo(outputStream)
-
-                            // 关闭流
-                            inputStream.close()
-                            outputStream.close()
-                            musicViewModel.getCurrentMusicCover(this@MainActivity)
-                            getSharedPreferences("Widgets", MODE_PRIVATE).getBoolean(
-                                "enable",
-                                false
-                            )
-                                .let {
-                                    if (it) {
-                                        val intent =
-                                            Intent(this@MainActivity, PlayMusicWidget::class.java)
-                                        intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-                                        intent.putExtra("source", this@MainActivity.packageName)
-                                        val ids = AppWidgetManager.getInstance(
-                                            application
-                                        ).getAppWidgetIds(
-                                            ComponentName(
-                                                application,
-                                                PlayMusicWidget::class.java
-                                            )
-                                        )
-                                        intent.putExtra(
-                                            "playingStatus",
-                                            musicViewModel.playStatus.value
-                                        )
-                                        intent.putExtra(
-                                            "title",
-                                            musicViewModel.currentPlay.value?.name ?: ""
-                                        )
-                                        intent.putExtra(
-                                            "author",
-                                            musicViewModel.currentPlay.value?.artist ?: ""
-                                        )
-                                        intent.putExtra(
-                                            "path",
-                                            musicViewModel.currentPlay.value?.path ?: ""
-                                        )
-                                        intent.putExtra(
-                                            "id",
-                                            musicViewModel.currentPlay.value?.id ?: 0L
-                                        )
-                                        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-                                        sendBroadcast(intent)
-                                    }
+                            if(folder!=null){
+                                if(folder.exists()){
+                                    folder.deleteRecursively()
+                                }else{
+                                    folder.mkdirs()
                                 }
+
+                                val tempPath: String? =
+                                    this@MainActivity.getExternalFilesDir(folderPath)?.absolutePath
+                                // 创建目标文件
+                                val targetFile = File(tempPath, "track_cover.$fileExtension")
+                                musicViewModel.customMusicCover.value = targetFile.absolutePath
+                                SharedPreferencesUtils.setTrackCoverData(
+                                    this@MainActivity,
+                                    targetFile.absolutePath
+                                )
+                                val outputStream = FileOutputStream(targetFile)
+                                // 复制内容
+                                inputStream.copyTo(outputStream)
+
+                                // 关闭流
+                                inputStream.close()
+                                outputStream.close()
+                                musicViewModel.getCurrentMusicCover(this@MainActivity)
+                                getSharedPreferences("Widgets", MODE_PRIVATE).getBoolean(
+                                    "enable",
+                                    false
+                                )
+                                    .let {
+                                        if (it) {
+                                            val intent =
+                                                Intent(this@MainActivity, PlayMusicWidget::class.java)
+                                            intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+                                            intent.putExtra("source", this@MainActivity.packageName)
+                                            val ids = AppWidgetManager.getInstance(
+                                                application
+                                            ).getAppWidgetIds(
+                                                ComponentName(
+                                                    application,
+                                                    PlayMusicWidget::class.java
+                                                )
+                                            )
+                                            intent.putExtra(
+                                                "playingStatus",
+                                                musicViewModel.playStatus.value
+                                            )
+                                            intent.putExtra(
+                                                "title",
+                                                musicViewModel.currentPlay.value?.name ?: ""
+                                            )
+                                            intent.putExtra(
+                                                "author",
+                                                musicViewModel.currentPlay.value?.artist ?: ""
+                                            )
+                                            intent.putExtra(
+                                                "path",
+                                                musicViewModel.currentPlay.value?.path ?: ""
+                                            )
+                                            intent.putExtra(
+                                                "id",
+                                                musicViewModel.currentPlay.value?.id ?: 0L
+                                            )
+                                            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+                                            sendBroadcast(intent)
+                                        }
+                                    }
+                            }
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
