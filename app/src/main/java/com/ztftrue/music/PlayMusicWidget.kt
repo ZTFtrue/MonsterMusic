@@ -3,9 +3,10 @@ package com.ztftrue.music
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
 import android.view.KeyEvent
@@ -13,10 +14,8 @@ import android.view.View
 import android.widget.RemoteViews
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.session.MediaButtonReceiver
-import com.ztftrue.music.utils.SharedPreferencesUtils
-import com.ztftrue.music.utils.Utils.getCover
-import java.io.File
+import com.ztftrue.music.play.PlayService
+import com.ztftrue.music.utils.Utils
 
 
 /**
@@ -45,23 +44,8 @@ class PlayMusicWidget : AppWidgetProvider() {
                 )
                 if (!playStatusChange) {
                     if (!path.isNullOrEmpty()) {
-                        val cover = getCover(null,context, id, path)
-                        if (cover != null) {
-                            it.setImageViewBitmap(R.id.cover, cover)
-                        } else {
-                            val customCoverPath = SharedPreferencesUtils.getTrackCoverData(context)
-                            val bitmap = customCoverPath
-                                ?.takeIf { File(it).exists() }
-                                ?.let { BitmapFactory.decodeFile(it) }
-                            if (bitmap != null) {
-                                it.setImageViewBitmap(R.id.cover, bitmap)
-                            } else {
-                                it.setImageViewResource(
-                                    R.id.cover,
-                                    R.drawable.songs_thumbnail_cover
-                                )
-                            }
-                        }
+                        val cover: Bitmap = Utils.getCoverBitmap(context, path)
+                        it.setImageViewBitmap(R.id.cover, cover)
                     }
                     it.setTextViewText(R.id.title, title)
                     it.setTextViewText(R.id.author, author)
@@ -156,9 +140,30 @@ class PlayMusicWidget : AppWidgetProvider() {
             putBoolean("enable", false)
             apply()
         }
-//        Log.d("PlayMusicWidget", "onDisabled")
     }
 
+    @UnstableApi
+    fun getPendingIntent(
+        context: Context,
+        serviceComponentName: ComponentName,
+        keyEvent: Int
+    ): PendingIntent {
+        val prevIntent = Intent(context, PlayService::class.java).apply {
+            action = Intent.ACTION_MEDIA_BUTTON
+            component = serviceComponentName
+            putExtra(
+                Intent.EXTRA_KEY_EVENT,
+                KeyEvent(KeyEvent.ACTION_DOWN, keyEvent)
+            )
+        }
+        val prevPendingIntent = PendingIntent.getService(
+            context,
+            keyEvent,
+            prevIntent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+        return prevPendingIntent
+    }
 
     @OptIn(UnstableApi::class)
     internal fun updateAppWidget(
@@ -188,44 +193,34 @@ class PlayMusicWidget : AppWidgetProvider() {
                     "setBackgroundColor",
                     context.resources.getColor(R.color.light_blue_900)
                 )
-                val prevIntent = Intent(context, MediaButtonReceiver::class.java).apply {
-                    // 创建一个“上一首”的媒体按键事件
-                    putExtra(Intent.EXTRA_KEY_EVENT, KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PREVIOUS))
-                }
-                val prevPendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    KeyEvent.KEYCODE_MEDIA_PREVIOUS, // 使用按键码作为 requestCode 以保证唯一性
-                    prevIntent,
-                    PendingIntent.FLAG_IMMUTABLE
-                )
-                it.setOnClickPendingIntent(
-                    R.id.preview,  prevPendingIntent
-                )
-                val playPauseIntent = Intent(context, MediaButtonReceiver::class.java).apply {
-                    putExtra(Intent.EXTRA_KEY_EVENT, KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE))
-                }
-                val playPausePendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
-                    playPauseIntent,
-                    PendingIntent.FLAG_IMMUTABLE
-                )
-                it.setOnClickPendingIntent(
-                    R.id.pause, playPausePendingIntent
-                )
-                val nextIntent = Intent(context, MediaButtonReceiver::class.java).apply {
-                    putExtra(Intent.EXTRA_KEY_EVENT, KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT))
-                }
+                val serviceComponentName =
+                    ComponentName(context.applicationContext, PlayService::class.java)
 
-                val nextPendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    KeyEvent.KEYCODE_MEDIA_NEXT,
-                    nextIntent,
-                    PendingIntent.FLAG_IMMUTABLE
-                )
                 it.setOnClickPendingIntent(
-                    R.id.next, nextPendingIntent
+                    R.id.preview,
+                    getPendingIntent(
+                        context,
+                        serviceComponentName,
+                        KeyEvent.KEYCODE_MEDIA_PREVIOUS
+                    )
                 )
+
+                it.setOnClickPendingIntent(
+                    R.id.pause, getPendingIntent(
+                        context,
+                        serviceComponentName,
+                        KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
+                    )
+                )
+
+                it.setOnClickPendingIntent(
+                    R.id.next, getPendingIntent(
+                        context,
+                        serviceComponentName,
+                        KeyEvent.KEYCODE_MEDIA_NEXT
+                    )
+                )
+
                 val intent = Intent(context, MainActivity::class.java)
                 val pendingIntent = PendingIntent.getActivity(
                     context,
@@ -282,29 +277,9 @@ class PlayMusicWidget : AppWidgetProvider() {
                     if (playingStatus) R.drawable.pause else R.drawable.play
                 )
                 if (!path.isNullOrEmpty()) {
-                    val cover = getCover(null,context, id, path)
-                    if (cover != null) {
-                        it.setImageViewBitmap(R.id.cover, cover)
-                        it.setImageViewBitmap(R.id.small_cover, cover)
-                    } else {
-                        val customCoverPath = SharedPreferencesUtils.getTrackCoverData(context)
-                        val bitmap = customCoverPath
-                            ?.takeIf { File(it).exists() }
-                            ?.let { BitmapFactory.decodeFile(it) }
-                        if (bitmap != null) {
-                            it.setImageViewBitmap(R.id.cover, bitmap)
-                            it.setImageViewBitmap(R.id.small_cover,bitmap)
-                        } else {
-                            it.setImageViewResource(
-                                R.id.cover,
-                                R.drawable.songs_thumbnail_cover
-                            )
-                            it.setImageViewResource(
-                                R.id.small_cover,
-                                R.drawable.songs_thumbnail_cover
-                            )
-                        }
-                    }
+                    val cover = Utils.getCoverBitmap(context, path)
+                    it.setImageViewBitmap(R.id.cover, cover)
+                    it.setImageViewBitmap(R.id.small_cover, cover)
                 }
                 it.setTextViewText(R.id.title, title)
                 it.setTextViewText(R.id.author, author)

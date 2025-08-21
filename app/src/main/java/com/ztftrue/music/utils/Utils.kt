@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.ztftrue.music.BuildConfig
+import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
@@ -264,7 +265,7 @@ object Utils {
         context: Context,
         musicId: Long,
         path: String
-    ): Bitmap? {
+    ): ImageSource {
 //        try {
 //            var uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
 //            uri = ContentUris.withAppendedId(uri, musicId)
@@ -277,6 +278,47 @@ object Utils {
             retriever.setDataSource(path)
             val coverT = retriever.embeddedPicture
             if (coverT != null) {
+                return ImageSource.BitmapFile(
+                    BitmapFactory.decodeByteArray(
+                        coverT,
+                        0,
+                        coverT.size
+                    ).scale(512, 512, false)
+                )
+            }
+        } catch (_: Exception) {
+        }
+        val defaultCoverResId = musicViewModel?.customMusicCover?.value
+        when (defaultCoverResId) {
+            null -> {
+                return ImageSource.Resource(R.drawable.songs_thumbnail_cover)
+            }
+
+            is Int -> {
+                return ImageSource.Resource(defaultCoverResId)
+            }
+
+            is String -> {
+                val sourceFile = File(defaultCoverResId)
+                return if (sourceFile.exists()) {
+                    ImageSource.FilePath(defaultCoverResId)
+                } else {
+                    ImageSource.Resource(R.drawable.songs_thumbnail_cover)
+                }
+            }
+
+            else -> return ImageSource.Resource(R.drawable.songs_thumbnail_cover)
+        }
+    }
+
+    /**
+     * for edit track page
+     */
+    fun getCoverNoFallback(path: String): Bitmap? {
+        try {
+            retriever.setDataSource(path)
+            val coverT = retriever.embeddedPicture
+            if (coverT != null) {
                 return BitmapFactory.decodeByteArray(
                     coverT,
                     0,
@@ -285,21 +327,37 @@ object Utils {
             }
         } catch (_: Exception) {
         }
-        val defaultCoverResId = musicViewModel?.customMusicCover?.value
-        when (defaultCoverResId) {
-            null -> {
-                return null
-            }
-            is Int -> {
-                return BitmapFactory.decodeResource(context.resources, defaultCoverResId).scale(512, 512, false)
-            }
+        return null
+    }
 
-            is String -> {
-                val sourceFile = File(defaultCoverResId)
-                return BitmapFactory.decodeFile(sourceFile.absolutePath).scale(512, 512, false)
+    /**
+     * for play music widget
+     */
+    fun getCoverBitmap(
+        context: Context,
+        path: String
+    ): Bitmap {
+        try {
+            retriever.setDataSource(path)
+            val coverT = retriever.embeddedPicture
+            if (coverT != null) {
+                return BitmapFactory.decodeByteArray(
+                    coverT,
+                    0,
+                    coverT.size
+                ).scale(512, 512, false)
             }
-
-            else -> return null
+        } catch (_: Exception) {
+        }
+        val defaultCoverResId = SharedPreferencesUtils.getTrackCoverData(
+            context
+        )
+        if (defaultCoverResId == null) {
+            return BitmapFactory.decodeResource(context.resources, R.drawable.songs_thumbnail_cover)
+                .scale(512, 512, false)
+        } else {
+            val sourceFile = File(defaultCoverResId)
+            return BitmapFactory.decodeFile(sourceFile.absolutePath).scale(512, 512, false)
         }
     }
 

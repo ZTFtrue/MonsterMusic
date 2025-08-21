@@ -1,6 +1,5 @@
 package com.ztftrue.music.ui.public
 
-import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -27,15 +26,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
+import coil3.compose.AsyncImage
+import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
@@ -53,21 +51,15 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
             }
         }
     }
-    val context = LocalContext.current
     LaunchedEffect(musicViewModel.currentPlay.value) {
         currentMusic = musicViewModel.currentPlay.value
     }
-    val currentCoverBitmap: Bitmap? by musicViewModel.currentMusicCover
+    val imageModel: ImageSource by musicViewModel.currentMusicCover
 
-    val imageModel: Any? = remember(currentCoverBitmap) {
-        currentCoverBitmap
-    }
 
-    val imageRequest = ImageRequest.Builder(context)
-        .data(imageModel)
-        .build()
 
-    val painter = rememberAsyncImagePainter(model = imageRequest)
+
+
     if (currentMusic == null) return
     BottomAppBar(
         modifier = Modifier
@@ -85,8 +77,8 @@ fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 key(musicViewModel.currentPlay.value) {
-                    Image(
-                        painter = painter,
+                    AsyncImage(
+                        model = imageModel.asModel(),
                         contentDescription = "song cover",
                         modifier = Modifier
                             .width(60.dp)

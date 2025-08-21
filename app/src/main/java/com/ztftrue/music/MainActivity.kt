@@ -288,7 +288,7 @@ class MainActivity : ComponentActivity() {
                             val fileExtension = if (fileName.contains('.')) {
                                 fileName.substringAfterLast('.').lowercase()
                             } else {
-                                "" // 没有后缀
+                                ""
                             }
                             val folderPath = "cover"
                             val folder = this@MainActivity.getExternalFilesDir(
@@ -296,27 +296,28 @@ class MainActivity : ComponentActivity() {
                             )
                             if(folder!=null){
                                 if(folder.exists()){
-                                    folder.deleteRecursively()
+                                    folder.listFiles()?.forEach {
+                                        if(it.isFile&&it.name.startsWith("track_cover")){
+                                            it.delete()
+                                            return@forEach
+                                        }
+                                    }
                                 }else{
                                     folder.mkdirs()
                                 }
 
                                 val tempPath: String? =
                                     this@MainActivity.getExternalFilesDir(folderPath)?.absolutePath
-                                // 创建目标文件
                                 val targetFile = File(tempPath, "track_cover.$fileExtension")
+                                val outputStream = FileOutputStream(targetFile)
+                                inputStream.copyTo(outputStream)
+                                inputStream.close()
+                                outputStream.close()
                                 musicViewModel.customMusicCover.value = targetFile.absolutePath
                                 SharedPreferencesUtils.setTrackCoverData(
                                     this@MainActivity,
                                     targetFile.absolutePath
                                 )
-                                val outputStream = FileOutputStream(targetFile)
-                                // 复制内容
-                                inputStream.copyTo(outputStream)
-
-                                // 关闭流
-                                inputStream.close()
-                                outputStream.close()
                                 musicViewModel.getCurrentMusicCover(this@MainActivity)
                                 getSharedPreferences("Widgets", MODE_PRIVATE).getBoolean(
                                     "enable",

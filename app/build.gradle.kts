@@ -152,8 +152,13 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout-compose:1.1.1")
 
     // load image
-    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("io.coil-kt.coil3:coil-compose:3.3.0")
+    implementation("io.coil-kt.coil3:coil:3.3.0")
+    implementation("io.coil-kt.coil3:coil-gif:3.3.0")
+    implementation("io.coil-kt.coil3:coil-svg:3.3.0")
+
     implementation("androidx.browser:browser:1.9.0")
+
     implementation("androidx.compose.runtime:runtime-livedata:1.9.0")
 
     testImplementation("junit:junit:4.13.2")

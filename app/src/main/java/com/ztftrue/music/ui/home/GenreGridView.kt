@@ -1,5 +1,6 @@
 package com.ztftrue.music.ui.home
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -8,6 +9,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -49,6 +51,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -61,7 +64,9 @@ import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.session.LibraryResult
 import androidx.navigation.NavHostController
-import coil.compose.rememberAsyncImagePainter
+import coil3.compose.AsyncImage
+import coil3.compose.rememberAsyncImagePainter
+import coil3.request.ImageRequest
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
@@ -196,6 +201,7 @@ fun GenreGridView(
 }
 
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun GenreItemView(
     item: GenresList,
@@ -273,18 +279,24 @@ fun GenreItemView(
         ConstraintLayout {
             val (playIndicator) = createRefs()
             val model: Any? = musicViewModel.genreCover[item.name.lowercase().trim()]
-            Image(
-                painter = rememberAsyncImagePainter(
-                    model ?: R.drawable.ic_genres
-                ),
-                contentDescription = stringResource(R.string.genre_cover),
-                modifier = Modifier
-                    .zIndex(0f)
+            BoxWithConstraints(
+                Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.primaryContainer)
-                    .aspectRatio(1f),
-                colorFilter = if (model == null) ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimaryContainer) else null
-            )
+                    .aspectRatio(1f)
+            ) {
+                val density = LocalDensity.current
+                val widthPx = with(density) { maxWidth.toPx().toInt() }
+                val heightPx = with(density) { maxHeight.toPx().toInt() }
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(model ?: R.drawable.ic_genres)
+                        .size(widthPx, heightPx)
+                        .build(),
+                    contentDescription = stringResource(R.string.album_cover),
+                    colorFilter = if (model == null) ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimaryContainer) else null
+                )
+            }
             if (item.id == musicViewModel.playListCurrent.value?.id && item.type == musicViewModel.playListCurrent.value?.type) {
                 Image(
                     painter = painterResource(

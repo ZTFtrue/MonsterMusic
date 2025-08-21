@@ -63,7 +63,7 @@
         <service
             android:name=".play.PlayService"
             android:enabled="true"
-            android:exported="true"
+            android:exported="false"
             android:stopWithTask="false"
             android:permission="android.permission.BIND_MEDIA_SESSION_SERVICE"
             android:foregroundServiceType="mediaPlayback">

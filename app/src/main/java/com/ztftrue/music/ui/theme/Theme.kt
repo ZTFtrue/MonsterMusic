@@ -2,6 +2,7 @@ package com.ztftrue.music.ui.theme
 
 import android.app.Activity
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Build
 import android.util.Log
 import androidx.annotation.OptIn
@@ -25,8 +26,11 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.media3.common.util.UnstableApi
 import androidx.palette.graphics.Palette
+import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.utils.CustomColorUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * “On” colors are primarily applied to text, iconography,
@@ -192,18 +196,45 @@ fun MusicPitchTheme(
         } else if (musicViewModel.themeSelected.intValue == 2) {
             colorScheme.value = DarkColorScheme
         } else if (musicViewModel.themeSelected.intValue == 3) {
-            val bitmap = musicViewModel.currentMusicCover.value
-            if (bitmap != null) {
-                generateAndApplyColorScheme(
-                    bitmap,
-                    colorScheme,
-                    if (darkTheme) DarkColorScheme else LightColorScheme
-                )
-            } else {
-                colorScheme.value =
-                    if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) if (darkTheme) dynamicDarkColorScheme(
-                        context
-                    ) else dynamicLightColorScheme(context) else if (darkTheme) DarkColorScheme else LightColorScheme
+            val cover = musicViewModel.currentMusicCover.value
+            when (cover) {
+                is ImageSource.Resource -> {
+                    withContext(Dispatchers.IO) {
+                        val bitmap = BitmapFactory.decodeResource(context.resources, cover.id)
+                        if (bitmap != null) {
+                            withContext(Dispatchers.Main) {
+                                generateAndApplyColorScheme(
+                                    bitmap,
+                                    colorScheme,
+                                    if (darkTheme) DarkColorScheme else LightColorScheme
+                                )
+                            }
+                        }
+                    }
+                }
+
+                is ImageSource.BitmapFile -> {
+                    generateAndApplyColorScheme(
+                        cover.bitmap,
+                        colorScheme,
+                        if (darkTheme) DarkColorScheme else LightColorScheme
+                    )
+                }
+
+                is ImageSource.FilePath -> {
+                    withContext(Dispatchers.IO) {
+                        val bitmap = BitmapFactory.decodeFile(cover.path)
+                        if (bitmap != null) {
+                            withContext(Dispatchers.Main) {
+                                generateAndApplyColorScheme(
+                                    bitmap,
+                                    colorScheme,
+                                    if (darkTheme) DarkColorScheme else LightColorScheme
+                                )
+                            }
+                        }
+                    }
+                }
             }
         } else if (musicViewModel.themeSelected.intValue == 4) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

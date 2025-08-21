@@ -13,6 +13,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import coil3.ImageLoader
+import coil3.compose.setSingletonImageLoaderFactory
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.Router
@@ -31,6 +33,15 @@ fun BaseLayout(
     musicViewModel: MusicViewModel,
     activity: MainActivity
 ) {
+    setSingletonImageLoaderFactory { context ->
+        ImageLoader.Builder(context)
+            .components {
+                // GIF 解碼
+                add(coil3.gif.GifDecoder.Factory())
+                add(coil3.svg.SvgDecoder.Factory())
+            }
+            .build()
+    }
     val window = LocalActivity.current!!.window
     WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars =
         MaterialTheme.colorScheme.background.luminance() > 0.5

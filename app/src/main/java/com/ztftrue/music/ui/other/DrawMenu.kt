@@ -1,10 +1,9 @@
 package com.ztftrue.music.ui.other
 
-import android.graphics.Bitmap
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.browser.customtabs.CustomTabsIntent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,7 +37,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -49,9 +47,9 @@ import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionResult
 import androidx.navigation.NavHostController
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
+import coil3.compose.AsyncImage
 import com.google.common.util.concurrent.ListenableFuture
+import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
@@ -63,6 +61,7 @@ import kotlinx.coroutines.launch
 
 @UnstableApi
 @Composable
+@Suppress("UNUSED")
 fun DrawMenu(
     pagerState: PagerState,
     drawerState: DrawerState,
@@ -74,14 +73,8 @@ fun DrawMenu(
     val scope = rememberCoroutineScope()
     val color = MaterialTheme.colorScheme.onBackground
     val context = LocalContext.current
-    val currentCoverBitmap: Bitmap? by musicViewModel.currentMusicCover
-    val imageModel: Any? = remember(currentCoverBitmap) {
-        currentCoverBitmap
-    }
-    val imageRequest = ImageRequest.Builder(context)
-        .data(imageModel)
-        .build()
-    val painter = rememberAsyncImagePainter(model = imageRequest)
+    val imageModel: ImageSource by musicViewModel.currentMusicCover
+
     ModalDrawerSheet(
         modifier = Modifier
             .width(drawerWidth)
@@ -101,10 +94,8 @@ fun DrawMenu(
                     .height(180.dp)
             ) {
                 val (bgImage, header) = createRefs()
-                Image(
-                    painter = painterResource(
-                        id = R.drawable.large_cover
-                    ),
+                AsyncImage(
+                    model = R.drawable.large_cover,
                     contentDescription = stringResource(id = R.string.album_cover),
                     modifier = Modifier
                         .width(drawerWidth)
@@ -119,8 +110,8 @@ fun DrawMenu(
                     contentScale = ContentScale.FillWidth,
                     alignment = Alignment.BottomStart
                 )
-                Image(
-                    painter = painter,
+                AsyncImage(
+                    model = imageModel.asModel(),
                     contentDescription = stringResource(id = R.string.album_cover),
                     modifier = Modifier
                         .width(80.dp)
@@ -237,7 +228,10 @@ fun DrawMenu(
                     }
                     .clickable {
 
-                      musicViewModel.  browser?.sendCustomCommand(  MediaCommands.COMMAND_APP_EXIT, Bundle.EMPTY)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_APP_EXIT,
+                            Bundle.EMPTY
+                        )
 //                        // 发送命令后，可以断开连接并关闭 Activity
 //                        if (browser != null) {
 //                            MediaBrowser.releaseFuture(browserFuture)
@@ -310,12 +304,23 @@ fun DrawMenu(
                                         !musicViewModel.refreshGenre.value
                                     musicViewModel.refreshFolder.value =
                                         !musicViewModel.refreshFolder.value
-                                    sessionResult.extras.getParcelableArrayList<MusicItem>(
-                                        "songsList"
-                                    )?.also {
-                                        musicViewModel.songsList.clear()
-                                        musicViewModel.songsList.addAll(it)
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                        sessionResult.extras.getParcelableArrayList(
+                                            "songsList", MusicItem::class.java
+                                        )?.also {
+                                            musicViewModel.songsList.clear()
+                                            musicViewModel.songsList.addAll(it)
+                                        }
+                                    }else{
+                                        @Suppress("DEPRECATION")
+                                        sessionResult.extras.getParcelableArrayList<MusicItem>(
+                                            "songsList"
+                                        )?.also {
+                                            musicViewModel.songsList.clear()
+                                            musicViewModel.songsList.addAll(it)
+                                        }
                                     }
+
                                 }
                             } catch (e: Exception) {
                                 Log.e("Client", "Failed to toggle favorite status", e)

@@ -57,7 +57,7 @@ import androidx.core.text.isDigitsOnly
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionResult
 import androidx.navigation.NavHostController
-import coil.compose.rememberAsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
@@ -66,7 +66,6 @@ import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.utils.Utils
-import com.ztftrue.music.utils.Utils.getCover
 import com.ztftrue.music.utils.trackManager.TracksManager
 
 
@@ -114,7 +113,7 @@ fun EditTrackPage(
         val musicItem = TracksManager.getMusicById(context, musicId)
         if (musicItem != null) {
             musicPath = musicItem.path
-            coverBitmap.value = getCover(null,context, musicId, musicPath)
+            coverBitmap.value = Utils.getCoverNoFallback(musicPath)
             title = musicItem.name
             album = musicItem.album
             artist = musicItem.artist

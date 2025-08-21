@@ -1,10 +1,8 @@
 package com.ztftrue.music.ui.play
 
 import android.annotation.SuppressLint
-import android.graphics.Bitmap
 import android.os.Bundle
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
@@ -39,14 +37,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
+import coil3.compose.AsyncImage
+import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.MediaCommands
@@ -58,7 +55,6 @@ import org.jaudiotagger.tag.FieldKey
 @Composable
 fun CoverView(musicViewModel: MusicViewModel) {
     val listState = rememberLazyListState()
-    val context = LocalContext.current
     val musicVisualizationEnable = remember { musicViewModel.musicVisualizationEnable }
     val showOtherMessage = remember { mutableStateOf(true) }
     val magnitudes by musicViewModel.visualizationData.observeAsState(initial = emptyList())
@@ -74,19 +70,13 @@ fun CoverView(musicViewModel: MusicViewModel) {
     val textPaint = android.graphics.Paint().apply {
         color = android.graphics.Color.GREEN
         textSize = textSizeSet
-        typeface = android.graphics.Typeface.MONOSPACE // 指定为等宽字体
+        typeface = android.graphics.Typeface.MONOSPACE
     }
-    val currentCoverBitmap: Bitmap? by musicViewModel.currentMusicCover
+    val imageModel: ImageSource by musicViewModel.currentMusicCover
 
-    val imageModel: Any? = remember(currentCoverBitmap) {
-        currentCoverBitmap
-    }
 
-    val imageRequest = ImageRequest.Builder(context)
-        .data(imageModel)
-        .build()
 
-    val painter = rememberAsyncImagePainter(model = imageRequest)
+
     LaunchedEffect(musicViewModel.currentPlay.value) {
         initDrops.value = false
     }
@@ -157,32 +147,6 @@ fun CoverView(musicViewModel: MusicViewModel) {
             lifecycle.removeObserver(observer)
         }
     }
-//    private fun calculateNextFrame(
-//        currentDrops: List<List<Drop>>,
-//        magnitudes: List<Float>,
-//        canvasHeight: Float,
-//        dropHeight: Float
-//    ): List<List<Drop>> {
-//        // 返回一个新的列表，而不是修改旧的列表
-//        return currentDrops.mapIndexed { colIndex, column ->
-//            val magnitudeForColumn = magnitudes.getOrNull(colIndex) ?: 0f
-//
-//            column.map { drop ->
-//                // 创建一个新的 drop 对象，而不是修改旧的
-//                val newY = drop.y + calculateSpeed(magnitudeForColumn)
-//                if (newY > canvasHeight + dropHeight) {
-//                    // 如果超出屏幕，重置到顶部
-//                    drop.copy(
-//                        y = 0f, // 或者一个随机的负值
-//                        char = generateRandomChars()
-//                    )
-//                } else {
-//                    drop.copy(y = newY)
-//                }
-//            }
-//        }
-//    }
-    // 动画更新
     LaunchedEffect(musicViewModel.playStatus.value, musicVisualizationEnable.value, shouldRun) {
         while (musicViewModel.playStatus.value && musicVisualizationEnable.value && shouldRun) {
             magnitudes.forEachIndexed { index, magnitude ->
@@ -205,10 +169,9 @@ fun CoverView(musicViewModel: MusicViewModel) {
                         d.y = columnDrops[columnDrops.size - 1].y - dropHeight
                         columnDrops.add(d)
                     }
-                    //                                        val d=  columnDrops.removeAt(index3)
                 }
             }
-            delay(17) // 控制更新频率
+            delay(10) // 控制更新频率
         }
     }
     LazyColumn(
@@ -225,12 +188,11 @@ fun CoverView(musicViewModel: MusicViewModel) {
             ) {
                 if (!musicVisualizationEnable.value || musicViewModel.showMusicCover.value) {
                     key(musicViewModel.currentPlay.value) {
-                        Image(
-                            painter = painter, contentDescription = stringResource(R.string.cover),
+                        AsyncImage(
+                            model = imageModel.asModel(), contentDescription = stringResource(R.string.cover),
                             modifier = Modifier
                                 .size(minOf(maxWidth, maxHeight))
                                 .aspectRatio(1f)
-                                .background(color = Color.Black)
                                 .combinedClickable(
                                     onLongClick = {
                                         showOtherMessage.value = !showOtherMessage.value
@@ -265,7 +227,6 @@ fun CoverView(musicViewModel: MusicViewModel) {
 //                        val barWidth =
 //                            size.width / magnitudes.size
 //                        val maxBarHeight = size.width / 2
-                    // 绘制每列的雨滴
                     drops.forEach { columnDrops ->
                         columnDrops.forEach { drop ->
                             drawContext.canvas.nativeCanvas.apply {

@@ -102,7 +102,6 @@ import com.ztftrue.music.utils.trackManager.FolderManger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import okhttp3.internal.toLongOrDefault
 import java.util.Locale
 
 
@@ -1818,7 +1817,7 @@ fun ManageFolderDialog(onDismiss: () -> Unit) {
             if (!ignoreFolders.isNullOrEmpty()) {
                 ignoreFolders.split(",").forEach {
                     if (it.isNotEmpty()) {
-                        folderMap[it.toLongOrDefault(-1)]?.isShow = false
+                        folderMap[it.toLong()]?.isShow = false
                     }
                 }
             }

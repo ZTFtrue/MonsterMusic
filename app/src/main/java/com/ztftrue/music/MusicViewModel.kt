@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.provider.DocumentsContract
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -76,6 +77,16 @@ import java.util.concurrent.locks.ReentrantLock
 var SongsPlayList = AnyListBase(-1, PlayListType.Songs)
 var QueuePlayList = AnyListBase(-1, PlayListType.Queue)
 
+sealed class ImageSource {
+    data class Resource(@DrawableRes val id: Int) : ImageSource()
+    data class FilePath(val path: String) : ImageSource()
+    data class BitmapFile(val bitmap: Bitmap) : ImageSource()
+    fun asModel(): Any = when (this) {
+        is Resource -> id
+        is FilePath -> File(path)
+        is BitmapFile -> bitmap
+    }
+}
 
 class MusicViewModel : ViewModel() {
 
@@ -110,7 +121,7 @@ class MusicViewModel : ViewModel() {
     // 每次播放仅设置当前列表的状态
     var musicQueue = mutableStateListOf<MusicItem>()
 
-    var currentMusicCover = mutableStateOf<Bitmap?>(null)
+    var currentMusicCover = mutableStateOf<ImageSource>(ImageSource.Resource(R.drawable.songs_thumbnail_cover))
     var currentPlay = mutableStateOf<MusicItem?>(null)
     var needRefreshTheme=mutableStateOf(false)
     //    var currentPlayQueueIndex = mutableIntStateOf(-1)
@@ -165,8 +176,8 @@ class MusicViewModel : ViewModel() {
         if (currentPlay.value != null) {
             currentCaptionList.clear()
         }
+        currentMusicCover.value = ImageSource.Resource(R.drawable.songs_thumbnail_cover)
         currentPlay.value = null
-        currentMusicCover.value = null
         playListCurrent.value = null
         musicQueue.clear()
         songsList.clear()
@@ -492,7 +503,7 @@ class MusicViewModel : ViewModel() {
     }
 
 
-    fun getCurrentMusicCover(context: Context): Bitmap? {
+    fun getCurrentMusicCover(context: Context): ImageSource? {
         val v = currentPlay.value
         if (v != null) {
             currentMusicCover.value = getCover(this@MusicViewModel, context, v.id, v.path)

@@ -65,8 +65,8 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.LibraryResult
 import androidx.navigation.NavHostController
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
+import coil3.compose.rememberAsyncImagePainter
+import coil3.request.ImageRequest
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel

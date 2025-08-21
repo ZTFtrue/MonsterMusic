@@ -21,6 +21,7 @@ object PlayUtils {
         "Last year" to MediaStore.Audio.Albums.LAST_YEAR,
         "Number of songs" to MediaStore.Audio.Albums.NUMBER_OF_SONGS
     )
+    @Suppress("DEPRECATION")
     val playListFiled = linkedMapOf(
         "Alphabetical" to MediaStore.Audio.Playlists.NAME,
     )
