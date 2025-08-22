@@ -132,6 +132,7 @@ class PlayMusicWidget : AppWidgetProvider() {
             putBoolean("enable", true)
             apply()
         }
+//        Toast.makeText(context, "You can set background color in setting", Toast.LENGTH_SHORT).show()
         // Enter relevant functionality for when the first widget is created
     }
 
