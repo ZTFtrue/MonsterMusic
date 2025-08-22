@@ -193,6 +193,7 @@ dependencies {
     // optional - Paging 3 Integration
     implementation("androidx.room:room-paging:$roomVersion")
 
+    implementation("com.github.skydoves:colorpicker-compose:1.1.2")
 
 //    debugImplementation ("com.squareup.leakcanary:leakcanary-android:2.14")
 //    implementation("uk.me.berndporr:iirj:1.7")

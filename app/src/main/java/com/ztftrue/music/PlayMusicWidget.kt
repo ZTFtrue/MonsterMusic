@@ -3,18 +3,20 @@ package com.ztftrue.music
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.widget.RemoteViews
 import androidx.annotation.OptIn
+import androidx.core.graphics.toColorInt
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.play.PlayService
+import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 
 
@@ -35,7 +37,7 @@ class PlayMusicWidget : AppWidgetProvider() {
             val title = intent.getStringExtra("title") ?: ""
             val author = intent.getStringExtra("author") ?: ""
             val path = intent.getStringExtra("path")
-            val id = intent.getLongExtra("id", 0L)
+//            val id = intent.getLongExtra("id", 0L)
             val appWidgetManager = AppWidgetManager.getInstance(context)
             hashMap.forEach { (id1, it) ->
                 it.setImageViewResource(
@@ -145,24 +147,22 @@ class PlayMusicWidget : AppWidgetProvider() {
     @UnstableApi
     fun getPendingIntent(
         context: Context,
-        serviceComponentName: ComponentName,
         keyEvent: Int
     ): PendingIntent {
-        val prevIntent = Intent(context, PlayService::class.java).apply {
+        val intent = Intent(context, PlayService::class.java).apply {
             action = Intent.ACTION_MEDIA_BUTTON
-            component = serviceComponentName
             putExtra(
                 Intent.EXTRA_KEY_EVENT,
                 KeyEvent(KeyEvent.ACTION_DOWN, keyEvent)
             )
         }
-        val prevPendingIntent = PendingIntent.getService(
+        val pendingIntent = PendingIntent.getService(
             context,
             keyEvent,
-            prevIntent,
+            intent,
             PendingIntent.FLAG_IMMUTABLE
         )
-        return prevPendingIntent
+        return pendingIntent
     }
 
     @OptIn(UnstableApi::class)
@@ -191,16 +191,21 @@ class PlayMusicWidget : AppWidgetProvider() {
                 it.setInt(
                     R.id.play_music_widget,
                     "setBackgroundColor",
-                    context.resources.getColor(R.color.light_blue_900)
+                    try {
+                        Log.e("Color",SharedPreferencesUtils.getWidgetBackground(context)
+                            ?: "#FFFFFF")
+                        (SharedPreferencesUtils.getWidgetBackground(context)
+                            ?: "#FFFFFF").toColorInt()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        Color.WHITE
+                    }
                 )
-                val serviceComponentName =
-                    ComponentName(context.applicationContext, PlayService::class.java)
 
                 it.setOnClickPendingIntent(
                     R.id.preview,
                     getPendingIntent(
                         context,
-                        serviceComponentName,
                         KeyEvent.KEYCODE_MEDIA_PREVIOUS
                     )
                 )
@@ -208,7 +213,6 @@ class PlayMusicWidget : AppWidgetProvider() {
                 it.setOnClickPendingIntent(
                     R.id.pause, getPendingIntent(
                         context,
-                        serviceComponentName,
                         KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
                     )
                 )
@@ -216,7 +220,6 @@ class PlayMusicWidget : AppWidgetProvider() {
                 it.setOnClickPendingIntent(
                     R.id.next, getPendingIntent(
                         context,
-                        serviceComponentName,
                         KeyEvent.KEYCODE_MEDIA_NEXT
                     )
                 )
@@ -243,7 +246,7 @@ class PlayMusicWidget : AppWidgetProvider() {
                 val title = sharedPreferences.getString("title", "")
                 val author = sharedPreferences.getString("author", "")
                 val path = sharedPreferences.getString("path", "")
-                val id = sharedPreferences.getLong("id", 0L)
+//                val id = sharedPreferences.getLong("id", 0L)
                 if (minWidth <= 180) {
                     it.setViewVisibility(R.id.cover, View.VISIBLE)
                     it.setViewVisibility(R.id.content, View.GONE)
@@ -260,7 +263,12 @@ class PlayMusicWidget : AppWidgetProvider() {
                     it.setInt(
                         R.id.play_music_widget,
                         "setBackgroundColor",
-                        context.resources.getColor(R.color.light_blue_900)
+                        try {
+                            (SharedPreferencesUtils.getWidgetBackground(context)
+                                ?: "#FFFFFF").toColorInt()
+                        } catch (_: Exception) {
+                            Color.WHITE
+                        }
                     )
                 } else {
                     it.setViewVisibility(R.id.small_cover, View.GONE)
@@ -269,7 +277,12 @@ class PlayMusicWidget : AppWidgetProvider() {
                     it.setInt(
                         R.id.play_music_widget,
                         "setBackgroundColor",
-                        context.resources.getColor(R.color.light_blue_900)
+                        try {
+                            (SharedPreferencesUtils.getWidgetBackground(context)
+                                ?: "#FFFFFF").toColorInt()
+                        } catch (_: Exception) {
+                            Color.WHITE
+                        }
                     )
                 }
                 it.setImageViewResource(

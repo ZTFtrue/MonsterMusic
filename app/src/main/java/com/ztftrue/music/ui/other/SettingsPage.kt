@@ -2,6 +2,8 @@ package com.ztftrue.music.ui.other
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -65,6 +67,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -84,7 +87,10 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.edit
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
+import com.github.skydoves.colorpicker.compose.ColorEnvelope
+import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 import com.ztftrue.music.MusicViewModel
+import com.ztftrue.music.PlayMusicWidget
 import com.ztftrue.music.R
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
 import com.ztftrue.music.sqlData.model.LYRICS_TYPE
@@ -327,7 +333,11 @@ fun SettingsPage(
                                                 Uri.fromParts("package", context.packageName, null)
                                             context.startActivity(intent)
                                         } catch (e: Exception) {
-                                            Log.e("SettingsPage", "Failed to open language settings",e)
+                                            Log.e(
+                                                "SettingsPage",
+                                                "Failed to open language settings",
+                                                e
+                                            )
                                             Toast.makeText(
                                                 context,
                                                 "Failed to open language settings",
@@ -341,7 +351,6 @@ fun SettingsPage(
                         ) {
                             if (showSetLanguageDialog) {
                                 SwitchLanguageDialog(
-                                    musicViewModel,
                                     onDismiss = {
                                         showSetLanguageDialog = false
                                     })
@@ -762,6 +771,60 @@ fun SettingsPage(
                             )
                         }
 
+                    }
+                }
+                item {
+                    var showSetWidgetDialog by remember { mutableStateOf(false) }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .padding(0.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+                                showSetWidgetDialog = !showSetWidgetDialog
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
+                                .clickable {
+                                    showSetWidgetDialog = !showSetWidgetDialog
+                                },
+                        ) {
+
+                            if (showSetWidgetDialog) {
+                                SetWidgetDialog(
+                                    musicViewModel,
+                                    onDismiss = {
+                                        showSetWidgetDialog = false
+                                    })
+                            }
+                            Text(
+                                text = "Set Widget Background",
+                                modifier = Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
                     }
                 }
                 item {
@@ -1578,7 +1641,7 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
     val context = LocalContext.current
     val scopeMain = CoroutineScope(Dispatchers.IO)
     val windowInfo = LocalWindowInfo.current
-                val containerHeightPx = windowInfo.containerSize.height
+    val containerHeightPx = windowInfo.containerSize.height
 //    val density = LocalDensity.current
 //    val screenHeightDp = with(density) { windowInfo.containerSize.height.toDp() }
     val folderList = remember { mutableStateListOf<StorageFolder>() }
@@ -1970,6 +2033,138 @@ fun ManageFolderDialog(onDismiss: () -> Unit) {
     )
 }
 
+
+@OptIn(ExperimentalStdlibApi::class)
+@Composable
+fun SetWidgetDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
+
+    val context = LocalContext.current
+    val scopeMain = CoroutineScope(Dispatchers.Main)
+    val controller = rememberColorPickerController()
+    var colorString by remember { mutableStateOf(Color.Blue.toArgb().toHexString()) }
+
+    LaunchedEffect(Unit) {
+        colorString = SharedPreferencesUtils.getWidgetBackground(context) ?: Color(
+            context.resources.getColor(
+                R.color.light_blue_900,
+                null
+            )
+        ).toArgb().toHexString()
+    }
+    fun onConfirmation() {
+        scopeMain.launch {
+            SharedPreferencesUtils.setWidgetBackground(context, colorString)
+            val intent = Intent(context, PlayMusicWidget::class.java)
+            intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+            intent.putExtra("source", context.packageName)
+            val ids = AppWidgetManager.getInstance(
+                context
+            ).getAppWidgetIds(
+                ComponentName(
+                    context,
+                    PlayMusicWidget::class.java
+                )
+            )
+            intent.putExtra("playingStatus", musicViewModel.browser?.isPlaying)
+            intent.putExtra("title", musicViewModel.currentPlay.value?.name ?: "")
+            intent.putExtra("author", musicViewModel.currentPlay.value?.artist ?: "")
+            intent.putExtra("path", musicViewModel.currentPlay.value?.path ?: "")
+            intent.putExtra("id", musicViewModel.currentPlay.value?.id ?: 0L)
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+            context.sendBroadcast(intent)
+            onDismiss()
+        }
+    }
+
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = true, dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        ),
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(color = MaterialTheme.colorScheme.background),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = "Set Widget Background",
+                    modifier = Modifier
+                        .padding(2.dp),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(color = MaterialTheme.colorScheme.onBackground)
+                )
+                LazyColumn {
+                    item {
+                        MyAdvancedColorPicker(
+                            onColorChanged = { colorEnvelope: ColorEnvelope ->
+                                val hexCode: String =
+                                    colorEnvelope.hexCode
+                                colorString = "#$hexCode"
+                            }
+                        )
+
+                    }
+                }
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(color = MaterialTheme.colorScheme.onBackground)
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    TextButton(
+                        onClick = { onDismiss() },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(0.5f),
+                    ) {
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.onBackground)
+                            .width(1.dp)
+                            .height(50.dp)
+                    )
+                    TextButton(
+                        onClick = {
+                            onConfirmation()
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(),
+
+                        ) {
+                        Text(
+                            stringResource(R.string.confirm),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+            }
+        }
+    )
+}
+
 @UnstableApi
 @Composable
 fun ClearAlbumCoverDialog(onDismiss: () -> Unit) {
@@ -2265,7 +2460,7 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
 
 @UnstableApi
 @Composable
-fun SwitchLanguageDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
+fun SwitchLanguageDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
     val scopeMain = CoroutineScope(Dispatchers.IO)
 

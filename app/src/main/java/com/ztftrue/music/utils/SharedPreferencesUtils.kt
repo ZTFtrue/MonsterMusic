@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.edit
+import com.ztftrue.music.R
 import com.ztftrue.music.sqlData.model.MusicItem
 
 object SharedPreferencesUtils {
@@ -182,6 +183,7 @@ object SharedPreferencesUtils {
             putBoolean("auto_to_top_when_random", enable)
         }
     }
+
     fun getIgnoreDuration(context: Context): Long {
         return context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
             .getLong("ignore_duration", 0L)
@@ -192,6 +194,7 @@ object SharedPreferencesUtils {
             putLong("ignore_duration", durationValue)
         }
     }
+
     fun getCurrentLanguage(context: Context): String? {
         return context.getSharedPreferences("config", Context.MODE_PRIVATE)
             .getString("language", null)
@@ -202,12 +205,30 @@ object SharedPreferencesUtils {
             putString("language", value)
         }
     }
+
     fun setTrackCoverData(context: Context, coverPath: String) {
         context.getSharedPreferences("Cover", Context.MODE_PRIVATE).edit {
-              putString("path",coverPath)
+            putString("path", coverPath)
         }
     }
-    fun getTrackCoverData(context: Context ): String? {
-       return context.getSharedPreferences("Cover", Context.MODE_PRIVATE).getString("path","")
+
+    fun getTrackCoverData(context: Context): String? {
+        return context.getSharedPreferences("Cover", Context.MODE_PRIVATE).getString("path", "")
+    }
+
+    fun setWidgetBackground(context: Context, color: String) {
+        context.getSharedPreferences("config", Context.MODE_PRIVATE).edit(commit = true) {
+            putString("widget_background", color)
+        }
+    }
+
+    @OptIn(ExperimentalStdlibApi::class)
+    fun getWidgetBackground(context: Context): String? {
+
+        return context.getSharedPreferences("config", Context.MODE_PRIVATE)
+            .getString(
+                "widget_background",
+                "#"+context.resources.getColor(R.color.light_blue_900).toHexString()
+            )
     }
 }

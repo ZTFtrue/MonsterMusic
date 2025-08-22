@@ -750,7 +750,7 @@ class MainActivity : ComponentActivity() {
                 Log.e("Client", "Failed to toggle favorite status", e)
             }
         }, ContextCompat.getMainExecutor(this@MainActivity))
-        fetchRootChildren(browser)
+//        fetchRootChildren(browser)
     }
 
     private fun onBrowserConnectionFailed() {
@@ -758,9 +758,9 @@ class MainActivity : ComponentActivity() {
         // Toast.makeText(this, "无法连接到播放服务", Toast.LENGTH_SHORT).show()
     }
 
-    private fun fetchRootChildren(browser: MediaBrowser) {
-
-    }
+//    private fun fetchRootChildren(browser: MediaBrowser) {
+//
+//    }
 
     private val playerListener = object : Player.Listener {
         override fun onTimelineChanged(
