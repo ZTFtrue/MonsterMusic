@@ -303,6 +303,8 @@ object Utils {
                 return if (sourceFile.exists()) {
                     ImageSource.FilePath(defaultCoverResId)
                 } else {
+                    musicViewModel.customMusicCover.value=ImageSource.Resource(R.drawable.songs_thumbnail_cover)
+                    SharedPreferencesUtils.setTrackCoverData(context, "")
                     ImageSource.Resource(R.drawable.songs_thumbnail_cover)
                 }
             }
@@ -360,6 +362,7 @@ object Utils {
             return if (sourceFile.exists()) {
                 BitmapFactory.decodeFile(sourceFile.absolutePath).scale(512, 512, false)
             } else {
+                SharedPreferencesUtils.setTrackCoverData(context, "")
                 BitmapFactory.decodeResource(context.resources, R.drawable.songs_thumbnail_cover)
                     .scale(512, 512, false)
             }
