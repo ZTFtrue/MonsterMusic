@@ -357,7 +357,12 @@ object Utils {
                 .scale(512, 512, false)
         } else {
             val sourceFile = File(defaultCoverResId)
-            return BitmapFactory.decodeFile(sourceFile.absolutePath).scale(512, 512, false)
+            return if (sourceFile.exists()) {
+                BitmapFactory.decodeFile(sourceFile.absolutePath).scale(512, 512, false)
+            } else {
+                BitmapFactory.decodeResource(context.resources, R.drawable.songs_thumbnail_cover)
+                    .scale(512, 512, false)
+            }
         }
     }
 
