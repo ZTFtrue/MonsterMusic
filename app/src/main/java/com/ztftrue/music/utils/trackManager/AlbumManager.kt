@@ -61,7 +61,7 @@ object AlbumManager {
         cursor?.close()
     }
 
-    fun getAlbumByName(context: Context, name: String): ArrayList<AlbumList> {
+    fun searchAlbumByName(context: Context, name: String): ArrayList<AlbumList> {
         val list = ArrayList<AlbumList>()
         val projection = arrayOf(
             MediaStore.Audio.Albums.ALBUM,

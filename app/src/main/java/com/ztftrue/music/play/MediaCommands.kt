@@ -64,8 +64,6 @@ object MediaCommands {
     const val KEY_DECAY = "decay"
     const val KEY_SEARCH_QUERY = "search_query"
 
-    val COMMAND_ADD_TO_QUEUE = SessionCommand("queue.ADD", Bundle.EMPTY)
-    val COMMAND_REMOVE_FROM_QUEUE = SessionCommand("queue.REMOVE", Bundle.EMPTY)
     val COMMAND_CLEAR_QUEUE = SessionCommand("queue.CLEAR", Bundle.EMPTY)
 
     val COMMAND_REFRESH_ALL = SessionCommand("app.REFRESH_ALL", Bundle.EMPTY)

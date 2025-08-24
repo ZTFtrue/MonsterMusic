@@ -15,7 +15,6 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
 import android.util.Log
-import android.view.KeyEvent
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.media3.common.AudioAttributes
@@ -261,7 +260,6 @@ class PlayService : MediaLibraryService() {
                     .add(MediaCommands.COMMAND_CHANGE_PITCH)
                     .add(MediaCommands.COMMAND_CHANGE_Q)
                     .add(MediaCommands.COMMAND_DSP_ENABLE)
-                    .add(MediaCommands.COMMAND_ADD_TO_QUEUE)
                     .add(MediaCommands.COMMAND_DSP_SET_BAND)
                     .add(MediaCommands.COMMAND_DSP_FLATTEN)
                     .add(MediaCommands.COMMAND_DSP_SET_BANDS)
@@ -277,7 +275,6 @@ class PlayService : MediaLibraryService() {
                     .add(MediaCommands.COMMAND_GET_INITIALIZED_DATA)
                     .add(MediaCommands.COMMAND_APP_EXIT)
                     .add(MediaCommands.COMMAND_TRACKS_UPDATE)
-                    .add(MediaCommands.COMMAND_REMOVE_FROM_QUEUE)
                     .add(MediaCommands.COMMAND_SORT_TRACKS)
                     .add(MediaCommands.COMMAND_CHANGE_PLAYLIST)
                     .add(MediaCommands.COMMAND_GET_CURRENT_PLAYLIST)
@@ -886,11 +883,6 @@ class PlayService : MediaLibraryService() {
                     }
                     return future
                 }
-                // --- Queue Management ---
-                MediaCommands.COMMAND_ADD_TO_QUEUE.customAction -> {
-
-                }
-
 
                 MediaCommands.COMMAND_CLEAR_QUEUE.customAction -> {
                     ContextCompat.getMainExecutor(this@PlayService).execute {
@@ -1652,10 +1644,10 @@ class PlayService : MediaLibraryService() {
                 TracksManager.searchTracks(this@PlayService, tracksLinkedHashMap, query)
             }
             val albumsDeferred = async(Dispatchers.IO) {
-                AlbumManager.getAlbumByName(this@PlayService, query)
+                AlbumManager.searchAlbumByName(this@PlayService, query)
             }
             val artistsDeferred = async(Dispatchers.IO) {
-                ArtistManager.getArtistByName(this@PlayService, query)
+                ArtistManager.searchArtistByName(this@PlayService, query)
             }
             SearchResult(
                 tracks = tracksDeferred.await(),

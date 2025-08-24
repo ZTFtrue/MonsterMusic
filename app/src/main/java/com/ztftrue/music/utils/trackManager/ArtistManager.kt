@@ -30,7 +30,7 @@ object ArtistManager {
         return null
     }
 
-    fun getArtistByName(context: Context, artistName: String): ArrayList<ArtistList> {
+    fun searchArtistByName(context: Context, artistName: String): ArrayList<ArtistList> {
         val list = ArrayList<ArtistList>()
         val projection = arrayOf(
             MediaStore.Audio.Artists._ID,
