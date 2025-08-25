@@ -140,6 +140,22 @@ object SharedPreferencesUtils {
         }
     }
 
+    fun setWidgetEnable(context: Context, enable: Boolean) {
+        context.getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit(commit = true) {
+            putBoolean(
+                "enable",
+                enable
+            )
+        }
+    }
+
+    fun getWidgetEnable(context: Context): Boolean {
+        return context.getSharedPreferences("Widgets", Context.MODE_PRIVATE).getBoolean(
+            "enable",
+            false
+        )
+    }
+
     fun getAutoPlayWaitTime(context: Context): Long {
         return context.getSharedPreferences("AutoPlay", Context.MODE_PRIVATE)
             .getLong("waitTime", 1000)
@@ -224,11 +240,10 @@ object SharedPreferencesUtils {
 
     @OptIn(ExperimentalStdlibApi::class)
     fun getWidgetBackground(context: Context): String? {
-
         return context.getSharedPreferences("config", Context.MODE_PRIVATE)
             .getString(
                 "widget_background",
-                "#"+context.resources.getColor(R.color.light_blue_900).toHexString()
+                "#" + context.resources.getColor(R.color.light_blue_900,null).toHexString()
             )
     }
 }

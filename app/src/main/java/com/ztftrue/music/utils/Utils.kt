@@ -1,5 +1,7 @@
 package com.ztftrue.music.utils
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ResolveInfo
@@ -303,7 +305,8 @@ object Utils {
                 return if (sourceFile.exists()) {
                     ImageSource.FilePath(defaultCoverResId)
                 } else {
-                    musicViewModel.customMusicCover.value=ImageSource.Resource(R.drawable.songs_thumbnail_cover)
+                    musicViewModel.customMusicCover.value =
+                        ImageSource.Resource(R.drawable.songs_thumbnail_cover)
                     SharedPreferencesUtils.setTrackCoverData(context, "")
                     ImageSource.Resource(R.drawable.songs_thumbnail_cover)
                 }
@@ -808,4 +811,20 @@ object Utils {
         }
         return result
     }
+
+    /**
+     * 检查用户是否已经创建了指定 AppWidgetProvider 的任何小部件实例。
+     *
+     * @param context 上下文
+     * @param widgetProviderClass 你的 AppWidgetProvider 的 Class 对象，例如 `MyWidgetProvider::class.java`
+     * @return 如果至少存在一个小部件，则返回 true；否则返回 false。
+     */
+    fun hasAppWidget(context: Context, widgetProviderClass: Class<*>): Boolean {
+        val appWidgetManager = AppWidgetManager.getInstance(context)
+        val componentName = ComponentName(context, widgetProviderClass)
+        val appWidgetIds: IntArray = appWidgetManager.getAppWidgetIds(componentName)
+        return appWidgetIds.isNotEmpty()
+    }
+
+
 }

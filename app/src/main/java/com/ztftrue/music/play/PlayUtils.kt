@@ -21,6 +21,7 @@ object PlayUtils {
         "Last year" to MediaStore.Audio.Albums.LAST_YEAR,
         "Number of songs" to MediaStore.Audio.Albums.NUMBER_OF_SONGS
     )
+
     @Suppress("DEPRECATION")
     val playListFiled = linkedMapOf(
         "Alphabetical" to MediaStore.Audio.Playlists.NAME,
@@ -150,34 +151,25 @@ object PlayUtils {
     ): Long {
         tracksLinkedHashMap.remove(id)
         val i = musicQueue.indexOfFirst { it.id == id }
-//        if (i > -1) {
-//            val musicItem = musicQueue.removeAt(i)
-//            changePriorityTableId(musicQueue, musicItem, db)
-//        }
         return i.toLong()
     }
 
 
     fun areQueuesContentAndOrderEqual(list1: List<MusicItem>, list2: List<MusicItem>): Boolean {
         if (list1.size != list2.size) {
-            return false // 数量不同，肯定不一致
+            return false
         }
         val l2 = list2.sortedBy {
             it.tableId
         }
 
-        // 注意：我们只比较那些代表歌曲本身的字段，忽略 tableId 和 priority
         for (i in list1.indices) {
             val item1 = list1[i]
             val item2 = l2[i]
-
-            // 比较歌曲的核心唯一标识符（例如，id）
             if (item1.id != item2.id) return false
-
-            // (可选) 比较其他关键字段，以确保它是同一首歌的完全相同版本
             if (item1.priority != item2.priority) return false
-//            if (item1.path != item2.path) return false
+            if (item1.path != item2.path) return false
         }
-        return true // 所有歌曲都相同且顺序一致
+        return true
     }
 }

@@ -243,10 +243,14 @@ class PlayService : MediaLibraryService() {
         }
         val notification = DefaultMediaNotificationProvider(this)
         setMediaNotificationProvider(notification)
+        if (Utils.hasAppWidget(this@PlayService, PlayMusicWidget::class.java)) {
+            SharedPreferencesUtils.setWidgetEnable(this@PlayService, true)
+        } else {
+            SharedPreferencesUtils.setWidgetEnable(this@PlayService, false)
+        }
     }
 
     inner class MySessionCallback(private val context: Context) : MediaLibrarySession.Callback {
-
 
 
         override fun onConnect(
@@ -926,7 +930,7 @@ class PlayService : MediaLibraryService() {
 //            }
 //            // 为你自己的 App 提供一个功能完整的根节点
 //            else
-            Log.e("TAG","GET-root${clientPackageName},${context.packageName}")
+            Log.e("TAG", "GET-root${clientPackageName},${context.packageName}")
             if (clientPackageName == context.packageName) {
                 val fullFeaturedRootItem = MediaItemUtils.createFullFeaturedRoot()
                 return Futures.immediateFuture(LibraryResult.ofItem(fullFeaturedRootItem, null))
@@ -1486,10 +1490,12 @@ class PlayService : MediaLibraryService() {
                     } else {
                         null
                     }
-                getSharedPreferences("Widgets", MODE_PRIVATE).getBoolean(
-                    "enable",
-                    false
-                )
+//                   getSharedPreferences("Widgets", MODE_PRIVATE).getBoolean(
+//                    "enable",
+//                    false
+//                )
+                SharedPreferencesUtils.getWidgetEnable(this@PlayService)
+
                     .let {
                         if (it) {
                             val intent = Intent(this@PlayService, PlayMusicWidget::class.java)
@@ -1560,10 +1566,7 @@ class PlayService : MediaLibraryService() {
                     }
                     currentPlayTrack =
                         musicQueue[exoPlayer.currentMediaItemIndex]
-                    getSharedPreferences("Widgets", MODE_PRIVATE).getBoolean(
-                        "enable",
-                        false
-                    )
+                    SharedPreferencesUtils.getWidgetEnable(this@PlayService)
                         .let {
                             if (it) {
                                 val intent =

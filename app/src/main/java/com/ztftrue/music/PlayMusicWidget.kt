@@ -128,10 +128,11 @@ class PlayMusicWidget : AppWidgetProvider() {
     override fun onEnabled(context: Context) {
         // TODO send broadcast
 //        Log.d("PlayMusicWidget", "onEnabled")
-        context.getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit().apply {
-            putBoolean("enable", true)
-            apply()
-        }
+        SharedPreferencesUtils.setWidgetEnable(context,true)
+//        context.getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit().apply {
+//            putBoolean("enable", true)
+//            apply()
+//        }
 //        Toast.makeText(context, "You can set background color in setting", Toast.LENGTH_SHORT).show()
         // Enter relevant functionality for when the first widget is created
     }
@@ -139,10 +140,11 @@ class PlayMusicWidget : AppWidgetProvider() {
     override fun onDisabled(
         context: Context
     ) {
-        context.getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit().apply {
-            putBoolean("enable", false)
-            apply()
-        }
+        SharedPreferencesUtils.setWidgetEnable(context,false)
+//        context.getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit().apply {
+//            putBoolean("enable", false)
+//            apply()
+//        }
     }
 
     @UnstableApi

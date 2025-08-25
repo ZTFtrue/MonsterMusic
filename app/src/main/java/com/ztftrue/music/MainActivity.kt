@@ -319,48 +319,48 @@ class MainActivity : ComponentActivity() {
                                     targetFile.absolutePath
                                 )
                                 musicViewModel.getCurrentMusicCover(this@MainActivity)
-                                getSharedPreferences("Widgets", MODE_PRIVATE).getBoolean(
-                                    "enable",
-                                    false
-                                )
-                                    .let {
-                                        if (it) {
-                                            val intent =
-                                                Intent(this@MainActivity, PlayMusicWidget::class.java)
-                                            intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-                                            intent.putExtra("source", this@MainActivity.packageName)
-                                            val ids = AppWidgetManager.getInstance(
-                                                application
-                                            ).getAppWidgetIds(
-                                                ComponentName(
-                                                    application,
-                                                    PlayMusicWidget::class.java
-                                                )
-                                            )
-                                            intent.putExtra(
-                                                "playingStatus",
-                                                musicViewModel.playStatus.value
-                                            )
-                                            intent.putExtra(
-                                                "title",
-                                                musicViewModel.currentPlay.value?.name ?: ""
-                                            )
-                                            intent.putExtra(
-                                                "author",
-                                                musicViewModel.currentPlay.value?.artist ?: ""
-                                            )
-                                            intent.putExtra(
-                                                "path",
-                                                musicViewModel.currentPlay.value?.path ?: ""
-                                            )
-                                            intent.putExtra(
-                                                "id",
-                                                musicViewModel.currentPlay.value?.id ?: 0L
-                                            )
-                                            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-                                            sendBroadcast(intent)
-                                        }
-                                    }
+//                                getSharedPreferences("Widgets", MODE_PRIVATE).getBoolean(
+//                                    "enable",
+//                                    false
+//                                )
+//                                    .let {
+//                                        if (it) {
+//                                            val intent =
+//                                                Intent(this@MainActivity, PlayMusicWidget::class.java)
+//                                            intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+//                                            intent.putExtra("source", this@MainActivity.packageName)
+//                                            val ids = AppWidgetManager.getInstance(
+//                                                application
+//                                            ).getAppWidgetIds(
+//                                                ComponentName(
+//                                                    application,
+//                                                    PlayMusicWidget::class.java
+//                                                )
+//                                            )
+//                                            intent.putExtra(
+//                                                "playingStatus",
+//                                                musicViewModel.playStatus.value
+//                                            )
+//                                            intent.putExtra(
+//                                                "title",
+//                                                musicViewModel.currentPlay.value?.name ?: ""
+//                                            )
+//                                            intent.putExtra(
+//                                                "author",
+//                                                musicViewModel.currentPlay.value?.artist ?: ""
+//                                            )
+//                                            intent.putExtra(
+//                                                "path",
+//                                                musicViewModel.currentPlay.value?.path ?: ""
+//                                            )
+//                                            intent.putExtra(
+//                                                "id",
+//                                                musicViewModel.currentPlay.value?.id ?: 0L
+//                                            )
+//                                            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+//                                            sendBroadcast(intent)
+//                                        }
+//                                    }
                             }
                         } catch (e: Exception) {
                             e.printStackTrace()
