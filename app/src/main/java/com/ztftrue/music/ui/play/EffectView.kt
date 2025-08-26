@@ -70,6 +70,12 @@ fun EffectView(musicViewModel: MusicViewModel) {
             }
     ) {
         items(1) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(color = MaterialTheme.colorScheme.primary)
+            )
             Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 10.dp)) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -87,7 +93,10 @@ fun EffectView(musicViewModel: MusicViewModel) {
                             pitch.floatValue = 1f
                             val bundle = Bundle()
                             bundle.putFloat("pitch", musicViewModel.pitch.floatValue)
-                            musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_CHANGE_PITCH, bundle)
+                            musicViewModel.browser?.sendCustomCommand(
+                                MediaCommands.COMMAND_CHANGE_PITCH,
+                                bundle
+                            )
                         },
                     ) {
                         Text(
@@ -111,7 +120,10 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         musicViewModel.pitch.floatValue = pitch.floatValue
                         val bundle = Bundle()
                         bundle.putFloat("pitch", musicViewModel.pitch.floatValue)
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_CHANGE_PITCH, bundle)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_CHANGE_PITCH,
+                            bundle
+                        )
                     },
                 )
                 Row(
@@ -236,7 +248,10 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         musicViewModel.delayTime.floatValue = delayTime.floatValue
                         val bundle = Bundle()
                         bundle.putFloat("delay", musicViewModel.delayTime.floatValue)
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_ECHO_SET_DELAY, bundle)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_ECHO_SET_DELAY,
+                            bundle
+                        )
                     },
                 )
                 Text(
@@ -257,7 +272,10 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         musicViewModel.decay.floatValue = decay.floatValue
                         val bundle = Bundle()
                         bundle.putFloat("decay", musicViewModel.decay.floatValue)
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_ECHO_SET_DECAY, bundle)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_ECHO_SET_DECAY,
+                            bundle
+                        )
                     },
                 )
             }

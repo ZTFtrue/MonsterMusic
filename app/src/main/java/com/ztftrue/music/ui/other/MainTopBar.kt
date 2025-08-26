@@ -719,21 +719,6 @@ fun MainTopBar(
                         height = 3.0.dp,
                         color = MaterialTheme.colorScheme.onBackground
                     )
-//                    if (tabPositions.isNotEmpty()) {
-//                        TabRowDefaults.SecondaryIndicator(
-//                            Modifier
-//                                .height(3.0.dp)
-//                                .tabIndicatorOffset(tabPositions[pagerState.currentPage]),
-//                            height = 3.0.dp,
-//                            color = MaterialTheme.colorScheme.onBackground
-//                        )
-//                    } else {
-//                        TabRowDefaults.SecondaryIndicator(
-//                            Modifier.height(3.0.dp),
-//                            height = 3.0.dp,
-//                            color = MaterialTheme.colorScheme.onBackground
-//                        )
-//                    }
                 },
             ) {
                 musicViewModel.mainTabList.forEachIndexed { index, item ->
