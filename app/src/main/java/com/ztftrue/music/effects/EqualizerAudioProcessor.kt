@@ -13,11 +13,9 @@ import com.ztftrue.music.effects.SoundUtils.expandBuffer
 import com.ztftrue.music.effects.SoundUtils.getBytePerSample
 import com.ztftrue.music.play.AudioDataRepository
 import com.ztftrue.music.utils.Utils
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.math3.util.FastMath
 import java.nio.ByteBuffer
@@ -30,7 +28,6 @@ import kotlin.math.absoluteValue
 
 /** Indicates that the output sample rate should be the same as the input.  */
 private const val SAMPLE_RATE_NO_CHANGE = -1
-
 @UnstableApi
 class EqualizerAudioProcessor : AudioProcessor {
     private var delayEffectLeft: DelayEffect = DelayEffect(0.0f, 1.0f, 44100.0f)
@@ -336,15 +333,13 @@ class EqualizerAudioProcessor : AudioProcessor {
                             visualizationBuffer.forEachIndexed { index, _ ->
                                 visualizationBuffer[index] = blockingQueue.poll() ?: 0f
                             }
-                            CoroutineScope(Dispatchers.IO).launch {
-                                val magnitude: FloatArray =
-                                    pcmToFrequencyDomain.process(visualizationBuffer)
-                                val m = downsampleMagnitudes(
-                                    magnitude, 32, -60f, needNormalize=false,
-                                    needPositive = true
-                                )
-                                AudioDataRepository.postVisualizationData(m)
-                            }
+                            val magnitude: FloatArray =
+                                pcmToFrequencyDomain.process(visualizationBuffer)
+                            val m = downsampleMagnitudes(
+                                magnitude, 32, -60f, needNormalize = false,
+                                needPositive = true
+                            )
+                            AudioDataRepository.postVisualizationData(m)
                         }
                     }
                     ind = 0
