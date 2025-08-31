@@ -1251,6 +1251,7 @@ fun PlayingPage(
                     SecondaryScrollableTabRow(
                         selectedTabIndex = pagerTabState.currentPage,
                         modifier = Modifier.fillMaxWidth(),
+                        divider = {},
                         indicator = {
                             TabRowDefaults.SecondaryIndicator(
                                 Modifier

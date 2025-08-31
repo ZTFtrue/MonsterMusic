@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.Handler
@@ -87,18 +88,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 
-/**
- * playList
- * albumsList
- * artistsList
- * genresList
- * songsList
- * foldersList
- */
-
-
 @UnstableApi
-@Suppress("deprecation")
 class PlayService : MediaLibraryService() {
 
     private var mediaSession: MediaLibrarySession? = null
@@ -157,64 +147,6 @@ class PlayService : MediaLibraryService() {
     private lateinit var audioManager: AudioManager
 //    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 //        Log.e("PlayServiceDebug", "onStartCommand called! Intent: ${intent?.action} Extras: ${intent?.extras}")
-//        if (intent != null) {
-//            when (intent.action) {
-//                "androidx.media3.session.action.SKIP_TO_PREVIOUS" -> {
-//                    Log.d("PlayServiceDebug", "onStartCommand: Handling SKIP_TO_PREVIOUS action.")
-//                    if (!exoPlayer.isPlaying && exoPlayer.playbackState == Player.STATE_IDLE) {
-//                        exoPlayer.playWhenReady = true
-//                    }
-//                    if (exoPlayer.hasPreviousMediaItem()) {
-//                        exoPlayer.seekToPreviousMediaItem()
-//                    } else {
-//                        exoPlayer.seekTo(0)
-//                    }
-//                }
-//                "androidx.media3.session.action.PLAY_PAUSE" -> {
-//                    Log.d("PlayServiceDebug", "onStartCommand: Handling PLAY_PAUSE action.")
-//                    // ... (你的处理逻辑) ...
-//                    if (exoPlayer.playbackState == Player.STATE_IDLE || exoPlayer.playbackState == Player.STATE_ENDED) {
-//                        exoPlayer.playWhenReady = true
-//                    } else {
-//                        exoPlayer.playWhenReady = !exoPlayer.playWhenReady
-//                    }
-//                }
-//                "androidx.media3.session.action.SKIP_TO_NEXT" -> {
-//                    Log.d("PlayServiceDebug", "onStartCommand: Handling SKIP_TO_NEXT action.")
-//                    // ... (你的处理逻辑) ...
-//                    if (!exoPlayer.isPlaying && exoPlayer.playbackState == Player.STATE_IDLE) {
-//                        exoPlayer.playWhenReady = true
-//                    }
-//                    if (exoPlayer.hasNextMediaItem()) {
-//                        exoPlayer.seekToNextMediaItem()
-//                    } else {
-//                        exoPlayer.seekTo(0)
-//                    }
-//                }
-//                Intent.ACTION_MEDIA_BUTTON -> {
-//                    val keyEvent = intent.getParcelableExtra<KeyEvent>(Intent.EXTRA_KEY_EVENT)
-//                    Log.d("PlayServiceDebug", "onStartCommand: Handling generic MEDIA_BUTTON action with keyCode: ${keyEvent?.keyCode}")
-//                    if (keyEvent?.action == KeyEvent.ACTION_DOWN) {
-//                        when (keyEvent.keyCode) {
-//                            KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
-//                                if (exoPlayer.hasPreviousMediaItem()) exoPlayer.seekToPreviousMediaItem() else exoPlayer.seekTo(0)
-//                            }
-//                            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
-//                                exoPlayer.playWhenReady = !exoPlayer.playWhenReady
-//                            }
-//                            KeyEvent.KEYCODE_MEDIA_NEXT -> {
-//                                if (exoPlayer.hasNextMediaItem()) exoPlayer.seekToNextMediaItem() else exoPlayer.seekTo(0)
-//                            }
-//                        }
-//                    }
-//                }
-//                else -> {
-//                    Log.d("PlayServiceDebug", "onStartCommand: Received unhandled action: ${intent.action}")
-//                }
-//            }
-//        } else {
-//            Log.d("PlayServiceDebug", "onStartCommand: Received null intent.")
-//        }
 //        return super.onStartCommand(intent, flags, startId)
 //    }
 
@@ -712,7 +644,6 @@ class PlayService : MediaLibraryService() {
                 }
 
                 MediaCommands.COMMAND_APP_EXIT.customAction -> {
-                    stopForeground(true)
                     stopSelf()
                 }
 
@@ -726,7 +657,13 @@ class PlayService : MediaLibraryService() {
 
                 MediaCommands.COMMAND_CHANGE_PLAYLIST.customAction -> {
                     CoroutineScope(Dispatchers.IO).launch {
-                        val playList = args.getParcelable<AnyListBase>("playList")
+                        val playList: AnyListBase? =
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                args.getParcelable("playList", AnyListBase::class.java)
+                            } else {
+                                @Suppress("deprecation")
+                                args.getParcelable("playList")
+                            }
                         if (playList != null) {
                             var currentList = db.CurrentListDao().findCurrentList()
                             if (currentList == null) {
@@ -2259,7 +2196,6 @@ class PlayService : MediaLibraryService() {
 
 
     private fun loadAllTracksAndFolders() {
-        db = MusicDatabase.getDatabase(this@PlayService)
         val sortDataDao =
             db.SortFiledDao()
         val sortData =
