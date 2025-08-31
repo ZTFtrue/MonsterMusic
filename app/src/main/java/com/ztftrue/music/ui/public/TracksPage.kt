@@ -708,13 +708,14 @@ fun TracksListPage(
                 val result: SessionResult? = futureResultItem.get()
                 if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
                     Log.e("Client", "Failed COMMAND_GET_PLAY_LIST_ITEM ${result?.resultCode}")
+                    navController.navigateUp()
                     return@addListener
                 }
                 result.extras.getParcelable<AnyListBase>("data")?.let {
                     musicPlayList.value = it
                 }
             } catch (e: Exception) {
-                // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
+                navController.navigateUp()
                 Log.e("Client", "Failed to toggle favorite status", e)
             }
         }, ContextCompat.getMainExecutor(context))
@@ -771,7 +772,7 @@ fun TracksListPage(
                         navController.navigateUp()
                         return@addListener
                     }
-
+                    getPlayListMessage()
                     getHaveAlbums()
                     val albumMediaItems: List<MediaItem> = result.value ?: listOf()
                     val tracksListResult = ArrayList<MusicItem>()
@@ -787,12 +788,13 @@ fun TracksListPage(
                     val duration = tracksList.sumOf { it.duration }
                     durationAll.value = Utils.formatTimeWithUnit(duration)
                 } catch (e: Exception) {
+                    navController.navigateUp()
                     // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
                     Log.e("Client", "Failed to toggle favorite status", e)
                 }
                 musicViewModel.loadingTracks.value = false
             }, ContextCompat.getMainExecutor(context))
-            getPlayListMessage()
+
         }
     }
 
