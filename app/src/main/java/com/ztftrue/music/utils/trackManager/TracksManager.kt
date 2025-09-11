@@ -111,22 +111,17 @@ object TracksManager {
                 val musicID = cursor.getLong(iDColumn)
                 val folderId = cursor.getLong(bucketIdColumn)
                 val folderName = cursor.getString(bucketNameColumn)
-                val path = cursor.getString(dataColumn)
-                val displayName = cursor.getString(displayNameColumn)
-                val thisTitle = cursor.getString(titleColumn)
-                val thisArtist = cursor.getString(artistColumn)
+                val path = cursor.getString(dataColumn) ?: ""
+                val displayName = cursor.getString(displayNameColumn) ?: "Unknown"
+                val thisTitle = cursor.getString(titleColumn) ?: "Unknown Title"
+                val thisArtist = cursor.getString(artistColumn) ?: "Unknown Artist"
                 val duration = cursor.getLong(durationColumn)
                 val albumId = cursor.getLong(albumIdColumn)
                 val artistId = cursor.getLong(artistIdColumn)
-                val album = cursor.getString(albumColumn)
+                val album = cursor.getString(albumColumn) ?: "Unknown Album"
                 val isMusic = cursor.getInt(isMusicColumn) != 0
-
-                val genre = if (genreColumn != null) {
-                    cursor.getString(genreColumn) ?: ""
-                } else {
-                    ""
-                }
-                val genreId = if (genreIdColumn != null) cursor.getLong(genreIdColumn) else -1
+                val genre = cursor.getString(genreColumn) ?: "Unknown genre"
+                val genreId = cursor.getLong(genreIdColumn)
                 val year = cursor.getInt(yearColumn)
 //                val discNumber = cursor.getInt(discNumberColumn)
                 val songNumber = cursor.getInt(songNumberColumn)
@@ -334,16 +329,16 @@ object TracksManager {
 
                 val musicID = cursor.getLong(iDColumn)
                 val path = cursor.getString(dataColumn)
-                val displayName = cursor.getString(displayNameColumn)
-                val thisTitle = cursor.getString(titleColumn)
-                val thisArtist = cursor.getString(artistColumn)
+                val displayName = cursor.getString(displayNameColumn) ?: "Unknown"
+                val thisTitle = cursor.getString(titleColumn) ?: "Unknown Title"
+                val thisArtist = cursor.getString(artistColumn) ?: "Unknown Artist"
                 val duration = cursor.getLong(durationColumn)
                 val albumId = cursor.getLong(albumIdColumn)
                 val artistId = cursor.getLong(artistIdColumn)
-                val album = cursor.getString(albumColumn)
+                val album = cursor.getString(albumColumn) ?: "Unknown Album"
 
-                val genre = if (genreColumn != null) cursor.getString(genreColumn) ?: "" else ""
-                val genreId = if (genreIdColumn != null) cursor.getLong(genreIdColumn) else -1
+                val genre = cursor.getString(genreColumn) ?: "Unknown genre"
+                val genreId = cursor.getLong(genreIdColumn)
                 val year = cursor.getInt(yearColumn)
 //                val discNumber = cursor.getInt(discNumberColumn)
                 val songNumber = cursor.getInt(songNumberColumn)
@@ -433,7 +428,6 @@ object TracksManager {
     fun requestEditPermission(
         context: Context,
         musicId: Long,
-        musicPath: String,
     ): Boolean {
         val contentResolver = context.contentResolver
         var uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)

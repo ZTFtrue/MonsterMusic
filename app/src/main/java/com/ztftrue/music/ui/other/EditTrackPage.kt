@@ -219,8 +219,7 @@ fun EditTrackPage(
                                 enableEdit =
                                     TracksManager.requestEditPermission(
                                         context,
-                                        musicId,
-                                        musicPath
+                                        musicId
                                     )
                             }
                         }) {
