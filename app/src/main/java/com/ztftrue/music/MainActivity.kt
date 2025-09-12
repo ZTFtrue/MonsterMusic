@@ -1,7 +1,6 @@
 package com.ztftrue.music
 
 import android.Manifest
-import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.ContentResolver
 import android.content.ContentValues
