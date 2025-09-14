@@ -47,6 +47,7 @@ import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -802,21 +803,23 @@ class MainActivity : ComponentActivity() {
 
         override fun onTracksChanged(tracks: Tracks) {
             super.onTracksChanged(tracks)
-            val formatMap = HashMap<String, String>()
-            val audioTrackGroups = tracks.groups.filter { it.type == C.TRACK_TYPE_AUDIO }
-            for (trackGroup in audioTrackGroups) {
-                for (i in 0 until trackGroup.length) {
-                    val format = trackGroup.getTrackFormat(i)
-                    formatMap["Codec"] = format.codecs ?: ""
-                    formatMap["SampleRate"] = format.sampleRate.toString()
-                    formatMap["ChannelCount"] = format.channelCount.toString()
-                    formatMap["Bitrate"] = format.bitrate.toString()
-                    break
+            musicViewModel.viewModelScope.launch {
+                val formatMap = HashMap<String, String>()
+                val audioTrackGroups = tracks.groups.filter { it.type == C.TRACK_TYPE_AUDIO }
+                for (trackGroup in audioTrackGroups) {
+                    for (i in 0 until trackGroup.length) {
+                        val format = trackGroup.getTrackFormat(i)
+                        formatMap["Codec"] = format.codecs ?: ""
+                        formatMap["SampleRate"] = format.sampleRate.toString()
+                        formatMap["ChannelCount"] = format.channelCount.toString()
+                        formatMap["Bitrate"] = format.bitrate.toString()
+                        break
+                    }
                 }
-            }
-            musicViewModel.currentInputFormat.clear()
-            formatMap.forEach { formatItem ->
-                musicViewModel.currentInputFormat[formatItem.key] = formatItem.value
+                musicViewModel.currentInputFormat.apply {
+                    clear()          // Clear existing entries
+                    putAll(formatMap) // Add all new entries
+                }
             }
         }
 
@@ -826,20 +829,10 @@ class MainActivity : ComponentActivity() {
             @Player.DiscontinuityReason reason: Int
         ) {
             super.onPositionDiscontinuity(oldPosition, newPosition, reason)
-
-            // 我们通常只关心由 seek 引起的跳转
             if (reason == Player.DISCONTINUITY_REASON_SEEK) {
                 val actualNewPositionMs = newPosition.positionMs // 获取精确的新位置
-//                val actualNewWindowIndex = newPosition.windowIndex // 获取精确的新窗口索引
                 musicViewModel.sliderPosition.floatValue = actualNewPositionMs.toFloat()
-                // (可选) 广播给 ViewModel，更新 UI 进度条的 LiveData
-                // (this@PlayService.application as? Application)?.let { app ->
-                //     val viewModel = ViewModelProvider(app).get(MusicPlayerViewModel::class.java)
-                //     viewModel.onPositionDiscontinuity(actualNewPositionMs) // 假设 ViewModel 有这个方法
-                // }
             }
-            // 您也可以在其他 reason (如 MEDIA_ITEM_TRANSITION) 中处理位置更新，
-            // 但 DISCONTINUITY_REASON_SEEK 是最明确的。
         }
     }
 

@@ -105,30 +105,46 @@ object PlaylistManager {
         sortFiled: String?,
         sortMethod: String?
     ): ArrayList<MusicItem> {
+
         val list = arrayListOf<MusicItem>()
         val trackMapPath = LinkedHashMap<String, MusicItem>()
+
         tracksHashMap.values.forEach {
-            trackMapPath[File(it.path).canonicalPath] = it
+            try {
+                val file = File(it.path)
+                trackMapPath[file.canonicalPath] = it
+            } catch (e: Exception) {
+                Log.w("PlaylistManager", "Invalid path in music library, skipping: ${it.path}", e)
+            }
         }
+
         try {
             context.contentResolver.openInputStream(playlistUri)?.use { inputStream ->
                 BufferedReader(InputStreamReader(inputStream)).use { reader ->
                     reader.forEachLine { line ->
                         if (line.isNotBlank() && !line.startsWith("#")) {
-                            val rawSongPath = line.trim()
-                            val songFile = File(rawSongPath)
-                            val absoluteSongPath = if (songFile.isAbsolute) {
-                                songFile.canonicalPath
-                            } else {
-                                File(playlistDir, rawSongPath).canonicalPath
-                            }
-                            val foundSong = trackMapPath[absoluteSongPath]
-                            if (foundSong != null) {
-                                list.add(foundSong)
-                            } else {
+                            try {
+                                val rawSongPath = line.trim()
+                                val songFile = File(rawSongPath)
+                                val absoluteSongPath = if (songFile.isAbsolute) {
+                                    songFile.canonicalPath
+                                } else {
+                                    File(playlistDir, rawSongPath).canonicalPath
+                                }
+                                val foundSong = trackMapPath[absoluteSongPath]
+                                if (foundSong != null) {
+                                    list.add(foundSong)
+                                } else {
+                                    Log.w(
+                                        "PlaylistMatcher",
+                                        "Path not found after resolving to absolute: $absoluteSongPath (from raw: $playlistUri)"
+                                    )
+                                }
+                            } catch (e: Exception) {
                                 Log.w(
-                                    "PlaylistMatcher",
-                                    "Path not found after resolving to absolute: $absoluteSongPath (from raw: $playlistUri)"
+                                    "PlaylistManager",
+                                    "Failed to process playlist line: '$line'",
+                                    e
                                 )
                             }
                         }
