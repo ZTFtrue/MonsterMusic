@@ -263,7 +263,7 @@ fun DrawMenu(
                 contentAlignment = Alignment.CenterStart
             ) {
                 Text(
-                    text = "I need your help!!!", Modifier.padding(start = 10.dp),
+                    text = stringResource(R.string.i_need_your_help), Modifier.padding(start = 10.dp),
                     color = MaterialTheme.colorScheme.onBackground,
                 )
             }
@@ -325,7 +325,7 @@ fun DrawMenu(
                 contentAlignment = Alignment.CenterStart
             ) {
                 Text(
-                    text = "Refresh tracks", Modifier.padding(start = 10.dp),
+                    text = stringResource(R.string.refresh_tracks), Modifier.padding(start = 10.dp),
                     color = MaterialTheme.colorScheme.onBackground,
                 )
             }
@@ -361,12 +361,14 @@ fun FeedBackDialog(onDismiss: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = stringResource(R.string.feedback), modifier = Modifier
+                    text = stringResource(R.string.feedback),
+                    modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    text = stringResource(R.string.star_share_tip), modifier = Modifier
+                    text = stringResource(R.string.star_share_tip),
+                    modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -426,7 +428,7 @@ fun FeedBackDialog(onDismiss: () -> Unit) {
                                     onConfirmation()
                                     Utils.sendEmail(
                                         "ztftrue@gmail.com",
-                                        "MonsterMusic FeedBack",
+                                        context.getString(R.string.monster_music_feedback_subject),
                                         context
                                     )
                                 },

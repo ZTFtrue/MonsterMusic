@@ -384,7 +384,7 @@ fun MusicItemView(
             } else {
                 Image(
                     painter = painterResource(playStatusIcon),
-                    contentDescription = "Operate More, will open dialog",
+                    contentDescription = stringResource(R.string.operate_more_will_open_dialog),
                     modifier = Modifier
                         .size(30.dp)
                         .padding(5.dp)
@@ -449,7 +449,7 @@ fun MusicItemView(
                             )) {
                         Icon(
                             imageVector = Icons.Outlined.SwipeVertical,
-                            contentDescription = "${music.name} sort",
+                            contentDescription = stringResource(R.string.item_sort_description, music.name),
                             modifier = Modifier
                                 .size(40.dp)
                                 .padding(5.dp)
@@ -468,7 +468,7 @@ fun MusicItemView(
                         }) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Operate More, will open dialog",
+                            contentDescription = stringResource(R.string.operate_more_will_open_dialog),
                             modifier = Modifier
                                 .size(20.dp)
                                 .clip(CircleShape),
@@ -825,4 +825,3 @@ fun OperateDialog(
         }
     )
 }
-

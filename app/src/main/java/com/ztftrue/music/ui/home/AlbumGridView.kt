@@ -98,7 +98,7 @@ fun AlbumGridView(
         albumList = albumListDefault
     }
     val context = LocalContext.current
-    LaunchedEffect(musicViewModel.refreshAlbum.value) {
+    LaunchedEffect(musicViewModel.refreshAlbum.value,albumListDefault) {
         if (albumListDefault == null) {
             albumList.clear()
             val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
@@ -131,7 +131,7 @@ fun AlbumGridView(
                     albumList.addAll(list)
                 } catch (e: Exception) {
                     // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
-                    Log.e("Client", "Failed to toggle favorite status", e)
+                    Log.e("Client", "Failed to load albums", e)
                 }
             }, ContextCompat.getMainExecutor(context))
         }
@@ -374,7 +374,7 @@ fun AlbumItemView(
                     }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Operate More, will open dialog",
+                        contentDescription = stringResource(R.string.operate_more_will_open_dialog),
                         modifier = Modifier
                             .size(20.dp)
                             .clip(CircleShape),

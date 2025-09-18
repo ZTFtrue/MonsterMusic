@@ -314,7 +314,7 @@ fun EditTrackPage(
                             },
                             label = {
                                 Text(
-                                    stringResource(id = R.string.title),
+                                    stringResource(id = R.string.title_),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                             }, // Placeholder or hint text
