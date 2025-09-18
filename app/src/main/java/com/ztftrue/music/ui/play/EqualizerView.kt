@@ -369,7 +369,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Equalizer Q: " + (equalizerQ.floatValue).toString(),
+                        text = stringResource(R.string.equalizer_q) + (equalizerQ.floatValue).toString(),
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     OutlinedButton(
@@ -410,7 +410,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                 )
                 if (equalizerQ.floatValue < 2.0f) {
                     Text(
-                        text = "Lower Q values will lead to a more pronounced effect, but with increased noise.",
+                        text = stringResource(R.string.lower_q_values_will_lead_to_a_more_pronounced_effect_but_with_increased_noise),
                         color = MaterialTheme.colorScheme.onBackground
                     )
                 }

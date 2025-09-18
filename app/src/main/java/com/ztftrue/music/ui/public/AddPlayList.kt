@@ -579,7 +579,7 @@ fun AddMusicToPlayListDialog(
                             }
                     )
                     Text(
-                        text = "Auto remove duplicate songs",
+                        text = stringResource(R.string.auto_remove_duplicate_songs),
                         modifier = Modifier.padding(8.dp),
                         color = MaterialTheme.colorScheme.onBackground
                     )

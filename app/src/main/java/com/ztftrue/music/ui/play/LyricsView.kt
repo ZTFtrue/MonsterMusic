@@ -291,7 +291,7 @@ fun LyricsView(
         Column {
             if (musicViewModel.currentCaptionListLoading.value) {
                 Text(
-                    text = "Loading...",
+                    text = stringResource(R.string.loading),
                     color = MaterialTheme.colorScheme.onBackground,
                     fontSize = MaterialTheme.typography.titleLarge.fontSize,
                     textAlign = TextAlign.Center,

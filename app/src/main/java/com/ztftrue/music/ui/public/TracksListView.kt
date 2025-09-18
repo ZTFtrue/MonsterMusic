@@ -126,7 +126,7 @@ fun TracksListView(
         if (tracksList.isEmpty() && header == null) {
             if (musicViewModel.loadingTracks.value) {
                 Text(
-                    text = "Loading...",
+                    text = stringResource(R.string.loading),
                     color = MaterialTheme.colorScheme.onBackground,
                     fontSize = MaterialTheme.typography.titleLarge.fontSize,
                     textAlign = TextAlign.Center,

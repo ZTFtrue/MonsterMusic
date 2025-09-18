@@ -922,7 +922,7 @@ fun TracksListPage(
                                 )
                             }
                             Text(
-                                text = "Duration: ${durationAll.value}",
+                                text = stringResource(R.string.duration, durationAll.value),
                                 modifier = Modifier.horizontalScroll(
                                     rememberScrollState(
                                         0

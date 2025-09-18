@@ -172,7 +172,7 @@ fun TopBar(
                                 IconButton(onClick = { popupVolumeWindow = false }) {
                                     Icon(
                                         imageVector = Icons.Outlined.Close,
-                                        contentDescription = "Remove folder",
+                                        contentDescription = stringResource(R.string.content_description_remove_folder),
                                         modifier = Modifier
                                             .size(30.dp)
                                             .clip(CircleShape),

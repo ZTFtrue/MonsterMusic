@@ -431,7 +431,7 @@ fun PlayListOperateDialog(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Remove duplicate tracks",
+                                text = stringResource(R.string.remove_duplicate_tracks),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )

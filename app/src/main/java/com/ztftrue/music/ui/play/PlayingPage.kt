@@ -872,7 +872,7 @@ fun PlayingPage(
                                 onClick = { selectedOption = "Matrix" }
                             )
                             Text(
-                                text = "Matrix", Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.matrix), Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }

@@ -162,7 +162,6 @@
     <string name="replace_cover_the_rose">Replace cover(the rose)</string>
     <string name="settings_set_widget_background">Set Widget Background</string>
     <string name="settings_set_auto_play">Set Auto Play</string>
-    <string name="settings_auto_switch_track_to_top_random">Auto switch current track to top when random</string>
     <string name="error_must_have_at_least_one_tab">Must has at least one tab</string>
     <string name="content_description_up_tab_priority">Up tab priority</string>
     <string name="content_description_down_tab_priority">Down tab priority</string>
@@ -198,4 +197,13 @@
     <string name="settings_link_media3">Media3</string>
     <string name="content_description_show_folder">Show this folder %1$s</string>
     <string name="content_description_hide_folder">Hide this folder %1$s</string>
+    <string name="auto_switch_current_track_to_top_when_random">Auto switch current track to top when random</string>
+    <string name="remove_duplicate_tracks">Remove duplicate tracks</string>
+    <string name="equalizer_q">"Equalizer Q: "</string>
+    <string name="lower_q_values_will_lead_to_a_more_pronounced_effect_but_with_increased_noise">Lower Q values will lead to a more pronounced effect, but with increased noise.</string>
+    <string name="loading">Loading…</string>
+    <string name="matrix">Matrix</string>
+    <string name="auto_remove_duplicate_songs">Auto remove duplicate songs</string>
+    <string name="duration">Duration: %1$s</string>
+    <string name="title">Title</string>
 </resources>

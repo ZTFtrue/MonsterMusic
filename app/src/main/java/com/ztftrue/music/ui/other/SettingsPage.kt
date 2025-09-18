@@ -340,7 +340,7 @@ fun SettingsPage(
                                             )
                                             Toast.makeText(
                                                 context,
-                                                "Failed to open language settings",
+                                                context.getString(R.string.failed_to_open_language_settings),
                                                 Toast.LENGTH_SHORT
                                             ).show()
                                         }
@@ -356,7 +356,7 @@ fun SettingsPage(
                                     })
                             }
                             Text(
-                                text = "Set language",
+                                text = stringResource(R.string.set_language),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -406,7 +406,7 @@ fun SettingsPage(
                                     })
                             }
                             Text(
-                                text = "Replace cover(the rose)",
+                                text = stringResource(R.string.replace_cover_the_rose),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -610,7 +610,7 @@ fun SettingsPage(
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
                                         Text(
-                                            text = "s",
+                                            text = stringResource(R.string.s),
                                             Modifier.padding(start = 10.dp, end = 20.dp),
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
@@ -820,7 +820,7 @@ fun SettingsPage(
                                     })
                             }
                             Text(
-                                text = "Set Widget Background",
+                                text = stringResource(R.string.settings_set_widget_background),
                                 modifier = Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -873,7 +873,7 @@ fun SettingsPage(
                                     })
                             }
                             Text(
-                                text = "Set Auto Play",
+                                text = stringResource(R.string.settings_set_auto_play),
                                 modifier = Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -902,7 +902,7 @@ fun SettingsPage(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Auto switch current track to top when random",
+                                text = stringResource(R.string.auto_switch_current_track_to_top_when_random),
                                 Modifier
                                     .padding(start = 10.dp)
                                     .weight(1f),
@@ -1472,7 +1472,7 @@ fun ManageAutoPlayDialog(onDismiss: () -> Unit) {
                                         }
                                 )
                                 Text(
-                                    text = "Enable auto play when bluetooth connected or headset connected. Need restart app.",
+                                    text = stringResource(R.string.settings_enable_auto_play_description),
                                     modifier = Modifier.padding(8.dp),
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
@@ -1498,7 +1498,7 @@ fun ManageAutoPlayDialog(onDismiss: () -> Unit) {
                             ) {
                                 Column {
                                     Text(
-                                        text = "Wait time before auto play",
+                                        text = stringResource(R.string.settings_wait_time_before_auto_play),
                                         Modifier.padding(start = 10.dp),
                                         color = MaterialTheme.colorScheme.onBackground
                                     )
@@ -1573,7 +1573,7 @@ fun ManageAutoPlayDialog(onDismiss: () -> Unit) {
                                                 verticalAlignment = Alignment.CenterVertically,
                                             ) {
                                                 Text(
-                                                    text = "s",
+                                                    text = stringResource(R.string.s),
                                                     Modifier.padding(start = 10.dp, end = 20.dp),
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 )
@@ -1795,7 +1795,7 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Text(
-                                    text = if (item.type == LYRICS_TYPE) "Lyrics: " else if (item.type == ARTIST_TYPE) "Artist: " else "Genre: ",
+                                    text = if (item.type == LYRICS_TYPE) stringResource(R.string.text_prefix_lyrics) else if (item.type == ARTIST_TYPE) stringResource(R.string.text_prefix_artist) else stringResource(R.string.text_prefix_genre),
                                     color = MaterialTheme.colorScheme.onBackground,
                                     modifier = Modifier.horizontalScroll(rememberScrollState(0))
                                 )
@@ -1826,7 +1826,7 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
                                 }) {
                                 Icon(
                                     imageVector = Icons.Outlined.Delete,
-                                    contentDescription = "Remove folder",
+                                    contentDescription = stringResource(R.string.content_description_remove_folder),
                                     modifier = Modifier
                                         .size(30.dp)
                                         .clip(CircleShape),
@@ -2093,7 +2093,7 @@ fun SetWidgetDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Set Widget Background",
+                    text = stringResource(R.string.settings_set_widget_background),
                     modifier = Modifier
                         .padding(2.dp),
                     color = MaterialTheme.colorScheme.onBackground
@@ -2337,9 +2337,9 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                                         .padding(8.dp)
                                         .semantics {
                                             contentDescription = if (showSlideIndicator) {
-                                                "Show slide indicator"
+                                                context.getString(R.string.content_description_show_slide_indicator)
                                             } else {
-                                                "Hide slide indicator"
+                                                context.getString(R.string.content_description_hide_slide_indicator)
                                             }
                                         }
                                 )
@@ -2372,8 +2372,11 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                                         .semantics {
                                             contentDescription = if (showTopIndicator) {
                                                 "Show top indicator"
+                                                context.getString(R.string.content_description_show_top_indicator)
+
                                             } else {
                                                 "Hide top indicator"
+                                                context.getString(R.string.content_description_hide_top_indicator)
                                             }
                                         }
                                 )
@@ -2405,9 +2408,9 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                                         .padding(8.dp)
                                         .semantics {
                                             contentDescription = if (showQueueIndicator) {
-                                                "Show indicator in queue"
+                                                context.getString(R.string.content_description_show_indicator_in_queue)
                                             } else {
-                                                "Hide indicator in queue"
+                                                context.getString(R.string.content_description_hide_indicator_in_queue)
                                             }
                                         }
                                 )
@@ -2698,7 +2701,7 @@ fun ReplaceCoverDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                             ) {
 
                                 Text(
-                                    text = "Replace Cover the Rose",
+                                    text = stringResource(R.string.replace_cover_the_rose),
                                     modifier = Modifier
                                         .padding(2.dp),
                                     color = MaterialTheme.colorScheme.onBackground,
