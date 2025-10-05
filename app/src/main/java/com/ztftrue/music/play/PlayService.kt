@@ -87,6 +87,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
+import kotlin.math.max
 
 @UnstableApi
 class PlayService : MediaLibraryService() {
@@ -1388,6 +1389,36 @@ class PlayService : MediaLibraryService() {
                                 maxPriority = maxPriority + 1
                                 musicItem.priority = maxPriority
                             }
+                        }
+                    }
+                    val allCurrentIds = qList.mapNotNull { it.tableId }
+                    val maxId = allCurrentIds.maxOrNull() ?: 0L
+                    var nextAvailableId = max(maxId, qList.size.toLong()) + 1
+
+                    // 步骤 2.2: 追踪已见 ID 并修复重复项
+                    val seenTableIds = mutableSetOf<Long>()
+                    qList.forEach { musicItem ->
+                        val currentId = musicItem.tableId
+
+                        // 如果 ID 是 null，或者无法添加到 Set 中（因为已存在），则视为需要修复
+                        if (currentId == null || !seenTableIds.add(currentId)) {
+
+                            // 如果是 null 才需要记录日志，如果是重复，上面已经分配了
+                            if(currentId != null) {
+                                Log.w("QueueCorrection", "发现重复 tableId: $currentId。为其重新分配新 ID。")
+                            }
+
+                            // 为防止极小概率下 nextAvailableId 恰好也是一个已存在的ID，循环检查一下
+                            while (seenTableIds.contains(nextAvailableId)) {
+                                nextAvailableId++
+                            }
+
+                            // 分配新 ID 并将其记录到 seen 集合中
+                            musicItem.tableId = nextAvailableId
+                            seenTableIds.add(nextAvailableId)
+
+                            // 为下一次分配准备
+                            nextAvailableId++
                         }
                     }
                     val l1 = musicQueue.sortedBy {
