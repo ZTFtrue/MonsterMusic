@@ -81,6 +81,7 @@ sealed class ImageSource {
     data class Resource(@DrawableRes val id: Int) : ImageSource()
     data class FilePath(val path: String) : ImageSource()
     data class BitmapFile(val bitmap: Bitmap) : ImageSource()
+
     fun asModel(): Any = when (this) {
         is Resource -> id
         is FilePath -> File(path)
@@ -121,9 +122,11 @@ class MusicViewModel : ViewModel() {
     // 每次播放仅设置当前列表的状态
     var musicQueue = mutableStateListOf<MusicItem>()
 
-    var currentMusicCover = mutableStateOf<ImageSource>(ImageSource.Resource(R.drawable.songs_thumbnail_cover))
+    var currentMusicCover =
+        mutableStateOf<ImageSource>(ImageSource.Resource(R.drawable.songs_thumbnail_cover))
     var currentPlay = mutableStateOf<MusicItem?>(null)
-    var needRefreshTheme=mutableStateOf(false)
+    var needRefreshTheme = mutableStateOf(false)
+
     //    var currentPlayQueueIndex = mutableIntStateOf(-1)
     var songsList = mutableStateListOf<MusicItem>()
     var playListCurrent = mutableStateOf<AnyListBase?>(null)
@@ -289,10 +292,17 @@ class MusicViewModel : ViewModel() {
     ): Boolean {
         val treeUri = storageFolder.uri.toUri()
 
-        context.contentResolver.takePersistableUriPermission(
-            treeUri,
-            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-        )
+        try {
+            context.contentResolver.takePersistableUriPermission(
+                treeUri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            if (e is SecurityException) {
+                storageFolder.id?.let { getDb(context).StorageFolderDao().deleteById(it) }
+            }
+        }
 
         // 这里假设 pickedDir 是 musicName 所在的目录
         // 我们直接构造出可能的歌词文件名并尝试匹配
@@ -321,6 +331,7 @@ class MusicViewModel : ViewModel() {
         }
         return false
     }
+
     fun dealLyrics(context: Context, currentPlay: MusicItem) {
         lock.lock()
         currentCaptionListLoading.value = true
@@ -508,8 +519,8 @@ class MusicViewModel : ViewModel() {
         if (v != null) {
             currentMusicCover.value = getCover(this@MusicViewModel, context, v.id, v.path)
         }
-        if(themeSelected.intValue == 3){
-            needRefreshTheme.value=!needRefreshTheme.value
+        if (themeSelected.intValue == 3) {
+            needRefreshTheme.value = !needRefreshTheme.value
         }
         return currentMusicCover.value
     }
@@ -549,10 +560,10 @@ class MusicViewModel : ViewModel() {
                     }
                     bm.recycle()
                     return@withContext defaultCoverResId
-                }else if(defaultCoverResId is String){
+                } else if (defaultCoverResId is String) {
                     val sourceFile = File(defaultCoverResId)
-                    if(sourceFile.exists()){
-                        sourceFile.copyTo(coverPath,true)
+                    if (sourceFile.exists()) {
+                        sourceFile.copyTo(coverPath, true)
                         return@withContext defaultCoverResId
                     }
 //                    Files.copy(sourceFile.toPath(), coverPath.toPath(), StandardCopyOption.REPLACE_EXISTING)
