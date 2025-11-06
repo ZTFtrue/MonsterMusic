@@ -47,7 +47,10 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnit.Companion
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
@@ -68,6 +71,7 @@ import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.FolderList
+import com.ztftrue.music.utils.trackManager.FolderManger
 
 
 @Composable
@@ -81,7 +85,7 @@ fun FolderListView(
     val folderList = remember { mutableStateListOf<FolderList>() }
     val listState = rememberLazyListState()
     val context = LocalContext.current
-    LaunchedEffect(Unit, musicViewModel.refreshFolder.value ) {
+    LaunchedEffect(Unit, musicViewModel.refreshFolder.value) {
         folderList.clear()
         val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
             musicViewModel.browser?.getChildren("folders_root", 0, Integer.MAX_VALUE, null)
@@ -94,6 +98,11 @@ fun FolderListView(
                 val albumMediaItems: List<MediaItem> = result.value ?: listOf()
                 albumMediaItems.forEach { mediaItem ->
                     val album = FolderList(
+                        children = ArrayList(),
+                        path = mediaItem.mediaMetadata.extras?.getString(
+                            CustomMetadataKeys.FOLDER_PATH,
+                            "/"
+                        ) ?: "/",
                         id = mediaItem.mediaId.toLong(),
                         name = mediaItem.mediaMetadata.title.toString(),
                         trackNumber = mediaItem.mediaMetadata.totalTrackCount ?: 0,
@@ -104,6 +113,8 @@ fun FolderListView(
                     )
                     folderList.add(album)
                 }
+                val treeFolder = FolderManger.buildFolderTreeFromPaths(folderList)
+                Log.d("tag", treeFolder.toString())
             } catch (e: Exception) {
                 // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
                 Log.e("Client", "Failed to toggle favorite status", e)
@@ -191,13 +202,20 @@ fun FolderItemView(
         )
     }
     if (showAddPlayListDialog) {
-        AddMusicToPlayListDialog(musicViewModel, null, onDismiss = {playListId,removeDuplicate ->
+        AddMusicToPlayListDialog(musicViewModel, null, onDismiss = { playListId, removeDuplicate ->
             showAddPlayListDialog = false
             if (playListId != null) {
                 if (playListId == -1L) {
                     showCreatePlayListDialog = true
                 } else {
-                    Utils.addTracksToPlayList(playListId, context, type, item.id, musicViewModel,removeDuplicate)
+                    Utils.addTracksToPlayList(
+                        playListId,
+                        context,
+                        type,
+                        item.id,
+                        musicViewModel,
+                        removeDuplicate
+                    )
                 }
             }
         })
@@ -206,7 +224,7 @@ fun FolderItemView(
         CreatePlayListDialog(onDismiss = {
             showCreatePlayListDialog = false
             if (it != null) {
-                Utils.createPlayListAddTracks(it, context, type, item.id, musicViewModel,false)
+                Utils.createPlayListAddTracks(it, context, type, item.id, musicViewModel, false)
             }
         })
     }
@@ -219,7 +237,10 @@ fun FolderItemView(
                 }
             ) {
                 navController.navigate(
-                    Router.PlayListView.withArgs("id" to "${item.id}", "itemType" to enumToStringForPlayListType(type)),
+                    Router.PlayListView.withArgs(
+                        "id" to "${item.id}",
+                        "itemType" to enumToStringForPlayListType(type)
+                    ),
                     navigatorExtras = ListParameter(item.id, type)
                 )
             }, verticalAlignment = Alignment.CenterVertically
@@ -251,8 +272,17 @@ fun FolderItemView(
                     modifier = Modifier.horizontalScroll(rememberScrollState(0)),
                 )
                 Text(
-                    text = stringResource(R.string.song, number, if (number <= 1L) "" else stringResource(id = R.string.s)),
+                    text = stringResource(
+                        R.string.song,
+                        number,
+                        if (number <= 1L) "" else stringResource(id = R.string.s)
+                    ),
                     color = MaterialTheme.colorScheme.onBackground,
+                )
+                Text(
+                    text = item.path,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.80f),
+                    modifier = Modifier.horizontalScroll(rememberScrollState(0)),
                 )
             }
             IconButton(
@@ -271,8 +301,6 @@ fun FolderItemView(
                 )
             }
         }
-
-
     }
 }
 

@@ -16,12 +16,19 @@ data class MusicPlayList(
 
 @Parcelize
 data class FolderList(
+    var children: ArrayList<FolderList> = ArrayList(),
+    var path: String,
     override var name: String,
     override var id: Long,
     override var trackNumber: Int,
     override var type: PlayListType = PlayListType.Folders,
-    var isShow: Boolean = true
-) : ListBase(id, name, trackNumber, type)
+    var isShow: Boolean = true,
+    var parent:FolderList?=null
+) : ListBase(id, name, trackNumber, type){
+    override fun toString(): String {
+        return path
+    }
+}
 
 @Parcelize
 data class AlbumList(

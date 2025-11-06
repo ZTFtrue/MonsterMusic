@@ -480,7 +480,7 @@ fun TracksListPage(
             }
 
             PlayListType.Folders -> {
-                val item = FolderList("", id, 0)
+                val item = FolderList(path="",name="", id=id, trackNumber = 0)
                 FolderListOperateDialog(
                     musicViewModel,
                     playList = item,

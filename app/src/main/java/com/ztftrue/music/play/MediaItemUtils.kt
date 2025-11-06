@@ -18,6 +18,7 @@ object CustomMetadataKeys {
     const val KEY_ARTIST = "com.ztftrue.music.metadata.ARTIST"
     const val KEY_ALBUM_COUNT = "com.ztftrue.music.metadata.ALBUM_COUNT"
     const val FOLDER_IS_SHOW = "com.ztftrue.music.metadata.FOLDER_IS_SHOW"
+    const val FOLDER_PATH = "com.ztftrue.music.metadata.FOLDER_PATH"
     const val KEY_FIRST_YEAR = "com.ztftrue.music.metadata.FIRST_YEAR"
     const val KEY_LAST_YEAR = "com.ztftrue.music.metadata.LAST_YEAR"
 
@@ -95,6 +96,7 @@ object MediaItemUtils {
 //            .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER)
             .setExtras(Bundle().apply {
                 putBoolean(CustomMetadataKeys.FOLDER_IS_SHOW, folder.isShow)
+                putString(CustomMetadataKeys.FOLDER_PATH, folder.path)
                 // folder.isShow 这种UI状态信息通常不放在这里，但如果需要也可以放
             })
             .build()
