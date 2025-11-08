@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -30,7 +31,6 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionResult
-import androidx.navigation.NavHostController
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.play.AudioDataRepository
 import com.ztftrue.music.play.CustomMetadataKeys
@@ -97,7 +97,7 @@ class MusicViewModel : ViewModel() {
     val refreshArtist = mutableStateOf(false)
     val refreshGenre = mutableStateOf(false)
     val refreshFolder = mutableStateOf(false)
-    var navController: NavHostController? = null
+    lateinit var navController: SnapshotStateList<Any>
     var themeSelected = mutableIntStateOf(0)
     var editTrackEnable = mutableStateOf(false)
     private val _visualizationData = MutableLiveData<List<Float>>()

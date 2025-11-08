@@ -28,13 +28,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
-import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.MediaCommands
@@ -55,7 +55,7 @@ import com.ztftrue.music.utils.trackManager.SongsUtils
 @Composable
 fun TracksSelectPage(
     musicViewModel: MusicViewModel,
-    navController: NavHostController,
+    navController: SnapshotStateList<Any>,
     playListName: String?,
     playListId: Long?
 ) {
@@ -134,7 +134,7 @@ fun TracksSelectPage(
                                                 MediaCommands.COMMAND_PlAY_LIST_CHANGE,
                                                 Bundle().apply {},
                                             )
-                                            navController.popBackStack()
+                                            navController.removeLastOrNull()
 
                                         } else {
                                             Toast.makeText(
@@ -159,7 +159,7 @@ fun TracksSelectPage(
                                             selectList.clear()
                                             SongsUtils.refreshPlaylist(musicViewModel)
                                         }
-                                        navController.popBackStack()
+                                        navController.removeLastOrNull()
                                     }
                                 }
                             }) {

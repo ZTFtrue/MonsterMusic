@@ -37,6 +37,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
@@ -56,7 +57,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.text.isDigitsOnly
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionResult
-import androidx.navigation.NavHostController
 import coil3.compose.rememberAsyncImagePainter
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MainActivity
@@ -80,8 +80,8 @@ import com.ztftrue.music.utils.trackManager.TracksManager
 @Composable
 fun EditTrackPage(
     musicViewModel: MusicViewModel,
-    navController: NavHostController,
-    musicId: Long
+    navController: SnapshotStateList<Any>,
+    musicItem: MusicItem
 ) {
     var title by remember { mutableStateOf("") }
     var album by remember { mutableStateOf("") }
@@ -110,26 +110,22 @@ fun EditTrackPage(
         }
     }
     LaunchedEffect(Unit) {
-        val musicItem = TracksManager.getMusicById(context, musicId)
-        if (musicItem != null) {
-            musicPath = musicItem.path
-            coverBitmap.value = Utils.getCoverNoFallback(musicPath)
-            title = musicItem.name
-            album = musicItem.album
-            artist = musicItem.artist
-            genre = musicItem.genre
-            duration = musicItem.duration
-            year = if (musicItem.year == 0) "" else musicItem.year.toString()
-        } else {
-            navController.popBackStack()
-        }
+        musicPath = musicItem.path
+        coverBitmap.value = Utils.getCoverNoFallback(musicPath)
+        title = musicItem.name
+        album = musicItem.album
+        artist = musicItem.artist
+        genre = musicItem.genre
+        duration = musicItem.duration
+        year = if (musicItem.year == 0) "" else musicItem.year.toString()
+
     }
 
     fun saveTrackMessage() {
         saving = true
         val success = TracksManager.saveTrackInfo(
             context,
-            musicId,
+            musicItem.id,
             musicPath,
             title,
             album,
@@ -143,7 +139,7 @@ fun EditTrackPage(
         enableEdit = !success
         if (success) {
             val bundleTemp = Bundle()
-            bundleTemp.putLong("id", musicId)
+            bundleTemp.putLong("id",  musicItem.id)
             val futureResult: ListenableFuture<SessionResult>? =
                 musicViewModel.browser?.sendCustomCommand(
                     MediaCommands.COMMAND_TRACKS_UPDATE,
@@ -219,7 +215,7 @@ fun EditTrackPage(
                                 enableEdit =
                                     TracksManager.requestEditPermission(
                                         context,
-                                        musicId
+                                        musicItem.id
                                     )
                             }
                         }) {

@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -39,7 +40,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.util.UnstableApi
-import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.ui.home.AlbumGridView
@@ -61,7 +61,7 @@ import com.ztftrue.music.utils.model.AnyListBase
 @Composable
 fun SearchPage(
     musicViewModel: MusicViewModel,
-    navController: NavHostController,
+    navController: SnapshotStateList<Any>,
     // Inject SearchScreenViewModel using viewModel() helper with a factory
     searchScreenViewModel: SearchScreenViewModel = viewModel(
         factory = SearchScreenViewModelFactory(musicViewModel)

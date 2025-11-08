@@ -67,6 +67,8 @@ import com.ztftrue.music.Router
 import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.utils.DialogOperate
+import com.ztftrue.music.utils.DialogOperate.openOpenArtistById
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.SharedPreferencesUtils
@@ -74,7 +76,6 @@ import com.ztftrue.music.utils.TracksUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.deleteTrackUpdate
 import com.ztftrue.music.utils.Utils.toPx
-import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.trackManager.PlaylistManager
@@ -100,9 +101,13 @@ fun MusicItemView(
             R.drawable.play
         }
     val context = LocalContext.current
+    @Suppress("ASSIGNED_VALUE_IS_NEVER_READ")
     var showDialog by remember { mutableStateOf(false) }
+    @Suppress("ASSIGNED_VALUE_IS_NEVER_READ")
     var showAddPlayListDialog by remember { mutableStateOf(false) }
+    @Suppress("ASSIGNED_VALUE_IS_NEVER_READ")
     var showCreatePlayListDialog by remember { mutableStateOf(false) }
+    @Suppress("ASSIGNED_VALUE_IS_NEVER_READ")
     var showDeleteTip by remember { mutableStateOf(false) }
     if (showDeleteTip) {
         DeleteTip(music.name, onDismiss = {
@@ -194,31 +199,23 @@ fun MusicItemView(
                     }
 
                     OperateType.Artist -> {
-                        viewModel.navController?.navigate(
-                            Router.PlayListView.withArgs(
-                                "id" to "${music.artistId}",
-                                "itemType" to enumToStringForPlayListType(PlayListType.Artists)
-                            ),
-                        ) {
-                            popUpTo(Router.MainView.route) {
-                                // Inclusive means the start destination is also popped
-                                inclusive = false
-                            }
-                        }
+                        openOpenArtistById(music.artistId, viewModel.navController)
+
+//                        viewModel.navController?.navigate(
+//                            Router.PlayListView.withArgs(
+//                                "id" to "${music.artistId}",
+//                                "itemType" to enumToStringForPlayListType(PlayListType.Artists)
+//                            ),
+//                        ) {
+//                            popUpTo(Router.MainView.route) {
+//                                // Inclusive means the start destination is also popped
+//                                inclusive = false
+//                            }
+//                        }
                     }
 
                     OperateType.Album -> {
-                        viewModel.navController?.navigate(
-                            Router.PlayListView.withArgs(
-                                "id" to "${music.albumId}",
-                                "itemType" to enumToStringForPlayListType(PlayListType.Albums)
-                            )
-                        ) {
-                            popUpTo(Router.MainView.route) {
-                                // Inclusive means the start destination is also popped
-                                inclusive = false
-                            }
-                        }
+                        DialogOperate.openOpenAlbumById(music, viewModel.navController)
                     }
 
                     OperateType.RemoveFromQueue -> {
@@ -232,7 +229,7 @@ fun MusicItemView(
                     }
 
                     OperateType.EditMusicInfo -> {
-                        viewModel.navController?.navigate(Router.EditTrackPage.withArgs("id" to "${music.id}"))
+                        viewModel.navController.add(Router.EditTrackPage(music))
                     }
 
                     OperateType.DeleteFromStorage -> {
@@ -449,7 +446,10 @@ fun MusicItemView(
                             )) {
                         Icon(
                             imageVector = Icons.Outlined.SwipeVertical,
-                            contentDescription = stringResource(R.string.item_sort_description, music.name),
+                            contentDescription = stringResource(
+                                R.string.item_sort_description,
+                                music.name
+                            ),
                             modifier = Modifier
                                 .size(40.dp)
                                 .padding(5.dp)

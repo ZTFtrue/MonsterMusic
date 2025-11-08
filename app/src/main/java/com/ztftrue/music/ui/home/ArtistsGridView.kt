@@ -63,11 +63,8 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.session.LibraryResult
-import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
-import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
-import coil3.size.Size
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
@@ -80,7 +77,6 @@ import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.Utils
-import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.ArtistList
 
 
@@ -88,7 +84,7 @@ import com.ztftrue.music.utils.model.ArtistList
 fun ArtistsGridView(
     modifier: Modifier = Modifier,
     musicViewModel: MusicViewModel,
-    navController: NavHostController,
+    navController: SnapshotStateList<Any>,
     artistListDefault: SnapshotStateList<ArtistList>? = null,
     type: PlayListType = PlayListType.Artists,
     scrollDirection: ScrollDirectionType? = null
@@ -215,7 +211,7 @@ fun ArtistsGridView(
 fun ArtistItemView(
     item: ArtistList,
     musicViewModel: MusicViewModel,
-    navController: NavHostController,
+    navController: SnapshotStateList<Any>,
     type: PlayListType = PlayListType.Artists
 ) {
     val context = LocalContext.current
@@ -278,13 +274,7 @@ fun ArtistItemView(
                     showOperateDialog = true
                 }
             ) {
-                navController.navigate(
-                    Router.PlayListView.withArgs(
-                        "id" to "${item.id}",
-                        "itemType" to enumToStringForPlayListType(type)
-                    ),
-                    navigatorExtras = ListParameter(item.id, type)
-                )
+                navController.add(Router.PlayListView(item))
             }) {
         ConstraintLayout {
             val (playIndicator) = createRefs()

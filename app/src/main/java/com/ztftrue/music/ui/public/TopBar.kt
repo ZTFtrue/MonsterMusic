@@ -47,6 +47,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -67,20 +68,20 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.text.isDigitsOnly
-import androidx.navigation.NavHostController
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.Utils.replaceCurrent
 import com.ztftrue.music.utils.Utils.toPx
 import kotlin.math.roundToLong
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
-    navController: NavHostController,
+    navController: SnapshotStateList<Any>,
     musicViewModel: MusicViewModel,
     content: @Composable RowScope.() -> Unit
 ) {
@@ -198,14 +199,16 @@ fun TopBar(
                         contentDescription = "Queue Page"
                     },
                 onClick = {
-                    navController.navigate(
-                        Router.QueuePage.route
-                    ) {
-                        popUpTo(Router.MainView.route) {
-                            // Inclusive means the start destination is also popped
-                            inclusive = false
-                        }
-                    }
+//                    navController.clearExceptFirst()
+                    navController.replaceCurrent(Router.QueuePage)
+//                    navController.navigate(
+//                        Router.QueuePage.route
+//                    ) {
+//                        popUpTo(Router.MainView.route) {
+//                            // Inclusive means the start destination is also popped
+//                            inclusive = false
+//                        }
+//                    }
                 }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.QueueMusic,
@@ -251,9 +254,10 @@ fun TopBar(
                         contentDescription = context.getString(R.string.search)
                     },
                 onClick = {
-                    navController.navigate(
-                        Router.SearchPage.route
-                    )
+                    navController.add(Router.SearchPage)
+//                    navController.navigate(
+//                        Router.SearchPage.route
+//                    )
                 }) {
                 Icon(
                     Icons.Filled.Search,
@@ -492,7 +496,7 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BackTopBar(
-    navController: NavHostController,
+    navController: SnapshotStateList<Any>,
     text: String
 ) {
     TopAppBar(

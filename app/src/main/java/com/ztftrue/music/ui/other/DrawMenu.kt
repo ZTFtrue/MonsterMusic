@@ -30,6 +30,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,7 +47,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionResult
-import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.ImageSource
@@ -65,7 +65,7 @@ import kotlinx.coroutines.launch
 fun DrawMenu(
     pagerState: PagerState,
     drawerState: DrawerState,
-    navController: NavHostController,
+    navController: SnapshotStateList<Any>,
     musicViewModel: MusicViewModel,
     activity: MainActivity
 ) {
@@ -143,8 +143,8 @@ fun DrawMenu(
                         scope.launch {
                             drawerState.close()
                         }
-                        navController.navigate(
-                            Router.SettingsPage.withArgs()
+                        navController.add(
+                            Router.SettingsPage
                         )
                     },
                 contentAlignment = Alignment.CenterStart
@@ -263,7 +263,8 @@ fun DrawMenu(
                 contentAlignment = Alignment.CenterStart
             ) {
                 Text(
-                    text = stringResource(R.string.i_need_your_help), Modifier.padding(start = 10.dp),
+                    text = stringResource(R.string.i_need_your_help),
+                    Modifier.padding(start = 10.dp),
                     color = MaterialTheme.colorScheme.onBackground,
                 )
             }
@@ -306,7 +307,7 @@ fun DrawMenu(
                                             musicViewModel.songsList.clear()
                                             musicViewModel.songsList.addAll(it)
                                         }
-                                    }else{
+                                    } else {
                                         @Suppress("DEPRECATION")
                                         sessionResult.extras.getParcelableArrayList<MusicItem>(
                                             "songsList"

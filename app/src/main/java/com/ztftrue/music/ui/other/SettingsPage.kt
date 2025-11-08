@@ -59,6 +59,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -86,7 +87,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.edit
 import androidx.media3.common.util.UnstableApi
-import androidx.navigation.NavHostController
 import com.github.skydoves.colorpicker.compose.ColorEnvelope
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 import com.ztftrue.music.MusicViewModel
@@ -118,7 +118,7 @@ import java.util.Locale
 @Composable
 fun SettingsPage(
     musicViewModel: MusicViewModel,
-    navController: NavHostController,
+    navController: SnapshotStateList<Any>,
 ) {
     val context = LocalContext.current
     val color = MaterialTheme.colorScheme.onBackground
@@ -1795,7 +1795,9 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Text(
-                                    text = if (item.type == LYRICS_TYPE) stringResource(R.string.text_prefix_lyrics) else if (item.type == ARTIST_TYPE) stringResource(R.string.text_prefix_artist) else stringResource(R.string.text_prefix_genre),
+                                    text = if (item.type == LYRICS_TYPE) stringResource(R.string.text_prefix_lyrics) else if (item.type == ARTIST_TYPE) stringResource(
+                                        R.string.text_prefix_artist
+                                    ) else stringResource(R.string.text_prefix_genre),
                                     color = MaterialTheme.colorScheme.onBackground,
                                     modifier = Modifier.horizontalScroll(rememberScrollState(0))
                                 )

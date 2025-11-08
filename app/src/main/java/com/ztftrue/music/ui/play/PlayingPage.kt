@@ -82,6 +82,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -118,7 +119,6 @@ import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionResult
-import androidx.navigation.NavHostController
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
@@ -133,13 +133,13 @@ import com.ztftrue.music.ui.public.DeleteTip
 import com.ztftrue.music.ui.public.OperateDialog
 import com.ztftrue.music.ui.public.TopBar
 import com.ztftrue.music.utils.CustomSlider
+import com.ztftrue.music.utils.DialogOperate
+import com.ztftrue.music.utils.DialogOperate.openOpenArtistById
 import com.ztftrue.music.utils.OperateType
-import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.deleteTrackUpdate
 import com.ztftrue.music.utils.Utils.toPx
-import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.SongsUtils
 import com.ztftrue.music.utils.trackManager.TracksManager
@@ -163,10 +163,11 @@ data class PlayingViewTab(
 @OptIn(
     ExperimentalMaterial3Api::class
 )
+@Suppress("ASSIGNED_VALUE_IS_NEVER_READ")
 @UnstableApi
 @Composable
 fun PlayingPage(
-    navController: NavHostController,
+    navController: SnapshotStateList<Any>,
     musicViewModel: MusicViewModel,
 ) {
     val context = LocalContext.current
@@ -178,15 +179,17 @@ fun PlayingPage(
     val pagerTabState = rememberPagerState { playViewTab.size }
     val coroutineScope = rememberCoroutineScope()
     var showDialog by remember { mutableStateOf(false) }
+    @Suppress("ASSIGNED_VALUE_IS_NEVER_READ")
     var showAddPlayListDialog by remember { mutableStateOf(false) }
     var showCreatePlayListDialog by remember { mutableStateOf(false) }
     var repeatModel by remember { mutableIntStateOf(musicViewModel.repeatModel.intValue) }
     var music: MusicItem? = musicViewModel.currentPlay.value
+    @Suppress("ASSIGNED_VALUE_IS_NEVER_READ")
     var showDeleteTip by remember { mutableStateOf(false) }
 
     LaunchedEffect(music) {
         if (music == null) {
-            navController.popBackStack()
+            navController.removeLastOrNull()
         }
     }
 
@@ -209,7 +212,7 @@ fun PlayingPage(
                             // b. 检查操作是否成功
                             if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
                                 deleteTrackUpdate(musicViewModel)
-                                navController.popBackStack()
+                                navController.removeLastOrNull()
                             }
                         } catch (e: Exception) {
                             // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
@@ -274,32 +277,24 @@ fun PlayingPage(
                         }
 
                         OperateType.Artist -> {
-
-                            musicViewModel.navController?.navigate(
-                                Router.PlayListView.withArgs(
-                                    "id" to "${music.artistId}",
-                                    "itemType" to enumToStringForPlayListType(PlayListType.Artists)
-                                ),
-                            ) {
-                                popUpTo(Router.MainView.route) {
-                                    // Inclusive means the start destination is also popped
-                                    inclusive = false
-                                }
-                            }
+                            openOpenArtistById(music.artistId, musicViewModel.navController)
+//                        viewModel.navController.clearExceptFirst()
+//                            musicViewModel.navController.replaceCurrent(Router.PlayListView(artistList))
+//                            musicViewModel.navController?.navigate(
+//                                Router.PlayListView.withArgs(
+//                                    "id" to "${music.artistId}",
+//                                    "itemType" to enumToStringForPlayListType(PlayListType.Artists)
+//                                ),
+//                            ) {
+//                                popUpTo(Router.MainView.route) {
+//                                    // Inclusive means the start destination is also popped
+//                                    inclusive = false
+//                                }
+//                            }
                         }
 
                         OperateType.Album -> {
-                            musicViewModel.navController?.navigate(
-                                Router.PlayListView.withArgs(
-                                    "id" to "${music.albumId}",
-                                    "itemType" to enumToStringForPlayListType(PlayListType.Albums)
-                                )
-                            ) {
-                                popUpTo(Router.MainView.route) {
-                                    // Inclusive means the start destination is also popped
-                                    inclusive = false
-                                }
-                            }
+                            DialogOperate.openOpenAlbumById(music, musicViewModel.navController)
                         }
 
                         OperateType.RemoveFromQueue -> {
@@ -315,7 +310,7 @@ fun PlayingPage(
                         }
 
                         OperateType.EditMusicInfo -> {
-                            musicViewModel.navController?.navigate(Router.EditTrackPage.withArgs("id" to "${music.id}"))
+                            musicViewModel.navController.add(Router.EditTrackPage(music))
                         }
 
                         OperateType.DeleteFromStorage -> {
@@ -872,7 +867,8 @@ fun PlayingPage(
                                 onClick = { selectedOption = "Matrix" }
                             )
                             Text(
-                                text = stringResource(R.string.matrix), Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.matrix),
+                                Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -1418,7 +1414,10 @@ fun PlayingPage(
                                                 )
                                                 val startId = musicViewModel.currentPlay.value?.id
                                                 if (startId != null) {
-                                                    putLong(  MediaCommands.KEY_START_MEDIA_ID, startId)
+                                                    putLong(
+                                                        MediaCommands.KEY_START_MEDIA_ID,
+                                                        startId
+                                                    )
                                                 }
                                             }
                                             musicViewModel.browser?.sendCustomCommand(

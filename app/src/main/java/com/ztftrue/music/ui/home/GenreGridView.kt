@@ -44,6 +44,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,14 +59,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.session.LibraryResult
-import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
-import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.ListenableFuture
@@ -81,7 +79,6 @@ import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.addTracksToPlayList
 import com.ztftrue.music.utils.Utils.createPlayListAddTracks
-import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.GenresList
 
 
@@ -89,7 +86,7 @@ import com.ztftrue.music.utils.model.GenresList
 fun GenreGridView(
     modifier: Modifier = Modifier,
     musicViewModel: MusicViewModel,
-    navController: NavHostController,
+    navController: SnapshotStateList<Any>,
     type: PlayListType = PlayListType.Genres,
     scrollDirection: ScrollDirectionType? = null
 ) {
@@ -206,7 +203,7 @@ fun GenreGridView(
 fun GenreItemView(
     item: GenresList,
     musicViewModel: MusicViewModel,
-    navController: NavHostController,
+    navController: SnapshotStateList<Any>,
     type: PlayListType = PlayListType.Genres
 ) {
     val context = LocalContext.current
@@ -267,13 +264,7 @@ fun GenreItemView(
             .combinedClickable(onLongClick = {
                 showOperateDialog = true
             }, onClick = {
-                navController.navigate(
-                    Router.PlayListView.withArgs(
-                        "id" to "${item.id}",
-                        "itemType" to enumToStringForPlayListType(type)
-                    ),
-                    navigatorExtras = ListParameter(item.id, type)
-                )
+                navController.add(Router.PlayListView(item))
             })
     ) {
         ConstraintLayout {

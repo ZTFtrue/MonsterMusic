@@ -51,8 +51,6 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.session.LibraryResult
-import androidx.navigation.NavHostController
-import androidx.navigation.Navigator
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
@@ -67,7 +65,6 @@ import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.operateDialogDeal
-import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.SongsUtils
@@ -77,7 +74,7 @@ import com.ztftrue.music.utils.trackManager.SongsUtils
 fun PlayListView(
     modifier: Modifier = Modifier,
     musicViewModel: MusicViewModel,
-    navController: NavHostController,
+    navController: SnapshotStateList<Any>,
 ) {
     val listState = rememberLazyListState()
     val playList = remember { mutableStateListOf<MusicPlayList>() }
@@ -143,14 +140,12 @@ fun PlayListView(
     }
 }
 
-data class ListParameter(val id: Long, val type: PlayListType, val path: String? = null) :
-    Navigator.Extras
 
 @Composable
 fun PlayListItemView(
     item: MusicPlayList,
     musicViewModel: MusicViewModel,
-    navController: NavHostController,
+    navController: SnapshotStateList<Any>,
     type: PlayListType,
     playList: SnapshotStateList<MusicPlayList>,
 ) {
@@ -260,13 +255,7 @@ fun PlayListItemView(
 
                 }
             ) {
-                navController.navigate(
-                    Router.PlayListView.withArgs(
-                        "id" to "${item.id}",
-                        "itemType" to enumToStringForPlayListType(type),
-                        "path" to item.path
-                    ),
-                )
+                navController.add(Router.PlayListView(item))
             }, verticalAlignment = Alignment.CenterVertically
     ) {
         Image(

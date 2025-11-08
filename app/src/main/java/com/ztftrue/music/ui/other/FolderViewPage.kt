@@ -1,11 +1,14 @@
-package com.ztftrue.music.ui.public
+package com.ztftrue.music.ui.other
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,8 +22,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,6 +43,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,17 +56,24 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.LibraryResult
@@ -79,16 +92,20 @@ import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.dao.SortFiledDao
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.SortFiledData
-import com.ztftrue.music.ui.home.AlbumGridView
 import com.ztftrue.music.ui.home.AlbumsOperateDialog
 import com.ztftrue.music.ui.home.ArtistsOperateDialog
 import com.ztftrue.music.ui.home.GenreListOperateDialog
 import com.ztftrue.music.ui.home.PlayListOperateDialog
-import com.ztftrue.music.ui.other.FolderListOperateDialog
+import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
+import com.ztftrue.music.ui.public.Bottom
+import com.ztftrue.music.ui.public.CreatePlayListDialog
+import com.ztftrue.music.ui.public.QueueOperateDialog
+import com.ztftrue.music.ui.public.RenamePlayListDialog
+import com.ztftrue.music.ui.public.TopBar
+import com.ztftrue.music.ui.public.TracksListView
 import com.ztftrue.music.utils.DialogOperate
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
-import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.model.AlbumList
@@ -107,22 +124,20 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-
-/**
- * show all music of playlist
- */
 @UnstableApi
 @Composable
 fun TracksListPage(
     musicViewModel: MusicViewModel,
     navController: SnapshotStateList<Any>,
-    anyListBase: AnyListBase
+    type: PlayListType,
+    id: Long,
+    path: String?
 ) {
     val tracksList = remember { mutableStateListOf<MusicItem>() }
     val showIndicator = remember { mutableStateOf(false) }
     val durationAll = remember { mutableStateOf("") }
     val musicPlayList = remember { mutableStateOf(AnyListBase(2, PlayListType.None)) }
-    val albumsList = remember { mutableStateListOf<AlbumList>() }
+    val childrenFolderList = remember { mutableStateListOf<FolderList>() }
     var refreshCurrentValueList by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var showMoreOperateDialog by remember { mutableStateOf(false) }
@@ -131,13 +146,13 @@ fun TracksListPage(
     var showCreatePlayListDialog by remember { mutableStateOf(false) }
     var showSortDialog by remember { mutableStateOf(false) }
     var showRenameDialog by remember { mutableStateOf(false) }
+
 //    LaunchedEffect(key1 = musicViewModel.showIndicatorMap) {
-    showIndicator.value =
-        musicViewModel.showIndicatorMap.getOrDefault(anyListBase.type.toString(), false)
+    showIndicator.value = musicViewModel.showIndicatorMap.getOrDefault(type.toString(), false)
 //    }
     if (showSortDialog) {
         val sortFiledOptions =
-            PlayUtils.trackSortFiledMap[anyListBase.type.name + "@Tracks"]
+            PlayUtils.trackSortFiledMap[type.name + "@Tracks"]
         if (sortFiledOptions.isNullOrEmpty()) {
             return
         }
@@ -153,7 +168,7 @@ fun TracksListPage(
             CoroutineScope(Dispatchers.IO).launch {
                 sortDb = MusicDatabase.getDatabase(context).SortFiledDao()
                 val sortData1 =
-                    sortDb?.findSortByType(anyListBase.type.name + "@Tracks")
+                    sortDb?.findSortByType(type.name + "@Tracks")
                 if (sortData1 != null) {
                     val f = sortData1.filedName
                     val m = sortData1.methodName
@@ -334,7 +349,7 @@ fun TracksListPage(
                                         sortDb =
                                             MusicDatabase.getDatabase(context).SortFiledDao()
                                         var sortData =
-                                            sortDb.findSortByType(anyListBase.type.name + "@Tracks")
+                                            sortDb.findSortByType(type.name + "@Tracks")
                                         if (sortData != null) {
                                             sortData.method =
                                                 PlayUtils.methodMap[methodSelected] ?: ""
@@ -345,7 +360,7 @@ fun TracksListPage(
                                             sortDb.update(sortData)
                                         } else {
                                             sortData = SortFiledData(
-                                                anyListBase.type.name + "@Tracks",
+                                                type.name + "@Tracks",
                                                 sortFiledOptions[filedSelected]
                                                     ?: "",
                                                 PlayUtils.methodMap[methodSelected] ?: "",
@@ -356,13 +371,10 @@ fun TracksListPage(
                                         }
                                     })
                             }
-                            musicViewModel.showIndicatorMap[anyListBase.type.name] =
+                            musicViewModel.showIndicatorMap[type.name] =
                                 filedSelected == "Alphabetical"
                             showIndicator.value =
-                                musicViewModel.showIndicatorMap.getOrDefault(
-                                    anyListBase.type.toString(),
-                                    false
-                                )
+                                musicViewModel.showIndicatorMap.getOrDefault(type.toString(), false)
                             val bundle = Bundle()
                             bundle.putString(
                                 "method",
@@ -374,7 +386,7 @@ fun TracksListPage(
                             )
                             bundle.putString(
                                 "type",
-                                anyListBase.type.name + "@Tracks"
+                                type.name + "@Tracks"
                             )
                             val futureResult: ListenableFuture<SessionResult>? =
                                 musicViewModel.browser?.sendCustomCommand(
@@ -410,11 +422,19 @@ fun TracksListPage(
         }
     }
     if (showMoreOperateDialog) {
-        when (anyListBase) {
-            is AlbumList -> {
+        when (type) {
+            PlayListType.Albums -> {
+                val item =
+                    if (musicPlayList.value is AlbumList) {
+                        val a = (musicPlayList.value as AlbumList)
+                        AlbumList(id, "", a.artist, a.firstYear, a.lastYear, 0)
+                    } else {
+                        AlbumList(id, "", "", "", "", 0)
+                    }
+
                 AlbumsOperateDialog(
                     musicViewModel,
-                    playList = anyListBase,
+                    playList = item,
                     onDismiss = {
                         showMoreOperateDialog = false
                         when (it) {
@@ -424,7 +444,7 @@ fun TracksListPage(
 
                             OperateType.ShowArtist -> {
                                 DialogOperate.openArtist(
-                                    context, anyListBase.artist,
+                                    context, item.artist,
                                     musicViewModel.navController
                                 )
                             }
@@ -432,7 +452,7 @@ fun TracksListPage(
                             else -> {
                                 Utils.operateDialogDeal(
                                     it,
-                                    anyListBase,
+                                    item,
                                     musicViewModel
                                 )
 
@@ -442,10 +462,11 @@ fun TracksListPage(
                 )
             }
 
-            is ArtistList -> {
+            PlayListType.Artists -> {
+                val item = ArtistList(id, "", 0, 0)
                 ArtistsOperateDialog(
                     musicViewModel,
-                    playList = anyListBase,
+                    playList = item,
                     onDismiss = {
                         showMoreOperateDialog = false
                         when (it) {
@@ -454,17 +475,18 @@ fun TracksListPage(
                             }
 
                             else -> {
-                                Utils.operateDialogDeal(it, anyListBase, musicViewModel)
+                                Utils.operateDialogDeal(it, item, musicViewModel)
                             }
                         }
                     },
                 )
             }
 
-            is FolderList -> {
+            PlayListType.Folders -> {
+                val item = FolderList(path = "", name = "", id = id, trackNumber = 0)
                 FolderListOperateDialog(
                     musicViewModel,
-                    playList = anyListBase,
+                    playList = item,
                     onDismiss = {
                         showMoreOperateDialog = false
                         when (it) {
@@ -473,17 +495,18 @@ fun TracksListPage(
                             }
 
                             else -> {
-                                Utils.operateDialogDeal(it, anyListBase, musicViewModel)
+                                Utils.operateDialogDeal(it, item, musicViewModel)
                             }
                         }
                     },
                 )
             }
 
-            is GenresList -> {
+            PlayListType.Genres -> {
+                val item = GenresList(id, "", 0, 0)
                 GenreListOperateDialog(
                     musicViewModel,
-                    playList = anyListBase,
+                    playList = item,
                     onDismiss = {
                         showMoreOperateDialog = false
                         when (it) {
@@ -492,17 +515,21 @@ fun TracksListPage(
                             }
 
                             else -> {
-                                Utils.operateDialogDeal(it, anyListBase, musicViewModel)
+                                Utils.operateDialogDeal(it, item, musicViewModel)
                             }
                         }
                     },
                 )
             }
 
-            is MusicPlayList -> {
+            PlayListType.PlayLists -> {
+                if (path.isNullOrEmpty()) {
+                    return
+                }
+                val item = MusicPlayList("", id, path, 0)
                 PlayListOperateDialog(
                     musicViewModel,
-                    playList = anyListBase,
+                    playList = item,
                     onDismiss = {
                         showMoreOperateDialog = false
                         when (it) {
@@ -513,12 +540,12 @@ fun TracksListPage(
                             OperateType.RemoveDuplicate -> {
                                 if (PlaylistManager.cleanDuplicateTrackFromPlayList(
                                         context,
-                                        anyListBase.id,
-                                        anyListBase.path,
+                                        item.id,
+                                        item.path,
                                         musicViewModel.songsList.toList()
                                     )
                                 ) {
-                                    musicViewModel.scanAndRefreshPlaylist(context, anyListBase.path)
+                                    musicViewModel.scanAndRefreshPlaylist(context, item.path)
                                 }
 
                             }
@@ -528,25 +555,31 @@ fun TracksListPage(
                             }
 
                             else -> {
-                                Utils.operateDialogDeal(it, anyListBase, musicViewModel)
+                                Utils.operateDialogDeal(it, item, musicViewModel)
                             }
 
                         }
                     },
                 )
+
             }
+
+            PlayListType.Songs -> {}
+            PlayListType.Queue -> {}
+            PlayListType.None -> {}
         }
+
     }
     if (showRenameDialog) {
-        if (anyListBase is MusicPlayList) {
-            RenamePlayListDialog(anyListBase.name, onDismiss = {
-                if (!it.isNullOrEmpty()) {
-                    if (PlaylistManager.renamePlaylist(context, anyListBase.id, it)) {
-                        SongsUtils.refreshPlaylist(musicViewModel)
-                    }
+        val item = MusicPlayList("", id, "", 0)
+        RenamePlayListDialog(item.name, onDismiss = {
+            showRenameDialog = false
+            if (!it.isNullOrEmpty()) {
+                if (PlaylistManager.renamePlaylist(context, item.id, it)) {
+                    SongsUtils.refreshPlaylist(musicViewModel)
                 }
-            })
-        }
+            }
+        })
     }
     if (showAddPlayListDialog) {
         AddMusicToPlayListDialog(musicViewModel, null, onDismiss = { playListId, removeDuplicate ->
@@ -558,8 +591,8 @@ fun TracksListPage(
                     Utils.addTracksToPlayList(
                         playListId,
                         context,
-                        anyListBase.type,
-                        anyListBase.id,
+                        type,
+                        id,
                         musicViewModel,
                         removeDuplicate
                     )
@@ -571,14 +604,7 @@ fun TracksListPage(
         CreatePlayListDialog(onDismiss = {
             showCreatePlayListDialog = false
             if (it != null) {
-                Utils.createPlayListAddTracks(
-                    it,
-                    context,
-                    anyListBase.type,
-                    anyListBase.id,
-                    musicViewModel,
-                    false
-                )
+                Utils.createPlayListAddTracks(it, context, type, id, musicViewModel, false)
             }
         })
     }
@@ -633,7 +659,7 @@ fun TracksListPage(
                         }
                     }
                     item {
-                        if (!PlayUtils.trackSortFiledMap[anyListBase.type.name + "@Tracks"].isNullOrEmpty()) {
+                        if (!PlayUtils.trackSortFiledMap[type.name + "@Tracks"].isNullOrEmpty()) {
                             IconButton(
                                 modifier = Modifier.width(50.dp), onClick = {
                                     showOperatePopup = false
@@ -676,8 +702,8 @@ fun TracksListPage(
             musicViewModel.browser?.sendCustomCommand(
                 MediaCommands.COMMAND_GET_PLAY_LIST_ITEM,
                 Bundle().apply {
-                    putString("type", anyListBase.type.name)
-                    putLong("id", anyListBase.id)
+                    putString("type", type.name)
+                    putLong("id", id)
                 }
             )
         futureResultItem?.addListener({
@@ -698,36 +724,76 @@ fun TracksListPage(
         }, ContextCompat.getMainExecutor(context))
     }
 
-    fun getHaveAlbums() {
-        if (anyListBase.type.name == PlayListType.Artists.name || anyListBase.type.name == PlayListType.Genres.name) {
-            albumsList.clear()
-            val futureResultAlbum: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
-                musicViewModel.browser?.getChildren(
-                    anyListBase.type.name + "_album_" + anyListBase.id,
-                    0,
-                    Integer.MAX_VALUE,
-                    null
+    val musicList = remember { musicViewModel.musicQueue }
+    var showDialog by remember { mutableStateOf(false) }
+
+
+    if (showDialog) {
+        QueueOperateDialog(onDismiss = {
+            if (it == OperateType.ClearQueue) {
+                musicViewModel.browser?.sendCustomCommand(
+                    MediaCommands.COMMAND_CLEAR_QUEUE,
+                    Bundle.EMPTY
                 )
-            futureResultAlbum?.addListener({
-                try {
-                    val result: LibraryResult<ImmutableList<MediaItem>>? = futureResultAlbum.get()
-                    if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
-                        return@addListener
+                musicViewModel.musicQueue.clear()
+                musicViewModel.currentPlay.value = null
+                musicViewModel.playListCurrent.value = null
+                musicViewModel.currentCaptionList.clear()
+                musicList.clear()
+            } else if (it == OperateType.SaveQueueToPlayList) {
+                showAddPlayListDialog = true
+            }
+        })
+    }
+    if (showAddPlayListDialog) {
+        AddMusicToPlayListDialog(musicViewModel, null) { playListId, removeDuplicate ->
+            if (playListId != null) {
+                if (playListId == -1L) {
+                    showCreatePlayListDialog = true
+                } else {
+                    val ids = ArrayList<MusicItem>(musicList.size)
+                    musicList.forEach {
+                        ids.add(it)
                     }
-                    val albumMediaItems: List<MediaItem> = result.value ?: listOf()
-                    val tracksListResult = ArrayList<AlbumList>()
-                    albumMediaItems.forEach { mediaItem ->
-                        MediaItemUtils.mediaItemToAlbumList(mediaItem)
-                            ?.let { tracksListResult.add(it) }
+                    if (PlaylistManager.addMusicsToPlaylist(
+                            context,
+                            playListId,
+                            ids,
+                            removeDuplicate
+                        )
+                    ) {
+                        SongsUtils.refreshPlaylist(musicViewModel)
                     }
-                    albumsList.addAll(tracksListResult)
-                } catch (e: Exception) {
-                    // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
-                    Log.e("Client", "Failed to toggle favorite status", e)
                 }
-            }, ContextCompat.getMainExecutor(context))
+            }
         }
     }
+    if (showCreatePlayListDialog) {
+        CreatePlayListDialog(onDismiss = { playListName ->
+            if (!playListName.isNullOrEmpty()) {
+                val ids = ArrayList<MusicItem>(musicList.size)
+                musicList.forEach {
+                    ids.add(it)
+                }
+                val idPlayList = PlaylistManager.createPlaylist(context, playListName, ids, false)
+                if (idPlayList != null) {
+                    musicViewModel.browser?.sendCustomCommand(
+                        MediaCommands.COMMAND_PlAY_LIST_CHANGE,
+                        Bundle().apply {},
+                    )
+                } else {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.create_failed),
+                        Toast.LENGTH_SHORT
+                    )
+                        .show()
+                }
+            }
+        })
+    }
+
+
     LaunchedEffect(musicViewModel.refreshPlayList.value, refreshCurrentValueList) {
         if (musicViewModel.browser == null) {
             navController.removeLastOrNull()
@@ -736,7 +802,7 @@ fun TracksListPage(
             musicViewModel.loadingTracks.value = true
             val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
                 musicViewModel.browser?.getChildren(
-                    anyListBase.type.name + "_track_" + anyListBase.id,
+                    type.name + "_track_" + id,
                     0,
                     Integer.MAX_VALUE,
                     null
@@ -750,7 +816,6 @@ fun TracksListPage(
                         return@addListener
                     }
                     getPlayListMessage()
-                    getHaveAlbums()
                     val albumMediaItems: List<MediaItem> = result.value ?: listOf()
                     val tracksListResult = ArrayList<MusicItem>()
                     albumMediaItems.forEach { mediaItem ->
@@ -775,6 +840,7 @@ fun TracksListPage(
         }
     }
 
+    val listState = rememberLazyListState()
     Scaffold(
         modifier = Modifier.padding(all = 0.dp),
         topBar = {
@@ -782,6 +848,7 @@ fun TracksListPage(
                 TopBar(navController, musicViewModel, content = {
                     IconButton(
                         modifier = Modifier.width(50.dp), onClick = {
+                            showOperatePopup = true
                         }) {
                         Icon(
                             imageVector = Icons.Outlined.Apps,
@@ -869,7 +936,7 @@ fun TracksListPage(
 
                                 if (mListPlay.type == PlayListType.PlayLists) {
                                     IconButton(onClick = {
-                                        navController.add(Router.TracksSelectPage(anyListBase as MusicPlayList))
+                                        navController.add(Router.TracksSelectPage(mListPlay as MusicPlayList))
                                     }) {
                                         Icon(
                                             imageVector = Icons.Default.Add,
@@ -992,37 +1059,358 @@ fun TracksListPage(
                     .fillMaxSize()
                     .padding(it)
             ) {
-                if (albumsList.isNotEmpty()) {
-                    val windowInfo = LocalWindowInfo.current
-                    val containerWidth = windowInfo.containerSize.width
-//                    val density = LocalDensity.current
-//                    val containerWidthDp = with(density) { windowInfo.containerSize.width.toDp() }
-                    val width = (containerWidth / 2.5) + 70
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(width.dp),
-                    ) {
-                        AlbumGridView(
-                            musicViewModel = musicViewModel,
-                            navController = navController,
-                            albumListDefault = albumsList,
-                            scrollDirection = ScrollDirectionType.GRID_HORIZONTAL
-                        )
-                        HorizontalDivider(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(1.dp)
-                                .background(color = MaterialTheme.colorScheme.background)
-                        )
-                    }
-                }
                 TracksListView(
                     musicViewModel,
                     musicPlayList.value, tracksList, showIndicator
-                )
+                ) {
+                    LazyColumn(
+                        state = listState, modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(childrenFolderList.size) { index ->
+                            val item = childrenFolderList[index]
+                            FolderItemView(
+                                item,
+                                musicViewModel,
+                                modifier = Modifier
+                                    .wrapContentHeight()
+                                    .fillMaxWidth(),
+                                navController
+                            )
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.inverseOnSurface,
+                                thickness = 1.2.dp
+                            )
+                        }
+                    }
+                }
             }
 
         },
+    )
+}
+
+
+@Composable
+fun FolderItemView(
+    item: FolderList,
+    musicViewModel: MusicViewModel,
+    modifier: Modifier,
+    navController: SnapshotStateList<Any>,
+    type: PlayListType = PlayListType.Folders,
+) {
+    val context = LocalContext.current
+    var showOperateDialog by remember { mutableStateOf(false) }
+    var showAddPlayListDialog by remember { mutableStateOf(false) }
+    var showCreatePlayListDialog by remember { mutableStateOf(false) }
+    if (showOperateDialog) {
+        FolderListOperateDialog(
+            musicViewModel,
+            playList = item,
+            onDismiss = {
+                showOperateDialog = false
+                when (it) {
+                    OperateType.AddToPlaylist -> {
+                        showAddPlayListDialog = true
+                    }
+
+                    OperateType.IgnoreFolder -> {
+                        val sharedPreferences =
+                            context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
+                        val ignoreFolders = sharedPreferences.getString("ignore_folders", "")
+                        val newIgnoreFolders: String = if (ignoreFolders.isNullOrEmpty()) {
+                            item.id.toString()
+                        } else {
+                            "$ignoreFolders,${item.id}"
+                        }
+                        sharedPreferences.edit {
+                            putString("ignore_folders", newIgnoreFolders)
+                        }
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.ignored_this_folder_please_restart_the_app_to_take_effect),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                    else -> {
+                        Utils.operateDialogDeal(it, item, musicViewModel)
+                    }
+                }
+            },
+        )
+    }
+    if (showAddPlayListDialog) {
+        AddMusicToPlayListDialog(musicViewModel, null, onDismiss = { playListId, removeDuplicate ->
+            showAddPlayListDialog = false
+            if (playListId != null) {
+                if (playListId == -1L) {
+                    showCreatePlayListDialog = true
+                } else {
+                    Utils.addTracksToPlayList(
+                        playListId,
+                        context,
+                        type,
+                        item.id,
+                        musicViewModel,
+                        removeDuplicate
+                    )
+                }
+            }
+        })
+    }
+    if (showCreatePlayListDialog) {
+        CreatePlayListDialog(onDismiss = {
+            showCreatePlayListDialog = false
+            if (it != null) {
+                Utils.createPlayListAddTracks(it, context, type, item.id, musicViewModel, false)
+            }
+        })
+    }
+    val number = item.trackNumber
+    Row(
+        modifier = Modifier
+            .combinedClickable(
+                onLongClick = {
+                }
+            ) {
+                navController.add(Router.PlayListView(item))
+//                navController.navigate(
+//                    Router.PlayListView.withArgs(
+//                        "id" to "${item.id}",
+//                        "itemType" to enumToStringForPlayListType(type)
+//                    ),
+//                    navigatorExtras = ListParameter(item.id, type)
+//                )
+            }, verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Image(
+                painter = painterResource(
+                    if (item.id == musicViewModel.playListCurrent.value?.id && item.type == musicViewModel.playListCurrent.value?.type) {
+                        R.drawable.pause
+                    } else {
+                        R.drawable.play
+                    }
+                ),
+                contentDescription = if (musicViewModel.playStatus.value) {
+                    val s = "pause"
+                    s
+                } else {
+                    "play"
+                },
+                modifier = Modifier
+                    .size(30.dp)
+                    .padding(5.dp),
+                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+            )
+            Column(modifier = Modifier.fillMaxWidth(0.9f)) {
+                Text(
+                    text = item.name,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.horizontalScroll(rememberScrollState(0)),
+                )
+                Text(
+                    text = stringResource(
+                        R.string.song,
+                        number,
+                        if (number <= 1L) "" else stringResource(id = R.string.s)
+                    ),
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Text(
+                    text = item.path,
+                    fontStyle = FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.80f),
+                    modifier = Modifier.horizontalScroll(rememberScrollState(0)),
+                )
+            }
+            IconButton(
+                modifier = Modifier
+                    .width(50.dp)
+                    .height(40.dp), onClick = {
+                    showOperateDialog = true
+                }) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "Operate More, will open dialog",
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clip(CircleShape),
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
+            }
+        }
+    }
+}
+
+
+@Composable
+fun FolderListOperateDialog(
+    musicViewModel: MusicViewModel,
+    playList: FolderList,
+    onDismiss: (value: OperateType) -> Unit
+) {
+
+    val onConfirmation = ({
+        onDismiss(OperateType.No)
+    })
+
+    val color = MaterialTheme.colorScheme.onBackground
+
+
+    Dialog(
+        onDismissRequest = onConfirmation,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = true, dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        ),
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(color = MaterialTheme.colorScheme.background),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = stringResource(R.string.operate), modifier = Modifier
+                        .padding(2.dp),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(color = MaterialTheme.colorScheme.onBackground)
+                )
+                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    items(1) {
+                        if (!(musicViewModel.playListCurrent.value?.type?.equals(playList.type) == true
+                                    && musicViewModel.playListCurrent.value?.id?.equals(playList.id) == true)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(50.dp)
+                                    .padding(0.dp)
+                                    .drawBehind {
+                                        drawLine(
+                                            color = color,
+                                            start = Offset(0f, size.height - 1.dp.toPx()),
+                                            end = Offset(size.width, size.height - 1.dp.toPx()),
+                                            strokeWidth = 1.dp.toPx()
+                                        )
+                                    }
+                                    .clickable {
+                                        musicViewModel.playListCurrent.value = null
+                                        onDismiss(OperateType.AddToQueue)
+                                    },
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.add_to_queue),
+                                    modifier = Modifier.padding(start = 10.dp),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(50.dp)
+                                    .padding(0.dp)
+                                    .drawBehind {
+                                        drawLine(
+                                            color = color,
+                                            start = Offset(0f, size.height - 1.dp.toPx()),
+                                            end = Offset(size.width, size.height - 1.dp.toPx()),
+                                            strokeWidth = 1.dp.toPx()
+                                        )
+                                    }
+                                    .clickable {
+                                        musicViewModel.playListCurrent.value = null
+                                        onDismiss(OperateType.PlayNext)
+                                    },
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.play_next),
+                                    Modifier.padding(start = 10.dp),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+
+                            }
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
+                                .clickable {
+                                    onDismiss(OperateType.AddToPlaylist)
+                                },
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text(
+                                text = stringResource(R.string.add_to_playlist),
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
+                                .clickable {
+                                    onDismiss(OperateType.IgnoreFolder)
+                                },
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text(
+                                text = stringResource(R.string.ignore_this_folder),
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    TextButton(
+                        onClick = {
+                            onConfirmation()
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(),
+                    ) {
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+            }
+        }
     )
 }

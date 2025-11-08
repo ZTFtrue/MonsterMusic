@@ -64,7 +64,6 @@ import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.LibraryResult
-import androidx.navigation.NavHostController
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
 import com.google.common.collect.ImmutableList
@@ -74,20 +73,19 @@ import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.CreatePlayListDialog
+import com.ztftrue.music.utils.DialogOperate
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.Utils
-import com.ztftrue.music.utils.enumToStringForPlayListType
 import com.ztftrue.music.utils.model.AlbumList
-import com.ztftrue.music.utils.trackManager.ArtistManager
 
 
 @Composable
 fun AlbumGridView(
     modifier: Modifier = Modifier,
     musicViewModel: MusicViewModel,
-    navController: NavHostController,
+    navController: SnapshotStateList<Any>,
     albumListDefault: SnapshotStateList<AlbumList>? = null,
     type: PlayListType = PlayListType.Albums,
     scrollDirection: ScrollDirectionType? = null
@@ -98,7 +96,7 @@ fun AlbumGridView(
         albumList = albumListDefault
     }
     val context = LocalContext.current
-    LaunchedEffect(musicViewModel.refreshAlbum.value,albumListDefault) {
+    LaunchedEffect(musicViewModel.refreshAlbum.value, albumListDefault) {
         if (albumListDefault == null) {
             albumList.clear()
             val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
@@ -217,7 +215,7 @@ fun AlbumGridView(
 fun AlbumItemView(
     item: AlbumList,
     musicViewModel: MusicViewModel,
-    navController: NavHostController,
+    navController: SnapshotStateList<Any>,
     type: PlayListType = PlayListType.Albums,
 ) {
     val number = item.trackNumber
@@ -237,16 +235,10 @@ fun AlbumItemView(
                     }
 
                     OperateType.ShowArtist -> {
-                        ArtistManager.getArtistIdByName(context, item.artist)?.let { artistId ->
-                            navController.navigate(
-                                Router.PlayListView.withArgs(
-                                    "id" to artistId.toString(),
-                                    "itemType" to enumToStringForPlayListType(PlayListType.Artists)
-                                ),
-                            ) {
-
-                            }
-                        }
+                        DialogOperate.openArtist(
+                            context, item.artist,
+                            musicViewModel.navController
+                        )
                     }
 
                     else -> {
@@ -306,13 +298,7 @@ fun AlbumItemView(
                     showOperateDialog = true
                 }
             ) {
-                navController.navigate(
-                    Router.PlayListView.withArgs(
-                        "id" to "${item.id}",
-                        "itemType" to enumToStringForPlayListType(type)
-                    ),
-                    navigatorExtras = ListParameter(item.id, type)
-                )
+                navController.add(Router.PlayListView(item))
             }) {
         ConstraintLayout {
             val (playIndicator) = createRefs()

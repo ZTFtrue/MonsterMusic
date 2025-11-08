@@ -22,6 +22,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,7 +32,6 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
-import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MusicViewModel
@@ -41,14 +41,12 @@ import com.ztftrue.music.sqlData.model.MusicItem
 
 @UnstableApi
 @Composable
-fun Bottom(musicViewModel: MusicViewModel, navController: NavHostController) {
+fun Bottom(musicViewModel: MusicViewModel, navController: SnapshotStateList<Any>) {
     var currentMusic by remember { mutableStateOf<MusicItem?>(null) }
     val modifier = remember {
         Modifier.clickable {
-            navController.navigate(Router.MusicPlayerView.withArgs()) {
-                launchSingleTop = true
-                restoreState = true
-            }
+            navController.remove(Router.MusicPlayerView)
+            navController.add(Router.MusicPlayerView)
         }
     }
     LaunchedEffect(musicViewModel.currentPlay.value) {

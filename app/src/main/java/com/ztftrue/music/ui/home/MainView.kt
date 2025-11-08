@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
@@ -27,7 +28,6 @@ import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.LibraryResult
-import androidx.navigation.NavHostController
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MainActivity
@@ -49,7 +49,7 @@ import kotlinx.coroutines.launch
 fun MainView(
     musicViewModel: MusicViewModel,
     activity: MainActivity,
-    navController: NavHostController,
+    navController: SnapshotStateList<Any>,
 ) {
     val showIndicator = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()

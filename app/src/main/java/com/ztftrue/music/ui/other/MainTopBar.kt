@@ -48,6 +48,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -67,7 +68,6 @@ import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.session.LibraryResult
 import androidx.media3.session.SessionResult
-import androidx.navigation.NavHostController
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
@@ -88,6 +88,7 @@ import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.toPx
+import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.SongsUtils
 import kotlinx.coroutines.CoroutineScope
@@ -103,7 +104,7 @@ fun MainTopBar(
     musicViewModel: MusicViewModel,
     drawerState: DrawerState,
     pagerState: PagerState,
-    navController: NavHostController
+    navController: SnapshotStateList<Any>
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -127,9 +128,17 @@ fun MainTopBar(
             CreatePlayListDialog(onDismiss = {
                 showCreatePlayListDialog = false
                 if (!it.isNullOrEmpty()) {
-                    navController.navigate(
-                        Router.TracksSelectPage.withArgs("id" to "-1", "name" to it)
+                    val playLst = MusicPlayList(
+                        id = -1,
+                        name = it,
+                        type = PlayListType.PlayLists,
+                        trackNumber = 0,
+                        path = ""
                     )
+                    navController.add(Router.TracksSelectPage(playLst))
+//                    navController.navigate(
+//                        Router.TracksSelectPage.withArgs("id" to "-1", "name" to it)
+//                    )
                 }
             })
         }
@@ -477,7 +486,10 @@ fun MainTopBar(
             QueueOperateDialog(onDismiss = {
                 showDialogForQueue = false
                 if (it == OperateType.ClearQueue) {
-                    musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_CLEAR_QUEUE, Bundle.EMPTY)
+                    musicViewModel.browser?.sendCustomCommand(
+                        MediaCommands.COMMAND_CLEAR_QUEUE,
+                        Bundle.EMPTY
+                    )
                     musicViewModel.musicQueue.clear()
                     musicViewModel.currentPlay.value = null
                     musicViewModel.playListCurrent.value = null
@@ -695,9 +707,7 @@ fun MainTopBar(
                             contentDescription = "Search"
                         },
                     onClick = {
-                        navController.navigate(
-                            Router.SearchPage.route
-                        )
+                        navController.add(Router.SearchPage)
                     }) {
                     Icon(
                         Icons.Filled.Search,
