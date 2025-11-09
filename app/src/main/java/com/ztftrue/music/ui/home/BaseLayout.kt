@@ -22,6 +22,7 @@ import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.Router
 import com.ztftrue.music.ui.other.EditTrackPage
+import com.ztftrue.music.ui.other.FolderListPage
 import com.ztftrue.music.ui.other.SearchPage
 import com.ztftrue.music.ui.other.SettingsPage
 import com.ztftrue.music.ui.other.TracksSelectPage
@@ -109,6 +110,13 @@ fun BaseLayout(
                         SearchPage(
                             musicViewModel = musicViewModel,
                             navController,
+                        )
+                    }
+                    is Router.FolderListPage -> NavEntry(key) {
+                        FolderListPage(
+                            musicViewModel = musicViewModel,
+                            navController,
+                            key.folderList
                         )
                     }
                     else -> NavEntry(Unit) { Text("Unknown route") }

@@ -49,7 +49,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -79,7 +78,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.LibraryResult
 import androidx.media3.session.SessionResult
 import coil3.compose.rememberAsyncImagePainter
-import coil3.request.ImageRequest
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
@@ -92,27 +90,18 @@ import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.dao.SortFiledDao
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.SortFiledData
-import com.ztftrue.music.ui.home.AlbumsOperateDialog
-import com.ztftrue.music.ui.home.ArtistsOperateDialog
-import com.ztftrue.music.ui.home.GenreListOperateDialog
-import com.ztftrue.music.ui.home.PlayListOperateDialog
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.Bottom
 import com.ztftrue.music.ui.public.CreatePlayListDialog
 import com.ztftrue.music.ui.public.QueueOperateDialog
-import com.ztftrue.music.ui.public.RenamePlayListDialog
 import com.ztftrue.music.ui.public.TopBar
 import com.ztftrue.music.ui.public.TracksListView
-import com.ztftrue.music.utils.DialogOperate
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.toPx
-import com.ztftrue.music.utils.model.AlbumList
 import com.ztftrue.music.utils.model.AnyListBase
-import com.ztftrue.music.utils.model.ArtistList
 import com.ztftrue.music.utils.model.FolderList
-import com.ztftrue.music.utils.model.GenresList
 import com.ztftrue.music.utils.model.ListBase
 import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.trackManager.PlaylistManager
@@ -126,12 +115,10 @@ import kotlinx.coroutines.runBlocking
 
 @UnstableApi
 @Composable
-fun TracksListPage(
+fun FolderListPage(
     musicViewModel: MusicViewModel,
     navController: SnapshotStateList<Any>,
-    type: PlayListType,
-    id: Long,
-    path: String?
+    folderList: FolderList
 ) {
     val tracksList = remember { mutableStateListOf<MusicItem>() }
     val showIndicator = remember { mutableStateOf(false) }
@@ -145,14 +132,13 @@ fun TracksListPage(
     var showAddPlayListDialog by remember { mutableStateOf(false) }
     var showCreatePlayListDialog by remember { mutableStateOf(false) }
     var showSortDialog by remember { mutableStateOf(false) }
-    var showRenameDialog by remember { mutableStateOf(false) }
-
 //    LaunchedEffect(key1 = musicViewModel.showIndicatorMap) {
-    showIndicator.value = musicViewModel.showIndicatorMap.getOrDefault(type.toString(), false)
+    showIndicator.value =
+        musicViewModel.showIndicatorMap.getOrDefault(folderList.type.toString(), false)
 //    }
     if (showSortDialog) {
         val sortFiledOptions =
-            PlayUtils.trackSortFiledMap[type.name + "@Tracks"]
+            PlayUtils.trackSortFiledMap[folderList.type.name + "@Tracks"]
         if (sortFiledOptions.isNullOrEmpty()) {
             return
         }
@@ -168,7 +154,7 @@ fun TracksListPage(
             CoroutineScope(Dispatchers.IO).launch {
                 sortDb = MusicDatabase.getDatabase(context).SortFiledDao()
                 val sortData1 =
-                    sortDb?.findSortByType(type.name + "@Tracks")
+                    sortDb?.findSortByType(folderList.type.name + "@Tracks")
                 if (sortData1 != null) {
                     val f = sortData1.filedName
                     val m = sortData1.methodName
@@ -349,7 +335,7 @@ fun TracksListPage(
                                         sortDb =
                                             MusicDatabase.getDatabase(context).SortFiledDao()
                                         var sortData =
-                                            sortDb.findSortByType(type.name + "@Tracks")
+                                            sortDb.findSortByType(folderList.type.name + "@Tracks")
                                         if (sortData != null) {
                                             sortData.method =
                                                 PlayUtils.methodMap[methodSelected] ?: ""
@@ -360,7 +346,7 @@ fun TracksListPage(
                                             sortDb.update(sortData)
                                         } else {
                                             sortData = SortFiledData(
-                                                type.name + "@Tracks",
+                                                folderList.type.name + "@Tracks",
                                                 sortFiledOptions[filedSelected]
                                                     ?: "",
                                                 PlayUtils.methodMap[methodSelected] ?: "",
@@ -371,10 +357,13 @@ fun TracksListPage(
                                         }
                                     })
                             }
-                            musicViewModel.showIndicatorMap[type.name] =
+                            musicViewModel.showIndicatorMap[folderList.type.name] =
                                 filedSelected == "Alphabetical"
                             showIndicator.value =
-                                musicViewModel.showIndicatorMap.getOrDefault(type.toString(), false)
+                                musicViewModel.showIndicatorMap.getOrDefault(
+                                    folderList.type.toString(),
+                                    false
+                                )
                             val bundle = Bundle()
                             bundle.putString(
                                 "method",
@@ -386,7 +375,7 @@ fun TracksListPage(
                             )
                             bundle.putString(
                                 "type",
-                                type.name + "@Tracks"
+                                folderList.type.name + "@Tracks"
                             )
                             val futureResult: ListenableFuture<SessionResult>? =
                                 musicViewModel.browser?.sendCustomCommand(
@@ -422,165 +411,26 @@ fun TracksListPage(
         }
     }
     if (showMoreOperateDialog) {
-        when (type) {
-            PlayListType.Albums -> {
-                val item =
-                    if (musicPlayList.value is AlbumList) {
-                        val a = (musicPlayList.value as AlbumList)
-                        AlbumList(id, "", a.artist, a.firstYear, a.lastYear, 0)
-                    } else {
-                        AlbumList(id, "", "", "", "", 0)
+
+        val item = FolderList(path = "", name = "", id = folderList.id, trackNumber = 0)
+        FolderListOperateDialog(
+            musicViewModel,
+            playList = item,
+            onDismiss = {
+                showMoreOperateDialog = false
+                when (it) {
+                    OperateType.AddToPlaylist -> {
+                        showAddPlayListDialog = true
                     }
 
-                AlbumsOperateDialog(
-                    musicViewModel,
-                    playList = item,
-                    onDismiss = {
-                        showMoreOperateDialog = false
-                        when (it) {
-                            OperateType.AddToPlaylist -> {
-                                showAddPlayListDialog = true
-                            }
-
-                            OperateType.ShowArtist -> {
-                                DialogOperate.openArtist(
-                                    context, item.artist,
-                                    musicViewModel.navController
-                                )
-                            }
-
-                            else -> {
-                                Utils.operateDialogDeal(
-                                    it,
-                                    item,
-                                    musicViewModel
-                                )
-
-                            }
-                        }
-                    },
-                )
-            }
-
-            PlayListType.Artists -> {
-                val item = ArtistList(id, "", 0, 0)
-                ArtistsOperateDialog(
-                    musicViewModel,
-                    playList = item,
-                    onDismiss = {
-                        showMoreOperateDialog = false
-                        when (it) {
-                            OperateType.AddToPlaylist -> {
-                                showAddPlayListDialog = true
-                            }
-
-                            else -> {
-                                Utils.operateDialogDeal(it, item, musicViewModel)
-                            }
-                        }
-                    },
-                )
-            }
-
-            PlayListType.Folders -> {
-                val item = FolderList(path = "", name = "", id = id, trackNumber = 0)
-                FolderListOperateDialog(
-                    musicViewModel,
-                    playList = item,
-                    onDismiss = {
-                        showMoreOperateDialog = false
-                        when (it) {
-                            OperateType.AddToPlaylist -> {
-                                showAddPlayListDialog = true
-                            }
-
-                            else -> {
-                                Utils.operateDialogDeal(it, item, musicViewModel)
-                            }
-                        }
-                    },
-                )
-            }
-
-            PlayListType.Genres -> {
-                val item = GenresList(id, "", 0, 0)
-                GenreListOperateDialog(
-                    musicViewModel,
-                    playList = item,
-                    onDismiss = {
-                        showMoreOperateDialog = false
-                        when (it) {
-                            OperateType.AddToPlaylist -> {
-                                showAddPlayListDialog = true
-                            }
-
-                            else -> {
-                                Utils.operateDialogDeal(it, item, musicViewModel)
-                            }
-                        }
-                    },
-                )
-            }
-
-            PlayListType.PlayLists -> {
-                if (path.isNullOrEmpty()) {
-                    return
+                    else -> {
+                        Utils.operateDialogDeal(it, item, musicViewModel)
+                    }
                 }
-                val item = MusicPlayList("", id, path, 0)
-                PlayListOperateDialog(
-                    musicViewModel,
-                    playList = item,
-                    onDismiss = {
-                        showMoreOperateDialog = false
-                        when (it) {
-                            OperateType.AddToPlaylist -> {
-                                showAddPlayListDialog = true
-                            }
-
-                            OperateType.RemoveDuplicate -> {
-                                if (PlaylistManager.cleanDuplicateTrackFromPlayList(
-                                        context,
-                                        item.id,
-                                        item.path,
-                                        musicViewModel.songsList.toList()
-                                    )
-                                ) {
-                                    musicViewModel.scanAndRefreshPlaylist(context, item.path)
-                                }
-
-                            }
-
-                            OperateType.RenamePlayList -> {
-                                showRenameDialog = true
-                            }
-
-                            else -> {
-                                Utils.operateDialogDeal(it, item, musicViewModel)
-                            }
-
-                        }
-                    },
-                )
-
-            }
-
-            PlayListType.Songs -> {}
-            PlayListType.Queue -> {}
-            PlayListType.None -> {}
-        }
-
+            },
+        )
     }
-    if (showRenameDialog) {
-        val item = MusicPlayList("", id, "", 0)
-        RenamePlayListDialog(item.name, onDismiss = {
-            showRenameDialog = false
-            if (!it.isNullOrEmpty()) {
-                if (PlaylistManager.renamePlaylist(context, item.id, it)) {
-                    SongsUtils.refreshPlaylist(musicViewModel)
-                }
-            }
-        })
-    }
+
     if (showAddPlayListDialog) {
         AddMusicToPlayListDialog(musicViewModel, null, onDismiss = { playListId, removeDuplicate ->
             showAddPlayListDialog = false
@@ -591,8 +441,8 @@ fun TracksListPage(
                     Utils.addTracksToPlayList(
                         playListId,
                         context,
-                        type,
-                        id,
+                        folderList.type,
+                        folderList.id,
                         musicViewModel,
                         removeDuplicate
                     )
@@ -604,7 +454,14 @@ fun TracksListPage(
         CreatePlayListDialog(onDismiss = {
             showCreatePlayListDialog = false
             if (it != null) {
-                Utils.createPlayListAddTracks(it, context, type, id, musicViewModel, false)
+                Utils.createPlayListAddTracks(
+                    it,
+                    context,
+                    folderList.type,
+                    folderList.id,
+                    musicViewModel,
+                    false
+                )
             }
         })
     }
@@ -659,7 +516,7 @@ fun TracksListPage(
                         }
                     }
                     item {
-                        if (!PlayUtils.trackSortFiledMap[type.name + "@Tracks"].isNullOrEmpty()) {
+                        if (!PlayUtils.trackSortFiledMap[folderList.type.name + "@Tracks"].isNullOrEmpty()) {
                             IconButton(
                                 modifier = Modifier.width(50.dp), onClick = {
                                     showOperatePopup = false
@@ -696,32 +553,6 @@ fun TracksListPage(
 
             }
         }
-    }
-    fun getPlayListMessage() {
-        val futureResultItem: ListenableFuture<SessionResult>? =
-            musicViewModel.browser?.sendCustomCommand(
-                MediaCommands.COMMAND_GET_PLAY_LIST_ITEM,
-                Bundle().apply {
-                    putString("type", type.name)
-                    putLong("id", id)
-                }
-            )
-        futureResultItem?.addListener({
-            try {
-                val result: SessionResult? = futureResultItem.get()
-                if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
-                    Log.e("Client", "Failed COMMAND_GET_PLAY_LIST_ITEM ${result?.resultCode}")
-                    navController.removeLastOrNull()
-                    return@addListener
-                }
-                result.extras.getParcelable<AnyListBase>("data")?.let {
-                    musicPlayList.value = it
-                }
-            } catch (e: Exception) {
-                navController.removeLastOrNull()
-                Log.e("Client", "Failed to toggle favorite status", e)
-            }
-        }, ContextCompat.getMainExecutor(context))
     }
 
     val musicList = remember { musicViewModel.musicQueue }
@@ -802,7 +633,7 @@ fun TracksListPage(
             musicViewModel.loadingTracks.value = true
             val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
                 musicViewModel.browser?.getChildren(
-                    type.name + "_track_" + id,
+                    folderList.type.name + "_track_" + folderList.id,
                     0,
                     Integer.MAX_VALUE,
                     null
@@ -815,7 +646,6 @@ fun TracksListPage(
                         navController.removeLastOrNull()
                         return@addListener
                     }
-                    getPlayListMessage()
                     val albumMediaItems: List<MediaItem> = result.value ?: listOf()
                     val tracksListResult = ArrayList<MusicItem>()
                     albumMediaItems.forEach { mediaItem ->
@@ -826,7 +656,6 @@ fun TracksListPage(
                     tracksList.addAll(
                         tracksListResult
                     )
-
                     val duration = tracksList.sumOf { it.duration }
                     durationAll.value = Utils.formatTimeWithUnit(duration)
                 } catch (e: Exception) {
@@ -836,10 +665,8 @@ fun TracksListPage(
                 }
                 musicViewModel.loadingTracks.value = false
             }, ContextCompat.getMainExecutor(context))
-
         }
     }
-
     val listState = rememberLazyListState()
     Scaffold(
         modifier = Modifier.padding(all = 0.dp),
@@ -870,37 +697,7 @@ fun TracksListPage(
                     ) {
                         Image(
                             painter = rememberAsyncImagePainter(
-                                when (musicPlayList.value) {
-                                    is AlbumList -> {
-                                        val albumList = musicPlayList.value as AlbumList
-                                        val albumCoverModel by produceState(
-                                            initialValue = musicViewModel.customMusicCover.value, // 初始显示默认封面
-                                            key1 = albumList.id
-                                        ) {
-                                            value =
-                                                musicViewModel.getAlbumCover(albumList.id, context)
-                                        }
-                                        ImageRequest.Builder(context)
-                                            .data(albumCoverModel)
-                                            .build()
-                                    }
-
-                                    is ArtistList -> {
-                                        val artistList = musicPlayList.value as ArtistList
-                                        musicViewModel.artistCover[artistList.name.lowercase()
-                                            .trim()] ?: R.drawable.ic_artist
-                                    }
-
-                                    is GenresList -> {
-                                        val genresList = musicPlayList.value as GenresList
-                                        musicViewModel.genreCover[genresList.name.lowercase()
-                                            .trim()] ?: R.drawable.ic_genres
-                                    }
-
-                                    else -> {
-                                        musicViewModel.customMusicCover.value
-                                    }
-                                }
+                                musicViewModel.customMusicCover.value
                             ),
                             contentDescription = "cover",
                             modifier = Modifier
@@ -972,79 +769,6 @@ fun TracksListPage(
                                 maxLines = 1,
                                 color = MaterialTheme.colorScheme.onBackground
                             )
-                            when (musicPlayList.value) {
-                                is AlbumList -> {
-                                    val a = musicPlayList.value as AlbumList
-                                    Column {
-                                        Text(
-                                            text = a.artist,
-//                                            modifier = Modifier
-//                                                .wrapContentSize(),
-                                            modifier = Modifier.horizontalScroll(
-                                                rememberScrollState(
-                                                    0
-                                                )
-                                            ),
-                                            maxLines = 1,
-                                            color = MaterialTheme.colorScheme.onBackground
-                                        )
-                                        Text(
-                                            text = stringResource(
-                                                R.string.year_tra,
-                                                a.firstYear,
-                                                if (a.firstYear == a.lastYear) "" else " ~ ${a.lastYear}"
-                                            ),
-//                                            modifier = Modifier
-//                                                .wrapContentSize(),
-                                            modifier = Modifier.horizontalScroll(
-                                                rememberScrollState(
-                                                    0
-                                                )
-                                            ),
-                                            maxLines = 1,
-                                            color = MaterialTheme.colorScheme.onBackground
-                                        )
-                                    }
-                                }
-
-                                is ArtistList -> {
-                                    val a = musicPlayList.value as ArtistList
-                                    Column {
-                                        Text(
-                                            text = stringResource(
-                                                R.string.album_tracks,
-                                                a.albumNumber,
-                                                if (a.albumNumber <= 1) "" else stringResource(id = R.string.s)
-                                            ),
-//                                            modifier = Modifier
-//                                                .wrapContentSize(),
-                                            modifier = Modifier.horizontalScroll(
-                                                rememberScrollState(
-                                                    0
-                                                )
-                                            ),
-                                            maxLines = 1,
-                                            color = MaterialTheme.colorScheme.onBackground
-                                        )
-                                    }
-                                }
-
-                                is GenresList -> {
-                                    val a = musicPlayList.value as GenresList
-                                    Text(
-                                        text = stringResource(
-                                            R.string.album_tracks,
-                                            a.albumNumber,
-                                            if (a.albumNumber <= 1) "" else stringResource(id = R.string.s)
-                                        ),
-//                                        modifier = Modifier
-//                                            .wrapContentSize(),
-                                        modifier = Modifier.horizontalScroll(rememberScrollState(0)),
-                                        maxLines = 1,
-                                        color = MaterialTheme.colorScheme.onBackground
-                                    )
-                                }
-                            }
                         }
 
                     }
@@ -1174,6 +898,7 @@ fun FolderItemView(
                 }
             ) {
                 navController.add(Router.PlayListView(item))
+//                navController.add(Router.FolderListPage(item))
 //                navController.navigate(
 //                    Router.PlayListView.withArgs(
 //                        "id" to "${item.id}",
