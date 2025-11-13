@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -34,6 +36,7 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -42,9 +45,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -52,6 +57,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -61,7 +67,9 @@ import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.ui.other.FolderItemView
 import com.ztftrue.music.utils.model.AnyListBase
+import com.ztftrue.music.utils.model.FolderList
 import com.ztftrue.music.utils.model.ItemFilterModel
 import kotlinx.coroutines.launch
 
@@ -79,16 +87,24 @@ fun TracksListView(
     showIndicator: MutableState<Boolean>,
     selectStatus: Boolean = false,
     selectList: SnapshotStateList<MusicItem>? = null,
+    folderData: SnapshotStateList<FolderList>? = null,
     header: @Composable (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     var showSlideIndicator by remember { mutableStateOf(false) }
     var showTopIndicator by remember { mutableStateOf(false) }
+    val folderDataSize = (folderData?.size ?: 0) + if (header == null) {
+        0
+    } else {
+        1
+    }
     val sharedPreferences =
         context.getSharedPreferences("list_indicator_config", Context.MODE_PRIVATE)
     val itemFilterList = remember { mutableStateListOf<ItemFilterModel>() }
+    val itemFilterMap = HashMap<String, ItemFilterModel>()
     var showItemFilterDialog by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
+    val listStateFilter = rememberLazyListState()
     val scope = rememberCoroutineScope()
 //    LaunchedEffect(key1 = tracksList, showIndicator.value) {
     showSlideIndicator =
@@ -103,10 +119,15 @@ fun TracksListView(
                 val lastM = tracksList[index - 1]
                 val lastMF = lastM.name[0]
                 if (lastMF != currentF) {
-                    itemFilterList.add(ItemFilterModel(currentF.toString(), index))
+                    val filterModel =
+                        ItemFilterModel(currentF.toString(), index, itemFilterList.size)
+                    itemFilterList.add(filterModel)
+                    itemFilterMap.put(currentF.toString(),filterModel)
                 }
             } else {
-                itemFilterList.add(ItemFilterModel(currentF.toString(), index))
+                val filterModel = ItemFilterModel(currentF.toString(), index, itemFilterList.size)
+                itemFilterList.add(filterModel)
+                itemFilterMap.put(currentF.toString(),filterModel)
             }
         }
     }
@@ -116,14 +137,27 @@ fun TracksListView(
             showItemFilterDialog = false
             if (it >= 0) {
                 scope.launch {
-                    listState.scrollToItem(it)
+                    listState.scrollToItem(it + folderDataSize)
                 }
             }
 
         })
     }
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex }
+            .collect { index ->
+                val trackIndex = index - folderDataSize
+                if (trackIndex >= 0 && tracksList.isNotEmpty()) {
+                    val itemFilterModel = itemFilterMap[tracksList[trackIndex].name[0].toString()]
+                    itemFilterModel?.selfIndex?.let { listStateFilter.scrollToItem(it) }
+                }
+                // 你可以在这里执行基于索引的操作，例如：
+                // 如果索引达到某个值，加载更多数据
+            }
+    }
+    var size by remember { mutableStateOf(IntSize.Zero) }
     key(tracksList, itemFilterList, showSlideIndicator, showTopIndicator) {
-        if (tracksList.isEmpty() && header == null) {
+        if (tracksList.isEmpty() && header == null && folderData == null) {
             if (musicViewModel.loadingTracks.value) {
                 Text(
                     text = stringResource(R.string.loading),
@@ -146,7 +180,6 @@ fun TracksListView(
                         }
                 )
             }
-
         } else {
             ConstraintLayout(
                 modifier = Modifier
@@ -163,6 +196,7 @@ fun TracksListView(
                     key(itemFilterList, showSlideIndicator) {
                         if (showSlideIndicator) {
                             LazyColumn(
+                                state = listStateFilter,
                                 verticalArrangement = Arrangement.Center,
                                 modifier = Modifier
                                     .wrapContentWidth()
@@ -170,6 +204,19 @@ fun TracksListView(
                                     .padding(top = 10.dp, bottom = 10.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
+                                item(size.height) {
+                                    if (folderData != null) {
+                                        val density = LocalDensity.current
+                                        val containerHeightDp =
+                                            with(density) { (size.height * folderData.size).toDp() }
+                                        Spacer(
+                                            Modifier.size(
+                                                height = containerHeightDp,
+                                                width = 1.dp
+                                            )
+                                        )
+                                    }
+                                }
                                 items(itemFilterList.size) { index ->
                                     val item = itemFilterList[index]
                                     Text(
@@ -178,7 +225,7 @@ fun TracksListView(
                                         modifier = Modifier
                                             .clickable {
                                                 scope.launch {
-                                                    listState.scrollToItem(item.index)
+                                                    listState.scrollToItem(item.index + folderDataSize)
                                                 }
                                             }
                                             .padding(start = 8.dp, end = 5.dp)
@@ -195,9 +242,32 @@ fun TracksListView(
                             state = listState, modifier = Modifier
                                 .fillMaxSize()
                         ) {
-                            item {
-                                if (header != null) {
+                            if (header != null) {
+                                item {
                                     header()
+                                }
+                            }
+                            if (folderData != null) {
+                                items(folderData.size) { index ->
+                                    val item = folderData[index]
+                                    FolderItemView(
+                                        item,
+                                        musicViewModel,
+                                        modifier = Modifier
+                                            .wrapContentHeight()
+                                            .fillMaxWidth()
+                                            .onGloballyPositioned { coordinates ->
+                                                if (size.height == 0) {
+                                                    size = coordinates.size
+                                                }
+                                                println("Composable Height in pixels: ${size.height}")
+                                            },
+                                        musicViewModel.navController
+                                    )
+                                    HorizontalDivider(
+                                        color = MaterialTheme.colorScheme.inverseOnSurface,
+                                        thickness = 1.2.dp
+                                    )
                                 }
                             }
                             items(tracksList.size) { index ->
@@ -278,8 +348,8 @@ fun TracksListView(
                             scope.launch {
                                 for ((index, entry) in tracksList.withIndex()) {
                                     if (entry.id == musicViewModel.currentPlay.value?.id) {
-                                        // TODO calculate the scroll position by　
-                                        listState.animateScrollToItem(if ((index - 2) < 0) 0 else (index - 2))
+                                        val position = folderDataSize + index
+                                        listState.animateScrollToItem(if ((position - 2) < 0) 0 else (position - 2))
                                         break
                                     }
                                 }

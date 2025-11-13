@@ -6,8 +6,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowInsetsControllerCompat
@@ -29,6 +32,8 @@ import com.ztftrue.music.ui.other.TracksSelectPage
 import com.ztftrue.music.ui.play.PlayingPage
 import com.ztftrue.music.ui.public.QueuePage
 import com.ztftrue.music.ui.public.TracksListPage
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -50,6 +55,17 @@ fun BaseLayout(
         MaterialTheme.colorScheme.background.luminance() > 0.5
 //    window.navigationBarColor = MaterialTheme.colorScheme.background.toArgb()
     val navController = remember { mutableStateListOf<Any>(Router.MainView) }
+    val coroutineScope = rememberCoroutineScope()
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            snapshotFlow { navController.size }
+                .collectLatest { size ->
+                    if (size == 0) {
+                        navController.add(Router.MainView)
+                    }
+                }
+        }
+    }
     musicViewModel.navController = navController
     val context = LocalContext.current
     CompositionLocalProvider(LocalContext provides context) {
@@ -106,12 +122,14 @@ fun BaseLayout(
                             navController,
                         )
                     }
+
                     is Router.SearchPage -> NavEntry(key) {
                         SearchPage(
                             musicViewModel = musicViewModel,
                             navController,
                         )
                     }
+
                     is Router.FolderListPage -> NavEntry(key) {
                         FolderListPage(
                             musicViewModel = musicViewModel,
@@ -119,6 +137,7 @@ fun BaseLayout(
                             key.folderList
                         )
                     }
+
                     else -> NavEntry(Unit) { Text("Unknown route") }
                 }
             },

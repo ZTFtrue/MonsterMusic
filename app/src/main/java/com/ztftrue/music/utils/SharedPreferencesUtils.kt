@@ -17,6 +17,25 @@ object SharedPreferencesUtils {
     fun getFontSize(context: Context): Int {
         return context.getSharedPreferences("display", Context.MODE_PRIVATE).getInt("fontSize", 16)
     }
+    fun saveShowFolderPath(context: Context, value: Boolean) {
+        context.getSharedPreferences("display", Context.MODE_PRIVATE).edit {
+            putBoolean("show_folder_path", value)
+        }
+    }
+
+    fun getShowFolderPath(context: Context): Boolean {
+        return context.getSharedPreferences("display", Context.MODE_PRIVATE).getBoolean("show_folder_path", false)
+    }
+
+    fun saveShowFolderTree(context: Context, value: Boolean) {
+        context.getSharedPreferences("display", Context.MODE_PRIVATE).edit {
+            putBoolean("show_folder_tree", value)
+        }
+    }
+
+    fun getShowFolderTree(context: Context): Boolean {
+        return context.getSharedPreferences("display", Context.MODE_PRIVATE).getBoolean("show_folder_tree", false)
+    }
 
     fun saveDisplayAlign(context: Context, textAlign: TextAlign) {
         context.getSharedPreferences("display", Context.MODE_PRIVATE).edit {

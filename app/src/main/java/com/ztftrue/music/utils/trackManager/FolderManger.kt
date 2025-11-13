@@ -88,7 +88,7 @@ object FolderManger {
                         val tf = FolderList(
                             children = ArrayList(),
                             path = tempPath,
-                            name = tempPath,
+                            name = tempPath.substring(tempPath.lastIndexOf(File.separator) + 1),
                             id = tempPath.hashCode().toLong(),
                             trackNumber = 0,
                         )
@@ -132,25 +132,25 @@ object FolderManger {
         }
         parentsFolders.removeAll(needArray.toSet())
         parentsFolders.addAll(newParent)
-        parentsFolders.forEach {
-            val stack = ArrayDeque<FolderList>()
-            stack.addFirst(it)
-            while (stack.isNotEmpty()) {
-                val temp = stack.removeLast()
-                val pt = temp.parent
-                if (pt != null && temp.children.size == 1 && temp.trackNumber == 0) {
-                    pt.children.remove(temp)
-                    pt.children.addAll(temp.children)
-                    // 实际只有一个
-                    temp.children.forEach { it2 ->
-                        it2.parent = pt
-                    }
-                }
-                temp.children.forEach { it2 ->
-                    stack.addFirst(it2)
-                }
-            }
-        }
+//        parentsFolders.forEach {
+//            val stack = ArrayDeque<FolderList>()
+//            stack.addFirst(it)
+//            while (stack.isNotEmpty()) {
+//                val temp = stack.removeLast()
+//                val pt = temp.parent
+//                if (pt != null && temp.children.size == 1 && temp.trackNumber == 0) {
+//                    pt.children.remove(temp)
+//                    pt.children.addAll(temp.children)
+//                    // 实际只有一个
+//                    temp.children.forEach { it2 ->
+//                        it2.parent = pt
+//                    }
+//                }
+//                temp.children.forEach { it2 ->
+//                    stack.addFirst(it2)
+//                }
+//            }
+//        }
         return if (parentsFolders.size == 1) {
             parentsFolders[0].children
         } else {

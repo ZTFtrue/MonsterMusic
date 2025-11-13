@@ -39,14 +39,26 @@ fun FolderListView(
     modifier: Modifier = Modifier,
     musicViewModel: MusicViewModel,
     navController: SnapshotStateList<Any>,
-    type: PlayListType = PlayListType.Folders
 ) {
-
     val folderList = remember { mutableStateListOf<FolderList>() }
+    val treeFolderList = remember { mutableStateListOf<FolderList>() }
+    val showList = remember { mutableStateListOf<FolderList>() }
     val listState = rememberLazyListState()
     val context = LocalContext.current
+
+    LaunchedEffect(musicViewModel.folderViewTree.value) {
+        if (musicViewModel.folderViewTree.value) {
+            showList.clear()
+            showList.addAll(treeFolderList)
+        } else {
+            showList.clear()
+            showList.addAll(folderList)
+        }
+    }
+
     LaunchedEffect(Unit, musicViewModel.refreshFolder.value) {
         folderList.clear()
+        treeFolderList.clear()
         val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
             musicViewModel.browser?.getChildren("folders_root", 0, Integer.MAX_VALUE, null)
         futureResult?.addListener({
@@ -57,7 +69,7 @@ fun FolderListView(
                 }
                 val albumMediaItems: List<MediaItem> = result.value ?: listOf()
                 albumMediaItems.forEach { mediaItem ->
-                    val album = FolderList(
+                    val folder = FolderList(
                         children = ArrayList(),
                         path = mediaItem.mediaMetadata.extras?.getString(
                             CustomMetadataKeys.FOLDER_PATH,
@@ -71,10 +83,21 @@ fun FolderListView(
                             true
                         ) ?: true
                     )
-                    folderList.add(album)
+                    folderList.add(folder)
                 }
-                val treeFolder = FolderManger.buildFolderTreeFromPaths(folderList)
-                Log.d("tag", treeFolder.toString())
+                try {
+                    val treeFolder = FolderManger.buildFolderTreeFromPaths(folderList)
+                    treeFolderList.addAll(treeFolder)
+                } catch (e: Exception) {
+                    Log.e("FolderListView", "Convert to tree", e)
+                }
+                if (musicViewModel.folderViewTree.value) {
+                    showList.clear()
+                    showList.addAll(treeFolderList)
+                } else {
+                    showList.clear()
+                    showList.addAll(folderList)
+                }
             } catch (e: Exception) {
                 // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
                 Log.e("Client", "Failed to toggle favorite status", e)
@@ -89,10 +112,12 @@ fun FolderListView(
             color = MaterialTheme.colorScheme.onBackground
         )
         LazyColumn(
-            state = listState, modifier = modifier.fillMaxSize()
+            state = listState, modifier = modifier
+                .fillMaxSize()
+                .padding(10.dp)
         ) {
-            items(folderList.size) { index ->
-                val item = folderList[index]
+            items(showList.size) { index ->
+                val item = showList[index]
                 FolderItemView(
                     item,
                     musicViewModel,

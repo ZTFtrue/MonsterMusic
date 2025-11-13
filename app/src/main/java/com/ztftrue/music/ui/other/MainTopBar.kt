@@ -28,7 +28,11 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Alarm
+import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material.icons.outlined.FolderCopy
 import androidx.compose.material.icons.outlined.Snooze
+import androidx.compose.material.icons.outlined.ViewAgenda
+import androidx.compose.material.icons.outlined.ViewStream
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -86,6 +90,7 @@ import com.ztftrue.music.ui.public.QueueOperateDialog
 import com.ztftrue.music.ui.public.SleepTimeDialog
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
+import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.model.MusicPlayList
@@ -681,6 +686,54 @@ fun MainTopBar(
                             contentDescription = stringResource(id = R.string.operate),
                             modifier = Modifier
                                 .size(25.dp)
+                                .clip(CircleShape),
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+                if (musicViewModel.mainTabList[pagerState.currentPage].type == PlayListType.Folders) {
+                    IconButton(modifier = Modifier.semantics {
+                        contentDescription = "Show folder path"
+                    }, onClick = {
+                        musicViewModel.folderViewShowPath.value =
+                            !musicViewModel.folderViewShowPath.value
+                        SharedPreferencesUtils.saveShowFolderPath(
+                            context,
+                            musicViewModel.folderViewShowPath.value
+                        )
+                    }) {
+                        Icon(
+                            imageVector = if (musicViewModel.folderViewShowPath.value) {
+                                Icons.Outlined.ViewAgenda
+                            } else {
+                                Icons.Outlined.ViewStream
+                            },
+                            contentDescription = "Show folder path",
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(CircleShape),
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    IconButton(modifier = Modifier.semantics {
+                        contentDescription = "Show folder list or tree"
+                    }, onClick = {
+                        musicViewModel.folderViewTree.value =
+                            !musicViewModel.folderViewTree.value
+                        SharedPreferencesUtils.saveShowFolderTree(
+                            context,
+                            musicViewModel.folderViewTree.value
+                        )
+                    }) {
+                        Icon(
+                            imageVector = if (musicViewModel.folderViewTree.value) {
+                                Icons.Outlined.FolderCopy
+                            } else {
+                                Icons.Outlined.Folder
+                            },
+                            contentDescription = "Show folder list or tree",
+                            modifier = Modifier
+                                .size(30.dp)
                                 .clip(CircleShape),
                             tint = MaterialTheme.colorScheme.onBackground
                         )

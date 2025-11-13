@@ -294,15 +294,15 @@ class MainActivity : ComponentActivity() {
                             val folder = this@MainActivity.getExternalFilesDir(
                                 folderPath
                             )
-                            if(folder!=null){
-                                if(folder.exists()){
+                            if (folder != null) {
+                                if (folder.exists()) {
                                     folder.listFiles()?.forEach {
-                                        if(it.isFile&&it.name.startsWith("track_cover")){
+                                        if (it.isFile && it.name.startsWith("track_cover")) {
                                             it.delete()
                                             return@forEach
                                         }
                                     }
-                                }else{
+                                } else {
                                     folder.mkdirs()
                                 }
 
@@ -426,7 +426,7 @@ class MainActivity : ComponentActivity() {
                             StorageFolder(null, treeUri.toString())
                         )
                         val c = musicViewModel.currentPlay.value
-                        if (c != null){
+                        if (c != null) {
                             musicViewModel.dealLyrics(
                                 this@MainActivity,
                                 c
@@ -600,7 +600,12 @@ class MainActivity : ComponentActivity() {
         musicViewModel.customMusicCover.value = customMusicCoverPath?.takeIf {
             File(it).exists()
         } ?: R.drawable.songs_thumbnail_cover
-
+        musicViewModel.folderViewShowPath.value = SharedPreferencesUtils.getShowFolderPath(
+            this@MainActivity
+        )
+        musicViewModel.folderViewTree.value = SharedPreferencesUtils.getShowFolderTree(
+            this@MainActivity
+        )
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
 
             if (ActivityCompat.checkSelfPermission(

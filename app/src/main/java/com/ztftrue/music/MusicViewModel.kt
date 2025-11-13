@@ -104,6 +104,10 @@ class MusicViewModel : ViewModel() {
     val visualizationData: LiveData<List<Float>> = _visualizationData
     var loadingTracks = mutableStateOf(false)
 
+
+    val folderViewTree = mutableStateOf(false)
+    val folderViewShowPath= mutableStateOf(false)
+
     //    val albumItemsCount = mutableIntStateOf(2)
 //    val genreItemsCount = mutableIntStateOf(2)
 //    var mediaBrowser: MediaBrowserCompat? = null

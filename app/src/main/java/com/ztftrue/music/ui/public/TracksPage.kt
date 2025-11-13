@@ -51,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -992,16 +993,17 @@ fun TracksListPage(
                     .fillMaxSize()
                     .padding(it)
             ) {
+
                 if (albumsList.isNotEmpty()) {
                     val windowInfo = LocalWindowInfo.current
                     val containerWidth = windowInfo.containerSize.width
-//                    val density = LocalDensity.current
-//                    val containerWidthDp = with(density) { windowInfo.containerSize.width.toDp() }
-                    val width = (containerWidth / 2.5) + 70
+                    val density = LocalDensity.current
+                    val containerHeightDp =
+                        with(density) { ((containerWidth / 2.5) + 70.dp.toPx()).toInt().toDp() }
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(width.dp),
+                            .height(containerHeightDp),
                     ) {
                         AlbumGridView(
                             musicViewModel = musicViewModel,

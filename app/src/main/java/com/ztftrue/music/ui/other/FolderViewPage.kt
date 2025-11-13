@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,7 +23,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -33,9 +33,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Apps
+import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Shuffle
+import androidx.compose.material.icons.outlined.SnippetFolder
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,6 +57,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -125,6 +130,7 @@ fun FolderListPage(
     val durationAll = remember { mutableStateOf("") }
     val musicPlayList = remember { mutableStateOf(AnyListBase(2, PlayListType.None)) }
     val childrenFolderList = remember { mutableStateListOf<FolderList>() }
+    childrenFolderList.addAll(folderList.children)
     var refreshCurrentValueList by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var showMoreOperateDialog by remember { mutableStateOf(false) }
@@ -132,10 +138,10 @@ fun FolderListPage(
     var showAddPlayListDialog by remember { mutableStateOf(false) }
     var showCreatePlayListDialog by remember { mutableStateOf(false) }
     var showSortDialog by remember { mutableStateOf(false) }
-//    LaunchedEffect(key1 = musicViewModel.showIndicatorMap) {
+    val musicList = remember { musicViewModel.musicQueue }
+    var showDialog by remember { mutableStateOf(false) }
     showIndicator.value =
         musicViewModel.showIndicatorMap.getOrDefault(folderList.type.toString(), false)
-//    }
     if (showSortDialog) {
         val sortFiledOptions =
             PlayUtils.trackSortFiledMap[folderList.type.name + "@Tracks"]
@@ -258,7 +264,6 @@ fun FolderListPage(
                                 }
                             )
                         }
-
                     }
                     item {
                         HorizontalDivider(
@@ -555,10 +560,6 @@ fun FolderListPage(
         }
     }
 
-    val musicList = remember { musicViewModel.musicQueue }
-    var showDialog by remember { mutableStateOf(false) }
-
-
     if (showDialog) {
         QueueOperateDialog(onDismiss = {
             if (it == OperateType.ClearQueue) {
@@ -709,7 +710,6 @@ fun FolderListPage(
                                 .fillMaxWidth()
                                 .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 10.dp)
                         ) {
-
                             Text(
                                 text = mListPlay.name,
                                 color = MaterialTheme.colorScheme.onBackground,
@@ -785,34 +785,13 @@ fun FolderListPage(
             ) {
                 TracksListView(
                     musicViewModel,
-                    musicPlayList.value, tracksList, showIndicator
-                ) {
-                    LazyColumn(
-                        state = listState, modifier = Modifier.fillMaxSize()
-                    ) {
-                        items(childrenFolderList.size) { index ->
-                            val item = childrenFolderList[index]
-                            FolderItemView(
-                                item,
-                                musicViewModel,
-                                modifier = Modifier
-                                    .wrapContentHeight()
-                                    .fillMaxWidth(),
-                                navController
-                            )
-                            HorizontalDivider(
-                                color = MaterialTheme.colorScheme.inverseOnSurface,
-                                thickness = 1.2.dp
-                            )
-                        }
-                    }
-                }
+                    folderList, tracksList, showIndicator, folderData = childrenFolderList
+                )
             }
 
         },
     )
 }
-
 
 @Composable
 fun FolderItemView(
@@ -826,6 +805,7 @@ fun FolderItemView(
     var showOperateDialog by remember { mutableStateOf(false) }
     var showAddPlayListDialog by remember { mutableStateOf(false) }
     var showCreatePlayListDialog by remember { mutableStateOf(false) }
+    var showFolderPath by remember { mutableStateOf(musicViewModel.folderViewShowPath) }
     if (showOperateDialog) {
         FolderListOperateDialog(
             musicViewModel,
@@ -891,14 +871,15 @@ fun FolderItemView(
         })
     }
     val number = item.trackNumber
+    val folderNumber = item.children.size
     Row(
-        modifier = Modifier
+        modifier = modifier
             .combinedClickable(
                 onLongClick = {
                 }
             ) {
-                navController.add(Router.PlayListView(item))
-//                navController.add(Router.FolderListPage(item))
+//                navController.add(Router.PlayListView(item))
+                navController.add(Router.FolderListPage(item))
 //                navController.navigate(
 //                    Router.PlayListView.withArgs(
 //                        "id" to "${item.id}",
@@ -908,25 +889,25 @@ fun FolderItemView(
 //                )
             }, verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                painter = painterResource(
-                    if (item.id == musicViewModel.playListCurrent.value?.id && item.type == musicViewModel.playListCurrent.value?.type) {
-                        R.drawable.pause
-                    } else {
-                        R.drawable.play
-                    }
-                ),
+        Row(
+            modifier = Modifier.padding(top = 10.dp, end = 10.dp, bottom = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = if (item.id == musicViewModel.playListCurrent.value?.id && item.type == musicViewModel.playListCurrent.value?.type) {
+                    Icons.Outlined.SnippetFolder
+                } else {
+                    Icons.Outlined.Folder
+                },
                 contentDescription = if (musicViewModel.playStatus.value) {
-                    val s = "pause"
-                    s
+                    "pause"
                 } else {
                     "play"
                 },
                 modifier = Modifier
                     .size(30.dp)
-                    .padding(5.dp),
-                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                    .padding(end = 5.dp),
+                tint = MaterialTheme.colorScheme.onBackground
             )
             Column(modifier = Modifier.fillMaxWidth(0.9f)) {
                 Text(
@@ -934,21 +915,57 @@ fun FolderItemView(
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.horizontalScroll(rememberScrollState(0)),
                 )
-                Text(
-                    text = stringResource(
-                        R.string.song,
-                        number,
-                        if (number <= 1L) "" else stringResource(id = R.string.s)
-                    ),
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-                Text(
-                    text = item.path,
-                    fontStyle = FontStyle.Italic,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.80f),
-                    modifier = Modifier.horizontalScroll(rememberScrollState(0)),
-                )
+                Row(
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (musicViewModel.folderViewTree.value) {
+                        if (number != 0) {
+                            Text(
+                                text = stringResource(
+                                    R.string.song,
+                                    number,
+                                    if (number <= 1L) "" else stringResource(id = R.string.s)
+                                ),
+                                color = MaterialTheme.colorScheme.onBackground,
+                            )
+                            Spacer(Modifier.size(10.dp))
+                        }
+                    } else {
+                        Text(
+                            text = stringResource(
+                                R.string.song,
+                                number,
+                                if (number <= 1L) "" else stringResource(id = R.string.s)
+                            ),
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
+                        Spacer(Modifier.size(10.dp))
+                    }
+
+                    if (musicViewModel.folderViewTree.value && folderNumber != 0) {
+                        Text(
+                            text = "$folderNumber Folder${
+                                if (folderNumber <= 1L) "" else stringResource(
+                                    id = R.string.s
+                                )
+                            }",
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
+                    }
+
+                }
+
+                if (showFolderPath.value) {
+                    Text(
+                        text = item.path,
+                        fontStyle = FontStyle.Italic,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.80f),
+                        modifier = Modifier.horizontalScroll(rememberScrollState(0)),
+                    )
+                }
             }
+            Spacer(Modifier.size(20.dp))
             IconButton(
                 modifier = Modifier
                     .width(50.dp)
