@@ -17,6 +17,7 @@ object SharedPreferencesUtils {
     fun getFontSize(context: Context): Int {
         return context.getSharedPreferences("display", Context.MODE_PRIVATE).getInt("fontSize", 16)
     }
+
     fun saveShowFolderPath(context: Context, value: Boolean) {
         context.getSharedPreferences("display", Context.MODE_PRIVATE).edit {
             putBoolean("show_folder_path", value)
@@ -24,7 +25,8 @@ object SharedPreferencesUtils {
     }
 
     fun getShowFolderPath(context: Context): Boolean {
-        return context.getSharedPreferences("display", Context.MODE_PRIVATE).getBoolean("show_folder_path", false)
+        return context.getSharedPreferences("display", Context.MODE_PRIVATE)
+            .getBoolean("show_folder_path", false)
     }
 
     fun saveShowFolderTree(context: Context, value: Boolean) {
@@ -34,7 +36,8 @@ object SharedPreferencesUtils {
     }
 
     fun getShowFolderTree(context: Context): Boolean {
-        return context.getSharedPreferences("display", Context.MODE_PRIVATE).getBoolean("show_folder_tree", false)
+        return context.getSharedPreferences("display", Context.MODE_PRIVATE)
+            .getBoolean("show_folder_tree", false)
     }
 
     fun saveDisplayAlign(context: Context, textAlign: TextAlign) {
@@ -241,6 +244,18 @@ object SharedPreferencesUtils {
         }
     }
 
+    fun setAutoHandleAudioFocus(context: Context, enable: Boolean) {
+        context.getSharedPreferences("config", Context.MODE_PRIVATE).edit {
+            putBoolean("auto_handle_audio_focus", enable)
+        }
+    }
+
+    fun getAutoHandleAudioFocus(context: Context): Boolean {
+        return context.getSharedPreferences("config", Context.MODE_PRIVATE)
+            .getBoolean("auto_handle_audio_focus", true)
+    }
+
+
     fun setTrackCoverData(context: Context, coverPath: String) {
         context.getSharedPreferences("Cover", Context.MODE_PRIVATE).edit {
             putString("path", coverPath)
@@ -262,7 +277,7 @@ object SharedPreferencesUtils {
         return context.getSharedPreferences("config", Context.MODE_PRIVATE)
             .getString(
                 "widget_background",
-                "#" + context.resources.getColor(R.color.light_blue_900,null).toHexString()
+                "#" + context.resources.getColor(R.color.light_blue_900, null).toHexString()
             )
     }
 }

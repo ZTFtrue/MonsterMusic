@@ -60,7 +60,7 @@ class ErrorTipActivity : ComponentActivity() {
             try {
                 errorMessage = intent.getStringExtra("error") ?: ""
                 errorMessage =
-                    "If possible, please tell me what caused this error to occur, or when the BUG occurs, you are clicking on the button of the app.   \n\n $errorMessage"
+                    "\n\n $errorMessage"
                 errorMessage = errorMessage + "\n\nVERSION_CODE   " + BuildConfig.VERSION_CODE
                 errorMessage = errorMessage + "\n\nBrand:   " + Build.BRAND
                 errorMessage = errorMessage + "\n\nAndroidVersion:   " + Build.VERSION.SDK_INT
@@ -142,6 +142,12 @@ class ErrorTipActivity : ComponentActivity() {
                             text = stringResource(R.string.sorry_some_error_happens_you_can_feedback_it_with_this_message),
                             color = MaterialTheme.colorScheme.onBackground
                         )
+                        Text(
+                            text = "If possible, please tell me what caused this error to occur, or when the BUG occurs, you are clicking on the button of the app.  ",
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    item(2) {
                         SelectionContainer(
                             modifier = Modifier,
                             content = {

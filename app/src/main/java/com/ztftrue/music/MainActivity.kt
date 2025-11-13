@@ -225,7 +225,7 @@ class MainActivity : ComponentActivity() {
         ) { result ->
             if (result.resultCode == RESULT_OK) {
                 if (result.data != null) {
-                    val selectedFileUri: Uri? = result.data!!.data
+                    val selectedFileUri: Uri? = result.data?.data
                     if (selectedFileUri != null) {
                         val cursor = this@MainActivity.contentResolver.query(
                             selectedFileUri,
@@ -276,49 +276,50 @@ class MainActivity : ComponentActivity() {
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (result.resultCode == RESULT_OK) {
-                val selectedFileUri: Uri? = result.data?.data
-                if (selectedFileUri != null) {
-                    val inputStream = contentResolver.openInputStream(selectedFileUri)
-                    if (inputStream != null) {
-                        try {
-                            //  read file name
-                            val fileName =
-                                Utils.getFileNameFromUri(this@MainActivity, selectedFileUri)
-                                    ?: "cover.jpg"
-                            val fileExtension = if (fileName.contains('.')) {
-                                fileName.substringAfterLast('.').lowercase()
-                            } else {
-                                ""
-                            }
-                            val folderPath = "cover"
-                            val folder = this@MainActivity.getExternalFilesDir(
-                                folderPath
-                            )
-                            if (folder != null) {
-                                if (folder.exists()) {
-                                    folder.listFiles()?.forEach {
-                                        if (it.isFile && it.name.startsWith("track_cover")) {
-                                            it.delete()
-                                            return@forEach
-                                        }
-                                    }
+                if (result.data != null) {
+                    val selectedFileUri: Uri? = result.data?.data
+                    if (selectedFileUri != null) {
+                        val inputStream = contentResolver.openInputStream(selectedFileUri)
+                        if (inputStream != null) {
+                            try {
+                                //  read file name
+                                val fileName =
+                                    Utils.getFileNameFromUri(this@MainActivity, selectedFileUri)
+                                        ?: "cover.jpg"
+                                val fileExtension = if (fileName.contains('.')) {
+                                    fileName.substringAfterLast('.').lowercase()
                                 } else {
-                                    folder.mkdirs()
+                                    ""
                                 }
-
-                                val tempPath: String? =
-                                    this@MainActivity.getExternalFilesDir(folderPath)?.absolutePath
-                                val targetFile = File(tempPath, "track_cover.$fileExtension")
-                                val outputStream = FileOutputStream(targetFile)
-                                inputStream.copyTo(outputStream)
-                                inputStream.close()
-                                outputStream.close()
-                                musicViewModel.customMusicCover.value = targetFile.absolutePath
-                                SharedPreferencesUtils.setTrackCoverData(
-                                    this@MainActivity,
-                                    targetFile.absolutePath
+                                val folderPath = "cover"
+                                val folder = this@MainActivity.getExternalFilesDir(
+                                    folderPath
                                 )
-                                musicViewModel.getCurrentMusicCover(this@MainActivity)
+                                if (folder != null) {
+                                    if (folder.exists()) {
+                                        folder.listFiles()?.forEach {
+                                            if (it.isFile && it.name.startsWith("track_cover")) {
+                                                it.delete()
+                                                return@forEach
+                                            }
+                                        }
+                                    } else {
+                                        folder.mkdirs()
+                                    }
+
+                                    val tempPath: String? =
+                                        this@MainActivity.getExternalFilesDir(folderPath)?.absolutePath
+                                    val targetFile = File(tempPath, "track_cover.$fileExtension")
+                                    val outputStream = FileOutputStream(targetFile)
+                                    inputStream.copyTo(outputStream)
+                                    inputStream.close()
+                                    outputStream.close()
+                                    musicViewModel.customMusicCover.value = targetFile.absolutePath
+                                    SharedPreferencesUtils.setTrackCoverData(
+                                        this@MainActivity,
+                                        targetFile.absolutePath
+                                    )
+                                    musicViewModel.getCurrentMusicCover(this@MainActivity)
 //                                getSharedPreferences("Widgets", MODE_PRIVATE).getBoolean(
 //                                    "enable",
 //                                    false
@@ -361,13 +362,13 @@ class MainActivity : ComponentActivity() {
 //                                            sendBroadcast(intent)
 //                                        }
 //                                    }
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
                             }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
                         }
                     }
                 }
-
             }
         }
     private val coverImagePickerLauncher: ActivityResultLauncher<Intent> =
@@ -415,26 +416,28 @@ class MainActivity : ComponentActivity() {
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (result.resultCode == RESULT_OK) {
-                val treeUri = result.data?.data
-                if (treeUri != null) {
-                    contentResolver.takePersistableUriPermission(
-                        treeUri,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                    )
-                    CoroutineScope(Dispatchers.IO).launch {
-                        musicViewModel.getDb(this@MainActivity).StorageFolderDao().insert(
-                            StorageFolder(null, treeUri.toString())
+                if (result.data != null) {
+                    val treeUri = result.data?.data
+                    if (treeUri != null) {
+                        contentResolver.takePersistableUriPermission(
+                            treeUri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                         )
-                        val c = musicViewModel.currentPlay.value
-                        if (c != null) {
-                            musicViewModel.dealLyrics(
-                                this@MainActivity,
-                                c
+                        CoroutineScope(Dispatchers.IO).launch {
+                            musicViewModel.getDb(this@MainActivity).StorageFolderDao().insert(
+                                StorageFolder(null, treeUri.toString())
                             )
+                            val c = musicViewModel.currentPlay.value
+                            if (c != null) {
+                                musicViewModel.dealLyrics(
+                                    this@MainActivity,
+                                    c
+                                )
+                            }
+
                         }
 
                     }
-
                 }
             }
         }
@@ -443,18 +446,20 @@ class MainActivity : ComponentActivity() {
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (result.resultCode == RESULT_OK) {
-                val treeUri = result.data?.data
-                if (treeUri != null) {
-                    contentResolver.takePersistableUriPermission(
-                        treeUri,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                    )
-                    CoroutineScope(Dispatchers.IO).launch {
-                        musicViewModel.getDb(this@MainActivity).StorageFolderDao().insert(
-                            StorageFolder(null, treeUri.toString(), GENRE_TYPE)
+                if (result.data != null) {
+                    val treeUri = result.data?.data
+                    if (treeUri != null) {
+                        contentResolver.takePersistableUriPermission(
+                            treeUri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                         )
-                        musicViewModel.genreCover.clear()
-                        musicViewModel.prepareArtistAndGenreCover(this@MainActivity)
+                        CoroutineScope(Dispatchers.IO).launch {
+                            musicViewModel.getDb(this@MainActivity).StorageFolderDao().insert(
+                                StorageFolder(null, treeUri.toString(), GENRE_TYPE)
+                            )
+                            musicViewModel.genreCover.clear()
+                            musicViewModel.prepareArtistAndGenreCover(this@MainActivity)
+                        }
                     }
                 }
             }
@@ -464,18 +469,20 @@ class MainActivity : ComponentActivity() {
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (result.resultCode == RESULT_OK) {
-                val treeUri = result.data?.data
-                if (treeUri != null) {
-                    contentResolver.takePersistableUriPermission(
-                        treeUri,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                    )
-                    CoroutineScope(Dispatchers.IO).launch {
-                        musicViewModel.getDb(this@MainActivity).StorageFolderDao().insert(
-                            StorageFolder(null, treeUri.toString(), ARTIST_TYPE)
+                if (result.data != null) {
+                    val treeUri = result.data?.data
+                    if (treeUri != null) {
+                        contentResolver.takePersistableUriPermission(
+                            treeUri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                         )
-                        musicViewModel.artistCover.clear()
-                        musicViewModel.prepareArtistAndGenreCover(this@MainActivity)
+                        CoroutineScope(Dispatchers.IO).launch {
+                            musicViewModel.getDb(this@MainActivity).StorageFolderDao().insert(
+                                StorageFolder(null, treeUri.toString(), ARTIST_TYPE)
+                            )
+                            musicViewModel.artistCover.clear()
+                            musicViewModel.prepareArtistAndGenreCover(this@MainActivity)
+                        }
                     }
                 }
             }

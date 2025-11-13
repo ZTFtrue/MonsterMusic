@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -39,12 +40,16 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionResult
 import coil3.compose.AsyncImage
@@ -56,6 +61,7 @@ import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import kotlinx.coroutines.launch
 
@@ -74,6 +80,9 @@ fun DrawMenu(
     val color = MaterialTheme.colorScheme.onBackground
     val context = LocalContext.current
     val imageModel: ImageSource by musicViewModel.currentMusicCover
+    var isAutoHandleAudioFocus by remember {
+        mutableStateOf(SharedPreferencesUtils.getAutoHandleAudioFocus(context))
+    }
 
     ModalDrawerSheet(
         modifier = Modifier
@@ -125,7 +134,83 @@ fun DrawMenu(
                     alignment = Alignment.Center
                 )
             }
-
+            Box(
+                modifier = Modifier
+                    .width(drawerWidth)
+                    .height(50.dp)
+                    .padding(0.dp)
+                    .drawBehind {
+                        drawLine(
+                            color = color,
+                            start = Offset(0f, size.height - 1.dp.toPx()),
+                            end = Offset(size.width, size.height - 1.dp.toPx()),
+                            strokeWidth = 1.dp.toPx()
+                        )
+                    }
+                    .clickable {
+                        scope.launch {
+                            drawerState.close()
+                        }
+                        navController.add(
+                            Router.SettingsPage
+                        )
+                    },
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text(
+                    text = stringResource(R.string.settings),
+                    Modifier.padding(start = 10.dp),
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .drawBehind {
+                        drawLine(
+                            color = color,
+                            start = Offset(0f, size.height - 1.dp.toPx()),
+                            end = Offset(size.width, size.height - 1.dp.toPx()),
+                            strokeWidth = 1.dp.toPx()
+                        )
+                    }
+                    .clickable {
+                        isAutoHandleAudioFocus = !isAutoHandleAudioFocus
+                        SharedPreferencesUtils.setAutoHandleAudioFocus(context, isAutoHandleAudioFocus)
+                        musicViewModel.browser?.setAudioAttributes(
+                            AudioAttributes.Builder()
+                                .setUsage(C.USAGE_MEDIA)
+                                .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                                .build(),
+                            isAutoHandleAudioFocus
+                        )
+                    },
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Disable audio focus",
+                    Modifier.padding(start = 10.dp),
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Checkbox(
+                    checked = !isAutoHandleAudioFocus,
+                    onCheckedChange = { v ->
+                        isAutoHandleAudioFocus = !isAutoHandleAudioFocus
+                        SharedPreferencesUtils.setAutoHandleAudioFocus(context, v)
+                        musicViewModel.browser?.setAudioAttributes(
+                            AudioAttributes.Builder()
+                                .setUsage(C.USAGE_MEDIA)
+                                .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                                .build(),
+                            isAutoHandleAudioFocus
+                        )
+                    },
+                    modifier = Modifier
+                        .padding(4.dp)
+                )
+            }
             Box(
                 modifier = Modifier
                     .width(drawerWidth)

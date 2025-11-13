@@ -7,6 +7,7 @@ import android.content.ComponentName
 import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
+import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
@@ -143,6 +144,7 @@ class PlayService : MediaLibraryService() {
     var playCompleted = false
     var needPlayPause = false
     var sleepTime = 0L
+    private var autoHandleFocus = true
     private var countDownTimer: CountDownTimer? = null
     private var headsetCallback: HeadsetConnectionCallback? = null
     private lateinit var audioManager: AudioManager
@@ -248,6 +250,11 @@ class PlayService : MediaLibraryService() {
                     CoroutineScope(Dispatchers.IO).launch {
                         db.AuxDao().update(auxr)
                     }
+                }
+
+                MediaCommands.COMMAND_SET_AUTO_HANDLE_AUDIO_FOCUS.customAction -> {
+                    val autoHandle = args.getBoolean("auto_handle", true)
+                    setAutoHandleAudioFocus(autoHandle)
                 }
 
                 MediaCommands.COMMAND_CHANGE_Q.customAction -> {
@@ -1329,13 +1336,10 @@ class PlayService : MediaLibraryService() {
         val trackSelectorParameters = DefaultTrackSelector.Parameters.Builder().build()
         val trackSelector = DefaultTrackSelector(context, trackSelectionFactory)
         trackSelector.parameters = trackSelectorParameters
+
         exoPlayer = ExoPlayer.Builder(context, renderersFactory)
             .setTrackSelector(trackSelector)
-            .setHandleAudioBecomingNoisy(true)
             .build()
-        exoPlayer.shuffleOrder = NoShuffleOrder(0)
-        exoPlayer.playWhenReady = true
-        exoPlayer.repeatMode = config?.repeatModel ?: Player.REPEAT_MODE_ALL
         exoPlayer.setAudioAttributes(
             AudioAttributes.Builder()
                 .setUsage(C.USAGE_MEDIA)
@@ -1343,6 +1347,10 @@ class PlayService : MediaLibraryService() {
                 .build(),
             true
         )
+        exoPlayer.setHandleAudioBecomingNoisy(true)
+        exoPlayer.shuffleOrder = NoShuffleOrder(0)
+        exoPlayer.playWhenReady = true
+        exoPlayer.repeatMode = config?.repeatModel ?: Player.REPEAT_MODE_ALL
         playerAddListener()
     }
 
@@ -1404,8 +1412,11 @@ class PlayService : MediaLibraryService() {
                         if (currentId == null || !seenTableIds.add(currentId)) {
 
                             // 如果是 null 才需要记录日志，如果是重复，上面已经分配了
-                            if(currentId != null) {
-                                Log.w("QueueCorrection", "发现重复 tableId: $currentId。为其重新分配新 ID。")
+                            if (currentId != null) {
+                                Log.w(
+                                    "QueueCorrection",
+                                    "发现重复 tableId: $currentId。为其重新分配新 ID。"
+                                )
                             }
 
                             // 为防止极小概率下 nextAvailableId 恰好也是一个已存在的ID，循环检查一下
@@ -2225,6 +2236,17 @@ class PlayService : MediaLibraryService() {
         }
     }
 
+    private fun setAutoHandleAudioFocus(value: Boolean) {
+        autoHandleFocus = value
+        SharedPreferencesUtils.setAutoHandleAudioFocus(this@PlayService, autoHandleFocus)
+        exoPlayer.setAudioAttributes(
+            AudioAttributes.Builder()
+                .setUsage(C.USAGE_MEDIA)
+                .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                .build(),
+            autoHandleFocus
+        )
+    }
 
     private fun loadAllTracksAndFolders() {
         val sortDataDao =
@@ -2280,6 +2302,7 @@ class PlayService : MediaLibraryService() {
             config = PlayConfig(0, Player.REPEAT_MODE_ALL)
             db.PlayConfigDao().insert(config!!)
         }
+        autoHandleFocus = SharedPreferencesUtils.getAutoHandleAudioFocus(this@PlayService)
     }
 
     private fun loadMainTabs() {

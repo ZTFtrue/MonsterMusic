@@ -22,6 +22,9 @@ object MediaCommands {
 
     val COMMAND_SEARCH = SessionCommand("app.SEARCH", Bundle.EMPTY)
 
+    val COMMAND_SET_AUTO_HANDLE_AUDIO_FOCUS= SessionCommand("app.SET_AUTO_HANDLE_AUDIO_FOCUS", Bundle.EMPTY)
+
+
     // Visualization
     val COMMAND_VISUALIZATION_ENABLE = SessionCommand("vis.ENABLE", Bundle.EMPTY)
 
