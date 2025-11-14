@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
@@ -67,6 +69,9 @@ import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.trackManager.TracksManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 /**
@@ -120,79 +125,83 @@ fun EditTrackPage(
         year = if (musicItem.year == 0) "" else musicItem.year.toString()
 
     }
-
+    val coroutineScope = rememberCoroutineScope()
     fun saveTrackMessage() {
-        saving = true
-        val success = TracksManager.saveTrackInfo(
-            context,
-            musicItem.id,
-            musicPath,
-            title,
-            album,
-            artist,
-            genre,
-            year,
-            coverBitmap.value,
-            lyrics
-        )
-        saving = false
-        enableEdit = !success
-        if (success) {
-            val bundleTemp = Bundle()
-            bundleTemp.putLong("id",  musicItem.id)
-            val futureResult: ListenableFuture<SessionResult>? =
-                musicViewModel.browser?.sendCustomCommand(
-                    MediaCommands.COMMAND_TRACKS_UPDATE,
-                    Bundle().apply {
-                        bundleTemp
-                    },
-                )
-            futureResult?.addListener({
-                try {
-                    val sessionResult = futureResult.get()
-                    if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
-                        musicViewModel.refreshPlayList.value =
-                            !musicViewModel.refreshPlayList.value
-                        musicViewModel.refreshAlbum.value =
-                            !musicViewModel.refreshAlbum.value
-                        musicViewModel.refreshArtist.value =
-                            !musicViewModel.refreshArtist.value
-                        musicViewModel.refreshGenre.value =
-                            !musicViewModel.refreshGenre.value
-                        musicViewModel.refreshFolder.value =
-                            !musicViewModel.refreshFolder.value
-                        sessionResult.extras.getParcelableArrayList<MusicItem>(
-                            "songsList"
-                        )?.also {
-                            musicViewModel.songsList.clear()
-                            musicViewModel.songsList.addAll(it)
-                        }
-                        sessionResult.extras.getParcelable<MusicItem>("item")?.also {
-                            if (musicViewModel.currentPlay.value?.id != it.id) {
-                                musicViewModel.currentPlay.value = it
-                            }
-                            musicViewModel.musicQueue.forEach { mIt ->
-                                if (mIt.id == it.id) {
-                                    mIt.name = it.name
-                                    mIt.path = it.path
-                                    mIt.duration = it.duration
-                                    mIt.displayName = it.displayName
-                                    mIt.album = it.album
-                                    mIt.albumId = it.albumId
-                                    mIt.artist = it.artist
-                                    mIt.artistId = it.artistId
-                                    mIt.genre = it.genre
-                                    mIt.genreId = it.genreId
-                                    mIt.year = it.year
-                                    mIt.songNumber = it.songNumber
+        coroutineScope.launch(Dispatchers.IO) {
+            saving = true
+            val success = TracksManager.saveTrackInfo(
+                context,
+                musicItem.id,
+                musicPath,
+                title,
+                album,
+                artist,
+                genre,
+                year,
+                coverBitmap.value,
+                lyrics
+            )
+            saving = false
+            enableEdit = !success
+            if (success) {
+                val bundleTemp = Bundle()
+                bundleTemp.putLong("id", musicItem.id)
+                withContext(Dispatchers.Main) {
+                    val futureResult: ListenableFuture<SessionResult>? =
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_TRACKS_UPDATE,
+                            Bundle().apply {
+                                bundleTemp
+                            },
+                        )
+                    futureResult?.addListener({
+                        try {
+                            val sessionResult = futureResult.get()
+                            if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
+                                musicViewModel.refreshPlayList.value =
+                                    !musicViewModel.refreshPlayList.value
+                                musicViewModel.refreshAlbum.value =
+                                    !musicViewModel.refreshAlbum.value
+                                musicViewModel.refreshArtist.value =
+                                    !musicViewModel.refreshArtist.value
+                                musicViewModel.refreshGenre.value =
+                                    !musicViewModel.refreshGenre.value
+                                musicViewModel.refreshFolder.value =
+                                    !musicViewModel.refreshFolder.value
+                                sessionResult.extras.getParcelableArrayList<MusicItem>(
+                                    "songsList"
+                                )?.also {
+                                    musicViewModel.songsList.clear()
+                                    musicViewModel.songsList.addAll(it)
+                                }
+                                sessionResult.extras.getParcelable<MusicItem>("item")?.also {
+                                    if (musicViewModel.currentPlay.value?.id != it.id) {
+                                        musicViewModel.currentPlay.value = it
+                                    }
+                                    musicViewModel.musicQueue.forEach { mIt ->
+                                        if (mIt.id == it.id) {
+                                            mIt.name = it.name
+                                            mIt.path = it.path
+                                            mIt.duration = it.duration
+                                            mIt.displayName = it.displayName
+                                            mIt.album = it.album
+                                            mIt.albumId = it.albumId
+                                            mIt.artist = it.artist
+                                            mIt.artistId = it.artistId
+                                            mIt.genre = it.genre
+                                            mIt.genreId = it.genreId
+                                            mIt.year = it.year
+                                            mIt.songNumber = it.songNumber
+                                        }
+                                    }
                                 }
                             }
+                        } catch (e: Exception) {
+                            Log.e("Client", "Failed to toggle favorite status", e)
                         }
-                    }
-                } catch (e: Exception) {
-                    Log.e("Client", "Failed to toggle favorite status", e)
+                    }, ContextCompat.getMainExecutor(context))
                 }
-            }, ContextCompat.getMainExecutor(context))
+            }
         }
     }
     Scaffold(
@@ -201,7 +210,7 @@ fun EditTrackPage(
             TopAppBar(
                 navigationIcon = { BackButton(navController) },
                 title = {
-                    Text(text = title, color = MaterialTheme.colorScheme.onBackground)
+                    Text(text = title, maxLines = 1, color = MaterialTheme.colorScheme.onBackground)
                 }, actions = {
                     IconButton(
                         modifier = Modifier
@@ -747,17 +756,20 @@ fun EditTrackPage(
                     val windowInfo = LocalWindowInfo.current
                     val density = LocalDensity.current
                     val containerWidthDp = with(density) { windowInfo.containerSize.width.toDp() }
-                    LinearProgressIndicator(
+                    CircularProgressIndicator(
                         modifier = Modifier
                             .width(containerWidthDp / 2)
+                            .height(containerWidthDp / 2)
                             .constrainAs(progress) {
                                 top.linkTo(parent.top)
                                 bottom.linkTo(parent.bottom)
+                                start.linkTo(parent.start)
+                                end.linkTo(parent.end)
                             },
+                        strokeWidth = 20.dp
                     )
                 }
             }
-
         },
     )
 }

@@ -511,32 +511,44 @@ object TracksManager {
         genre: String?,
         year: String?,
     ) {
+        var pfd: ParcelFileDescriptor? = null
+        var inputStream: FileInputStream? = null
+        var outputStream: FileOutputStream? = null
+        var pfdWt: ParcelFileDescriptor? = null
+        var cacheOut: FileInputStream? = null
+        var fileOutputStream: FileOutputStream? = null
+        var cacheFile: File? = null
+
         try {
-            var uri: Uri =
-                MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            var uri: Uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
             uri = ContentUris.withAppendedId(uri, musicId)
-            val pfd: ParcelFileDescriptor =
-                context.contentResolver.openFileDescriptor(uri, "r") ?: return
-            val inputStream = ParcelFileDescriptor.AutoCloseInputStream(pfd)
-            val cacheFile = File(
-                context.externalCacheDir,
-                "temp_" + path.substring(path.lastIndexOf("/") + 1, path.length)
-            )
+
+            // 1. Read the existing file into a temporary cache
+            pfd = context.contentResolver.openFileDescriptor(uri, "r")
+            if (pfd == null) {
+                println("Failed to open file descriptor for reading.")
+                return
+            }
+            inputStream = ParcelFileDescriptor.AutoCloseInputStream(pfd) as FileInputStream
+
+            // Create a unique cache file name
+            val fileName = path.substringAfterLast("/") // More robust way to get file name
+            cacheFile = File(context.externalCacheDir, "temp_$fileName")
             if (cacheFile.exists()) {
                 cacheFile.delete()
             }
             cacheFile.createNewFile()
-            // Create an output stream to the cache file
-            val outputStream = FileOutputStream(cacheFile)
+
+            outputStream = FileOutputStream(cacheFile)
             inputStream.copyTo(outputStream)
-            inputStream.close()
-            outputStream.close()
-            pfd.close()
+
+            // 2. Modify the tags using Jaudiotagger
             val f = AudioFileIO.read(cacheFile)
             val tag: Tag = f.tag
-            if (bitmap != null) {
+
+            bitmap?.let {
                 val byteArrayOutputStream = ByteArrayOutputStream()
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
+                it.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
                 val imageData: ByteArray = byteArrayOutputStream.toByteArray()
                 val artwork = ArtworkFactory.getNew()
                 artwork.binaryData = imageData
@@ -544,43 +556,71 @@ object TracksManager {
                 tag.deleteArtworkField()
                 tag.setField(artwork)
             }
-            if (!artist.isNullOrEmpty()) {
-                tag.setField(FieldKey.ARTIST, artist)
+
+            artist?.takeIf { it.isNotEmpty() }?.let { tag.setField(FieldKey.ARTIST, it) }
+            lyrics?.let { tag.setField(FieldKey.LYRICS, it) }
+            title?.let { tag.setField(FieldKey.TITLE, it) }
+            album?.let { tag.setField(FieldKey.ALBUM, it) }
+            genre?.let { tag.setField(FieldKey.GENRE, it) }
+            year?.takeIf { it.isDigitsOnly() && it.toIntOrNull() != null }
+                ?.let { tag.setField(FieldKey.YEAR, it) }
+
+            f.commit() // Commit changes to the cache file
+
+            // 3. Write the modified cache file back to the original location
+            pfdWt = context.contentResolver.openFileDescriptor(uri, "wt")
+            if (pfdWt == null) {
+                println("Failed to open file descriptor for writing.")
+                return
             }
-            if (lyrics != null) {
-                tag.setField(FieldKey.LYRICS, lyrics)
+            cacheOut = FileInputStream(cacheFile)
+            fileOutputStream = FileOutputStream(pfdWt.fileDescriptor)
+
+            // Using a buffer to copy for better memory management than reading all bytes at once
+            val buffer = ByteArray(4096) // 4KB buffer
+            var bytesRead: Int
+            while (cacheOut.read(buffer).also { bytesRead = it } != -1) {
+                fileOutputStream.write(buffer, 0, bytesRead)
             }
-            if (title != null) {
-                tag.setField(FieldKey.TITLE, title)
-            }
-            if (album != null) {
-                tag.setField(FieldKey.ALBUM, album)
-            }
-            if (genre != null) {
-                tag.setField(FieldKey.GENRE, genre)
-            }
-            if (year != null && year != "" && year.isDigitsOnly() && (year.toIntOrNull() != null)) {
-                tag.setField(FieldKey.YEAR, year)
-            }
-            f.commit()
-            val pfdWt: ParcelFileDescriptor =
-                context.contentResolver.openFileDescriptor(uri, "wt") ?: return
-            val cacheOut = FileInputStream(
-                File(
-                    context.externalCacheDir,
-                    "temp_" + path.substring(path.lastIndexOf("/") + 1, path.length)
-                )
-            )
-            val fileOutputStream = FileOutputStream(pfdWt.fileDescriptor)
-            val b = cacheOut.readBytes()
-            fileOutputStream.write(b)
             fileOutputStream.flush()
-            fileOutputStream.close()
-            cacheOut.close()
-            pfdWt.close()
-            cacheFile.delete()
+
         } catch (e: Exception) {
             e.printStackTrace()
+        } finally {
+            // Close all streams and file descriptors in a finally block to ensure they are released
+            try {
+                inputStream?.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            try {
+                outputStream?.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            try {
+                pfd?.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            try {
+                cacheOut?.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            try {
+                fileOutputStream?.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            try {
+                pfdWt?.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            // Delete the temporary cache file
+            cacheFile?.delete()
         }
     }
 }
