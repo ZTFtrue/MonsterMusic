@@ -69,9 +69,19 @@ object FolderManger {
             }
             // 从当前传入的文件夹路径逐级向上，提取所有父文件夹路径并添加到 allEffectivePathsToBuild
             var tempPath = currentPath
+            if (tempPath.isBlank()) {
+                tempPath = "@"
+            }
             var tempFolder: FolderList? = hashMapFolder.get(tempPath)
             if (tempFolder != null) {
-                tempFolder.children.add(folder)
+                tempFolder.children.forEach {
+                    it.parent = folder
+                }
+                folder.children.addAll(tempFolder.children)
+                folder.parent = tempFolder.parent
+                folder.parent?.children?.remove(tempFolder)
+                folder.parent?.children?.add(folder)
+                hashMapFolder[tempPath] = folder
             } else {
                 tempFolder = folder
                 hashMapFolder[folder.path] = tempFolder
@@ -79,6 +89,9 @@ object FolderManger {
                     val lastSeparatorIndex = tempPath.lastIndexOf(File.separator)
                     if (lastSeparatorIndex != -1) {
                         tempPath = tempPath.take(lastSeparatorIndex)
+                        if (tempPath.isBlank()) {
+                            tempPath = "@"
+                        }
                         val temptttFolder: FolderList? = hashMapFolder.get(tempPath)
                         if (temptttFolder != null && tempFolder != null) {
                             temptttFolder.children.add(tempFolder)
@@ -118,15 +131,11 @@ object FolderManger {
                 var pp = it.children[0]
                 pp.parent = null
                 newParent.add(pp)
-                while (true) {
-                    if (pp.children.size == 1 && pp.trackNumber == 0) {
-                        newParent.remove(pp)
-                        pp = pp.children[0]
-                        pp.parent = null
-                        newParent.add(pp)
-                    } else {
-                        break
-                    }
+                while (pp.children.size == 1 && pp.trackNumber == 0&&pp.children[0].trackNumber==0) {
+                    newParent.remove(pp)
+                    pp = pp.children[0]
+                    pp.parent = null
+                    newParent.add(pp)
                 }
             }
         }

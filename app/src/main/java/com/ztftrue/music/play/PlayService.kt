@@ -7,7 +7,6 @@ import android.content.ComponentName
 import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
-import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
@@ -875,7 +874,7 @@ class PlayService : MediaLibraryService() {
 //            }
 //            // 为你自己的 App 提供一个功能完整的根节点
 //            else
-            Log.e("TAG", "GET-root${clientPackageName},${context.packageName}")
+            Log.d("TAG", "GET-root${clientPackageName},${context.packageName}")
             if (clientPackageName == context.packageName) {
                 val fullFeaturedRootItem = MediaItemUtils.createFullFeaturedRoot()
                 return Futures.immediateFuture(LibraryResult.ofItem(fullFeaturedRootItem, null))
