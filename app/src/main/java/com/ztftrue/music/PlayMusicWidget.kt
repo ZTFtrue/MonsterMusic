@@ -195,7 +195,7 @@ class PlayMusicWidget : AppWidgetProvider() {
                     R.id.play_music_widget,
                     "setBackgroundColor",
                     try {
-                        Log.e("Color",SharedPreferencesUtils.getWidgetBackground(context)
+                        Log.d("Color",SharedPreferencesUtils.getWidgetBackground(context)
                             ?: "#FFFFFF")
                         (SharedPreferencesUtils.getWidgetBackground(context)
                             ?: "#FFFFFF").toColorInt()
