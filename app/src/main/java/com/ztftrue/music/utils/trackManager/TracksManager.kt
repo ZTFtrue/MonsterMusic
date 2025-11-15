@@ -526,7 +526,7 @@ object TracksManager {
             // 1. Read the existing file into a temporary cache
             pfd = context.contentResolver.openFileDescriptor(uri, "r")
             if (pfd == null) {
-                println("Failed to open file descriptor for reading.")
+//                println("Failed to open file descriptor for reading.")
                 return
             }
             inputStream = ParcelFileDescriptor.AutoCloseInputStream(pfd) as FileInputStream
@@ -570,7 +570,7 @@ object TracksManager {
             // 3. Write the modified cache file back to the original location
             pfdWt = context.contentResolver.openFileDescriptor(uri, "wt")
             if (pfdWt == null) {
-                println("Failed to open file descriptor for writing.")
+//                println("Failed to open file descriptor for writing.")
                 return
             }
             cacheOut = FileInputStream(cacheFile)
