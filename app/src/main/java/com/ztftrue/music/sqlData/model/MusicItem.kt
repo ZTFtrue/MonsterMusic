@@ -1,10 +1,11 @@
 package com.ztftrue.music.sqlData.model
 
 import android.os.Parcelable
+import androidx.compose.runtime.Immutable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.parcelize.Parcelize
-
+@Immutable
 @Parcelize
 @Entity(tableName = "queue")
 data class MusicItem(

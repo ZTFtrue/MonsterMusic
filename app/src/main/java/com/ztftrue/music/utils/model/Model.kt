@@ -1,6 +1,7 @@
 package com.ztftrue.music.utils.model
 
 import android.os.Parcelable
+import androidx.compose.runtime.Immutable
 import com.ztftrue.music.utils.PlayListType
 import kotlinx.parcelize.Parcelize
 import java.io.Serializable
@@ -13,7 +14,7 @@ data class MusicPlayList(
     override var trackNumber: Int,
     override var type: PlayListType = PlayListType.PlayLists,
 ) : ListBase(id, name, trackNumber, type)
-
+@Immutable
 @Parcelize
 data class FolderList(
     var children: ArrayList<FolderList> = ArrayList(),

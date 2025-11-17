@@ -783,6 +783,7 @@ fun TracksListPage(
                 TopBar(navController, musicViewModel, content = {
                     IconButton(
                         modifier = Modifier.width(50.dp), onClick = {
+                            showOperatePopup = true
                         }) {
                         Icon(
                             imageVector = Icons.Outlined.Apps,

@@ -668,7 +668,6 @@ fun FolderListPage(
             }, ContextCompat.getMainExecutor(context))
         }
     }
-    val listState = rememberLazyListState()
     Scaffold(
         modifier = Modifier.padding(all = 0.dp),
         topBar = {
@@ -785,7 +784,12 @@ fun FolderListPage(
             ) {
                 TracksListView(
                     musicViewModel,
-                    folderList, tracksList, showIndicator, folderData = childrenFolderList
+                    folderList, tracksList, showIndicator,
+                    folderData = if (musicViewModel.folderViewTree.value) {
+                        childrenFolderList
+                    } else {
+                        null
+                    }
                 )
             }
 
