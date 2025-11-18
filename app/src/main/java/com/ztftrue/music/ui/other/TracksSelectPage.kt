@@ -86,10 +86,9 @@ fun TracksSelectPage(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        BackButton(navController)
                         Row {
                             IconButton(onClick = {
                                 if (selectList.size == musicList.size) {
@@ -177,7 +176,6 @@ fun TracksSelectPage(
                     }
                 }
             )
-
         },
         bottomBar = { },
         floatingActionButton = {},
