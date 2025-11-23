@@ -12,7 +12,7 @@ android {
     defaultConfig {
         applicationId = "com.ztftrue.music"
         minSdk = 30
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 56
         versionName = "0.1.56"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -97,8 +97,8 @@ android {
 //            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
 //        }
 //    }
-    kotlinOptions {
-        jvmTarget = "17"
+    kotlin {
+        jvmToolchain(17) // Automatically sets jvmTarget to 17
     }
     buildFeatures {
         compose = true
@@ -126,12 +126,12 @@ ksp {
 dependencies {
 
     implementation("androidx.core:core-ktx:1.17.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
-    implementation("androidx.activity:activity-compose:1.11.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
+    implementation("androidx.activity:activity-compose:1.12.0")
 
-    implementation("androidx.activity:activity-ktx:1.11.0")
+    implementation("androidx.activity:activity-ktx:1.12.0")
 
 
     implementation("androidx.appcompat:appcompat:1.7.1")
@@ -159,12 +159,12 @@ dependencies {
 
     implementation("androidx.browser:browser:1.9.0")
 
-    implementation("androidx.compose.runtime:runtime-livedata:1.9.4")
+    implementation("androidx.compose.runtime:runtime-livedata:1.9.5")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2025.11.00"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2025.11.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
@@ -178,7 +178,7 @@ dependencies {
     implementation("org.apache.commons:commons-math3:3.6.1")
     implementation("com.google.code.gson:gson:2.13.2")
 
-    val roomVersion = "2.8.3"
+    val roomVersion = "2.8.4"
     implementation("androidx.room:room-runtime:$roomVersion")
     annotationProcessor("androidx.room:room-compiler:$roomVersion")
     // To use Kotlin Symbol Processing (KSP)
@@ -192,17 +192,17 @@ dependencies {
     // optional - Paging 3 Integration
     implementation("androidx.room:room-paging:$roomVersion")
 
-    implementation("com.github.skydoves:colorpicker-compose:1.1.2")
+    implementation("com.github.skydoves:colorpicker-compose:1.1.3")
 
 
     // Core Navigation 3 libraries
-    implementation("androidx.navigation3:navigation3-runtime:1.0.0-rc01")
-    implementation("androidx.navigation3:navigation3-ui:1.0.0-rc01")
+    implementation("androidx.navigation3:navigation3-runtime:1.0.0")
+    implementation("androidx.navigation3:navigation3-ui:1.0.0")
     // Optional add-on libraries,Navigation 3
-    implementation("androidx.lifecycle:lifecycle-viewmodel-navigation3:1.3.0-alpha03")
-    implementation ("androidx.compose.material3.adaptive:adaptive:1.3.0-alpha03")
-    implementation ("androidx.compose.material3.adaptive:adaptive-layout:1.3.0-alpha03")
-    implementation ("androidx.compose.material3.adaptive:adaptive-navigation:1.3.0-alpha03")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-navigation3:2.10.0")
+    implementation ("androidx.compose.material3.adaptive:adaptive:1.3.0-alpha04")
+    implementation ("androidx.compose.material3.adaptive:adaptive-layout:1.3.0-alpha04")
+    implementation ("androidx.compose.material3.adaptive:adaptive-navigation:1.3.0-alpha04")
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-core:1.9.0")
 
 //    debugImplementation ("com.squareup.leakcanary:leakcanary-android:2.14")
