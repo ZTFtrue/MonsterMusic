@@ -98,7 +98,7 @@ object SoundUtils {
     }
 
     fun expandBuffer(newCapacity: Int, oldBuffer: ByteBuffer): ByteBuffer {
-        val newBuffer = ByteBuffer.allocate(newCapacity)
+        val newBuffer = ByteBuffer.allocateDirect(newCapacity)
         oldBuffer.flip() // 切换到读取模式
         newBuffer.put(oldBuffer) // 复制内容
         return newBuffer
