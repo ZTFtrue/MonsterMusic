@@ -593,7 +593,7 @@ class PlayService : MediaLibraryService() {
 
                 MediaCommands.COMMAND_ECHO_SET_DELAY.customAction -> {
                     val delay = args.getFloat(MediaCommands.KEY_DELAY)
-                    equalizerAudioProcessor.setDaleyTime(delay)
+                    equalizerAudioProcessor.setDelayTime(delay)
                     auxr.echoDelay = delay
                     CoroutineScope(Dispatchers.IO).launch { db.AuxDao().update(auxr) }
                 }
@@ -2268,7 +2268,7 @@ class PlayService : MediaLibraryService() {
         } else {
             auxr = auxTemp
         }
-        equalizerAudioProcessor.setDaleyTime(auxr.echoDelay)
+        equalizerAudioProcessor.setDelayTime(auxr.echoDelay)
         equalizerAudioProcessor.setDecay(auxr.echoDecay)
         equalizerAudioProcessor.setFeedBack(auxr.echoRevert)
         equalizerAudioProcessor.setEchoActive(auxr.echo)

@@ -1,6 +1,5 @@
 package com.ztftrue.music.effects
 
-// 移除协程相关引用，改用单线程
 import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
@@ -53,7 +52,6 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var pcmToFrequencyDomain = PCMToFrequencyDomain(bufferSize, 44100f)
     private var Q = Utils.Q
 
-    // --- 状态变量 ---
     private var bytePerSample: Int = 2
     private var ind = 0
     private var leftEqualizerMax: Float = 1.0f
@@ -215,24 +213,87 @@ class EqualizerAudioProcessor : AudioProcessor {
         return outputBuffer
     }
 
+    fun processEqEcho(
+        echoActive: Boolean,
+        equalizerActive: Boolean,
+        sampleBufferRealLeft: FloatArray,
+        sampleBufferRealRight: FloatArray
+    ) {
+        if (echoActive) {
+            // 保留您原有的逻辑
+            leftEchoMax = FastMath.max(
+                delayEffectLeft.process(sampleBufferRealLeft),
+                leftEchoMax.absoluteValue
+            )
+            if (leftEchoMax > 1.0f) {
+                for (i in sampleBufferRealLeft.indices) {
+                    sampleBufferRealLeft[i] =
+                        sampleBufferRealLeft[i] / leftEchoMax
+                }
+            }
+            rightEchoMax = FastMath.max(
+                delayEffectRight.process(sampleBufferRealRight),
+                rightEchoMax.absoluteValue
+            )
+            if (rightEchoMax > 1.0f) {
+                for (i in sampleBufferRealRight.indices) {
+                    sampleBufferRealRight[i] =
+                        sampleBufferRealRight[i] / rightEchoMax
+                }
+            }
+        }
+        if (equalizerActive) {
+            for (index in sampleBufferRealLeft.indices) {
+                var outY = sampleBufferRealLeft[index]
+                for (filter in mCoefficientLeftBiQuad) {
+                    outY = filter.filter(outY)
+                }
+                sampleBufferRealLeft[index] = outY
+            }
+            leftEqualizerMax = FastMath.max(
+                leftEqualizerMax,
+                Limiter.Limiter.process(sampleBufferRealLeft)
+            )
+            if (leftEqualizerMax > 1.0f) {
+                for (i in sampleBufferRealLeft.indices) sampleBufferRealLeft[i] =
+                    sampleBufferRealLeft[i] / leftEqualizerMax
+            }
+
+            for (i in sampleBufferRealRight.indices) {
+                var outY = sampleBufferRealRight[i]
+                for (filter in mCoefficientRightBiQuad) {
+                    outY = filter.filter(outY)
+                }
+                sampleBufferRealRight[i] = outY
+            }
+            rightEqualizerMax = FastMath.max(
+                rightEqualizerMax,
+                Limiter.Limiter.process(sampleBufferRealRight)
+            )
+            if (rightEqualizerMax > 1.0f) {
+                for (i in sampleBufferRealRight.indices) sampleBufferRealRight[i] =
+                    sampleBufferRealRight[i] / rightEqualizerMax
+            }
+        }
+    }
+
     private fun processData() {
-        if (equalizerActive or echoActive or visualizationAudioActive) {
+        val needsProcessing = equalizerActive || echoActive || visualizationAudioActive
+        if (needsProcessing) {
             lock.lock()
             try {
                 if (changeDb) {
                     leftEqualizerMax = 1.0f
                     rightEqualizerMax = 1.0f
-                    for (i in 0 until 10) {
+                    for (i in 0 until mCoefficientLeftBiQuad.size) {
                         mCoefficientLeftBiQuad[i].reset()
                         mCoefficientRightBiQuad[i].reset()
                     }
                     changeDb = false
                 }
-
                 // 2. 只有当数据量 >= bufferSize 时才处理 (恢复原有逻辑！)
                 if (dataBuffer.position() >= bufferSize) {
                     dataBuffer.flip()
-
                     if (dataBuffer.hasRemaining()) {
                         val dataRemaining = dataBuffer.remaining()
                         // 确定读取量，保持和原来一样
@@ -260,89 +321,32 @@ class EqualizerAudioProcessor : AudioProcessor {
                         // 准备 ByteArray 进行处理
                         outputContainer.flip()
                         outputContainer.get(reusableByteArray, 0, readSize)
-
                         // 转换 Float
                         converter.toFloatArray(
                             reusableByteArray,
                             floatArray,
                             bufferSize / bytePerSample
                         )
-
                         ind = 0
                         val halfLength = floatArray.size / 2
-
                         // 分离声道
                         for (i in 0 until halfLength step outputAudioFormat!!.channelCount) {
                             sampleBufferRealLeft[ind] = floatArray[i]
                             sampleBufferRealRight[ind] = floatArray[i + 1]
                             ind += 1
                         }
-
-                        // --- DSP 处理 (改为单线程顺序执行，避免协程卡顿) ---
-                        // 左声道
-                        if (echoActive) {
-                            // 保留您原有的逻辑
-                            leftEchoMax = FastMath.max(
-                                delayEffectLeft.process(sampleBufferRealLeft),
-                                leftEchoMax.absoluteValue
-                            )
-                            if (leftEchoMax > 1.0) {
-                                sampleBufferRealLeft.forEachIndexed { index, it ->
-                                    sampleBufferRealLeft[index] = it / leftEchoMax
-                                }
-                            }
-                            rightEchoMax = FastMath.max(
-                                delayEffectRight.process(sampleBufferRealRight),
-                                rightEchoMax.absoluteValue
-                            )
-                            if (rightEchoMax > 1.0) {
-                                sampleBufferRealRight.forEachIndexed { index, it ->
-                                    sampleBufferRealRight[index] = it / rightEchoMax
-                                }
-                            }
-                        }
-                        if (equalizerActive) {
-                            sampleBufferRealLeft.forEachIndexed { index, it ->
-                                var outY: Float = it
-                                mCoefficientLeftBiQuad.forEach { filter ->
-                                    outY = filter.filter(outY)
-                                }
-                                sampleBufferRealLeft[index] = outY
-                            }
-                            leftEqualizerMax = FastMath.max(
-                                leftEqualizerMax,
-                                Limiter.Limiter.process(sampleBufferRealLeft)
-                            )
-                            if (leftEqualizerMax > 1.0) {
-                                sampleBufferRealLeft.forEachIndexed { index, it ->
-                                    sampleBufferRealLeft[index] = it / leftEqualizerMax
-                                }
-                            }
-
-                            sampleBufferRealRight.forEachIndexed { index, it ->
-                                var outY: Float = it
-                                mCoefficientRightBiQuad.forEach { filter ->
-                                    outY = filter.filter(outY)
-                                }
-                                sampleBufferRealRight[index] = outY
-                            }
-                            rightEqualizerMax = FastMath.max(
-                                rightEqualizerMax,
-                                Limiter.Limiter.process(sampleBufferRealRight)
-                            )
-                            if (rightEqualizerMax > 1.0) {
-                                sampleBufferRealRight.forEachIndexed { index, it ->
-                                    sampleBufferRealRight[index] = it / rightEqualizerMax
-                                }
-                            }
-                        }
-
+                        processEqEcho(
+                            echoActive,
+                            equalizerActive,
+                            sampleBufferRealLeft,
+                            sampleBufferRealRight
+                        )
                         if (visualizationAudioActive) {
-                            sampleBufferRealLeft.forEachIndexed { index, it ->
+                            for ((index, it) in sampleBufferRealLeft.withIndex()) {
                                 blockingQueue.offer((it + sampleBufferRealRight[index]) / 2f)
                             }
                             if (blockingQueue.size >= visualizationBuffer.size) {
-                                visualizationBuffer.forEachIndexed { index, _ ->
+                                for ((index, _) in visualizationBuffer.withIndex()) {
                                     visualizationBuffer[index] = blockingQueue.poll() ?: 0f
                                 }
                                 val magnitude: FloatArray =
@@ -412,12 +416,15 @@ class EqualizerAudioProcessor : AudioProcessor {
 
     override fun flush() {
         lock.lock()
-        outputBuffer = EMPTY_BUFFER
-        outputContainer.clear() // 清理复用容器
-        dataBuffer.clear()
-        blockingQueue.clear()
-        inputEnded = false
-        lock.unlock()
+        try {
+            outputBuffer = EMPTY_BUFFER
+            outputContainer.clear()
+            dataBuffer.clear()
+            blockingQueue.clear()
+            inputEnded = false
+        } finally {
+            lock.unlock()
+        }
     }
 
     override fun reset() {
@@ -428,13 +435,10 @@ class EqualizerAudioProcessor : AudioProcessor {
         inputEnded = false
     }
 
-    // ... (Bottom Setters: setQ, setBand, flatBand, etc. 保持不变) ...
-    // ... 请把原文件底部的 setQ, setBand 等方法原样复制过来 ...
-    // 为了节省篇幅，这里假设它们还在
     fun setQ(value: Float, needChange: Boolean = true) {
         this.Q = value
         if (needChange) {
-            for (i in 0 until 10) {
+            for (i in 0 until mCoefficientLeftBiQuad.size) {
                 setBand(i, gainDBArray[i])
             }
         }
@@ -479,20 +483,20 @@ class EqualizerAudioProcessor : AudioProcessor {
 
     fun getBandLevels(): IntArray {
         val bandLevels = IntArray(gainDBAbsArray.size)
-        gainDBArray.forEachIndexed { index: Int, biQuadraticFilter: Int ->
-            bandLevels[index] = biQuadraticFilter
+        for (i in gainDBArray.indices) {
+            bandLevels[i] = gainDBArray[i]
         }
         return bandLevels
     }
 
-    fun setDaleyTime(value: Float) {
+    fun setDelayTime(value: Float) {
         delayTime = value
         delayEffectLeft.setEchoLength(delayTime)
         delayEffectRight.setEchoLength(delayTime)
     }
 
     fun setDecay(value: Float) {
-        if (decay > 1.0 || decay < 0.0) {
+        if (value !in 0.0..1.0) {
             return
         }
         leftEchoMax = 1.0f
