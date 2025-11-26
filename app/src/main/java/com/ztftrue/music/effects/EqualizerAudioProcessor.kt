@@ -113,7 +113,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             outputAudioFormat!!.channelCount
         ) * outputAudioFormat!!.sampleRate
         bufferSize = perSecond
-        dataBuffer = ByteBuffer.allocate(bufferSize * 8)
+        dataBuffer = ByteBuffer.allocateDirect(bufferSize * 8)
 
         // 2. 初始化输出复用容器 (预分配，防止 processData 里 allocate)
         // 给大一点，防止越界
@@ -226,9 +226,10 @@ class EqualizerAudioProcessor : AudioProcessor {
                 leftEchoMax.absoluteValue
             )
             if (leftEchoMax > 1.0f) {
+                val invMax = 1.0f / leftEchoMax
                 for (i in sampleBufferRealLeft.indices) {
                     sampleBufferRealLeft[i] =
-                        sampleBufferRealLeft[i] / leftEchoMax
+                        sampleBufferRealLeft[i] * invMax
                 }
             }
             rightEchoMax = FastMath.max(
@@ -236,17 +237,18 @@ class EqualizerAudioProcessor : AudioProcessor {
                 rightEchoMax.absoluteValue
             )
             if (rightEchoMax > 1.0f) {
+                val invMax = 1.0f / rightEchoMax
                 for (i in sampleBufferRealRight.indices) {
                     sampleBufferRealRight[i] =
-                        sampleBufferRealRight[i] / rightEchoMax
+                        sampleBufferRealRight[i] * invMax
                 }
             }
         }
         if (equalizerActive) {
             for (index in sampleBufferRealLeft.indices) {
                 var outY = sampleBufferRealLeft[index]
-                for (filter in mCoefficientLeftBiQuad) {
-                    outY = filter.filter(outY)
+                for (index in mCoefficientLeftBiQuad.indices) {
+                    outY = mCoefficientLeftBiQuad[index].filter(outY)
                 }
                 sampleBufferRealLeft[index] = outY
             }
@@ -255,14 +257,16 @@ class EqualizerAudioProcessor : AudioProcessor {
                 Limiter.Limiter.process(sampleBufferRealLeft)
             )
             if (leftEqualizerMax > 1.0f) {
+                val invMax = 1.0f / leftEqualizerMax
+
                 for (i in sampleBufferRealLeft.indices) sampleBufferRealLeft[i] =
-                    sampleBufferRealLeft[i] / leftEqualizerMax
+                    sampleBufferRealLeft[i] * invMax
             }
 
             for (i in sampleBufferRealRight.indices) {
                 var outY = sampleBufferRealRight[i]
-                for (filter in mCoefficientRightBiQuad) {
-                    outY = filter.filter(outY)
+                for (index in mCoefficientRightBiQuad.indices) {
+                    outY = mCoefficientRightBiQuad[index].filter(outY)
                 }
                 sampleBufferRealRight[i] = outY
             }
@@ -271,8 +275,9 @@ class EqualizerAudioProcessor : AudioProcessor {
                 Limiter.Limiter.process(sampleBufferRealRight)
             )
             if (rightEqualizerMax > 1.0f) {
+                val invMax = 1.0f / rightEqualizerMax
                 for (i in sampleBufferRealRight.indices) sampleBufferRealRight[i] =
-                    sampleBufferRealRight[i] / rightEqualizerMax
+                    sampleBufferRealRight[i] * invMax
             }
         }
     }
@@ -299,13 +304,12 @@ class EqualizerAudioProcessor : AudioProcessor {
                         // 确定读取量，保持和原来一样
                         val readSize = if (dataRemaining > bufferSize) bufferSize else dataRemaining
 
-                        // --- 修改点：复用内存，不再 allocate ---
                         if (outputContainer.capacity() < readSize) {
-                            outputContainer = ByteBuffer.allocateDirect(readSize + 4096)
+                            outputContainer = ByteBuffer.allocateDirect(readSize + 4096 * 2)
                                 .order(ByteOrder.nativeOrder())
                         }
                         if (reusableByteArray.size < readSize) {
-                            reusableByteArray = ByteArray(readSize + 4096)
+                            reusableByteArray = ByteArray(readSize + 4096 * 2)
                         }
                         outputContainer.clear()
                         // ------------------------------------

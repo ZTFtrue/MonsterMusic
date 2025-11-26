@@ -149,26 +149,35 @@ fun CoverView(musicViewModel: MusicViewModel) {
     }
     LaunchedEffect(musicViewModel.playStatus.value, musicVisualizationEnable.value, shouldRun) {
         while (musicViewModel.playStatus.value && musicVisualizationEnable.value && shouldRun) {
-            magnitudes.forEachIndexed { index, magnitude ->
-                drops.forEachIndexed { index2, columnDrops ->
-                    // 更新每一列的雨滴
-                    val cDrops = ArrayList<Int>()
-                    columnDrops.forEachIndexed { index3, drop ->
-                        if (index == index2) {
-                            // TODO Use log function to calculate the speed
-                            drop.update((magnitude + 1))
-                            // 检查是否超出屏幕
-                            if (drop.y > canvasHeight.floatValue + dropHeight) {
-                                cDrops.add(index3)
-                                drop.char = generateRandomChars()
-                            }
-                        }
-                    }
-                    cDrops.forEach { index3 ->
-                        val d = columnDrops.removeAt(index3)
-                        d.y = columnDrops[columnDrops.size - 1].y - dropHeight
-                        columnDrops.add(d)
-                    }
+            val screenBottom = canvasHeight.floatValue + dropHeight
+            val loopLimit = minOf(magnitudes.size, drops.size)
+            for (i in 0 until loopLimit) {
+                val magnitude = magnitudes[i]
+                val columnDrops = drops[i]
+                val speed = magnitude + 1
+                // 1. 更新所有雨滴位置
+                // 使用索引遍历比 iterator 更快，且不产生 Garbage
+                for (drop in columnDrops) {
+                    drop.update(speed)
+                }
+                // 2. 检查并回收出界的雨滴
+                // 假设：列表顺序代表垂直顺序，index 0 是最下面的雨滴。
+                // 只需要检查头部元素，不需要遍历整个列表去找谁出界了。
+                while (columnDrops.isNotEmpty() && columnDrops[0].y > screenBottom) {
+                    // 移除头部 (最下方的雨滴)
+                    val recycledDrop = columnDrops.removeAt(0)
+
+                    // 重置状态
+                    recycledDrop.char = generateRandomChars()
+
+                    // 获取当前最上方雨滴的 Y 坐标 (现在是 List 的最后一个元素)
+                    val tailY = if (columnDrops.isNotEmpty()) columnDrops.last().y else 0f
+
+                    // 将回收的雨滴放置在最上方
+                    recycledDrop.y = tailY - dropHeight
+
+                    // 加到尾部
+                    columnDrops.add(recycledDrop)
                 }
             }
             delay(10) // 控制更新频率

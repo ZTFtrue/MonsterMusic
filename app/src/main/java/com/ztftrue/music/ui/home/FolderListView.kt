@@ -68,7 +68,7 @@ fun FolderListView(
                     return@addListener
                 }
                 val albumMediaItems: List<MediaItem> = result.value ?: listOf()
-                albumMediaItems.forEach { mediaItem ->
+                for (mediaItem in albumMediaItems) {
                     val folder = FolderList(
                         children = ArrayList(),
                         path = mediaItem.mediaMetadata.extras?.getString(
