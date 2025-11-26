@@ -220,9 +220,9 @@ class EqualizerAudioProcessor : AudioProcessor {
         sampleBufferRealRight: FloatArray
     ) {
         if (echoActive) {
-            // 保留您原有的逻辑
+            delayEffectLeft.process(sampleBufferRealLeft)
             leftEchoMax = FastMath.max(
-                delayEffectLeft.process(sampleBufferRealLeft),
+                Limiter.process(sampleBufferRealLeft),
                 leftEchoMax.absoluteValue
             )
             if (leftEchoMax > 1.0f) {
@@ -232,8 +232,9 @@ class EqualizerAudioProcessor : AudioProcessor {
                         sampleBufferRealLeft[i] * invMax
                 }
             }
+            delayEffectRight.process(sampleBufferRealRight)
             rightEchoMax = FastMath.max(
-                delayEffectRight.process(sampleBufferRealRight),
+                Limiter.process(sampleBufferRealRight),
                 rightEchoMax.absoluteValue
             )
             if (rightEchoMax > 1.0f) {
@@ -254,7 +255,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             }
             leftEqualizerMax = FastMath.max(
                 leftEqualizerMax,
-                Limiter.Limiter.process(sampleBufferRealLeft)
+                Limiter.process(sampleBufferRealLeft)
             )
             if (leftEqualizerMax > 1.0f) {
                 val invMax = 1.0f / leftEqualizerMax
@@ -272,7 +273,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             }
             rightEqualizerMax = FastMath.max(
                 rightEqualizerMax,
-                Limiter.Limiter.process(sampleBufferRealRight)
+                Limiter.process(sampleBufferRealRight)
             )
             if (rightEqualizerMax > 1.0f) {
                 val invMax = 1.0f / rightEqualizerMax
