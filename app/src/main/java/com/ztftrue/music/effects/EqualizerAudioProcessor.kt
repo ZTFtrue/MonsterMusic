@@ -74,8 +74,8 @@ class EqualizerAudioProcessor : AudioProcessor {
     init {
         outputBuffer = EMPTY_BUFFER
         repeat(Utils.bandsCenter.count()) {
-            mCoefficientLeftBiQuad.add(BiQuadraticFilter())
-            mCoefficientRightBiQuad.add(BiQuadraticFilter())
+            this.mCoefficientLeftBiQuad.add(BiQuadraticFilter())
+            this.mCoefficientRightBiQuad.add(BiQuadraticFilter())
         }
         outputAudioFormat = AudioProcessor.AudioFormat.NOT_SET
         pendingOutputSampleRate = SAMPLE_RATE_NO_CHANGE
@@ -85,7 +85,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     fun setEqualizerActive(active: Boolean) {
         lock.lock()
         if (this.equalizerActive != active) {
-            mCoefficientRightBiQuad.forEachIndexed { index, _ ->
+            for (index in mCoefficientRightBiQuad.indices) {
                 setBand(index, gainDBArray[index])
             }
             this.equalizerActive = active
@@ -149,7 +149,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             TarsosDSPAudioFloatConverter.getConverter(
                 tarsosDSPAudioFormat
             )
-        mCoefficientRightBiQuad.forEachIndexed { index, _ ->
+        for (index in mCoefficientRightBiQuad.indices) {
             setBand(index, gainDBArray[index])
         }
 
