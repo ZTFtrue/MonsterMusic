@@ -225,8 +225,9 @@ fun TracksListView(
                 }
 
                 // TracksList
-                itemsIndexed(tracksList, key = { index, item -> item.id + index }) { index, music ->
-
+                itemsIndexed(
+                    tracksList,
+                    key = { index, item -> "${item.id}_$index" }) { index, music ->
                     // Top indicator
                     if (showTopIndicator) {
                         val currentF = music.name[0]
