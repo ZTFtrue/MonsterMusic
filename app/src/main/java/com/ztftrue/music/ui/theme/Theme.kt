@@ -196,8 +196,7 @@ fun MusicPitchTheme(
         } else if (musicViewModel.themeSelected.intValue == 2) {
             colorScheme.value = DarkColorScheme
         } else if (musicViewModel.themeSelected.intValue == 3) {
-            val cover = musicViewModel.currentMusicCover.value
-            when (cover) {
+            when (val cover = musicViewModel.currentMusicCover.value) {
                 is ImageSource.Resource -> {
                     withContext(Dispatchers.IO) {
                         val bitmap = BitmapFactory.decodeResource(context.resources, cover.id)

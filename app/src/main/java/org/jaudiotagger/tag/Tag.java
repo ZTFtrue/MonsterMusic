@@ -1,17 +1,17 @@
 /*
  * Entagged Audio Tag library
  * Copyright (c) 2003-2010 Raphaël Slinckx <raphael@slinckx.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *  
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -27,12 +27,12 @@ import java.util.List;
 /**
  * This interface represents the basic data structure for the default
  * audio library functionality.<br>
- *
+ * <p>
  * Some audio file tagging systems allow to specify multiple values for one type
  * of information. The artist for example. Some songs may be a cooperation of
  * two or more artists. Sometimes a tagging user wants to specify them in the
  * tag without making one long text string.<br>
- *
+ * <p>
  * The addField() method can be used for this but it is possible the underlying implementation
  * does not support that kind of storing multiple values and will just overwrite the existing value<br>
  * <br>
@@ -63,7 +63,7 @@ public interface Tag {
 
     /**
      * Create the field based on the generic key and add it to the tag
-     *
+     * <p>
      * This is handled differently by different formats
      *
      * @param genericKey
@@ -87,7 +87,7 @@ public interface Tag {
      * @param key
      * @throws KeyNotFoundException
      */
-    void deleteField(String key)throws KeyNotFoundException;
+    void deleteField(String key) throws KeyNotFoundException;
 
     /**
      * Returns a {@linkplain List list} of {@link TagField} objects whose &quot;{@linkplain TagField#getId() id}&quot;
@@ -177,7 +177,7 @@ public interface Tag {
      * {@linkplain TagField fields} is a common field ({@link TagField#isCommon()}).
      *
      * @return <code>true</code> if a {@linkplain TagField#isCommon() common}
-     *         field is present.
+     * field is present.
      */
     boolean hasCommonFields();
 
@@ -195,7 +195,7 @@ public interface Tag {
      *
      * @param id The field id to look for.
      * @return <code>true</code> if tag contains a {@link TagField} with the
-     *         given {@linkplain TagField#getId() id}.
+     * given {@linkplain TagField#getId() id}.
      */
     boolean hasField(String id);
 
@@ -214,7 +214,7 @@ public interface Tag {
      * Return the number of fields
      *
      * <p>Fields with the same identifiers are counted separately
-     *
+     * <p>
      * i.e two TITLE fields in a Vorbis Comment file would count as two
      *
      * @return total number of fields
@@ -224,9 +224,9 @@ public interface Tag {
 
     /**
      * Return the number of fields taking multiple value fields into consideration
-     *
+     * <p>
      * Fields that actually contain multiple values are counted seperately
-     *
+     * <p>
      * i.e. a TCON frame in ID3v24 frame containing multiple genres would add to count for each genre.
      *
      * @return total number of fields taking multiple value fields into consideration
@@ -271,7 +271,6 @@ public interface Tag {
     /**
      * Create artwork field based on the data in artwork and then set it in the tag itself
      *
-     *
      * @param artwork
      * @throws FieldDataInvalidException
      */
@@ -279,7 +278,6 @@ public interface Tag {
 
     /**
      * Create artwork field based on the data in artwork and then add it to the tag itself
-     *
      *
      * @param artwork
      * @throws FieldDataInvalidException
@@ -289,7 +287,6 @@ public interface Tag {
     /**
      * Sets a field in the structure, used internally by the library<br>
      *
-     *
      * @param field The field to add.
      * @throws FieldDataInvalidException
      */
@@ -297,7 +294,6 @@ public interface Tag {
 
     /**
      * Adds a field to the structure, used internally by the library<br>
-     *
      *
      * @param field The field to add.
      * @throws FieldDataInvalidException
@@ -309,7 +305,7 @@ public interface Tag {
      *
      * <p>Only textual data supported at the moment. The genericKey will be mapped
      * to the correct implementation key and return a TagField.
-     *
+     * <p>
      * Usually the value field should only be one value, but certain fields may require more than one value
      * currently the only field to require this is the MUSICIAN field, it should contain instrument and then
      * performer name
@@ -324,7 +320,7 @@ public interface Tag {
 
     /**
      * Creates isCompilation field
-     *
+     * <p>
      * It is useful to have this method because it handles ensuring that the correct value to represent a boolean
      * is stored in the underlying field format.
      *

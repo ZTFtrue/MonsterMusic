@@ -33,17 +33,14 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyTRDA extends AbstractFrameBodyTextInfo implements ID3v23FrameBody
-{
+public class FrameBodyTRDA extends AbstractFrameBodyTextInfo implements ID3v23FrameBody {
     /**
      * Creates a new FrameBodyTRDA datatype.
      */
-    public FrameBodyTRDA()
-    {
+    public FrameBodyTRDA() {
     }
 
-    public FrameBodyTRDA(FrameBodyTRDA body)
-    {
+    public FrameBodyTRDA(FrameBodyTRDA body) {
         super(body);
     }
 
@@ -53,8 +50,7 @@ public class FrameBodyTRDA extends AbstractFrameBodyTextInfo implements ID3v23Fr
      * @param textEncoding
      * @param text
      */
-    public FrameBodyTRDA(byte textEncoding, String text)
-    {
+    public FrameBodyTRDA(byte textEncoding, String text) {
         super(textEncoding, text);
     }
 
@@ -66,8 +62,7 @@ public class FrameBodyTRDA extends AbstractFrameBodyTextInfo implements ID3v23Fr
      * @throws java.io.IOException
      * @throws InvalidTagException
      */
-    public FrameBodyTRDA(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyTRDA(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -76,8 +71,7 @@ public class FrameBodyTRDA extends AbstractFrameBodyTextInfo implements ID3v23Fr
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v23Frames.FRAME_ID_V3_TRDA;
     }
 }

@@ -6,13 +6,11 @@ package org.jaudiotagger.tag;
  * <p>For example if try and create an Mp4Field with type Byte using data that cannot be parsed as a number
  * then this exception will be thrown
  */
-public class FieldDataInvalidException extends TagException
-{
+public class FieldDataInvalidException extends TagException {
     /**
      * Creates a new KeyNotFoundException datatype.
      */
-    public FieldDataInvalidException()
-    {
+    public FieldDataInvalidException() {
     }
 
     /**
@@ -20,8 +18,7 @@ public class FieldDataInvalidException extends TagException
      *
      * @param ex the cause.
      */
-    public FieldDataInvalidException(Throwable ex)
-    {
+    public FieldDataInvalidException(Throwable ex) {
         super(ex);
     }
 
@@ -30,8 +27,7 @@ public class FieldDataInvalidException extends TagException
      *
      * @param msg the detail message.
      */
-    public FieldDataInvalidException(String msg)
-    {
+    public FieldDataInvalidException(String msg) {
         super(msg);
     }
 
@@ -41,8 +37,7 @@ public class FieldDataInvalidException extends TagException
      * @param msg the detail message.
      * @param ex  the cause.
      */
-    public FieldDataInvalidException(String msg, Throwable ex)
-    {
+    public FieldDataInvalidException(String msg, Throwable ex) {
         super(msg, ex);
     }
 }

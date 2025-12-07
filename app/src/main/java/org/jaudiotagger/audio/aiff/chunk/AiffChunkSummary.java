@@ -6,8 +6,7 @@ import org.jaudiotagger.tag.aiff.AiffTag;
 /**
  * AIFF Specific methods for ChunkSummarys
  */
-public class AiffChunkSummary
-{
+public class AiffChunkSummary {
     /**
      * Checks that there are only id3 tags after the currently selected id3tag because this means its safe to truncate
      * the remainder of the file.
@@ -15,22 +14,15 @@ public class AiffChunkSummary
      * @param tag
      * @return
      */
-    public static boolean isOnlyMetadataTagsAfterStartingMetadataTag(AiffTag tag)
-    {
+    public static boolean isOnlyMetadataTagsAfterStartingMetadataTag(AiffTag tag) {
         boolean firstId3Tag = false;
-        for(ChunkSummary cs:tag.getChunkSummaryList())
-        {
-            if(firstId3Tag)
-            {
-                if(!cs.getChunkId().equals(AiffChunkType.TAG.getCode()))
-                {
+        for (ChunkSummary cs : tag.getChunkSummaryList()) {
+            if (firstId3Tag) {
+                if (!cs.getChunkId().equals(AiffChunkType.TAG.getCode())) {
                     return false;
                 }
-            }
-            else
-            {
-                if (cs.getFileStartLocation() == tag.getStartLocationInFileOfId3Chunk())
-                {
+            } else {
+                if (cs.getFileStartLocation() == tag.getStartLocationInFileOfId3Chunk()) {
                     //Found starting point
                     firstId3Tag = true;
                 }
@@ -48,13 +40,10 @@ public class AiffChunkSummary
      * @param tag
      * @return
      */
-    public static ChunkSummary getChunkBeforeStartingMetadataTag(AiffTag tag)
-    {
-        for(int i=0;i < tag.getChunkSummaryList().size(); i++)
-        {
+    public static ChunkSummary getChunkBeforeStartingMetadataTag(AiffTag tag) {
+        for (int i = 0; i < tag.getChunkSummaryList().size(); i++) {
             ChunkSummary cs = tag.getChunkSummaryList().get(i);
-            if (cs.getFileStartLocation() == tag.getStartLocationInFileOfId3Chunk())
-            {
+            if (cs.getFileStartLocation() == tag.getStartLocationInFileOfId3Chunk()) {
                 return tag.getChunkSummaryList().get(i - 1);
             }
         }

@@ -141,9 +141,6 @@ fun ArtistsGridView(
     }
     when (scrollDirection) {
         ScrollDirectionType.LIST_VERTICAL -> {
-//            LazyColumn(
-//
-//            )
         }
 
         ScrollDirectionType.GRID_HORIZONTAL -> {

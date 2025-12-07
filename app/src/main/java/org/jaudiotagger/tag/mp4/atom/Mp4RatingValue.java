@@ -2,13 +2,12 @@ package org.jaudiotagger.tag.mp4.atom;
 
 /**
  * List of valid values for the Rating (rtng) atom
- *
+ * <p>
  * These are held as a byte field
- *
+ * <p>
  * TODO:Is this only used in video
  */
-public enum Mp4RatingValue
-{
+public enum Mp4RatingValue {
     CLEAN("Clean", 2),
     EXPLICIT("Explicit", 4);
 
@@ -20,8 +19,7 @@ public enum Mp4RatingValue
      * @param description of value
      * @param id          used internally
      */
-    Mp4RatingValue(String description, int id)
-    {
+    Mp4RatingValue(String description, int id) {
         this.description = description;
         this.id = id;
     }
@@ -31,8 +29,7 @@ public enum Mp4RatingValue
      *
      * @return id
      */
-    public int getId()
-    {
+    public int getId() {
         return id;
     }
 
@@ -41,8 +38,7 @@ public enum Mp4RatingValue
      *
      * @return
      */
-    public String getDescription()
-    {
+    public String getDescription() {
         return description;
     }
 

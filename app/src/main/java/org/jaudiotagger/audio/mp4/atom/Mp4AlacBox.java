@@ -8,12 +8,11 @@ import java.nio.ByteOrder;
 
 /**
  * AlacBox ( Apple Lossless Codec information description box),
- *
+ * <p>
  * Normally occurs twice, the first ALAC contains the default  values, the second ALAC within contains the real
  * values for this audio.
  */
-public class Mp4AlacBox extends AbstractMp4Box
-{
+public class Mp4AlacBox extends AbstractMp4Box {
     public static final int OTHER_FLAG_LENGTH = 4;
 
     private int maxSamplePerFrame; // 32bit
@@ -35,99 +34,85 @@ public class Mp4AlacBox extends AbstractMp4Box
      * @param header     header info
      * @param dataBuffer data of box (doesnt include header data)
      */
-    public Mp4AlacBox(Mp4BoxHeader header, ByteBuffer dataBuffer)
-    {
-        this.header     = header;
+    public Mp4AlacBox(Mp4BoxHeader header, ByteBuffer dataBuffer) {
+        this.header = header;
         this.dataBuffer = dataBuffer;
     }
 
-    public void processData() throws CannotReadException
-    {
+    public void processData() throws CannotReadException {
         //Skip version/other flags
         dataBuffer.position(dataBuffer.position() + OTHER_FLAG_LENGTH);
         dataBuffer.order(ByteOrder.BIG_ENDIAN);
 
-        maxSamplePerFrame   = dataBuffer.getInt();
-        unknown1            = Utils.u(dataBuffer.get());
-        sampleSize          = Utils.u(dataBuffer.get());
-        historyMult         = Utils.u(dataBuffer.get());
-        initialHistory      = Utils.u(dataBuffer.get());
-        kModifier           = Utils.u(dataBuffer.get());
-        channels            = Utils.u(dataBuffer.get());
-        unknown2            = dataBuffer.getShort();
-        maxCodedFrameSize   = dataBuffer.getInt();
-        bitRate             = dataBuffer.getInt();
-        sampleRate          = dataBuffer.getInt();
+        maxSamplePerFrame = dataBuffer.getInt();
+        unknown1 = Utils.u(dataBuffer.get());
+        sampleSize = Utils.u(dataBuffer.get());
+        historyMult = Utils.u(dataBuffer.get());
+        initialHistory = Utils.u(dataBuffer.get());
+        kModifier = Utils.u(dataBuffer.get());
+        channels = Utils.u(dataBuffer.get());
+        unknown2 = dataBuffer.getShort();
+        maxCodedFrameSize = dataBuffer.getInt();
+        bitRate = dataBuffer.getInt();
+        sampleRate = dataBuffer.getInt();
     }
 
-    public int getMaxSamplePerFrame()
-    {
+    public int getMaxSamplePerFrame() {
         return maxSamplePerFrame;
     }
 
-    public int getUnknown1()
-    {
+    public int getUnknown1() {
         return unknown1;
     }
 
-    public int getSampleSize()
-    {
+    public int getSampleSize() {
         return sampleSize;
     }
 
-    public int getHistoryMult()
-    {
+    public int getHistoryMult() {
         return historyMult;
     }
 
-    public int getInitialHistory()
-    {
+    public int getInitialHistory() {
         return initialHistory;
     }
 
-    public int getKModifier()
-    {
+    public int getKModifier() {
         return kModifier;
     }
 
-    public int getChannels()
-    {
+    public int getChannels() {
         return channels;
     }
 
-    public int getUnknown2()
-    {
+    public int getUnknown2() {
         return unknown2;
     }
 
-    public int getMaxCodedFrameSize()
-    {
+    public int getMaxCodedFrameSize() {
         return maxCodedFrameSize;
     }
 
-    public int getBitRate()
-    {
+    public int getBitRate() {
         return bitRate;
     }
 
-    public int getSampleRate()
-    {
+    public int getSampleRate() {
         return sampleRate;
     }
 
-    public String toString()
-    {
+    public String toString() {
         String s = "maxSamplePerFrame:" + maxSamplePerFrame
-                    + "unknown1:"+ unknown1
-                    + "sampleSize:"+sampleSize
-                    + "historyMult:"+historyMult
-                    + "initialHistory:"+initialHistory
-                    + "kModifier:"+kModifier
-                    + "channels:"+channels
-                    + "unknown2 :"+unknown2
-                    + "maxCodedFrameSize:"+maxCodedFrameSize
-                    + "bitRate:"+bitRate
-                    + "sampleRate:"+sampleRate;
+                + "unknown1:" + unknown1
+                + "sampleSize:" + sampleSize
+                + "historyMult:" + historyMult
+                + "initialHistory:" + initialHistory
+                + "kModifier:" + kModifier
+                + "channels:" + channels
+                + "unknown2 :" + unknown2
+                + "maxCodedFrameSize:" + maxCodedFrameSize
+                + "bitRate:" + bitRate
+                + "sampleRate:" + sampleRate;
         return s;
     }
 }

@@ -5,6 +5,7 @@ import androidx.compose.runtime.Immutable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.parcelize.Parcelize
+
 @Immutable
 @Parcelize
 @Entity(tableName = "queue")
@@ -24,7 +25,7 @@ data class MusicItem(
     var genreId: Long,
     var year: Int,
 //    var discNumber:Int,
-    var songNumber:Int,
+    var songNumber: Int,
     // for random
     var priority: Int = 0,
     var isFavorite: Boolean = false,

@@ -24,12 +24,19 @@ import org.jaudiotagger.tag.id3.ID3v24Frames;
 import org.jaudiotagger.tag.id3.valuepair.EventTimingTimestampTypes;
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Event timing codes frame.
- *
- *
+ * <p>
+ * <p>
  * This frame allows synchronisation with key events in a song or sound.
  * The header is:
  * <p><table border=0 width="70%">
@@ -99,8 +106,7 @@ import java.util.*;
  * @author : Hendrik Schreiber
  * @version $Id$
  */
-public class FrameBodyETCO extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody
-{
+public class FrameBodyETCO extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody {
 
     public static final int MPEG_FRAMES = 1;
     public static final int MILLISECONDS = 2;
@@ -108,13 +114,11 @@ public class FrameBodyETCO extends AbstractID3v2FrameBody implements ID3v24Frame
     /**
      * Creates a new FrameBodyETCO datatype.
      */
-    public FrameBodyETCO()
-    {
+    public FrameBodyETCO() {
         setObjectValue(DataTypes.OBJ_TIME_STAMP_FORMAT, MILLISECONDS);
     }
 
-    public FrameBodyETCO(final FrameBodyETCO body)
-    {
+    public FrameBodyETCO(final FrameBodyETCO body) {
         super(body);
     }
 
@@ -122,12 +126,19 @@ public class FrameBodyETCO extends AbstractID3v2FrameBody implements ID3v24Frame
      * Creates a new FrameBodyETCO datatype.
      *
      * @param byteBuffer buffer to read from
-     * @param frameSize size of the frame
+     * @param frameSize  size of the frame
      * @throws InvalidTagException if unable to create framebody from buffer
      */
-    public FrameBodyETCO(final ByteBuffer byteBuffer, final int frameSize) throws InvalidTagException
-    {
+    public FrameBodyETCO(final ByteBuffer byteBuffer, final int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
+    }
+
+    private static Set<Integer> toSet(final int... types) {
+        final Set<Integer> typeSet = new HashSet<Integer>();
+        for (final int type : types) {
+            typeSet.add(type);
+        }
+        return typeSet;
     }
 
     /**
@@ -139,8 +150,7 @@ public class FrameBodyETCO extends AbstractID3v2FrameBody implements ID3v24Frame
      * @see #MILLISECONDS
      * @see #MPEG_FRAMES
      */
-    public int getTimestampFormat()
-    {
+    public int getTimestampFormat() {
         return ((Number) getObjectValue(DataTypes.OBJ_TIME_STAMP_FORMAT)).intValue();
     }
 
@@ -150,10 +160,8 @@ public class FrameBodyETCO extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param timestampFormat 1 for MPEG frames or 2 for milliseconds
      * @see #getTimestampFormat()
      */
-    public void setTimestampFormat(final int timestampFormat)
-    {
-        if (EventTimingTimestampTypes.getInstanceOf().getValueForId(timestampFormat) == null)
-        {
+    public void setTimestampFormat(final int timestampFormat) {
+        if (EventTimingTimestampTypes.getInstanceOf().getValueForId(timestampFormat) == null) {
             throw new IllegalArgumentException("Timestamp format must be 1 or 2 (ID3v2.4, 4.5): " + timestampFormat);
         }
         setObjectValue(DataTypes.OBJ_TIME_STAMP_FORMAT, timestampFormat);
@@ -164,13 +172,11 @@ public class FrameBodyETCO extends AbstractID3v2FrameBody implements ID3v24Frame
      *
      * @return map of timing codes
      */
-    public Map<Long, int[]> getTimingCodes()
-    {
+    public Map<Long, int[]> getTimingCodes() {
         final Map<Long, int[]> map = new LinkedHashMap<Long, int[]>();
-        final List<EventTimingCode> codes = (List<EventTimingCode>)getObjectValue(DataTypes.OBJ_TIMED_EVENT_LIST);
+        final List<EventTimingCode> codes = (List<EventTimingCode>) getObjectValue(DataTypes.OBJ_TIMED_EVENT_LIST);
         long lastTimestamp = 0;
-        for (final EventTimingCode code : codes)
-        {
+        for (final EventTimingCode code : codes) {
             final long translatedTimestamp = code.getTimestamp() == 0 ? lastTimestamp : code.getTimestamp();
             final int[] types = map.get(translatedTimestamp);
             if (types == null) {
@@ -178,7 +184,7 @@ public class FrameBodyETCO extends AbstractID3v2FrameBody implements ID3v24Frame
             } else {
                 final int[] newTypes = new int[types.length + 1];
                 System.arraycopy(types, 0, newTypes, 0, types.length);
-                newTypes[newTypes.length-1] = code.getType();
+                newTypes[newTypes.length - 1] = code.getType();
                 map.put(translatedTimestamp, newTypes);
             }
             lastTimestamp = translatedTimestamp;
@@ -192,17 +198,14 @@ public class FrameBodyETCO extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param type types
      * @return list of timestamps
      */
-    public List<Long> getTimestamps(final int... type)
-    {
+    public List<Long> getTimestamps(final int... type) {
         final Set<Integer> typeSet = toSet(type);
         final List<Long> list = new ArrayList<Long>();
-        final List<EventTimingCode> codes = (List<EventTimingCode>)getObjectValue(DataTypes.OBJ_TIMED_EVENT_LIST);
+        final List<EventTimingCode> codes = (List<EventTimingCode>) getObjectValue(DataTypes.OBJ_TIMED_EVENT_LIST);
         long lastTimestamp = 0;
-        for (final EventTimingCode code : codes)
-        {
+        for (final EventTimingCode code : codes) {
             final long translatedTimestamp = code.getTimestamp() == 0 ? lastTimestamp : code.getTimestamp();
-            if (typeSet.contains(code.getType()))
-            {
+            if (typeSet.contains(code.getType())) {
                 list.add(translatedTimestamp);
             }
             lastTimestamp = translatedTimestamp;
@@ -214,20 +217,16 @@ public class FrameBodyETCO extends AbstractID3v2FrameBody implements ID3v24Frame
      * Adds a timing code for each given type.
      *
      * @param timestamp timestamp
-     * @param types types
+     * @param types     types
      */
-    public void addTimingCode(final long timestamp, final int... types)
-    {
-        final List<EventTimingCode> codes = (List<EventTimingCode>)getObjectValue(DataTypes.OBJ_TIMED_EVENT_LIST);
+    public void addTimingCode(final long timestamp, final int... types) {
+        final List<EventTimingCode> codes = (List<EventTimingCode>) getObjectValue(DataTypes.OBJ_TIMED_EVENT_LIST);
         long lastTimestamp = 0;
         int insertIndex = 0;
-        if (!codes.isEmpty() && codes.get(0).getTimestamp() <= timestamp)
-        {
-            for (final EventTimingCode code : codes)
-            {
+        if (!codes.isEmpty() && codes.get(0).getTimestamp() <= timestamp) {
+            for (final EventTimingCode code : codes) {
                 final long translatedTimestamp = code.getTimestamp() == 0 ? lastTimestamp : code.getTimestamp();
-                if (timestamp < translatedTimestamp)
-                {
+                if (timestamp < translatedTimestamp) {
                     break;
                 }
                 insertIndex++;
@@ -244,27 +243,23 @@ public class FrameBodyETCO extends AbstractID3v2FrameBody implements ID3v24Frame
      * Removes timestamps at a given time with the given types.
      *
      * @param timestamp timestamp
-     * @param types types
+     * @param types     types
      * @return {@code true}, if any timestamps were removed
      */
-    public boolean removeTimingCode(final long timestamp, final int... types)
-    {
+    public boolean removeTimingCode(final long timestamp, final int... types) {
         // before we can remove anything, we have to resolve relative 0-timestamps
         // otherwise we might remove the anchor a relative timestamp relies on
         resolveRelativeTimestamps();
         final Set<Integer> typeSet = toSet(types);
-        final List<EventTimingCode> codes = (List<EventTimingCode>)getObjectValue(DataTypes.OBJ_TIMED_EVENT_LIST);
+        final List<EventTimingCode> codes = (List<EventTimingCode>) getObjectValue(DataTypes.OBJ_TIMED_EVENT_LIST);
         boolean removed = false;
-        for (final ListIterator<EventTimingCode> iterator = codes.listIterator(); iterator.hasNext(); )
-        {
+        for (final ListIterator<EventTimingCode> iterator = codes.listIterator(); iterator.hasNext(); ) {
             final EventTimingCode code = iterator.next();
-            if (timestamp == code.getTimestamp() && typeSet.contains(code.getType()))
-            {
+            if (timestamp == code.getTimestamp() && typeSet.contains(code.getType())) {
                 iterator.remove();
                 removed = true;
             }
-            if (timestamp > code.getTimestamp())
-            {
+            if (timestamp > code.getTimestamp()) {
                 break;
             }
         }
@@ -274,20 +269,17 @@ public class FrameBodyETCO extends AbstractID3v2FrameBody implements ID3v24Frame
     /**
      * Remove all timing codes.
      */
-    public void clearTimingCodes()
-    {
-        ((List<EventTimingCode>)getObjectValue(DataTypes.OBJ_TIMED_EVENT_LIST)).clear();
+    public void clearTimingCodes() {
+        ((List<EventTimingCode>) getObjectValue(DataTypes.OBJ_TIMED_EVENT_LIST)).clear();
     }
 
     /**
      * Resolve any relative timestamp (zero timestamp after a non-zero timestamp) to absolute timestamp.
      */
-    private void resolveRelativeTimestamps()
-    {
-        final List<EventTimingCode> codes = (List<EventTimingCode>)getObjectValue(DataTypes.OBJ_TIMED_EVENT_LIST);
+    private void resolveRelativeTimestamps() {
+        final List<EventTimingCode> codes = (List<EventTimingCode>) getObjectValue(DataTypes.OBJ_TIMED_EVENT_LIST);
         long lastTimestamp = 0;
-        for (final EventTimingCode code : codes)
-        {
+        for (final EventTimingCode code : codes) {
             final long translatedTimestamp = code.getTimestamp() == 0 ? lastTimestamp : code.getTimestamp();
             code.setTimestamp(translatedTimestamp);
             lastTimestamp = translatedTimestamp;
@@ -295,18 +287,15 @@ public class FrameBodyETCO extends AbstractID3v2FrameBody implements ID3v24Frame
     }
 
     @Override
-    public void read(final ByteBuffer byteBuffer) throws InvalidTagException
-    {
+    public void read(final ByteBuffer byteBuffer) throws InvalidTagException {
         super.read(byteBuffer);
 
         // validate input
-        final List<EventTimingCode> codes = (List<EventTimingCode>)getObjectValue(DataTypes.OBJ_TIMED_EVENT_LIST);
+        final List<EventTimingCode> codes = (List<EventTimingCode>) getObjectValue(DataTypes.OBJ_TIMED_EVENT_LIST);
         long lastTimestamp = 0;
-        for (final EventTimingCode code : codes)
-        {
+        for (final EventTimingCode code : codes) {
             final long translatedTimestamp = code.getTimestamp() == 0 ? lastTimestamp : code.getTimestamp();
-            if (code.getTimestamp() < lastTimestamp)
-            {
+            if (code.getTimestamp() < lastTimestamp) {
                 logger.warning("Event codes are not in chronological order. " + lastTimestamp + " is followed by " + code.getTimestamp() + ".");
                 // throw exception???
             }
@@ -318,8 +307,7 @@ public class FrameBodyETCO extends AbstractID3v2FrameBody implements ID3v24Frame
      * @return identifier
      */
     @Override
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_EVENT_TIMING_CODES;
     }
 
@@ -327,20 +315,9 @@ public class FrameBodyETCO extends AbstractID3v2FrameBody implements ID3v24Frame
      * Setup object list.
      */
     @Override
-    protected void setupObjectList()
-    {
+    protected void setupObjectList() {
         objectList.add(new NumberHashMap(DataTypes.OBJ_TIME_STAMP_FORMAT, this, EventTimingTimestampTypes.TIMESTAMP_KEY_FIELD_SIZE));
         objectList.add(new EventTimingCodeList(this));
-    }
-
-    private static Set<Integer> toSet(final int... types)
-    {
-        final Set<Integer> typeSet = new HashSet<Integer>();
-        for (final int type : types)
-        {
-            typeSet.add(type);
-        }
-        return typeSet;
     }
 
 

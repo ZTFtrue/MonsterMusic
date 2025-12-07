@@ -1,23 +1,23 @@
 /**
- *  @author : Paul Taylor
- *  @author : Eric Farng
- *
- *  Version @version:$Id$
- *
- *  MusicTag Copyright (C)2003,2004
- *
- *  This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
- *  General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
- *  or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- *  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public License along with this library; if not,
- *  you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ * @author : Paul Taylor
+ * @author : Eric Farng
+ * <p>
+ * Version @version:$Id$
+ * <p>
+ * MusicTag Copyright (C)2003,2004
+ * <p>
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
+ * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
+ * or (at your option) any later version.
+ * <p>
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not,
+ * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * <p>
  * Description:
  */
 package org.jaudiotagger.tag.lyrics3;
@@ -37,8 +37,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class Lyrics3v2 extends AbstractLyrics3
-{
+public class Lyrics3v2 extends AbstractLyrics3 {
     /**
      *
      */
@@ -47,12 +46,10 @@ public class Lyrics3v2 extends AbstractLyrics3
     /**
      * Creates a new Lyrics3v2 datatype.
      */
-    public Lyrics3v2()
-    {
+    public Lyrics3v2() {
     }
 
-    public Lyrics3v2(Lyrics3v2 copyObject)
-    {
+    public Lyrics3v2(Lyrics3v2 copyObject) {
         super(copyObject);
 
         Iterator<String> iterator = copyObject.fieldMap.keySet().iterator();
@@ -60,8 +57,7 @@ public class Lyrics3v2 extends AbstractLyrics3
         String newIdentifier;
         Lyrics3v2Field newObject;
 
-        while (iterator.hasNext())
-        {
+        while (iterator.hasNext()) {
             oldIdentifier = iterator.next();
             newIdentifier = oldIdentifier;
             newObject = new Lyrics3v2Field(copyObject.fieldMap.get(newIdentifier));
@@ -75,40 +71,28 @@ public class Lyrics3v2 extends AbstractLyrics3
      * @param mp3tag
      * @throws UnsupportedOperationException
      */
-    public Lyrics3v2(AbstractTag mp3tag)
-    {
-        if (mp3tag != null)
-        {
+    public Lyrics3v2(AbstractTag mp3tag) {
+        if (mp3tag != null) {
             // upgrade the tag to lyrics3v2
-            if (mp3tag instanceof Lyrics3v2)
-            {
+            if (mp3tag instanceof Lyrics3v2) {
                 throw new UnsupportedOperationException("Copy Constructor not called. Please type cast the argument");
-            }
-            else if (mp3tag instanceof Lyrics3v1 lyricOld)
-            {
+            } else if (mp3tag instanceof Lyrics3v1 lyricOld) {
                 Lyrics3v2Field newField;
                 newField = new Lyrics3v2Field(new FieldFrameBodyLYR(lyricOld.getLyric()));
                 fieldMap.put(newField.getIdentifier(), newField);
-            }
-            else
-            {
+            } else {
                 Lyrics3v2Field newField;
                 Iterator<AbstractID3v2Frame> iterator;
                 iterator = (new ID3v24Tag(mp3tag)).iterator();
 
-                while (iterator.hasNext())
-                {
-                    try
-                    {
+                while (iterator.hasNext()) {
+                    try {
                         newField = new Lyrics3v2Field(iterator.next());
 
-                        if (newField != null)
-                        {
+                        if (newField != null) {
                             fieldMap.put(newField.getIdentifier(), newField);
                         }
-                    }
-                    catch (TagException ex)
-                    {
+                    } catch (TagException ex) {
                         //invalid frame to createField lyrics3 field. ignore and keep going
                     }
                 }
@@ -123,14 +107,10 @@ public class Lyrics3v2 extends AbstractLyrics3
      * @throws IOException
      * @param byteBuffer
      */
-    public Lyrics3v2(ByteBuffer byteBuffer) throws TagNotFoundException, IOException
-    {
-        try
-        {
+    public Lyrics3v2(ByteBuffer byteBuffer) throws TagNotFoundException, IOException {
+        try {
             this.read(byteBuffer);
-        }
-        catch (TagException e)
-        {
+        } catch (TagException e) {
             e.printStackTrace();
         }
     }
@@ -138,8 +118,7 @@ public class Lyrics3v2 extends AbstractLyrics3
     /**
      * @param field
      */
-    public void setField(Lyrics3v2Field field)
-    {
+    public void setField(Lyrics3v2Field field) {
         fieldMap.put(field.getIdentifier(), field);
     }
 
@@ -149,38 +128,33 @@ public class Lyrics3v2 extends AbstractLyrics3
      * @param identifier The three letter code
      * @return The value associated with the identifier
      */
-    public Lyrics3v2Field getField(String identifier)
-    {
+    public Lyrics3v2Field getField(String identifier) {
         return fieldMap.get(identifier);
     }
 
     /**
      * @return
      */
-    public int getFieldCount()
-    {
+    public int getFieldCount() {
         return fieldMap.size();
     }
 
     /**
      * @return
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return "Lyrics3v2.00";
     }
 
     /**
      * @return
      */
-    public int getSize()
-    {
+    public int getSize() {
         int size = 0;
         Iterator<Lyrics3v2Field> iterator = fieldMap.values().iterator();
         Lyrics3v2Field field;
 
-        while (iterator.hasNext())
-        {
+        while (iterator.hasNext()) {
             field = iterator.next();
             size += field.getSize();
         }
@@ -194,10 +168,8 @@ public class Lyrics3v2 extends AbstractLyrics3
      * @param obj
      * @return
      */
-    public boolean equals(Object obj)
-    {
-        if (!(obj instanceof Lyrics3v2 object))
-        {
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Lyrics3v2 object)) {
             return false;
         }
 
@@ -209,16 +181,14 @@ public class Lyrics3v2 extends AbstractLyrics3
      * @param identifier
      * @return
      */
-    public boolean hasField(String identifier)
-    {
+    public boolean hasField(String identifier) {
         return fieldMap.containsKey(identifier);
     }
 
     /**
      * @return
      */
-    public Iterator<Lyrics3v2Field> iterator()
-    {
+    public Iterator<Lyrics3v2Field> iterator() {
         return fieldMap.values().iterator();
     }
 
@@ -230,23 +200,18 @@ public class Lyrics3v2 extends AbstractLyrics3
      * @return
      * @throws IOException
      */
-    public boolean seek(ByteBuffer byteBuffer)
-    {
+    public boolean seek(ByteBuffer byteBuffer) {
         return false;
     }
 
 
-    public void read(ByteBuffer byteBuffer) throws TagException
-    {
+    public void read(ByteBuffer byteBuffer) throws TagException {
         long filePointer;
         int lyricSize;
 
-        if (seek(byteBuffer))
-        {
+        if (seek(byteBuffer)) {
             lyricSize = seekSize(byteBuffer);
-        }
-        else
-        {
+        } else {
             throw new TagNotFoundException("Lyrics3v2.00 Tag Not Found");
         }
 
@@ -259,15 +224,11 @@ public class Lyrics3v2 extends AbstractLyrics3
         Lyrics3v2Field lyric;
 
         // read each of the fields
-        while ((byteBuffer.position()) < (lyricSize - 11))
-        {
-            try
-            {
+        while ((byteBuffer.position()) < (lyricSize - 11)) {
+            try {
                 lyric = new Lyrics3v2Field(byteBuffer);
                 setField(lyric);
-            }
-            catch (InvalidTagException ex)
-            {
+            } catch (InvalidTagException ex) {
                 // keep reading until we're done
             }
         }
@@ -276,8 +237,7 @@ public class Lyrics3v2 extends AbstractLyrics3
     /**
      * @param identifier
      */
-    public void removeField(String identifier)
-    {
+    public void removeField(String identifier) {
         fieldMap.remove(identifier);
     }
 
@@ -286,8 +246,7 @@ public class Lyrics3v2 extends AbstractLyrics3
      * @return
      * @throws IOException
      */
-    public boolean seek(RandomAccessFile file) throws IOException
-    {
+    public boolean seek(RandomAccessFile file) throws IOException {
         byte[] buffer = new byte[11];
         String lyricEnd;
         String lyricStart;
@@ -299,24 +258,18 @@ public class Lyrics3v2 extends AbstractLyrics3
         file.read(buffer, 0, 9);
         lyricEnd = new String(buffer, 0, 9);
 
-        if (lyricEnd.equals("LYRICS200"))
-        {
+        if (lyricEnd.equals("LYRICS200")) {
             filePointer = file.getFilePointer();
-        }
-        else
-        {
+        } else {
             // check the end of the file for a lyrics tag incase an ID3
             // tag wasn't placed after it.
             file.seek(file.length() - 9);
             file.read(buffer, 0, 9);
             lyricEnd = new String(buffer, 0, 9);
 
-            if (lyricEnd.equals("LYRICS200"))
-            {
+            if (lyricEnd.equals("LYRICS200")) {
                 filePointer = file.getFilePointer();
-            }
-            else
-            {
+            } else {
                 return false;
             }
         }
@@ -339,14 +292,12 @@ public class Lyrics3v2 extends AbstractLyrics3
     /**
      * @return
      */
-    public String toString()
-    {
+    public String toString() {
         Iterator<Lyrics3v2Field> iterator = fieldMap.values().iterator();
         Lyrics3v2Field field;
         String str = getIdentifier() + " " + this.getSize() + "\n";
 
-        while (iterator.hasNext())
-        {
+        while (iterator.hasNext()) {
             field = iterator.next();
             str += (field.toString() + "\n");
         }
@@ -357,17 +308,14 @@ public class Lyrics3v2 extends AbstractLyrics3
     /**
      * @param identifier
      */
-    public void updateField(String identifier)
-    {
+    public void updateField(String identifier) {
         Lyrics3v2Field lyrField;
 
-        if (identifier.equals("IND"))
-        {
+        if (identifier.equals("IND")) {
             boolean lyricsPresent = fieldMap.containsKey("LYR");
             boolean timeStampPresent = false;
 
-            if (lyricsPresent)
-            {
+            if (lyricsPresent) {
                 lyrField = fieldMap.get("LYR");
 
                 FieldFrameBodyLYR lyrBody = (FieldFrameBodyLYR) lyrField.getBody();
@@ -383,8 +331,7 @@ public class Lyrics3v2 extends AbstractLyrics3
      * @param file
      * @throws IOException
      */
-    public void write(RandomAccessFile file) throws IOException
-    {
+    public void write(RandomAccessFile file) throws IOException {
         int offset = 0;
 
         long size;
@@ -406,8 +353,7 @@ public class Lyrics3v2 extends AbstractLyrics3
 
         str = "LYRICSBEGIN";
 
-        for (int i = 0; i < str.length(); i++)
-        {
+        for (int i = 0; i < str.length(); i++) {
             buffer[i] = (byte) str.charAt(i);
         }
 
@@ -420,23 +366,20 @@ public class Lyrics3v2 extends AbstractLyrics3
 
         iterator = fieldMap.values().iterator();
 
-        while (iterator.hasNext())
-        {
+        while (iterator.hasNext()) {
             field = iterator.next();
 
             String id = field.getIdentifier();
             boolean save = TagOptionSingleton.getInstance().getLyrics3SaveField(id);
 
-            if ((!id.equals("IND")) && save)
-            {
+            if ((!id.equals("IND")) && save) {
                 field.write(file);
             }
         }
 
         size = file.getFilePointer() - filePointer;
 
-        if (this.getSize() != size)
-        {
+        if (this.getSize() != size) {
             //logger.config("Lyrics3v2 size didn't match up while writing.");
             //logger.config("this.getsize()     = " + this.getSize());
             //logger.config("size (filePointer) = " + size);
@@ -444,15 +387,13 @@ public class Lyrics3v2 extends AbstractLyrics3
 
         str = Long.toString(size);
 
-        for (int i = 0; i < (6 - str.length()); i++)
-        {
+        for (int i = 0; i < (6 - str.length()); i++) {
             buffer[i] = (byte) '0';
         }
 
         offset += (6 - str.length());
 
-        for (int i = 0; i < str.length(); i++)
-        {
+        for (int i = 0; i < str.length(); i++) {
             buffer[i + offset] = (byte) str.charAt(i);
         }
 
@@ -460,8 +401,7 @@ public class Lyrics3v2 extends AbstractLyrics3
 
         str = "LYRICS200";
 
-        for (int i = 0; i < str.length(); i++)
-        {
+        for (int i = 0; i < str.length(); i++) {
             buffer[i + offset] = (byte) str.charAt(i);
         }
 
@@ -469,8 +409,7 @@ public class Lyrics3v2 extends AbstractLyrics3
 
         file.write(buffer, 0, offset);
 
-        if (id3v1tag != null)
-        {
+        if (id3v1tag != null) {
             id3v1tag.write(file);
         }
     }
@@ -480,8 +419,7 @@ public class Lyrics3v2 extends AbstractLyrics3
      * @param byteBuffer
      * @return
      */
-    private int seekSize(ByteBuffer byteBuffer)
-    {
+    private int seekSize(ByteBuffer byteBuffer) {
         /*
         byte[] buffer = new byte[11];
         String lyricEnd = "";

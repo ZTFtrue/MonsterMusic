@@ -1,17 +1,17 @@
 /*
  * Entagged Audio Tag library
  * Copyright (c) 2003-2005 Raphaël Slinckx <raphael@slinckx.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *  
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -29,8 +29,7 @@ import java.nio.ByteOrder;
  * <p>This MP4Box contains important audio information we need. It can be used to calculate track length,
  * depending on the version field this can be in either short or long format
  */
-public class Mp4MvhdBox extends AbstractMp4Box
-{
+public class Mp4MvhdBox extends AbstractMp4Box {
     public static final int VERSION_FLAG_POS = 0;
     public static final int OTHER_FLAG_POS = 1;
     public static final int CREATED_DATE_SHORT_POS = 4;
@@ -62,27 +61,22 @@ public class Mp4MvhdBox extends AbstractMp4Box
      * @param header     header info
      * @param dataBuffer data of box (doesnt include header data)
      */
-    public Mp4MvhdBox(Mp4BoxHeader header, ByteBuffer dataBuffer)
-    {
+    public Mp4MvhdBox(Mp4BoxHeader header, ByteBuffer dataBuffer) {
         this.header = header;
         dataBuffer.order(ByteOrder.BIG_ENDIAN);
         byte version = dataBuffer.get(VERSION_FLAG_POS);
 
-        if (version == LONG_FORMAT)
-        {
+        if (version == LONG_FORMAT) {
             timeScale = dataBuffer.getInt(TIMESCALE_LONG_POS);
             timeLength = dataBuffer.getLong(DURATION_LONG_POS);
 
-        }
-        else
-        {
+        } else {
             timeScale = dataBuffer.getInt(TIMESCALE_SHORT_POS);
             timeLength = Utils.u(dataBuffer.getInt(DURATION_SHORT_POS));
         }
     }
 
-    public int getLength()
-    {
+    public int getLength() {
         return (int) (this.timeLength / this.timeScale);
     }
 }

@@ -3,11 +3,10 @@ package org.jaudiotagger.audio.mp4;
 /**
  * This a list of mp4boxes identifiers that can bwe found in a mp4 container. This list is by no means
  * exhaustive.
- *
+ * <p>
  * Only a limited number are of interest to Jaudiotagger
  */
-public enum Mp4AtomIdentifier
-{
+public enum Mp4AtomIdentifier {
     ALAC("alac", "Apple Lossless File"),
     ALBM("albm", "Album title and track number (user-data)"),
     AUTH("auth", "Media author name (user-data)"),
@@ -168,8 +167,7 @@ public enum Mp4AtomIdentifier
     private final String fieldName;
     private final String description;
 
-    Mp4AtomIdentifier(String fieldName, String description)
-    {
+    Mp4AtomIdentifier(String fieldName, String description) {
         this.fieldName = fieldName;
         this.description = description;
 
@@ -180,16 +178,14 @@ public enum Mp4AtomIdentifier
      *
      * @return
      */
-    public String getFieldName()
-    {
+    public String getFieldName() {
         return fieldName;
     }
 
     /**
      * @return description, human redable description of the atom
      */
-    public String getDescription()
-    {
+    public String getDescription() {
         return description;
     }
 }

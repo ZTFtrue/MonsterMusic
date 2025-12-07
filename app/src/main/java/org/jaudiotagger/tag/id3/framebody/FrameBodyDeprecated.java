@@ -5,20 +5,20 @@ package org.jaudiotagger.tag.id3.framebody;
  * earlier tag version.
  * The body consists  of an array of bytes representing all the bytes in the body.
  */
-public class FrameBodyDeprecated extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody
-{
-    /** The original frameBody is held so can be retrieved
-     *  when converting a DeprecatedFrameBody back to a normal framebody
+public class FrameBodyDeprecated extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody {
+    /**
+     * The original frameBody is held so can be retrieved
+     * when converting a DeprecatedFrameBody back to a normal framebody
      */
     private AbstractID3v2FrameBody originalFrameBody;
 
 
     /**
      * Creates a new FrameBodyDeprecated wrapper around the frameBody
+     *
      * @param frameBody
      */
-    public FrameBodyDeprecated(AbstractID3v2FrameBody frameBody)
-    {
+    public FrameBodyDeprecated(AbstractID3v2FrameBody frameBody) {
         this.originalFrameBody = frameBody;
     }
 
@@ -27,8 +27,7 @@ public class FrameBodyDeprecated extends AbstractID3v2FrameBody implements ID3v2
      *
      * @param copyObject a copy is made of this
      */
-    public FrameBodyDeprecated(FrameBodyDeprecated copyObject)
-    {
+    public FrameBodyDeprecated(FrameBodyDeprecated copyObject) {
         super(copyObject);
     }
 
@@ -38,8 +37,7 @@ public class FrameBodyDeprecated extends AbstractID3v2FrameBody implements ID3v2
      *
      * @return the identifier
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return originalFrameBody.getIdentifier();
     }
 
@@ -49,8 +47,7 @@ public class FrameBodyDeprecated extends AbstractID3v2FrameBody implements ID3v2
      *
      * @return size in bytes of this frame body
      */
-    public int getSize()
-    {
+    public int getSize() {
         return originalFrameBody.getSize();
     }
 
@@ -58,10 +55,8 @@ public class FrameBodyDeprecated extends AbstractID3v2FrameBody implements ID3v2
      * @param obj
      * @return whether obj is equivalent to this object
      */
-    public boolean equals(Object obj)
-    {
-        if (!(obj instanceof FrameBodyDeprecated object))
-        {
+    public boolean equals(Object obj) {
+        if (!(obj instanceof FrameBodyDeprecated object)) {
             return false;
         }
 
@@ -73,8 +68,7 @@ public class FrameBodyDeprecated extends AbstractID3v2FrameBody implements ID3v2
      *
      * @return the original frameBody
      */
-    public AbstractID3v2FrameBody getOriginalFrameBody()
-    {
+    public AbstractID3v2FrameBody getOriginalFrameBody() {
         return originalFrameBody;
     }
 
@@ -84,26 +78,22 @@ public class FrameBodyDeprecated extends AbstractID3v2FrameBody implements ID3v2
      *
      * @return a string representation of this frame
      */
-    public String toString()
-    {
+    public String toString() {
         return getIdentifier();
     }
 
     /**
      * Setup the Object List.
-     *
+     * <p>
      * This is handled by the wrapped class
      */
-    protected void setupObjectList()
-    {
+    protected void setupObjectList() {
 
     }
 
-    public String getBriefDescription()
-    {
+    public String getBriefDescription() {
         //TODO When is this null, it seems it can be but Im not sure why
-        if (originalFrameBody != null)
-        {
+        if (originalFrameBody != null) {
             return originalFrameBody.getBriefDescription();
         }
         return "";

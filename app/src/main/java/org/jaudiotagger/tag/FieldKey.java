@@ -2,14 +2,13 @@ package org.jaudiotagger.tag;
 
 /**
  * This is an enumeration of fields implemented by all major formats
- *
- *
- *
+ * <p>
+ * <p>
+ * <p>
  * This enumeration is used by subclasses to map from the common key to their implementation key, the keys
  * are grouped within EnumSets within Tag class.
  */
-public enum FieldKey
-{
+public enum FieldKey {
     ACOUSTID_FINGERPRINT,
     ACOUSTID_ID,
     ALBUM,

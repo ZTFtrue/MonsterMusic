@@ -1,17 +1,17 @@
 /*
  * Entagged Audio Tag library
  * Copyright (c) 2004-2005 Christian Laireiter <liree@web.de>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *  
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -26,7 +26,7 @@ import org.jaudiotagger.tag.TagField;
  * {@link org.jaudiotagger.audio.asf.data.MetadataDescriptor}and provides access
  * to it. <br>
  * The metadata descriptor used for construction is copied.
- * 
+ *
  * @author Christian Laireiter (liree)
  */
 public class AsfTagField implements TagField, Cloneable {
@@ -38,9 +38,8 @@ public class AsfTagField implements TagField, Cloneable {
 
     /**
      * Creates a tag field.
-     * 
-     * @param field
-     *            the ASF field that should be represented.
+     *
+     * @param field the ASF field that should be represented.
      */
     public AsfTagField(final AsfFieldKey field) {
         assert field != null;
@@ -50,10 +49,9 @@ public class AsfTagField implements TagField, Cloneable {
 
     /**
      * Creates an instance.
-     * 
-     * @param source
-     *            The descriptor which should be represented as a
-     *            {@link TagField}.
+     *
+     * @param source The descriptor which should be represented as a
+     *               {@link TagField}.
      */
     public AsfTagField(final MetadataDescriptor source) {
         assert source != null;
@@ -63,9 +61,8 @@ public class AsfTagField implements TagField, Cloneable {
 
     /**
      * Creates a tag field.
-     * 
-     * @param fieldKey
-     *            The field identifier to use.
+     *
+     * @param fieldKey The field identifier to use.
      */
     public AsfTagField(final String fieldKey) {
         assert fieldKey != null;
@@ -92,7 +89,7 @@ public class AsfTagField implements TagField, Cloneable {
     /**
      * Returns the wrapped metadata descriptor (which actually stores the
      * values).
-     * 
+     *
      * @return the wrapped metadata descriptor
      */
     public MetadataDescriptor getDescriptor() {

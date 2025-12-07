@@ -33,17 +33,14 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyTSSE extends AbstractFrameBodyTextInfo implements ID3v23FrameBody, ID3v24FrameBody
-{
+public class FrameBodyTSSE extends AbstractFrameBodyTextInfo implements ID3v23FrameBody, ID3v24FrameBody {
     /**
      * Creates a new FrameBodyTSSE datatype.
      */
-    public FrameBodyTSSE()
-    {
+    public FrameBodyTSSE() {
     }
 
-    public FrameBodyTSSE(FrameBodyTSSE body)
-    {
+    public FrameBodyTSSE(FrameBodyTSSE body) {
         super(body);
     }
 
@@ -53,8 +50,7 @@ public class FrameBodyTSSE extends AbstractFrameBodyTextInfo implements ID3v23Fr
      * @param textEncoding
      * @param text
      */
-    public FrameBodyTSSE(byte textEncoding, String text)
-    {
+    public FrameBodyTSSE(byte textEncoding, String text) {
         super(textEncoding, text);
     }
 
@@ -65,8 +61,7 @@ public class FrameBodyTSSE extends AbstractFrameBodyTextInfo implements ID3v23Fr
      * @param frameSize
      * @throws InvalidTagException
      */
-    public FrameBodyTSSE(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyTSSE(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -75,8 +70,7 @@ public class FrameBodyTSSE extends AbstractFrameBodyTextInfo implements ID3v23Fr
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_HW_SW_SETTINGS;
     }
 }

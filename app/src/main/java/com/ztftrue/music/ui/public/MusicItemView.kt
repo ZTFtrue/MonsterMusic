@@ -101,12 +101,16 @@ fun MusicItemView(
             R.drawable.play
         }
     val context = LocalContext.current
+
     @Suppress("ASSIGNED_VALUE_IS_NEVER_READ")
     var showDialog by remember { mutableStateOf(false) }
+
     @Suppress("ASSIGNED_VALUE_IS_NEVER_READ")
     var showAddPlayListDialog by remember { mutableStateOf(false) }
+
     @Suppress("ASSIGNED_VALUE_IS_NEVER_READ")
     var showCreatePlayListDialog by remember { mutableStateOf(false) }
+
     @Suppress("ASSIGNED_VALUE_IS_NEVER_READ")
     var showDeleteTip by remember { mutableStateOf(false) }
     if (showDeleteTip) {

@@ -9,14 +9,12 @@ import java.util.Date;
 /**
  * Utility methods only of use for Aiff datatypes
  */
-public class AiffUtil
-{
+public class AiffUtil {
 
     private final static SimpleDateFormat dateFmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
 
-    public static double read80BitDouble(ByteBuffer chunkData) throws IOException
-    {
+    public static double read80BitDouble(ByteBuffer chunkData) throws IOException {
         byte[] buf = new byte[10];
         chunkData.get(buf);
         ExtDouble xd = new ExtDouble(buf);
@@ -31,8 +29,7 @@ public class AiffUtil
      * there may be some variation in the exact hour of the date
      * returned, e.g., due to daylight savings time.
      */
-    public static Date timestampToDate(long timestamp)
-    {
+    public static Date timestampToDate(long timestamp) {
         Calendar cal = Calendar.getInstance();
         cal.set(1904, 0, 1, 0, 0, 0);
 
@@ -50,8 +47,7 @@ public class AiffUtil
     /**
      * Format a date as text
      */
-    public static String formatDate(Date dat)
-    {
+    public static String formatDate(Date dat) {
         return dateFmt.format(dat);
     }
 

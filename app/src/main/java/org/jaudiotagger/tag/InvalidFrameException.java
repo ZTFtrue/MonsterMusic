@@ -27,13 +27,11 @@ package org.jaudiotagger.tag;
  * @author Eric Farng
  * @version $Revision$
  */
-public class InvalidFrameException extends InvalidTagException
-{
+public class InvalidFrameException extends InvalidTagException {
     /**
      * Creates a new InvalidFrameException datatype.
      */
-    public InvalidFrameException()
-    {
+    public InvalidFrameException() {
     }
 
     /**
@@ -41,8 +39,7 @@ public class InvalidFrameException extends InvalidTagException
      *
      * @param ex the cause.
      */
-    public InvalidFrameException(Throwable ex)
-    {
+    public InvalidFrameException(Throwable ex) {
         super(ex);
     }
 
@@ -51,8 +48,7 @@ public class InvalidFrameException extends InvalidTagException
      *
      * @param msg the detail message.
      */
-    public InvalidFrameException(String msg)
-    {
+    public InvalidFrameException(String msg) {
         super(msg);
     }
 
@@ -62,8 +58,7 @@ public class InvalidFrameException extends InvalidTagException
      * @param msg the detail message.
      * @param ex  the cause.
      */
-    public InvalidFrameException(String msg, Throwable ex)
-    {
+    public InvalidFrameException(String msg, Throwable ex) {
         super(msg, ex);
     }
 }

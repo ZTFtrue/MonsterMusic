@@ -32,13 +32,11 @@ package org.jaudiotagger.tag;
  * @author Eric Farng
  * @version $Revision$
  */
-public class TagNotFoundException extends TagException
-{
+public class TagNotFoundException extends TagException {
     /**
      * Creates a new TagNotFoundException datatype.
      */
-    public TagNotFoundException()
-    {
+    public TagNotFoundException() {
     }
 
     /**
@@ -46,8 +44,7 @@ public class TagNotFoundException extends TagException
      *
      * @param ex the cause.
      */
-    public TagNotFoundException(Throwable ex)
-    {
+    public TagNotFoundException(Throwable ex) {
         super(ex);
     }
 
@@ -56,8 +53,7 @@ public class TagNotFoundException extends TagException
      *
      * @param msg the detail message.
      */
-    public TagNotFoundException(String msg)
-    {
+    public TagNotFoundException(String msg) {
         super(msg);
     }
 
@@ -67,8 +63,7 @@ public class TagNotFoundException extends TagException
      * @param msg the detail message.
      * @param ex  the cause.
      */
-    public TagNotFoundException(String msg, Throwable ex)
-    {
+    public TagNotFoundException(String msg, Throwable ex) {
         super(msg, ex);
     }
 }

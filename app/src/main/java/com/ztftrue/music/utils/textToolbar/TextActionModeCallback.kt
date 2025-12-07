@@ -16,7 +16,7 @@ internal class TextActionModeCallback(
     var onSelectAllRequested: (() -> Unit)? = null,
     var customProcessTextApp: List<DictionaryApp>? = null,
     var onProcessAppItemClick: ((DictionaryApp) -> Unit)? = null,
-    var textToolbar: CustomTextToolbar?=null
+    var textToolbar: CustomTextToolbar? = null
 ) {
     fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
         requireNotNull(menu)
@@ -60,7 +60,7 @@ internal class TextActionModeCallback(
                         MenuItemOption.Paste.id -> onPasteRequested?.invoke()
                         MenuItemOption.Cut.id -> onCutRequested?.invoke()
                         MenuItemOption.SelectAll.id -> onSelectAllRequested?.invoke()
-                        MenuItemOption.Close.id ->textToolbar?.hideAll()
+                        MenuItemOption.Close.id -> textToolbar?.hideAll()
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()

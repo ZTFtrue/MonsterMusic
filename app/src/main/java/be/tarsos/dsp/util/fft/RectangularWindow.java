@@ -1,25 +1,25 @@
 /*
-*      _______                       _____   _____ _____  
-*     |__   __|                     |  __ \ / ____|  __ \ 
-*        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
-*        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/ 
-*        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |     
-*        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|     
-*                                                         
-* -------------------------------------------------------------
-*
-* TarsosDSP is developed by Joren Six at IPEM, University Ghent
-*  
-* -------------------------------------------------------------
-*
-*  Info: http://0110.be/tag/TarsosDSP
-*  Github: https://github.com/JorenSix/TarsosDSP
-*  Releases: http://0110.be/releases/TarsosDSP/
-*  
-*  TarsosDSP includes modified source code by various authors,
-*  for credits and info, see README.
-* 
-*/
+ *      _______                       _____   _____ _____
+ *     |__   __|                     |  __ \ / ____|  __ \
+ *        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
+ *        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/
+ *        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |
+ *        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|
+ *
+ * -------------------------------------------------------------
+ *
+ * TarsosDSP is developed by Joren Six at IPEM, University Ghent
+ *
+ * -------------------------------------------------------------
+ *
+ *  Info: http://0110.be/tag/TarsosDSP
+ *  Github: https://github.com/JorenSix/TarsosDSP
+ *  Releases: http://0110.be/releases/TarsosDSP/
+ *
+ *  TarsosDSP includes modified source code by various authors,
+ *  for credits and info, see README.
+ *
+ */
 
 /*
  *  Copyright (c) 2007 - 2008 by Damien Di Fede <ddf@compartmental.net>
@@ -44,19 +44,21 @@ package be.tarsos.dsp.util.fft;
 /**
  * A Rectangular window function A Rectangular window is equivalent to using no
  * window at all.
- * 
+ *
  * @author Damien Di Fede
  * @author Corban Brook
  * @see <a
- *      href="http://en.wikipedia.org/wiki/Window_function#Rectangular_window">The
- *      Rectangular Window</a>
+ * href="http://en.wikipedia.org/wiki/Window_function#Rectangular_window">The
+ * Rectangular Window</a>
  */
 public class RectangularWindow extends WindowFunction {
-	/** Constructs a Rectangular window. */
-	public RectangularWindow() {
-	}
+    /**
+     * Constructs a Rectangular window.
+     */
+    public RectangularWindow() {
+    }
 
-	protected float value(int length, int index) {
-		return 1f;
-	}
+    protected float value(int length, int index) {
+        return 1f;
+    }
 }

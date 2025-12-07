@@ -6,8 +6,7 @@ package org.jaudiotagger.audio.asf.data;
  *
  * @author Christian Laireiter
  */
-public class GUIDFormatException extends IllegalArgumentException
-{
+public class GUIDFormatException extends IllegalArgumentException {
 
     /**
      *
@@ -19,8 +18,7 @@ public class GUIDFormatException extends IllegalArgumentException
      *
      * @param detail detail message.
      */
-    public GUIDFormatException(final String detail)
-    {
+    public GUIDFormatException(final String detail) {
         super(detail);
     }
 }

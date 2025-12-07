@@ -11,7 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 object MusicFileParser {
-    suspend fun parse(context: Context, uri: Uri): MusicItem= withContext(Dispatchers.IO)  {
+    suspend fun parse(context: Context, uri: Uri): MusicItem = withContext(Dispatchers.IO) {
         // 1. 尝试从 MediaStore 数据库查询 (这是获取 ArtistId, AlbumId 的唯一准确方法)
         val musicFromStore = queryMediaStore(context, uri)
 

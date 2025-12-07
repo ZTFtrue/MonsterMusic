@@ -37,18 +37,15 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyTPOS extends AbstractFrameBodyNumberTotal implements ID3v23FrameBody, ID3v24FrameBody
-{
+public class FrameBodyTPOS extends AbstractFrameBodyNumberTotal implements ID3v23FrameBody, ID3v24FrameBody {
     /**
      * Creates a new FrameBodyTRCK datatype.
      */
-    public FrameBodyTPOS()
-    {
+    public FrameBodyTPOS() {
         super();
     }
 
-    public FrameBodyTPOS(FrameBodyTPOS body)
-    {
+    public FrameBodyTPOS(FrameBodyTPOS body) {
         super(body);
     }
 
@@ -58,13 +55,11 @@ public class FrameBodyTPOS extends AbstractFrameBodyNumberTotal implements ID3v2
      * @param textEncoding
      * @param text
      */
-    public FrameBodyTPOS(byte textEncoding, String text)
-    {
+    public FrameBodyTPOS(byte textEncoding, String text) {
         super(textEncoding, text);
     }
 
-    public FrameBodyTPOS(byte textEncoding, Integer discNo,Integer discTotal)
-    {
+    public FrameBodyTPOS(byte textEncoding, Integer discNo, Integer discTotal) {
         super(textEncoding, discNo, discTotal);
     }
 
@@ -76,8 +71,7 @@ public class FrameBodyTPOS extends AbstractFrameBodyNumberTotal implements ID3v2
      * @throws java.io.IOException
      * @throws InvalidTagException
      */
-    public FrameBodyTPOS(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyTPOS(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -86,50 +80,40 @@ public class FrameBodyTPOS extends AbstractFrameBodyNumberTotal implements ID3v2
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_SET;
     }
 
-    public Integer getDiscNo()
-    {
+    public Integer getDiscNo() {
         return getNumber();
     }
 
-    public String getDiscNoAsText()
-    {
+    public void setDiscNo(Integer discNo) {
+        setNumber(discNo);
+    }
+
+    public void setDiscNo(String discNo) {
+        setNumber(discNo);
+    }
+
+    public String getDiscNoAsText() {
         return getNumberAsText();
     }
 
-    public void setDiscNo(Integer discNo)
-    {
-        setNumber(discNo);
-    }
-
-    public void setDiscNo(String discNo)
-    {
-        setNumber(discNo);
-    }
-
-
-    public Integer getDiscTotal()
-    {
+    public Integer getDiscTotal() {
         return getTotal();
     }
 
-    public String getDiscTotalAsText()
-    {
+    public void setDiscTotal(Integer discTotal) {
+        setTotal(discTotal);
+    }
+
+    public void setDiscTotal(String discTotal) {
+        setTotal(discTotal);
+    }
+
+    public String getDiscTotalAsText() {
         return getTotalAsText();
-    }
-
-    public void setDiscTotal(Integer discTotal)
-    {
-         setTotal(discTotal);
-    }
-
-    public void setDiscTotal(String discTotal)
-    {
-         setTotal(discTotal);
     }
 
 }

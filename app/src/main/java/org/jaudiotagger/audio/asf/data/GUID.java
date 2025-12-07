@@ -1,17 +1,17 @@
 /*
  * Entagged Audio Tag library
  * Copyright (c) 2004-2005 Christian Laireiter <liree@web.de>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *  
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -31,8 +31,7 @@ import java.util.regex.Pattern;
  *
  * @author Christian Laireiter
  */
-public final class GUID
-{
+public final class GUID {
 
     /**
      * This constant defines the GUID for stream chunks describing audio
@@ -114,23 +113,37 @@ public final class GUID
      * This constant stores the GUID indicating the asf metadata library object.<br>
      */
     public final static GUID GUID_METADATA_LIBRARY = new GUID(new int[]{0x94, 0x1c, 0x23, 0x44, 0x98, 0x94, 0xd1, 0x49, 0xa1, 0x41, 0x1d, 0x13, 0x4e, 0x45, 0x70, 0x54}, "Metadata Library");
-
-    /**
-     * The GUID String values format.<br>
-     */
-    private final static Pattern GUID_PATTERN = Pattern.compile("[a-f0-9]{8}\\-[a-f0-9]{4}\\-[a-f0-9]{4}\\-[a-f0-9]{4}\\-[a-f0-9]{12}", Pattern.CASE_INSENSITIVE);
-
     /**
      * This constant stores the GUID indicating a stream object.
      */
     public final static GUID GUID_STREAM = new GUID(new int[]{0x91, 0x07, 0xDC, 0xB7, 0xB7, 0xA9, 0xCF, 0x11, 0x8E, 0xE6, 0x00, 0xC0, 0x0C, 0x20, 0x53, 0x65}, "Stream");
-
     /**
      * This constant stores a GUID indicating a "stream bitrate properties"
      * chunk.
      */
     public final static GUID GUID_STREAM_BITRATE_PROPERTIES = new GUID(new int[]{0xCE, 0x75, 0xF8, 0x7B, 0x8D, 0x46, 0xD1, 0x11, 0x8D, 0x82, 0x00, 0x60, 0x97, 0xC9, 0xA2, 0xB2}, "Stream bitrate properties");
-
+    /**
+     * This constant represents a GUID implementation which can be used for
+     * generic implementations, which have to provide a GUID, but do not really
+     * require a specific GUID to work.
+     */
+    public final static GUID GUID_UNSPECIFIED = new GUID(new int[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "Unspecified");
+    /**
+     * This constant stores the GUID indicating that stream type is video.
+     */
+    public final static GUID GUID_VIDEOSTREAM = new GUID(new int[]{0xC0, 0xEF, 0x19, 0xBC, 0x4D, 0x5B, 0xCF, 0x11, 0xA8, 0xFD, 0x00, 0x80, 0x5F, 0x5C, 0x44, 0x2B}, "Video stream");
+    /**
+     * This field stores all known GUIDs.
+     */
+    public final static GUID[] KNOWN_GUIDS;
+    /**
+     * This constant stores the GUID for a &quot;script command object&quot;.<br>
+     */
+    public final static GUID SCRIPT_COMMAND_OBJECT = new GUID(new int[]{0x30, 0x1a, 0xfb, 0x1e, 0x62, 0x0b, 0xd0, 0x11, 0xa3, 0x9b, 0x00, 0xa0, 0xc9, 0x03, 0x48, 0xf6}, "Script Command Object");
+    /**
+     * The GUID String values format.<br>
+     */
+    private final static Pattern GUID_PATTERN = Pattern.compile("[a-f0-9]{8}\\-[a-f0-9]{4}\\-[a-f0-9]{4}\\-[a-f0-9]{4}\\-[a-f0-9]{12}", Pattern.CASE_INSENSITIVE);
     /**
      * This map is used, to get the description of a GUID instance, which has
      * been created by reading.<br>
@@ -139,37 +152,81 @@ public final class GUID
      */
     private final static Map<GUID, GUID> GUID_TO_CONFIGURED;
 
-    /**
-     * This constant represents a GUID implementation which can be used for
-     * generic implementations, which have to provide a GUID, but do not really
-     * require a specific GUID to work.
-     */
-    public final static GUID GUID_UNSPECIFIED = new GUID(new int[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "Unspecified");
-
-    /**
-     * This constant stores the GUID indicating that stream type is video.
-     */
-    public final static GUID GUID_VIDEOSTREAM = new GUID(new int[]{0xC0, 0xEF, 0x19, 0xBC, 0x4D, 0x5B, 0xCF, 0x11, 0xA8, 0xFD, 0x00, 0x80, 0x5F, 0x5C, 0x44, 0x2B}, "Video stream");
-
-    /**
-     * This field stores all known GUIDs.
-     */
-    public final static GUID[] KNOWN_GUIDS;
-
-    /**
-     * This constant stores the GUID for a &quot;script command object&quot;.<br>
-     */
-    public final static GUID SCRIPT_COMMAND_OBJECT = new GUID(new int[]{0x30, 0x1a, 0xfb, 0x1e, 0x62, 0x0b, 0xd0, 0x11, 0xa3, 0x9b, 0x00, 0xa0, 0xc9, 0x03, 0x48, 0xf6}, "Script Command Object");
-
-    static
-    {
+    static {
         KNOWN_GUIDS = new GUID[]{GUID_AUDIO_ERROR_CONCEALEMENT_ABSENT, GUID_CONTENTDESCRIPTION, GUID_AUDIOSTREAM, GUID_ENCODING, GUID_FILE, GUID_HEADER, GUID_STREAM, GUID_EXTENDED_CONTENT_DESCRIPTION, GUID_VIDEOSTREAM, GUID_HEADER_EXTENSION, GUID_STREAM_BITRATE_PROPERTIES, SCRIPT_COMMAND_OBJECT, GUID_CONTENT_ENCRYPTION, GUID_CONTENT_BRANDING, GUID_UNSPECIFIED, GUID_METADATA_LIBRARY, GUID_METADATA, GUID_LANGUAGE_LIST};
         GUID_TO_CONFIGURED = new HashMap<GUID, GUID>(KNOWN_GUIDS.length);
-        for (final GUID curr : KNOWN_GUIDS)
-        {
+        for (final GUID curr : KNOWN_GUIDS) {
             assert !GUID_TO_CONFIGURED.containsKey(curr) : "Double definition: \"" + GUID_TO_CONFIGURED.get(curr).getDescription() + "\" <-> \"" + curr.getDescription() + "\"";
             GUID_TO_CONFIGURED.put(curr, curr);
         }
+    }
+
+    /**
+     * Stores an optionally description of the GUID.
+     */
+    private String description = "";
+    /**
+     * An instance of this class stores the value of the wrapped GUID in this
+     * field. <br>
+     */
+    private int[] guidData = null;
+    /**
+     * Stores the hash code of the object.<br>
+     * <code>&quot;-1&quot;</code> if not determined yet.
+     */
+    private int hash;
+
+    /**
+     * Creates an instance and assigns given <code>value</code>.<br>
+     *
+     * @param value GUID, which should be assigned. (will be converted to int[])
+     */
+    public GUID(final byte[] value) {
+        assert value != null;
+        final int[] tmp = new int[value.length];
+        for (int i = 0; i < value.length; i++) {
+            tmp[i] = (0xFF & value[i]);
+        }
+        setGUID(tmp);
+    }
+
+    /**
+     * Creates an instance and assigns given <code>value</code>.<br>
+     *
+     * @param value GUID, which should be assigned.
+     */
+    public GUID(final int[] value) {
+        setGUID(value);
+    }
+
+    /**
+     * Creates an instance like {@link #GUID(int[])}and sets the optional
+     * description. <br>
+     *
+     * @param value GUID, which should be assigned.
+     * @param desc  Description for the GUID.
+     */
+    public GUID(final int[] value, final String desc) {
+        this(value);
+        if (desc == null) {
+            throw new IllegalArgumentException("Argument must not be null.");
+        }
+        this.description = desc;
+    }
+
+    /**
+     * Creates an instance like {@link #GUID(int[])} and sets the optional
+     * description. (the int[] is obtained by {@link GUID#parseGUID(String)}) <br>
+     *
+     * @param guidString GUID, which should be assigned.
+     * @param desc       Description for the GUID.
+     */
+    public GUID(final String guidString, final String desc) {
+        this(parseGUID(guidString).getGUID());
+        if (desc == null) {
+            throw new IllegalArgumentException("Argument must not be null.");
+        }
+        this.description = desc;
     }
 
     /**
@@ -180,8 +237,7 @@ public final class GUID
      * @return <code>true</code> if <code>value</code> matches the specification
      * of a GUID.
      */
-    public static boolean assertGUID(final int[] value)
-    {
+    public static boolean assertGUID(final int[] value) {
         return value != null && value.length == GUID.GUID_LENGTH;
     }
 
@@ -193,8 +249,7 @@ public final class GUID
      * @return a GUID instance from {@link #KNOWN_GUIDS} if available.
      * <code>null</code> else.
      */
-    public static GUID getConfigured(final GUID orig)
-    {
+    public static GUID getConfigured(final GUID orig) {
         // safe against null
         return GUID_TO_CONFIGURED.get(orig);
     }
@@ -208,15 +263,12 @@ public final class GUID
      * @param guid GUID, which description is needed.
      * @return description of the GUID if found. Else <code>null</code>
      */
-    public static String getGuidDescription(final GUID guid)
-    {
+    public static String getGuidDescription(final GUID guid) {
         String result = null;
-        if (guid == null)
-        {
+        if (guid == null) {
             throw new IllegalArgumentException("Argument must not be null.");
         }
-        if (getConfigured(guid) != null)
-        {
+        if (getConfigured(guid) != null) {
             result = getConfigured(guid).getDescription();
         }
         return result;
@@ -231,14 +283,11 @@ public final class GUID
      * @return the GUID.
      * @throws GUIDFormatException If the GUID has an invalid format.
      */
-    public static GUID parseGUID(final String guid) throws GUIDFormatException
-    {
-        if (guid == null)
-        {
+    public static GUID parseGUID(final String guid) throws GUIDFormatException {
+        if (guid == null) {
             throw new GUIDFormatException("null");
         }
-        if (!GUID_PATTERN.matcher(guid).matches())
-        {
+        if (!GUID_PATTERN.matcher(guid).matches()) {
             throw new GUIDFormatException("Invalid guidData format.");
         }
         final int[] bytes = new int[GUID_LENGTH];
@@ -247,10 +296,8 @@ public final class GUID
          */
         final int[] arrayIndices = {3, 2, 1, 0, 5, 4, 7, 6, 8, 9, 10, 11, 12, 13, 14, 15};
         int arrayPointer = 0;
-        for (int i = 0; i < guid.length(); i++)
-        {
-            if (guid.charAt(i) == '-')
-            {
+        for (int i = 0; i < guid.length(); i++) {
+            if (guid.charAt(i) == '-') {
                 continue;
             }
             bytes[arrayIndices[arrayPointer++]] = Integer.parseInt(guid.substring(i, i + 2), 16);
@@ -260,94 +307,15 @@ public final class GUID
     }
 
     /**
-     * Stores an optionally description of the GUID.
-     */
-    private String description = "";
-
-    /**
-     * An instance of this class stores the value of the wrapped GUID in this
-     * field. <br>
-     */
-    private int[] guidData = null;
-
-    /**
-     * Stores the hash code of the object.<br>
-     * <code>&quot;-1&quot;</code> if not determined yet.
-     */
-    private int hash;
-
-    /**
-     * Creates an instance and assigns given <code>value</code>.<br>
-     *
-     * @param value GUID, which should be assigned. (will be converted to int[])
-     */
-    public GUID(final byte[] value)
-    {
-        assert value != null;
-        final int[] tmp = new int[value.length];
-        for (int i = 0; i < value.length; i++)
-        {
-            tmp[i] = (0xFF & value[i]);
-        }
-        setGUID(tmp);
-    }
-
-    /**
-     * Creates an instance and assigns given <code>value</code>.<br>
-     *
-     * @param value GUID, which should be assigned.
-     */
-    public GUID(final int[] value)
-    {
-        setGUID(value);
-    }
-
-    /**
-     * Creates an instance like {@link #GUID(int[])}and sets the optional
-     * description. <br>
-     *
-     * @param value GUID, which should be assigned.
-     * @param desc  Description for the GUID.
-     */
-    public GUID(final int[] value, final String desc)
-    {
-        this(value);
-        if (desc == null)
-        {
-            throw new IllegalArgumentException("Argument must not be null.");
-        }
-        this.description = desc;
-    }
-
-    /**
-     * Creates an instance like {@link #GUID(int[])} and sets the optional
-     * description. (the int[] is obtained by {@link GUID#parseGUID(String)}) <br>
-     *
-     * @param guidString GUID, which should be assigned.
-     * @param desc       Description for the GUID.
-     */
-    public GUID(final String guidString, final String desc)
-    {
-        this(parseGUID(guidString).getGUID());
-        if (desc == null)
-        {
-            throw new IllegalArgumentException("Argument must not be null.");
-        }
-        this.description = desc;
-    }
-
-    /**
      * This method compares two objects. If the given Object is a {@link GUID},
      * the stored GUID values are compared. <br>
      *
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
-    public boolean equals(final Object obj)
-    {
+    public boolean equals(final Object obj) {
         boolean result = false;
-        if (obj instanceof GUID other)
-        {
+        if (obj instanceof GUID other) {
             result = Arrays.equals(this.getGUID(), other.getGUID());
         }
         return result;
@@ -359,11 +327,9 @@ public final class GUID
      * @return The GUID as a byte array.
      * @see #getGUID()
      */
-    public byte[] getBytes()
-    {
+    public byte[] getBytes() {
         final byte[] result = new byte[this.guidData.length];
-        for (int i = 0; i < result.length; i++)
-        {
+        for (int i = 0; i < result.length; i++) {
             result[i] = (byte) (this.guidData[i] & 0xFF);
         }
         return result;
@@ -372,8 +338,7 @@ public final class GUID
     /**
      * @return Returns the description.
      */
-    public String getDescription()
-    {
+    public String getDescription() {
         return this.description;
     }
 
@@ -382,11 +347,26 @@ public final class GUID
      *
      * @return stored GUID.
      */
-    public int[] getGUID()
-    {
+    public int[] getGUID() {
         final int[] copy = new int[this.guidData.length];
         System.arraycopy(this.guidData, 0, copy, 0, this.guidData.length);
         return copy;
+    }
+
+    /**
+     * This method saves a copy of the given <code>value</code> as the
+     * represented value of this object. <br>
+     * The given value is checked with {@link #assertGUID(int[])}.<br>
+     *
+     * @param value GUID to assign.
+     */
+    private void setGUID(final int[] value) {
+        if (assertGUID(value)) {
+            this.guidData = new int[GUID_LENGTH];
+            System.arraycopy(value, 0, this.guidData, 0, GUID_LENGTH);
+        } else {
+            throw new IllegalArgumentException("The given guidData doesn't match the GUID specification.");
+        }
     }
 
     /**
@@ -395,16 +375,13 @@ public final class GUID
      * @param bytes bytes to convert.
      * @return each byte as 2 digit hex.
      */
-    private String[] getHex(final byte[] bytes)
-    {
+    private String[] getHex(final byte[] bytes) {
         final String[] result = new String[bytes.length];
         final StringBuilder tmp = new StringBuilder();
-        for (int i = 0; i < bytes.length; i++)
-        {
+        for (int i = 0; i < bytes.length; i++) {
             tmp.delete(0, tmp.length());
             tmp.append(Integer.toHexString(0xFF & bytes[i]));
-            if (tmp.length() == 1)
-            {
+            if (tmp.length() == 1) {
                 tmp.insert(0, "0");
             }
             result[i] = tmp.toString();
@@ -416,13 +393,10 @@ public final class GUID
      * {@inheritDoc}
      */
     @Override
-    public int hashCode()
-    {
-        if (this.hash == -1)
-        {
+    public int hashCode() {
+        if (this.hash == -1) {
             int tmp = 0;
-            for (final int curr : getGUID())
-            {
+            for (final int curr : getGUID()) {
                 tmp = tmp * 31 + curr;
             }
             this.hash = tmp;
@@ -436,8 +410,7 @@ public final class GUID
      *
      * @return <code>true</code> if it is.
      */
-    public boolean isValid()
-    {
+    public boolean isValid() {
         return assertGUID(getGUID());
     }
 
@@ -446,16 +419,13 @@ public final class GUID
      *
      * @return hex formatted representation.
      */
-    public String prettyPrint()
-    {
+    public String prettyPrint() {
         final StringBuilder result = new StringBuilder();
         String descr = getDescription();
-        if (Utils.isBlank(descr))
-        {
+        if (Utils.isBlank(descr)) {
             descr = getGuidDescription(this);
         }
-        if (!Utils.isBlank(descr))
-        {
+        if (!Utils.isBlank(descr)) {
             result.append("Description: ").append(descr).append(Utils.LINE_SEPARATOR).append("   ");
         }
         result.append(this);
@@ -463,31 +433,10 @@ public final class GUID
     }
 
     /**
-     * This method saves a copy of the given <code>value</code> as the
-     * represented value of this object. <br>
-     * The given value is checked with {@link #assertGUID(int[])}.<br>
-     *
-     * @param value GUID to assign.
-     */
-    private void setGUID(final int[] value)
-    {
-        if (assertGUID(value))
-        {
-            this.guidData = new int[GUID_LENGTH];
-            System.arraycopy(value, 0, this.guidData, 0, GUID_LENGTH);
-        }
-        else
-        {
-            throw new IllegalArgumentException("The given guidData doesn't match the GUID specification.");
-        }
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
-    public String toString()
-    {
+    public String toString() {
         // C5F8CBEA-5BAF-4877-8467-AA8C44FA4CCA
         // 0xea, 0xcb,0xf8, 0xc5, 0xaf, 0x5b, 0x77, 0x48, 0x84, 0x67, 0xaa,
         // 0x8c, 0x44,0xfa, 0x4c, 0xca

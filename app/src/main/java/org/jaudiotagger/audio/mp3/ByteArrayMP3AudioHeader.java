@@ -4,11 +4,9 @@ import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
 
 import java.nio.ByteBuffer;
 
-public class ByteArrayMP3AudioHeader extends MP3AudioHeader
-{
+public class ByteArrayMP3AudioHeader extends MP3AudioHeader {
 
-    public ByteArrayMP3AudioHeader(byte[] fileBytes)
-    {
+    public ByteArrayMP3AudioHeader(byte[] fileBytes) {
         //References to Xing Header
         ByteBuffer header;
 
@@ -19,24 +17,17 @@ public class ByteArrayMP3AudioHeader extends MP3AudioHeader
         ByteBuffer bb = ByteBuffer.wrap(fileBytes);
 
         boolean syncFound = false;
-        do
-        {
-            if (MPEGFrameHeader.isMPEGFrame(bb))
-            {
-                try
-                {
+        do {
+            if (MPEGFrameHeader.isMPEGFrame(bb)) {
+                try {
 
                     mp3FrameHeader = MPEGFrameHeader.parseMPEGHeader(bb);
                     syncFound = true;
-                    if ((header = XingFrame.isXingFrame(bb, mp3FrameHeader))!=null)
-                    {
-                        try
-                        {
+                    if ((header = XingFrame.isXingFrame(bb, mp3FrameHeader)) != null) {
+                        try {
                             // Parses Xing frame without modifying position of main buffer
                             mp3XingFrame = XingFrame.parseXingFrame(header);
-                        }
-                        catch (InvalidAudioFrameException ex)
-                        {
+                        } catch (InvalidAudioFrameException ex) {
                             // We Ignore because even if Xing Header is corrupted
                             // doesn't mean file is corrupted
                         }
@@ -50,18 +41,14 @@ public class ByteArrayMP3AudioHeader extends MP3AudioHeader
                     // overhead because wont apply to most Mpegs anyway ( Most likely to occur if audio
                     // has an APIC frame which should have been unsynchronised but has not been) , or if the frame
                     // has been encoded with as Unicode LE because these have a BOM of 0xFF 0xFE
-                    else
-                    {
+                    else {
                         syncFound = isNextFrameValid(bb);
-                        if (syncFound)
-                        {
+                        if (syncFound) {
                             break;
                         }
                     }
 
-                }
-                catch (InvalidAudioFrameException ex)
-                {
+                } catch (InvalidAudioFrameException ex) {
                     // We Ignore because likely to be incorrect sync bits ,
                     // will just continue in loop
                 }
@@ -80,22 +67,17 @@ public class ByteArrayMP3AudioHeader extends MP3AudioHeader
         setEncoder();
     }
 
-    private boolean isNextFrameValid(ByteBuffer bb)
-    {
+    private boolean isNextFrameValid(ByteBuffer bb) {
         boolean result = false;
         int currentPosition = bb.position();
 
         bb.position(bb.position() + mp3FrameHeader.getFrameLength());
-        if (MPEGFrameHeader.isMPEGFrame(bb))
-        {
-            try
-            {
+        if (MPEGFrameHeader.isMPEGFrame(bb)) {
+            try {
                 MPEGFrameHeader.parseMPEGHeader(bb);
                 MP3AudioHeader.logger.finer("Check next frame confirms is an audio header ");
                 result = true;
-            }
-            catch (InvalidAudioFrameException ex)
-            {
+            } catch (InvalidAudioFrameException ex) {
                 MP3AudioHeader.logger.finer("Check next frame has identified this is not an audio header");
                 result = false;
             }

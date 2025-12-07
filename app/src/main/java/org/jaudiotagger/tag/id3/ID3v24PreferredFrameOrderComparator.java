@@ -1,21 +1,103 @@
 package org.jaudiotagger.tag.id3;
 
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_ACCOMPANIMENT;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_ALBUM;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_ALBUM_ARTIST_SORT_ORDER_ITUNES;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_ALBUM_SORT_ORDER;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_ARTIST;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_ARTIST_SORT_ORDER;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_ATTACHED_PICTURE;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_AUDIO_ENCRYPTION;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_AUDIO_SEEK_POINT_INDEX;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_BPM;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_COMMENT;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_COMMERCIAL_FRAME;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_COMPOSER;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_COMPOSER_SORT_ORDER_ITUNES;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_CONDUCTOR;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_CONTENT_GROUP_DESC;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_COPYRIGHTINFO;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_ENCODEDBY;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_ENCODING_TIME;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_ENCRYPTION;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_EQUALISATION2;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_EVENT_TIMING_CODES;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_FILE_OWNER;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_FILE_TYPE;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_GENERAL_ENCAPS_OBJECT;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_GENRE;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_GROUP_ID_REG;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_HW_SW_SETTINGS;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_INITIAL_KEY;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_INVOLVED_PEOPLE;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_ISRC;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_IS_COMPILATION;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_LANGUAGE;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_LENGTH;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_LINKED_INFO;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_LYRICIST;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_MEDIA_TYPE;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_MOOD;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_MPEG_LOCATION_LOOKUP_TABLE;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_MUSICIAN_CREDITS;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_MUSIC_CD_ID;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_ORIGARTIST;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_ORIGINAL_RELEASE_TIME;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_ORIG_FILENAME;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_ORIG_LYRICIST;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_ORIG_TITLE;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_OWNERSHIP;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_PLAYLIST_DELAY;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_PLAY_COUNTER;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_POPULARIMETER;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_POSITION_SYNC;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_PRIVATE;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_PRODUCED_NOTICE;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_PUBLISHER;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_RADIO_NAME;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_RADIO_OWNER;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_RECOMMENDED_BUFFER_SIZE;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_RELATIVE_VOLUME_ADJUSTMENT2;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_RELEASE_TIME;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_REMIXED;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_REVERB;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_SEEK;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_SET;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_SET_SUBTITLE;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_SIGNATURE;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_SYNC_LYRIC;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_SYNC_TEMPO;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_TAGGING_TIME;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_TERMS_OF_USE;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_TITLE;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_TITLE_REFINEMENT;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_TITLE_SORT_ORDER;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_TRACK;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_UNIQUE_FILE_ID;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_UNSYNC_LYRICS;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_URL_ARTIST_WEB;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_URL_COMMERCIAL;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_URL_COPYRIGHT;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_URL_FILE_WEB;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_URL_OFFICIAL_RADIO;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_URL_PAYMENT;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_URL_PUBLISHERS;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_USER_DEFINED_INFO;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_USER_DEFINED_URL;
+import static org.jaudiotagger.tag.id3.ID3v24Frames.FRAME_ID_YEAR;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import static org.jaudiotagger.tag.id3.ID3v24Frames.*;
-
 /**
  * Orders frame Ids so that the most important frames are writtne first
  */
-public class ID3v24PreferredFrameOrderComparator implements Comparator<String>
-{
-    private static ID3v24PreferredFrameOrderComparator comparator;
+public class ID3v24PreferredFrameOrderComparator implements Comparator<String> {
     private static final List frameIdsInPreferredOrder = new ArrayList<String>();
+    private static ID3v24PreferredFrameOrderComparator comparator;
 
-    static
-    {
+    static {
         //these are the key ones we want at the top
         frameIdsInPreferredOrder.add(FRAME_ID_UNIQUE_FILE_ID);
         frameIdsInPreferredOrder.add(FRAME_ID_TITLE);
@@ -57,7 +139,7 @@ public class ID3v24PreferredFrameOrderComparator implements Comparator<String>
         frameIdsInPreferredOrder.add(FRAME_ID_COMPOSER_SORT_ORDER_ITUNES);
         frameIdsInPreferredOrder.add(FRAME_ID_IS_COMPILATION);
         frameIdsInPreferredOrder.add(FRAME_ID_COMMENT);
-        
+
         //Not so bothered about these
         frameIdsInPreferredOrder.add(FRAME_ID_AUDIO_SEEK_POINT_INDEX);
         frameIdsInPreferredOrder.add(FRAME_ID_COMMERCIAL_FRAME);
@@ -112,15 +194,12 @@ public class ID3v24PreferredFrameOrderComparator implements Comparator<String>
 
     }
 
-    private ID3v24PreferredFrameOrderComparator()
-    {
+    private ID3v24PreferredFrameOrderComparator() {
 
     }
 
-    public static ID3v24PreferredFrameOrderComparator getInstanceof()
-    {
-        if (comparator == null)
-        {
+    public static ID3v24PreferredFrameOrderComparator getInstanceof() {
+        if (comparator == null) {
             comparator = new ID3v24PreferredFrameOrderComparator();
         }
         return comparator;
@@ -134,31 +213,26 @@ public class ID3v24PreferredFrameOrderComparator implements Comparator<String>
      * @param frameId2
      * @return
      */
-    public int compare(String frameId1, String frameId2)
-    {
-        int frameId1Index= frameIdsInPreferredOrder.indexOf(frameId1);
-        if(frameId1Index==-1)
-        {
-            frameId1Index=Integer.MAX_VALUE;
+    public int compare(String frameId1, String frameId2) {
+        int frameId1Index = frameIdsInPreferredOrder.indexOf(frameId1);
+        if (frameId1Index == -1) {
+            frameId1Index = Integer.MAX_VALUE;
         }
-        int frameId2Index= frameIdsInPreferredOrder.indexOf(frameId2);
+        int frameId2Index = frameIdsInPreferredOrder.indexOf(frameId2);
 
         //Because othwerwise returns -1 whihc would be tags in list went to top of list
-        if(frameId2Index==-1)
-        {
-            frameId2Index=Integer.MAX_VALUE;
+        if (frameId2Index == -1) {
+            frameId2Index = Integer.MAX_VALUE;
         }
 
         //To have determinable ordering AND because if returns equal Treese considers as equal
-        if(frameId1Index==frameId2Index)
-        {
+        if (frameId1Index == frameId2Index) {
             return frameId1.compareTo(frameId2);
         }
         return frameId1Index - frameId2Index;
     }
 
-    public boolean equals(Object obj)
-    {
+    public boolean equals(Object obj) {
         return obj instanceof ID3v24PreferredFrameOrderComparator;
     }
 

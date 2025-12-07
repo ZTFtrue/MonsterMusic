@@ -6,8 +6,7 @@ package org.jaudiotagger.tag.mp4.atom;
  *
  * <p>These are held as a byte field, normally only used for purcahed items, audio files use a stik of one
  */
-public enum Mp4ContentTypeValue
-{
+public enum Mp4ContentTypeValue {
     MOVIE("Movie", 0),
     NORMAL("Normal", 1),
     AUDIO_BOOK("AudioBook", 2),
@@ -25,8 +24,7 @@ public enum Mp4ContentTypeValue
      * @param description of value
      * @param id          used internally
      */
-    Mp4ContentTypeValue(String description, int id)
-    {
+    Mp4ContentTypeValue(String description, int id) {
         this.description = description;
         this.id = id;
     }
@@ -36,16 +34,14 @@ public enum Mp4ContentTypeValue
      *
      * @return id
      */
-    public int getId()
-    {
+    public int getId() {
         return id;
     }
 
     /**
      * @return the id as a string (convenience method for use with mp4.createtagField()
      */
-    public String getIdAsString()
-    {
+    public String getIdAsString() {
         return String.valueOf(id);
     }
 
@@ -54,8 +50,7 @@ public enum Mp4ContentTypeValue
      *
      * @return
      */
-    public String getDescription()
-    {
+    public String getDescription() {
         return description;
     }
 

@@ -1,25 +1,25 @@
 /*
-*      _______                       _____   _____ _____  
-*     |__   __|                     |  __ \ / ____|  __ \ 
-*        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
-*        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/ 
-*        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |     
-*        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|     
-*                                                         
-* -------------------------------------------------------------
-*
-* TarsosDSP is developed by Joren Six at IPEM, University Ghent
-*  
-* -------------------------------------------------------------
-*
-*  Info: http://0110.be/tag/TarsosDSP
-*  Github: https://github.com/JorenSix/TarsosDSP
-*  Releases: http://0110.be/releases/TarsosDSP/
-*  
-*  TarsosDSP includes modified source code by various authors,
-*  for credits and info, see README.
-* 
-*/
+ *      _______                       _____   _____ _____
+ *     |__   __|                     |  __ \ / ____|  __ \
+ *        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
+ *        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/
+ *        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |
+ *        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|
+ *
+ * -------------------------------------------------------------
+ *
+ * TarsosDSP is developed by Joren Six at IPEM, University Ghent
+ *
+ * -------------------------------------------------------------
+ *
+ *  Info: http://0110.be/tag/TarsosDSP
+ *  Github: https://github.com/JorenSix/TarsosDSP
+ *  Releases: http://0110.be/releases/TarsosDSP/
+ *
+ *  TarsosDSP includes modified source code by various authors,
+ *  for credits and info, see README.
+ *
+ */
 
 /******************************************************************************
  *
@@ -39,7 +39,7 @@ package be.tarsos.dsp.resample;
  * This file provides Kaiser-windowed low-pass filter support,
  * including a function to create the filter coefficients, and
  * two functions to apply the filter at a particular point.
- * 
+ *
  * <pre>
  * reference: "Digital Filters, 2nd edition"
  *            R.W. Hamming, pp. 178-179
@@ -121,25 +121,25 @@ class FilterKit {
             temp = (double) i * inm1;
             temp1 = 1.0 - temp * temp;
             temp1 = (temp1 < 0 ? 0 : temp1); /*
-                                              * make sure it's not negative
-                                              * since we're taking the square
-                                              * root - this happens on Pentium
-                                              * 4's due to tiny roundoff errors
-                                              */
+             * make sure it's not negative
+             * since we're taking the square
+             * root - this happens on Pentium
+             * 4's due to tiny roundoff errors
+             */
             c[i] *= Izero(Beta * Math.sqrt(temp1)) * IBeta;
         }
     }
 
     /**
-     * 
-     * @param Imp impulse response
-     * @param ImpD impulse response deltas
-     * @param Nwing length of one wing of filter
-     * @param Interp Interpolate coefs using deltas?
+     *
+     * @param Imp      impulse response
+     * @param ImpD     impulse response deltas
+     * @param Nwing    length of one wing of filter
+     * @param Interp   Interpolate coefs using deltas?
      * @param Xp_array Current sample array
      * @param Xp_index Current sample index
-     * @param Ph Phase
-     * @param Inc increment (1 for right wing or -1 for left)
+     * @param Ph       Phase
+     * @param Inc      increment (1 for right wing or -1 for left)
      * @return v.
      */
     public static float lrsFilterUp(float[] Imp, float[] ImpD, int Nwing, boolean Interp, float[] Xp_array, int Xp_index, double Ph,
@@ -198,16 +198,16 @@ class FilterKit {
     }
 
     /**
-     * 
-     * @param Imp impulse response
-     * @param ImpD impulse response deltas
-     * @param Nwing length of one wing of filter
-     * @param Interp Interpolate coefs using deltas?
+     *
+     * @param Imp      impulse response
+     * @param ImpD     impulse response deltas
+     * @param Nwing    length of one wing of filter
+     * @param Interp   Interpolate coefs using deltas?
      * @param Xp_array Current sample array
      * @param Xp_index Current sample index
-     * @param Ph Phase
-     * @param Inc increment (1 for right wing or -1 for left)
-     * @param dhb filter sampling period
+     * @param Ph       Phase
+     * @param Inc      increment (1 for right wing or -1 for left)
+     * @param dhb      filter sampling period
      * @return v.
      */
     public static float lrsFilterUD(float[] Imp, float[] ImpD, int Nwing, boolean Interp, float[] Xp_array, int Xp_index, double Ph,
@@ -240,7 +240,7 @@ class FilterKit {
                 t = Hp_array[Hp_index]; // Get IR sample
                 Hdp_index = (int) Ho; // get interp bits from diff table
                 a = (float) (Ho - Math.floor(Ho)); // a is logically between 0
-                                                   // and 1
+                // and 1
                 t += Hdp_array[Hdp_index] * a; // t is now interp'd filter coeff
                 t *= Xp_array[Xp_index]; // Mult coeff by input sample
                 v += t; // The filter output

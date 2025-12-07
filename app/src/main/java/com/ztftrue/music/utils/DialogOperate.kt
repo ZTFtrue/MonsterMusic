@@ -27,7 +27,8 @@ object DialogOperate {
             navController.add(Router.PlayListView(artistList))
         }
     }
-    fun openOpenArtistById(artistId:Long,navController: SnapshotStateList<Any>) {
+
+    fun openOpenArtistById(artistId: Long, navController: SnapshotStateList<Any>) {
         val artistList =
             ArtistList(
                 id = artistId,
@@ -39,6 +40,7 @@ object DialogOperate {
 //                        viewModel.navController.clearExceptFirst()
         navController.replaceCurrent(Router.PlayListView(artistList))
     }
+
     fun openOpenAlbumById(music: MusicItem, navController: SnapshotStateList<Any>) {
 
         val albumList =

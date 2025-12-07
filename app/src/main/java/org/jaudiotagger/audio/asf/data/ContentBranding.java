@@ -15,8 +15,7 @@ import java.util.Set;
  *
  * @author Christian Laireiter
  */
-public final class ContentBranding extends MetadataContainer
-{
+public final class ContentBranding extends MetadataContainer {
 
     /**
      * Stores the allowed {@linkplain MetadataDescriptor#getName() descriptor
@@ -52,8 +51,7 @@ public final class ContentBranding extends MetadataContainer
      */
     public final static String KEY_COPYRIGHT_URL = "COPYRIGHT_URL";
 
-    static
-    {
+    static {
         ALLOWED = new HashSet<String>();
         ALLOWED.add(KEY_BANNER_IMAGE);
         ALLOWED.add(KEY_BANNER_TYPE);
@@ -64,8 +62,7 @@ public final class ContentBranding extends MetadataContainer
     /**
      * Creates an instance.
      */
-    public ContentBranding()
-    {
+    public ContentBranding() {
         this(0, BigInteger.ZERO);
     }
 
@@ -75,8 +72,7 @@ public final class ContentBranding extends MetadataContainer
      * @param pos  Position of content description within file or stream
      * @param size Length of content description.
      */
-    public ContentBranding(final long pos, final BigInteger size)
-    {
+    public ContentBranding(final long pos, final BigInteger size) {
         super(ContainerType.CONTENT_BRANDING, pos, size);
     }
 
@@ -85,9 +81,22 @@ public final class ContentBranding extends MetadataContainer
      *
      * @return the banner image URL.
      */
-    public String getBannerImageURL()
-    {
+    public String getBannerImageURL() {
         return getValueFor(KEY_BANNER_URL);
+    }
+
+    /**
+     * This method sets the banner image URL, if <code>imageURL</code> is not
+     * blank.<br>
+     *
+     * @param imageURL image URL to set.
+     */
+    public void setBannerImageURL(final String imageURL) {
+        if (Utils.isBlank(imageURL)) {
+            removeDescriptorsByName(KEY_BANNER_URL);
+        } else {
+            assertDescriptor(KEY_BANNER_URL).setStringValue(imageURL);
+        }
     }
 
     /**
@@ -95,17 +104,29 @@ public final class ContentBranding extends MetadataContainer
      *
      * @return the banner image URL.
      */
-    public String getCopyRightURL()
-    {
+    public String getCopyRightURL() {
         return getValueFor(KEY_COPYRIGHT_URL);
+    }
+
+    /**
+     * This method sets the copyright URL, if <code>copyRight</code> is not
+     * blank.<br>
+     *
+     * @param copyRight copyright URL to set.
+     */
+    public void setCopyRightURL(final String copyRight) {
+        if (Utils.isBlank(copyRight)) {
+            removeDescriptorsByName(KEY_COPYRIGHT_URL);
+        } else {
+            assertDescriptor(KEY_COPYRIGHT_URL).setStringValue(copyRight);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public long getCurrentAsfChunkSize()
-    {
+    public long getCurrentAsfChunkSize() {
         // GUID, size, image type, image data size, image url data size,
         // copyright data size
         long result = 40;
@@ -120,8 +141,7 @@ public final class ContentBranding extends MetadataContainer
      *
      * @return binary image data.
      */
-    public byte[] getImageData()
-    {
+    public byte[] getImageData() {
         return assertDescriptor(KEY_BANNER_IMAGE, MetadataDescriptor.TYPE_BINARY).getRawData();
     }
 
@@ -131,10 +151,8 @@ public final class ContentBranding extends MetadataContainer
      * @return image type
      * @see #KEY_BANNER_TYPE for known/valid values.
      */
-    public long getImageType()
-    {
-        if (!hasDescriptor(KEY_BANNER_TYPE))
-        {
+    public long getImageType() {
+        if (!hasDescriptor(KEY_BANNER_TYPE)) {
             final MetadataDescriptor descriptor = new MetadataDescriptor(ContainerType.CONTENT_BRANDING, KEY_BANNER_TYPE, MetadataDescriptor.TYPE_DWORD);
             descriptor.setDWordValue(0);
             addDescriptor(descriptor);
@@ -146,53 +164,15 @@ public final class ContentBranding extends MetadataContainer
      * {@inheritDoc}
      */
     @Override
-    public boolean isAddSupported(final MetadataDescriptor descriptor)
-    {
+    public boolean isAddSupported(final MetadataDescriptor descriptor) {
         return ALLOWED.contains(descriptor.getName()) && super.isAddSupported(descriptor);
-    }
-
-    /**
-     * This method sets the banner image URL, if <code>imageURL</code> is not
-     * blank.<br>
-     *
-     * @param imageURL image URL to set.
-     */
-    public void setBannerImageURL(final String imageURL)
-    {
-        if (Utils.isBlank(imageURL))
-        {
-            removeDescriptorsByName(KEY_BANNER_URL);
-        }
-        else
-        {
-            assertDescriptor(KEY_BANNER_URL).setStringValue(imageURL);
-        }
-    }
-
-    /**
-     * This method sets the copyright URL, if <code>copyRight</code> is not
-     * blank.<br>
-     *
-     * @param copyRight copyright URL to set.
-     */
-    public void setCopyRightURL(final String copyRight)
-    {
-        if (Utils.isBlank(copyRight))
-        {
-            removeDescriptorsByName(KEY_COPYRIGHT_URL);
-        }
-        else
-        {
-            assertDescriptor(KEY_COPYRIGHT_URL).setStringValue(copyRight);
-        }
     }
 
     /**
      * @param imageType
      * @param imageData
      */
-    public void setImage(final long imageType, final byte[] imageData)
-    {
+    public void setImage(final long imageType, final byte[] imageData) {
         assert imageType >= 0 && imageType <= 3;
         assert imageType > 0 || imageData.length == 0;
         assertDescriptor(KEY_BANNER_TYPE, MetadataDescriptor.TYPE_DWORD).setDWordValue(imageType);
@@ -203,8 +183,7 @@ public final class ContentBranding extends MetadataContainer
      * {@inheritDoc}
      */
     @Override
-    public long writeInto(final OutputStream out) throws IOException
-    {
+    public long writeInto(final OutputStream out) throws IOException {
         final long chunkSize = getCurrentAsfChunkSize();
         out.write(getGuid().getBytes());
         Utils.writeUINT64(chunkSize, out);

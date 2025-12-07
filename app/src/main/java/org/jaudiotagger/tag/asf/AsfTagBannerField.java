@@ -7,11 +7,10 @@ import org.jaudiotagger.audio.asf.data.MetadataDescriptor;
 /**
  * This field represents the image content of the banner image which is stored
  * in the {@linkplain ContentBranding content branding} chunk of ASF files.<br>
- * 
+ *
  * @author Christian Laireiter
  */
-public class AsfTagBannerField extends AbstractAsfTagImageField
-{
+public class AsfTagBannerField extends AbstractAsfTagImageField {
 
     /**
      * Creates an instance with no image data.<br>
@@ -22,9 +21,8 @@ public class AsfTagBannerField extends AbstractAsfTagImageField
 
     /**
      * Creates an instance with given descriptor as image content.<br>
-     * 
-     * @param descriptor
-     *            image content.
+     *
+     * @param descriptor image content.
      */
     public AsfTagBannerField(final MetadataDescriptor descriptor) {
         super(descriptor);
@@ -34,9 +32,8 @@ public class AsfTagBannerField extends AbstractAsfTagImageField
 
     /**
      * Creates an instance with specified data as image content.
-     * 
-     * @param imageData
-     *            image content.
+     *
+     * @param imageData image content.
      */
     public AsfTagBannerField(final byte[] imageData) {
         super(new MetadataDescriptor(ContainerType.CONTENT_BRANDING,

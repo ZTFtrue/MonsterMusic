@@ -33,13 +33,11 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyWORS extends AbstractFrameBodyUrlLink implements ID3v24FrameBody, ID3v23FrameBody
-{
+public class FrameBodyWORS extends AbstractFrameBodyUrlLink implements ID3v24FrameBody, ID3v23FrameBody {
     /**
      * Creates a new FrameBodyWORS datatype.
      */
-    public FrameBodyWORS()
-    {
+    public FrameBodyWORS() {
     }
 
     /**
@@ -47,13 +45,11 @@ public class FrameBodyWORS extends AbstractFrameBodyUrlLink implements ID3v24Fra
      *
      * @param urlLink
      */
-    public FrameBodyWORS(String urlLink)
-    {
+    public FrameBodyWORS(String urlLink) {
         super(urlLink);
     }
 
-    public FrameBodyWORS(FrameBodyWORS body)
-    {
+    public FrameBodyWORS(FrameBodyWORS body) {
         super(body);
     }
 
@@ -64,8 +60,7 @@ public class FrameBodyWORS extends AbstractFrameBodyUrlLink implements ID3v24Fra
      * @param frameSize
      * @throws InvalidTagException
      */
-    public FrameBodyWORS(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyWORS(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -74,8 +69,7 @@ public class FrameBodyWORS extends AbstractFrameBodyUrlLink implements ID3v24Fra
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_URL_OFFICIAL_RADIO;
     }
 }

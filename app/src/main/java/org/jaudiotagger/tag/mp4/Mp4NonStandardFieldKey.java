@@ -7,8 +7,7 @@ import org.jaudiotagger.tag.reference.Tagger;
  * be created by applications other than iTunes, as we regard iTunes as the defacto standard for Mp4 files (but
  * certainly not any other format such as mp3 !).
  */
-public enum Mp4NonStandardFieldKey
-{
+public enum Mp4NonStandardFieldKey {
     AAPR("AApr", "MM3 Album Art Attributes", Tagger.MEDIA_MONKEY),
     ALFN("Alfn", "MM3 Album Art Unknown", Tagger.MEDIA_MONKEY),
     AMIM("AMIM", "MM3 Album Art MimeType", Tagger.MEDIA_MONKEY),
@@ -19,8 +18,7 @@ public enum Mp4NonStandardFieldKey
     private final String description;
     private final Tagger tagger;
 
-    Mp4NonStandardFieldKey(String fieldName, String description, Tagger tagger)
-    {
+    Mp4NonStandardFieldKey(String fieldName, String description, Tagger tagger) {
         this.fieldName = fieldName;
         this.description = description;
         this.tagger = tagger;
@@ -32,24 +30,21 @@ public enum Mp4NonStandardFieldKey
      *
      * @return
      */
-    public String getFieldName()
-    {
+    public String getFieldName() {
         return fieldName;
     }
 
     /**
      * @return description, human redable description of the atom
      */
-    public String getDescription()
-    {
+    public String getDescription() {
         return description;
     }
 
     /**
      * @return tagger that defined (and probably craeted) instance of field
      */
-    public Tagger geTagger()
-    {
+    public Tagger geTagger() {
         return tagger;
     }
 }

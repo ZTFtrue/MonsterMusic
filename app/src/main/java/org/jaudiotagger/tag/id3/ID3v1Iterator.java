@@ -1,23 +1,23 @@
 /**
- *  @author : Paul Taylor
- *  @author : Eric Farng
- *
- *  Version @version:$Id$
- *
- *  MusicTag Copyright (C)2003,2004
- *
- *  This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
- *  General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
- *  or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- *  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public License along with this library; if not,
- *  you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ * @author : Paul Taylor
+ * @author : Eric Farng
+ * <p>
+ * Version @version:$Id$
+ * <p>
+ * MusicTag Copyright (C)2003,2004
+ * <p>
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
+ * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
+ * or (at your option) any later version.
+ * <p>
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not,
+ * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * <p>
  * Description:
  *
  */
@@ -27,8 +27,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 
-public class ID3v1Iterator implements Iterator
-{
+public class ID3v1Iterator implements Iterator {
     /**
      *
      */
@@ -79,34 +78,29 @@ public class ID3v1Iterator implements Iterator
      *
      * @param id3v1tag
      */
-    public ID3v1Iterator(ID3v1Tag id3v1tag)
-    {
+    public ID3v1Iterator(ID3v1Tag id3v1tag) {
         this.id3v1tag = id3v1tag;
     }
 
     /**
      * @return
      */
-    public boolean hasNext()
-    {
+    public boolean hasNext() {
         return hasNext(lastIndex);
     }
 
     /**
      * @return
      */
-    public Object next()
-    {
+    public Object next() {
         return next(lastIndex);
     }
 
     /**
      *
      */
-    public void remove()
-    {
-        switch (lastIndex)
-        {
+    public void remove() {
+        switch (lastIndex) {
             case TITLE:
                 id3v1tag.title = "";
 
@@ -127,8 +121,7 @@ public class ID3v1Iterator implements Iterator
 
             case TRACK:
 
-                if (id3v1tag instanceof ID3v11Tag)
-                {
+                if (id3v1tag instanceof ID3v11Tag) {
                     ((ID3v11Tag) id3v1tag).track = (byte) -1;
                 }
         }
@@ -138,10 +131,8 @@ public class ID3v1Iterator implements Iterator
      * @param index
      * @return
      */
-    private boolean hasNext(int index)
-    {
-        switch (index)
-        {
+    private boolean hasNext(int index) {
+        switch (index) {
             case TITLE:
                 return (id3v1tag.title.length() > 0) || hasNext(index + 1);
 
@@ -162,8 +153,7 @@ public class ID3v1Iterator implements Iterator
 
             case TRACK:
 
-                if (id3v1tag instanceof ID3v11Tag)
-                {
+                if (id3v1tag instanceof ID3v11Tag) {
                     return (((ID3v11Tag) id3v1tag).track >= (byte) 0) || hasNext(index + 1);
                 }
 
@@ -177,10 +167,8 @@ public class ID3v1Iterator implements Iterator
      * @return
      * @throws NoSuchElementException
      */
-    private Object next(int index)
-    {
-        switch (lastIndex)
-        {
+    private Object next(int index) {
+        switch (lastIndex) {
             case 0:
                 return (id3v1tag.title.length() > 0) ? id3v1tag.title : next(index + 1);
 

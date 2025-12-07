@@ -2,14 +2,13 @@ package org.jaudiotagger.audio.flac.metadatablock;
 
 /**
  * The different types of metadata block
- *
+ * <p>
  * 7 - 126 are reserved for future use
  * 127 is invalid
  * User: Paul Taylor
  * Date: 21-Nov-2007
  */
-public enum BlockType
-{
+public enum BlockType {
     STREAMINFO(0),
     PADDING(1),
     APPLICATION(2),
@@ -20,13 +19,11 @@ public enum BlockType
 
     private final int id;
 
-    BlockType(int id)
-    {
+    BlockType(int id) {
         this.id = id;
     }
 
-    public int getId()
-    {
+    public int getId() {
         return id;
     }
 }

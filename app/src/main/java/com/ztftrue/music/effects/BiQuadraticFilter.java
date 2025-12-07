@@ -14,19 +14,12 @@ final public class BiQuadraticFilter {
     final static int LOWSHELF = 5;
     final static int HIGHSHELF = 6;
     final static int Gain = 7;
+    BIND_TYPE bindType = BIND_TYPE.Q;
+    float center_freq, sample_rate, Q, gainDB, bw;
     private float a0, a1, a2, b0, b1, b2;
     private float x1, x2, y, y1, y2;
     private float gain_abs;
     private int type;
-    BIND_TYPE bindType = BIND_TYPE.Q;
-
-    enum BIND_TYPE {
-        Q,
-        BW,
-        S
-    }
-
-    float center_freq, sample_rate, Q, gainDB, bw;
 
     public BiQuadraticFilter() {
     }
@@ -61,8 +54,6 @@ final public class BiQuadraticFilter {
     public void configure(int type, float center_freq, float sample_rate, float Q) {
         configure(type, center_freq, sample_rate, Q, 0);
     }
-
-
 
     // allow parameter change while running
     public void reconfigure(float cf) {
@@ -190,5 +181,11 @@ final public class BiQuadraticFilter {
         y2 = y1;
         y1 = y;
         return (y);
+    }
+
+    enum BIND_TYPE {
+        Q,
+        BW,
+        S
     }
 }

@@ -29,7 +29,6 @@ import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.CustomMetadataKeys
 import com.ztftrue.music.ui.other.FolderItemView
-import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.model.FolderList
 import com.ztftrue.music.utils.trackManager.FolderManger
 

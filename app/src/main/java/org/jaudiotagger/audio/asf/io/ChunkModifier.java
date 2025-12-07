@@ -11,8 +11,7 @@ import java.io.OutputStream;
  *
  * @author Christian Laireiter
  */
-public interface ChunkModifier
-{
+public interface ChunkModifier {
 
     /**
      * Determines, whether the modifier handles chunks identified by given

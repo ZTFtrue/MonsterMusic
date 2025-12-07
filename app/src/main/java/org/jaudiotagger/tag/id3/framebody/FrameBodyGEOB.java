@@ -16,7 +16,12 @@
 package org.jaudiotagger.tag.id3.framebody;
 
 import org.jaudiotagger.tag.InvalidTagException;
-import org.jaudiotagger.tag.datatype.*;
+import org.jaudiotagger.tag.datatype.AbstractString;
+import org.jaudiotagger.tag.datatype.ByteArraySizeTerminated;
+import org.jaudiotagger.tag.datatype.DataTypes;
+import org.jaudiotagger.tag.datatype.NumberHashMap;
+import org.jaudiotagger.tag.datatype.StringNullTerminated;
+import org.jaudiotagger.tag.datatype.TextEncodedStringNullTerminated;
 import org.jaudiotagger.tag.id3.ID3v24Frames;
 import org.jaudiotagger.tag.id3.valuepair.TextEncoding;
 
@@ -25,8 +30,8 @@ import java.nio.ByteBuffer;
 
 /**
  * General encapsulated object frame.
- *
- *
+ * <p>
+ * <p>
  * In this frame any type of file can be encapsulated. After the header,
  * 'Frame size' and 'Encoding' follows 'MIME type' represented as
  * as a terminated string encoded with ISO-8859-1. The
@@ -53,14 +58,12 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyGEOB extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody
-{
+public class FrameBodyGEOB extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody {
 
     /**
      * Creates a new FrameBodyGEOB datatype.
      */
-    public FrameBodyGEOB()
-    {
+    public FrameBodyGEOB() {
         this.setObjectValue(DataTypes.OBJ_TEXT_ENCODING, TextEncoding.ISO_8859_1);
         this.setObjectValue(DataTypes.OBJ_MIME_TYPE, "");
         this.setObjectValue(DataTypes.OBJ_FILENAME, "");
@@ -68,8 +71,7 @@ public class FrameBodyGEOB extends AbstractID3v2FrameBody implements ID3v24Frame
         this.setObjectValue(DataTypes.OBJ_DATA, new byte[0]);
     }
 
-    public FrameBodyGEOB(FrameBodyGEOB body)
-    {
+    public FrameBodyGEOB(FrameBodyGEOB body) {
         super(body);
     }
 
@@ -82,8 +84,7 @@ public class FrameBodyGEOB extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param description
      * @param object
      */
-    public FrameBodyGEOB(byte textEncoding, String mimeType, String filename, String description, byte[] object)
-    {
+    public FrameBodyGEOB(byte textEncoding, String mimeType, String filename, String description, byte[] object) {
         this.setObjectValue(DataTypes.OBJ_TEXT_ENCODING, textEncoding);
         this.setObjectValue(DataTypes.OBJ_MIME_TYPE, mimeType);
         this.setObjectValue(DataTypes.OBJ_FILENAME, filename);
@@ -98,32 +99,28 @@ public class FrameBodyGEOB extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param frameSize
      * @throws InvalidTagException if unable to create framebody from buffer
      */
-    public FrameBodyGEOB(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyGEOB(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
-    }
-
-    /**
-     * @param description
-     */
-    public void setDescription(String description)
-    {
-        setObjectValue(DataTypes.OBJ_DESCRIPTION, description);
     }
 
     /**
      * @return the description field
      */
-    public String getDescription()
-    {
+    public String getDescription() {
         return (String) getObjectValue(DataTypes.OBJ_DESCRIPTION);
+    }
+
+    /**
+     * @param description
+     */
+    public void setDescription(String description) {
+        setObjectValue(DataTypes.OBJ_DESCRIPTION, description);
     }
 
     /**
      * @return
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_GENERAL_ENCAPS_OBJECT;
     }
 
@@ -131,14 +128,11 @@ public class FrameBodyGEOB extends AbstractID3v2FrameBody implements ID3v24Frame
     /**
      * If the filename or description cannot be encoded using current encoder, change the encoder
      */
-    public void write(ByteArrayOutputStream tagBuffer)
-    {
-        if (!((AbstractString) getObject(DataTypes.OBJ_FILENAME)).canBeEncoded())
-        {
+    public void write(ByteArrayOutputStream tagBuffer) {
+        if (!((AbstractString) getObject(DataTypes.OBJ_FILENAME)).canBeEncoded()) {
             this.setTextEncoding(TextEncoding.UTF_16);
         }
-        if (!((AbstractString) getObject(DataTypes.OBJ_DESCRIPTION)).canBeEncoded())
-        {
+        if (!((AbstractString) getObject(DataTypes.OBJ_DESCRIPTION)).canBeEncoded()) {
             this.setTextEncoding(TextEncoding.UTF_16);
         }
         super.write(tagBuffer);
@@ -147,8 +141,7 @@ public class FrameBodyGEOB extends AbstractID3v2FrameBody implements ID3v24Frame
     /**
      *
      */
-    protected void setupObjectList()
-    {
+    protected void setupObjectList() {
         objectList.add(new NumberHashMap(DataTypes.OBJ_TEXT_ENCODING, this, TextEncoding.TEXT_ENCODING_FIELD_SIZE));
         objectList.add(new StringNullTerminated(DataTypes.OBJ_MIME_TYPE, this));
         objectList.add(new TextEncodedStringNullTerminated(DataTypes.OBJ_FILENAME, this));

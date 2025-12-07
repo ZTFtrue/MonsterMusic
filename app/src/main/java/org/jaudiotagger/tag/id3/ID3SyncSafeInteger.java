@@ -16,14 +16,13 @@ import java.nio.ByteBuffer;
  * integers that keep its highest bit (bit 7) zeroed, making seven bits
  * out of eight available. Thus a 32 bit synchsafe integer can store 28
  * bits of information.
- *
+ * <p>
  * Example:
- *
+ * <p>
  * 255 (%11111111) encoded as a 16 bit synchsafe integer is 383
  * (%00000001 01111111).
  */
-public class ID3SyncSafeInteger
-{
+public class ID3SyncSafeInteger {
     public static final int INTEGRAL_SIZE = 4;
 
     /**
@@ -38,8 +37,7 @@ public class ID3SyncSafeInteger
      * @param buffer syncsafe integer
      * @return decoded int
      */
-    public static int bufferToValue(byte[] buffer)
-    {
+    public static int bufferToValue(byte[] buffer) {
         //Note Need to && with 0xff otherwise if value is greater than 128 we get a negative number
         //when cast byte to int
         return ((buffer[0] & 0xff) << 21) + ((buffer[1] & 0xff) << 14) + ((buffer[2] & 0xff) << 7) + ((buffer[3]) & 0xff);
@@ -47,14 +45,13 @@ public class ID3SyncSafeInteger
 
     /**
      * Read syncsafe value from buffer in format specified in spec and convert to int.
-     *
+     * <p>
      * The buffers position is moved to just after the location of the syncsafe integer
      *
      * @param buffer syncsafe integer
      * @return decoded int
      */
-    public static int bufferToValue(ByteBuffer buffer)
-    {
+    public static int bufferToValue(ByteBuffer buffer) {
         byte[] byteBuffer = new byte[INTEGRAL_SIZE];
         buffer.get(byteBuffer, 0, INTEGRAL_SIZE);
         return bufferToValue(byteBuffer);
@@ -62,28 +59,25 @@ public class ID3SyncSafeInteger
 
     /**
      * Is buffer holding a value that is definently not syncsafe
-     *
+     * <p>
      * We cannot guarantee a buffer is holding a syncsafe integer but there are some checks
      * we can do to show that it definently is not.
-     *
+     * <p>
      * The buffer is NOT moved after reading.
-     *
+     * <p>
      * This function is useful for reading ID3v24 frames created in iTunes because iTunes does not use syncsafe
      * integers in  its frames.
      *
      * @param buffer
      * @return true if this buffer is definently not holding a syncsafe integer
      */
-    protected static boolean isBufferNotSyncSafe(ByteBuffer buffer)
-    {
+    protected static boolean isBufferNotSyncSafe(ByteBuffer buffer) {
         int position = buffer.position();
 
         //Check Bit7 not set
-        for (int i = 0; i < INTEGRAL_SIZE; i++)
-        {
+        for (int i = 0; i < INTEGRAL_SIZE; i++) {
             byte nextByte = buffer.get(position + i);
-            if ((nextByte & 0x80) > 0)
-            {
+            if ((nextByte & 0x80) > 0) {
                 return true;
             }
         }
@@ -92,18 +86,15 @@ public class ID3SyncSafeInteger
 
     /**
      * Checks if the buffer just contains zeros
-     *
+     * <p>
      * This can be used to identify when accessing padding of a tag
      *
      * @param buffer
      * @return true if buffer only contains zeros
      */
-    protected static boolean isBufferEmpty(byte[] buffer)
-    {
-        for (byte aBuffer : buffer)
-        {
-            if (aBuffer != 0)
-            {
+    protected static boolean isBufferEmpty(byte[] buffer) {
+        for (byte aBuffer : buffer) {
+            if (aBuffer != 0) {
                 return false;
             }
         }
@@ -116,8 +107,7 @@ public class ID3SyncSafeInteger
      * @param size
      * @return buffer syncsafe integer
      */
-    protected static byte[] valueToBuffer(int size)
-    {
+    protected static byte[] valueToBuffer(int size) {
         byte[] buffer = new byte[4];
         buffer[0] = (byte) ((size & 0x0FE00000) >> 21);
         buffer[1] = (byte) ((size & 0x001FC000) >> 14);

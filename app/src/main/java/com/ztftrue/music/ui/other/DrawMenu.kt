@@ -40,8 +40,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -177,7 +175,10 @@ fun DrawMenu(
                     }
                     .clickable {
                         isAutoHandleAudioFocus = !isAutoHandleAudioFocus
-                        SharedPreferencesUtils.setAutoHandleAudioFocus(context, isAutoHandleAudioFocus)
+                        SharedPreferencesUtils.setAutoHandleAudioFocus(
+                            context,
+                            isAutoHandleAudioFocus
+                        )
                         musicViewModel.browser?.setAudioAttributes(
                             AudioAttributes.Builder()
                                 .setUsage(C.USAGE_MEDIA)

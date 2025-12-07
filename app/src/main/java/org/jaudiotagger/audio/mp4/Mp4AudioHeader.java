@@ -6,24 +6,27 @@ import org.jaudiotagger.audio.mp4.atom.Mp4EsdsBox;
 /**
  * Store some additional attributes useful for Mp4s
  */
-public class Mp4AudioHeader extends GenericAudioHeader
-{
-    private Mp4EsdsBox.Kind             kind;
-    private Mp4EsdsBox.AudioProfile     profile;
-    private String                      brand;
-
-
-    public void setKind(Mp4EsdsBox.Kind kind)
-    {
-       this.kind=kind;
-    }
+public class Mp4AudioHeader extends GenericAudioHeader {
+    private Mp4EsdsBox.Kind kind;
+    private Mp4EsdsBox.AudioProfile profile;
+    private String brand;
 
     /**
      * @return kind
      */
-    public Mp4EsdsBox.Kind getKind()
-    {
+    public Mp4EsdsBox.Kind getKind() {
         return kind;
+    }
+
+    public void setKind(Mp4EsdsBox.Kind kind) {
+        this.kind = kind;
+    }
+
+    /**
+     * @return audio profile
+     */
+    public Mp4EsdsBox.AudioProfile getProfile() {
+        return profile;
     }
 
     /**
@@ -31,34 +34,22 @@ public class Mp4AudioHeader extends GenericAudioHeader
      *
      * @param profile
      */
-    public void setProfile(Mp4EsdsBox.AudioProfile profile)
-    {
-        this.profile=profile;
+    public void setProfile(Mp4EsdsBox.AudioProfile profile) {
+        this.profile = profile;
     }
 
     /**
-     * @return audio profile
+     * @return brand
      */
-    public Mp4EsdsBox.AudioProfile getProfile()
-    {
-        return profile;
+    public String getBrand() {
+        return brand;
     }
 
     /**
      * @param brand
      */
-    public void setBrand(String brand)
-    {
-        this.brand=brand;
-    }
-
-
-    /**
-     * @return brand
-     */
-    public String getBrand()
-    {
-        return brand;
+    public void setBrand(String brand) {
+        this.brand = brand;
     }
 
 

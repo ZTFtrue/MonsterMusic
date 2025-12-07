@@ -198,7 +198,8 @@ fun CoverView(musicViewModel: MusicViewModel) {
                 if (!musicVisualizationEnable.value || musicViewModel.showMusicCover.value) {
                     key(musicViewModel.currentPlay.value) {
                         AsyncImage(
-                            model = imageModel.asModel(), contentDescription = stringResource(R.string.cover),
+                            model = imageModel.asModel(),
+                            contentDescription = stringResource(R.string.cover),
                             modifier = Modifier
                                 .size(minOf(maxWidth, maxHeight))
                                 .aspectRatio(1f)
@@ -311,7 +312,10 @@ fun CoverView(musicViewModel: MusicViewModel) {
                         )
 
                         Text(
-                            text = stringResource(R.string.sample_rate_hz_format, musicViewModel.currentInputFormat["SampleRate"] ?: ""),
+                            text = stringResource(
+                                R.string.sample_rate_hz_format,
+                                musicViewModel.currentInputFormat["SampleRate"] ?: ""
+                            ),
                             modifier =
                                 Modifier
                                     .padding(top = 10.dp)
@@ -321,7 +325,10 @@ fun CoverView(musicViewModel: MusicViewModel) {
                             fontSize = MaterialTheme.typography.titleSmall.fontSize
                         )
                         Text(
-                            text = stringResource(R.string.bitrate_format, musicViewModel.currentInputFormat["Bitrate"] ?: ""),
+                            text = stringResource(
+                                R.string.bitrate_format,
+                                musicViewModel.currentInputFormat["Bitrate"] ?: ""
+                            ),
                             modifier =
                                 Modifier
                                     .padding(top = 10.dp)
@@ -331,7 +338,10 @@ fun CoverView(musicViewModel: MusicViewModel) {
                             fontSize = MaterialTheme.typography.titleSmall.fontSize
                         )
                         Text(
-                            text = stringResource(R.string.channel_count_format, musicViewModel.currentInputFormat["ChannelCount"] ?: ""),
+                            text = stringResource(
+                                R.string.channel_count_format,
+                                musicViewModel.currentInputFormat["ChannelCount"] ?: ""
+                            ),
                             modifier =
                                 Modifier
                                     .padding(top = 10.dp)
@@ -341,7 +351,10 @@ fun CoverView(musicViewModel: MusicViewModel) {
                             fontSize = MaterialTheme.typography.titleSmall.fontSize
                         )
                         Text(
-                            text = stringResource(R.string.codec_format, musicViewModel.currentInputFormat["Codec"] ?: ""),
+                            text = stringResource(
+                                R.string.codec_format,
+                                musicViewModel.currentInputFormat["Codec"] ?: ""
+                            ),
                             modifier =
                                 Modifier
                                     .padding(top = 10.dp)

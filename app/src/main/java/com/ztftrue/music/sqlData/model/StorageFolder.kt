@@ -16,7 +16,7 @@ data class StorageFolder(
     @PrimaryKey
     val id: Int?,
     @ColumnInfo(name = "uri") val uri: String,
-    @ColumnInfo(name = "type", defaultValue = "0")  val type: Int = 0
+    @ColumnInfo(name = "type", defaultValue = "0") val type: Int = 0
 ) : Parcelable {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

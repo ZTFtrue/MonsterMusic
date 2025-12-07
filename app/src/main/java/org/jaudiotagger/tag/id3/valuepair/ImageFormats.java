@@ -1,25 +1,25 @@
 /**
- *  @author : Paul Taylor
- *
- *  Version @version:$Id$
- *
- *  MusicTag Copyright (C)2003,2004
- *
- *  This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
- *  General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
- *  or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- *  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public License along with this library; if not,
- *  you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ * @author : Paul Taylor
+ * <p>
+ * Version @version:$Id$
+ * <p>
+ * MusicTag Copyright (C)2003,2004
+ * <p>
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
+ * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
+ * or (at your option) any later version.
+ * <p>
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not,
+ * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * <p>
  * Description:
  * This class maps from v2.2 Image formats (PIC) to v2.3/v2.4 Mimetypes (APIC) and
- *  vice versa.
+ * vice versa.
  */
 package org.jaudiotagger.tag.id3.valuepair;
 
@@ -37,8 +37,7 @@ import java.util.Map;
  *
  */
 //TODO identifying PICT, bit more difficult because in certain formats has an empty 512byte header
-public class  ImageFormats
-{
+public class ImageFormats {
     public static final String V22_JPG_FORMAT = "JPG";
     public static final String V22_PNG_FORMAT = "PNG";
     public static final String V22_GIF_FORMAT = "GIF";
@@ -49,23 +48,22 @@ public class  ImageFormats
 
 
     public static final String MIME_TYPE_JPEG = "image/jpeg";
-    public static final String MIME_TYPE_PNG  = "image/png";
-    public static final String MIME_TYPE_GIF  = "image/gif";
-    public static final String MIME_TYPE_BMP  = "image/bmp";
+    public static final String MIME_TYPE_PNG = "image/png";
+    public static final String MIME_TYPE_GIF = "image/gif";
+    public static final String MIME_TYPE_BMP = "image/bmp";
     public static final String MIME_TYPE_TIFF = "image/tiff";
-    public static final String MIME_TYPE_PDF  = "image/pdf";
+    public static final String MIME_TYPE_PDF = "image/pdf";
     public static final String MIME_TYPE_PICT = "image/x-pict";
 
     /**
      * Sometimes this is used for jpg instead :or have I made this up
      */
-    public static final String MIME_TYPE_JPG  = "image/jpg";
+    public static final String MIME_TYPE_JPG = "image/jpg";
 
     private static final Map<String, String> imageFormatsToMimeType = new HashMap<String, String>();
-    private static final Map<String, String> imageMimeTypeToFormat = new HashMap <String, String>();
+    private static final Map<String, String> imageMimeTypeToFormat = new HashMap<String, String>();
 
-    static
-    {
+    static {
         imageFormatsToMimeType.put(V22_JPG_FORMAT, MIME_TYPE_JPEG);
         imageFormatsToMimeType.put(V22_PNG_FORMAT, MIME_TYPE_PNG);
         imageFormatsToMimeType.put(V22_GIF_FORMAT, MIME_TYPE_GIF);
@@ -75,8 +73,7 @@ public class  ImageFormats
         imageFormatsToMimeType.put(V22_PIC_FORMAT, MIME_TYPE_PICT);
 
         String value;
-        for (String key : imageFormatsToMimeType.keySet())
-        {
+        for (String key : imageFormatsToMimeType.keySet()) {
             value = imageFormatsToMimeType.get(key);
             imageMimeTypeToFormat.put(value, key);
         }
@@ -90,8 +87,7 @@ public class  ImageFormats
      * @param format
      * @return
      */
-    public static String getMimeTypeForFormat(String format)
-    {
+    public static String getMimeTypeForFormat(String format) {
         return imageFormatsToMimeType.get(format);
     }
 
@@ -100,8 +96,7 @@ public class  ImageFormats
      * @param mimeType
      * @return
      */
-    public static String getFormatForMimeType(String mimeType)
-    {
+    public static String getFormatForMimeType(String mimeType) {
         return imageMimeTypeToFormat.get(mimeType);
     }
 
@@ -111,11 +106,9 @@ public class  ImageFormats
      * @param data
      * @return true if binary data matches expected header for a png
      */
-    public static boolean binaryDataIsPngFormat(byte[] data)
-    {
+    public static boolean binaryDataIsPngFormat(byte[] data) {
         //Read signature
-        if(data.length<4)
-        {
+        if (data.length < 4) {
             return false;
         }
         return (0x89 == (data[0] & 0xff)) && (0x50 == (data[1] & 0xff)) && (0x4E == (data[2] & 0xff)) && (0x47 == (data[3] & 0xff));
@@ -129,10 +122,8 @@ public class  ImageFormats
      *
      * Some details http://www.obrador.com/essentialjpeg/headerinfo.htm
      */
-    public static boolean binaryDataIsJpgFormat(byte[] data)
-    {
-        if(data.length<4)
-        {
+    public static boolean binaryDataIsJpgFormat(byte[] data) {
+        if (data.length < 4) {
             return false;
         }
         //Read signature
@@ -148,10 +139,8 @@ public class  ImageFormats
      * @param data
      * @return true if binary data matches expected header for a gif
      */
-    public static boolean binaryDataIsGifFormat(byte[] data)
-    {
-        if(data.length<3)
-        {
+    public static boolean binaryDataIsGifFormat(byte[] data) {
+        if (data.length < 3) {
             return false;
         }
         //Read signature
@@ -165,10 +154,8 @@ public class  ImageFormats
      * @param data
      * @return true if binary data matches expected header for a bmp
      */
-    public static boolean binaryDataIsBmpFormat(byte[] data)
-    {
-        if(data.length<2)
-        {
+    public static boolean binaryDataIsBmpFormat(byte[] data) {
+        if (data.length < 2) {
             return false;
         }
         //Read signature
@@ -183,10 +170,8 @@ public class  ImageFormats
      * @param data
      * @return true if binary data matches expected header for a pdf
      */
-    public static boolean binaryDataIsPdfFormat(byte[] data)
-    {
-        if(data.length<4)
-        {
+    public static boolean binaryDataIsPdfFormat(byte[] data) {
+        if (data.length < 4) {
             return false;
         }
         //Read signature
@@ -200,18 +185,16 @@ public class  ImageFormats
      * @param data
      * @return true if binary data matches expected header for a tiff
      */
-    public static boolean binaryDataIsTiffFormat(byte[] data)
-    {
-        if(data.length<4)
-        {
+    public static boolean binaryDataIsTiffFormat(byte[] data) {
+        if (data.length < 4) {
             return false;
         }
         //Read signature Intel
         return (
                 ((0x49 == (data[0] & 0xff)) && (0x49 == (data[1] & 0xff)) && (0x2a == (data[2] & 0xff)) && (0x00 == (data[3] & 0xff)))
-                ||
-                ((0x4d == (data[0] & 0xff)) && (0x4d == (data[1] & 0xff)) && (0x00 == (data[2] & 0xff)) && (0x2a == (data[3] & 0xff)))
-                );
+                        ||
+                        ((0x4d == (data[0] & 0xff)) && (0x4d == (data[1] & 0xff)) && (0x00 == (data[2] & 0xff)) && (0x2a == (data[3] & 0xff)))
+        );
     }
 
     /**
@@ -219,9 +202,8 @@ public class  ImageFormats
      * @param data
      * @return true if the image format is a portable format recognised across operating systems
      */
-    public static boolean isPortableFormat(byte[] data)
-    {
-        return binaryDataIsPngFormat(data) ||  binaryDataIsJpgFormat(data) ||  binaryDataIsGifFormat(data);     
+    public static boolean isPortableFormat(byte[] data) {
+        return binaryDataIsPngFormat(data) || binaryDataIsJpgFormat(data) || binaryDataIsGifFormat(data);
     }
 
     /**
@@ -229,34 +211,20 @@ public class  ImageFormats
      * @param data
      * @return correct mimetype for the image data represented by this byte data
      */
-    public static String getMimeTypeForBinarySignature(byte[] data)
-    {
-        if(binaryDataIsPngFormat(data))
-        {
+    public static String getMimeTypeForBinarySignature(byte[] data) {
+        if (binaryDataIsPngFormat(data)) {
             return MIME_TYPE_PNG;
-        }
-        else if(binaryDataIsJpgFormat(data))
-        {
+        } else if (binaryDataIsJpgFormat(data)) {
             return MIME_TYPE_JPEG;
-        }
-        else if(binaryDataIsGifFormat(data))
-        {
+        } else if (binaryDataIsGifFormat(data)) {
             return MIME_TYPE_GIF;
-        }
-        else if(binaryDataIsBmpFormat(data))
-        {
+        } else if (binaryDataIsBmpFormat(data)) {
             return MIME_TYPE_BMP;
-        }
-        else if(binaryDataIsPdfFormat(data))
-        {
+        } else if (binaryDataIsPdfFormat(data)) {
             return MIME_TYPE_PDF;
-        }
-        else if(binaryDataIsTiffFormat(data))
-        {
+        } else if (binaryDataIsTiffFormat(data)) {
             return MIME_TYPE_TIFF;
-        }
-        else
-        {
+        } else {
             return null;
         }
     }

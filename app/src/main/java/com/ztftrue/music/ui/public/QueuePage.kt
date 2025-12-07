@@ -78,7 +78,10 @@ fun QueuePage(
         QueueOperateDialog(onDismiss = {
             showDialog = false
             if (it == OperateType.ClearQueue) {
-                musicViewModel.browser?.sendCustomCommand( MediaCommands.COMMAND_CLEAR_QUEUE, Bundle.EMPTY)
+                musicViewModel.browser?.sendCustomCommand(
+                    MediaCommands.COMMAND_CLEAR_QUEUE,
+                    Bundle.EMPTY
+                )
                 musicViewModel.musicQueue.clear()
                 musicViewModel.currentPlay.value = null
                 musicViewModel.playListCurrent.value = null

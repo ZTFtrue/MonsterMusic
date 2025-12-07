@@ -29,7 +29,7 @@ import java.nio.ByteBuffer;
  * <ul>
  * <li><a href="http://www.id3.org/id3v2.3.0.txt">ID3 v2.3.0 Spec</a>
  * </ul>
- *
+ * <p>
  * TODO:Although rare TLAN can actually return multiple language codes, at the moment they are all returned as a single
  * string via getText(), any additional parsing has to be done externally.
  *
@@ -37,19 +37,16 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyTLAN extends AbstractFrameBodyTextInfo implements ID3v24FrameBody, ID3v23FrameBody
-{
+public class FrameBodyTLAN extends AbstractFrameBodyTextInfo implements ID3v24FrameBody, ID3v23FrameBody {
 
     /**
      * Creates a new FrameBodyTLAN datatype.
      */
-    public FrameBodyTLAN()
-    {
+    public FrameBodyTLAN() {
         super();
     }
 
-    public FrameBodyTLAN(FrameBodyTLAN body)
-    {
+    public FrameBodyTLAN(FrameBodyTLAN body) {
         super(body);
     }
 
@@ -59,8 +56,7 @@ public class FrameBodyTLAN extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param textEncoding
      * @param text
      */
-    public FrameBodyTLAN(byte textEncoding, String text)
-    {
+    public FrameBodyTLAN(byte textEncoding, String text) {
         super(textEncoding, text);
     }
 
@@ -71,8 +67,7 @@ public class FrameBodyTLAN extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param frameSize
      * @throws InvalidTagException
      */
-    public FrameBodyTLAN(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyTLAN(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -81,8 +76,7 @@ public class FrameBodyTLAN extends AbstractFrameBodyTextInfo implements ID3v24Fr
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_LANGUAGE;
     }
 
@@ -90,8 +84,7 @@ public class FrameBodyTLAN extends AbstractFrameBodyTextInfo implements ID3v24Fr
      *
      * @return true if text value is valid language code
      */
-    public boolean isValid()
-    {
-        return Languages.getInstanceOf().getValueForId(getFirstTextValue())!=null;
+    public boolean isValid() {
+        return Languages.getInstanceOf().getValueForId(getFirstTextValue()) != null;
     }
 }

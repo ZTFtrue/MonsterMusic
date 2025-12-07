@@ -22,15 +22,14 @@ import java.util.Map;
 
 /**
  * Defines ID3v23 frames and collections that categorise frames within an ID3v23 tag.
- *
+ * <p>
  * You can include frames here that are not officially supported as long as they can be used within an
  * ID3v23Tag
  *
  * @author Paul Taylor
  * @version $Id$
  */
-public class ID3v23Frames extends ID3Frames
-{
+public class ID3v23Frames extends ID3Frames {
     /**
      * Define all frames that are valid within ID3v23
      * Frame IDs beginning with T are text frames, and with W are url frames
@@ -135,19 +134,9 @@ public class ID3v23Frames extends ID3Frames
     /**
      * Maps from ID3 key to Generic key
      */
-    protected EnumMap<ID3v23FieldKey, FieldKey> id3ToTagField = new EnumMap<ID3v23FieldKey,FieldKey>(ID3v23FieldKey.class);
-    
-    public static ID3v23Frames getInstanceOf()
-    {
-        if (id3v23Frames == null)
-        {
-            id3v23Frames = new ID3v23Frames();
-        }
-        return id3v23Frames;
-    }
+    protected EnumMap<ID3v23FieldKey, FieldKey> id3ToTagField = new EnumMap<ID3v23FieldKey, FieldKey>(ID3v23FieldKey.class);
 
-    private ID3v23Frames()
-    {
+    private ID3v23Frames() {
         // The defined v23 frames,
         supportedFrames.add(FRAME_ID_V3_ACCOMPANIMENT);
         supportedFrames.add(FRAME_ID_V3_ALBUM);
@@ -435,7 +424,7 @@ public class ID3v23Frames extends ID3Frames
         tagFieldToId3.put(FieldKey.LYRICS, ID3v23FieldKey.LYRICS);
         tagFieldToId3.put(FieldKey.MEDIA, ID3v23FieldKey.MEDIA);
         tagFieldToId3.put(FieldKey.MIXER, ID3v23FieldKey.MIXER);
-        tagFieldToId3.put(FieldKey.MOOD,ID3v23FieldKey.MOOD);
+        tagFieldToId3.put(FieldKey.MOOD, ID3v23FieldKey.MOOD);
         tagFieldToId3.put(FieldKey.MOOD_ACOUSTIC, ID3v23FieldKey.MOOD_ACOUSTIC);
         tagFieldToId3.put(FieldKey.MOOD_AGGRESSIVE, ID3v23FieldKey.MOOD_AGGRESSIVE);
         tagFieldToId3.put(FieldKey.MOOD_AROUSAL, ID3v23FieldKey.MOOD_AROUSAL);
@@ -528,29 +517,33 @@ public class ID3v23Frames extends ID3Frames
         tagFieldToId3.put(FieldKey.WORK_TYPE, ID3v23FieldKey.WORK_TYPE);
         tagFieldToId3.put(FieldKey.YEAR, ID3v23FieldKey.YEAR);
 
-        for(Map.Entry<FieldKey,ID3v23FieldKey> next:tagFieldToId3.entrySet())
-        {
+        for (Map.Entry<FieldKey, ID3v23FieldKey> next : tagFieldToId3.entrySet()) {
             id3ToTagField.put(next.getValue(), next.getKey());
         }
     }
 
+    public static ID3v23Frames getInstanceOf() {
+        if (id3v23Frames == null) {
+            id3v23Frames = new ID3v23Frames();
+        }
+        return id3v23Frames;
+    }
 
     /**
      * @param genericKey
      * @return id3 key for generic key
      */
-    public ID3v23FieldKey getId3KeyFromGenericKey(FieldKey genericKey)
-    {
+    public ID3v23FieldKey getId3KeyFromGenericKey(FieldKey genericKey) {
         return tagFieldToId3.get(genericKey);
     }
 
     /**
      * Get generic key for ID3 field key
+     *
      * @param fieldKey
      * @return
      */
-    public FieldKey getGenericKeyFromId3(ID3v23FieldKey fieldKey)
-    {
+    public FieldKey getGenericKeyFromId3(ID3v23FieldKey fieldKey) {
         return id3ToTagField.get(fieldKey);
     }
 }

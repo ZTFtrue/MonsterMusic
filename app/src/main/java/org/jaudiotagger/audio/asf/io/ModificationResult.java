@@ -11,8 +11,7 @@ import java.util.Set;
  *
  * @author Christian Laireiter
  */
-final class ModificationResult
-{
+final class ModificationResult {
 
     /**
      * Stores the difference of bytes.<br>
@@ -39,8 +38,7 @@ final class ModificationResult
      * @param bytesDiffer    amount of bytes added or removed.
      * @param occurred       all GUIDs which have been occurred, during processing
      */
-    public ModificationResult(final int chunkCountDiff, final long bytesDiffer, final GUID... occurred)
-    {
+    public ModificationResult(final int chunkCountDiff, final long bytesDiffer, final GUID... occurred) {
         assert occurred != null && occurred.length > 0;
         this.chunkDifference = chunkCountDiff;
         this.byteDifference = bytesDiffer;
@@ -54,8 +52,7 @@ final class ModificationResult
      * @param bytesDiffer    amount of bytes added or removed.
      * @param occurred       all GUIDs which have been occurred, during processing
      */
-    public ModificationResult(final int chunkCountDiff, final long bytesDiffer, final Set<GUID> occurred)
-    {
+    public ModificationResult(final int chunkCountDiff, final long bytesDiffer, final Set<GUID> occurred) {
         this.chunkDifference = chunkCountDiff;
         this.byteDifference = bytesDiffer;
         this.occuredGUIDs.addAll(occurred);
@@ -66,8 +63,7 @@ final class ModificationResult
      *
      * @return the byte difference
      */
-    public long getByteDifference()
-    {
+    public long getByteDifference() {
         return this.byteDifference;
     }
 
@@ -76,8 +72,7 @@ final class ModificationResult
      *
      * @return the chunk count difference
      */
-    public int getChunkCountDifference()
-    {
+    public int getChunkCountDifference() {
         return this.chunkDifference;
     }
 
@@ -86,8 +81,7 @@ final class ModificationResult
      *
      * @return see description.s
      */
-    public Set<GUID> getOccuredGUIDs()
-    {
+    public Set<GUID> getOccuredGUIDs() {
         return new HashSet<GUID>(this.occuredGUIDs);
     }
 

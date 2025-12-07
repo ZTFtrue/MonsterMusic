@@ -5,24 +5,21 @@ import org.jaudiotagger.logging.Hex;
 /**
  * Created by Paul on 22/01/2016.
  */
-public class ChunkSummary
-{
+public class ChunkSummary {
     private String chunkId;
-    private long    fileStartLocation;
+    private long fileStartLocation;
     private long chunkSize;
 
-    public ChunkSummary(String chunkId, long fileStartLocation, long chunkSize)
-    {
-        this.chunkId=chunkId;
-        this.fileStartLocation=fileStartLocation;
-        this.chunkSize=chunkSize;
+    public ChunkSummary(String chunkId, long fileStartLocation, long chunkSize) {
+        this.chunkId = chunkId;
+        this.fileStartLocation = fileStartLocation;
+        this.chunkSize = chunkSize;
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         long endLocation = fileStartLocation + chunkSize + ChunkHeader.CHUNK_HEADER_SIZE;
-        return chunkId+":StartLocation:"
+        return chunkId + ":StartLocation:"
                 + Hex.asDecAndHex(fileStartLocation)
                 + ":SizeIncHeader:"
                 + chunkSize + ChunkHeader.CHUNK_HEADER_SIZE
@@ -30,37 +27,31 @@ public class ChunkSummary
                 + Hex.asDecAndHex(endLocation);
     }
 
-    public long getEndLocation()
-    {
+    public long getEndLocation() {
         return fileStartLocation + chunkSize + ChunkHeader.CHUNK_HEADER_SIZE;
     }
-    public String getChunkId()
-    {
+
+    public String getChunkId() {
         return chunkId;
     }
 
-    public void setChunkId(String chunkId)
-    {
+    public void setChunkId(String chunkId) {
         this.chunkId = chunkId;
     }
 
-    public long getFileStartLocation()
-    {
+    public long getFileStartLocation() {
         return fileStartLocation;
     }
 
-    public void setFileStartLocation(long fileStartLocation)
-    {
+    public void setFileStartLocation(long fileStartLocation) {
         this.fileStartLocation = fileStartLocation;
     }
 
-    public long getChunkSize()
-    {
+    public long getChunkSize() {
         return chunkSize;
     }
 
-    public void setChunkSize(long chunkSize)
-    {
+    public void setChunkSize(long chunkSize) {
         this.chunkSize = chunkSize;
     }
 

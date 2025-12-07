@@ -1,17 +1,17 @@
 /*
  * Entagged Audio Tag library
  * Copyright (c) 2004-2005 Christian Laireiter <liree@web.de>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *  
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -35,8 +35,7 @@ import java.util.Set;
  *
  * @author Christian Laireiter
  */
-public final class AsfHeader extends ChunkContainer
-{
+public final class AsfHeader extends ChunkContainer {
     /**
      * The charset &quot;UTF-16LE&quot; is mandatory for ASF handling.
      */
@@ -47,8 +46,7 @@ public final class AsfHeader extends ChunkContainer
      */
     public final static byte[] ZERO_TERM = {0, 0};
 
-    static
-    {
+    static {
         Set<GUID> MULTI_CHUNKS = new HashSet<GUID>();
         MULTI_CHUNKS.add(GUID.GUID_STREAM);
     }
@@ -66,8 +64,7 @@ public final class AsfHeader extends ChunkContainer
      * @param chunkLen see {@link Chunk#chunkLength}
      * @param chunkCnt
      */
-    public AsfHeader(final long pos, final BigInteger chunkLen, final long chunkCnt)
-    {
+    public AsfHeader(final long pos, final BigInteger chunkLen, final long chunkCnt) {
         super(GUID.GUID_HEADER, pos, chunkLen);
         this.chunkCount = chunkCnt;
     }
@@ -79,11 +76,9 @@ public final class AsfHeader extends ChunkContainer
      *
      * @return content description if found, <code>null</code> otherwise.
      */
-    public ContentDescription findContentDescription()
-    {
+    public ContentDescription findContentDescription() {
         ContentDescription result = getContentDescription();
-        if (result == null && getExtendedHeader() != null)
-        {
+        if (result == null && getExtendedHeader() != null) {
             result = getExtendedHeader().getContentDescription();
         }
         return result;
@@ -97,11 +92,9 @@ public final class AsfHeader extends ChunkContainer
      * @return extended content description if found, <code>null</code>
      * otherwise.
      */
-    public MetadataContainer findExtendedContentDescription()
-    {
+    public MetadataContainer findExtendedContentDescription() {
         MetadataContainer result = getExtendedContentDescription();
-        if (result == null && getExtendedHeader() != null)
-        {
+        if (result == null && getExtendedHeader() != null) {
             result = getExtendedHeader().getExtendedContentDescription();
         }
         return result;
@@ -114,11 +107,9 @@ public final class AsfHeader extends ChunkContainer
      * @return a container of specified type, of <code>null</code> if not
      * contained.
      */
-    public MetadataContainer findMetadataContainer(final ContainerType type)
-    {
+    public MetadataContainer findMetadataContainer(final ContainerType type) {
         MetadataContainer result = (MetadataContainer) getFirst(type.getContainerGUID(), MetadataContainer.class);
-        if (result == null)
-        {
+        if (result == null) {
             result = (MetadataContainer) getExtendedHeader().getFirst(type.getContainerGUID(), MetadataContainer.class);
         }
         return result;
@@ -130,14 +121,11 @@ public final class AsfHeader extends ChunkContainer
      *
      * @return Returns the audioStreamChunk.
      */
-    public AudioStreamChunk getAudioStreamChunk()
-    {
+    public AudioStreamChunk getAudioStreamChunk() {
         AudioStreamChunk result = null;
         final List<Chunk> streamChunks = assertChunkList(GUID.GUID_STREAM);
-        for (int i = 0; i < streamChunks.size() && result == null; i++)
-        {
-            if (streamChunks.get(i) instanceof AudioStreamChunk)
-            {
+        for (int i = 0; i < streamChunks.size() && result == null; i++) {
+            if (streamChunks.get(i) instanceof AudioStreamChunk) {
                 result = (AudioStreamChunk) streamChunks.get(i);
             }
         }
@@ -151,64 +139,56 @@ public final class AsfHeader extends ChunkContainer
      *
      * @return Chunkcount at instance creation.
      */
-    public long getChunkCount()
-    {
+    public long getChunkCount() {
         return this.chunkCount;
     }
 
     /**
      * @return Returns the contentDescription.
      */
-    public ContentDescription getContentDescription()
-    {
+    public ContentDescription getContentDescription() {
         return (ContentDescription) getFirst(GUID.GUID_CONTENTDESCRIPTION, ContentDescription.class);
     }
 
     /**
      * @return Returns the encodingChunk.
      */
-    public EncodingChunk getEncodingChunk()
-    {
+    public EncodingChunk getEncodingChunk() {
         return (EncodingChunk) getFirst(GUID.GUID_ENCODING, EncodingChunk.class);
     }
 
     /**
      * @return Returns the encodingChunk.
      */
-    public EncryptionChunk getEncryptionChunk()
-    {
+    public EncryptionChunk getEncryptionChunk() {
         return (EncryptionChunk) getFirst(GUID.GUID_CONTENT_ENCRYPTION, EncryptionChunk.class);
     }
 
     /**
      * @return Returns the tagHeader.
      */
-    public MetadataContainer getExtendedContentDescription()
-    {
+    public MetadataContainer getExtendedContentDescription() {
         return (MetadataContainer) getFirst(GUID.GUID_EXTENDED_CONTENT_DESCRIPTION, MetadataContainer.class);
     }
 
     /**
      * @return Returns the extended header.
      */
-    public AsfExtendedHeader getExtendedHeader()
-    {
+    public AsfExtendedHeader getExtendedHeader() {
         return (AsfExtendedHeader) getFirst(GUID.GUID_HEADER_EXTENSION, AsfExtendedHeader.class);
     }
 
     /**
      * @return Returns the fileHeader.
      */
-    public FileHeader getFileHeader()
-    {
+    public FileHeader getFileHeader() {
         return (FileHeader) getFirst(GUID.GUID_FILE, FileHeader.class);
     }
 
     /**
      * @return Returns the streamBitratePropertiesChunk.
      */
-    public StreamBitratePropertiesChunk getStreamBitratePropertiesChunk()
-    {
+    public StreamBitratePropertiesChunk getStreamBitratePropertiesChunk() {
         return (StreamBitratePropertiesChunk) getFirst(GUID.GUID_STREAM_BITRATE_PROPERTIES, StreamBitratePropertiesChunk.class);
     }
 
@@ -216,8 +196,7 @@ public final class AsfHeader extends ChunkContainer
      * {@inheritDoc}
      */
     @Override
-    public String prettyPrint(final String prefix)
-    {
+    public String prettyPrint(final String prefix) {
         return super.prettyPrint(prefix, prefix + "  | : Contains: \"" + getChunkCount() + "\" chunks" + Utils.LINE_SEPARATOR);
     }
 }

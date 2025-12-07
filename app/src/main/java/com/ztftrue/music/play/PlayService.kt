@@ -325,7 +325,7 @@ class PlayService : MediaLibraryService() {
                                 }
                                 result
                             }
-                        val startMediaId: Long? = args.getLong(MediaCommands.KEY_START_MEDIA_ID)
+                        val startMediaId: Long = args.getLong(MediaCommands.KEY_START_MEDIA_ID)
                         if (newMusicItems.isNullOrEmpty()) {
                             return Futures.immediateFuture(SessionResult(SessionError.ERROR_BAD_VALUE))
                         }

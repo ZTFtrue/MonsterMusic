@@ -9,11 +9,9 @@ import java.nio.ByteBuffer;
  *
  * @author Gary McGath
  */
-public abstract class Chunk
-{
+public abstract class Chunk {
     protected ByteBuffer chunkData;
     protected ChunkHeader chunkHeader;
-
 
 
     /**
@@ -22,9 +20,8 @@ public abstract class Chunk
      * @param chunkData
      * @param chunkHeader
      */
-    public Chunk(ByteBuffer chunkData, ChunkHeader chunkHeader)
-    {
-        this.chunkData   = chunkData;
+    public Chunk(ByteBuffer chunkData, ChunkHeader chunkHeader) {
+        this.chunkData = chunkData;
         this.chunkHeader = chunkHeader;
     }
 

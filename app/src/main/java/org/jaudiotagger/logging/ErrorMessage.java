@@ -5,8 +5,7 @@ import java.text.MessageFormat;
 /**
  * Defines Error Messages
  */
-public enum ErrorMessage
-{
+public enum ErrorMessage {
     GENERAL_READ("File {0} being read"),
     MP4_FILE_NOT_CONTAINER("This file does not appear to be an Mp4  file"),
     MP4_FILE_NOT_AUDIO("This file does not appear to be an Mp4 Audio file, could be corrupted or video "),
@@ -62,7 +61,7 @@ public enum ErrorMessage
     GENERAL_WRITE_FAILED_TO_OPEN_FILE_FOR_EDITING("Cannot modify {0} because do not have permissions to modify file"),
     NULL_PADDING_FOUND_AT_END_OF_MP4("Null Padding found at end of file starting at offset {0}"),
     OGG_VORBIS_NO_SETUP_BLOCK("Could not find the Ogg Setup block"),
-    OGG_HEADER_CANNOT_BE_FOUND("OggS Header could not be found, not an ogg stream {0}"),    
+    OGG_HEADER_CANNOT_BE_FOUND("OggS Header could not be found, not an ogg stream {0}"),
     GENERAL_READ_FAILED_UNABLE_TO_CLOSE_RANDOM_ACCESS_FILE("Unable to close random access file: {0}"),
     GENERAL_READ_FAILED_FILE_TOO_SMALL("Unable to read file because it is too small to be valid audio file: {0}"),
     GENERAL_READ_FAILED_DO_NOT_HAVE_PERMISSION_TO_READ_FILE("Unable to read file do not have permission to read: {0}"),
@@ -78,14 +77,14 @@ public enum ErrorMessage
     MP3_FRAME_IS_DATA_LENGTH_INDICATOR("Filename {0}:{1} has a data length indicator"),
     MP4_FILE_HAS_NO_METADATA("This file does not currently contain any metadata"),
     MP4_FILE_META_ATOM_CHILD_DATA_NOT_NULL("Expect data in meta box to be null"),
-    WMA_INVALID_FIELD_NAME ("The field name {0} is not allowed for {1}"),
-    WMA_INVALID_LANGUAGE_USE ("The use of language {0} ist not allowed for {1} (only {2} allowed)"),
-    WMA_INVALID_STREAM_REFERNCE ("The stream number {0} is invalid. Only {1} allowed for {2}."),
-    WMA_INVALID_GUID_USE ("The use of GUID ist not allowed for {0}"),
+    WMA_INVALID_FIELD_NAME("The field name {0} is not allowed for {1}"),
+    WMA_INVALID_LANGUAGE_USE("The use of language {0} ist not allowed for {1} (only {2} allowed)"),
+    WMA_INVALID_STREAM_REFERNCE("The stream number {0} is invalid. Only {1} allowed for {2}."),
+    WMA_INVALID_GUID_USE("The use of GUID ist not allowed for {0}"),
     WMA_LENGTH_OF_DATA_IS_TOO_LARGE("Trying to create field with {0} bytes of data but the maximum data allowed in WMA files is {1} for {2}."),
     WMA_LENGTH_OF_LANGUAGE_IS_TOO_LARGE("Trying to create language entry, but UTF-16LE representation is {0} and exceeds maximum allowed of 255."),
     WMA_LENGTH_OF_STRING_IS_TOO_LARGE("Trying to create field but UTF-16LE representation is {0} and exceeds maximum allowed of 65535."),
-    WMA_ONLY_STRING_IN_CD ("Only Strings are allowed in content description objects"),
+    WMA_ONLY_STRING_IN_CD("Only Strings are allowed in content description objects"),
     ID3_EXTENDED_HEADER_SIZE_INVALID("{0} Invalid Extended Header Size of {0} assuming no extended header after all"),
     ID3_EXTENDED_HEADER_SIZE_TOO_SMALL("{0} Invalid Extended Header Size of {0} is too smal to be valid"),
     ID3_INVALID_OR_UNKNOWN_FLAG_SET("{0} Invalid or unknown bit flag 0x{1} set in ID3 tag header"),
@@ -126,18 +125,15 @@ public enum ErrorMessage
 
     String msg;
 
-    ErrorMessage(String msg)
-    {
+    ErrorMessage(String msg) {
         this.msg = msg;
     }
 
-    public String getMsg()
-    {
+    public String getMsg() {
         return msg;
     }
 
-    public String getMsg(Object... args)
-    {
+    public String getMsg(Object... args) {
         return MessageFormat.format(getMsg(), args);
     }
 

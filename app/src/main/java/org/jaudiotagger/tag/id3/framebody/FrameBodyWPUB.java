@@ -33,13 +33,11 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyWPUB extends AbstractFrameBodyUrlLink implements ID3v24FrameBody, ID3v23FrameBody
-{
+public class FrameBodyWPUB extends AbstractFrameBodyUrlLink implements ID3v24FrameBody, ID3v23FrameBody {
     /**
      * Creates a new FrameBodyWPUB datatype.
      */
-    public FrameBodyWPUB()
-    {
+    public FrameBodyWPUB() {
     }
 
     /**
@@ -47,13 +45,11 @@ public class FrameBodyWPUB extends AbstractFrameBodyUrlLink implements ID3v24Fra
      *
      * @param urlLink
      */
-    public FrameBodyWPUB(String urlLink)
-    {
+    public FrameBodyWPUB(String urlLink) {
         super(urlLink);
     }
 
-    public FrameBodyWPUB(FrameBodyWPUB body)
-    {
+    public FrameBodyWPUB(FrameBodyWPUB body) {
         super(body);
     }
 
@@ -65,8 +61,7 @@ public class FrameBodyWPUB extends AbstractFrameBodyUrlLink implements ID3v24Fra
      * @throws java.io.IOException
      * @throws InvalidTagException
      */
-    public FrameBodyWPUB(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyWPUB(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -75,8 +70,7 @@ public class FrameBodyWPUB extends AbstractFrameBodyUrlLink implements ID3v24Fra
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_URL_PUBLISHERS;
     }
 }

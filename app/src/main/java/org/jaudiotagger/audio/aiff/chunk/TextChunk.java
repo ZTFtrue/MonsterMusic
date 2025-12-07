@@ -13,19 +13,17 @@ import java.nio.charset.StandardCharsets;
  * Provides common functionality for textual chunks like {@link NameChunk}, {@link AuthorChunk},
  * {@link CopyrightChunk} and {@link AnnotationChunk}.
  */
-public abstract class TextChunk extends Chunk
-{
+public abstract class TextChunk extends Chunk {
     protected final AiffAudioHeader aiffAudioHeader;
 
     /**
      * Constructor.
      *
-     * @param chunkHeader The header for this chunk
-     * @param chunkData The buffer from which the AIFF data are being read
-     * @param aiffAudioHeader aiff header                 
+     * @param chunkHeader     The header for this chunk
+     * @param chunkData       The buffer from which the AIFF data are being read
+     * @param aiffAudioHeader aiff header
      */
-    public TextChunk(final ChunkHeader chunkHeader, final ByteBuffer chunkData, final AiffAudioHeader aiffAudioHeader)
-    {
+    public TextChunk(final ChunkHeader chunkHeader, final ByteBuffer chunkData, final AiffAudioHeader aiffAudioHeader) {
         super(chunkData, chunkHeader);
         this.aiffAudioHeader = aiffAudioHeader;
     }

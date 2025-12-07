@@ -1,25 +1,25 @@
 /*
-*      _______                       _____   _____ _____  
-*     |__   __|                     |  __ \ / ____|  __ \ 
-*        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
-*        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/ 
-*        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |     
-*        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|     
-*                                                         
-* -------------------------------------------------------------
-*
-* TarsosDSP is developed by Joren Six at IPEM, University Ghent
-*  
-* -------------------------------------------------------------
-*
-*  Info: http://0110.be/tag/TarsosDSP
-*  Github: https://github.com/JorenSix/TarsosDSP
-*  Releases: http://0110.be/releases/TarsosDSP/
-*  
-*  TarsosDSP includes modified source code by various authors,
-*  for credits and info, see README.
-* 
-*/
+ *      _______                       _____   _____ _____
+ *     |__   __|                     |  __ \ / ____|  __ \
+ *        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
+ *        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/
+ *        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |
+ *        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|
+ *
+ * -------------------------------------------------------------
+ *
+ * TarsosDSP is developed by Joren Six at IPEM, University Ghent
+ *
+ * -------------------------------------------------------------
+ *
+ *  Info: http://0110.be/tag/TarsosDSP
+ *  Github: https://github.com/JorenSix/TarsosDSP
+ *  Releases: http://0110.be/releases/TarsosDSP/
+ *
+ *  TarsosDSP includes modified source code by various authors,
+ *  for credits and info, see README.
+ *
+ */
 
 
 /* ***** BEGIN LICENSE BLOCK *****
@@ -63,7 +63,6 @@ import java.util.concurrent.Future;
 import be.tarsos.dsp.util.ConcurrencyUtils;
 
 
-
 /**
  * Computes 1D Discrete Fourier Transform (DFT) of complex and real, single
  * precision data. The size of the data can be an arbitrary number. This is a
@@ -73,49 +72,31 @@ import be.tarsos.dsp.util.ConcurrencyUtils;
  * This code is derived from General Purpose FFT Package written by Takuya Ooura
  * (http://www.kurims.kyoto-u.ac.jp/~ooura/fft.html) and from JFFTPack written
  * by Baoshe Zhang (http://jfftpack.sourceforge.net/)
- * 
+ *
  * @author Piotr Wendykier (piotr.wendykier@gmail.com)
- * 
+ *
  */
 public class FloatFFT {
 
-    private enum Plans {
-        SPLIT_RADIX, MIXED_RADIX, BLUESTEIN
-    }
-
-    private final int n;
-
-    private int nBluestein;
-
-    private int[] ip;
-
-    private float[] w;
-
-    private int nw;
-
-    private int nc;
-
-    private float[] wtable;
-
-    private float[] wtable_r;
-
-    private float[] bk1;
-
-    private float[] bk2;
-
-    private final Plans plan;
-
-    private static final int[] factors = { 4, 2, 3, 5 };
-
+    private static final int[] factors = {4, 2, 3, 5};
     private static final float PI = 3.14159265358979311599796346854418516f;
-
     private static final float TWO_PI = 6.28318530717958623199592693708837032f;
+    private final int n;
+    private final Plans plan;
+    private int nBluestein;
+    private int[] ip;
+    private float[] w;
+    private int nw;
+    private int nc;
+    private float[] wtable;
+    private float[] wtable_r;
+    private float[] bk1;
+    private float[] bk2;
 
     /**
      * Creates new instance of FloatFFT.
-     * 
-     * @param n
-     *            size of data
+     *
+     * @param n size of data
      */
     public FloatFFT(int n) {
         if (n < 1) {
@@ -168,573 +149,6 @@ public class FloatFFT {
         }
     }
 
-    /**
-     * Computes 1D forward DFT of complex data leaving the result in
-     * <code>a</code>. Complex number is stored as two float values in
-     * sequence: the real and imaginary part, i.e. the size of the input array
-     * must be greater or equal 2*n. The physical layout of the input data has
-     * to be as follows:<br>
-     * 
-     * <pre>
-     * a[2*k] = Re[k], 
-     * a[2*k+1] = Im[k], 0&lt;=k&lt;n
-     * </pre>
-     * 
-     * @param a
-     *            data to transform
-     */
-    public void complexForward(float[] a) {
-        complexForward(a, 0);
-    }
-
-    /**
-     * Computes 1D forward DFT of complex data leaving the result in
-     * <code>a</code>. Complex number is stored as two float values in
-     * sequence: the real and imaginary part, i.e. the size of the input array
-     * must be greater or equal 2*n. The physical layout of the input data has
-     * to be as follows:<br>
-     * 
-     * <pre>
-     * a[offa+2*k] = Re[k], 
-     * a[offa+2*k+1] = Im[k], 0&lt;=k&lt;n
-     * </pre>
-     * 
-     * @param a
-     *            data to transform
-     * @param offa
-     *            index of the first element in array <code>a</code>
-     */
-    public void complexForward(float[] a, int offa) {
-        if (n == 1)
-            return;
-        switch (plan) {
-        case SPLIT_RADIX:
-            cftbsub(2 * n, a, offa, ip, nw, w);
-            break;
-        case MIXED_RADIX:
-            cfftf(a, offa, -1);
-            break;
-        case BLUESTEIN:
-            bluestein_complex(a, offa, -1);
-            break;
-        }
-    }
-
-    /**
-     * Computes 1D inverse DFT of complex data leaving the result in
-     * <code>a</code>. Complex number is stored as two float values in
-     * sequence: the real and imaginary part, i.e. the size of the input array
-     * must be greater or equal 2*n. The physical layout of the input data has
-     * to be as follows:<br>
-     * 
-     * <pre>
-     * a[2*k] = Re[k], 
-     * a[2*k+1] = Im[k], 0&lt;=k&lt;n
-     * </pre>
-     * 
-     * @param a
-     *            data to transform
-     * @param scale
-     *            if true then scaling is performed
-     */
-    public void complexInverse(float[] a, boolean scale) {
-        complexInverse(a, 0, scale);
-    }
-
-    /**
-     * Computes 1D inverse DFT of complex data leaving the result in
-     * <code>a</code>. Complex number is stored as two float values in
-     * sequence: the real and imaginary part, i.e. the size of the input array
-     * must be greater or equal 2*n. The physical layout of the input data has
-     * to be as follows:<br>
-     * 
-     * <pre>
-     * a[offa+2*k] = Re[k], 
-     * a[offa+2*k+1] = Im[k], 0&lt;=k&lt;n
-     * </pre>
-     * 
-     * @param a
-     *            data to transform
-     * @param offa
-     *            index of the first element in array <code>a</code>
-     * @param scale
-     *            if true then scaling is performed
-     */
-    public void complexInverse(float[] a, int offa, boolean scale) {
-        if (n == 1)
-            return;
-        switch (plan) {
-        case SPLIT_RADIX:
-            cftfsub(2 * n, a, offa, ip, nw, w);
-            break;
-        case MIXED_RADIX:
-            cfftf(a, offa, +1);
-            break;
-        case BLUESTEIN:
-            bluestein_complex(a, offa, 1);
-            break;
-        }
-        if (scale) {
-            scale(n, a, offa, true);
-        }
-    }
-
-    /**
-     * Computes 1D forward DFT of real data leaving the result in <code>a</code>
-     * . The physical layout of the output data is as follows:<br>
-     * 
-     * if n is even then
-     * 
-     * <pre>
-     * a[2*k] = Re[k], 0&lt;=k&lt;n/2
-     * a[2*k+1] = Im[k], 0&lt;k&lt;n/2
-     * a[1] = Re[n/2]
-     * </pre>
-     * 
-     * if n is odd then
-     * 
-     * <pre>
-     * a[2*k] = Re[k], 0&lt;=k&lt;(n+1)/2
-     * a[2*k+1] = Im[k], 0&lt;k&lt;(n-1)/2
-     * a[1] = Im[(n-1)/2]
-     * </pre>
-     * 
-     * This method computes only half of the elements of the real transform. The
-     * other half satisfies the symmetry condition. If you want the full real
-     * forward transform, use <code>realForwardFull</code>. To get back the
-     * original data, use <code>realInverse</code> on the output of this method.
-     * 
-     * @param a
-     *            data to transform
-     */
-    public void realForward(float[] a) {
-        realForward(a, 0);
-    }
-
-    /**
-     * Computes 1D forward DFT of real data leaving the result in <code>a</code>
-     * . The physical layout of the output data is as follows:<br>
-     * 
-     * if n is even then
-     * 
-     * <pre>
-     * a[offa+2*k] = Re[k], 0&lt;=k&lt;n/2
-     * a[offa+2*k+1] = Im[k], 0&lt;k&lt;n/2
-     * a[offa+1] = Re[n/2]
-     * </pre>
-     * 
-     * if n is odd then
-     * 
-     * <pre>
-     * a[offa+2*k] = Re[k], 0&lt;=k&lt;(n+1)/2
-     * a[offa+2*k+1] = Im[k], 0&lt;k&lt;(n-1)/2
-     * a[offa+1] = Im[(n-1)/2]
-     * </pre>
-     * 
-     * This method computes only half of the elements of the real transform. The
-     * other half satisfies the symmetry condition. If you want the full real
-     * forward transform, use <code>realForwardFull</code>. To get back the
-     * original data, use <code>realInverse</code> on the output of this method.
-     * 
-     * @param a
-     *            data to transform
-     * @param offa
-     *            index of the first element in array <code>a</code>
-     */
-    public void realForward(float[] a, int offa) {
-        if (n == 1)
-            return;
-
-        switch (plan) {
-        case SPLIT_RADIX:
-            float xi;
-
-            if (n > 4) {
-                cftfsub(n, a, offa, ip, nw, w);
-                rftfsub(n, a, offa, nc, w, nw);
-            } else if (n == 4) {
-                cftx020(a, offa);
-            }
-            xi = a[offa] - a[offa + 1];
-            a[offa] += a[offa + 1];
-            a[offa + 1] = xi;
-            break;
-        case MIXED_RADIX:
-            rfftf(a, offa);
-            for (int k = n - 1; k >= 2; k--) {
-                int idx = offa + k;
-                float tmp = a[idx];
-                a[idx] = a[idx - 1];
-                a[idx - 1] = tmp;
-            }
-            break;
-        case BLUESTEIN:
-            bluestein_real_forward(a, offa);
-            break;
-        }
-    }
-
-    /**
-     * Computes 1D forward DFT of real data leaving the result in <code>a</code>
-     * . This method computes the full real forward transform, i.e. you will get
-     * the same result as from <code>complexForward</code> called with all
-     * imaginary parts equal 0. Because the result is stored in <code>a</code>,
-     * the size of the input array must greater or equal 2*n, with only the
-     * first n elements filled with real data. To get back the original data,
-     * use <code>complexInverse</code> on the output of this method.
-     * 
-     * @param a
-     *            data to transform
-     */
-    public void realForwardFull(float[] a) {
-        realForwardFull(a, 0);
-    }
-
-    /**
-     * Computes 1D forward DFT of real data leaving the result in <code>a</code>
-     * . This method computes the full real forward transform, i.e. you will get
-     * the same result as from <code>complexForward</code> called with all
-     * imaginary part equal 0. Because the result is stored in <code>a</code>,
-     * the size of the input array must greater or equal 2*n, with only the
-     * first n elements filled with real data. To get back the original data,
-     * use <code>complexInverse</code> on the output of this method.
-     * 
-     * @param a
-     *            data to transform
-     * @param offa
-     *            index of the first element in array <code>a</code>
-     */
-    public void realForwardFull(final float[] a, final int offa) {
-
-        final int twon = 2 * n;
-        switch (plan) {
-        case SPLIT_RADIX:
-            realForward(a, offa);
-            int nthreads = ConcurrencyUtils.getNumberOfThreads();
-            if ((nthreads > 1) && (n / 2 > ConcurrencyUtils.getThreadsBeginN_1D_FFT_2Threads())) {
-                Future<?>[] futures = new Future[nthreads];
-                int k = n / 2 / nthreads;
-                for (int i = 0; i < nthreads; i++) {
-                    final int firstIdx = i * k;
-                    final int lastIdx = (i == (nthreads - 1)) ? n / 2 : firstIdx + k;
-                    futures[i] = ConcurrencyUtils.submit(new Runnable() {
-                        public void run() {
-                            int idx1, idx2;
-                            for (int k = firstIdx; k < lastIdx; k++) {
-                                idx1 = 2 * k;
-                                idx2 = offa + ((twon - idx1) % twon);
-                                a[idx2] = a[offa + idx1];
-                                a[idx2 + 1] = -a[offa + idx1 + 1];
-                            }
-                        }
-                    });
-                }
-                ConcurrencyUtils.waitForCompletion(futures);
-            } else {
-                int idx1, idx2;
-                for (int k = 0; k < n / 2; k++) {
-                    idx1 = 2 * k;
-                    idx2 = offa + ((twon - idx1) % twon);
-                    a[idx2] = a[offa + idx1];
-                    a[idx2 + 1] = -a[offa + idx1 + 1];
-                }
-            }
-            a[offa + n] = -a[offa + 1];
-            a[offa + 1] = 0;
-            break;
-        case MIXED_RADIX:
-            rfftf(a, offa);
-            int m;
-            if (n % 2 == 0) {
-                m = n / 2;
-            } else {
-                m = (n + 1) / 2;
-            }
-            for (int k = 1; k < m; k++) {
-                int idx1 = offa + twon - 2 * k;
-                int idx2 = offa + 2 * k;
-                a[idx1 + 1] = -a[idx2];
-                a[idx1] = a[idx2 - 1];
-            }
-            for (int k = 1; k < n; k++) {
-                int idx = offa + n - k;
-                float tmp = a[idx + 1];
-                a[idx + 1] = a[idx];
-                a[idx] = tmp;
-            }
-            a[offa + 1] = 0;
-            break;
-        case BLUESTEIN:
-            bluestein_real_full(a, offa, -1);
-            break;
-        }
-    }
-
-    /**
-     * Computes 1D inverse DFT of real data leaving the result in <code>a</code>
-     * . The physical layout of the input data has to be as follows:<br>
-     * 
-     * if n is even then
-     * 
-     * <pre>
-     * a[2*k] = Re[k], 0&lt;=k&lt;n/2
-     * a[2*k+1] = Im[k], 0&lt;k&lt;n/2
-     * a[1] = Re[n/2]
-     * </pre>
-     * 
-     * if n is odd then
-     * 
-     * <pre>
-     * a[2*k] = Re[k], 0&lt;=k&lt;(n+1)/2
-     * a[2*k+1] = Im[k], 0&lt;k&lt;(n-1)/2
-     * a[1] = Im[(n-1)/2]
-     * </pre>
-     * 
-     * This method computes only half of the elements of the real transform. The
-     * other half satisfies the symmetry condition. If you want the full real
-     * inverse transform, use <code>realInverseFull</code>.
-     * 
-     * @param a
-     *            data to transform
-     * 
-     * @param scale
-     *            if true then scaling is performed
-     * 
-     */
-    public void realInverse(float[] a, boolean scale) {
-        realInverse(a, 0, scale);
-    }
-
-    /**
-     * Computes 1D inverse DFT of real data leaving the result in <code>a</code>
-     * . The physical layout of the input data has to be as follows:<br>
-     * 
-     * if n is even then
-     * 
-     * <pre>
-     * a[offa+2*k] = Re[k], 0&lt;=k&lt;n/2
-     * a[offa+2*k+1] = Im[k], 0&lt;k&lt;n/2
-     * a[offa+1] = Re[n/2]
-     * </pre>
-     * 
-     * if n is odd then
-     * 
-     * <pre>
-     * a[offa+2*k] = Re[k], 0&lt;=k&lt;(n+1)/2
-     * a[offa+2*k+1] = Im[k], 0&lt;k&lt;(n-1)/2
-     * a[offa+1] = Im[(n-1)/2]
-     * </pre>
-     * 
-     * This method computes only half of the elements of the real transform. The
-     * other half satisfies the symmetry condition. If you want the full real
-     * inverse transform, use <code>realInverseFull</code>.
-     * 
-     * @param a
-     *            data to transform
-     * @param offa
-     *            index of the first element in array <code>a</code>
-     * @param scale
-     *            if true then scaling is performed
-     * 
-     */
-    public void realInverse(float[] a, int offa, boolean scale) {
-        if (n == 1)
-            return;
-        switch (plan) {
-        case SPLIT_RADIX:
-            a[offa + 1] = (float)(0.5 * (a[offa] - a[offa + 1]));
-            a[offa] -= a[offa + 1];
-            if (n > 4) {
-                rftfsub(n, a, offa, nc, w, nw);
-                cftbsub(n, a, offa, ip, nw, w);
-            } else if (n == 4) {
-                cftxc020(a, offa);
-            }
-            if (scale) {
-                scale(n / 2, a, offa, false);
-            }
-            break;
-        case MIXED_RADIX:
-            for (int k = 2; k < n; k++) {
-                int idx = offa + k;
-                float tmp = a[idx - 1];
-                a[idx - 1] = a[idx];
-                a[idx] = tmp;
-            }
-            rfftb(a, offa);
-            if (scale) {
-                scale(n, a, offa, false);
-            }
-            break;
-        case BLUESTEIN:
-            bluestein_real_inverse(a, offa);
-            if (scale) {
-                scale(n, a, offa, false);
-            }
-            break;
-        }
-
-    }
-
-    /**
-     * Computes 1D inverse DFT of real data leaving the result in <code>a</code>
-     * . This method computes the full real inverse transform, i.e. you will get
-     * the same result as from <code>complexInverse</code> called with all
-     * imaginary part equal 0. Because the result is stored in <code>a</code>,
-     * the size of the input array must greater or equal 2*n, with only the
-     * first n elements filled with real data.
-     * 
-     * @param a
-     *            data to transform
-     * @param scale
-     *            if true then scaling is performed
-     */
-    public void realInverseFull(float[] a, boolean scale) {
-        realInverseFull(a, 0, scale);
-    }
-
-    /**
-     * Computes 1D inverse DFT of real data leaving the result in <code>a</code>
-     * . This method computes the full real inverse transform, i.e. you will get
-     * the same result as from <code>complexInverse</code> called with all
-     * imaginary part equal 0. Because the result is stored in <code>a</code>,
-     * the size of the input array must greater or equal 2*n, with only the
-     * first n elements filled with real data.
-     * 
-     * @param a
-     *            data to transform
-     * @param offa
-     *            index of the first element in array <code>a</code>
-     * @param scale
-     *            if true then scaling is performed
-     */
-    public void realInverseFull(final float[] a, final int offa, boolean scale) {
-        final int twon = 2 * n;
-        switch (plan) {
-        case SPLIT_RADIX:
-            realInverse2(a, offa, scale);
-            int nthreads = ConcurrencyUtils.getNumberOfThreads();
-            if ((nthreads > 1) && (n / 2 > ConcurrencyUtils.getThreadsBeginN_1D_FFT_2Threads())) {
-                Future<?>[] futures = new Future[nthreads];
-                int k = n / 2 / nthreads;
-                for (int i = 0; i < nthreads; i++) {
-                    final int firstIdx = i * k;
-                    final int lastIdx = (i == (nthreads - 1)) ? n / 2 : firstIdx + k;
-                    futures[i] = ConcurrencyUtils.submit(new Runnable() {
-                        public void run() {
-                            int idx1, idx2;
-                            for (int k = firstIdx; k < lastIdx; k++) {
-                                idx1 = 2 * k;
-                                idx2 = offa + ((twon - idx1) % twon);
-                                a[idx2] = a[offa + idx1];
-                                a[idx2 + 1] = -a[offa + idx1 + 1];
-                            }
-                        }
-                    });
-                }
-                ConcurrencyUtils.waitForCompletion(futures);
-            } else {
-                int idx1, idx2;
-                for (int k = 0; k < n / 2; k++) {
-                    idx1 = 2 * k;
-                    idx2 = offa + ((twon - idx1) % twon);
-                    a[idx2] = a[offa + idx1];
-                    a[idx2 + 1] = -a[offa + idx1 + 1];
-                }
-            }
-            a[offa + n] = -a[offa + 1];
-            a[offa + 1] = 0;
-            break;
-        case MIXED_RADIX:
-            rfftf(a, offa);
-            if (scale) {
-                scale(n, a, offa, false);
-            }
-            int m;
-            if (n % 2 == 0) {
-                m = n / 2;
-            } else {
-                m = (n + 1) / 2;
-            }
-            for (int k = 1; k < m; k++) {
-                int idx1 = offa + 2 * k;
-                int idx2 = offa + twon - 2 * k;
-                a[idx1] = -a[idx1];
-                a[idx2 + 1] = -a[idx1];
-                a[idx2] = a[idx1 - 1];
-            }
-            for (int k = 1; k < n; k++) {
-                int idx = offa + n - k;
-                float tmp = a[idx + 1];
-                a[idx + 1] = a[idx];
-                a[idx] = tmp;
-            }
-            a[offa + 1] = 0;
-            break;
-        case BLUESTEIN:
-            bluestein_real_full(a, offa, 1);
-            if (scale) {
-                scale(n, a, offa, true);
-            }
-            break;
-        }
-    }
-
-    private void realInverse2(float[] a, int offa, boolean scale) {
-        if (n == 1)
-            return;
-        switch (plan) {
-        case SPLIT_RADIX:
-            float xi;
-
-            if (n > 4) {
-                cftfsub(n, a, offa, ip, nw, w);
-                rftbsub(n, a, offa, nc, w, nw);
-            } else if (n == 4) {
-                cftbsub(n, a, offa, ip, nw, w);
-            }
-            xi = a[offa] - a[offa + 1];
-            a[offa] += a[offa + 1];
-            a[offa + 1] = xi;
-            if (scale) {
-                scale(n, a, offa, false);
-            }
-            break;
-        case MIXED_RADIX:
-            rfftf(a, offa);
-            for (int k = n - 1; k >= 2; k--) {
-                int idx = offa + k;
-                float tmp = a[idx];
-                a[idx] = a[idx - 1];
-                a[idx - 1] = tmp;
-            }
-            if (scale) {
-                scale(n, a, offa, false);
-            }
-            int m;
-            if (n % 2 == 0) {
-                m = n / 2;
-                for (int i = 1; i < m; i++) {
-                    int idx = offa + 2 * i + 1;
-                    a[idx] = -a[idx];
-                }
-            } else {
-                m = (n - 1) / 2;
-                for (int i = 0; i < m; i++) {
-                    int idx = offa + 2 * i + 1;
-                    a[idx] = -a[idx];
-                }
-            }
-            break;
-        case BLUESTEIN:
-            bluestein_real_inverse2(a, offa);
-            if (scale) {
-                scale(n, a, offa, false);
-            }
-            break;
-        }
-    }
-
     private static int getReminder(int n, int[] factors) {
         int reminder = n;
 
@@ -751,11 +165,547 @@ public class FloatFFT {
         return reminder;
     }
 
-    /* -------- initializing routines -------- */
+    /**
+     * Computes 1D forward DFT of complex data leaving the result in
+     * <code>a</code>. Complex number is stored as two float values in
+     * sequence: the real and imaginary part, i.e. the size of the input array
+     * must be greater or equal 2*n. The physical layout of the input data has
+     * to be as follows:<br>
+     *
+     * <pre>
+     * a[2*k] = Re[k],
+     * a[2*k+1] = Im[k], 0&lt;=k&lt;n
+     * </pre>
+     *
+     * @param a data to transform
+     */
+    public void complexForward(float[] a) {
+        complexForward(a, 0);
+    }
 
-    /*---------------------------------------------------------
-       cffti: initialization of Complex FFT
-      --------------------------------------------------------*/
+    /**
+     * Computes 1D forward DFT of complex data leaving the result in
+     * <code>a</code>. Complex number is stored as two float values in
+     * sequence: the real and imaginary part, i.e. the size of the input array
+     * must be greater or equal 2*n. The physical layout of the input data has
+     * to be as follows:<br>
+     *
+     * <pre>
+     * a[offa+2*k] = Re[k],
+     * a[offa+2*k+1] = Im[k], 0&lt;=k&lt;n
+     * </pre>
+     *
+     * @param a    data to transform
+     * @param offa index of the first element in array <code>a</code>
+     */
+    public void complexForward(float[] a, int offa) {
+        if (n == 1)
+            return;
+        switch (plan) {
+            case SPLIT_RADIX:
+                cftbsub(2 * n, a, offa, ip, nw, w);
+                break;
+            case MIXED_RADIX:
+                cfftf(a, offa, -1);
+                break;
+            case BLUESTEIN:
+                bluestein_complex(a, offa, -1);
+                break;
+        }
+    }
+
+    /**
+     * Computes 1D inverse DFT of complex data leaving the result in
+     * <code>a</code>. Complex number is stored as two float values in
+     * sequence: the real and imaginary part, i.e. the size of the input array
+     * must be greater or equal 2*n. The physical layout of the input data has
+     * to be as follows:<br>
+     *
+     * <pre>
+     * a[2*k] = Re[k],
+     * a[2*k+1] = Im[k], 0&lt;=k&lt;n
+     * </pre>
+     *
+     * @param a     data to transform
+     * @param scale if true then scaling is performed
+     */
+    public void complexInverse(float[] a, boolean scale) {
+        complexInverse(a, 0, scale);
+    }
+
+    /**
+     * Computes 1D inverse DFT of complex data leaving the result in
+     * <code>a</code>. Complex number is stored as two float values in
+     * sequence: the real and imaginary part, i.e. the size of the input array
+     * must be greater or equal 2*n. The physical layout of the input data has
+     * to be as follows:<br>
+     *
+     * <pre>
+     * a[offa+2*k] = Re[k],
+     * a[offa+2*k+1] = Im[k], 0&lt;=k&lt;n
+     * </pre>
+     *
+     * @param a     data to transform
+     * @param offa  index of the first element in array <code>a</code>
+     * @param scale if true then scaling is performed
+     */
+    public void complexInverse(float[] a, int offa, boolean scale) {
+        if (n == 1)
+            return;
+        switch (plan) {
+            case SPLIT_RADIX:
+                cftfsub(2 * n, a, offa, ip, nw, w);
+                break;
+            case MIXED_RADIX:
+                cfftf(a, offa, +1);
+                break;
+            case BLUESTEIN:
+                bluestein_complex(a, offa, 1);
+                break;
+        }
+        if (scale) {
+            scale(n, a, offa, true);
+        }
+    }
+
+    /**
+     * Computes 1D forward DFT of real data leaving the result in <code>a</code>
+     * . The physical layout of the output data is as follows:<br>
+     * <p>
+     * if n is even then
+     *
+     * <pre>
+     * a[2*k] = Re[k], 0&lt;=k&lt;n/2
+     * a[2*k+1] = Im[k], 0&lt;k&lt;n/2
+     * a[1] = Re[n/2]
+     * </pre>
+     * <p>
+     * if n is odd then
+     *
+     * <pre>
+     * a[2*k] = Re[k], 0&lt;=k&lt;(n+1)/2
+     * a[2*k+1] = Im[k], 0&lt;k&lt;(n-1)/2
+     * a[1] = Im[(n-1)/2]
+     * </pre>
+     * <p>
+     * This method computes only half of the elements of the real transform. The
+     * other half satisfies the symmetry condition. If you want the full real
+     * forward transform, use <code>realForwardFull</code>. To get back the
+     * original data, use <code>realInverse</code> on the output of this method.
+     *
+     * @param a data to transform
+     */
+    public void realForward(float[] a) {
+        realForward(a, 0);
+    }
+
+    /**
+     * Computes 1D forward DFT of real data leaving the result in <code>a</code>
+     * . The physical layout of the output data is as follows:<br>
+     * <p>
+     * if n is even then
+     *
+     * <pre>
+     * a[offa+2*k] = Re[k], 0&lt;=k&lt;n/2
+     * a[offa+2*k+1] = Im[k], 0&lt;k&lt;n/2
+     * a[offa+1] = Re[n/2]
+     * </pre>
+     * <p>
+     * if n is odd then
+     *
+     * <pre>
+     * a[offa+2*k] = Re[k], 0&lt;=k&lt;(n+1)/2
+     * a[offa+2*k+1] = Im[k], 0&lt;k&lt;(n-1)/2
+     * a[offa+1] = Im[(n-1)/2]
+     * </pre>
+     * <p>
+     * This method computes only half of the elements of the real transform. The
+     * other half satisfies the symmetry condition. If you want the full real
+     * forward transform, use <code>realForwardFull</code>. To get back the
+     * original data, use <code>realInverse</code> on the output of this method.
+     *
+     * @param a    data to transform
+     * @param offa index of the first element in array <code>a</code>
+     */
+    public void realForward(float[] a, int offa) {
+        if (n == 1)
+            return;
+
+        switch (plan) {
+            case SPLIT_RADIX:
+                float xi;
+
+                if (n > 4) {
+                    cftfsub(n, a, offa, ip, nw, w);
+                    rftfsub(n, a, offa, nc, w, nw);
+                } else if (n == 4) {
+                    cftx020(a, offa);
+                }
+                xi = a[offa] - a[offa + 1];
+                a[offa] += a[offa + 1];
+                a[offa + 1] = xi;
+                break;
+            case MIXED_RADIX:
+                rfftf(a, offa);
+                for (int k = n - 1; k >= 2; k--) {
+                    int idx = offa + k;
+                    float tmp = a[idx];
+                    a[idx] = a[idx - 1];
+                    a[idx - 1] = tmp;
+                }
+                break;
+            case BLUESTEIN:
+                bluestein_real_forward(a, offa);
+                break;
+        }
+    }
+
+    /**
+     * Computes 1D forward DFT of real data leaving the result in <code>a</code>
+     * . This method computes the full real forward transform, i.e. you will get
+     * the same result as from <code>complexForward</code> called with all
+     * imaginary parts equal 0. Because the result is stored in <code>a</code>,
+     * the size of the input array must greater or equal 2*n, with only the
+     * first n elements filled with real data. To get back the original data,
+     * use <code>complexInverse</code> on the output of this method.
+     *
+     * @param a data to transform
+     */
+    public void realForwardFull(float[] a) {
+        realForwardFull(a, 0);
+    }
+
+    /**
+     * Computes 1D forward DFT of real data leaving the result in <code>a</code>
+     * . This method computes the full real forward transform, i.e. you will get
+     * the same result as from <code>complexForward</code> called with all
+     * imaginary part equal 0. Because the result is stored in <code>a</code>,
+     * the size of the input array must greater or equal 2*n, with only the
+     * first n elements filled with real data. To get back the original data,
+     * use <code>complexInverse</code> on the output of this method.
+     *
+     * @param a    data to transform
+     * @param offa index of the first element in array <code>a</code>
+     */
+    public void realForwardFull(final float[] a, final int offa) {
+
+        final int twon = 2 * n;
+        switch (plan) {
+            case SPLIT_RADIX:
+                realForward(a, offa);
+                int nthreads = ConcurrencyUtils.getNumberOfThreads();
+                if ((nthreads > 1) && (n / 2 > ConcurrencyUtils.getThreadsBeginN_1D_FFT_2Threads())) {
+                    Future<?>[] futures = new Future[nthreads];
+                    int k = n / 2 / nthreads;
+                    for (int i = 0; i < nthreads; i++) {
+                        final int firstIdx = i * k;
+                        final int lastIdx = (i == (nthreads - 1)) ? n / 2 : firstIdx + k;
+                        futures[i] = ConcurrencyUtils.submit(new Runnable() {
+                            public void run() {
+                                int idx1, idx2;
+                                for (int k = firstIdx; k < lastIdx; k++) {
+                                    idx1 = 2 * k;
+                                    idx2 = offa + ((twon - idx1) % twon);
+                                    a[idx2] = a[offa + idx1];
+                                    a[idx2 + 1] = -a[offa + idx1 + 1];
+                                }
+                            }
+                        });
+                    }
+                    ConcurrencyUtils.waitForCompletion(futures);
+                } else {
+                    int idx1, idx2;
+                    for (int k = 0; k < n / 2; k++) {
+                        idx1 = 2 * k;
+                        idx2 = offa + ((twon - idx1) % twon);
+                        a[idx2] = a[offa + idx1];
+                        a[idx2 + 1] = -a[offa + idx1 + 1];
+                    }
+                }
+                a[offa + n] = -a[offa + 1];
+                a[offa + 1] = 0;
+                break;
+            case MIXED_RADIX:
+                rfftf(a, offa);
+                int m;
+                if (n % 2 == 0) {
+                    m = n / 2;
+                } else {
+                    m = (n + 1) / 2;
+                }
+                for (int k = 1; k < m; k++) {
+                    int idx1 = offa + twon - 2 * k;
+                    int idx2 = offa + 2 * k;
+                    a[idx1 + 1] = -a[idx2];
+                    a[idx1] = a[idx2 - 1];
+                }
+                for (int k = 1; k < n; k++) {
+                    int idx = offa + n - k;
+                    float tmp = a[idx + 1];
+                    a[idx + 1] = a[idx];
+                    a[idx] = tmp;
+                }
+                a[offa + 1] = 0;
+                break;
+            case BLUESTEIN:
+                bluestein_real_full(a, offa, -1);
+                break;
+        }
+    }
+
+    /**
+     * Computes 1D inverse DFT of real data leaving the result in <code>a</code>
+     * . The physical layout of the input data has to be as follows:<br>
+     * <p>
+     * if n is even then
+     *
+     * <pre>
+     * a[2*k] = Re[k], 0&lt;=k&lt;n/2
+     * a[2*k+1] = Im[k], 0&lt;k&lt;n/2
+     * a[1] = Re[n/2]
+     * </pre>
+     * <p>
+     * if n is odd then
+     *
+     * <pre>
+     * a[2*k] = Re[k], 0&lt;=k&lt;(n+1)/2
+     * a[2*k+1] = Im[k], 0&lt;k&lt;(n-1)/2
+     * a[1] = Im[(n-1)/2]
+     * </pre>
+     * <p>
+     * This method computes only half of the elements of the real transform. The
+     * other half satisfies the symmetry condition. If you want the full real
+     * inverse transform, use <code>realInverseFull</code>.
+     *
+     * @param a     data to transform
+     * @param scale if true then scaling is performed
+     *
+     */
+    public void realInverse(float[] a, boolean scale) {
+        realInverse(a, 0, scale);
+    }
+
+    /**
+     * Computes 1D inverse DFT of real data leaving the result in <code>a</code>
+     * . The physical layout of the input data has to be as follows:<br>
+     * <p>
+     * if n is even then
+     *
+     * <pre>
+     * a[offa+2*k] = Re[k], 0&lt;=k&lt;n/2
+     * a[offa+2*k+1] = Im[k], 0&lt;k&lt;n/2
+     * a[offa+1] = Re[n/2]
+     * </pre>
+     * <p>
+     * if n is odd then
+     *
+     * <pre>
+     * a[offa+2*k] = Re[k], 0&lt;=k&lt;(n+1)/2
+     * a[offa+2*k+1] = Im[k], 0&lt;k&lt;(n-1)/2
+     * a[offa+1] = Im[(n-1)/2]
+     * </pre>
+     * <p>
+     * This method computes only half of the elements of the real transform. The
+     * other half satisfies the symmetry condition. If you want the full real
+     * inverse transform, use <code>realInverseFull</code>.
+     *
+     * @param a     data to transform
+     * @param offa  index of the first element in array <code>a</code>
+     * @param scale if true then scaling is performed
+     *
+     */
+    public void realInverse(float[] a, int offa, boolean scale) {
+        if (n == 1)
+            return;
+        switch (plan) {
+            case SPLIT_RADIX:
+                a[offa + 1] = (float) (0.5 * (a[offa] - a[offa + 1]));
+                a[offa] -= a[offa + 1];
+                if (n > 4) {
+                    rftfsub(n, a, offa, nc, w, nw);
+                    cftbsub(n, a, offa, ip, nw, w);
+                } else if (n == 4) {
+                    cftxc020(a, offa);
+                }
+                if (scale) {
+                    scale(n / 2, a, offa, false);
+                }
+                break;
+            case MIXED_RADIX:
+                for (int k = 2; k < n; k++) {
+                    int idx = offa + k;
+                    float tmp = a[idx - 1];
+                    a[idx - 1] = a[idx];
+                    a[idx] = tmp;
+                }
+                rfftb(a, offa);
+                if (scale) {
+                    scale(n, a, offa, false);
+                }
+                break;
+            case BLUESTEIN:
+                bluestein_real_inverse(a, offa);
+                if (scale) {
+                    scale(n, a, offa, false);
+                }
+                break;
+        }
+
+    }
+
+    /**
+     * Computes 1D inverse DFT of real data leaving the result in <code>a</code>
+     * . This method computes the full real inverse transform, i.e. you will get
+     * the same result as from <code>complexInverse</code> called with all
+     * imaginary part equal 0. Because the result is stored in <code>a</code>,
+     * the size of the input array must greater or equal 2*n, with only the
+     * first n elements filled with real data.
+     *
+     * @param a     data to transform
+     * @param scale if true then scaling is performed
+     */
+    public void realInverseFull(float[] a, boolean scale) {
+        realInverseFull(a, 0, scale);
+    }
+
+    /**
+     * Computes 1D inverse DFT of real data leaving the result in <code>a</code>
+     * . This method computes the full real inverse transform, i.e. you will get
+     * the same result as from <code>complexInverse</code> called with all
+     * imaginary part equal 0. Because the result is stored in <code>a</code>,
+     * the size of the input array must greater or equal 2*n, with only the
+     * first n elements filled with real data.
+     *
+     * @param a     data to transform
+     * @param offa  index of the first element in array <code>a</code>
+     * @param scale if true then scaling is performed
+     */
+    public void realInverseFull(final float[] a, final int offa, boolean scale) {
+        final int twon = 2 * n;
+        switch (plan) {
+            case SPLIT_RADIX:
+                realInverse2(a, offa, scale);
+                int nthreads = ConcurrencyUtils.getNumberOfThreads();
+                if ((nthreads > 1) && (n / 2 > ConcurrencyUtils.getThreadsBeginN_1D_FFT_2Threads())) {
+                    Future<?>[] futures = new Future[nthreads];
+                    int k = n / 2 / nthreads;
+                    for (int i = 0; i < nthreads; i++) {
+                        final int firstIdx = i * k;
+                        final int lastIdx = (i == (nthreads - 1)) ? n / 2 : firstIdx + k;
+                        futures[i] = ConcurrencyUtils.submit(new Runnable() {
+                            public void run() {
+                                int idx1, idx2;
+                                for (int k = firstIdx; k < lastIdx; k++) {
+                                    idx1 = 2 * k;
+                                    idx2 = offa + ((twon - idx1) % twon);
+                                    a[idx2] = a[offa + idx1];
+                                    a[idx2 + 1] = -a[offa + idx1 + 1];
+                                }
+                            }
+                        });
+                    }
+                    ConcurrencyUtils.waitForCompletion(futures);
+                } else {
+                    int idx1, idx2;
+                    for (int k = 0; k < n / 2; k++) {
+                        idx1 = 2 * k;
+                        idx2 = offa + ((twon - idx1) % twon);
+                        a[idx2] = a[offa + idx1];
+                        a[idx2 + 1] = -a[offa + idx1 + 1];
+                    }
+                }
+                a[offa + n] = -a[offa + 1];
+                a[offa + 1] = 0;
+                break;
+            case MIXED_RADIX:
+                rfftf(a, offa);
+                if (scale) {
+                    scale(n, a, offa, false);
+                }
+                int m;
+                if (n % 2 == 0) {
+                    m = n / 2;
+                } else {
+                    m = (n + 1) / 2;
+                }
+                for (int k = 1; k < m; k++) {
+                    int idx1 = offa + 2 * k;
+                    int idx2 = offa + twon - 2 * k;
+                    a[idx1] = -a[idx1];
+                    a[idx2 + 1] = -a[idx1];
+                    a[idx2] = a[idx1 - 1];
+                }
+                for (int k = 1; k < n; k++) {
+                    int idx = offa + n - k;
+                    float tmp = a[idx + 1];
+                    a[idx + 1] = a[idx];
+                    a[idx] = tmp;
+                }
+                a[offa + 1] = 0;
+                break;
+            case BLUESTEIN:
+                bluestein_real_full(a, offa, 1);
+                if (scale) {
+                    scale(n, a, offa, true);
+                }
+                break;
+        }
+    }
+
+    private void realInverse2(float[] a, int offa, boolean scale) {
+        if (n == 1)
+            return;
+        switch (plan) {
+            case SPLIT_RADIX:
+                float xi;
+
+                if (n > 4) {
+                    cftfsub(n, a, offa, ip, nw, w);
+                    rftbsub(n, a, offa, nc, w, nw);
+                } else if (n == 4) {
+                    cftbsub(n, a, offa, ip, nw, w);
+                }
+                xi = a[offa] - a[offa + 1];
+                a[offa] += a[offa + 1];
+                a[offa + 1] = xi;
+                if (scale) {
+                    scale(n, a, offa, false);
+                }
+                break;
+            case MIXED_RADIX:
+                rfftf(a, offa);
+                for (int k = n - 1; k >= 2; k--) {
+                    int idx = offa + k;
+                    float tmp = a[idx];
+                    a[idx] = a[idx - 1];
+                    a[idx - 1] = tmp;
+                }
+                if (scale) {
+                    scale(n, a, offa, false);
+                }
+                int m;
+                if (n % 2 == 0) {
+                    m = n / 2;
+                    for (int i = 1; i < m; i++) {
+                        int idx = offa + 2 * i + 1;
+                        a[idx] = -a[idx];
+                    }
+                } else {
+                    m = (n - 1) / 2;
+                    for (int i = 0; i < m; i++) {
+                        int idx = offa + 2 * i + 1;
+                        a[idx] = -a[idx];
+                    }
+                }
+                break;
+            case BLUESTEIN:
+                bluestein_real_inverse2(a, offa);
+                if (scale) {
+                    scale(n, a, offa, false);
+                }
+                break;
+        }
+    }
 
     void cffti(int n, int offw) {
         if (n == 1)
@@ -776,7 +726,8 @@ public class FloatFFT {
         nf = 0;
         j = 0;
 
-        factorize_loop: while (true) {
+        factorize_loop:
+        while (true) {
             j++;
             if (j <= 4)
                 ntry = factors[j - 1];
@@ -825,8 +776,8 @@ public class FloatFFT {
                     fi += 1;
                     arg = fi * argld;
                     int idx = i + twon;
-                    wtable[offw + idx - 1] = (float)Math.cos(arg);
-                    wtable[offw + idx] = (float)Math.sin(arg);
+                    wtable[offw + idx - 1] = (float) Math.cos(arg);
+                    wtable[offw + idx] = (float) Math.sin(arg);
                 }
                 if (ip > 5) {
                     int idx1 = i1 + twon;
@@ -839,6 +790,12 @@ public class FloatFFT {
         }
 
     }
+
+    /* -------- initializing routines -------- */
+
+    /*---------------------------------------------------------
+       cffti: initialization of Complex FFT
+      --------------------------------------------------------*/
 
     void cffti() {
         if (n == 1)
@@ -859,7 +816,8 @@ public class FloatFFT {
         nf = 0;
         j = 0;
 
-        factorize_loop: while (true) {
+        factorize_loop:
+        while (true) {
             j++;
             if (j <= 4)
                 ntry = factors[j - 1];
@@ -908,8 +866,8 @@ public class FloatFFT {
                     fi += 1;
                     arg = fi * argld;
                     int idx = i + twon;
-                    wtable[idx - 1] = (float)Math.cos(arg);
-                    wtable[idx] = (float)Math.sin(arg);
+                    wtable[idx - 1] = (float) Math.cos(arg);
+                    wtable[idx] = (float) Math.sin(arg);
                 }
                 if (ip > 5) {
                     int idx1 = i1 + twon;
@@ -942,7 +900,8 @@ public class FloatFFT {
         nf = 0;
         j = 0;
 
-        factorize_loop: while (true) {
+        factorize_loop:
+        while (true) {
             ++j;
             if (j <= 4)
                 ntry = factors[j - 1];
@@ -993,8 +952,8 @@ public class FloatFFT {
                     fi += 1;
                     arg = fi * argld;
                     int idx = i + n;
-                    wtable_r[idx - 2] = (float)Math.cos(arg);
-                    wtable_r[idx - 1] = (float)Math.sin(arg);
+                    wtable_r[idx - 2] = (float) Math.cos(arg);
+                    wtable_r[idx - 1] = (float) Math.sin(arg);
                 }
                 is += ido;
             }
@@ -1013,10 +972,10 @@ public class FloatFFT {
             if (k >= 2 * n)
                 k -= 2 * n;
             arg = pi_n * k;
-            bk1[2 * i] = (float)Math.cos(arg);
-            bk1[2 * i + 1] = (float)Math.sin(arg);
+            bk1[2 * i] = (float) Math.cos(arg);
+            bk1[2 * i + 1] = (float) Math.sin(arg);
         }
-        float scale = (float)(1.0 / nBluestein);
+        float scale = (float) (1.0 / nBluestein);
         bk2[0] = bk1[0] * scale;
         bk2[1] = bk1[1] * scale;
         for (int i = 2; i < 2 * n; i += 2) {
@@ -1037,25 +996,25 @@ public class FloatFFT {
         ip[1] = 1;
         if (nw > 2) {
             nwh = nw >> 1;
-            delta = (float)(0.785398163397448278999490867136046290 / nwh);
+            delta = (float) (0.785398163397448278999490867136046290 / nwh);
             delta2 = delta * 2;
-            wn4r = (float)Math.cos(delta * nwh);
+            wn4r = (float) Math.cos(delta * nwh);
             w[0] = 1;
             w[1] = wn4r;
             if (nwh == 4) {
-                w[2] = (float)Math.cos(delta2);
-                w[3] = (float)Math.sin(delta2);
+                w[2] = (float) Math.cos(delta2);
+                w[3] = (float) Math.sin(delta2);
             } else if (nwh > 4) {
                 makeipt(nw);
-                w[2] = (float)(0.5 / Math.cos(delta2));
-                w[3] = (float)(0.5 / Math.cos(delta * 6));
+                w[2] = (float) (0.5 / Math.cos(delta2));
+                w[3] = (float) (0.5 / Math.cos(delta * 6));
                 for (j = 4; j < nwh; j += 4) {
                     deltaj = delta * j;
                     deltaj3 = 3 * deltaj;
-                    w[j] = (float)Math.cos(deltaj);
-                    w[j + 1] = (float)Math.sin(deltaj);
-                    w[j + 2] = (float)Math.cos(deltaj3);
-                    w[j + 3] = (float)-Math.sin(deltaj3);
+                    w[j] = (float) Math.cos(deltaj);
+                    w[j + 1] = (float) Math.sin(deltaj);
+                    w[j + 2] = (float) Math.cos(deltaj3);
+                    w[j + 3] = (float) -Math.sin(deltaj3);
                 }
             }
             nw0 = 0;
@@ -1072,8 +1031,8 @@ public class FloatFFT {
                 } else if (nwh > 4) {
                     wk1r = w[nw0 + 4];
                     wk3r = w[nw0 + 6];
-                    w[nw1 + 2] = (float)(0.5 / wk1r);
-                    w[nw1 + 3] = (float)(0.5 / wk3r);
+                    w[nw1 + 2] = (float) (0.5 / wk1r);
+                    w[nw1 + 3] = (float) (0.5 / wk3r);
                     for (j = 4; j < nwh; j += 4) {
                         int idx1 = nw0 + 2 * j;
                         int idx2 = nw1 + j;
@@ -1117,13 +1076,13 @@ public class FloatFFT {
         ip[1] = nc;
         if (nc > 1) {
             nch = nc >> 1;
-            delta = (float)(0.785398163397448278999490867136046290 / nch);
-            c[startc] = (float)Math.cos(delta * nch);
-            c[startc + nch] = (float)(0.5 * c[startc]);
+            delta = (float) (0.785398163397448278999490867136046290 / nch);
+            c[startc] = (float) Math.cos(delta * nch);
+            c[startc + nch] = (float) (0.5 * c[startc]);
             for (j = 1; j < nch; j++) {
                 deltaj = delta * j;
-                c[startc + j] =  (float)(0.5 * Math.cos(deltaj));
-                c[startc + nc - j] = (float)(0.5 * Math.sin(deltaj));
+                c[startc + j] = (float) (0.5 * Math.cos(deltaj));
+                c[startc + nc - j] = (float) (0.5 * Math.sin(deltaj));
             }
         }
     }
@@ -1774,45 +1733,45 @@ public class FloatFFT {
             iw -= (ip - 1) * ido;
             na = 1 - na;
             switch (ip) {
-            case 2:
-                if (na == 0) {
-                    radf2(ido, l1, a, offa, ch, 0, iw);
-                } else {
-                    radf2(ido, l1, ch, 0, a, offa, iw);
-                }
-                break;
-            case 3:
-                if (na == 0) {
-                    radf3(ido, l1, a, offa, ch, 0, iw);
-                } else {
-                    radf3(ido, l1, ch, 0, a, offa, iw);
-                }
-                break;
-            case 4:
-                if (na == 0) {
-                    radf4(ido, l1, a, offa, ch, 0, iw);
-                } else {
-                    radf4(ido, l1, ch, 0, a, offa, iw);
-                }
-                break;
-            case 5:
-                if (na == 0) {
-                    radf5(ido, l1, a, offa, ch, 0, iw);
-                } else {
-                    radf5(ido, l1, ch, 0, a, offa, iw);
-                }
-                break;
-            default:
-                if (ido == 1)
-                    na = 1 - na;
-                if (na == 0) {
-                    radfg(ido, ip, l1, idl1, a, offa, ch, 0, iw);
-                    na = 1;
-                } else {
-                    radfg(ido, ip, l1, idl1, ch, 0, a, offa, iw);
-                    na = 0;
-                }
-                break;
+                case 2:
+                    if (na == 0) {
+                        radf2(ido, l1, a, offa, ch, 0, iw);
+                    } else {
+                        radf2(ido, l1, ch, 0, a, offa, iw);
+                    }
+                    break;
+                case 3:
+                    if (na == 0) {
+                        radf3(ido, l1, a, offa, ch, 0, iw);
+                    } else {
+                        radf3(ido, l1, ch, 0, a, offa, iw);
+                    }
+                    break;
+                case 4:
+                    if (na == 0) {
+                        radf4(ido, l1, a, offa, ch, 0, iw);
+                    } else {
+                        radf4(ido, l1, ch, 0, a, offa, iw);
+                    }
+                    break;
+                case 5:
+                    if (na == 0) {
+                        radf5(ido, l1, a, offa, ch, 0, iw);
+                    } else {
+                        radf5(ido, l1, ch, 0, a, offa, iw);
+                    }
+                    break;
+                default:
+                    if (ido == 1)
+                        na = 1 - na;
+                    if (na == 0) {
+                        radfg(ido, ip, l1, idl1, a, offa, ch, 0, iw);
+                        na = 1;
+                    } else {
+                        radfg(ido, ip, l1, idl1, ch, 0, a, offa, iw);
+                        na = 0;
+                    }
+                    break;
             }
             l2 = l1;
         }
@@ -1841,47 +1800,47 @@ public class FloatFFT {
             ido = n / l2;
             idl1 = ido * l1;
             switch (ip) {
-            case 2:
-                if (na == 0) {
-                    radb2(ido, l1, a, offa, ch, 0, iw);
-                } else {
-                    radb2(ido, l1, ch, 0, a, offa, iw);
-                }
-                na = 1 - na;
-                break;
-            case 3:
-                if (na == 0) {
-                    radb3(ido, l1, a, offa, ch, 0, iw);
-                } else {
-                    radb3(ido, l1, ch, 0, a, offa, iw);
-                }
-                na = 1 - na;
-                break;
-            case 4:
-                if (na == 0) {
-                    radb4(ido, l1, a, offa, ch, 0, iw);
-                } else {
-                    radb4(ido, l1, ch, 0, a, offa, iw);
-                }
-                na = 1 - na;
-                break;
-            case 5:
-                if (na == 0) {
-                    radb5(ido, l1, a, offa, ch, 0, iw);
-                } else {
-                    radb5(ido, l1, ch, 0, a, offa, iw);
-                }
-                na = 1 - na;
-                break;
-            default:
-                if (na == 0) {
-                    radbg(ido, ip, l1, idl1, a, offa, ch, 0, iw);
-                } else {
-                    radbg(ido, ip, l1, idl1, ch, 0, a, offa, iw);
-                }
-                if (ido == 1)
+                case 2:
+                    if (na == 0) {
+                        radb2(ido, l1, a, offa, ch, 0, iw);
+                    } else {
+                        radb2(ido, l1, ch, 0, a, offa, iw);
+                    }
                     na = 1 - na;
-                break;
+                    break;
+                case 3:
+                    if (na == 0) {
+                        radb3(ido, l1, a, offa, ch, 0, iw);
+                    } else {
+                        radb3(ido, l1, ch, 0, a, offa, iw);
+                    }
+                    na = 1 - na;
+                    break;
+                case 4:
+                    if (na == 0) {
+                        radb4(ido, l1, a, offa, ch, 0, iw);
+                    } else {
+                        radb4(ido, l1, ch, 0, a, offa, iw);
+                    }
+                    na = 1 - na;
+                    break;
+                case 5:
+                    if (na == 0) {
+                        radb5(ido, l1, a, offa, ch, 0, iw);
+                    } else {
+                        radb5(ido, l1, ch, 0, a, offa, iw);
+                    }
+                    na = 1 - na;
+                    break;
+                default:
+                    if (na == 0) {
+                        radbg(ido, ip, l1, idl1, a, offa, ch, 0, iw);
+                    } else {
+                        radbg(ido, ip, l1, idl1, ch, 0, a, offa, iw);
+                    }
+                    if (ido == 1)
+                        na = 1 - na;
+                    break;
             }
             l1 = l2;
             iw += (ip - 1) * ido;
@@ -2029,7 +1988,7 @@ public class FloatFFT {
     }
 
     /*-------------------------------------------------
-       radf3: Real FFT's forward processing of factor 3 
+       radf3: Real FFT's forward processing of factor 3
       -------------------------------------------------*/
     void radf3(final int ido, final int l1, final float[] in, final int in_off, final float[] out, final int out_off, final int offset) {
         final float taur = -0.5f;
@@ -2772,8 +2731,8 @@ public class FloatFFT {
         int iw1 = offset;
 
         arg = TWO_PI / (float) ip;
-        dcp = (float)Math.cos(arg);
-        dsp = (float)Math.sin(arg);
+        dcp = (float) Math.cos(arg);
+        dsp = (float) Math.sin(arg);
         ipph = (ip + 1) / 2;
         nbd = (ido - 1) / 2;
         if (ido != 1) {
@@ -3062,8 +3021,8 @@ public class FloatFFT {
         int iw1 = offset;
 
         arg = TWO_PI / (float) ip;
-        dcp = (float)Math.cos(arg);
-        dsp = (float)Math.sin(arg);
+        dcp = (float) Math.cos(arg);
+        dsp = (float) Math.sin(arg);
         nbd = (ido - 1) / 2;
         ipph = (ip + 1) / 2;
         int idx0 = ip * ido;
@@ -3373,47 +3332,47 @@ public class FloatFFT {
             idot = ido + ido;
             idl1 = idot * l1;
             switch (ip) {
-            case 4:
-                if (na == 0) {
-                    passf4(idot, l1, a, offa, ch, 0, iw, isign);
-                } else {
-                    passf4(idot, l1, ch, 0, a, offa, iw, isign);
-                }
-                na = 1 - na;
-                break;
-            case 2:
-                if (na == 0) {
-                    passf2(idot, l1, a, offa, ch, 0, iw, isign);
-                } else {
-                    passf2(idot, l1, ch, 0, a, offa, iw, isign);
-                }
-                na = 1 - na;
-                break;
-            case 3:
-                if (na == 0) {
-                    passf3(idot, l1, a, offa, ch, 0, iw, isign);
-                } else {
-                    passf3(idot, l1, ch, 0, a, offa, iw, isign);
-                }
-                na = 1 - na;
-                break;
-            case 5:
-                if (na == 0) {
-                    passf5(idot, l1, a, offa, ch, 0, iw, isign);
-                } else {
-                    passf5(idot, l1, ch, 0, a, offa, iw, isign);
-                }
-                na = 1 - na;
-                break;
-            default:
-                if (na == 0) {
-                    passfg(nac, idot, ip, l1, idl1, a, offa, ch, 0, iw, isign);
-                } else {
-                    passfg(nac, idot, ip, l1, idl1, ch, 0, a, offa, iw, isign);
-                }
-                if (nac[0] != 0)
+                case 4:
+                    if (na == 0) {
+                        passf4(idot, l1, a, offa, ch, 0, iw, isign);
+                    } else {
+                        passf4(idot, l1, ch, 0, a, offa, iw, isign);
+                    }
                     na = 1 - na;
-                break;
+                    break;
+                case 2:
+                    if (na == 0) {
+                        passf2(idot, l1, a, offa, ch, 0, iw, isign);
+                    } else {
+                        passf2(idot, l1, ch, 0, a, offa, iw, isign);
+                    }
+                    na = 1 - na;
+                    break;
+                case 3:
+                    if (na == 0) {
+                        passf3(idot, l1, a, offa, ch, 0, iw, isign);
+                    } else {
+                        passf3(idot, l1, ch, 0, a, offa, iw, isign);
+                    }
+                    na = 1 - na;
+                    break;
+                case 5:
+                    if (na == 0) {
+                        passf5(idot, l1, a, offa, ch, 0, iw, isign);
+                    } else {
+                        passf5(idot, l1, ch, 0, a, offa, iw, isign);
+                    }
+                    na = 1 - na;
+                    break;
+                default:
+                    if (na == 0) {
+                        passfg(nac, idot, ip, l1, idl1, a, offa, ch, 0, iw, isign);
+                    } else {
+                        passfg(nac, idot, ip, l1, idl1, ch, 0, a, offa, iw, isign);
+                    }
+                    if (nac[0] != 0)
+                        na = 1 - na;
+                    break;
             }
             l1 = l2;
             iw += (ip - 1) * idot;
@@ -3423,11 +3382,6 @@ public class FloatFFT {
         System.arraycopy(ch, 0, a, offa, twon);
 
     }
-
-    /*----------------------------------------------------------------------
-       passf2: Complex FFT's forward/backward processing of factor 2;
-       isign is +1 for backward and -1 for forward transforms
-      ----------------------------------------------------------------------*/
 
     void passf2(final int ido, final int l1, final float[] in, final int in_off, final float[] out, final int out_off, final int offset, final int isign) {
         float t1i, t1r;
@@ -3479,6 +3433,11 @@ public class FloatFFT {
             }
         }
     }
+
+    /*----------------------------------------------------------------------
+       passf2: Complex FFT's forward/backward processing of factor 2;
+       isign is +1 for backward and -1 for forward transforms
+      ----------------------------------------------------------------------*/
 
     /*----------------------------------------------------------------------
        passf3: Complex FFT's forward/backward processing of factor 3;
@@ -3687,8 +3646,7 @@ public class FloatFFT {
        isign is +1 for backward and -1 for forward transforms
       ----------------------------------------------------------------------*/
     void passf5(final int ido, final int l1, final float[] in, final int in_off, final float[] out, final int out_off, final int offset, final int isign)
-    /* isign==-1 for forward transform and+1 for backward transform */
-    {
+    /* isign==-1 for forward transform and+1 for backward transform */ {
         final float tr11 = 0.309016994374947451262869435595348477f;
         final float ti11 = 0.951056516295153531181938433292089030f;
         final float tr12 = -0.809016994374947340240566973079694435f;
@@ -6526,7 +6484,7 @@ public class FloatFFT {
         for (int j = 2; j < m; j += 2) {
             k = n - j;
             kk += ks;
-            wkr = (float)(0.5 - c[startc + nc - kk]);
+            wkr = (float) (0.5 - c[startc + nc - kk]);
             wki = c[startc + kk];
             idx1 = offa + j;
             idx2 = offa + k;
@@ -6553,7 +6511,7 @@ public class FloatFFT {
         for (int j = 2; j < m; j += 2) {
             k = n - j;
             kk += ks;
-            wkr = (float)(0.5 - c[startc + nc - kk]);
+            wkr = (float) (0.5 - c[startc + nc - kk]);
             wki = c[startc + kk];
             idx1 = offa + j;
             idx2 = offa + k;
@@ -6569,7 +6527,7 @@ public class FloatFFT {
     }
 
     private void scale(final float m, final float[] a, int offa, boolean complex) {
-        final float norm = (float)(1.0 / m);
+        final float norm = (float) (1.0 / m);
         int n2;
         if (complex) {
             n2 = 2 * n;
@@ -6599,5 +6557,9 @@ public class FloatFFT {
             }
 
         }
+    }
+
+    private enum Plans {
+        SPLIT_RADIX, MIXED_RADIX, BLUESTEIN
     }
 }

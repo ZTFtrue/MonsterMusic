@@ -1,23 +1,23 @@
 /**
- *  @author : Paul Taylor
- *  @author : Eric Farng
- *
- *  Version @version:$Id$
- *
- *  MusicTag Copyright (C)2003,2004
- *
- *  This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
- *  General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
- *  or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- *  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public License along with this library; if not,
- *  you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ * @author : Paul Taylor
+ * @author : Eric Farng
+ * <p>
+ * Version @version:$Id$
+ * <p>
+ * MusicTag Copyright (C)2003,2004
+ * <p>
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
+ * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
+ * or (at your option) any later version.
+ * <p>
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not,
+ * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * <p>
  * Description:
  *
  */
@@ -30,8 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-public class Lyrics3Line extends AbstractDataType
-{
+public class Lyrics3Line extends AbstractDataType {
     /**
      *
      */
@@ -48,86 +47,73 @@ public class Lyrics3Line extends AbstractDataType
      * @param identifier
      * @param frameBody
      */
-    public Lyrics3Line(String identifier, AbstractTagFrameBody frameBody)
-    {
+    public Lyrics3Line(String identifier, AbstractTagFrameBody frameBody) {
         super(identifier, frameBody);
     }
 
-    public Lyrics3Line(Lyrics3Line copy)
-    {
+    public Lyrics3Line(Lyrics3Line copy) {
         super(copy);
         this.lyric = copy.lyric;
         Lyrics3TimeStamp newTimeStamp;
-        for (int i = 0; i < copy.timeStamp.size(); i++)
-        {
+        for (int i = 0; i < copy.timeStamp.size(); i++) {
             newTimeStamp = new Lyrics3TimeStamp(copy.timeStamp.get(i));
             this.timeStamp.add(newTimeStamp);
         }
     }
 
-    public void setLyric(String lyric)
-    {
+    /**
+     * @return
+     */
+    public String getLyric() {
+        return lyric;
+    }
+
+    public void setLyric(String lyric) {
         this.lyric = lyric;
     }
 
-    public void setLyric(ID3v2LyricLine line)
-    {
+    public void setLyric(ID3v2LyricLine line) {
         this.lyric = line.getText();
     }
 
     /**
      * @return
      */
-    public String getLyric()
-    {
-        return lyric;
-    }
-
-    /**
-     * @return
-     */
-    public int getSize()
-    {
+    public int getSize() {
         int size = 0;
-        for (Object aTimeStamp : timeStamp)
-        {
+        for (Object aTimeStamp : timeStamp) {
             size += ((Lyrics3TimeStamp) aTimeStamp).getSize();
         }
         return size + lyric.length();
     }
 
     /**
+     * @return
+     */
+    public Iterator<Lyrics3TimeStamp> getTimeStamp() {
+        return timeStamp.iterator();
+    }
+
+    /**
      * @param time
      */
-    public void setTimeStamp(Lyrics3TimeStamp time)
-    {
+    public void setTimeStamp(Lyrics3TimeStamp time) {
         timeStamp.clear();
         timeStamp.add(time);
     }
 
-    /**
-     * @return
-     */
-    public Iterator<Lyrics3TimeStamp> getTimeStamp()
-    {
-        return timeStamp.iterator();
-    }
-
-    public void addLyric(String newLyric)
-    {
+    public void addLyric(String newLyric) {
         this.lyric += newLyric;
     }
 
-    public void addLyric(ID3v2LyricLine line)
-    {
+    public void addLyric(ID3v2LyricLine line) {
         this.lyric += line.getText();
     }
 
     /**
      * @param time
      */
-    public void addTimeStamp(Lyrics3TimeStamp time)
-    {
+    public void addTimeStamp(Lyrics3TimeStamp time) {
         timeStamp.add(time);
     }
 
@@ -135,14 +121,11 @@ public class Lyrics3Line extends AbstractDataType
      * @param obj
      * @return
      */
-    public boolean equals(Object obj)
-    {
-        if (!(obj instanceof Lyrics3Line object))
-        {
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Lyrics3Line object)) {
             return false;
         }
-        if (!this.lyric.equals(object.lyric))
-        {
+        if (!this.lyric.equals(object.lyric)) {
             return false;
         }
         return this.timeStamp.equals(object.timeStamp) && super.equals(obj);
@@ -151,8 +134,7 @@ public class Lyrics3Line extends AbstractDataType
     /**
      * @return
      */
-    public boolean hasTimeStamp()
-    {
+    public boolean hasTimeStamp() {
         return !timeStamp.isEmpty();
     }
 
@@ -162,22 +144,18 @@ public class Lyrics3Line extends AbstractDataType
      * @throws NullPointerException
      * @throws IndexOutOfBoundsException
      */
-    public void readString(String lineString, int offset)
-    {
-        if (lineString == null)
-        {
+    public void readString(String lineString, int offset) {
+        if (lineString == null) {
             throw new NullPointerException("Image is null");
         }
-        if ((offset < 0) || (offset >= lineString.length()))
-        {
+        if ((offset < 0) || (offset >= lineString.length())) {
             throw new IndexOutOfBoundsException("Offset to line is out of bounds: offset = " + offset + ", line.length()" + lineString.length());
         }
         int delim;
         Lyrics3TimeStamp time;
         timeStamp = new LinkedList<Lyrics3TimeStamp>();
         delim = lineString.indexOf("[", offset);
-        while (delim >= 0)
-        {
+        while (delim >= 0) {
             offset = lineString.indexOf("]", delim) + 1;
             time = new Lyrics3TimeStamp("Time Stamp");
             time.readString(lineString.substring(delim, offset));
@@ -190,11 +168,9 @@ public class Lyrics3Line extends AbstractDataType
     /**
      * @return
      */
-    public String toString()
-    {
+    public String toString() {
         String str = "";
-        for (Object aTimeStamp : timeStamp)
-        {
+        for (Object aTimeStamp : timeStamp) {
             str += aTimeStamp.toString();
         }
         return "timeStamp = " + str + ", lyric = " + lyric + "\n";
@@ -203,25 +179,21 @@ public class Lyrics3Line extends AbstractDataType
     /**
      * @return
      */
-    public String writeString()
-    {
+    public String writeString() {
         String str = "";
         Lyrics3TimeStamp time;
-        for (Object aTimeStamp : timeStamp)
-        {
+        for (Object aTimeStamp : timeStamp) {
             time = (Lyrics3TimeStamp) aTimeStamp;
             str += time.writeString();
         }
         return str + lyric;
     }
 
-    public void readByteArray(byte[] arr, int offset) throws InvalidDataTypeException
-    {
+    public void readByteArray(byte[] arr, int offset) throws InvalidDataTypeException {
         readString(arr.toString(), offset);
     }
 
-    public byte[] writeByteArray()
-    {
+    public byte[] writeByteArray() {
         return writeString().getBytes(StandardCharsets.ISO_8859_1);
     }
 }

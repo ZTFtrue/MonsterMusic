@@ -15,8 +15,7 @@ import java.util.List;
  *
  * @author Christian Laireiter
  */
-public class AsfExtHeaderReader extends ChunkContainerReader<AsfExtendedHeader>
-{
+public class AsfExtHeaderReader extends ChunkContainerReader<AsfExtendedHeader> {
 
     /**
      * The GUID this reader {@linkplain #getApplyingIds() applies to}
@@ -33,16 +32,14 @@ public class AsfExtHeaderReader extends ChunkContainerReader<AsfExtendedHeader>
      *                      GUID) will handled only once, if a reader is available, other
      *                      chunks will be discarded.
      */
-    public AsfExtHeaderReader(final List<Class<? extends ChunkReader>> toRegister, final boolean readChunkOnce)
-    {
+    public AsfExtHeaderReader(final List<Class<? extends ChunkReader>> toRegister, final boolean readChunkOnce) {
         super(toRegister, readChunkOnce);
     }
 
     /**
      * {@inheritDoc}
      */
-    public boolean canFail()
-    {
+    public boolean canFail() {
         return false;
     }
 
@@ -50,8 +47,7 @@ public class AsfExtHeaderReader extends ChunkContainerReader<AsfExtendedHeader>
      * {@inheritDoc}
      */
     @Override
-    protected AsfExtendedHeader createContainer(final long streamPosition, final BigInteger chunkLength, final InputStream stream) throws IOException
-    {
+    protected AsfExtendedHeader createContainer(final long streamPosition, final BigInteger chunkLength, final InputStream stream) throws IOException {
         Utils.readGUID(stream); // First reserved field (should be a specific
         // GUID.
         Utils.readUINT16(stream); // Second reserved field (should always be 6)
@@ -64,8 +60,7 @@ public class AsfExtHeaderReader extends ChunkContainerReader<AsfExtendedHeader>
     /**
      * {@inheritDoc}
      */
-    public GUID[] getApplyingIds()
-    {
+    public GUID[] getApplyingIds() {
         return APPLYING.clone();
     }
 

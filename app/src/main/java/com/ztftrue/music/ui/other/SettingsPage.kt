@@ -2042,7 +2042,7 @@ fun SetWidgetDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 
     val context = LocalContext.current
     val scopeMain = CoroutineScope(Dispatchers.Main)
-    val controller = rememberColorPickerController()
+    rememberColorPickerController()
     var colorString by remember { mutableStateOf(Color.Blue.toArgb().toHexString()) }
 
     LaunchedEffect(Unit) {

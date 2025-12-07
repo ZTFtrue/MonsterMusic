@@ -5,7 +5,7 @@ package be.tarsos.dsp.wavelet.lift;
  * class LiftingSchemeBaseWavelet: base class for simple Lifting Scheme wavelets
  * using split, predict, update or update, predict, merge steps.
  * </p>
- * 
+ *
  * <p>
  * Simple lifting scheme wavelets consist of three steps, a split/merge step,
  * predict step and an update step:
@@ -40,20 +40,20 @@ package be.tarsos.dsp.wavelet.lift;
  * recursive step in the wavelet calculation.
  * </p>
  * </li>
- * 
+ *
  * </ul>
- * 
+ *
  * <p>
  * The split and merge methods are shared by all Lifting Scheme wavelet
  * algorithms. This base class provides the transform and inverse transform
  * methods (forwardTrans and inverseTrans). The predict and update methods are
  * abstract and are defined for a particular Lifting Scheme wavelet sub-class.
  * </p>
- * 
+ *
  * <p>
  * <b>References:</b>
  * </p>
- * 
+ *
  * <ul>
  * <li>
  * <a href="http://www.bearcave.com/misl/misl_tech/wavelets/lifting/index.html">
@@ -67,10 +67,10 @@ package be.tarsos.dsp.wavelet.lift;
  * href="http://www.multires.caltech.edu/teaching/courses/waveletcourse/">
  * Wavelets in Computer Graphics</a></li>
  * </ul>
- * 
+ *
  * <b>
  * Copyright and Use</b>
- * 
+ *
  * <p>
  * You may use this source code without limitation and without fee as long as
  * you include:
@@ -83,141 +83,137 @@ package be.tarsos.dsp.wavelet.lift;
  * is any support provided by Ian Kaplan and Bear Products International.
  * <p>
  * Please send any bug fixes or suggested source changes to:
- * 
+ *
  * <pre>
  *      iank@bearcave.com
  * </pre>
- * 
+ *
  * @author Ian Kaplan
  */
 public abstract class LiftingSchemeBaseWavelet {
 
-	/** "enumeration" for forward wavelet transform */
-	protected final int forward = 1;
-	/** "enumeration" for inverse wavelet transform */
-	protected final int inverse = 2;
+    /**
+     * "enumeration" for forward wavelet transform
+     */
+    protected final int forward = 1;
+    /**
+     * "enumeration" for inverse wavelet transform
+     */
+    protected final int inverse = 2;
 
-	/**
-	 * Split the <i>vec</i> into even and odd elements, where the even elements
-	 * are in the first half of the vector and the odd elements are in the
-	 * second half.
-	 */
-	protected void split(float[] vec, int N) {
+    /**
+     * Split the <i>vec</i> into even and odd elements, where the even elements
+     * are in the first half of the vector and the odd elements are in the
+     * second half.
+     */
+    protected void split(float[] vec, int N) {
 
-		int start = 1;
-		int end = N - 1;
+        int start = 1;
+        int end = N - 1;
 
-		while (start < end) {
-			for (int i = start; i < end; i = i + 2) {
-				float tmp = vec[i];
-				vec[i] = vec[i + 1];
-				vec[i + 1] = tmp;
-			}
-			start = start + 1;
-			end = end - 1;
-		}
-	}
+        while (start < end) {
+            for (int i = start; i < end; i = i + 2) {
+                float tmp = vec[i];
+                vec[i] = vec[i + 1];
+                vec[i + 1] = tmp;
+            }
+            start = start + 1;
+            end = end - 1;
+        }
+    }
 
-	/**
-	 * Merge the odd elements from the second half of the N element region in
-	 * the array with the even elements in the first half of the N element
-	 * region. The result will be the combination of the odd and even elements
-	 * in a region of length N.
-	 */
-	protected void merge(float[] vec, int N) {
-		int half = N >> 1;
-		int start = half - 1;
-		int end = half;
+    /**
+     * Merge the odd elements from the second half of the N element region in
+     * the array with the even elements in the first half of the N element
+     * region. The result will be the combination of the odd and even elements
+     * in a region of length N.
+     */
+    protected void merge(float[] vec, int N) {
+        int half = N >> 1;
+        int start = half - 1;
+        int end = half;
 
-		while (start > 0) {
-			for (int i = start; i < end; i = i + 2) {
-				float tmp = vec[i];
-				vec[i] = vec[i + 1];
-				vec[i + 1] = tmp;
-			}
-			start = start - 1;
-			end = end + 1;
-		}
-	}
+        while (start > 0) {
+            for (int i = start; i < end; i = i + 2) {
+                float tmp = vec[i];
+                vec[i] = vec[i + 1];
+                vec[i + 1] = tmp;
+            }
+            start = start - 1;
+            end = end + 1;
+        }
+    }
 
-	/**
-	 * Predict step, to be defined by the subclass
-	 * 
-	 * @param vec
-	 *            input array
-	 * @param N
-	 *            size of region to act on (from 0..N-1)
-	 * @param direction
-	 *            forward or inverse transform
-	 */
-	protected abstract void predict(float[] vec, int N, int direction);
+    /**
+     * Predict step, to be defined by the subclass
+     *
+     * @param vec       input array
+     * @param N         size of region to act on (from 0..N-1)
+     * @param direction forward or inverse transform
+     */
+    protected abstract void predict(float[] vec, int N, int direction);
 
-	/**
-	 * Update step, to be defined by the subclass
-	 * 
-	 * @param vec
-	 *            input array
-	 * @param N
-	 *            size of region to act on (from 0..N-1)
-	 * @param direction
-	 *            forward or inverse transform
-	 */
-	protected abstract void update(float[] vec, int N, int direction);
+    /**
+     * Update step, to be defined by the subclass
+     *
+     * @param vec       input array
+     * @param N         size of region to act on (from 0..N-1)
+     * @param direction forward or inverse transform
+     */
+    protected abstract void update(float[] vec, int N, int direction);
 
-	/**
-	 * <p>
-	 * Simple wavelet Lifting Scheme forward transform
-	 * </p>
-	 * 
-	 * <p>
-	 * forwardTrans is passed an array of doubles. The array size must be a
-	 * power of two. Lifting Scheme wavelet transforms are calculated in-place
-	 * and the result is returned in the argument array.
-	 * </p>
-	 * 
-	 * <p>
-	 * The result of forwardTrans is a set of wavelet coefficients ordered by
-	 * increasing frequency and an approximate average of the input data set in
-	 * vec[0]. The coefficient bands follow this element in powers of two (e.g.,
-	 * 1, 2, 4, 8...).
-	 * </p>
-	 * 
-	 * @param vec
-	 *            the vector
-	 */
-	public void forwardTrans(float[] vec) {
-		final int N = vec.length;
+    /**
+     * <p>
+     * Simple wavelet Lifting Scheme forward transform
+     * </p>
+     *
+     * <p>
+     * forwardTrans is passed an array of doubles. The array size must be a
+     * power of two. Lifting Scheme wavelet transforms are calculated in-place
+     * and the result is returned in the argument array.
+     * </p>
+     *
+     * <p>
+     * The result of forwardTrans is a set of wavelet coefficients ordered by
+     * increasing frequency and an approximate average of the input data set in
+     * vec[0]. The coefficient bands follow this element in powers of two (e.g.,
+     * 1, 2, 4, 8...).
+     * </p>
+     *
+     * @param vec the vector
+     */
+    public void forwardTrans(float[] vec) {
+        final int N = vec.length;
 
-		for (int n = N; n > 1; n = n >> 1) {
-			split(vec, n);
-			predict(vec, n, forward);
-			update(vec, n, forward);
-		}
-	} // forwardTrans
+        for (int n = N; n > 1; n = n >> 1) {
+            split(vec, n);
+            predict(vec, n, forward);
+            update(vec, n, forward);
+        }
+    } // forwardTrans
 
-	/**
-	 * <p>
-	 * Default two step Lifting Scheme inverse wavelet transform
-	 * </p>
-	 * 
-	 * <p>
-	 * inverseTrans is passed the result of an ordered wavelet transform,
-	 * consisting of an average and a set of wavelet coefficients. The inverse
-	 * transform is calculated in-place and the result is returned in the
-	 * argument array.
-	 * </p>
-	 * 
-	 * @param vec
-	 *            the vector
-	 */
-	public void inverseTrans(float[] vec) {
-		final int N = vec.length;
+    /**
+     * <p>
+     * Default two step Lifting Scheme inverse wavelet transform
+     * </p>
+     *
+     * <p>
+     * inverseTrans is passed the result of an ordered wavelet transform,
+     * consisting of an average and a set of wavelet coefficients. The inverse
+     * transform is calculated in-place and the result is returned in the
+     * argument array.
+     * </p>
+     *
+     * @param vec the vector
+     */
+    public void inverseTrans(float[] vec) {
+        final int N = vec.length;
 
-		for (int n = 2; n <= N; n = n << 1) {
-			update(vec, n, inverse);
-			predict(vec, n, inverse);
-			merge(vec, n);
-		}
-	} // inverseTrans
+        for (int n = 2; n <= N; n = n << 1) {
+            update(vec, n, inverse);
+            predict(vec, n, inverse);
+            merge(vec, n);
+        }
+    } // inverseTrans
 
 } // LiftingSchemeBaseWavelet

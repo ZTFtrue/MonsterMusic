@@ -13,15 +13,14 @@ import java.util.logging.Logger;
 /**
  * Encapsulates the WM/Pictures provides some convenience methods for decoding
  * the binary data it contains
- *
+ * <p>
  * The value of a WM/Pictures metadata descriptor is as follows:
- *
+ * <p>
  * byte0 Picture Type byte1-4 Length of the image data mime type encoded as
  * UTF-16LE null byte null byte description encoded as UTF-16LE (optional) null
  * byte null byte image data
  */
-public class AsfTagCoverField extends AbstractAsfTagImageField
-{
+public class AsfTagCoverField extends AbstractAsfTagImageField {
     /**
      * Logger Object
      */
@@ -55,14 +54,14 @@ public class AsfTagCoverField extends AbstractAsfTagImageField
 
     /**
      * Create New Image Field
-     * 
+     *
      * @param imageData
      * @param pictureType
      * @param description
      * @param mimeType
      */
     public AsfTagCoverField(final byte[] imageData, final int pictureType,
-            final String description, final String mimeType) {
+                            final String description, final String mimeType) {
         super(new MetadataDescriptor(AsfFieldKey.COVER_ART.getFieldName(),
                 MetadataDescriptor.TYPE_BINARY));
         this.getDescriptor()
@@ -73,9 +72,8 @@ public class AsfTagCoverField extends AbstractAsfTagImageField
 
     /**
      * Creates an instance from a metadata descriptor
-     * 
-     * @param source
-     *            The metadata descriptor, whose content is published.<br>
+     *
+     * @param source The metadata descriptor, whose content is published.<br>
      */
     public AsfTagCoverField(final MetadataDescriptor source) {
         super(source);
@@ -97,7 +95,7 @@ public class AsfTagCoverField extends AbstractAsfTagImageField
     }
 
     private byte[] createRawContent(final byte[] data, final int pictureType,
-            final String description, String mimeType) { // NOPMD by Christian Laireiter on 5/9/09 5:46 PM
+                                    final String description, String mimeType) { // NOPMD by Christian Laireiter on 5/9/09 5:46 PM
         this.description = description;
         this.imageDataSize = data.length;
         this.pictureType = pictureType;

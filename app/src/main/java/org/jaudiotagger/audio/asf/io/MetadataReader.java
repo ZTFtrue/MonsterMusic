@@ -1,6 +1,10 @@
 package org.jaudiotagger.audio.asf.io;
 
-import org.jaudiotagger.audio.asf.data.*;
+import org.jaudiotagger.audio.asf.data.Chunk;
+import org.jaudiotagger.audio.asf.data.ContainerType;
+import org.jaudiotagger.audio.asf.data.GUID;
+import org.jaudiotagger.audio.asf.data.MetadataContainer;
+import org.jaudiotagger.audio.asf.data.MetadataDescriptor;
 import org.jaudiotagger.audio.asf.util.Utils;
 
 import java.io.IOException;
@@ -13,8 +17,7 @@ import java.math.BigInteger;
  *
  * @author Christian Laireiter
  */
-public class MetadataReader implements ChunkReader
-{
+public class MetadataReader implements ChunkReader {
 
     /**
      * The GUID this reader {@linkplain #getApplyingIds() applies to}
@@ -24,24 +27,21 @@ public class MetadataReader implements ChunkReader
     /**
      * {@inheritDoc}
      */
-    public boolean canFail()
-    {
+    public boolean canFail() {
         return false;
     }
 
     /**
      * {@inheritDoc}
      */
-    public GUID[] getApplyingIds()
-    {
+    public GUID[] getApplyingIds() {
         return APPLYING.clone();
     }
 
     /**
      * {@inheritDoc}
      */
-    public Chunk read(final GUID guid, final InputStream stream, final long streamPosition) throws IOException
-    {
+    public Chunk read(final GUID guid, final InputStream stream, final long streamPosition) throws IOException {
         final BigInteger chunkLen = Utils.readBig64(stream);
 
         final MetadataContainer result = new MetadataContainer(guid, streamPosition, chunkLen);
@@ -50,12 +50,10 @@ public class MetadataReader implements ChunkReader
         // otherwise it is a metadata object, there are only slight differences
         final boolean isExtDesc = result.getContainerType() == ContainerType.EXTENDED_CONTENT;
         final int recordCount = Utils.readUINT16(stream);
-        for (int i = 0; i < recordCount; i++)
-        {
+        for (int i = 0; i < recordCount; i++) {
             int languageIndex = 0;
             int streamNumber = 0;
-            if (!isExtDesc)
-            {
+            if (!isExtDesc) {
                 /*
                  * Metadata objects have a language index and a stream number
                  */
@@ -67,8 +65,7 @@ public class MetadataReader implements ChunkReader
             }
             final int nameLen = Utils.readUINT16(stream);
             String recordName = null;
-            if (isExtDesc)
-            {
+            if (isExtDesc) {
                 recordName = Utils.readFixedSizeUTF16Str(stream, nameLen);
             }
             final int dataType = Utils.readUINT16(stream);
@@ -76,14 +73,12 @@ public class MetadataReader implements ChunkReader
             final long dataLen = isExtDesc ? Utils.readUINT16(stream) : Utils.readUINT32(stream);
             assert dataLen >= 0;
             assert result.getContainerType() == ContainerType.METADATA_LIBRARY_OBJECT || dataLen <= MetadataDescriptor.DWORD_MAXVALUE;
-            if (!isExtDesc)
-            {
+            if (!isExtDesc) {
                 recordName = Utils.readFixedSizeUTF16Str(stream, nameLen);
             }
             final MetadataDescriptor descriptor = new MetadataDescriptor(result.getContainerType(), recordName, dataType, streamNumber, languageIndex
             );
-            switch (dataType)
-            {
+            switch (dataType) {
                 case MetadataDescriptor.TYPE_STRING:
                     descriptor.setStringValue(Utils.readFixedSizeUTF16Str(stream, (int) dataLen));
                     break;
@@ -131,20 +126,15 @@ public class MetadataReader implements ChunkReader
      * @return <code>true</code> or <code>false</code>.
      * @throws IOException on I/O Errors
      */
-    private boolean readBoolean(final InputStream stream, final int bytes) throws IOException
-    {
+    private boolean readBoolean(final InputStream stream, final int bytes) throws IOException {
         final byte[] tmp = new byte[bytes];
         stream.read(tmp);
         boolean result = false;
-        for (int i = 0; i < bytes; i++)
-        {
-            if (i == bytes - 1)
-            {
+        for (int i = 0; i < bytes; i++) {
+            if (i == bytes - 1) {
                 result = tmp[i] == 1;
                 assert tmp[i] == 0 || tmp[i] == 1;
-            }
-            else
-            {
+            } else {
                 assert tmp[i] == 0;
             }
         }

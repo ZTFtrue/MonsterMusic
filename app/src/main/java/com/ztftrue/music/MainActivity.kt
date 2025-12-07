@@ -614,7 +614,7 @@ class MainActivity : ComponentActivity() {
         musicViewModel.folderViewTree.value = SharedPreferencesUtils.getShowFolderTree(
             this@MainActivity
         )
-        needHandleIntent=true
+        needHandleIntent = true
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
 
             if (ActivityCompat.checkSelfPermission(
@@ -647,11 +647,12 @@ class MainActivity : ComponentActivity() {
         }
 
     }
-    var needHandleIntent=false
+
+    var needHandleIntent = false
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        needHandleIntent=true
+        needHandleIntent = true
     }
 
     private fun handleIntent(intent: Intent?) {
@@ -1030,8 +1031,8 @@ class MainActivity : ComponentActivity() {
         musicViewModel.playCompleted.value =
             resultData.getBoolean("play_completed")
         musicViewModel.volume.intValue = resultData.getInt("volume", 100)
-        if(needHandleIntent){
-            needHandleIntent=false
+        if (needHandleIntent) {
+            needHandleIntent = false
             handleIntent(intent)
         }
     }

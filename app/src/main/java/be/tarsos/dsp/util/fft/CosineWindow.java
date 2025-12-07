@@ -1,25 +1,25 @@
 /*
-*      _______                       _____   _____ _____  
-*     |__   __|                     |  __ \ / ____|  __ \ 
-*        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
-*        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/ 
-*        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |     
-*        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|     
-*                                                         
-* -------------------------------------------------------------
-*
-* TarsosDSP is developed by Joren Six at IPEM, University Ghent
-*  
-* -------------------------------------------------------------
-*
-*  Info: http://0110.be/tag/TarsosDSP
-*  Github: https://github.com/JorenSix/TarsosDSP
-*  Releases: http://0110.be/releases/TarsosDSP/
-*  
-*  TarsosDSP includes modified source code by various authors,
-*  for credits and info, see README.
-* 
-*/
+ *      _______                       _____   _____ _____
+ *     |__   __|                     |  __ \ / ____|  __ \
+ *        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
+ *        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/
+ *        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |
+ *        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|
+ *
+ * -------------------------------------------------------------
+ *
+ * TarsosDSP is developed by Joren Six at IPEM, University Ghent
+ *
+ * -------------------------------------------------------------
+ *
+ *  Info: http://0110.be/tag/TarsosDSP
+ *  Github: https://github.com/JorenSix/TarsosDSP
+ *  Releases: http://0110.be/releases/TarsosDSP/
+ *
+ *  TarsosDSP includes modified source code by various authors,
+ *  for credits and info, see README.
+ *
+ */
 
 /*
  *  Copyright (c) 2007 - 2008 by Damien Di Fede <ddf@compartmental.net>
@@ -43,18 +43,20 @@ package be.tarsos.dsp.util.fft;
 
 /**
  * A Cosine window function.
- * 
+ *
  * @author Damien Di Fede
  * @author Corban Brook
  * @see <a href="http://en.wikipedia.org/wiki/Window_function#Cosine_window">The
- *      Cosine Window</a>
+ * Cosine Window</a>
  */
 public class CosineWindow extends WindowFunction {
-	/** Constructs a Cosine window. */
-	public CosineWindow() {
-	}
+    /**
+     * Constructs a Cosine window.
+     */
+    public CosineWindow() {
+    }
 
-	protected float value(int length, int index) {
-		return (float) (Math.cos(Math.PI * index / (length - 1) - Math.PI / 2));
-	}
+    protected float value(int length, int index) {
+        return (float) (Math.cos(Math.PI * index / (length - 1) - Math.PI / 2));
+    }
 }

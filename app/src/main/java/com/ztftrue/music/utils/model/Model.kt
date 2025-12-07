@@ -14,6 +14,7 @@ data class MusicPlayList(
     override var trackNumber: Int,
     override var type: PlayListType = PlayListType.PlayLists,
 ) : ListBase(id, name, trackNumber, type)
+
 @Immutable
 @Parcelize
 data class FolderList(
@@ -24,8 +25,8 @@ data class FolderList(
     override var trackNumber: Int,
     override var type: PlayListType = PlayListType.Folders,
     var isShow: Boolean = true,
-    var parent:FolderList?=null
-) : ListBase(id, name, trackNumber, type){
+    var parent: FolderList? = null
+) : ListBase(id, name, trackNumber, type) {
     override fun toString(): String {
         return path
     }

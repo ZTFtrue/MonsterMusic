@@ -1,22 +1,24 @@
 /*
  * Entagged Audio Tag library
  * Copyright (c) 2003-2005 Raphaël Slinckx <raphael@slinckx.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *  
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 package org.jaudiotagger.tag.vorbiscomment;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import org.jaudiotagger.audio.generic.AbstractTagCreator;
 import org.jaudiotagger.audio.generic.Utils;
@@ -29,13 +31,10 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 /**
  * Create the raw packet data for a Vorbis Comment Tag
  */
-public class VorbisCommentCreator extends AbstractTagCreator
-{
+public class VorbisCommentCreator extends AbstractTagCreator {
     /**
      * Convert tagdata to rawdata ready for writing to file
      *
@@ -45,10 +44,8 @@ public class VorbisCommentCreator extends AbstractTagCreator
      * @throws UnsupportedEncodingException
      */
     //TODO padding parameter currently ignored
-    public ByteBuffer convert(Tag tag, int padding) throws UnsupportedEncodingException
-    {
-        try
-        {
+    public ByteBuffer convert(Tag tag, int padding) throws UnsupportedEncodingException {
+        try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
             //Vendor
@@ -63,15 +60,11 @@ public class VorbisCommentCreator extends AbstractTagCreator
 
             //Add metadata raw content
             Iterator<TagField> it = tag.getFields();
-            while (it.hasNext())
-            {
+            while (it.hasNext()) {
                 TagField frame = it.next();
-                if (frame.getId().equals(VorbisCommentFieldKey.VENDOR.getFieldName()))
-                {
+                if (frame.getId().equals(VorbisCommentFieldKey.VENDOR.getFieldName())) {
                     //this is always stored above so ignore                    
-                }
-                else
-                {
+                } else {
                     baos.write(frame.getRawContent());
                 }
             }
@@ -80,9 +73,7 @@ public class VorbisCommentCreator extends AbstractTagCreator
             ByteBuffer buf = ByteBuffer.wrap(baos.toByteArray());
             buf.rewind();
             return buf;
-        }
-        catch (IOException ioe)
-        {
+        } catch (IOException ioe) {
             //Should never happen as not writing to file at this point
             throw new RuntimeException(ioe);
         }

@@ -179,11 +179,13 @@ fun PlayingPage(
     val pagerTabState = rememberPagerState { playViewTab.size }
     val coroutineScope = rememberCoroutineScope()
     var showDialog by remember { mutableStateOf(false) }
+
     @Suppress("ASSIGNED_VALUE_IS_NEVER_READ")
     var showAddPlayListDialog by remember { mutableStateOf(false) }
     var showCreatePlayListDialog by remember { mutableStateOf(false) }
     var repeatModel by remember { mutableIntStateOf(musicViewModel.repeatModel.intValue) }
     var music: MusicItem? = musicViewModel.currentPlay.value
+
     @Suppress("ASSIGNED_VALUE_IS_NEVER_READ")
     var showDeleteTip by remember { mutableStateOf(false) }
 

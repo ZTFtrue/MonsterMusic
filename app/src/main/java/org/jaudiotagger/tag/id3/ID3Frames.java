@@ -24,106 +24,13 @@ import java.util.TreeSet;
 
 /**
  * Subclasses Defines ID3 frames for their Tag Version
- *
+ * <p>
  * Here we specify how frames are mapped between different Tag Versions
  *
  * @author Paul Taylor
  * @version $Id$
  */
-public abstract class ID3Frames extends AbstractStringStringValuePair
-{
-    /**
-     * Holds frames whereby multiple occurences are allowed
-     */
-    protected TreeSet<String> multipleFrames = new TreeSet<String>();
-
-    /**
-     * These frames should be lost if file changes
-     */
-    protected TreeSet<String> discardIfFileAlteredFrames = new TreeSet<String>();
-
-    /**
-     * These frames are part of the Official Specification for that Tag Version
-     */
-    protected TreeSet<String> supportedFrames = new TreeSet<String>();
-
-    /**
-     * These frames are extensions to the  Specification for that Tag Version
-     */
-    protected TreeSet<String> extensionFrames = new TreeSet<String>();
-
-    /**
-     * These frames are Common , this is a loose term
-     */
-    protected TreeSet<String> commonFrames = new TreeSet<String>();
-
-    /**
-     * These frames are Binary
-     */
-    protected TreeSet<String> binaryFrames = new TreeSet<String>();
-
-    /**
-     * If file changes discard these frames
-     * @param frameID
-     * @return
-     */
-    public boolean isDiscardIfFileAltered(String frameID)
-    {
-        return discardIfFileAlteredFrames.contains(frameID);
-    }
-
-    /**
-     * Are multiple occurrences of frame allowed
-     * @param frameID
-     * @return
-     */
-    public boolean isMultipleAllowed(String frameID)
-    {
-        return multipleFrames.contains(frameID);
-    }
-
-    /**
-     * @param frameID
-     * @return true if frames with this id are part of the specification
-     */
-    public boolean isSupportedFrames(String frameID)
-    {
-        return supportedFrames.contains(frameID);
-    }
-
-    public TreeSet<String> getSupportedFrames()
-    {
-        return supportedFrames;
-    }
-    /**
-     * @param frameID
-     * @return true if frames with this id are considered common
-     */
-    public boolean isCommon(String frameID)
-    {
-        return commonFrames.contains(frameID);
-    }
-
-    /**
-     * @param frameID
-     * @return true if frames with this id are binary (non textual data)
-     */
-    public boolean isBinary(String frameID)
-    {
-        return binaryFrames.contains(frameID);
-    }
-
-
-    /**
-     * @param frameID
-     * @return true if frame is a known extension
-     */
-    public boolean isExtensionFrames(String frameID)
-    {
-        return extensionFrames.contains(frameID);
-    }
-
-
+public abstract class ID3Frames extends AbstractStringStringValuePair {
     /**
      * Mapping from v22 to v23
      */
@@ -131,15 +38,42 @@ public abstract class ID3Frames extends AbstractStringStringValuePair
     public static final Map<String, String> convertv23Tov22 = new LinkedHashMap<String, String>();
     public static final Map<String, String> forcev22Tov23 = new LinkedHashMap<String, String>();
     public static final Map<String, String> forcev23Tov22 = new LinkedHashMap<String, String>();
-
     public static final Map<String, String> convertv23Tov24 = new LinkedHashMap<String, String>();
     public static final Map<String, String> convertv24Tov23 = new LinkedHashMap<String, String>();
     public static final Map<String, String> forcev23Tov24 = new LinkedHashMap<String, String>();
     public static final Map<String, String> forcev24Tov23 = new LinkedHashMap<String, String>();
 
+    static {
+        loadID3v22ID3v23Mapping();
+        loadID3v23ID3v24Mapping();
+    }
 
-    private static void loadID3v23ID3v24Mapping()
-    {
+    /**
+     * Holds frames whereby multiple occurences are allowed
+     */
+    protected TreeSet<String> multipleFrames = new TreeSet<String>();
+    /**
+     * These frames should be lost if file changes
+     */
+    protected TreeSet<String> discardIfFileAlteredFrames = new TreeSet<String>();
+    /**
+     * These frames are part of the Official Specification for that Tag Version
+     */
+    protected TreeSet<String> supportedFrames = new TreeSet<String>();
+    /**
+     * These frames are extensions to the  Specification for that Tag Version
+     */
+    protected TreeSet<String> extensionFrames = new TreeSet<String>();
+    /**
+     * These frames are Common , this is a loose term
+     */
+    protected TreeSet<String> commonFrames = new TreeSet<String>();
+    /**
+     * These frames are Binary
+     */
+    protected TreeSet<String> binaryFrames = new TreeSet<String>();
+
+    private static void loadID3v23ID3v24Mapping() {
         // Define the mapping from v23 to v24 only maps values where
         // the v23 ID is not a v24 ID and where the translation from v23 to v24
         // ID does not affect the framebody.
@@ -173,8 +107,7 @@ public abstract class ID3Frames extends AbstractStringStringValuePair
 
     }
 
-    private static void loadID3v22ID3v23Mapping()
-    {
+    private static void loadID3v22ID3v23Mapping() {
         Iterator<String> iterator;
         String key;
         String value;
@@ -260,8 +193,7 @@ public abstract class ID3Frames extends AbstractStringStringValuePair
 
         // v23 to v22 The translation is both way
         iterator = convertv22Tov23.keySet().iterator();
-        while (iterator.hasNext())
-        {
+        while (iterator.hasNext()) {
             key = iterator.next();
             value = convertv22Tov23.get(key);
             convertv23Tov22.put(value, key);
@@ -280,10 +212,60 @@ public abstract class ID3Frames extends AbstractStringStringValuePair
         forcev23Tov22.put(ID3v23Frames.FRAME_ID_V3_ATTACHED_PICTURE, ID3v22Frames.FRAME_ID_V2_ATTACHED_PICTURE);
     }
 
-    static
-    {
-        loadID3v22ID3v23Mapping();
-        loadID3v23ID3v24Mapping();
+    /**
+     * If file changes discard these frames
+     *
+     * @param frameID
+     * @return
+     */
+    public boolean isDiscardIfFileAltered(String frameID) {
+        return discardIfFileAlteredFrames.contains(frameID);
+    }
+
+    /**
+     * Are multiple occurrences of frame allowed
+     *
+     * @param frameID
+     * @return
+     */
+    public boolean isMultipleAllowed(String frameID) {
+        return multipleFrames.contains(frameID);
+    }
+
+    /**
+     * @param frameID
+     * @return true if frames with this id are part of the specification
+     */
+    public boolean isSupportedFrames(String frameID) {
+        return supportedFrames.contains(frameID);
+    }
+
+    public TreeSet<String> getSupportedFrames() {
+        return supportedFrames;
+    }
+
+    /**
+     * @param frameID
+     * @return true if frames with this id are considered common
+     */
+    public boolean isCommon(String frameID) {
+        return commonFrames.contains(frameID);
+    }
+
+    /**
+     * @param frameID
+     * @return true if frames with this id are binary (non textual data)
+     */
+    public boolean isBinary(String frameID) {
+        return binaryFrames.contains(frameID);
+    }
+
+    /**
+     * @param frameID
+     * @return true if frame is a known extension
+     */
+    public boolean isExtensionFrames(String frameID) {
+        return extensionFrames.contains(frameID);
     }
 
 

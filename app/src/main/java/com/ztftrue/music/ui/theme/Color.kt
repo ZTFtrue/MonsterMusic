@@ -20,12 +20,15 @@ val md_theme_light_errorContainer = Color(0xFFffdad6)
 val md_theme_light_onErrorContainer = Color(0xFF410002)
 val md_theme_light_background = Color(0xFFfbfcfe)
 val md_theme_light_onBackground = Color(0xFF191c1d)
+
 // background color
 val md_theme_light_surface = Color(0xFFfbfcfe)
 val md_theme_light_onSurface = Color(0xFF191c1d)
+
 // slider color slider uncovered and enable
 val md_theme_light_surfaceVariant = Color(0xFFdbe4e8)
 val md_theme_light_onSurfaceVariant = Color(0xFF40484b)
+
 // button border
 val md_theme_light_outline = Color(0xFF70787c)
 val md_theme_light_inverseOnSurface = Color(0xFFF9EFE7)

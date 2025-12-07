@@ -1,25 +1,25 @@
 /*
-*      _______                       _____   _____ _____  
-*     |__   __|                     |  __ \ / ____|  __ \ 
-*        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
-*        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/ 
-*        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |     
-*        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|     
-*                                                         
-* -------------------------------------------------------------
-*
-* TarsosDSP is developed by Joren Six at IPEM, University Ghent
-*  
-* -------------------------------------------------------------
-*
-*  Info: http://0110.be/tag/TarsosDSP
-*  Github: https://github.com/JorenSix/TarsosDSP
-*  Releases: http://0110.be/releases/TarsosDSP/
-*  
-*  TarsosDSP includes modified source code by various authors,
-*  for credits and info, see README.
-* 
-*/
+ *      _______                       _____   _____ _____
+ *     |__   __|                     |  __ \ / ____|  __ \
+ *        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
+ *        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/
+ *        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |
+ *        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|
+ *
+ * -------------------------------------------------------------
+ *
+ * TarsosDSP is developed by Joren Six at IPEM, University Ghent
+ *
+ * -------------------------------------------------------------
+ *
+ *  Info: http://0110.be/tag/TarsosDSP
+ *  Github: https://github.com/JorenSix/TarsosDSP
+ *  Releases: http://0110.be/releases/TarsosDSP/
+ *
+ *  TarsosDSP includes modified source code by various authors,
+ *  for credits and info, see README.
+ *
+ */
 
 
 /*
@@ -45,20 +45,20 @@ package be.tarsos.dsp.filters;
  * Four stage low pass filter.
  *
  */
-public class LowPassFS extends IIRFilter{
-	
-	public LowPassFS(float freq, float sampleRate) {
-		//minimum frequency is 60Hz!
-		super(freq>60?freq:60, sampleRate);
-	}
+public class LowPassFS extends IIRFilter {
 
-	@Override
-	protected void calcCoeff() {
-		float freqFrac = getFrequency() / getSampleRate();
-		float x = (float) Math.exp(-14.445 * freqFrac);
-		a = new float[] { (float) Math.pow(1 - x, 4) };
-		b = new float[] { 4 * x, -6 * x * x, 4 * x * x * x, -x * x * x * x };
-	}
+    public LowPassFS(float freq, float sampleRate) {
+        //minimum frequency is 60Hz!
+        super(freq > 60 ? freq : 60, sampleRate);
+    }
+
+    @Override
+    protected void calcCoeff() {
+        float freqFrac = getFrequency() / getSampleRate();
+        float x = (float) Math.exp(-14.445 * freqFrac);
+        a = new float[]{(float) Math.pow(1 - x, 4)};
+        b = new float[]{4 * x, -6 * x * x, 4 * x * x * x, -x * x * x * x};
+    }
 
 
 }

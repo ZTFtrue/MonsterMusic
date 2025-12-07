@@ -1,25 +1,25 @@
 /*
-*      _______                       _____   _____ _____  
-*     |__   __|                     |  __ \ / ____|  __ \ 
-*        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
-*        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/ 
-*        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |     
-*        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|     
-*                                                         
-* -------------------------------------------------------------
-*
-* TarsosDSP is developed by Joren Six at IPEM, University Ghent
-*  
-* -------------------------------------------------------------
-*
-*  Info: http://0110.be/tag/TarsosDSP
-*  Github: https://github.com/JorenSix/TarsosDSP
-*  Releases: http://0110.be/releases/TarsosDSP/
-*  
-*  TarsosDSP includes modified source code by various authors,
-*  for credits and info, see README.
-* 
-*/
+ *      _______                       _____   _____ _____
+ *     |__   __|                     |  __ \ / ____|  __ \
+ *        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
+ *        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/
+ *        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |
+ *        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|
+ *
+ * -------------------------------------------------------------
+ *
+ * TarsosDSP is developed by Joren Six at IPEM, University Ghent
+ *
+ * -------------------------------------------------------------
+ *
+ *  Info: http://0110.be/tag/TarsosDSP
+ *  Github: https://github.com/JorenSix/TarsosDSP
+ *  Releases: http://0110.be/releases/TarsosDSP/
+ *
+ *  TarsosDSP includes modified source code by various authors,
+ *  for credits and info, see README.
+ *
+ */
 
 /*
  *  Copyright (c) 2007 - 2008 by Damien Di Fede <ddf@compartmental.net>
@@ -44,7 +44,7 @@ package be.tarsos.dsp.util.fft;
 /**
  * A Window function represents a curve which is applied to a sample buffer to
  * reduce the introduction of spectral leakage in the Fourier transform.
- * 
+ *
  * <p>
  * <b>Windowing</b>
  * <p>
@@ -71,58 +71,59 @@ package be.tarsos.dsp.util.fft;
  * at a given offset. <code>WindowFunction</code> will call this method to apply
  * the window to a sample buffer. The number passed to the method is an offset
  * within the length of the window curve.
- * 
+ *
  * @author Damien Di Fede
  * @author Corban Brook
- * 
+ *
  */
 public abstract class WindowFunction {
 
-	/** The float value of 2*PI. Provided as a convenience for subclasses. */
-	protected static final float TWO_PI = (float) (2 * Math.PI);
-	protected int length;
+    /**
+     * The float value of 2*PI. Provided as a convenience for subclasses.
+     */
+    protected static final float TWO_PI = (float) (2 * Math.PI);
+    protected int length;
 
 
-	/**
-	 * Construct a new window.
-	 */
-	protected WindowFunction() {
-	}
+    /**
+     * Construct a new window.
+     */
+    protected WindowFunction() {
+    }
 
-	/**
-	 * Apply the window function to a sample buffer.
-	 * 
-	 * @param samples
-	 *            a sample buffer
-	 */
-	public void apply(float[] samples) {
-		this.length = samples.length;
+    /**
+     * Apply the window function to a sample buffer.
+     *
+     * @param samples a sample buffer
+     */
+    public void apply(float[] samples) {
+        this.length = samples.length;
 
-		for (int n = 0; n < samples.length; n++) {
-			samples[n] *= value(samples.length, n);
-		}
-	}
+        for (int n = 0; n < samples.length; n++) {
+            samples[n] *= value(samples.length, n);
+        }
+    }
 
-	/**
-	 * Generates the curve of the window function.
-	 * 
-	 * @param length
-	 *            the length of the window
-	 * @return the shape of the window function
-	 */
-	public float[] generateCurve(int length) {
-		float[] samples = new float[length];
-		for (int n = 0; n < length; n++) {
-			samples[n] = value(length, n);
-		}
-		return samples;
-	}
+    /**
+     * Generates the curve of the window function.
+     *
+     * @param length the length of the window
+     * @return the shape of the window function
+     */
+    public float[] generateCurve(int length) {
+        float[] samples = new float[length];
+        for (int n = 0; n < length; n++) {
+            samples[n] = value(length, n);
+        }
+        return samples;
+    }
 
-	/**
-	 * The value of the window function
-	 * @param length with the lengt of the window (in samples)
-	 * @param index at index
-	 * @return The value of the window function at the requested index.
-	 */
-	protected abstract float value(int length, int index);
+    /**
+     * The value of the window function
+     *
+     * @param length with the lengt of the window (in samples)
+     * @param index  at index
+     * @return The value of the window function at the requested index.
+     */
+    protected abstract float value(int length, int index);
 }

@@ -1,22 +1,22 @@
 /**
  * @author : Paul Taylor
- *
+ * <p>
  * Version @version:$Id$
- *
+ * <p>
  * Jaudiotagger Copyright (C)2004,2005
- *
+ * <p>
  * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
  * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
  * or (at your option) any later version.
- *
+ * <p>
  * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU Lesser General Public License ainteger with this library; if not,
  * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ * <p>
  * Description:
  */
 package org.jaudiotagger.tag.reference;
@@ -32,42 +32,14 @@ import java.util.Map;
  * <p>This is the IDv1 list with additional values as defined by Winamp, this list is also used in Mp4
  * files, note iTunes doesn't understand genres above MAX_STANDARD_GENRE_ID, Winamp does.
  */
-public class GenreTypes extends AbstractIntStringValuePair
-{
-    private static final int MAX_STANDARD_GENRE_ID    = 125;
-    private static final int MAX_GENRE_ID             = 191;
-
-    /**
-     * @return the maximum genreId that is part of the official Standard, genres above this were added by
-     *         Winamp later.
-     */
-    public static int getMaxStandardGenreId()
-    {
-        return MAX_STANDARD_GENRE_ID;
-    }
-
-    public static int getMaxGenreId()
-    {
-        return MAX_GENRE_ID;
-    }
-
+public class GenreTypes extends AbstractIntStringValuePair {
+    private static final int MAX_STANDARD_GENRE_ID = 125;
+    private static final int MAX_GENRE_ID = 191;
     private static GenreTypes genreTypes;
-
-    public static GenreTypes getInstanceOf()
-    {
-        if (genreTypes == null)
-        {
-            genreTypes = new GenreTypes();
-        }
-        return genreTypes;
-    }
-
     //This maps the lowercase version to the id, so applications can map from the lowercase value to the id
     private final Map<String, Integer> nameToIdMap;
 
-
-    private GenreTypes()
-    {
+    private GenreTypes() {
         idToValue.put(0, "Blues");
         idToValue.put(1, "Classic Rock");
         idToValue.put(2, "Country");
@@ -267,10 +239,28 @@ public class GenreTypes extends AbstractIntStringValuePair
 
         //We now need to map from lowercase version to Id
         nameToIdMap = new LinkedHashMap<String, Integer>(idToValue.size());
-        for (Map.Entry<Integer, String> entry : idToValue.entrySet())
-        {
+        for (Map.Entry<Integer, String> entry : idToValue.entrySet()) {
             nameToIdMap.put(entry.getValue().toLowerCase(), entry.getKey());
         }
+    }
+
+    /**
+     * @return the maximum genreId that is part of the official Standard, genres above this were added by
+     *         Winamp later.
+     */
+    public static int getMaxStandardGenreId() {
+        return MAX_STANDARD_GENRE_ID;
+    }
+
+    public static int getMaxGenreId() {
+        return MAX_GENRE_ID;
+    }
+
+    public static GenreTypes getInstanceOf() {
+        if (genreTypes == null) {
+            genreTypes = new GenreTypes();
+        }
+        return genreTypes;
     }
 
     /**
@@ -279,8 +269,7 @@ public class GenreTypes extends AbstractIntStringValuePair
      * @param name genre name
      * @return id or {@code null}, if not found
      */
-    public Integer getIdForName(String name)
-    {
+    public Integer getIdForName(String name) {
         return nameToIdMap.get(name.toLowerCase());
     }
 

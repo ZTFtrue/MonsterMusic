@@ -26,21 +26,21 @@ import java.nio.ByteBuffer;
 
 /**
  * Position synchronisation frame.
- *
- *
+ * <p>
+ * <p>
  * This frame delivers information to the listener of how far into the
  * audio stream he picked up; in effect, it states the time offset of
  * the first frame in the stream. The frame layout is:
- *
+ * <p>
  * Head for 'Position synchronisation', ID:
  * Time stamp format $xx
  * Position          $xx (xx ...)
- *
+ * <p>
  * Where time stamp format is:
- *
+ * <p>
  * $01 Absolute time, 32 bit sized, using MPEG frames as unit
  * $02 Absolute time, 32 bit sized, using milliseconds as unit
- *
+ * <p>
  * and position is where in the audio the listener starts to receive,
  * i.e. the beginning of the next frame. If this frame is used in the
  * beginning of a file the value is always 0. There may only be one
@@ -56,19 +56,16 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyPOSS extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody
-{
+public class FrameBodyPOSS extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody {
     /**
      * Creates a new FrameBodyPOSS datatype.
      */
-    public FrameBodyPOSS()
-    {
+    public FrameBodyPOSS() {
         //        this.setObject(ObjectNumberHashMap.OBJ_TIME_STAMP_FORMAT, new Byte((byte) 0));
         //        this.setObject("Position", new Long(0));
     }
 
-    public FrameBodyPOSS(FrameBodyPOSS body)
-    {
+    public FrameBodyPOSS(FrameBodyPOSS body) {
         super(body);
     }
 
@@ -78,8 +75,7 @@ public class FrameBodyPOSS extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param timeStampFormat
      * @param position
      */
-    public FrameBodyPOSS(byte timeStampFormat, long position)
-    {
+    public FrameBodyPOSS(byte timeStampFormat, long position) {
         this.setObjectValue(DataTypes.OBJ_TIME_STAMP_FORMAT, timeStampFormat);
         this.setObjectValue(DataTypes.OBJ_POSITION, position);
     }
@@ -91,8 +87,7 @@ public class FrameBodyPOSS extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param frameSize
      * @throws InvalidTagException if unable to create framebody from buffer
      */
-    public FrameBodyPOSS(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyPOSS(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -101,8 +96,7 @@ public class FrameBodyPOSS extends AbstractID3v2FrameBody implements ID3v24Frame
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_POSITION_SYNC;
     }
 
@@ -110,8 +104,7 @@ public class FrameBodyPOSS extends AbstractID3v2FrameBody implements ID3v24Frame
     /**
      *
      */
-    protected void setupObjectList()
-    {
+    protected void setupObjectList() {
         objectList.add(new NumberHashMap(DataTypes.OBJ_TIME_STAMP_FORMAT, this, EventTimingTimestampTypes.TIMESTAMP_KEY_FIELD_SIZE));
         objectList.add(new NumberVariableLength(DataTypes.OBJ_POSITION, this, 1));
     }

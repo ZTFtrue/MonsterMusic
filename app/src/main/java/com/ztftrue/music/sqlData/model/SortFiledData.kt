@@ -9,9 +9,9 @@ import kotlinx.parcelize.Parcelize
 @Entity(tableName = "sort_filed_data")
 data class SortFiledData(
     @PrimaryKey
-    var type:String,
+    var type: String,
     var filed: String,
     var method: String,
-    var methodName:String,
-    var filedName:String,
+    var methodName: String,
+    var filedName: String,
 ) : Parcelable

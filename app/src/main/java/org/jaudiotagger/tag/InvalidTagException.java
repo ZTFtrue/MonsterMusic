@@ -31,13 +31,11 @@ package org.jaudiotagger.tag;
  *
  * @version $Revision$
  */
-public class InvalidTagException extends TagException
-{
+public class InvalidTagException extends TagException {
     /**
      * Creates a new InvalidTagException datatype.
      */
-    public InvalidTagException()
-    {
+    public InvalidTagException() {
     }
 
     /**
@@ -45,8 +43,7 @@ public class InvalidTagException extends TagException
      *
      * @param ex the cause.
      */
-    public InvalidTagException(Throwable ex)
-    {
+    public InvalidTagException(Throwable ex) {
         super(ex);
     }
 
@@ -55,8 +52,7 @@ public class InvalidTagException extends TagException
      *
      * @param msg the detail message.
      */
-    public InvalidTagException(String msg)
-    {
+    public InvalidTagException(String msg) {
         super(msg);
     }
 
@@ -66,8 +62,7 @@ public class InvalidTagException extends TagException
      * @param msg the detail message.
      * @param ex  the cause.
      */
-    public InvalidTagException(String msg, Throwable ex)
-    {
+    public InvalidTagException(String msg, Throwable ex) {
         super(msg, ex);
     }
 }

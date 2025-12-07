@@ -16,7 +16,13 @@
 package org.jaudiotagger.tag.id3.framebody;
 
 import org.jaudiotagger.tag.InvalidTagException;
-import org.jaudiotagger.tag.datatype.*;
+import org.jaudiotagger.tag.datatype.AbstractString;
+import org.jaudiotagger.tag.datatype.DataTypes;
+import org.jaudiotagger.tag.datatype.Lyrics3Line;
+import org.jaudiotagger.tag.datatype.NumberHashMap;
+import org.jaudiotagger.tag.datatype.StringHashMap;
+import org.jaudiotagger.tag.datatype.TextEncodedStringNullTerminated;
+import org.jaudiotagger.tag.datatype.TextEncodedStringSizeTerminated;
 import org.jaudiotagger.tag.id3.ID3TextEncodingConversion;
 import org.jaudiotagger.tag.id3.ID3v24Frames;
 import org.jaudiotagger.tag.id3.valuepair.TextEncoding;
@@ -27,8 +33,8 @@ import java.nio.ByteBuffer;
 
 /**
  * Unsychronised lyrics/text transcription frame.
- *
- *
+ * <p>
+ * <p>
  * This frame contains the lyrics of the song or a text transcription of other vocal activities. The head includes an
  * encoding descriptor and a content descriptor. The body consists of the actual text. The 'Content descriptor' is a
  * terminated string. If no descriptor is entered, 'Content descriptor' is $00 (00) only. Newline characters are
@@ -42,7 +48,7 @@ import java.nio.ByteBuffer;
  * <tr><td>Content descriptor</td><td>&lt;text string according to encoding&gt; $00 (00)</td></tr>
  * <tr><td>Lyrics/text       </td><td>&lt;full text string according to encoding&gt;</td></tr>
  * </table>
- *
+ * <p>
  * You can retrieve the first value without the null terminator using {@link #getFirstTextValue}
  *
  * <p>For more details, please refer to the ID3 specifications:
@@ -54,13 +60,11 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyUSLT extends AbstractID3v2FrameBody implements ID3v23FrameBody, ID3v24FrameBody
-{
+public class FrameBodyUSLT extends AbstractID3v2FrameBody implements ID3v23FrameBody, ID3v24FrameBody {
     /**
      * Creates a new FrameBodyUSLT dataType.
      */
-    public FrameBodyUSLT()
-    {
+    public FrameBodyUSLT() {
         setObjectValue(DataTypes.OBJ_TEXT_ENCODING, TextEncoding.ISO_8859_1);
         setObjectValue(DataTypes.OBJ_LANGUAGE, "");
         setObjectValue(DataTypes.OBJ_DESCRIPTION, "");
@@ -72,8 +76,7 @@ public class FrameBodyUSLT extends AbstractID3v2FrameBody implements ID3v23Frame
      *
      * @param body
      */
-    public FrameBodyUSLT(FrameBodyUSLT body)
-    {
+    public FrameBodyUSLT(FrameBodyUSLT body) {
         super(body);
     }
 
@@ -85,8 +88,7 @@ public class FrameBodyUSLT extends AbstractID3v2FrameBody implements ID3v23Frame
      * @param description
      * @param text
      */
-    public FrameBodyUSLT(byte textEncoding, String language, String description, String text)
-    {
+    public FrameBodyUSLT(byte textEncoding, String language, String description, String text) {
         setObjectValue(DataTypes.OBJ_TEXT_ENCODING, textEncoding);
         setObjectValue(DataTypes.OBJ_LANGUAGE, language);
         setObjectValue(DataTypes.OBJ_DESCRIPTION, description);
@@ -101,25 +103,12 @@ public class FrameBodyUSLT extends AbstractID3v2FrameBody implements ID3v23Frame
      * @throws InvalidTagException
      * @throws InvalidTagException
      */
-    public FrameBodyUSLT(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyUSLT(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
-    public String getUserFriendlyValue()
-    {
+    public String getUserFriendlyValue() {
         return getFirstTextValue();
-    }
-
-
-    /**
-     * Set a description field
-     *
-     * @param description
-     */
-    public void setDescription(String description)
-    {
-        setObjectValue(DataTypes.OBJ_DESCRIPTION, description);
     }
 
     /**
@@ -127,9 +116,17 @@ public class FrameBodyUSLT extends AbstractID3v2FrameBody implements ID3v23Frame
      *
      * @return description
      */
-    public String getDescription()
-    {
+    public String getDescription() {
         return (String) getObjectValue(DataTypes.OBJ_DESCRIPTION);
+    }
+
+    /**
+     * Set a description field
+     *
+     * @param description
+     */
+    public void setDescription(String description) {
+        setObjectValue(DataTypes.OBJ_DESCRIPTION, description);
     }
 
     /**
@@ -137,19 +134,8 @@ public class FrameBodyUSLT extends AbstractID3v2FrameBody implements ID3v23Frame
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_UNSYNC_LYRICS;
-    }
-
-    /**
-     * Set the language field
-     *
-     * @param language
-     */
-    public void setLanguage(String language)
-    {
-        setObjectValue(DataTypes.OBJ_LANGUAGE, language);
     }
 
     /**
@@ -157,19 +143,17 @@ public class FrameBodyUSLT extends AbstractID3v2FrameBody implements ID3v23Frame
      *
      * @return language
      */
-    public String getLanguage()
-    {
+    public String getLanguage() {
         return (String) getObjectValue(DataTypes.OBJ_LANGUAGE);
     }
 
     /**
-     * Set the lyric field
+     * Set the language field
      *
-     * @param lyric
+     * @param language
      */
-    public void setLyric(String lyric)
-    {
-        setObjectValue(DataTypes.OBJ_LYRICS, lyric);
+    public void setLanguage(String language) {
+        setObjectValue(DataTypes.OBJ_LANGUAGE, language);
     }
 
     /**
@@ -177,9 +161,17 @@ public class FrameBodyUSLT extends AbstractID3v2FrameBody implements ID3v23Frame
      *
      * @return lyrics
      */
-    public String getLyric()
-    {
+    public String getLyric() {
         return (String) getObjectValue(DataTypes.OBJ_LYRICS);
+    }
+
+    /**
+     * Set the lyric field
+     *
+     * @param lyric
+     */
+    public void setLyric(String lyric) {
+        setObjectValue(DataTypes.OBJ_LYRICS, lyric);
     }
 
     /**
@@ -187,8 +179,7 @@ public class FrameBodyUSLT extends AbstractID3v2FrameBody implements ID3v23Frame
      *
      * @return value at index 0
      */
-    public String getFirstTextValue()
-    {
+    public String getFirstTextValue() {
         TextEncodedStringSizeTerminated text = (TextEncodedStringSizeTerminated) getObject(DataTypes.OBJ_LYRICS);
         return text.getValueAtIndex(0);
     }
@@ -198,33 +189,28 @@ public class FrameBodyUSLT extends AbstractID3v2FrameBody implements ID3v23Frame
      *
      * @param text
      */
-    public void addLyric(String text)
-    {
+    public void addLyric(String text) {
         setLyric(getLyric() + text);
-        }
+    }
 
     /**
      * @param line
      */
-    public void addLyric(Lyrics3Line line)
-    {
+    public void addLyric(Lyrics3Line line) {
         setLyric(getLyric() + line.writeString());
     }
 
 
-    public void write(ByteArrayOutputStream tagBuffer)
-    {
+    public void write(ByteArrayOutputStream tagBuffer) {
 
         //Ensure valid for type
         this.setTextEncoding(ID3TextEncodingConversion.getTextEncoding(getHeader(), getTextEncoding()));
 
         //Ensure valid for data                    
-        if (!((AbstractString) getObject(DataTypes.OBJ_DESCRIPTION)).canBeEncoded())
-        {
+        if (!((AbstractString) getObject(DataTypes.OBJ_DESCRIPTION)).canBeEncoded()) {
             this.setTextEncoding(ID3TextEncodingConversion.getUnicodeTextEncoding(getHeader()));
         }
-        if (!((AbstractString) getObject(DataTypes.OBJ_LYRICS)).canBeEncoded())
-        {
+        if (!((AbstractString) getObject(DataTypes.OBJ_LYRICS)).canBeEncoded()) {
             this.setTextEncoding(ID3TextEncodingConversion.getUnicodeTextEncoding(getHeader()));
         }
         super.write(tagBuffer);
@@ -233,8 +219,7 @@ public class FrameBodyUSLT extends AbstractID3v2FrameBody implements ID3v23Frame
     /**
      *
      */
-    protected void setupObjectList()
-    {
+    protected void setupObjectList() {
         objectList.add(new NumberHashMap(DataTypes.OBJ_TEXT_ENCODING, this, TextEncoding.TEXT_ENCODING_FIELD_SIZE));
         objectList.add(new StringHashMap(DataTypes.OBJ_LANGUAGE, this, Languages.LANGUAGE_FIELD_SIZE));
         objectList.add(new TextEncodedStringNullTerminated(DataTypes.OBJ_DESCRIPTION, this));

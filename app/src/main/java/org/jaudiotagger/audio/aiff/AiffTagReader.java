@@ -1,7 +1,8 @@
-
 package org.jaudiotagger.audio.aiff;
 
-import org.jaudiotagger.audio.aiff.chunk.*;
+import org.jaudiotagger.audio.aiff.chunk.AiffChunkReader;
+import org.jaudiotagger.audio.aiff.chunk.AiffChunkType;
+import org.jaudiotagger.audio.aiff.chunk.ID3Chunk;
 import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.iff.Chunk;
 import org.jaudiotagger.audio.iff.ChunkHeader;
@@ -20,10 +21,8 @@ import java.util.logging.Logger;
 /**
  * Read the AIff file chunks, until finds Aiff Common chunk and then generates AudioHeader from it
  */
-public class AiffTagReader extends AiffChunkReader
-{
+public class AiffTagReader extends AiffChunkReader {
     public static Logger logger = Logger.getLogger("org.jaudiotagger.audio.aiff");
-
 
 
     /**
@@ -34,26 +33,21 @@ public class AiffTagReader extends AiffChunkReader
      * @throws CannotReadException
      * @throws IOException
      */
-    public AiffTag read(Path file) throws CannotReadException, IOException
-    {
-        try(FileChannel fc = FileChannel.open(file))
-        {
+    public AiffTag read(Path file) throws CannotReadException, IOException {
+        try (FileChannel fc = FileChannel.open(file)) {
             AiffAudioHeader aiffAudioHeader = new AiffAudioHeader();
             AiffTag aiffTag = new AiffTag();
 
             final AiffFileHeader fileHeader = new AiffFileHeader();
             fileHeader.readHeader(fc, aiffAudioHeader, file.toString());
-            while (fc.position() < fc.size())
-            {
-                if (!readChunk(fc, aiffTag, file.toString()))
-                {
+            while (fc.position() < fc.size()) {
+                if (!readChunk(fc, aiffTag, file.toString())) {
                     logger.severe(file + " UnableToReadProcessChunk");
                     break;
                 }
             }
 
-            if (aiffTag.getID3Tag() == null)
-            {
+            if (aiffTag.getID3Tag() == null) {
                 aiffTag.setID3Tag(AiffTag.createDefaultID3Tag());
             }
             return aiffTag;
@@ -65,13 +59,11 @@ public class AiffTagReader extends AiffChunkReader
      *
      * @return {@code false}, if we were not able to read a valid chunk id
      */
-    private boolean readChunk(FileChannel fc, AiffTag aiffTag, String fileName) throws IOException
-    {
+    private boolean readChunk(FileChannel fc, AiffTag aiffTag, String fileName) throws IOException {
         logger.config(fileName + " Reading Tag Chunk");
 
         ChunkHeader chunkHeader = new ChunkHeader(ByteOrder.BIG_ENDIAN);
-        if (!chunkHeader.readHeader(fc))
-        {
+        if (!chunkHeader.readHeader(fc)) {
             return false;
         }
         logger.config(fileName + " Reading Chunk:" + chunkHeader.getID() + ":starting at:"
@@ -80,15 +72,13 @@ public class AiffTagReader extends AiffChunkReader
 
         long startLocationOfId3TagInFile = fc.position();
         AiffChunkType chunkType = AiffChunkType.get(chunkHeader.getID());
-        if (chunkType!=null && chunkType== AiffChunkType.TAG && chunkHeader.getSize() > 0)
-        {
+        if (chunkType != null && chunkType == AiffChunkType.TAG && chunkHeader.getSize() > 0) {
             ByteBuffer chunkData = readChunkDataIntoBuffer(fc, chunkHeader);
             aiffTag.addChunkSummary(new ChunkSummary(chunkHeader.getID(), chunkHeader.getStartLocationInFile(), chunkHeader.getSize()));
 
             //If we havent already for an ID3 Tag
-            if(aiffTag.getID3Tag()==null)
-            {
-                Chunk chunk = new ID3Chunk(chunkHeader,chunkData, aiffTag);
+            if (aiffTag.getID3Tag() == null) {
+                Chunk chunk = new ID3Chunk(chunkHeader, chunkData, aiffTag);
                 chunk.readChunk();
                 aiffTag.setExistingId3Tag(true);
                 aiffTag.getID3Tag().setStartLocationInFile(startLocationOfId3TagInFile);
@@ -105,37 +95,31 @@ public class AiffTagReader extends AiffChunkReader
         }
         //Special handling to recognise ID3Tags written on odd boundary because original preceding chunk odd length but
         //didn't write padding byte
-        else if(chunkType!=null && chunkType== AiffChunkType.CORRUPT_TAG_LATE)
-        {
+        else if (chunkType != null && chunkType == AiffChunkType.CORRUPT_TAG_LATE) {
             logger.warning(fileName + "Found Corrupt ID3 Chunk, starting at Odd Location:" + chunkHeader.getID() + ":"
                     + Hex.asDecAndHex(chunkHeader.getStartLocationInFile() - 1)
-                    + ":sizeIncHeader:"+ (chunkHeader.getSize() + ChunkHeader.CHUNK_HEADER_SIZE));
+                    + ":sizeIncHeader:" + (chunkHeader.getSize() + ChunkHeader.CHUNK_HEADER_SIZE));
 
             //We only want to know if first metadata tag is misaligned
-            if(aiffTag.getID3Tag()==null)
-            {
+            if (aiffTag.getID3Tag() == null) {
                 aiffTag.setIncorrectlyAlignedTag(true);
             }
             fc.position(fc.position() - (ChunkHeader.CHUNK_HEADER_SIZE + 1));
             return true;
         }
         //Other Special handling for ID3Tags
-        else if(chunkType!=null && chunkType== AiffChunkType.CORRUPT_TAG_EARLY)
-        {
+        else if (chunkType != null && chunkType == AiffChunkType.CORRUPT_TAG_EARLY) {
             logger.warning(fileName + " Found Corrupt ID3 Chunk, starting at Odd Location:" + chunkHeader.getID()
                     + ":" + Hex.asDecAndHex(chunkHeader.getStartLocationInFile())
-                    + ":sizeIncHeader:"+ (chunkHeader.getSize() + ChunkHeader.CHUNK_HEADER_SIZE));
+                    + ":sizeIncHeader:" + (chunkHeader.getSize() + ChunkHeader.CHUNK_HEADER_SIZE));
 
             //We only want to know if first metadata tag is misaligned
-            if(aiffTag.getID3Tag()==null)
-            {
+            if (aiffTag.getID3Tag() == null) {
                 aiffTag.setIncorrectlyAlignedTag(true);
             }
             fc.position(fc.position() - (ChunkHeader.CHUNK_HEADER_SIZE - 1));
             return true;
-        }
-        else
-        {
+        } else {
             logger.config(fileName + "Skipping Chunk:" + chunkHeader.getID() + ":" + chunkHeader.getSize());
             aiffTag.addChunkSummary(new ChunkSummary(chunkHeader.getID(), chunkHeader.getStartLocationInFile(), chunkHeader.getSize()));
             fc.position(fc.position() + chunkHeader.getSize());

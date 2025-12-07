@@ -14,29 +14,30 @@ import be.tarsos.dsp.io.TarsosDSPAudioFormat;
  *
  */
 public class WriterProcessor implements AudioProcessor {
+    private static final int HEADER_LENGTH = 44;//byte
     RandomAccessFile output;
     TarsosDSPAudioFormat audioFormat;
-    private int audioLen=0;
-    private  static final int HEADER_LENGTH=44;//byte
+    private int audioLen = 0;
 
     /**
      *
      * @param audioFormat which this processor is attached to
-     * @param output randomaccessfile of the output file
+     * @param output      randomaccessfile of the output file
      */
-    public WriterProcessor(TarsosDSPAudioFormat audioFormat,RandomAccessFile output){
-        this.output=output;
-        this.audioFormat=audioFormat;
+    public WriterProcessor(TarsosDSPAudioFormat audioFormat, RandomAccessFile output) {
+        this.output = output;
+        this.audioFormat = audioFormat;
         try {
             output.write(new byte[HEADER_LENGTH]);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
     @Override
     public boolean process(AudioEvent audioEvent) {
         try {
-            audioLen+=audioEvent.getByteBuffer().length;
+            audioLen += audioEvent.getByteBuffer().length;
             //write audio to the output
             output.write(audioEvent.getByteBuffer());
         } catch (IOException e) {
@@ -48,16 +49,16 @@ public class WriterProcessor implements AudioProcessor {
     @Override
     public void processingFinished() {
         //write header and data to the result output
-        WaveHeader waveHeader=new WaveHeader(WaveHeader.FORMAT_PCM,
-                (short)audioFormat.getChannels(),
-                (int)audioFormat.getSampleRate(),(short)16,audioLen);//16 is for pcm, Read WaveHeader class for more details
-        ByteArrayOutputStream header=new ByteArrayOutputStream();
+        WaveHeader waveHeader = new WaveHeader(WaveHeader.FORMAT_PCM,
+                (short) audioFormat.getChannels(),
+                (int) audioFormat.getSampleRate(), (short) 16, audioLen);//16 is for pcm, Read WaveHeader class for more details
+        ByteArrayOutputStream header = new ByteArrayOutputStream();
         try {
             waveHeader.write(header);
             output.seek(0);
             output.write(header.toByteArray());
             output.close();
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
 

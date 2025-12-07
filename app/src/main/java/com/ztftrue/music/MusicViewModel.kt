@@ -106,7 +106,7 @@ class MusicViewModel : ViewModel() {
 
 
     val folderViewTree = mutableStateOf(false)
-    val folderViewShowPath= mutableStateOf(false)
+    val folderViewShowPath = mutableStateOf(false)
 
     //    val albumItemsCount = mutableIntStateOf(2)
 //    val genreItemsCount = mutableIntStateOf(2)
@@ -518,7 +518,7 @@ class MusicViewModel : ViewModel() {
     }
 
 
-    fun getCurrentMusicCover(context: Context): ImageSource? {
+    fun getCurrentMusicCover(context: Context): ImageSource {
         val v = currentPlay.value
         if (v != null) {
             currentMusicCover.value = getCover(this@MusicViewModel, context, v.id, v.path)

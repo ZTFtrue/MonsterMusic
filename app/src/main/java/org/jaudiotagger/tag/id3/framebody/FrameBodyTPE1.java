@@ -33,17 +33,14 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyTPE1 extends AbstractFrameBodyTextInfo implements ID3v24FrameBody, ID3v23FrameBody
-{
+public class FrameBodyTPE1 extends AbstractFrameBodyTextInfo implements ID3v24FrameBody, ID3v23FrameBody {
     /**
      * Creates a new FrameBodyTPE1 datatype.
      */
-    public FrameBodyTPE1()
-    {
+    public FrameBodyTPE1() {
     }
 
-    public FrameBodyTPE1(FrameBodyTPE1 body)
-    {
+    public FrameBodyTPE1(FrameBodyTPE1 body) {
         super(body);
     }
 
@@ -53,8 +50,7 @@ public class FrameBodyTPE1 extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param textEncoding
      * @param text
      */
-    public FrameBodyTPE1(byte textEncoding, String text)
-    {
+    public FrameBodyTPE1(byte textEncoding, String text) {
         super(textEncoding, text);
     }
 
@@ -65,8 +61,7 @@ public class FrameBodyTPE1 extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param frameSize
      * @throws InvalidTagException
      */
-    public FrameBodyTPE1(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyTPE1(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -75,8 +70,7 @@ public class FrameBodyTPE1 extends AbstractFrameBodyTextInfo implements ID3v24Fr
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_ARTIST;
     }
 }

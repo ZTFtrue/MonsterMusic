@@ -5,12 +5,12 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity
-data class CurrentList (
+data class CurrentList(
     @PrimaryKey
     val id: Int?,
     var listID: Long,
     @ColumnInfo(name = "type") var type: String,
-){
+) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -22,7 +22,7 @@ data class CurrentList (
     }
 
     override fun hashCode(): Int {
-        var result = id?:0
+        var result = id ?: 0
         result = 31 * result + type.hashCode()
         return result
     }

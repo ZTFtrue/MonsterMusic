@@ -1,23 +1,23 @@
 /**
- *  @author : Paul Taylor
- *  @author : Eric Farng
- *
- *  Version @version:$Id$
- *
- *  MusicTag Copyright (C)2003,2004
- *
- *  This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
- *  General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
- *  or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- *  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public License along with this library; if not,
- *  you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ * @author : Paul Taylor
+ * @author : Eric Farng
+ * <p>
+ * Version @version:$Id$
+ * <p>
+ * MusicTag Copyright (C)2003,2004
+ * <p>
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
+ * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
+ * or (at your option) any later version.
+ * <p>
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not,
+ * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * <p>
  * Description:
  * Abstract Superclass of all Frame Bodys
  *
@@ -38,8 +38,7 @@ import java.nio.ByteBuffer;
 /**
  * Contains the content for an ID3v2 frame, (the header is held directly within the frame
  */
-public abstract class AbstractID3v2FrameBody extends AbstractTagFrameBody
-{
+public abstract class AbstractID3v2FrameBody extends AbstractTagFrameBody {
     protected static final String TYPE_BODY = "body";
 
 
@@ -53,16 +52,14 @@ public abstract class AbstractID3v2FrameBody extends AbstractTagFrameBody
     /**
      * Create Empty Body. Super Constructor sets up Object list
      */
-    protected AbstractID3v2FrameBody()
-    {
+    protected AbstractID3v2FrameBody() {
     }
 
     /**
      * Create Body based on another body
      * @param copyObject
      */
-    protected AbstractID3v2FrameBody(AbstractID3v2FrameBody copyObject)
-    {
+    protected AbstractID3v2FrameBody(AbstractID3v2FrameBody copyObject) {
         super(copyObject);
     }
 
@@ -74,8 +71,7 @@ public abstract class AbstractID3v2FrameBody extends AbstractTagFrameBody
      * @param frameSize
      * @throws org.jaudiotagger.tag.InvalidTagException
      */
-    protected AbstractID3v2FrameBody(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    protected AbstractID3v2FrameBody(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super();
         setSize(frameSize);
         this.read(byteBuffer);
@@ -96,8 +92,7 @@ public abstract class AbstractID3v2FrameBody extends AbstractTagFrameBody
      *
      * @return size in bytes of this frame body
      */
-    public int getSize()
-    {
+    public int getSize() {
         return size;
     }
 
@@ -106,32 +101,28 @@ public abstract class AbstractID3v2FrameBody extends AbstractTagFrameBody
      * done before read
      * @param size
      */
-    public void setSize(int size)
-    {
+    public void setSize(int size) {
         this.size = size;
     }
 
     /**
      * Set size based on size of the DataTypes making up the body,done after write
      */
-    public void setSize()
-    {
+    public void setSize() {
         size = 0;
-        for (AbstractDataType object : objectList)
-        {
+        for (AbstractDataType object : objectList) {
             size += object.getSize();
         }
-        }
+    }
 
     /**
      * Are two bodies equal
      *
      * @param obj
      */
-    public boolean equals(Object obj)
-    {
+    public boolean equals(Object obj) {
         return (obj instanceof AbstractID3v2FrameBody) && super.equals(obj);
-        }
+    }
 
     /**
      * This reads a frame body from a ByteBuffer into the appropriate FrameBody class and update the position of the
@@ -146,8 +137,7 @@ public abstract class AbstractID3v2FrameBody extends AbstractTagFrameBody
     //TODO why don't we just slice byteBuffer, set limit to size and convert readByteArray to take a ByteBuffer
     //then we wouldn't have to temporary allocate space for the buffer, using lots of needless memory
     //and providing extra work for the garbage collector.
-    public void read(ByteBuffer byteBuffer) throws InvalidTagException
-    {
+    public void read(ByteBuffer byteBuffer) throws InvalidTagException {
         int size = getSize();
         logger.config("Reading body for" + this.getIdentifier() + ":" + size);
 
@@ -168,20 +158,16 @@ public abstract class AbstractID3v2FrameBody extends AbstractTagFrameBody
 
             //The read has extended further than the defined frame size (ok to extend upto
             //size because the next datatype may be of length 0.)
-            if (offset > (size))
-            {
+            if (offset > (size)) {
                 logger.warning("Invalid Size for FrameBody");
                 throw new InvalidFrameException("Invalid size for Frame Body");
             }
 
             //Try and load it with data from the Buffer
             //if it fails frame is invalid
-            try
-            {
+            try {
                 object.readByteArray(buffer, offset);
-            }
-            catch (InvalidDataTypeException e)
-            {
+            } catch (InvalidDataTypeException e) {
                 logger.warning("Problem reading datatype within Frame Body:" + e.getMessage());
                 throw e;
             }
@@ -195,22 +181,15 @@ public abstract class AbstractID3v2FrameBody extends AbstractTagFrameBody
      *
      * @param tagBuffer
      */
-    public void write(ByteArrayOutputStream tagBuffer)
-
-    {
+    public void write(ByteArrayOutputStream tagBuffer) {
         logger.config("Writing frame body for" + this.getIdentifier() + ":Est Size:" + size);
         //Write the various fields to file in order
-        for (AbstractDataType object : objectList)
-        {
+        for (AbstractDataType object : objectList) {
             byte[] objectData = object.writeByteArray();
-            if (objectData != null)
-            {
-                try
-                {
+            if (objectData != null) {
+                try {
                     tagBuffer.write(objectData);
-                }
-                catch (IOException ioe)
-                {
+                } catch (IOException ioe) {
                     //This could never happen coz not writing to file, so convert to RuntimeException
                     throw new RuntimeException(ioe);
                 }
@@ -224,11 +203,9 @@ public abstract class AbstractID3v2FrameBody extends AbstractTagFrameBody
     /**
      * Return String Representation of Datatype     *
      */
-    public void createStructure()
-    {
+    public void createStructure() {
         MP3File.getStructureFormatter().openHeadingElement(TYPE_BODY, "");
-        for (AbstractDataType nextObject : objectList)
-        {
+        for (AbstractDataType nextObject : objectList) {
             nextObject.createStructure();
         }
         MP3File.getStructureFormatter().closeHeadingElement(TYPE_BODY);

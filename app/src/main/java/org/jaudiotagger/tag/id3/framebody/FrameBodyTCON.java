@@ -53,13 +53,13 @@ import java.nio.ByteBuffer;
  * <ul>
  * <li><a href="http://www.id3.org/id3v2.3.0.txt">ID3 v2.3.0 Spec</a>
  * </ul>
- *
+ * <p>
  * ID3V24:The 'Content type', which ID3v1 was stored as a one byte numeric
  * value only, is now a string. You may use one or several of the ID3v1
  * types as numerical strings, or, since the category list would be
  * impossible to maintain with accurate and up to date categories,
  * define your own. Example: "21" $00 "Eurodisco" $00
- *
+ * <p>
  * You may also use any of the following keywords:
  * <p><table border=0 width="70%">
  * <tr><td>RX</td><td width="100%">Remix</td></tr>
@@ -70,17 +70,14 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyTCON extends AbstractFrameBodyTextInfo implements ID3v24FrameBody, ID3v23FrameBody
-{
+public class FrameBodyTCON extends AbstractFrameBodyTextInfo implements ID3v24FrameBody, ID3v23FrameBody {
     /**
      * Creates a new FrameBodyTCON datatype.
      */
-    public FrameBodyTCON()
-    {
+    public FrameBodyTCON() {
     }
 
-    public FrameBodyTCON(FrameBodyTCON body)
-    {
+    public FrameBodyTCON(FrameBodyTCON body) {
         super(body);
     }
 
@@ -90,8 +87,7 @@ public class FrameBodyTCON extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param textEncoding
      * @param text
      */
-    public FrameBodyTCON(byte textEncoding, String text)
-    {
+    public FrameBodyTCON(byte textEncoding, String text) {
         super(textEncoding, text);
     }
 
@@ -102,22 +98,9 @@ public class FrameBodyTCON extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param frameSize
      * @throws InvalidTagException
      */
-    public FrameBodyTCON(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyTCON(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
-
-
-    /**
-     * The ID3v2 frame identifier
-     *
-     * @return the ID3v2 frame identifier  for this frame type
-     */
-    public String getIdentifier()
-    {
-        return ID3v24Frames.FRAME_ID_GENRE;
-    }
-
 
     /**
      * Convert value to internal genre value
@@ -125,46 +108,31 @@ public class FrameBodyTCON extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param value
      * @return
      */
-    public static String convertGenericToID3v24Genre(String value)
-    {
-        try
-        {
+    public static String convertGenericToID3v24Genre(String value) {
+        try {
             //If passed id and known value use it
             int genreId = Integer.parseInt(value);
-            if (genreId <= GenreTypes.getMaxGenreId())
-            {
+            if (genreId <= GenreTypes.getMaxGenreId()) {
                 return String.valueOf(genreId);
-            }
-            else
-            {
+            } else {
                 return value;
             }
-        }
-        catch (NumberFormatException nfe)
-        {
+        } catch (NumberFormatException nfe) {
             // If passed String, use matching integral value if can
             Integer genreId = GenreTypes.getInstanceOf().getIdForName(value);
             // to preserve iTunes compatibility, don't write genre ids higher than getMaxStandardGenreId, rather use string
-            if (genreId != null && genreId <= GenreTypes.getMaxStandardGenreId())
-            {
+            if (genreId != null && genreId <= GenreTypes.getMaxStandardGenreId()) {
                 return String.valueOf(genreId);
             }
 
             //Covert special string values
-            if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.RX.getDescription()))
-            {
+            if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.RX.getDescription())) {
                 value = ID3V2ExtendedGenreTypes.RX.name();
-            }
-            else if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.CR.getDescription()))
-            {
+            } else if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.CR.getDescription())) {
                 value = ID3V2ExtendedGenreTypes.CR.name();
-            }
-            else if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.RX.name()))
-            {
+            } else if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.RX.name())) {
                 value = ID3V2ExtendedGenreTypes.RX.name();
-            }
-            else if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.CR.name()))
-            {
+            } else if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.CR.name())) {
                 value = ID3V2ExtendedGenreTypes.CR.name();
             }
         }
@@ -177,59 +145,42 @@ public class FrameBodyTCON extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param value
      * @return
      */
-    public static String convertGenericToID3v23Genre(String value)
-    {
-        try
-        {
+    public static String convertGenericToID3v23Genre(String value) {
+        try {
             //If passed integer and in list use numeric form else use original value
             int genreId = Integer.parseInt(value);
-            if (genreId <= GenreTypes.getMaxGenreId())
-            {
+            if (genreId <= GenreTypes.getMaxGenreId()) {
                 return bracketWrap(String.valueOf(genreId));
-            }
-            else
-            {
+            } else {
                 return value;
             }
-        }
-        catch (NumberFormatException nfe)
-        {
+        } catch (NumberFormatException nfe) {
             //if passed text try and find integral value otherwise use text
             Integer genreId = GenreTypes.getInstanceOf().getIdForName(value);
             // to preserve iTunes compatibility, don't write genre ids higher than getMaxStandardGenreId, rather use string
-            if (genreId != null && genreId <= GenreTypes.getMaxStandardGenreId())
-            {
+            if (genreId != null && genreId <= GenreTypes.getMaxStandardGenreId()) {
                 return bracketWrap(String.valueOf(genreId));
             }
 
             //But special handling for these text values
-            if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.RX.getDescription()))
-            {
+            if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.RX.getDescription())) {
                 value = bracketWrap(ID3V2ExtendedGenreTypes.RX.name());
-            }
-            else if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.CR.getDescription()))
-            {
+            } else if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.CR.getDescription())) {
                 value = bracketWrap(ID3V2ExtendedGenreTypes.CR.name());
-            }
-            else if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.RX.name()))
-            {
+            } else if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.RX.name())) {
                 value = bracketWrap(ID3V2ExtendedGenreTypes.RX.name());
-            }
-            else if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.CR.name()))
-            {
+            } else if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.CR.name())) {
                 value = bracketWrap(ID3V2ExtendedGenreTypes.CR.name());
             }
         }
         return value;
     }
 
-    public static String convertGenericToID3v22Genre(String value)
-    {
+    public static String convertGenericToID3v22Genre(String value) {
         return convertGenericToID3v23Genre(value);
     }
 
-    private static String bracketWrap(Object value)
-    {
+    private static String bracketWrap(Object value) {
         return "(" + value + ')';
     }
 
@@ -239,65 +190,42 @@ public class FrameBodyTCON extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param value
      * @return
      */
-    public static String convertID3v24GenreToGeneric(String value)
-    {
-        try
-        {
+    public static String convertID3v24GenreToGeneric(String value) {
+        try {
             int genreId = Integer.parseInt(value);
-            if (genreId <= GenreTypes.getMaxGenreId())
-            {
+            if (genreId <= GenreTypes.getMaxGenreId()) {
                 return GenreTypes.getInstanceOf().getValueForId(genreId);
-            }
-            else
-            {
+            } else {
                 return value;
             }
-        }
-        catch (NumberFormatException nfe)
-        {
-            if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.RX.name()))
-            {
+        } catch (NumberFormatException nfe) {
+            if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.RX.name())) {
                 value = ID3V2ExtendedGenreTypes.RX.getDescription();
-            }
-            else if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.CR.name()))
-            {
+            } else if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.CR.name())) {
                 value = ID3V2ExtendedGenreTypes.CR.getDescription();
-            }
-            else
-            {
+            } else {
                 return value;
             }
         }
         return value;
     }
 
-    private static String checkBracketed(String value)
-    {
-        value=value.replace("(", "");
-        value=value.replace(")", "");
-        try
-        {
+    private static String checkBracketed(String value) {
+        value = value.replace("(", "");
+        value = value.replace(")", "");
+        try {
             int genreId = Integer.parseInt(value);
             if (genreId <= GenreTypes.getMaxGenreId()) {
                 return GenreTypes.getInstanceOf().getValueForId(genreId);
-            }
-            else
-            {
+            } else {
                 return value;
             }
-        }
-        catch (NumberFormatException nfe)
-        {
-            if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.RX.name()))
-            {
+        } catch (NumberFormatException nfe) {
+            if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.RX.name())) {
                 value = ID3V2ExtendedGenreTypes.RX.getDescription();
-            }
-            else if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.CR.name()))
-            {
+            } else if (value.equalsIgnoreCase(ID3V2ExtendedGenreTypes.CR.name())) {
                 value = ID3V2ExtendedGenreTypes.CR.getDescription();
-            }
-            else
-            {
+            } else {
                 return value;
             }
         }
@@ -306,44 +234,47 @@ public class FrameBodyTCON extends AbstractFrameBodyTextInfo implements ID3v24Fr
 
     /**
      * Convert V23 format to Generic
-     *
+     * <p>
      * i.e.
-     *
+     * <p>
      * (2)         -> Country
      * (RX)        -> Remix
      * Shoegaze    -> Shoegaze
      * (2)Shoegaze -> Country Shoegaze
-     *
+     * <p>
      * Note only handles one field so if the frame stored (2)(3) this would be two separate fields
      * and would manifest itself as two different calls to this method once for (2) and once for (3)
+     *
      * @param value
      * @return
      */
-    public static String convertID3v23GenreToGeneric(String value)
-    {
-        if(value.contains(")") && value.lastIndexOf(')')<value.length()-1)
-        {
-            return checkBracketed(value.substring(0,value.lastIndexOf(')'))) + ' ' + value.substring(value.lastIndexOf(')')+1);
-        }
-        else
-        {
+    public static String convertID3v23GenreToGeneric(String value) {
+        if (value.contains(")") && value.lastIndexOf(')') < value.length() - 1) {
+            return checkBracketed(value.substring(0, value.lastIndexOf(')'))) + ' ' + value.substring(value.lastIndexOf(')') + 1);
+        } else {
             return checkBracketed(value);
         }
     }
 
-    public static String convertID3v22GenreToGeneric(String value)
-    {
+    public static String convertID3v22GenreToGeneric(String value) {
         return convertID3v23GenreToGeneric(value);
     }
 
-    public void setV23Format()
-    {
+    /**
+     * The ID3v2 frame identifier
+     *
+     * @return the ID3v2 frame identifier  for this frame type
+     */
+    public String getIdentifier() {
+        return ID3v24Frames.FRAME_ID_GENRE;
+    }
+
+    public void setV23Format() {
         TCONString text = (TCONString) getObject(DataTypes.OBJ_TEXT);
         text.setNullSeperateMultipleValues(false);
     }
 
-    protected void setupObjectList()
-    {
+    protected void setupObjectList() {
         objectList.add(new NumberHashMap(DataTypes.OBJ_TEXT_ENCODING, this, TextEncoding.TEXT_ENCODING_FIELD_SIZE));
         objectList.add(new TCONString(DataTypes.OBJ_TEXT, this));
     }

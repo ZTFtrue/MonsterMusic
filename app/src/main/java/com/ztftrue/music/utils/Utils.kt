@@ -291,8 +291,7 @@ object Utils {
             }
         } catch (_: Exception) {
         }
-        val defaultCoverResId = musicViewModel?.customMusicCover?.value
-        when (defaultCoverResId) {
+        when (val defaultCoverResId = musicViewModel?.customMusicCover?.value) {
             null -> {
                 return ImageSource.Resource(R.drawable.songs_thumbnail_cover)
             }

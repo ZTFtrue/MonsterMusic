@@ -10,8 +10,7 @@ import java.util.logging.Logger;
 /**
  * Common to all IFF formats such as Wav and Aiff
  */
-public class IffHeaderChunk
-{
+public class IffHeaderChunk {
     public static Logger logger = Logger.getLogger("org.jaudiotagger.audio.iff");
 
     public static int SIGNATURE_LENGTH = 4;
@@ -26,26 +25,20 @@ public class IffHeaderChunk
      * @param chunkHeader
      * @throws java.io.IOException
      */
-    public static void ensureOnEqualBoundary(final RandomAccessFile raf,ChunkHeader chunkHeader) throws IOException
-    {
-        if (Utils.isOddLength(chunkHeader.getSize()))
-        {
+    public static void ensureOnEqualBoundary(final RandomAccessFile raf, ChunkHeader chunkHeader) throws IOException {
+        if (Utils.isOddLength(chunkHeader.getSize())) {
             // Must come out to an even byte boundary unless at end of file
-            if(raf.getFilePointer()<raf.length())
-            {
+            if (raf.getFilePointer() < raf.length()) {
                 logger.config("Skipping Byte because on odd boundary");
                 raf.skipBytes(1);
             }
         }
     }
 
-    public static void ensureOnEqualBoundary(FileChannel fc,ChunkHeader chunkHeader) throws IOException
-    {
-        if (Utils.isOddLength(chunkHeader.getSize()))
-        {
+    public static void ensureOnEqualBoundary(FileChannel fc, ChunkHeader chunkHeader) throws IOException {
+        if (Utils.isOddLength(chunkHeader.getSize())) {
             // Must come out to an even byte boundary unless at end of file
-            if(fc.position()<fc.size())
-            {
+            if (fc.position() < fc.size()) {
                 logger.config("Skipping Byte because on odd boundary");
                 fc.position(fc.position() + 1);
             }

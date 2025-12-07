@@ -8,26 +8,22 @@ import java.util.Map;
 
 /**
  * Represents the ISO Script
- *
+ * <p>
  * Contains an enum  of script, their four letter code and description
  * with additional method to allow an enum to be found by its four letter code or its description.
  */
-public class ISOScript
-{
+public class ISOScript {
     private static final Map<String, Script> codeMap;
     private static final Map<String, Script> descriptionMap;
 
-    static
-    {
+    static {
         codeMap = new HashMap<String, Script>();
-        for (Script script : Script.values())
-        {
+        for (Script script : Script.values()) {
             codeMap.put(script.code, script);
         }
 
         descriptionMap = new HashMap<String, Script>();
-        for (Script script : Script.values())
-        {
+        for (Script script : Script.values()) {
             descriptionMap.put(script.description, script);
         }
 
@@ -37,8 +33,7 @@ public class ISOScript
      * @param code
      * @return enum with this two letter code
      */
-    public static Script getScriptByCode(String code)
-    {
+    public static Script getScriptByCode(String code) {
         return codeMap.get(code);
     }
 
@@ -46,16 +41,22 @@ public class ISOScript
      * @param description
      * @return enum with this description
      */
-    public static Script getScriptByDescription(String description)
-    {
+    public static Script getScriptByDescription(String description) {
         return descriptionMap.get(description);
+    }
+
+    public static String[] getDescriptionsAsArray() {
+        List<String> descriptions = new ArrayList<String>();
+        for (Script script : Script.values()) {
+            descriptions.add(script.description);
+        }
+        return descriptions.toArray(new String[0]);
     }
 
     /**
      * List of valid Iso Scripts, shows 4 letter abbreviation and script human readable name
      */
-    public enum Script
-    {
+    public enum Script {
         ARABIC("Arab", "Arabic"),
         IMPERIAL_ARAMAIC("Armi", "Imperial Aramaic"),
         ARMENIAN("Armn", "Armenian"),
@@ -181,40 +182,27 @@ public class ISOScript
         CUNEIFORM_SUMERO_AKKADIAN("Xsux", "Cuneiform, Sumero-Akkadian"),
         YI("Yiii", "Yi"),
         MATHEMATICAL_NOTATION("Zmth", "Mathematical notation"),
-        SYMBOLS("Zsym", "Symbols"),;
+        SYMBOLS("Zsym", "Symbols"),
+        ;
 
         private final String code;
         private final String description;
 
-        Script(String code, String description)
-        {
+        Script(String code, String description) {
             this.code = code;
             this.description = description;
         }
 
-        public String getCode()
-        {
+        public String getCode() {
             return code;
         }
 
-        public String getDescription()
-        {
+        public String getDescription() {
             return description;
         }
 
-        public String toString()
-        {
+        public String toString() {
             return getDescription();
         }
-    }
-    
-    public static String[] getDescriptionsAsArray()
-    {
-        List<String> descriptions = new ArrayList<String>();
-        for(Script script:Script.values())
-        {
-            descriptions.add(script.description);
-        }
-        return descriptions.toArray(new String[0]);
     }
 }

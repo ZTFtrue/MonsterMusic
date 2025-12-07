@@ -1,25 +1,25 @@
 /*
-*      _______                       _____   _____ _____  
-*     |__   __|                     |  __ \ / ____|  __ \ 
-*        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
-*        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/ 
-*        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |     
-*        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|     
-*                                                         
-* -------------------------------------------------------------
-*
-* TarsosDSP is developed by Joren Six at IPEM, University Ghent
-*  
-* -------------------------------------------------------------
-*
-*  Info: http://0110.be/tag/TarsosDSP
-*  Github: https://github.com/JorenSix/TarsosDSP
-*  Releases: http://0110.be/releases/TarsosDSP/
-*  
-*  TarsosDSP includes modified source code by various authors,
-*  for credits and info, see README.
-* 
-*/
+ *      _______                       _____   _____ _____
+ *     |__   __|                     |  __ \ / ____|  __ \
+ *        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
+ *        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/
+ *        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |
+ *        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|
+ *
+ * -------------------------------------------------------------
+ *
+ * TarsosDSP is developed by Joren Six at IPEM, University Ghent
+ *
+ * -------------------------------------------------------------
+ *
+ *  Info: http://0110.be/tag/TarsosDSP
+ *  Github: https://github.com/JorenSix/TarsosDSP
+ *  Releases: http://0110.be/releases/TarsosDSP/
+ *
+ *  TarsosDSP includes modified source code by various authors,
+ *  for credits and info, see README.
+ *
+ */
 
 package be.tarsos.dsp.pitch;
 
@@ -79,93 +79,94 @@ THE SOFTWARE.
  * The heart of the algorithm is a very powerful wavelet algorithm, described in
  * a paper by Eric Larson and Ross Maddox: Real-Time Time-Domain Pitch Tracking Using Wavelets.
  * </p>
- * 
+ *
  * @author Antoine Schmitt
  * @author Joren Six
  * @see <a href="http://online.physics.uiuc.edu/courses/phys498pom/NSF_REU_Reports/2005_reu/Real-Time_Time-Domain_Pitch_Tracking_Using_Wavelets.pdf">Real-Time Time-Domain Pitch Tracking Using Wavelets</a>
  */
-public class DynamicWavelet implements PitchDetector{
-	
-	// algorithm parameters
-	private final int maxFLWTlevels = 6;
-	private final double maxF = 3000.;
-	private final int differenceLevelsN = 3;
-	private final double maximaThresholdRatio = 0.75;
-	
-	/**
-	 * The result of the pitch detection iteration.
-	 */
-	private final PitchDetectionResult result;
-	
-	private final float sampleRate;
-	
-	private int[] distances;
-	private int[] mins;
-	private int[] maxs;
+public class DynamicWavelet implements PitchDetector {
 
-	/**
-	 * create a new dynamic wavelet
-	 * @param sampleRate the sample rate in hz
-	 * @param bufferSize the size of the audio blocks
-	 */
-	public DynamicWavelet(float sampleRate,int bufferSize){
-		this.sampleRate = sampleRate;
-		
-		distances = new int[bufferSize];
-		mins = new int[bufferSize];
-		maxs = new int[bufferSize];
-		result = new PitchDetectionResult();
-	}
-	
-	@Override
-	public PitchDetectionResult getPitch(float[] audioBuffer) {
-		float pitchF = -1.0f;
-		
-		int curSamNb = audioBuffer.length;
-	
-		int nbMins;
-		int nbMaxs;
-		
-		//check if the buffer size changed
-		if(distances.length == audioBuffer.length){
-			//if not fill the arrays with zero
-			Arrays.fill(distances,0);
-			Arrays.fill(mins,0);
-			Arrays.fill(maxs,0);
-		} else {
-			//otherwise create new ones 
-			distances = new int[audioBuffer.length];
-			mins = new int[audioBuffer.length];
-			maxs = new int[audioBuffer.length];
-		}
-		
-		double ampltitudeThreshold;  
-		double theDC = 0.0;
-		
-		
-		//compute ampltitudeThreshold and theDC
-		//first compute the DC and maxAMplitude
-		double maxValue = 0.0;
-		double minValue = 0.0;
-		for (int i = 0; i < audioBuffer.length;i++) {
-			double sample = audioBuffer[i];
-			theDC = theDC + sample;
-			maxValue = Math.max(maxValue, sample);
-			minValue = Math.min(sample, minValue);
-		}
-		theDC = theDC/audioBuffer.length;
-		maxValue = maxValue - theDC;
-		minValue = minValue - theDC;
-		double amplitudeMax = (maxValue > -minValue ? maxValue : -minValue);
-		
-		ampltitudeThreshold = amplitudeMax*maximaThresholdRatio;
-		
-		// levels, start without downsampling..
-		int curLevel = 0;
-		double curModeDistance = -1.;
-		int delta;
-		
-		//TODO: refactor to make this more java, break it up in methods, remove the wile and branching statements...
+    // algorithm parameters
+    private final int maxFLWTlevels = 6;
+    private final double maxF = 3000.;
+    private final int differenceLevelsN = 3;
+    private final double maximaThresholdRatio = 0.75;
+
+    /**
+     * The result of the pitch detection iteration.
+     */
+    private final PitchDetectionResult result;
+
+    private final float sampleRate;
+
+    private int[] distances;
+    private int[] mins;
+    private int[] maxs;
+
+    /**
+     * create a new dynamic wavelet
+     *
+     * @param sampleRate the sample rate in hz
+     * @param bufferSize the size of the audio blocks
+     */
+    public DynamicWavelet(float sampleRate, int bufferSize) {
+        this.sampleRate = sampleRate;
+
+        distances = new int[bufferSize];
+        mins = new int[bufferSize];
+        maxs = new int[bufferSize];
+        result = new PitchDetectionResult();
+    }
+
+    @Override
+    public PitchDetectionResult getPitch(float[] audioBuffer) {
+        float pitchF = -1.0f;
+
+        int curSamNb = audioBuffer.length;
+
+        int nbMins;
+        int nbMaxs;
+
+        //check if the buffer size changed
+        if (distances.length == audioBuffer.length) {
+            //if not fill the arrays with zero
+            Arrays.fill(distances, 0);
+            Arrays.fill(mins, 0);
+            Arrays.fill(maxs, 0);
+        } else {
+            //otherwise create new ones
+            distances = new int[audioBuffer.length];
+            mins = new int[audioBuffer.length];
+            maxs = new int[audioBuffer.length];
+        }
+
+        double ampltitudeThreshold;
+        double theDC = 0.0;
+
+
+        //compute ampltitudeThreshold and theDC
+        //first compute the DC and maxAMplitude
+        double maxValue = 0.0;
+        double minValue = 0.0;
+        for (int i = 0; i < audioBuffer.length; i++) {
+            double sample = audioBuffer[i];
+            theDC = theDC + sample;
+            maxValue = Math.max(maxValue, sample);
+            minValue = Math.min(sample, minValue);
+        }
+        theDC = theDC / audioBuffer.length;
+        maxValue = maxValue - theDC;
+        minValue = minValue - theDC;
+        double amplitudeMax = (maxValue > -minValue ? maxValue : -minValue);
+
+        ampltitudeThreshold = amplitudeMax * maximaThresholdRatio;
+
+        // levels, start without downsampling..
+        int curLevel = 0;
+        double curModeDistance = -1.;
+        int delta;
+
+        //TODO: refactor to make this more java, break it up in methods, remove the wile and branching statements...
 
         while (true) {
             delta = (int) (sampleRate / (Math.pow(2, curLevel) * maxF));
@@ -316,11 +317,11 @@ public class DynamicWavelet implements PitchDetector{
             audioBuffer = newAudioBuffer;
             curSamNb /= 2;
         }
-		
-		result.setPitch(pitchF);
-		result.setPitched(-1!=pitchF);
-		result.setProbability(-1);
-		
-		return result;
-	}
+
+        result.setPitch(pitchF);
+        result.setPitched(-1 != pitchF);
+        result.setProbability(-1);
+
+        return result;
+    }
 }

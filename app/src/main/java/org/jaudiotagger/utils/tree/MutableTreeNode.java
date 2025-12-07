@@ -12,16 +12,14 @@ package org.jaudiotagger.utils.tree;
  * by adding or removing child nodes, or by changing the contents
  * of a user object stored in the node.
  *
- * @see DefaultMutableTreeNode
- * @see javax.swing.JTree
- *
- * @version 1.13 03/23/10
  * @author Rob Davis
  * @author Scott Violet
+ * @version 1.13 03/23/10
+ * @see DefaultMutableTreeNode
+ * @see javax.swing.JTree
  */
 
-public interface MutableTreeNode extends TreeNode
-{
+public interface MutableTreeNode extends TreeNode {
     /**
      * Adds <code>child</code> to the receiver at <code>index</code>.
      * <code>child</code> will be messaged with <code>setParent</code>.

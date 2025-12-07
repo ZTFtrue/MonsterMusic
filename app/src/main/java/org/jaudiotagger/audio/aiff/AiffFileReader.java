@@ -11,20 +11,17 @@ import java.nio.file.Path;
 /**
  * Reads Audio and Metadata information contained in Aiff file.
  */
-public class AiffFileReader extends AudioFileReader2
-{
-    private final AiffInfoReader      ir = new AiffInfoReader();
-    private final AiffTagReader       im = new AiffTagReader();
+public class AiffFileReader extends AudioFileReader2 {
+    private final AiffInfoReader ir = new AiffInfoReader();
+    private final AiffTagReader im = new AiffTagReader();
 
     @Override
-    protected GenericAudioHeader getEncodingInfo(Path path)throws CannotReadException, IOException
-    {
+    protected GenericAudioHeader getEncodingInfo(Path path) throws CannotReadException, IOException {
         return ir.read(path);
     }
 
     @Override
-    protected Tag getTag(Path path)throws CannotReadException, IOException
-    {
+    protected Tag getTag(Path path) throws CannotReadException, IOException {
         return im.read(path);
     }
 }

@@ -28,14 +28,12 @@ import java.util.logging.Logger;
  * @author : Eric Farng
  * @version $Id$
  */
-public class ID3Tags
-{
+public class ID3Tags {
     //Logger
     public static Logger logger = Logger.getLogger("org.jaudiotagger.tag.id3");
 
 
-    private ID3Tags()
-    {
+    private ID3Tags() {
     }
 
     /**
@@ -44,15 +42,14 @@ public class ID3Tags
      * @param identifier string to test
      * @return true if the identifier is a valid ID3v2.2 frame identifier
      */
-    public static boolean isID3v22FrameIdentifier(String identifier)
-    {
+    public static boolean isID3v22FrameIdentifier(String identifier) {
         //If less than 3 cant be an identifier
-        if (identifier.length() < 3)
-        {
+        if (identifier.length() < 3) {
             return false;
         }
         //If 3 is it a known identifier
-        else return identifier.length() == 3 && ID3v22Frames.getInstanceOf().getIdToValueMap().containsKey(identifier);
+        else
+            return identifier.length() == 3 && ID3v22Frames.getInstanceOf().getIdToValueMap().containsKey(identifier);
     }
 
     /**
@@ -61,8 +58,7 @@ public class ID3Tags
      * @param identifier string to test
      * @return true if the identifier is a valid ID3v2.3 frame identifier
      */
-    public static boolean isID3v23FrameIdentifier(String identifier)
-    {
+    public static boolean isID3v23FrameIdentifier(String identifier) {
         return identifier.length() >= 4 && ID3v23Frames.getInstanceOf().getIdToValueMap().containsKey(identifier.substring(0, 4));
     }
 
@@ -72,8 +68,7 @@ public class ID3Tags
      * @param identifier string to test
      * @return true if the identifier is a valid ID3v2.4 frame identifier
      */
-    public static boolean isID3v24FrameIdentifier(String identifier)
-    {
+    public static boolean isID3v24FrameIdentifier(String identifier) {
         return identifier.length() >= 4 && ID3v24Frames.getInstanceOf().getIdToValueMap().containsKey(identifier.substring(0, 4));
     }
 
@@ -87,31 +82,19 @@ public class ID3Tags
      * @return <code>long</code> value
      * @throws IllegalArgumentException
      */
-    static public long getWholeNumber(Object value)
-    {
+    static public long getWholeNumber(Object value) {
         long number;
-        if (value instanceof String)
-        {
+        if (value instanceof String) {
             number = Long.parseLong((String) value);
-        }
-        else if (value instanceof Byte)
-        {
+        } else if (value instanceof Byte) {
             number = (Byte) value;
-        }
-        else if (value instanceof Short)
-        {
+        } else if (value instanceof Short) {
             number = (Short) value;
-        }
-        else if (value instanceof Integer)
-        {
+        } else if (value instanceof Integer) {
             number = (Integer) value;
-        }
-        else if (value instanceof Long)
-        {
+        } else if (value instanceof Long) {
             number = (Long) value;
-        }
-        else
-        {
+        } else {
             throw new IllegalArgumentException("Unsupported value class: " + value.getClass().getName());
         }
         return number;
@@ -119,75 +102,62 @@ public class ID3Tags
 
     /**
      * Convert from ID3v22 FrameIdentifier to ID3v23
+     *
      * @param identifier
      * @return
      */
-    public static String convertFrameID22To23(String identifier)
-    {
-        if (identifier.length() < 3)
-        {
+    public static String convertFrameID22To23(String identifier) {
+        if (identifier.length() < 3) {
             return null;
         }
-        return ID3Frames.convertv22Tov23.get((String)identifier.subSequence(0, 3));
+        return ID3Frames.convertv22Tov23.get((String) identifier.subSequence(0, 3));
     }
 
     /**
      * Convert from ID3v22 FrameIdentifier to ID3v24
+     *
      * @param identifier
      * @return
      */
-    public static String convertFrameID22To24(String identifier)
-    {
+    public static String convertFrameID22To24(String identifier) {
         //Idv22 identifiers are only of length 3 times
-        if (identifier.length() < 3)
-        {
+        if (identifier.length() < 3) {
             return null;
         }
         //Has idv22 been mapped to v23
         String id = ID3Frames.convertv22Tov23.get(identifier.substring(0, 3));
-        if (id != null)
-        {
+        if (id != null) {
             //has v2.3 been mapped to v2.4
             String v23id = ID3Frames.convertv23Tov24.get(id);
-            if (v23id == null)
-            {
+            if (v23id == null) {
                 //if not it may be because v2.3 and and v2.4 are same so wont be
                 //in mapping
-                if (ID3v24Frames.getInstanceOf().getIdToValueMap().get(id) != null)
-                {
+                if (ID3v24Frames.getInstanceOf().getIdToValueMap().get(id) != null) {
                     return id;
-                }
-                else
-                {
+                } else {
                     return null;
                 }
-            }
-            else
-            {
+            } else {
                 return v23id;
             }
-        }
-        else
-        {
+        } else {
             return null;
         }
     }
 
     /**
      * Convert from ID3v23 FrameIdentifier to ID3v22
+     *
      * @param identifier
      * @return
      */
-    public static String convertFrameID23To22(String identifier)
-    {
-        if (identifier.length() < 4)
-        {
+    public static String convertFrameID23To22(String identifier) {
+        if (identifier.length() < 4) {
             return null;
         }
 
         //If it is a v23 identifier
-        if (ID3v23Frames.getInstanceOf().getIdToValueMap().containsKey(identifier))
-        {
+        if (ID3v23Frames.getInstanceOf().getIdToValueMap().containsKey(identifier)) {
             //If only name has changed  v22 and modified in v23 return result of.
             return ID3Frames.convertv23Tov22.get(identifier.substring(0, 4));
         }
@@ -196,27 +166,23 @@ public class ID3Tags
 
     /**
      * Convert from ID3v23 FrameIdentifier to ID3v24
+     *
      * @param identifier
      * @return
      */
-    public static String convertFrameID23To24(String identifier)
-    {
-        if (identifier.length() < 4)
-        {
+    public static String convertFrameID23To24(String identifier) {
+        if (identifier.length() < 4) {
             return null;
         }
 
         //If it is a ID3v23 identifier
-        if (ID3v23Frames.getInstanceOf().getIdToValueMap().containsKey(identifier))
-        {
+        if (ID3v23Frames.getInstanceOf().getIdToValueMap().containsKey(identifier)) {
             //If no change between ID3v23 and ID3v24 should be in ID3v24 list.
-            if (ID3v24Frames.getInstanceOf().getIdToValueMap().containsKey(identifier))
-            {
+            if (ID3v24Frames.getInstanceOf().getIdToValueMap().containsKey(identifier)) {
                 return identifier;
             }
             //If only name has changed  ID3v23 and modified in ID3v24 return result of.
-            else
-            {
+            else {
                 return ID3Frames.convertv23Tov24.get(identifier.substring(0, 4));
             }
         }
@@ -226,64 +192,61 @@ public class ID3Tags
     /**
      * Force from ID3v22 FrameIdentifier to ID3v23, this is where the frame and structure
      * has changed from v2 to v3 but we can still do some kind of conversion.
+     *
      * @param identifier
      * @return
      */
-    public static String forceFrameID22To23(String identifier)
-    {
+    public static String forceFrameID22To23(String identifier) {
         return ID3Frames.forcev22Tov23.get(identifier);
     }
 
     /**
      * Force from ID3v22 FrameIdentifier to ID3v23, this is where the frame and structure
      * has changed from v2 to v3 but we can still do some kind of conversion.
+     *
      * @param identifier
      * @return
      */
-    public static String forceFrameID23To22(String identifier)
-    {
+    public static String forceFrameID23To22(String identifier) {
         return ID3Frames.forcev23Tov22.get(identifier);
     }
 
     /**
      * Force from ID3v2.30 FrameIdentifier to ID3v2.40, this is where the frame and structure
      * has changed from v3 to v4 but we can still do some kind of conversion.
+     *
      * @param identifier
      * @return
      */
-    public static String forceFrameID23To24(String identifier)
-    {
+    public static String forceFrameID23To24(String identifier) {
         return ID3Frames.forcev23Tov24.get(identifier);
     }
 
     /**
      * Force from ID3v2.40 FrameIdentifier to ID3v2.30, this is where the frame and structure
      * has changed between v4 to v3 but we can still do some kind of conversion.
+     *
      * @param identifier
      * @return
      */
-    public static String forceFrameID24To23(String identifier)
-    {
+    public static String forceFrameID24To23(String identifier) {
         return ID3Frames.forcev24Tov23.get(identifier);
     }
 
     /**
      * Convert from ID3v24 FrameIdentifier to ID3v23
+     *
      * @param identifier
      * @return
      */
-    public static String convertFrameID24To23(String identifier)
-    {
+    public static String convertFrameID24To23(String identifier) {
         String id;
-        if (identifier.length() < 4)
-        {
+        if (identifier.length() < 4) {
             return null;
         }
         id = ID3Frames.convertv24Tov23.get(identifier);
-        if (id == null)
-        {
-            if (ID3v23Frames.getInstanceOf().getIdToValueMap().containsKey(identifier))
-            {
+        if (id == null) {
+            if (ID3v23Frames.getInstanceOf().getIdToValueMap().containsKey(identifier)) {
                 id = identifier;
             }
         }
@@ -300,48 +263,32 @@ public class ID3Tags
      * @return
      * @throws IllegalArgumentException if no suitable constructor exists
      */
-    public static Object copyObject(Object copyObject)
-    {
+    public static Object copyObject(Object copyObject) {
         Constructor<?> constructor;
         Class<?>[] constructorParameterArray;
         Object[] parameterArray;
-        if (copyObject == null)
-        {
+        if (copyObject == null) {
             return null;
         }
-        try
-        {
+        try {
             constructorParameterArray = new Class[1];
             constructorParameterArray[0] = copyObject.getClass();
             constructor = copyObject.getClass().getConstructor(constructorParameterArray);
             parameterArray = new Object[1];
             parameterArray[0] = copyObject;
             return constructor.newInstance(parameterArray);
-        }
-        catch (NoSuchMethodException ex)
-        {
-            throw new IllegalArgumentException("NoSuchMethodException: Error finding constructor to create copy:"+copyObject.getClass().getName());
-        }
-        catch (IllegalAccessException ex)
-        {
-            throw new IllegalArgumentException("IllegalAccessException: No access to run constructor to create copy"+copyObject.getClass().getName());
-        }
-        catch (InstantiationException ex)
-        {
-            throw new IllegalArgumentException("InstantiationException: Unable to instantiate constructor to copy"+copyObject.getClass().getName());
-        }
-        catch (java.lang.reflect.InvocationTargetException ex)
-        {
-            if (ex.getCause() instanceof Error)
-            {
+        } catch (NoSuchMethodException ex) {
+            throw new IllegalArgumentException("NoSuchMethodException: Error finding constructor to create copy:" + copyObject.getClass().getName());
+        } catch (IllegalAccessException ex) {
+            throw new IllegalArgumentException("IllegalAccessException: No access to run constructor to create copy" + copyObject.getClass().getName());
+        } catch (InstantiationException ex) {
+            throw new IllegalArgumentException("InstantiationException: Unable to instantiate constructor to copy" + copyObject.getClass().getName());
+        } catch (java.lang.reflect.InvocationTargetException ex) {
+            if (ex.getCause() instanceof Error) {
                 throw (Error) ex.getCause();
-            }
-            else if (ex.getCause() instanceof RuntimeException)
-            {
+            } else if (ex.getCause() instanceof RuntimeException) {
                 throw (RuntimeException) ex.getCause();
-            }
-            else
-            {
+            } else {
                 throw new IllegalArgumentException("InvocationTargetException: Unable to invoke constructor to create copy");
             }
         }
@@ -354,8 +301,7 @@ public class ID3Tags
      * @return first whole number that can be parsed from the string
      * @throws TagException
      */
-    public static long findNumber(String str) throws TagException
-    {
+    public static long findNumber(String str) throws TagException {
         return findNumber(str, 0);
     }
 
@@ -369,45 +315,35 @@ public class ID3Tags
      * @throws NullPointerException
      * @throws IndexOutOfBoundsException
      */
-    public static long findNumber(String str, int offset) throws TagException
-    {
-        if (str == null)
-        {
+    public static long findNumber(String str, int offset) throws TagException {
+        if (str == null) {
             throw new NullPointerException("String is null");
         }
-        if ((offset < 0) || (offset >= str.length()))
-        {
+        if ((offset < 0) || (offset >= str.length())) {
             throw new IndexOutOfBoundsException("Offset to image string is out of bounds: offset = " + offset + ", string.length()" + str.length());
         }
         int i;
         int j;
         long num;
         i = offset;
-        while (i < str.length())
-        {
-            if (((str.charAt(i) >= '0') && (str.charAt(i) <= '9')) || (str.charAt(i) == '-'))
-            {
+        while (i < str.length()) {
+            if (((str.charAt(i) >= '0') && (str.charAt(i) <= '9')) || (str.charAt(i) == '-')) {
                 break;
             }
             i++;
         }
         j = i + 1;
-        while (j < str.length())
-        {
-            if (((str.charAt(j) < '0') || (str.charAt(j) > '9')))
-            {
+        while (j < str.length()) {
+            if (((str.charAt(j) < '0') || (str.charAt(j) > '9'))) {
                 break;
             }
             j++;
         }
-        if ((j <= str.length()) && (j > i))
-        {
-        	String toParseNumberFrom = str.substring(i, j);
-        	if(!toParseNumberFrom.equals("-")) num = Long.parseLong(toParseNumberFrom);
-        	else throw new TagException("Unable to find integer in string: " + str);
-        }
-        else
-        {
+        if ((j <= str.length()) && (j > i)) {
+            String toParseNumberFrom = str.substring(i, j);
+            if (!toParseNumberFrom.equals("-")) num = Long.parseLong(toParseNumberFrom);
+            else throw new TagException("Unable to find integer in string: " + str);
+        } else {
             throw new TagException("Unable to find integer in string: " + str);
         }
         return num;
@@ -420,23 +356,17 @@ public class ID3Tags
      * @param ch  character to remove
      * @return new String without the given charcter
      */
-    static public String stripChar(String str, char ch)
-    {
-        if (str != null)
-        {
+    static public String stripChar(String str, char ch) {
+        if (str != null) {
             char[] buffer = new char[str.length()];
             int next = 0;
-            for (int i = 0; i < str.length(); i++)
-            {
-                if (str.charAt(i) != ch)
-                {
+            for (int i = 0; i < str.length(); i++) {
+                if (str.charAt(i) != ch) {
                     buffer[next++] = str.charAt(i);
                 }
             }
             return new String(buffer, 0, next);
-        }
-        else
-        {
+        } else {
             return null;
         }
     }
@@ -448,22 +378,16 @@ public class ID3Tags
      * @param len maximum desired length of new string
      * @return
      */
-    public static String truncate(String str, int len)
-    {
-        if (str == null)
-        {
+    public static String truncate(String str, int len) {
+        if (str == null) {
             return null;
         }
-        if (len < 0)
-        {
+        if (len < 0) {
             return null;
         }
-        if (str.length() > len)
-        {
+        if (str.length() > len) {
             return str.substring(0, len);
-        }
-        else
-        {
+        } else {
             return str;
         }
     }

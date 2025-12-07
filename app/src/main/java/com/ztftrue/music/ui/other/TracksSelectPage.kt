@@ -69,7 +69,7 @@ fun TracksSelectPage(
     val selectList = remember { mutableStateListOf<MusicItem>() }
     LaunchedEffect(Unit) {
         musicList.addAll(
-             musicViewModel.songsList
+            musicViewModel.songsList
         )
     }
 

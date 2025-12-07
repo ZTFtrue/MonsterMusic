@@ -12,8 +12,7 @@ import java.io.OutputStream;
  *
  * @author Christian Laireiter
  */
-public interface WriteableChunk
-{
+public interface WriteableChunk {
 
     /**
      * This method calculates the total amount of bytes, the chunk would consume

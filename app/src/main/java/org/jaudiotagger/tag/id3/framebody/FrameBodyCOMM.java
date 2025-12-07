@@ -17,7 +17,12 @@ package org.jaudiotagger.tag.id3.framebody;
 
 import org.jaudiotagger.logging.ErrorMessage;
 import org.jaudiotagger.tag.InvalidTagException;
-import org.jaudiotagger.tag.datatype.*;
+import org.jaudiotagger.tag.datatype.AbstractString;
+import org.jaudiotagger.tag.datatype.DataTypes;
+import org.jaudiotagger.tag.datatype.NumberHashMap;
+import org.jaudiotagger.tag.datatype.StringHashMap;
+import org.jaudiotagger.tag.datatype.TextEncodedStringNullTerminated;
+import org.jaudiotagger.tag.datatype.TextEncodedStringSizeTerminated;
 import org.jaudiotagger.tag.id3.ID3TextEncodingConversion;
 import org.jaudiotagger.tag.id3.ID3v24Frames;
 import org.jaudiotagger.tag.id3.valuepair.TextEncoding;
@@ -29,13 +34,13 @@ import java.util.List;
 
 /**
  * Comments frame.
- *
- *
+ * <p>
+ * <p>
  * This frame is intended for any kind of full text information that does not fit in any other frame. It consists of a
  * frame header followed by encoding, language and content descriptors and is ended with the actual comment as a
  * text string. Newline characters are allowed in the comment text string. There may be more than one comment frame
  * in each tag, but only one with the same language and* content descriptor.
- * 
+ *
  * <p><table border=0 width="70%">
  * <tr><td colspan=2>&lt;Header for 'Comment', ID: "COMM"&gt;</td></tr>
  * <tr><td>Text encoding   </td><td width="80%">$xx          </td></tr>
@@ -53,61 +58,37 @@ import java.util.List;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyCOMM extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody
-{
+public class FrameBodyCOMM extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody {
     //Most players only read comment with description of blank
     public static final String DEFAULT = "";
 
     //used by iTunes for volume normalization, although uses the COMMENT field not usually displayed as a comment
     public static final String ITUNES_NORMALIZATION = "iTunNORM";
-
+    public static final String MM_CUSTOM1 = "Songs-DB_Custom1";
+    public static final String MM_CUSTOM2 = "Songs-DB_Custom2";
+    public static final String MM_CUSTOM3 = "Songs-DB_Custom3";
+    public static final String MM_CUSTOM4 = "Songs-DB_Custom4";
+    public static final String MM_CUSTOM5 = "Songs-DB_Custom5";
+    public static final String MM_OCCASION = "Songs-DB_Occasion";
+    public static final String MM_QUALITY = "Songs-DB_Preference";
+    public static final String MM_TEMPO = "Songs-DB_Tempo";
     //Various descriptions used by MediaMonkey, (note Media Monkey uses non-standard language field XXX)
-    private static final String MM_PREFIX               = "Songs-DB";
-    public static final String MM_CUSTOM1               = "Songs-DB_Custom1";
-    public static final String MM_CUSTOM2               = "Songs-DB_Custom2";
-    public static final String MM_CUSTOM3               = "Songs-DB_Custom3";
-    public static final String MM_CUSTOM4               = "Songs-DB_Custom4";
-    public static final String MM_CUSTOM5               = "Songs-DB_Custom5";
-    public static final String MM_OCCASION              = "Songs-DB_Occasion";
-    public static final String MM_QUALITY               = "Songs-DB_Preference";
-    public static final String MM_TEMPO                 = "Songs-DB_Tempo";
+    private static final String MM_PREFIX = "Songs-DB";
 
-    public boolean isMediaMonkeyFrame()
-    {
-        String desc = getDescription();
-        if(desc!=null && !(desc.length()==0))
-        {
-            return desc.startsWith(MM_PREFIX);
-        }
-        return false;
-    }
-
-    public boolean isItunesFrame()
-    {
-        String desc = getDescription();
-        if(desc!=null && !(desc.length()==0))
-        {
-            return desc.equals(ITUNES_NORMALIZATION);
-        }
-        return false;
-    }
-
-    
     /**
      * Creates a new FrameBodyCOMM datatype.
      */
-    public FrameBodyCOMM()
-    {
+    public FrameBodyCOMM() {
         setObjectValue(DataTypes.OBJ_TEXT_ENCODING, TextEncoding.ISO_8859_1);
         setObjectValue(DataTypes.OBJ_LANGUAGE, Languages.DEFAULT_ID);
         setObjectValue(DataTypes.OBJ_DESCRIPTION, "");
         setObjectValue(DataTypes.OBJ_TEXT, "");
     }
 
-    public FrameBodyCOMM(FrameBodyCOMM body)
-    {
+    public FrameBodyCOMM(FrameBodyCOMM body) {
         super(body);
     }
+
 
     /**
      * Creates a new FrameBodyCOMM datatype.
@@ -117,8 +98,7 @@ public class FrameBodyCOMM extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param description
      * @param text
      */
-    public FrameBodyCOMM(byte textEncoding, String language, String description, String text)
-    {
+    public FrameBodyCOMM(byte textEncoding, String language, String description, String text) {
         setObjectValue(DataTypes.OBJ_TEXT_ENCODING, textEncoding);
         setObjectValue(DataTypes.OBJ_LANGUAGE, language);
         setObjectValue(DataTypes.OBJ_DESCRIPTION, description);
@@ -132,24 +112,24 @@ public class FrameBodyCOMM extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param frameSize
      * @throws InvalidTagException if unable to create framebody from buffer
      */
-    public FrameBodyCOMM(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyCOMM(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
-
-    /**
-     * Set the description field, which describes the type of comment
-     *
-     * @param description
-     */
-    public void setDescription(String description)
-    {
-        if (description == null)
-        {
-            throw new IllegalArgumentException(ErrorMessage.GENERAL_INVALID_NULL_ARGUMENT.getMsg());
+    public boolean isMediaMonkeyFrame() {
+        String desc = getDescription();
+        if (desc != null && !(desc.length() == 0)) {
+            return desc.startsWith(MM_PREFIX);
         }
-        setObjectValue(DataTypes.OBJ_DESCRIPTION, description);
+        return false;
+    }
+
+    public boolean isItunesFrame() {
+        String desc = getDescription();
+        if (desc != null && !(desc.length() == 0)) {
+            return desc.equals(ITUNES_NORMALIZATION);
+        }
+        return false;
     }
 
     /**
@@ -157,9 +137,20 @@ public class FrameBodyCOMM extends AbstractID3v2FrameBody implements ID3v24Frame
      *
      * @return description field
      */
-    public String getDescription()
-    {
+    public String getDescription() {
         return (String) getObjectValue(DataTypes.OBJ_DESCRIPTION);
+    }
+
+    /**
+     * Set the description field, which describes the type of comment
+     *
+     * @param description
+     */
+    public void setDescription(String description) {
+        if (description == null) {
+            throw new IllegalArgumentException(ErrorMessage.GENERAL_INVALID_NULL_ARGUMENT.getMsg());
+        }
+        setObjectValue(DataTypes.OBJ_DESCRIPTION, description);
     }
 
     /**
@@ -167,24 +158,8 @@ public class FrameBodyCOMM extends AbstractID3v2FrameBody implements ID3v24Frame
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_COMMENT;
-    }
-
-    /**
-     * Sets the language the comment is written in
-     *
-     * @param language
-     */
-    public void setLanguage(String language)
-    {
-        //TODO not sure if this might break existing code
-        /*if(language==null)
-        {
-             throw new IllegalArgumentException(ErrorMessage.GENERAL_INVALID_NULL_ARGUMENT.getMsg());
-        } */
-        setObjectValue(DataTypes.OBJ_LANGUAGE, language);        
     }
 
     /**
@@ -192,21 +167,22 @@ public class FrameBodyCOMM extends AbstractID3v2FrameBody implements ID3v24Frame
      *
      * @return the language
      */
-    public String getLanguage()
-    {
+    public String getLanguage() {
         return (String) getObjectValue(DataTypes.OBJ_LANGUAGE);
     }
 
     /**
-     * @param text
+     * Sets the language the comment is written in
+     *
+     * @param language
      */
-    public void setText(String text)
-    {
-        if (text == null)
+    public void setLanguage(String language) {
+        //TODO not sure if this might break existing code
+        /*if(language==null)
         {
-            throw new IllegalArgumentException(ErrorMessage.GENERAL_INVALID_NULL_ARGUMENT.getMsg());
-        }
-        setObjectValue(DataTypes.OBJ_TEXT, text);
+             throw new IllegalArgumentException(ErrorMessage.GENERAL_INVALID_NULL_ARGUMENT.getMsg());
+        } */
+        setObjectValue(DataTypes.OBJ_LANGUAGE, language);
     }
 
     /**
@@ -215,14 +191,22 @@ public class FrameBodyCOMM extends AbstractID3v2FrameBody implements ID3v24Frame
      *
      * @return the text field
      */
-    public String getText()
-    {
+    public String getText() {
         TextEncodedStringSizeTerminated text = (TextEncodedStringSizeTerminated) getObject(DataTypes.OBJ_TEXT);
         return text.getValueAtIndex(0);
     }
 
-    public String getUserFriendlyValue()
-    {
+    /**
+     * @param text
+     */
+    public void setText(String text) {
+        if (text == null) {
+            throw new IllegalArgumentException(ErrorMessage.GENERAL_INVALID_NULL_ARGUMENT.getMsg());
+        }
+        setObjectValue(DataTypes.OBJ_TEXT, text);
+    }
+
+    public String getUserFriendlyValue() {
         return getText();
     }
 
@@ -230,8 +214,7 @@ public class FrameBodyCOMM extends AbstractID3v2FrameBody implements ID3v24Frame
     /**
      *
      */
-    protected void setupObjectList()
-    {
+    protected void setupObjectList() {
         objectList.add(new NumberHashMap(DataTypes.OBJ_TEXT_ENCODING, this, TextEncoding.TEXT_ENCODING_FIELD_SIZE));
         objectList.add(new StringHashMap(DataTypes.OBJ_LANGUAGE, this, Languages.LANGUAGE_FIELD_SIZE));
         objectList.add(new TextEncodedStringNullTerminated(DataTypes.OBJ_DESCRIPTION, this));
@@ -243,18 +226,15 @@ public class FrameBodyCOMM extends AbstractID3v2FrameBody implements ID3v24Frame
      * not contain characters that cannot be encoded in current encoding before
      * we write data. If there are we change the encoding.
      */
-    public void write(ByteArrayOutputStream tagBuffer)
-    {
+    public void write(ByteArrayOutputStream tagBuffer) {
         //Ensure valid for type
         setTextEncoding(ID3TextEncodingConversion.getTextEncoding(getHeader(), getTextEncoding()));
 
         //Ensure valid for data
-        if (!((AbstractString) getObject(DataTypes.OBJ_TEXT)).canBeEncoded())
-        {
+        if (!((AbstractString) getObject(DataTypes.OBJ_TEXT)).canBeEncoded()) {
             this.setTextEncoding(ID3TextEncodingConversion.getUnicodeTextEncoding(getHeader()));
         }
-        if (!((AbstractString) getObject(DataTypes.OBJ_DESCRIPTION)).canBeEncoded())
-        {
+        if (!((AbstractString) getObject(DataTypes.OBJ_DESCRIPTION)).canBeEncoded()) {
             this.setTextEncoding(ID3TextEncodingConversion.getUnicodeTextEncoding(getHeader()));
         }
         super.write(tagBuffer);
@@ -262,13 +242,12 @@ public class FrameBodyCOMM extends AbstractID3v2FrameBody implements ID3v24Frame
 
     /**
      * Retrieve the complete text String but without any trailing nulls
-     *
+     * <p>
      * If multiple values are held these will be returned, needless trailing nulls will not be returned
      *
      * @return the text string
      */
-    public String getTextWithoutTrailingNulls()
-    {
+    public String getTextWithoutTrailingNulls() {
         TextEncodedStringSizeTerminated text = (TextEncodedStringSizeTerminated) getObject(DataTypes.OBJ_TEXT);
         return text.getValueWithoutTrailingNull();
     }
@@ -278,39 +257,36 @@ public class FrameBodyCOMM extends AbstractID3v2FrameBody implements ID3v24Frame
      *
      * @return value at index 0
      */
-    public String getFirstTextValue()
-    {
+    public String getFirstTextValue() {
         TextEncodedStringSizeTerminated text = (TextEncodedStringSizeTerminated) getObject(DataTypes.OBJ_TEXT);
         return text.getValueAtIndex(0);
     }
 
     /**
      * Get text value at index
-     *
+     * <p>
      * When a multiple values are stored within a single text frame this method allows access to any of the
      * individual values.
      *
      * @param index
      * @return value at index
      */
-    public String getValueAtIndex(int index)
-    {
+    public String getValueAtIndex(int index) {
         TextEncodedStringSizeTerminated text = (TextEncodedStringSizeTerminated) getObject(DataTypes.OBJ_TEXT);
         return text.getValueAtIndex(index);
     }
 
-    public List<String> getValues()
-    {
+    public List<String> getValues() {
         TextEncodedStringSizeTerminated text = (TextEncodedStringSizeTerminated) getObject(DataTypes.OBJ_TEXT);
         return text.getValues();
     }
+
     /**
      * Add additional value to value
      *
      * @param value at index
      */
-    public void addTextValue(String value)
-    {
+    public void addTextValue(String value) {
         TextEncodedStringSizeTerminated text = (TextEncodedStringSizeTerminated) getObject(DataTypes.OBJ_TEXT);
         text.addValue(value);
     }
@@ -318,8 +294,7 @@ public class FrameBodyCOMM extends AbstractID3v2FrameBody implements ID3v24Frame
     /**
      * @return number of text values, usually one
      */
-    public int getNumberOfValues()
-    {
+    public int getNumberOfValues() {
         TextEncodedStringSizeTerminated text = (TextEncodedStringSizeTerminated) getObject(DataTypes.OBJ_TEXT);
         return text.getNumberOfValues();
     }
