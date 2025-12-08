@@ -874,6 +874,7 @@ fun FolderItemView(
         modifier = modifier
             .combinedClickable(
                 onLongClick = {
+                    showOperateDialog = true
                 }
             ) {
 //                navController.add(Router.PlayListView(item))
