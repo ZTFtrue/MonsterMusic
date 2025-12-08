@@ -78,8 +78,8 @@ fun DrawMenu(
     val color = MaterialTheme.colorScheme.onBackground
     val context = LocalContext.current
     val imageModel: ImageSource by musicViewModel.currentMusicCover
-    var isAutoHandleAudioFocus by remember {
-        mutableStateOf(SharedPreferencesUtils.getAutoHandleAudioFocus(context))
+    var disableAudioFocus by remember {
+        mutableStateOf(!SharedPreferencesUtils.getAutoHandleAudioFocus(context))
     }
 
     ModalDrawerSheet(
@@ -174,18 +174,6 @@ fun DrawMenu(
                         )
                     }
                     .clickable {
-                        isAutoHandleAudioFocus = !isAutoHandleAudioFocus
-                        SharedPreferencesUtils.setAutoHandleAudioFocus(
-                            context,
-                            isAutoHandleAudioFocus
-                        )
-                        musicViewModel.browser?.setAudioAttributes(
-                            AudioAttributes.Builder()
-                                .setUsage(C.USAGE_MEDIA)
-                                .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
-                                .build(),
-                            isAutoHandleAudioFocus
-                        )
                     },
                 horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
@@ -196,16 +184,16 @@ fun DrawMenu(
                     color = MaterialTheme.colorScheme.onBackground,
                 )
                 Checkbox(
-                    checked = !isAutoHandleAudioFocus,
+                    checked = disableAudioFocus,
                     onCheckedChange = { v ->
-                        isAutoHandleAudioFocus = !isAutoHandleAudioFocus
-                        SharedPreferencesUtils.setAutoHandleAudioFocus(context, v)
+                        disableAudioFocus = v
+                        SharedPreferencesUtils.setAutoHandleAudioFocus(context, !disableAudioFocus)
                         musicViewModel.browser?.setAudioAttributes(
                             AudioAttributes.Builder()
                                 .setUsage(C.USAGE_MEDIA)
                                 .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
                                 .build(),
-                            isAutoHandleAudioFocus
+                            disableAudioFocus
                         )
                     },
                     modifier = Modifier
