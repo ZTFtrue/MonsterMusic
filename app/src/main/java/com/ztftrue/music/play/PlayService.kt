@@ -2206,6 +2206,13 @@ class PlayService : MediaLibraryService() {
         volumeValue = SharedPreferencesUtils.getVolume(this@PlayService)
         exoPlayer.volume = volumeValue / 100f
         exoPlayer.repeatMode = config?.repeatModel ?: Player.REPEAT_MODE_ALL
+        exoPlayer.setAudioAttributes(
+            AudioAttributes.Builder()
+                .setUsage(C.USAGE_MEDIA)
+                .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                .build(),
+            autoHandleFocus
+        )
         val p = PlaybackParameters(
             auxr.speed,
             auxr.pitch
@@ -2233,6 +2240,7 @@ class PlayService : MediaLibraryService() {
             exoPlayer.playWhenReady = false
             exoPlayer.prepare()
         }
+
     }
 
     private fun setAutoHandleAudioFocus(value: Boolean) {

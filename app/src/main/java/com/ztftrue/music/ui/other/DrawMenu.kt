@@ -193,7 +193,7 @@ fun DrawMenu(
                                 .setUsage(C.USAGE_MEDIA)
                                 .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
                                 .build(),
-                            disableAudioFocus
+                            !disableAudioFocus
                         )
                     },
                     modifier = Modifier
