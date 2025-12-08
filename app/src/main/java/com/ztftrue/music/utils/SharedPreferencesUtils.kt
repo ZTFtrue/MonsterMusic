@@ -245,7 +245,7 @@ object SharedPreferencesUtils {
     }
 
     fun setAutoHandleAudioFocus(context: Context, enable: Boolean) {
-        context.getSharedPreferences("config", Context.MODE_PRIVATE).edit {
+        context.getSharedPreferences("config", Context.MODE_PRIVATE).edit(commit = true) {
             putBoolean("auto_handle_audio_focus", enable)
         }
     }
