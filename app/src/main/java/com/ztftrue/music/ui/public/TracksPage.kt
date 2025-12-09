@@ -2,6 +2,7 @@ package com.ztftrue.music.ui.public
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -90,6 +91,7 @@ import com.ztftrue.music.utils.DialogOperate
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType
+import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.model.AlbumList
@@ -686,7 +688,11 @@ fun TracksListPage(
                 val result: SessionResult? = futureResultItem.get()
                 if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
                     Log.e("Client", "Failed COMMAND_GET_PLAY_LIST_ITEM ${result?.resultCode}")
-                    navController.removeLastOrNull()
+                    if(SharedPreferencesUtils.getMergeAlbum(context)){
+                        Toast.makeText(context,"In merged album mode, this title may be empty. Yes, I slacked off.",Toast.LENGTH_SHORT).show()
+                    }else{
+                        navController.removeLastOrNull()
+                    }
                     return@addListener
                 }
                 result.extras.getParcelable<AnyListBase>("data")?.let {

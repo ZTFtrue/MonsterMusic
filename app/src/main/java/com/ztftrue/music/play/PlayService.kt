@@ -1625,7 +1625,8 @@ class PlayService : MediaLibraryService() {
                 TracksManager.searchTracks(this@PlayService, tracksLinkedHashMap, query)
             }
             val albumsDeferred = async(Dispatchers.IO) {
-                AlbumManager.searchAlbumByName(this@PlayService, query)
+                val needMerge = SharedPreferencesUtils.getMergeAlbum(this@PlayService)
+                AlbumManager.searchAlbumByName(this@PlayService, query, needMerge)
             }
             val artistsDeferred = async(Dispatchers.IO) {
                 ArtistManager.searchArtistByName(this@PlayService, query)
@@ -1904,10 +1905,12 @@ class PlayService : MediaLibraryService() {
                             val sortDataP =
                                 db.SortFiledDao()
                                     .findSortByType(PlayListType.Albums.name)
+                            val needMerge = SharedPreferencesUtils.getMergeAlbum(this@PlayService)
                             AlbumManager.getAlbumList(
                                 this@PlayService,
                                 albumsLinkedHashMap,
-                                "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
+                                "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}",
+                                needMerge
                             )
                         }
                     )
@@ -1955,24 +1958,51 @@ class PlayService : MediaLibraryService() {
             //   bundle.putParcelable("message", playListLinkedHashMap[id])
             future.set(LibraryResult.ofItemList(mediaItems, null))
         } else {
-            val sortData =
-                db.SortFiledDao()
-                    .findSortByType(PlayUtils.ListTypeTracks.AlbumsTracks)
-            val trackUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-            val listT: ArrayList<MusicItem> = TracksManager.getTracksById(
-                this@PlayService,
-                trackUri,
-                allTracksLinkedHashMap,
-                MediaStore.Audio.Media.ALBUM_ID + "=?",
-                arrayOf(id.toString()),
-                "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
-            )
-            albumsListTracksHashMap[id] = listT
-            val mediaItems = listT.map { playlist ->
-                MediaItemUtils.musicItemToMediaItem(playlist)
+            val needMerge = SharedPreferencesUtils.getMergeAlbum(this@PlayService)
+            if (needMerge) {
+                val albumList = AlbumManager.getAlbumById(this@PlayService, id)
+                val targetAlbumName = albumList?.name ?: ""
+                val targetArtistName = albumList?.artist ?: ""
+                val sortData =
+                    db.SortFiledDao().findSortByType(PlayUtils.ListTypeTracks.AlbumsTracks)
+                val trackUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                val selection =
+                    "${MediaStore.Audio.Media.ALBUM} = ? AND ${MediaStore.Audio.Media.ARTIST} = ?"
+                val selectionArgs = arrayOf(targetAlbumName, targetArtistName)
+                val listT: ArrayList<MusicItem> = TracksManager.getTracksById(
+                    this@PlayService,
+                    trackUri,
+                    allTracksLinkedHashMap,
+                    selection,
+                    selectionArgs,
+                    "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
+                )
+                albumsListTracksHashMap[id] = listT
+                val mediaItems = listT.map { playlist ->
+                    MediaItemUtils.musicItemToMediaItem(playlist)
+                }
+                future.set(LibraryResult.ofItemList(mediaItems, null))
+            } else {
+                val sortData =
+                    db.SortFiledDao()
+                        .findSortByType(PlayUtils.ListTypeTracks.AlbumsTracks)
+                val trackUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                val listT: ArrayList<MusicItem> = TracksManager.getTracksById(
+                    this@PlayService,
+                    trackUri,
+                    allTracksLinkedHashMap,
+                    MediaStore.Audio.Media.ALBUM_ID + "=?",
+                    arrayOf(id.toString()),
+                    "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
+                )
+                albumsListTracksHashMap[id] = listT
+                val mediaItems = listT.map { playlist ->
+                    MediaItemUtils.musicItemToMediaItem(playlist)
+                }
+                // bundle.putParcelable("message", playListLinkedHashMap[id])
+                future.set(LibraryResult.ofItemList(mediaItems, null))
             }
-            // bundle.putParcelable("message", playListLinkedHashMap[id])
-            future.set(LibraryResult.ofItemList(mediaItems, null))
+
         }
     }
 
@@ -2002,10 +2032,12 @@ class PlayService : MediaLibraryService() {
                             val sortDataP =
                                 db.SortFiledDao()
                                     .findSortByType(PlayListType.Albums.name)
+                            val needMerge = SharedPreferencesUtils.getMergeAlbum(this@PlayService)
+
                             AlbumManager.getAlbumList(
                                 this@PlayService,
                                 albumsLinkedHashMap,
-                                "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
+                                "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}", needMerge
                             )
                         }
                     )
@@ -2141,10 +2173,12 @@ class PlayService : MediaLibraryService() {
         } else {
             val sortDataP =
                 db.SortFiledDao().findSortByType(PlayListType.Albums.name)
+            val needMerge = SharedPreferencesUtils.getMergeAlbum(this@PlayService)
+
             AlbumManager.getAlbumList(
                 this@PlayService,
                 albumsLinkedHashMap,
-                "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
+                "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}", needMerge
             )
             val mediaItems = albumsLinkedHashMap.values.map { playlist ->
                 MediaItemUtils.albumToMediaItem(playlist)
