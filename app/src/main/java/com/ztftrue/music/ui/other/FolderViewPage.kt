@@ -95,6 +95,7 @@ import com.ztftrue.music.ui.public.CreatePlayListDialog
 import com.ztftrue.music.ui.public.QueueOperateDialog
 import com.ztftrue.music.ui.public.TopBar
 import com.ztftrue.music.ui.public.TracksListView
+import com.ztftrue.music.utils.MutableListExtension.removeLastSafe
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
@@ -622,7 +623,7 @@ fun FolderListPage(
 
     LaunchedEffect(musicViewModel.refreshPlayList.value, refreshCurrentValueList) {
         if (musicViewModel.browser == null) {
-            navController.removeLastOrNull()
+            navController.removeLastSafe()
             return@LaunchedEffect
         } else {
             musicViewModel.loadingTracks.value = true
@@ -638,7 +639,7 @@ fun FolderListPage(
                     val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
                     Log.d("Client", "result tracks: ${result?.resultCode}")
                     if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
-                        navController.removeLastOrNull()
+                        navController.removeLastSafe()
                         return@addListener
                     }
                     val albumMediaItems: List<MediaItem> = result.value ?: listOf()
@@ -654,7 +655,7 @@ fun FolderListPage(
                     val duration = tracksList.sumOf { it.duration }
                     durationAll.value = Utils.formatTimeWithUnit(duration)
                 } catch (e: Exception) {
-                    navController.removeLastOrNull()
+                    navController.removeLastSafe()
                     // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
                     Log.e("Client", "Failed to toggle favorite status", e)
                 }

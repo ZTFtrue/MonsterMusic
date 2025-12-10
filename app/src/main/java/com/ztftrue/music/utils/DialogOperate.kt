@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.ztftrue.music.Router
 import com.ztftrue.music.sqlData.model.MusicItem
-import com.ztftrue.music.utils.Utils.replaceCurrent
+import com.ztftrue.music.utils.MutableListExtension.replaceCurrent
 import com.ztftrue.music.utils.model.AlbumList
 import com.ztftrue.music.utils.model.ArtistList
 import com.ztftrue.music.utils.trackManager.ArtistManager
@@ -42,7 +42,6 @@ object DialogOperate {
     }
 
     fun openOpenAlbumById(music: MusicItem, navController: SnapshotStateList<Any>) {
-
         val albumList =
             AlbumList(
                 id = music.albumId,
@@ -52,7 +51,7 @@ object DialogOperate {
                 firstYear = "",
                 lastYear = "",
             )
-        navController.replaceCurrent(Router.PlayListView(albumList))
+        navController.add(Router.PlayListView(albumList))
 //                        viewModel.navController.clearExceptFirst()
     }
 }

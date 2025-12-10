@@ -826,17 +826,4 @@ object Utils {
         return appWidgetIds.isNotEmpty()
     }
 
-    fun <T> SnapshotStateList<T>.clearExceptFirst() {
-        if (this.size > 1) {
-            this.subList(1, this.size).clear()
-        }
-    }
-
-    fun <T> SnapshotStateList<T>.replaceCurrent(current: T) {
-        if (this.size > 1) {
-            val currentIndex = this.size - 1
-            this.add(current)
-            this.removeAt(currentIndex)
-        }
-    }
 }

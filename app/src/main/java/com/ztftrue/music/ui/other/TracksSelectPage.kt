@@ -41,6 +41,7 @@ import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.ui.public.TracksListView
+import com.ztftrue.music.utils.MutableListExtension.removeLastSafe
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.trackManager.PlaylistManager
@@ -133,7 +134,7 @@ fun TracksSelectPage(
                                                 MediaCommands.COMMAND_PlAY_LIST_CHANGE,
                                                 Bundle().apply {},
                                             )
-                                            navController.removeLastOrNull()
+                                            navController.removeLastSafe()
 
                                         } else {
                                             Toast.makeText(
@@ -158,7 +159,7 @@ fun TracksSelectPage(
                                             selectList.clear()
                                             SongsUtils.refreshPlaylist(musicViewModel)
                                         }
-                                        navController.removeLastOrNull()
+                                        navController.removeLastSafe()
                                     }
                                 }
                             }) {

@@ -8,6 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.ztftrue.music.Router
+import com.ztftrue.music.utils.MutableListExtension.removeLastSafe
 
 @Composable
 fun BackButton(
@@ -17,7 +18,7 @@ fun BackButton(
         if (Router.MainView == navController.last()) {
             onIsLastComposable()
         } else {
-            navController.removeLastOrNull()
+            navController.removeLastSafe()
         }
     }
     // Composition Local

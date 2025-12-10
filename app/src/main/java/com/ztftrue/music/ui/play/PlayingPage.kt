@@ -135,6 +135,7 @@ import com.ztftrue.music.ui.public.TopBar
 import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.DialogOperate
 import com.ztftrue.music.utils.DialogOperate.openOpenArtistById
+import com.ztftrue.music.utils.MutableListExtension.removeLastSafe
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
@@ -191,7 +192,7 @@ fun PlayingPage(
 
     LaunchedEffect(music) {
         if (music == null) {
-            navController.removeLastOrNull()
+            navController.removeLastSafe()
         }
     }
 
@@ -214,7 +215,7 @@ fun PlayingPage(
                             // b. 检查操作是否成功
                             if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
                                 deleteTrackUpdate(musicViewModel)
-                                navController.removeLastOrNull()
+                                navController.removeLastSafe()
                             }
                         } catch (e: Exception) {
                             // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
