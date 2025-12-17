@@ -950,7 +950,7 @@ fun SettingsPage(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text ="Merge same name and artist album(Don't recommend, need restart app)",
+                                text = "Merge same name and artist album(Don't recommend, need restart app)",
                                 Modifier
                                     .padding(start = 10.dp)
                                     .weight(1f),
@@ -1966,7 +1966,7 @@ fun ManageFolderDialog(onDismiss: () -> Unit) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight()
+                    .fillMaxHeight(0.6f)
                     .background(color = MaterialTheme.colorScheme.background),
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -1974,6 +1974,7 @@ fun ManageFolderDialog(onDismiss: () -> Unit) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .fillMaxHeight(0.85f)
                         .background(color = MaterialTheme.colorScheme.background),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -2043,7 +2044,8 @@ fun ManageFolderDialog(onDismiss: () -> Unit) {
 
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .fillMaxHeight(),
                     horizontalArrangement = Arrangement.Center,
                 ) {
                     TextButton(
