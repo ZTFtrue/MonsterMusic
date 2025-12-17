@@ -115,7 +115,7 @@ fun FolderListView(
                 .fillMaxSize()
                 .padding(10.dp)
         ) {
-            items(showList.size) { index ->
+            items(showList.size, key={"${showList[it].id}${showList[it].children.size}${showList[it].trackNumber}${it}"}) { index ->
                 val item = showList[index]
                 FolderItemView(
                     item,

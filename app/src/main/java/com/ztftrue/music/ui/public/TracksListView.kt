@@ -204,7 +204,7 @@ fun TracksListView(
 
                 // FolderData
                 stableFolderData?.let { folders ->
-                    items(folders.size, key = { folders[it].id + it }) { index ->
+                    items(folders.size, key={"${folders[it].id}${folders[it].children.size}${folders[it].trackNumber}${it}"}) { index ->
                         FolderItemView(
                             folders[index], musicViewModel, modifier = Modifier
                                 .wrapContentHeight()
