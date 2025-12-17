@@ -200,35 +200,6 @@ fun DrawMenu(
                         .padding(4.dp)
                 )
             }
-            Box(
-                modifier = Modifier
-                    .width(drawerWidth)
-                    .height(50.dp)
-                    .padding(0.dp)
-                    .drawBehind {
-                        drawLine(
-                            color = color,
-                            start = Offset(0f, size.height - 1.dp.toPx()),
-                            end = Offset(size.width, size.height - 1.dp.toPx()),
-                            strokeWidth = 1.dp.toPx()
-                        )
-                    }
-                    .clickable {
-                        scope.launch {
-                            drawerState.close()
-                        }
-                        navController.add(
-                            Router.SettingsPage
-                        )
-                    },
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Text(
-                    text = stringResource(R.string.settings),
-                    Modifier.padding(start = 10.dp),
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-            }
             var showFeedBackDialog by remember { mutableStateOf(false) }
             if (showFeedBackDialog) {
                 FeedBackDialog {
