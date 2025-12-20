@@ -1,7 +1,6 @@
 package com.ztftrue.music.utils
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import com.ztftrue.music.Router
 
 object MutableListExtension {
     fun <T> SnapshotStateList<T>.clearExceptFirst() {
