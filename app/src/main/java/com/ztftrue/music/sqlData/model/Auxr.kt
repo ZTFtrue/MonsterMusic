@@ -20,7 +20,7 @@ data class Auxr(
     @ColumnInfo var echoDecay: Float,
     @ColumnInfo var echoRevert: Boolean,
     @ColumnInfo var equalizer: Boolean,
-    @ColumnInfo(defaultValue = Utils.Q.toString()) var equalizerQ: Float=Utils.Q,
+    @ColumnInfo(defaultValue = Utils.Q.toString()) var equalizerQ: Float = Utils.Q,
     @field:TypeConverters(IntArrayConverters::class)
     @ColumnInfo var equalizerBand: IntArray,
 ) {

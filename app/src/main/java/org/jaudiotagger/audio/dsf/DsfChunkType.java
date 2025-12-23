@@ -8,8 +8,7 @@ import java.util.Map;
  *
  * @see org.jaudiotagger.audio.iff.Chunk
  */
-public enum DsfChunkType
-{
+public enum DsfChunkType {
     DSD("DSD "),
     FORMAT("fmt "),
     DATA("data"),
@@ -22,9 +21,8 @@ public enum DsfChunkType
     /**
      * @param code 4 char string
      */
-    DsfChunkType(final String code)
-    {
-        this.code=code;
+    DsfChunkType(final String code) {
+        this.code = code;
     }
 
     /**
@@ -47,8 +45,7 @@ public enum DsfChunkType
      *
      * @return 4 char type code, e.g. "SSND" for the sound chunk.
      */
-    public String getCode()
-    {
+    public String getCode() {
         return code;
     }
 }

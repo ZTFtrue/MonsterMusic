@@ -14,12 +14,12 @@ import java.util.EventListener;
  * to changes in a TreeModel.
  * For further information and examples see
  * <a
- href="http://java.sun.com/docs/books/tutorial/uiswing/events/treemodellistener.html">How to Write a Tree Model Listener</a>,
+ * href="http://java.sun.com/docs/books/tutorial/uiswing/events/treemodellistener.html">How to Write a Tree Model Listener</a>,
  * a section in <em>The Java Tutorial.</em>
  *
- * @version 1.19 03/23/10
  * @author Rob Davis
  * @author Ray Ryan
+ * @version 1.19 03/23/10
  */
 public interface TreeModelListener extends EventListener {
 
@@ -32,8 +32,8 @@ public interface TreeModelListener extends EventListener {
      * system.
      * <p>To indicate the root has changed, childIndices and children
      * will be null.
-     * 
-     * <p>Use <code>e.getPath()</code> 
+     *
+     * <p>Use <code>e.getPath()</code>
      * to get the parent of the changed node(s).
      * <code>e.getChildIndices()</code>
      * returns the index(es) of the changed node(s).
@@ -42,8 +42,8 @@ public interface TreeModelListener extends EventListener {
 
     /**
      * <p>Invoked after nodes have been inserted into the tree.
-     * 
-     * <p>Use <code>e.getPath()</code> 
+     *
+     * <p>Use <code>e.getPath()</code>
      * to get the parent of the new node(s).
      * <code>e.getChildIndices()</code>
      * returns the index(es) of the new node(s)
@@ -57,10 +57,10 @@ public interface TreeModelListener extends EventListener {
      * invoked once for the root of the removed subtree, not once for
      * each individual set of siblings removed.
      *
-     * <p>Use <code>e.getPath()</code> 
+     * <p>Use <code>e.getPath()</code>
      * to get the former parent of the deleted node(s).
      * <code>e.getChildIndices()</code>
-     * returns, in ascending order, the index(es) 
+     * returns, in ascending order, the index(es)
      * the node(s) had before being deleted.
      */
     void treeNodesRemoved(TreeModelEvent e);
@@ -70,8 +70,8 @@ public interface TreeModelListener extends EventListener {
      * given node down.  If the path returned by e.getPath() is of length
      * one and the first element does not identify the current root node
      * the first element should become the new root of the tree.<p>
-     * 
-     * <p>Use <code>e.getPath()</code> 
+     *
+     * <p>Use <code>e.getPath()</code>
      * to get the path to the node.
      * <code>e.getChildIndices()</code>
      * returns null.

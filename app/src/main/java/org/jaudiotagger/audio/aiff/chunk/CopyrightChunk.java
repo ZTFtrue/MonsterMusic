@@ -16,22 +16,19 @@ import java.nio.ByteBuffer;
  * The Copyright Chunk is optional. No more than one Copyright Chunk may exist within a FORM AIFF.
  * </p>
  */
-public class CopyrightChunk extends TextChunk
-{
+public class CopyrightChunk extends TextChunk {
 
     /**
-     * @param chunkHeader  The header for this chunk
-     * @param chunkData  The buffer from which the AIFF data are being read
+     * @param chunkHeader     The header for this chunk
+     * @param chunkData       The buffer from which the AIFF data are being read
      * @param aiffAudioHeader The AiffAudioHeader into which information is stored
      */
-    public CopyrightChunk(final ChunkHeader chunkHeader, final ByteBuffer chunkData, final AiffAudioHeader aiffAudioHeader)
-    {
+    public CopyrightChunk(final ChunkHeader chunkHeader, final ByteBuffer chunkData, final AiffAudioHeader aiffAudioHeader) {
         super(chunkHeader, chunkData, aiffAudioHeader);
     }
 
     @Override
-    public boolean readChunk() throws IOException
-    {
+    public boolean readChunk() throws IOException {
         aiffAudioHeader.setCopyright(readChunkText());
         return true;
     }

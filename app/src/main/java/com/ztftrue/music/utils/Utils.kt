@@ -16,7 +16,6 @@ import android.util.Log
 import android.util.TypedValue
 import android.widget.Toast
 import androidx.annotation.OptIn
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.unit.Dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -291,8 +290,7 @@ object Utils {
             }
         } catch (_: Exception) {
         }
-        val defaultCoverResId = musicViewModel?.customMusicCover?.value
-        when (defaultCoverResId) {
+        when (val defaultCoverResId = musicViewModel?.customMusicCover?.value) {
             null -> {
                 return ImageSource.Resource(R.drawable.songs_thumbnail_cover)
             }
@@ -827,17 +825,4 @@ object Utils {
         return appWidgetIds.isNotEmpty()
     }
 
-    fun <T> SnapshotStateList<T>.clearExceptFirst() {
-        if (this.size > 1) {
-            this.subList(1, this.size).clear()
-        }
-    }
-
-    fun <T> SnapshotStateList<T>.replaceCurrent(current: T) {
-        if (this.size > 1) {
-            val currentIndex = this.size - 1
-            this.add(current)
-            this.removeAt(currentIndex)
-        }
-    }
 }

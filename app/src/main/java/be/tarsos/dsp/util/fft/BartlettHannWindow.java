@@ -1,25 +1,25 @@
 /*
-*      _______                       _____   _____ _____  
-*     |__   __|                     |  __ \ / ____|  __ \ 
-*        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
-*        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/ 
-*        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |     
-*        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|     
-*                                                         
-* -------------------------------------------------------------
-*
-* TarsosDSP is developed by Joren Six at IPEM, University Ghent
-*  
-* -------------------------------------------------------------
-*
-*  Info: http://0110.be/tag/TarsosDSP
-*  Github: https://github.com/JorenSix/TarsosDSP
-*  Releases: http://0110.be/releases/TarsosDSP/
-*  
-*  TarsosDSP includes modified source code by various authors,
-*  for credits and info, see README.
-* 
-*/
+ *      _______                       _____   _____ _____
+ *     |__   __|                     |  __ \ / ____|  __ \
+ *        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
+ *        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/
+ *        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |
+ *        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|
+ *
+ * -------------------------------------------------------------
+ *
+ * TarsosDSP is developed by Joren Six at IPEM, University Ghent
+ *
+ * -------------------------------------------------------------
+ *
+ *  Info: http://0110.be/tag/TarsosDSP
+ *  Github: https://github.com/JorenSix/TarsosDSP
+ *  Releases: http://0110.be/releases/TarsosDSP/
+ *
+ *  TarsosDSP includes modified source code by various authors,
+ *  for credits and info, see README.
+ *
+ */
 
 /*
  *  Copyright (c) 2007 - 2008 by Damien Di Fede <ddf@compartmental.net>
@@ -46,18 +46,17 @@ package be.tarsos.dsp.util.fft;
  *
  * @author Damien Di Fede
  * @author Corban Brook
- * @see   <a href="http://en.wikipedia.org/wiki/Window_function#Bartlett.E2.80.93Hann_window">The Bartlett-Hann Window</a>
+ * @see <a href="http://en.wikipedia.org/wiki/Window_function#Bartlett.E2.80.93Hann_window">The Bartlett-Hann Window</a>
  */
-public class BartlettHannWindow extends WindowFunction
-{
-  /** Constructs a Bartlett-Hann window. */
-  public BartlettHannWindow()
-  {
-  }
+public class BartlettHannWindow extends WindowFunction {
+    /**
+     * Constructs a Bartlett-Hann window.
+     */
+    public BartlettHannWindow() {
+    }
 
-  protected float value(int length, int index) 
-  {
-    return (float) (0.62 - 0.48 * Math.abs(index / (length - 1) - 0.5) - 0.38 * Math.cos(TWO_PI * index / (length - 1)));
-  }
+    protected float value(int length, int index) {
+        return (float) (0.62 - 0.48 * Math.abs(index / (length - 1) - 0.5) - 0.38 * Math.cos(TWO_PI * index / (length - 1)));
+    }
 }
 

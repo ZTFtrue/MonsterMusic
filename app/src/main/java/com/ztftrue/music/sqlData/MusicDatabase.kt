@@ -29,7 +29,7 @@ const val MUSIC_DATABASE_NAME = "default_data.db"
 
 @Database(
     entities = [Auxr::class, CurrentList::class, MainTab::class, PlayConfig::class, MusicItem::class,
-        DictionaryApp::class, StorageFolder::class,SortFiledData::class],
+        DictionaryApp::class, StorageFolder::class, SortFiledData::class],
     version = 6,
     exportSchema = true,
     autoMigrations = [

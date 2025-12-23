@@ -19,13 +19,11 @@ package org.jaudiotagger.tag;
  *
  * @version $Revision$
  */
-public class InvalidDataTypeException extends InvalidTagException
-{
+public class InvalidDataTypeException extends InvalidTagException {
     /**
      * Creates a new InvalidDataTypeException datatype.
      */
-    public InvalidDataTypeException()
-    {
+    public InvalidDataTypeException() {
     }
 
     /**
@@ -33,8 +31,7 @@ public class InvalidDataTypeException extends InvalidTagException
      *
      * @param ex the cause.
      */
-    public InvalidDataTypeException(Throwable ex)
-    {
+    public InvalidDataTypeException(Throwable ex) {
         super(ex);
     }
 
@@ -43,8 +40,7 @@ public class InvalidDataTypeException extends InvalidTagException
      *
      * @param msg the detail message.
      */
-    public InvalidDataTypeException(String msg)
-    {
+    public InvalidDataTypeException(String msg) {
         super(msg);
     }
 
@@ -54,8 +50,7 @@ public class InvalidDataTypeException extends InvalidTagException
      * @param msg the detail message.
      * @param ex  the cause.
      */
-    public InvalidDataTypeException(String msg, Throwable ex)
-    {
+    public InvalidDataTypeException(String msg, Throwable ex) {
         super(msg, ex);
     }
 }

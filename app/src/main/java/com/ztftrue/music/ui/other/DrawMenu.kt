@@ -40,8 +40,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -80,8 +78,8 @@ fun DrawMenu(
     val color = MaterialTheme.colorScheme.onBackground
     val context = LocalContext.current
     val imageModel: ImageSource by musicViewModel.currentMusicCover
-    var isAutoHandleAudioFocus by remember {
-        mutableStateOf(SharedPreferencesUtils.getAutoHandleAudioFocus(context))
+    var disableAudioFocus by remember {
+        mutableStateOf(!SharedPreferencesUtils.getAutoHandleAudioFocus(context))
     }
 
     ModalDrawerSheet(
@@ -176,15 +174,6 @@ fun DrawMenu(
                         )
                     }
                     .clickable {
-                        isAutoHandleAudioFocus = !isAutoHandleAudioFocus
-                        SharedPreferencesUtils.setAutoHandleAudioFocus(context, isAutoHandleAudioFocus)
-                        musicViewModel.browser?.setAudioAttributes(
-                            AudioAttributes.Builder()
-                                .setUsage(C.USAGE_MEDIA)
-                                .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
-                                .build(),
-                            isAutoHandleAudioFocus
-                        )
                     },
                 horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
@@ -195,49 +184,20 @@ fun DrawMenu(
                     color = MaterialTheme.colorScheme.onBackground,
                 )
                 Checkbox(
-                    checked = !isAutoHandleAudioFocus,
+                    checked = disableAudioFocus,
                     onCheckedChange = { v ->
-                        isAutoHandleAudioFocus = !isAutoHandleAudioFocus
-                        SharedPreferencesUtils.setAutoHandleAudioFocus(context, v)
+                        disableAudioFocus = v
+                        SharedPreferencesUtils.setAutoHandleAudioFocus(context, !disableAudioFocus)
                         musicViewModel.browser?.setAudioAttributes(
                             AudioAttributes.Builder()
                                 .setUsage(C.USAGE_MEDIA)
                                 .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
                                 .build(),
-                            isAutoHandleAudioFocus
+                            !disableAudioFocus
                         )
                     },
                     modifier = Modifier
                         .padding(4.dp)
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .width(drawerWidth)
-                    .height(50.dp)
-                    .padding(0.dp)
-                    .drawBehind {
-                        drawLine(
-                            color = color,
-                            start = Offset(0f, size.height - 1.dp.toPx()),
-                            end = Offset(size.width, size.height - 1.dp.toPx()),
-                            strokeWidth = 1.dp.toPx()
-                        )
-                    }
-                    .clickable {
-                        scope.launch {
-                            drawerState.close()
-                        }
-                        navController.add(
-                            Router.SettingsPage
-                        )
-                    },
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Text(
-                    text = stringResource(R.string.settings),
-                    Modifier.padding(start = 10.dp),
-                    color = MaterialTheme.colorScheme.onBackground,
                 )
             }
             var showFeedBackDialog by remember { mutableStateOf(false) }

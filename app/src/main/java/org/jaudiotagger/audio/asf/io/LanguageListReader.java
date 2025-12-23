@@ -14,8 +14,7 @@ import java.math.BigInteger;
  *
  * @author Christian Laireiter
  */
-public class LanguageListReader implements ChunkReader
-{
+public class LanguageListReader implements ChunkReader {
 
     /**
      * The GUID this reader {@linkplain #getApplyingIds() applies to}
@@ -25,32 +24,28 @@ public class LanguageListReader implements ChunkReader
     /**
      * {@inheritDoc}
      */
-    public boolean canFail()
-    {
+    public boolean canFail() {
         return false;
     }
 
     /**
      * {@inheritDoc}
      */
-    public GUID[] getApplyingIds()
-    {
+    public GUID[] getApplyingIds() {
         return APPLYING.clone();
     }
 
     /**
      * {@inheritDoc}
      */
-    public Chunk read(final GUID guid, final InputStream stream, final long streamPosition) throws IOException
-    {
+    public Chunk read(final GUID guid, final InputStream stream, final long streamPosition) throws IOException {
         assert GUID.GUID_LANGUAGE_LIST.equals(guid);
         final BigInteger chunkLen = Utils.readBig64(stream);
 
         final int readUINT16 = Utils.readUINT16(stream);
 
         final LanguageList result = new LanguageList(streamPosition, chunkLen);
-        for (int i = 0; i < readUINT16; i++)
-        {
+        for (int i = 0; i < readUINT16; i++) {
             final int langIdLen = (stream.read() & 0xFF);
             final String langId = Utils.readFixedSizeUTF16Str(stream, langIdLen);
             // langIdLen = 2 bytes for each char and optionally one zero

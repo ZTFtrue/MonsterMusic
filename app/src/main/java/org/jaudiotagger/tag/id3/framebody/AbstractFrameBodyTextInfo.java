@@ -1,23 +1,23 @@
 /**
- *  @author : Paul Taylor
- *  @author : Eric Farng
- *
- *  Version @version:$Id$
- *
- *  MusicTag Copyright (C)2003,2004
- *
- *  This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
- *  General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
- *  or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- *  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public License along with this library; if not,
- *  you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ * @author : Paul Taylor
+ * @author : Eric Farng
+ * <p>
+ * Version @version:$Id$
+ * <p>
+ * MusicTag Copyright (C)2003,2004
+ * <p>
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
+ * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
+ * or (at your option) any later version.
+ * <p>
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not,
+ * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * <p>
  * Description:
  */
 package org.jaudiotagger.tag.id3.framebody;
@@ -55,15 +55,13 @@ import java.util.List;
  *
  * You can retrieve the first value without the null terminator using {@link #getFirstTextValue}
  */
-public abstract class AbstractFrameBodyTextInfo extends AbstractID3v2FrameBody
-{
+public abstract class AbstractFrameBodyTextInfo extends AbstractID3v2FrameBody {
 
     /**
      * Creates a new FrameBodyTextInformation datatype. The super.super
      * Constructor sets up the Object list for the frame.
      */
-    protected AbstractFrameBodyTextInfo()
-    {
+    protected AbstractFrameBodyTextInfo() {
         super();
         setObjectValue(DataTypes.OBJ_TEXT_ENCODING, TextEncoding.ISO_8859_1);
         setObjectValue(DataTypes.OBJ_TEXT, "");
@@ -74,8 +72,7 @@ public abstract class AbstractFrameBodyTextInfo extends AbstractID3v2FrameBody
      *
      * @param body AbstractFrameBodyTextInformation
      */
-    protected AbstractFrameBodyTextInfo(AbstractFrameBodyTextInfo body)
-    {
+    protected AbstractFrameBodyTextInfo(AbstractFrameBodyTextInfo body) {
         super(body);
     }
 
@@ -87,8 +84,7 @@ public abstract class AbstractFrameBodyTextInfo extends AbstractID3v2FrameBody
      *                     text to file.
      * @param text         Specifies the text String.
      */
-    protected AbstractFrameBodyTextInfo(byte textEncoding, String text)
-    {
+    protected AbstractFrameBodyTextInfo(byte textEncoding, String text) {
         super();
         setObjectValue(DataTypes.OBJ_TEXT_ENCODING, textEncoding);
         setObjectValue(DataTypes.OBJ_TEXT, text);
@@ -103,9 +99,23 @@ public abstract class AbstractFrameBodyTextInfo extends AbstractID3v2FrameBody
      * @param frameSize
      * @throws InvalidTagException if unable to create framebody from buffer
      */
-    protected AbstractFrameBodyTextInfo(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    protected AbstractFrameBodyTextInfo(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
+    }
+
+    public String getUserFriendlyValue() {
+        return getTextWithoutTrailingNulls();
+    }
+
+    /**
+     * Retrieve the complete text String as it is held internally.
+     *
+     * If multiple values are held these will be returned, needless trailing nulls will also be returned
+     *
+     * @return the text string
+     */
+    public String getText() {
+        return (String) getObjectValue(DataTypes.OBJ_TEXT);
     }
 
     /**
@@ -117,30 +127,11 @@ public abstract class AbstractFrameBodyTextInfo extends AbstractID3v2FrameBody
      *
      * @param text to set
      */
-    public void setText(String text)
-    {
-        if (text == null)
-        {
+    public void setText(String text) {
+        if (text == null) {
             throw new IllegalArgumentException(ErrorMessage.GENERAL_INVALID_NULL_ARGUMENT.getMsg());
         }
         setObjectValue(DataTypes.OBJ_TEXT, text);
-    }
-
-    public String getUserFriendlyValue()
-    {
-        return getTextWithoutTrailingNulls();
-    }
-
-    /**
-     * Retrieve the complete text String as it is held internally.
-     *
-     * If multiple values are held these will be returned, needless trailing nulls will also be returned
-     *
-     * @return the text string
-     */
-    public String getText()
-    {
-        return (String) getObjectValue(DataTypes.OBJ_TEXT);
     }
 
     /**
@@ -150,8 +141,7 @@ public abstract class AbstractFrameBodyTextInfo extends AbstractID3v2FrameBody
      *
      * @return the text string
      */
-    public String getTextWithoutTrailingNulls()
-    {
+    public String getTextWithoutTrailingNulls() {
         TextEncodedStringSizeTerminated text = (TextEncodedStringSizeTerminated) getObject(DataTypes.OBJ_TEXT);
         return text.getValueWithoutTrailingNull();
     }
@@ -161,8 +151,7 @@ public abstract class AbstractFrameBodyTextInfo extends AbstractID3v2FrameBody
      *
      * @return value at index 0
      */
-    public String getFirstTextValue()
-    {
+    public String getFirstTextValue() {
         TextEncodedStringSizeTerminated text = (TextEncodedStringSizeTerminated) getObject(DataTypes.OBJ_TEXT);
         return text.getValueAtIndex(0);
     }
@@ -176,24 +165,22 @@ public abstract class AbstractFrameBodyTextInfo extends AbstractID3v2FrameBody
      * @param index
      * @return value at index
      */
-    public String getValueAtIndex(int index)
-    {
+    public String getValueAtIndex(int index) {
         TextEncodedStringSizeTerminated text = (TextEncodedStringSizeTerminated) getObject(DataTypes.OBJ_TEXT);
         return text.getValueAtIndex(index);
     }
 
-    public List<String> getValues()
-    {
+    public List<String> getValues() {
         TextEncodedStringSizeTerminated text = (TextEncodedStringSizeTerminated) getObject(DataTypes.OBJ_TEXT);
         return text.getValues();
     }
+
     /**
      * Add additional value to value
      *
      * @param value at index
      */
-    public void addTextValue(String value)
-    {
+    public void addTextValue(String value) {
         TextEncodedStringSizeTerminated text = (TextEncodedStringSizeTerminated) getObject(DataTypes.OBJ_TEXT);
         text.addValue(value);
     }
@@ -201,8 +188,7 @@ public abstract class AbstractFrameBodyTextInfo extends AbstractID3v2FrameBody
     /**
      * @return number of text values, usually one
      */
-    public int getNumberOfValues()
-    {
+    public int getNumberOfValues() {
         TextEncodedStringSizeTerminated text = (TextEncodedStringSizeTerminated) getObject(DataTypes.OBJ_TEXT);
         return text.getNumberOfValues();
     }
@@ -213,14 +199,12 @@ public abstract class AbstractFrameBodyTextInfo extends AbstractID3v2FrameBody
      * current encoding before we write data. If there are change the text
      * encoding.
      */
-    public void write(ByteArrayOutputStream tagBuffer)
-    {
+    public void write(ByteArrayOutputStream tagBuffer) {
         //Ensure valid for type
         setTextEncoding(ID3TextEncodingConversion.getTextEncoding(getHeader(), getTextEncoding()));
 
         //Ensure valid for data
-        if (!((TextEncodedStringSizeTerminated) getObject(DataTypes.OBJ_TEXT)).canBeEncoded())
-        {
+        if (!((TextEncodedStringSizeTerminated) getObject(DataTypes.OBJ_TEXT)).canBeEncoded()) {
             this.setTextEncoding(ID3TextEncodingConversion.getUnicodeTextEncoding(getHeader()));
         }
         super.write(tagBuffer);
@@ -232,8 +216,7 @@ public abstract class AbstractFrameBodyTextInfo extends AbstractID3v2FrameBody
      *
      * TODO:would like to make final but cannot because overridden by FrameBodyTXXX
      */
-    protected void setupObjectList()
-    {
+    protected void setupObjectList() {
         objectList.add(new NumberHashMap(DataTypes.OBJ_TEXT_ENCODING, this, TextEncoding.TEXT_ENCODING_FIELD_SIZE));
         objectList.add(new TextEncodedStringSizeTerminated(DataTypes.OBJ_TEXT, this));
     }

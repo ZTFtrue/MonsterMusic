@@ -10,72 +10,59 @@ import java.nio.charset.StandardCharsets;
 /**
  * DSD Chunk
  */
-public class DsdChunk
-{
-    private long chunkSizeLength;
-    private long fileLength;
-    private long metadataOffset;
-
+public class DsdChunk {
     public static final int CHUNKSIZE_LENGTH = 8;
     public static final int FILESIZE_LENGTH = 8;
     public static final int METADATA_OFFSET_LENGTH = 8;
     public static final int FMT_CHUNK_MIN_DATA_SIZE_ = 40;
+    public static final int DSD_HEADER_LENGTH = IffHeaderChunk.SIGNATURE_LENGTH + CHUNKSIZE_LENGTH + FILESIZE_LENGTH + METADATA_OFFSET_LENGTH;
+    private long chunkSizeLength;
+    private long fileLength;
+    private long metadataOffset;
 
-    public static final int DSD_HEADER_LENGTH =  IffHeaderChunk.SIGNATURE_LENGTH + CHUNKSIZE_LENGTH + FILESIZE_LENGTH + METADATA_OFFSET_LENGTH;
+    private DsdChunk(ByteBuffer dataBuffer) {
+        chunkSizeLength = dataBuffer.getLong();
+        fileLength = dataBuffer.getLong();
+        metadataOffset = dataBuffer.getLong();
+    }
 
-    public static DsdChunk readChunk(ByteBuffer dataBuffer)
-    {
+    public static DsdChunk readChunk(ByteBuffer dataBuffer) {
         String type = Utils.readFourBytesAsChars(dataBuffer);
-        if (DsfChunkType.DSD.getCode().equals(type))
-        {
+        if (DsfChunkType.DSD.getCode().equals(type)) {
             return new DsdChunk(dataBuffer);
         }
         return null;
     }
 
-    private DsdChunk(ByteBuffer dataBuffer)
-    {
-        chunkSizeLength = dataBuffer.getLong();
-        fileLength      = dataBuffer.getLong();
-        metadataOffset  = dataBuffer.getLong();
-    }
+    public String toString() {
 
-    public String toString()
-    {
-
-        return "ChunkSize:"+chunkSizeLength
-                + ":fileLength:"+fileLength
-                + ":metadata:"+metadataOffset;
+        return "ChunkSize:" + chunkSizeLength
+                + ":fileLength:" + fileLength
+                + ":metadata:" + metadataOffset;
 
     }
 
-    public long getChunkSizeLength()
-    {
+    public long getChunkSizeLength() {
         return chunkSizeLength;
     }
 
-    public void setChunkSizeLength(long chunkSizeLength)
-    {
+    public void setChunkSizeLength(long chunkSizeLength) {
         this.chunkSizeLength = chunkSizeLength;
     }
 
-    public long getFileLength()
-    {
+    public long getFileLength() {
         return fileLength;
     }
 
-    public void setFileLength(long fileLength)
-    {
+    public void setFileLength(long fileLength) {
         this.fileLength = fileLength;
     }
 
-    public long getMetadataOffset()
-    {
+    public long getMetadataOffset() {
         return metadataOffset;
     }
 
-    public void setMetadataOffset(long metadataOffset)
-    {
+    public void setMetadataOffset(long metadataOffset) {
         this.metadataOffset = metadataOffset;
     }
 
@@ -84,8 +71,7 @@ public class DsdChunk
      *
      * @return
      */
-    public ByteBuffer write()
-    {
+    public ByteBuffer write() {
         ByteBuffer buffer = ByteBuffer.allocateDirect(DSD_HEADER_LENGTH);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         buffer.put(DsfChunkType.DSD.getCode().getBytes(StandardCharsets.US_ASCII));

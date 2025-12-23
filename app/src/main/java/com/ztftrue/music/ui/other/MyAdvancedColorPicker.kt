@@ -36,7 +36,7 @@ fun MyAdvancedColorPicker(onColorChanged: (ColorEnvelope) -> Unit) {
                 .fillMaxWidth()
                 .height(300.dp),
             controller = controller,
-            onColorChanged =onColorChanged
+            onColorChanged = onColorChanged
         )
 
         Spacer(modifier = Modifier.height(20.dp))

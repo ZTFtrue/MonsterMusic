@@ -16,21 +16,20 @@ import java.util.Enumeration;
  * Implementations of <code>TreeNode</code> that override <code>equals</code>
  * will typically need to override <code>hashCode</code> as well.  Refer
  * to {@link javax.swing.tree.TreeModel} for more information.
- *
+ * <p>
  * For further information and examples of using tree nodes,
  * see <a
- href="http://java.sun.com/docs/books/tutorial/uiswing/components/tree.html">How to Use Tree Nodes</a>
+ * href="http://java.sun.com/docs/books/tutorial/uiswing/components/tree.html">How to Use Tree Nodes</a>
  * in <em>The Java Tutorial.</em>
  *
- * @version 1.26 03/23/10
  * @author Rob Davis
  * @author Scott Violet
+ * @version 1.26 03/23/10
  */
 
-public interface TreeNode
-{
+public interface TreeNode {
     /**
-     * Returns the child <code>TreeNode</code> at index 
+     * Returns the child <code>TreeNode</code> at index
      * <code>childIndex</code>.
      */
     TreeNode getChildAt(int childIndex);

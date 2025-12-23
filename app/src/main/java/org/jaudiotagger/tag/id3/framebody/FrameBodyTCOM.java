@@ -36,17 +36,14 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyTCOM extends AbstractFrameBodyTextInfo implements ID3v24FrameBody, ID3v23FrameBody
-{
+public class FrameBodyTCOM extends AbstractFrameBodyTextInfo implements ID3v24FrameBody, ID3v23FrameBody {
     /**
      * Creates a new FrameBodyTCOM datatype.
      */
-    public FrameBodyTCOM()
-    {
+    public FrameBodyTCOM() {
     }
 
-    public FrameBodyTCOM(FrameBodyTCOM body)
-    {
+    public FrameBodyTCOM(FrameBodyTCOM body) {
         super(body);
     }
 
@@ -56,8 +53,7 @@ public class FrameBodyTCOM extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param textEncoding
      * @param text
      */
-    public FrameBodyTCOM(byte textEncoding, String text)
-    {
+    public FrameBodyTCOM(byte textEncoding, String text) {
         super(textEncoding, text);
     }
 
@@ -68,8 +64,7 @@ public class FrameBodyTCOM extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param frameSize
      * @throws InvalidTagException if unable to create framebody from buffer
      */
-    public FrameBodyTCOM(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyTCOM(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -79,8 +74,7 @@ public class FrameBodyTCOM extends AbstractFrameBodyTextInfo implements ID3v24Fr
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_COMPOSER;
     }
 }

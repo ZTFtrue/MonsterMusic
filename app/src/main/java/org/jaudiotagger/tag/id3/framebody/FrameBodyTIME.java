@@ -34,18 +34,16 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyTIME extends AbstractFrameBodyTextInfo implements ID3v23FrameBody
-{
+public class FrameBodyTIME extends AbstractFrameBodyTextInfo implements ID3v23FrameBody {
     private boolean hoursOnly;
+
     /**
      * Creates a new FrameBodyTIME datatype.
      */
-    public FrameBodyTIME()
-    {
+    public FrameBodyTIME() {
     }
 
-    public FrameBodyTIME(FrameBodyTIME body)
-    {
+    public FrameBodyTIME(FrameBodyTIME body) {
         super(body);
     }
 
@@ -55,8 +53,7 @@ public class FrameBodyTIME extends AbstractFrameBodyTextInfo implements ID3v23Fr
      * @param textEncoding
      * @param text
      */
-    public FrameBodyTIME(byte textEncoding, String text)
-    {
+    public FrameBodyTIME(byte textEncoding, String text) {
         super(textEncoding, text);
     }
 
@@ -67,8 +64,7 @@ public class FrameBodyTIME extends AbstractFrameBodyTextInfo implements ID3v23Fr
      * @param frameSize
      * @throws InvalidTagException
      */
-    public FrameBodyTIME(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyTIME(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -77,18 +73,15 @@ public class FrameBodyTIME extends AbstractFrameBodyTextInfo implements ID3v23Fr
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v23Frames.FRAME_ID_V3_TIME;
     }
 
-    public boolean isHoursOnly()
-    {
+    public boolean isHoursOnly() {
         return hoursOnly;
     }
 
-    public void setHoursOnly(boolean hoursOnly)
-    {
+    public void setHoursOnly(boolean hoursOnly) {
         this.hoursOnly = hoursOnly;
     }
 }

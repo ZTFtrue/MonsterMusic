@@ -1,17 +1,17 @@
 /*
  * Entagged Audio Tag library
  * Copyright (c) 2004-2005 Christian Laireiter <liree@web.de>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *  
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -34,8 +34,7 @@ import java.util.Set;
  *
  * @author Christian Laireiter
  */
-public final class ContentDescription extends MetadataContainer
-{
+public final class ContentDescription extends MetadataContainer {
     /**
      * Stores the only allowed keys of this metadata container.
      */
@@ -66,16 +65,14 @@ public final class ContentDescription extends MetadataContainer
      */
     public final static String KEY_TITLE = "TITLE";
 
-    static
-    {
+    static {
         ALLOWED = new HashSet<String>(Arrays.asList(KEY_AUTHOR, KEY_COPYRIGHT, KEY_DESCRIPTION, KEY_RATING, KEY_TITLE));
     }
 
     /**
      * Creates an instance. <br>
      */
-    public ContentDescription()
-    {
+    public ContentDescription() {
         this(0, BigInteger.ZERO);
     }
 
@@ -85,32 +82,46 @@ public final class ContentDescription extends MetadataContainer
      * @param pos      Position of content description within file or stream
      * @param chunkLen Length of content description.
      */
-    public ContentDescription(final long pos, final BigInteger chunkLen)
-    {
+    public ContentDescription(final long pos, final BigInteger chunkLen) {
         super(ContainerType.CONTENT_DESCRIPTION, pos, chunkLen);
     }
 
     /**
      * @return Returns the author.
      */
-    public String getAuthor()
-    {
+    public String getAuthor() {
         return getValueFor(KEY_AUTHOR);
+    }
+
+    /**
+     * @param fileAuthor The author to set.
+     * @throws IllegalArgumentException If "UTF-16LE"-byte-representation would take more than 65535
+     *                                  bytes.
+     */
+    public void setAuthor(final String fileAuthor) throws IllegalArgumentException {
+        setStringValue(KEY_AUTHOR, fileAuthor);
     }
 
     /**
      * @return Returns the comment.
      */
-    public String getComment()
-    {
+    public String getComment() {
         return getValueFor(KEY_DESCRIPTION);
+    }
+
+    /**
+     * @param tagComment The comment to set.
+     * @throws IllegalArgumentException If "UTF-16LE"-byte-representation would take more than 65535
+     *                                  bytes.
+     */
+    public void setComment(final String tagComment) throws IllegalArgumentException {
+        setStringValue(KEY_DESCRIPTION, tagComment);
     }
 
     /**
      * @return Returns the copyRight.
      */
-    public String getCopyRight()
-    {
+    public String getCopyRight() {
         return getValueFor(KEY_COPYRIGHT);
     }
 
@@ -118,8 +129,7 @@ public final class ContentDescription extends MetadataContainer
      * {@inheritDoc}
      */
     @Override
-    public long getCurrentAsfChunkSize()
-    {
+    public long getCurrentAsfChunkSize() {
         long result = 44; // GUID + UINT64 for size + 5 times string length
         // (each
         // 2 bytes) + 5 times zero term char (2 bytes each).
@@ -134,25 +144,40 @@ public final class ContentDescription extends MetadataContainer
     /**
      * @return returns the rating.
      */
-    public String getRating()
-    {
+    public String getRating() {
         return getValueFor(KEY_RATING);
+    }
+
+    /**
+     * @param ratingText The rating to be set.
+     * @throws IllegalArgumentException If "UTF-16LE"-byte-representation would take more than 65535
+     *                                  bytes.
+     */
+    public void setRating(final String ratingText) throws IllegalArgumentException {
+        setStringValue(KEY_RATING, ratingText);
     }
 
     /**
      * @return Returns the title.
      */
-    public String getTitle()
-    {
+    public String getTitle() {
         return getValueFor(KEY_TITLE);
+    }
+
+    /**
+     * @param songTitle The title to set.
+     * @throws IllegalArgumentException If "UTF-16LE"-byte-representation would take more than 65535
+     *                                  bytes.
+     */
+    public void setTitle(final String songTitle) throws IllegalArgumentException {
+        setStringValue(KEY_TITLE, songTitle);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean isAddSupported(final MetadataDescriptor descriptor)
-    {
+    public boolean isAddSupported(final MetadataDescriptor descriptor) {
         return ALLOWED.contains(descriptor.getName()) && super.isAddSupported(descriptor);
     }
 
@@ -160,8 +185,7 @@ public final class ContentDescription extends MetadataContainer
      * {@inheritDoc}
      */
     @Override
-    public String prettyPrint(final String prefix)
-    {
+    public String prettyPrint(final String prefix) {
         String result = super.prettyPrint(prefix) + prefix + "  |->Title      : " + getTitle() + Utils.LINE_SEPARATOR +
                 prefix + "  |->Author     : " + getAuthor() + Utils.LINE_SEPARATOR +
                 prefix + "  |->Copyright  : " + getCopyRight() + Utils.LINE_SEPARATOR +
@@ -171,61 +195,19 @@ public final class ContentDescription extends MetadataContainer
     }
 
     /**
-     * @param fileAuthor The author to set.
-     * @throws IllegalArgumentException If "UTF-16LE"-byte-representation would take more than 65535
-     *                                  bytes.
-     */
-    public void setAuthor(final String fileAuthor) throws IllegalArgumentException
-    {
-        setStringValue(KEY_AUTHOR, fileAuthor);
-    }
-
-    /**
-     * @param tagComment The comment to set.
-     * @throws IllegalArgumentException If "UTF-16LE"-byte-representation would take more than 65535
-     *                                  bytes.
-     */
-    public void setComment(final String tagComment) throws IllegalArgumentException
-    {
-        setStringValue(KEY_DESCRIPTION, tagComment);
-    }
-
-    /**
      * @param cpright The copyRight to set.
      * @throws IllegalArgumentException If "UTF-16LE"-byte-representation would take more than 65535
      *                                  bytes.
      */
-    public void setCopyright(final String cpright) throws IllegalArgumentException
-    {
+    public void setCopyright(final String cpright) throws IllegalArgumentException {
         setStringValue(KEY_COPYRIGHT, cpright);
-    }
-
-    /**
-     * @param ratingText The rating to be set.
-     * @throws IllegalArgumentException If "UTF-16LE"-byte-representation would take more than 65535
-     *                                  bytes.
-     */
-    public void setRating(final String ratingText) throws IllegalArgumentException
-    {
-        setStringValue(KEY_RATING, ratingText);
-    }
-
-    /**
-     * @param songTitle The title to set.
-     * @throws IllegalArgumentException If "UTF-16LE"-byte-representation would take more than 65535
-     *                                  bytes.
-     */
-    public void setTitle(final String songTitle) throws IllegalArgumentException
-    {
-        setStringValue(KEY_TITLE, songTitle);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public long writeInto(final OutputStream out) throws IOException
-    {
+    public long writeInto(final OutputStream out) throws IOException {
         final long chunkSize = getCurrentAsfChunkSize();
 
         out.write(this.getGuid().getBytes());

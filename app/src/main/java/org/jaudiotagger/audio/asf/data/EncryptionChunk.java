@@ -9,25 +9,22 @@ import java.util.Collection;
 /**
  * @author eric
  */
-public class EncryptionChunk extends Chunk
-{
-    private String keyID;
-
-    private String licenseURL;
-    private String protectionType;
-    private String secretData;
+public class EncryptionChunk extends Chunk {
     /**
      * The read strings.
      */
     private final ArrayList<String> strings;
+    private String keyID;
+    private String licenseURL;
+    private String protectionType;
+    private String secretData;
 
     /**
      * Creates an instance.
      *
      * @param chunkLen Length of current chunk.
      */
-    public EncryptionChunk(final BigInteger chunkLen)
-    {
+    public EncryptionChunk(final BigInteger chunkLen) {
         super(GUID.GUID_CONTENT_ENCRYPTION, chunkLen);
         this.strings = new ArrayList<String>();
         this.secretData = "";
@@ -41,8 +38,7 @@ public class EncryptionChunk extends Chunk
      *
      * @param toAdd String to add.
      */
-    public void addString(final String toAdd)
-    {
+    public void addString(final String toAdd) {
         this.strings.add(toAdd);
     }
 
@@ -51,9 +47,17 @@ public class EncryptionChunk extends Chunk
      *
      * @return
      */
-    public String getKeyID()
-    {
+    public String getKeyID() {
         return this.keyID;
+    }
+
+    /**
+     * This method appends a String.
+     *
+     * @param toAdd String to add.
+     */
+    public void setKeyID(final String toAdd) {
+        this.keyID = toAdd;
     }
 
     /**
@@ -61,19 +65,17 @@ public class EncryptionChunk extends Chunk
      *
      * @return
      */
-    public String getLicenseURL()
-    {
+    public String getLicenseURL() {
         return this.licenseURL;
     }
 
     /**
-     * This method gets the secret data.
+     * This method appends a String.
      *
-     * @return
+     * @param toAdd String to add.
      */
-    public String getProtectionType()
-    {
-        return this.protectionType;
+    public void setLicenseURL(final String toAdd) {
+        this.licenseURL = toAdd;
     }
 
     /**
@@ -81,9 +83,35 @@ public class EncryptionChunk extends Chunk
      *
      * @return
      */
-    public String getSecretData()
-    {
+    public String getProtectionType() {
+        return this.protectionType;
+    }
+
+    /**
+     * This method appends a String.
+     *
+     * @param toAdd String to add.
+     */
+    public void setProtectionType(final String toAdd) {
+        this.protectionType = toAdd;
+    }
+
+    /**
+     * This method gets the secret data.
+     *
+     * @return
+     */
+    public String getSecretData() {
         return this.secretData;
+    }
+
+    /**
+     * This method adds the secret data.
+     *
+     * @param toAdd String to add.
+     */
+    public void setSecretData(final String toAdd) {
+        this.secretData = toAdd;
     }
 
     /**
@@ -92,8 +120,7 @@ public class EncryptionChunk extends Chunk
      *
      * @return Inserted Strings.
      */
-    public Collection<String> getStrings()
-    {
+    public Collection<String> getStrings() {
         return new ArrayList<String>(this.strings);
     }
 
@@ -101,8 +128,7 @@ public class EncryptionChunk extends Chunk
      * {@inheritDoc}
      */
     @Override
-    public String prettyPrint(final String prefix)
-    {
+    public String prettyPrint(final String prefix) {
         final StringBuilder result = new StringBuilder(super.prettyPrint(prefix));
         result.insert(0, Utils.LINE_SEPARATOR + prefix + " Encryption:" + Utils.LINE_SEPARATOR);
         result.append(prefix).append("	|->keyID ").append(this.keyID).append(Utils.LINE_SEPARATOR);
@@ -110,50 +136,9 @@ public class EncryptionChunk extends Chunk
         result.append(prefix).append("	|->protectionType ").append(this.protectionType).append(Utils.LINE_SEPARATOR);
         result.append(prefix).append("	|->licenseURL ").append(this.licenseURL).append(Utils.LINE_SEPARATOR);
         this.strings.iterator();
-        for (final String string : this.strings)
-        {
+        for (final String string : this.strings) {
             result.append(prefix).append("   |->").append(string).append(Utils.LINE_SEPARATOR);
         }
         return result.toString();
-    }
-
-    /**
-     * This method appends a String.
-     *
-     * @param toAdd String to add.
-     */
-    public void setKeyID(final String toAdd)
-    {
-        this.keyID = toAdd;
-    }
-
-    /**
-     * This method appends a String.
-     *
-     * @param toAdd String to add.
-     */
-    public void setLicenseURL(final String toAdd)
-    {
-        this.licenseURL = toAdd;
-    }
-
-    /**
-     * This method appends a String.
-     *
-     * @param toAdd String to add.
-     */
-    public void setProtectionType(final String toAdd)
-    {
-        this.protectionType = toAdd;
-    }
-
-    /**
-     * This method adds the secret data.
-     *
-     * @param toAdd String to add.
-     */
-    public void setSecretData(final String toAdd)
-    {
-        this.secretData = toAdd;
     }
 }

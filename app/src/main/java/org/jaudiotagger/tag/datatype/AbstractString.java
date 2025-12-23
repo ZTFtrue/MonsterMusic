@@ -1,23 +1,23 @@
 /**
- *  @author : Paul Taylor
- *  @author : Eric Farng
- *
- *  Version @version:$Id$
- *
- *  MusicTag Copyright (C)2003,2004
- *
- *  This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
- *  General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
- *  or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- *  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public License along with this library; if not,
- *  you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ * @author : Paul Taylor
+ * @author : Eric Farng
+ * <p>
+ * Version @version:$Id$
+ * <p>
+ * MusicTag Copyright (C)2003,2004
+ * <p>
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
+ * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
+ * or (at your option) any later version.
+ * <p>
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not,
+ * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * <p>
  * Description:
  *
  */
@@ -35,16 +35,14 @@ import java.nio.charset.StandardCharsets;
 /**
  * A partial implementation for String based ID3 fields
  */
-public abstract class AbstractString extends AbstractDataType
-{
+public abstract class AbstractString extends AbstractDataType {
     /**
      * Creates a new  datatype
      *
      * @param identifier
      * @param frameBody
      */
-    protected AbstractString(String identifier, AbstractTagFrameBody frameBody)
-    {
+    protected AbstractString(String identifier, AbstractTagFrameBody frameBody) {
         super(identifier, frameBody);
     }
 
@@ -55,8 +53,7 @@ public abstract class AbstractString extends AbstractDataType
      * @param frameBody
      * @param value
      */
-    public AbstractString(String identifier, AbstractTagFrameBody frameBody, String value)
-    {
+    public AbstractString(String identifier, AbstractTagFrameBody frameBody, String value) {
         super(identifier, frameBody, value);
     }
 
@@ -65,8 +62,7 @@ public abstract class AbstractString extends AbstractDataType
      *
      * @param object
      */
-    protected AbstractString(AbstractString object)
-    {
+    protected AbstractString(AbstractString object) {
         super(object);
     }
 
@@ -76,8 +72,7 @@ public abstract class AbstractString extends AbstractDataType
      *
      * @return the size
      */
-    public int getSize()
-    {
+    public int getSize() {
         return size;
     }
 
@@ -87,8 +82,7 @@ public abstract class AbstractString extends AbstractDataType
      * frame header.
      * @param size
      */
-    protected void setSize(int size)
-    {
+    protected void setSize(int size) {
         this.size = size;
     }
 
@@ -97,8 +91,7 @@ public abstract class AbstractString extends AbstractDataType
      *
      * @return a string representation of the value
      */
-    public String toString()
-    {
+    public String toString() {
         return (String) value;
     }
 
@@ -106,8 +99,7 @@ public abstract class AbstractString extends AbstractDataType
      * Check the value can be encoded with the specified encoding
      * @return
      */
-    public boolean canBeEncoded()
-    {
+    public boolean canBeEncoded() {
         //Try and write to buffer using the CharSet defined by the textEncoding field (note if using UTF16 we dont
         //need to worry about LE,BE at this point it makes no difference)
         final byte textEncoding = this.getBody().getTextEncoding();
@@ -115,12 +107,9 @@ public abstract class AbstractString extends AbstractDataType
         final Charset charset = encoding.getCharsetForId(textEncoding);
         CharsetEncoder encoder = charset.newEncoder();
 
-        if (encoder.canEncode((String) value))
-        {
+        if (encoder.canEncode((String) value)) {
             return true;
-        }
-        else
-        {
+        } else {
             logger.finest("Failed Trying to decode" + value + "with" + encoder);
             return false;
         }
@@ -134,40 +123,29 @@ public abstract class AbstractString extends AbstractDataType
      * @param inBuffer
      * @return
      */
-    protected CharsetDecoder getCorrectDecoder(ByteBuffer inBuffer)
-    {
-        CharsetDecoder decoder=null;
-        if(inBuffer.remaining()<=2)
-        {
+    protected CharsetDecoder getCorrectDecoder(ByteBuffer inBuffer) {
+        CharsetDecoder decoder = null;
+        if (inBuffer.remaining() <= 2) {
             decoder = getTextEncodingCharSet().newDecoder();
             decoder.reset();
             return decoder;
         }
 
-        if(getTextEncodingCharSet()== StandardCharsets.UTF_16)
-        {
-            if(inBuffer.getChar(0)==0xfffe || inBuffer.getChar(0)==0xfeff)
-            {
+        if (getTextEncodingCharSet() == StandardCharsets.UTF_16) {
+            if (inBuffer.getChar(0) == 0xfffe || inBuffer.getChar(0) == 0xfeff) {
                 //Get the Specified Decoder
                 decoder = getTextEncodingCharSet().newDecoder();
                 decoder.reset();
-            }
-            else
-            {
-                if(inBuffer.get(0)==0)
-                {
+            } else {
+                if (inBuffer.get(0) == 0) {
                     decoder = StandardCharsets.UTF_16BE.newDecoder();
                     decoder.reset();
-                }
-                else
-                {
+                } else {
                     decoder = StandardCharsets.UTF_16LE.newDecoder();
                     decoder.reset();
                 }
             }
-        }
-        else
-        {
+        } else {
             decoder = getTextEncodingCharSet().newDecoder();
             decoder.reset();
         }
@@ -181,8 +159,7 @@ public abstract class AbstractString extends AbstractDataType
      *
      * @return the text encoding charset
      */
-    protected Charset getTextEncodingCharSet()
-    {
+    protected Charset getTextEncodingCharSet() {
         final byte textEncoding = this.getBody().getTextEncoding();
         final Charset charSetName = TextEncoding.getInstanceOf().getCharsetForId(textEncoding);
         logger.finest("text encoding:" + textEncoding + " charset:" + charSetName.name());

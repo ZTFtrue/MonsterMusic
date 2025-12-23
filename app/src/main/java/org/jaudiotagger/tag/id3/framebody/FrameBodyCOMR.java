@@ -16,7 +16,13 @@
 package org.jaudiotagger.tag.id3.framebody;
 
 import org.jaudiotagger.tag.InvalidTagException;
-import org.jaudiotagger.tag.datatype.*;
+import org.jaudiotagger.tag.datatype.AbstractString;
+import org.jaudiotagger.tag.datatype.ByteArraySizeTerminated;
+import org.jaudiotagger.tag.datatype.DataTypes;
+import org.jaudiotagger.tag.datatype.NumberHashMap;
+import org.jaudiotagger.tag.datatype.StringDate;
+import org.jaudiotagger.tag.datatype.StringNullTerminated;
+import org.jaudiotagger.tag.datatype.TextEncodedStringNullTerminated;
 import org.jaudiotagger.tag.id3.ID3v24Frames;
 import org.jaudiotagger.tag.id3.valuepair.ReceivedAsTypes;
 import org.jaudiotagger.tag.id3.valuepair.TextEncoding;
@@ -26,8 +32,8 @@ import java.nio.ByteBuffer;
 
 /**
  * Commercial frame.
- *
- *
+ * <p>
+ * <p>
  * This frame enables several competing offers in the same tag by
  * bundling all needed information. That makes this frame rather complex
  * but it's an easier solution than if one tries to achieve the same
@@ -86,13 +92,11 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyCOMR extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody
-{
+public class FrameBodyCOMR extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody {
     /**
      * Creates a new FrameBodyCOMR datatype.
      */
-    public FrameBodyCOMR()
-    {
+    public FrameBodyCOMR() {
         //        this.setObject("Text Encoding", new Byte((byte) 0));
         //        this.setObject("Price String", "");
         //        this.setObject("Valid Until", "");
@@ -104,8 +108,7 @@ public class FrameBodyCOMR extends AbstractID3v2FrameBody implements ID3v24Frame
         //        this.setObject("Seller Logo", new byte[0]);
     }
 
-    public FrameBodyCOMR(FrameBodyCOMR body)
-    {
+    public FrameBodyCOMR(FrameBodyCOMR body) {
         super(body);
     }
 
@@ -122,8 +125,7 @@ public class FrameBodyCOMR extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param mimeType
      * @param sellerLogo
      */
-    public FrameBodyCOMR(byte textEncoding, String priceString, String validUntil, String contactUrl, byte recievedAs, String nameOfSeller, String description, String mimeType, byte[] sellerLogo)
-    {
+    public FrameBodyCOMR(byte textEncoding, String priceString, String validUntil, String contactUrl, byte recievedAs, String nameOfSeller, String description, String mimeType, byte[] sellerLogo) {
         this.setObjectValue(DataTypes.OBJ_TEXT_ENCODING, textEncoding);
         this.setObjectValue(DataTypes.OBJ_PRICE_STRING, priceString);
         this.setObjectValue(DataTypes.OBJ_VALID_UNTIL, validUntil);
@@ -142,8 +144,7 @@ public class FrameBodyCOMR extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param frameSize
      * @throws InvalidTagException if unable to create framebody from buffer
      */
-    public FrameBodyCOMR(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyCOMR(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -152,38 +153,32 @@ public class FrameBodyCOMR extends AbstractID3v2FrameBody implements ID3v24Frame
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_COMMERCIAL_FRAME;
     }
 
     /**
      * @return
      */
-    public String getOwner()
-    {
+    public String getOwner() {
         return (String) getObjectValue(DataTypes.OBJ_OWNER);
     }
 
     /**
      * @param description
      */
-    public void getOwner(String description)
-    {
+    public void getOwner(String description) {
         setObjectValue(DataTypes.OBJ_OWNER, description);
     }
 
     /**
      * If the seller or description cannot be encoded using current encoder, change the encoder
      */
-    public void write(ByteArrayOutputStream tagBuffer)
-    {
-        if (!((AbstractString) getObject(DataTypes.OBJ_SELLER_NAME)).canBeEncoded())
-        {
+    public void write(ByteArrayOutputStream tagBuffer) {
+        if (!((AbstractString) getObject(DataTypes.OBJ_SELLER_NAME)).canBeEncoded()) {
             this.setTextEncoding(TextEncoding.UTF_16);
         }
-        if (!((AbstractString) getObject(DataTypes.OBJ_DESCRIPTION)).canBeEncoded())
-        {
+        if (!((AbstractString) getObject(DataTypes.OBJ_DESCRIPTION)).canBeEncoded()) {
             this.setTextEncoding(TextEncoding.UTF_16);
         }
         super.write(tagBuffer);
@@ -192,8 +187,7 @@ public class FrameBodyCOMR extends AbstractID3v2FrameBody implements ID3v24Frame
     /**
      *
      */
-    protected void setupObjectList()
-    {
+    protected void setupObjectList() {
         objectList.add(new NumberHashMap(DataTypes.OBJ_TEXT_ENCODING, this, TextEncoding.TEXT_ENCODING_FIELD_SIZE));
         objectList.add(new StringNullTerminated(DataTypes.OBJ_PRICE_STRING, this));
         objectList.add(new StringDate(DataTypes.OBJ_VALID_UNTIL, this));

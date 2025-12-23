@@ -140,6 +140,11 @@ fun SettingsPage(
             SharedPreferencesUtils.getAutoToTopRandom(context)
         )
     }
+    var mergeAlbum by remember {
+        mutableStateOf(
+            SharedPreferencesUtils.getMergeAlbum(context)
+        )
+    }
     LaunchedEffect(Unit) {
         durationValue = SharedPreferencesUtils.getIgnoreDuration(context).toString()
     }
@@ -915,6 +920,49 @@ fun SettingsPage(
                                     SharedPreferencesUtils.setAutoToTopRandom(
                                         context,
                                         autoToTopRandom
+                                    )
+                                },
+//                                colors = SwitchDefaults.colors(checkedThumbColor = Color.Green)
+                            )
+                        }
+
+                    }
+                }
+                item {
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .padding(0.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Merge same name and artist album(Don't recommend, need restart app)",
+                                Modifier
+                                    .padding(start = 10.dp)
+                                    .weight(1f),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Switch(
+                                checked = mergeAlbum,
+                                onCheckedChange = { value ->
+                                    mergeAlbum = value
+                                    SharedPreferencesUtils.setMergeAlbum(
+                                        context,
+                                        mergeAlbum
                                     )
                                 },
 //                                colors = SwitchDefaults.colors(checkedThumbColor = Color.Green)
@@ -1918,7 +1966,7 @@ fun ManageFolderDialog(onDismiss: () -> Unit) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight()
+                    .fillMaxHeight(0.6f)
                     .background(color = MaterialTheme.colorScheme.background),
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -1926,6 +1974,7 @@ fun ManageFolderDialog(onDismiss: () -> Unit) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .fillMaxHeight(0.85f)
                         .background(color = MaterialTheme.colorScheme.background),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -1995,7 +2044,8 @@ fun ManageFolderDialog(onDismiss: () -> Unit) {
 
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .fillMaxHeight(),
                     horizontalArrangement = Arrangement.Center,
                 ) {
                     TextButton(
@@ -2042,7 +2092,7 @@ fun SetWidgetDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 
     val context = LocalContext.current
     val scopeMain = CoroutineScope(Dispatchers.Main)
-    val controller = rememberColorPickerController()
+    rememberColorPickerController()
     var colorString by remember { mutableStateOf(Color.Blue.toArgb().toHexString()) }
 
     LaunchedEffect(Unit) {

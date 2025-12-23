@@ -23,28 +23,25 @@ import java.nio.ByteBuffer;
 
 /**
  * Encrypted frame.
- *
- *
+ * <p>
+ * <p>
  * Container for an encrypted frame, we cannot decrypt encrypted frame but it may be possible
  * for the calling application to decrypt the frame if they understand how it has been encrypted,
  * information on this will be held within an ENCR frame
  *
  * @author : Paul Taylor
  */
-public class FrameBodyEncrypted extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody
-{
-    private String identifier=null;
+public class FrameBodyEncrypted extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody {
+    private String identifier = null;
 
     /**
      * Creates a new FrameBodyEncrypted dataType.
      */
-    public FrameBodyEncrypted(String identifier)
-    {
-        this.identifier=identifier;
+    public FrameBodyEncrypted(String identifier) {
+        this.identifier = identifier;
     }
 
-    public FrameBodyEncrypted(FrameBodyEncrypted body)
-    {
+    public FrameBodyEncrypted(FrameBodyEncrypted body) {
         super(body);
     }
 
@@ -56,26 +53,24 @@ public class FrameBodyEncrypted extends AbstractID3v2FrameBody implements ID3v24
      * @param frameSize
      * @throws InvalidTagException
      */
-    public FrameBodyEncrypted(String identifier,ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyEncrypted(String identifier, ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
-        this.identifier=identifier;
+        this.identifier = identifier;
     }
+
     /**
      * The ID3v2 frame identifier
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return identifier;
     }
 
     /**
      * TODO:proper mapping
      */
-    protected void setupObjectList()
-    {
+    protected void setupObjectList() {
         objectList.add(new ByteArraySizeTerminated(DataTypes.OBJ_DATA, this));
     }
 }

@@ -9,18 +9,16 @@ import java.nio.charset.Charset;
 
 /**
  * Represents a tag text field for ASF fields.<br>
- * 
+ *
  * @author Christian Laireiter
  */
 public class AsfTagTextField extends AsfTagField implements TagTextField {
 
     /**
      * Creates a tag text field and assigns the string value.
-     * 
-     * @param field
-     *            ASF field to represent.
-     * @param value
-     *            the value to assign.
+     *
+     * @param field ASF field to represent.
+     * @param value the value to assign.
      */
     public AsfTagTextField(final AsfFieldKey field, final String value) {
         super(field);
@@ -29,10 +27,9 @@ public class AsfTagTextField extends AsfTagField implements TagTextField {
 
     /**
      * Creates an instance.
-     * 
-     * @param source
-     *            The metadata descriptor, whose content is published.<br>
-     *            Must not be of type {@link MetadataDescriptor#TYPE_BINARY}.
+     *
+     * @param source The metadata descriptor, whose content is published.<br>
+     *               Must not be of type {@link MetadataDescriptor#TYPE_BINARY}.
      */
     public AsfTagTextField(final MetadataDescriptor source) {
         super(source);
@@ -44,11 +41,9 @@ public class AsfTagTextField extends AsfTagField implements TagTextField {
 
     /**
      * Creates a tag text field and assigns the string value.
-     * 
-     * @param fieldKey
-     *            The fields identifier.
-     * @param value
-     *            the value to assign.
+     *
+     * @param fieldKey The fields identifier.
+     * @param value    the value to assign.
      */
     public AsfTagTextField(final String fieldKey, final String value) {
         super(fieldKey);
@@ -61,21 +56,13 @@ public class AsfTagTextField extends AsfTagField implements TagTextField {
     }
 
     @Override
-    public Charset getEncoding() {
-        return AsfHeader.ASF_CHARSET;
-    }
-
-    /**
-     * @return true if blank or only contains whitespace
-     */
-    @Override
-    public boolean isEmpty() {
-        return Utils.isBlank(getContent());
-    }
-
-    @Override
     public void setContent(final String content) {
         getDescriptor().setString(content);
+    }
+
+    @Override
+    public Charset getEncoding() {
+        return AsfHeader.ASF_CHARSET;
     }
 
     @Override
@@ -84,5 +71,13 @@ public class AsfTagTextField extends AsfTagField implements TagTextField {
             throw new IllegalArgumentException(
                     "Only UTF-16LE is possible with ASF.");
         }
+    }
+
+    /**
+     * @return true if blank or only contains whitespace
+     */
+    @Override
+    public boolean isEmpty() {
+        return Utils.isBlank(getContent());
     }
 }

@@ -25,8 +25,8 @@ import java.nio.ByteBuffer;
 
 /**
  * Private frame.
- *
- *
+ * <p>
+ * <p>
  * This frame is used to contain information from a software producer
  * that its program uses and does not fit into the other frames. The
  * frame consists of an 'Owner identifier' string and the binary data.
@@ -37,7 +37,7 @@ import java.nio.ByteBuffer;
  * indicated email address. The tag may contain more than one "PRIV"
  * frame but only with different contents. It is recommended to keep the
  * number of "PRIV" frames as low as possible.
- *
+ * <p>
  * Header for 'Private frame'
  * Owner identifier
  * The private data
@@ -51,19 +51,16 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyPRIV extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody
-{
+public class FrameBodyPRIV extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody {
     /**
      * Creates a new FrameBodyPRIV datatype.
      */
-    public FrameBodyPRIV()
-    {
+    public FrameBodyPRIV() {
         this.setObjectValue(DataTypes.OBJ_OWNER, "");
         this.setObjectValue(DataTypes.OBJ_DATA, new byte[0]);
     }
 
-    public FrameBodyPRIV(FrameBodyPRIV body)
-    {
+    public FrameBodyPRIV(FrameBodyPRIV body) {
         super(body);
     }
 
@@ -73,8 +70,7 @@ public class FrameBodyPRIV extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param owner
      * @param data
      */
-    public FrameBodyPRIV(String owner, byte[] data)
-    {
+    public FrameBodyPRIV(String owner, byte[] data) {
         this.setObjectValue(DataTypes.OBJ_OWNER, owner);
         this.setObjectValue(DataTypes.OBJ_DATA, data);
     }
@@ -86,25 +82,22 @@ public class FrameBodyPRIV extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param frameSize
      * @throws InvalidTagException if unable to create framebody from buffer
      */
-    public FrameBodyPRIV(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyPRIV(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
-    }
-
-    /**
-     * @param data
-     */
-    public void setData(byte[] data)
-    {
-        setObjectValue(DataTypes.OBJ_DATA, data);
     }
 
     /**
      * @return
      */
-    public byte[] getData()
-    {
+    public byte[] getData() {
         return (byte[]) getObjectValue(DataTypes.OBJ_DATA);
+    }
+
+    /**
+     * @param data
+     */
+    public void setData(byte[] data) {
+        setObjectValue(DataTypes.OBJ_DATA, data);
     }
 
     /**
@@ -112,32 +105,28 @@ public class FrameBodyPRIV extends AbstractID3v2FrameBody implements ID3v24Frame
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_PRIVATE;
-    }
-
-    /**
-     * @param owner
-     */
-    public void setOwner(String owner)
-    {
-        setObjectValue(DataTypes.OBJ_OWNER, owner);
     }
 
     /**
      * @return
      */
-    public String getOwner()
-    {
+    public String getOwner() {
         return (String) getObjectValue(DataTypes.OBJ_OWNER);
+    }
+
+    /**
+     * @param owner
+     */
+    public void setOwner(String owner) {
+        setObjectValue(DataTypes.OBJ_OWNER, owner);
     }
 
     /**
      *
      */
-    protected void setupObjectList()
-    {
+    protected void setupObjectList() {
         objectList.add(new StringNullTerminated(DataTypes.OBJ_OWNER, this));
         objectList.add(new ByteArraySizeTerminated(DataTypes.OBJ_DATA, this));
     }

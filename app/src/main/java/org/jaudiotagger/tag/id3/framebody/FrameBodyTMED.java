@@ -109,17 +109,14 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyTMED extends AbstractFrameBodyTextInfo implements ID3v23FrameBody, ID3v24FrameBody
-{
+public class FrameBodyTMED extends AbstractFrameBodyTextInfo implements ID3v23FrameBody, ID3v24FrameBody {
     /**
      * Creates a new FrameBodyTMED datatype.
      */
-    public FrameBodyTMED()
-    {
+    public FrameBodyTMED() {
     }
 
-    public FrameBodyTMED(FrameBodyTMED body)
-    {
+    public FrameBodyTMED(FrameBodyTMED body) {
         super(body);
     }
 
@@ -129,8 +126,7 @@ public class FrameBodyTMED extends AbstractFrameBodyTextInfo implements ID3v23Fr
      * @param textEncoding
      * @param text
      */
-    public FrameBodyTMED(byte textEncoding, String text)
-    {
+    public FrameBodyTMED(byte textEncoding, String text) {
         super(textEncoding, text);
     }
 
@@ -141,8 +137,7 @@ public class FrameBodyTMED extends AbstractFrameBodyTextInfo implements ID3v23Fr
      * @param frameSize
      * @throws InvalidTagException
      */
-    public FrameBodyTMED(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyTMED(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -152,8 +147,7 @@ public class FrameBodyTMED extends AbstractFrameBodyTextInfo implements ID3v23Fr
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_MEDIA_TYPE;
     }
 }

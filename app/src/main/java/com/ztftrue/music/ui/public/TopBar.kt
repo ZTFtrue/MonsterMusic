@@ -74,7 +74,6 @@ import com.ztftrue.music.Router
 import com.ztftrue.music.play.MediaCommands
 import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.Utils
-import com.ztftrue.music.utils.Utils.replaceCurrent
 import com.ztftrue.music.utils.Utils.toPx
 import kotlin.math.roundToLong
 
@@ -199,16 +198,7 @@ fun TopBar(
                         contentDescription = "Queue Page"
                     },
                 onClick = {
-//                    navController.clearExceptFirst()
-                    navController.replaceCurrent(Router.QueuePage)
-//                    navController.navigate(
-//                        Router.QueuePage.route
-//                    ) {
-//                        popUpTo(Router.MainView.route) {
-//                            // Inclusive means the start destination is also popped
-//                            inclusive = false
-//                        }
-//                    }
+                    navController.add(Router.QueuePage)
                 }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.QueueMusic,

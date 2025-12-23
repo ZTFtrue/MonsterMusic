@@ -10,8 +10,7 @@ import java.io.RandomAccessFile;
 /**
  * Created by Paul on 15/09/2015.
  */
-public interface TagWriter
-{
+public interface TagWriter {
     void delete(Tag tag, RandomAccessFile raf, RandomAccessFile tempRaf) throws IOException, CannotWriteException;
 
 

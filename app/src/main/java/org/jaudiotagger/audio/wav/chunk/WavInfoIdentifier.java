@@ -8,8 +8,7 @@ import java.util.Map;
 /**
  * Known Identifiers used in an INFO Chunk together with their mapping to a generic FieldKey (if known)
  */
-public enum WavInfoIdentifier
-{
+public enum WavInfoIdentifier {
     ARTIST("IART", FieldKey.ARTIST, 1),
     ALBUM("IPRD", FieldKey.ALBUM, 2),
     TITLE("INAM", FieldKey.TITLE, 3),
@@ -35,28 +34,12 @@ public enum WavInfoIdentifier
     private static final Map<FieldKey, WavInfoIdentifier> FIELDKEY_TYPE_MAP = new HashMap<FieldKey, WavInfoIdentifier>();
     private final String code;
     private final FieldKey fieldKey;
-    private final int      preferredWriteOrder;
+    private final int preferredWriteOrder;
 
-    WavInfoIdentifier(String code, FieldKey fieldKey, int preferredWriteOrder)
-    {
+    WavInfoIdentifier(String code, FieldKey fieldKey, int preferredWriteOrder) {
         this.code = code;
         this.fieldKey = fieldKey;
-        this.preferredWriteOrder=preferredWriteOrder;
-    }
-
-    public String getCode()
-    {
-        return code;
-    }
-
-    public FieldKey getFieldKey()
-    {
-        return fieldKey;
-    }
-
-    public int getPreferredWriteOrder()
-    {
-        return preferredWriteOrder;
+        this.preferredWriteOrder = preferredWriteOrder;
     }
 
     /**
@@ -65,12 +48,9 @@ public enum WavInfoIdentifier
      * @param code chunk id
      * @return chunk type or {@code null} if not registered
      */
-    public synchronized static WavInfoIdentifier getByCode(final String code)
-    {
-        if (CODE_TYPE_MAP.isEmpty())
-        {
-            for (final WavInfoIdentifier type : values())
-            {
+    public synchronized static WavInfoIdentifier getByCode(final String code) {
+        if (CODE_TYPE_MAP.isEmpty()) {
+            for (final WavInfoIdentifier type : values()) {
                 CODE_TYPE_MAP.put(type.getCode(), type);
             }
         }
@@ -83,18 +63,26 @@ public enum WavInfoIdentifier
      * @param fieldKey
      * @return chunk type or {@code null} if not registered
      */
-    public synchronized static WavInfoIdentifier getByByFieldKey(final FieldKey fieldKey)
-    {
-        if (FIELDKEY_TYPE_MAP.isEmpty())
-        {
-            for (final WavInfoIdentifier type : values())
-            {
-                if (type.getFieldKey() != null)
-                {
+    public synchronized static WavInfoIdentifier getByByFieldKey(final FieldKey fieldKey) {
+        if (FIELDKEY_TYPE_MAP.isEmpty()) {
+            for (final WavInfoIdentifier type : values()) {
+                if (type.getFieldKey() != null) {
                     FIELDKEY_TYPE_MAP.put(type.getFieldKey(), type);
                 }
             }
         }
         return FIELDKEY_TYPE_MAP.get(fieldKey);
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public FieldKey getFieldKey() {
+        return fieldKey;
+    }
+
+    public int getPreferredWriteOrder() {
+        return preferredWriteOrder;
     }
 }

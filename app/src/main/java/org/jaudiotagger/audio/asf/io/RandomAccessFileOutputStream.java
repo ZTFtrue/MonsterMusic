@@ -9,8 +9,7 @@ import java.io.RandomAccessFile;
  *
  * @author Christian Laireiter
  */
-public final class RandomAccessFileOutputStream extends OutputStream
-{
+public final class RandomAccessFileOutputStream extends OutputStream {
 
     /**
      * the file to write to.
@@ -22,8 +21,7 @@ public final class RandomAccessFileOutputStream extends OutputStream
      *
      * @param target file to write to.
      */
-    public RandomAccessFileOutputStream(final RandomAccessFile target)
-    {
+    public RandomAccessFileOutputStream(final RandomAccessFile target) {
         super();
         this.targetFile = target;
     }
@@ -32,8 +30,7 @@ public final class RandomAccessFileOutputStream extends OutputStream
      * {@inheritDoc}
      */
     @Override
-    public void write(final byte[] bytes, final int off, final int len) throws IOException
-    {
+    public void write(final byte[] bytes, final int off, final int len) throws IOException {
         this.targetFile.write(bytes, off, len);
     }
 
@@ -41,8 +38,7 @@ public final class RandomAccessFileOutputStream extends OutputStream
      * {@inheritDoc}
      */
     @Override
-    public void write(final int toWrite) throws IOException
-    {
+    public void write(final int toWrite) throws IOException {
         this.targetFile.write(toWrite);
     }
 

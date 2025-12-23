@@ -1,17 +1,17 @@
 /*
  * Entagged Audio Tag library
  * Copyright (c) 2003-2005 Christian Laireiter <liree@web.de>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *  
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -30,17 +30,16 @@ import java.io.File;
  * <p>It will be notified on several occasions:<br>
  * <ul>
  * <li>An audio file is about to be modified
- * {@link #fileWillBeModified(AudioFile,boolean)}<br>
+ * {@link #fileWillBeModified(AudioFile, boolean)}<br>
  * Here one can modify the tag data because of global settings.</li>
  * <li>The write process has just finished. But if a copy was created the
- * original has not been replaced yet. ({@link #fileModified(AudioFile,File)}).</li>
+ * original has not been replaced yet. ({@link #fileModified(AudioFile, File)}).</li>
  * <li>The operation has been finished. {@link #fileOperationFinished(File)}</li>
  * </ul>
  *
  * @author Christian Laireiter <liree@web.de>
  */
-public interface AudioFileModificationListener
-{
+public interface AudioFileModificationListener {
 
     /**
      * Notifies that <code>original</code> has been processed.<br>

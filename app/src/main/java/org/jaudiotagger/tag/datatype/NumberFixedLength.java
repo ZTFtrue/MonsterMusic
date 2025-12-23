@@ -1,25 +1,25 @@
 /**
- *  @author : Paul Taylor
- *  @author : Eric Farng
- *
- *  Version @version:$Id$
- *
- *  MusicTag Copyright (C)2003,2004
- *
- *  This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
- *  General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
- *  or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- *  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public License along with this library; if not,
- *  you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ * @author : Paul Taylor
+ * @author : Eric Farng
+ * <p>
+ * Version @version:$Id$
+ * <p>
+ * MusicTag Copyright (C)2003,2004
+ * <p>
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
+ * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
+ * or (at your option) any later version.
+ * <p>
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not,
+ * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * <p>
  * Description:
- *  Represents a Number of a fixed number of decimal places.
+ * Represents a Number of a fixed number of decimal places.
  */
 package org.jaudiotagger.tag.datatype;
 
@@ -36,8 +36,7 @@ import org.jaudiotagger.tag.id3.ID3Tags;
  *
  * In ID3Specification would be denoted as $xx xx this denotes exactly two bytes required
  */
-public class NumberFixedLength extends AbstractDataType
-{
+public class NumberFixedLength extends AbstractDataType {
     /**
      * Creates a new ObjectNumberFixedLength datatype.
      *
@@ -46,35 +45,18 @@ public class NumberFixedLength extends AbstractDataType
      * @param size       the number of significant places that the number is held to
      * @throws IllegalArgumentException
      */
-    public NumberFixedLength(String identifier, AbstractTagFrameBody frameBody, int size)
-    {
+    public NumberFixedLength(String identifier, AbstractTagFrameBody frameBody, int size) {
         super(identifier, frameBody);
-        if (size < 0)
-        {
+        if (size < 0) {
             throw new IllegalArgumentException("Length is less than zero: " + size);
         }
         this.size = size;
 
     }
 
-    public NumberFixedLength(NumberFixedLength copy)
-    {
+    public NumberFixedLength(NumberFixedLength copy) {
         super(copy);
         this.size = copy.size;
-    }
-
-
-    /**
-     * Set Size in Bytes of this Object
-     *
-     * @param size in bytes that this number will be held as
-     */
-    public void setSize(int size)
-    {
-        if (size > 0)
-        {
-            this.size = size;
-        }
     }
 
     /**
@@ -82,15 +64,23 @@ public class NumberFixedLength extends AbstractDataType
      *
      * @return the size of this number
      */
-    public int getSize()
-    {
+    public int getSize() {
         return size;
     }
 
-    public void setValue(Object value)
-    {
-        if (!(value instanceof Number))
-        {
+    /**
+     * Set Size in Bytes of this Object
+     *
+     * @param size in bytes that this number will be held as
+     */
+    public void setSize(int size) {
+        if (size > 0) {
+            this.size = size;
+        }
+    }
+
+    public void setValue(Object value) {
+        if (!(value instanceof Number)) {
             throw new IllegalArgumentException("Invalid value type for NumberFixedLength:" + value.getClass());
         }
         super.setValue(value);
@@ -101,10 +91,8 @@ public class NumberFixedLength extends AbstractDataType
      * @param obj
      * @return true if obj equivalent to this
      */
-    public boolean equals(Object obj)
-    {
-        if (!(obj instanceof NumberFixedLength object))
-        {
+    public boolean equals(Object obj) {
+        if (!(obj instanceof NumberFixedLength object)) {
             return false;
         }
         return this.size == object.size && super.equals(obj);
@@ -118,26 +106,21 @@ public class NumberFixedLength extends AbstractDataType
      * @throws NullPointerException
      * @throws IndexOutOfBoundsException
      */
-    public void readByteArray(byte[] arr, int offset) throws InvalidDataTypeException
-    {
-        if (arr == null)
-        {
+    public void readByteArray(byte[] arr, int offset) throws InvalidDataTypeException {
+        if (arr == null) {
             throw new NullPointerException("Byte array is null");
         }
-        if ((offset < 0) || (offset >= arr.length))
-        {
+        if ((offset < 0) || (offset >= arr.length)) {
             throw new InvalidDataTypeException("Offset to byte array is out of bounds: offset = " + offset + ", array.length = " + arr.length);
         }
 
-        if(offset + size > arr.length)
-        {
+        if (offset + size > arr.length) {
             throw new InvalidDataTypeException("Offset plus size to byte array is out of bounds: offset = "
-                    + offset + ", size = "+size  +" + arr.length "+ arr.length );
+                    + offset + ", size = " + size + " + arr.length " + arr.length);
         }
 
         long lvalue = 0;
-        for (int i = offset; i < (offset + size); i++)
-        {
+        for (int i = offset; i < (offset + size); i++) {
             lvalue <<= 8;
             lvalue += (arr[i] & 0xff);
         }
@@ -149,14 +132,10 @@ public class NumberFixedLength extends AbstractDataType
     /**
      * @return String representation of this datatype
      */
-    public String toString()
-    {
-        if (value == null)
-        {
+    public String toString() {
+        if (value == null) {
             return "";
-        }
-        else
-        {
+        } else {
             return value.toString();
         }
     }
@@ -166,17 +145,14 @@ public class NumberFixedLength extends AbstractDataType
      *
      * @return the datatype converted to a byte array
      */
-    public byte[] writeByteArray()
-    {
+    public byte[] writeByteArray() {
         byte[] arr;
         arr = new byte[size];
-        if (value != null)
-        {
+        if (value != null) {
             //Convert value to long
             long temp = ID3Tags.getWholeNumber(value);
 
-            for (int i = size - 1; i >= 0; i--)
-            {
+            for (int i = size - 1; i >= 0; i--) {
                 arr[i] = (byte) (temp & 0xFF);
                 temp >>= 8;
             }

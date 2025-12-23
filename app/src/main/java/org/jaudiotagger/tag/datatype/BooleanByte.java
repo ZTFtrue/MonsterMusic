@@ -1,23 +1,23 @@
 /**
- *  @author : Paul Taylor
- *  @author : Eric Farng
- *
- *  Version @version:$Id$
- *
- *  MusicTag Copyright (C)2003,2004
- *
- *  This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
- *  General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
- *  or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- *  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public License along with this library; if not,
- *  you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ * @author : Paul Taylor
+ * @author : Eric Farng
+ * <p>
+ * Version @version:$Id$
+ * <p>
+ * MusicTag Copyright (C)2003,2004
+ * <p>
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
+ * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
+ * or (at your option) any later version.
+ * <p>
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not,
+ * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * <p>
  * Description:
  *
  */
@@ -29,8 +29,7 @@ import org.jaudiotagger.tag.id3.AbstractTagFrameBody;
 /**
  * Represents a bit flag within a byte
  */
-public class BooleanByte extends AbstractDataType
-{
+public class BooleanByte extends AbstractDataType {
     /**
      *
      */
@@ -44,19 +43,16 @@ public class BooleanByte extends AbstractDataType
      * @param bitPosition
      * @throws IndexOutOfBoundsException
      */
-    public BooleanByte(String identifier, AbstractTagFrameBody frameBody, int bitPosition)
-    {
+    public BooleanByte(String identifier, AbstractTagFrameBody frameBody, int bitPosition) {
         super(identifier, frameBody);
-        if ((bitPosition < 0) || (bitPosition > 7))
-        {
+        if ((bitPosition < 0) || (bitPosition > 7)) {
             throw new IndexOutOfBoundsException("Bit position needs to be from 0 - 7 : " + bitPosition);
         }
 
         this.bitPosition = bitPosition;
     }
 
-    public BooleanByte(BooleanByte copy)
-    {
+    public BooleanByte(BooleanByte copy) {
         super(copy);
         this.bitPosition = copy.bitPosition;
     }
@@ -64,16 +60,14 @@ public class BooleanByte extends AbstractDataType
     /**
      * @return
      */
-    public int getBitPosition()
-    {
+    public int getBitPosition() {
         return bitPosition;
     }
 
     /**
      * @return
      */
-    public int getSize()
-    {
+    public int getSize() {
         return 1;
     }
 
@@ -81,10 +75,8 @@ public class BooleanByte extends AbstractDataType
      * @param obj
      * @return
      */
-    public boolean equals(Object obj)
-    {
-        if (!(obj instanceof BooleanByte object))
-        {
+    public boolean equals(Object obj) {
+        if (!(obj instanceof BooleanByte object)) {
             return false;
         }
 
@@ -98,15 +90,12 @@ public class BooleanByte extends AbstractDataType
      * @throws NullPointerException
      * @throws IndexOutOfBoundsException
      */
-    public void readByteArray(byte[] arr, int offset) throws InvalidDataTypeException
-    {
-        if (arr == null)
-        {
+    public void readByteArray(byte[] arr, int offset) throws InvalidDataTypeException {
+        if (arr == null) {
             throw new NullPointerException("Byte array is null");
         }
 
-        if ((offset < 0) || (offset >= arr.length))
-        {
+        if ((offset < 0) || (offset >= arr.length)) {
             throw new IndexOutOfBoundsException("Offset to byte array is out of bounds: offset = " + offset + ", array.length = " + arr.length);
         }
 
@@ -120,22 +109,19 @@ public class BooleanByte extends AbstractDataType
     /**
      * @return
      */
-    public String toString()
-    {
+    public String toString() {
         return "" + value;
     }
 
     /**
      * @return
      */
-    public byte[] writeByteArray()
-    {
+    public byte[] writeByteArray() {
         byte[] retValue;
 
         retValue = new byte[1];
 
-        if (value != null)
-        {
+        if (value != null) {
             retValue[0] = (byte) ((Boolean) value ? 1 : 0);
             retValue[0] <<= bitPosition;
         }

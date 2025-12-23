@@ -1,23 +1,23 @@
 /**
- *  @author : Paul Taylor
- *  @author : Eric Farng
- *
- *  Version @version:$Id$
- *
- *  MusicTag Copyright (C)2003,2004
- *
- *  This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
- *  General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
- *  or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- *  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public License along with this library; if not,
- *  you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ * @author : Paul Taylor
+ * @author : Eric Farng
+ * <p>
+ * Version @version:$Id$
+ * <p>
+ * MusicTag Copyright (C)2003,2004
+ * <p>
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
+ * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
+ * or (at your option) any later version.
+ * <p>
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not,
+ * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * <p>
  * Description:
  *
  */
@@ -28,8 +28,7 @@ import org.jaudiotagger.tag.id3.AbstractTagFrameBody;
 
 import java.nio.charset.StandardCharsets;
 
-public class Lyrics3Image extends AbstractDataType
-{
+public class Lyrics3Image extends AbstractDataType {
     /**
      *
      */
@@ -51,13 +50,11 @@ public class Lyrics3Image extends AbstractDataType
      * @param identifier
      * @param frameBody
      */
-    public Lyrics3Image(String identifier, AbstractTagFrameBody frameBody)
-    {
+    public Lyrics3Image(String identifier, AbstractTagFrameBody frameBody) {
         super(identifier, frameBody);
     }
 
-    public Lyrics3Image(Lyrics3Image copy)
-    {
+    public Lyrics3Image(Lyrics3Image copy) {
         super(copy);
         this.time = new Lyrics3TimeStamp(copy.time);
         this.description = copy.description;
@@ -65,48 +62,42 @@ public class Lyrics3Image extends AbstractDataType
     }
 
     /**
+     * @return
+     */
+    public String getDescription() {
+        return this.description;
+    }
+
+    /**
      * @param description
      */
-    public void setDescription(String description)
-    {
+    public void setDescription(String description) {
         this.description = description;
     }
 
     /**
      * @return
      */
-    public String getDescription()
-    {
-        return this.description;
+    public String getFilename() {
+        return this.filename;
     }
 
     /**
      * @param filename
      */
-    public void setFilename(String filename)
-    {
+    public void setFilename(String filename) {
         this.filename = filename;
     }
 
     /**
      * @return
      */
-    public String getFilename()
-    {
-        return this.filename;
-    }
-
-    /**
-     * @return
-     */
-    public int getSize()
-    {
+    public int getSize() {
         int size;
 
         size = filename.length() + 2 + description.length() + 2;
 
-        if (time != null)
-        {
+        if (time != null) {
             size += time.getSize();
         }
 
@@ -114,53 +105,42 @@ public class Lyrics3Image extends AbstractDataType
     }
 
     /**
-     * @param time
+     * @return
      */
-    public void setTimeStamp(Lyrics3TimeStamp time)
-    {
-        this.time = time;
+    public Lyrics3TimeStamp getTimeStamp() {
+        return this.time;
     }
 
     /**
-     * @return
+     * @param time
      */
-    public Lyrics3TimeStamp getTimeStamp()
-    {
-        return this.time;
+    public void setTimeStamp(Lyrics3TimeStamp time) {
+        this.time = time;
     }
 
     /**
      * @param obj
      * @return
      */
-    public boolean equals(Object obj)
-    {
-        if (!(obj instanceof Lyrics3Image object))
-        {
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Lyrics3Image object)) {
             return false;
         }
 
-        if (!this.description.equals(object.description))
-        {
+        if (!this.description.equals(object.description)) {
             return false;
         }
 
-        if (!this.filename.equals(object.filename))
-        {
+        if (!this.filename.equals(object.filename)) {
             return false;
         }
 
-        if (this.time == null)
-        {
-            if (object.time != null)
-            {
+        if (this.time == null) {
+            if (object.time != null) {
                 return false;
             }
-        }
-        else
-        {
-            if (!this.time.equals(object.time))
-            {
+        } else {
+            if (!this.time.equals(object.time)) {
                 return false;
             }
         }
@@ -174,20 +154,16 @@ public class Lyrics3Image extends AbstractDataType
      * @throws NullPointerException
      * @throws IndexOutOfBoundsException
      */
-    public void readString(String imageString, int offset)
-    {
-        if (imageString == null)
-        {
+    public void readString(String imageString, int offset) {
+        if (imageString == null) {
             throw new NullPointerException("Image string is null");
         }
 
-        if ((offset < 0) || (offset >= imageString.length()))
-        {
+        if ((offset < 0) || (offset >= imageString.length())) {
             throw new IndexOutOfBoundsException("Offset to image string is out of bounds: offset = " + offset + ", string.length()" + imageString.length());
         }
 
-        if (imageString != null)
-        {
+        if (imageString != null) {
             String timestamp;
             int delim;
 
@@ -201,8 +177,7 @@ public class Lyrics3Image extends AbstractDataType
             offset = delim + 2;
             timestamp = imageString.substring(offset);
 
-            if (timestamp.length() == 7)
-            {
+            if (timestamp.length() == 7) {
                 time = new Lyrics3TimeStamp("Time Stamp");
                 time.readString(timestamp);
             }
@@ -212,13 +187,11 @@ public class Lyrics3Image extends AbstractDataType
     /**
      * @return
      */
-    public String toString()
-    {
+    public String toString() {
         String str;
         str = "filename = " + filename + ", description = " + description;
 
-        if (time != null)
-        {
+        if (time != null) {
             str += (", timestamp = " + time);
         }
 
@@ -228,43 +201,33 @@ public class Lyrics3Image extends AbstractDataType
     /**
      * @return
      */
-    public String writeString()
-    {
+    public String writeString() {
         String str;
 
-        if (filename == null)
-        {
+        if (filename == null) {
             str = "||";
-        }
-        else
-        {
+        } else {
             str = filename + "||";
         }
 
-        if (description == null)
-        {
+        if (description == null) {
             str += "||";
-        }
-        else
-        {
+        } else {
             str += (description + "||");
         }
 
-        if (time != null)
-        {
+        if (time != null) {
             str += time.writeString();
         }
 
         return str;
     }
 
-    public void readByteArray(byte[] arr, int offset) throws InvalidDataTypeException
-    {
+    public void readByteArray(byte[] arr, int offset) throws InvalidDataTypeException {
         readString(arr.toString(), offset);
     }
 
-    public byte[] writeByteArray()
-    {
+    public byte[] writeByteArray() {
         return writeString().getBytes(StandardCharsets.ISO_8859_1);
     }
 

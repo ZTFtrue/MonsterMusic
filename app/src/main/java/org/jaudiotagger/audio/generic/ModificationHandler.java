@@ -1,17 +1,17 @@
 /*
  * Entagged Audio Tag library
  * Copyright (c) 2003-2005 Christian Laireiter <liree@web.de>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *  
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -30,8 +30,7 @@ import java.util.Vector;
  *
  * @author Christian Laireiter
  */
-public class ModificationHandler implements AudioFileModificationListener
-{
+public class ModificationHandler implements AudioFileModificationListener {
 
     /**
      * The listeners to wich events are broadcasted are stored here.
@@ -43,10 +42,8 @@ public class ModificationHandler implements AudioFileModificationListener
      *
      * @param l Listener to add.
      */
-    public void addAudioFileModificationListener(AudioFileModificationListener l)
-    {
-        if (!this.listeners.contains(l))
-        {
+    public void addAudioFileModificationListener(AudioFileModificationListener l) {
+        if (!this.listeners.contains(l)) {
             this.listeners.add(l);
         }
     }
@@ -55,19 +52,14 @@ public class ModificationHandler implements AudioFileModificationListener
      * (overridden)
      *
      * @see org.jaudiotagger.audio.generic.AudioFileModificationListener#fileModified(org.jaudiotagger.audio.AudioFile,
-     *File)
+     * File)
      */
-    public void fileModified(AudioFile original, File temporary) throws ModifyVetoException
-    {
-        for (AudioFileModificationListener listener : this.listeners)
-        {
+    public void fileModified(AudioFile original, File temporary) throws ModifyVetoException {
+        for (AudioFileModificationListener listener : this.listeners) {
             AudioFileModificationListener current = listener;
-            try
-            {
+            try {
                 current.fileModified(original, temporary);
-            }
-            catch (ModifyVetoException e)
-            {
+            } catch (ModifyVetoException e) {
                 vetoThrown(current, original, e);
                 throw e;
             }
@@ -79,10 +71,8 @@ public class ModificationHandler implements AudioFileModificationListener
      *
      * @see org.jaudiotagger.audio.generic.AudioFileModificationListener#fileOperationFinished(File)
      */
-    public void fileOperationFinished(File result)
-    {
-        for (AudioFileModificationListener listener : this.listeners)
-        {
+    public void fileOperationFinished(File result) {
+        for (AudioFileModificationListener listener : this.listeners) {
             AudioFileModificationListener current = listener;
             current.fileOperationFinished(result);
         }
@@ -92,19 +82,14 @@ public class ModificationHandler implements AudioFileModificationListener
      * (overridden)
      *
      * @see org.jaudiotagger.audio.generic.AudioFileModificationListener#fileWillBeModified(org.jaudiotagger.audio.AudioFile,
-     *boolean)
+     * boolean)
      */
-    public void fileWillBeModified(AudioFile file, boolean delete) throws ModifyVetoException
-    {
-        for (AudioFileModificationListener listener : this.listeners)
-        {
+    public void fileWillBeModified(AudioFile file, boolean delete) throws ModifyVetoException {
+        for (AudioFileModificationListener listener : this.listeners) {
             AudioFileModificationListener current = listener;
-            try
-            {
+            try {
                 current.fileWillBeModified(file, delete);
-            }
-            catch (ModifyVetoException e)
-            {
+            } catch (ModifyVetoException e) {
                 vetoThrown(current, file, e);
                 throw e;
             }
@@ -116,8 +101,7 @@ public class ModificationHandler implements AudioFileModificationListener
      *
      * @param l Listener to remove.
      */
-    public void removeAudioFileModificationListener(AudioFileModificationListener l)
-    {
+    public void removeAudioFileModificationListener(AudioFileModificationListener l) {
         this.listeners.remove(l);
     }
 
@@ -125,13 +109,11 @@ public class ModificationHandler implements AudioFileModificationListener
      * (overridden)
      *
      * @see org.jaudiotagger.audio.generic.AudioFileModificationListener#vetoThrown(org.jaudiotagger.audio.generic.AudioFileModificationListener,
-     *org.jaudiotagger.audio.AudioFile,
-     *org.jaudiotagger.audio.exceptions.ModifyVetoException)
+     * org.jaudiotagger.audio.AudioFile,
+     * org.jaudiotagger.audio.exceptions.ModifyVetoException)
      */
-    public void vetoThrown(AudioFileModificationListener cause, AudioFile original, ModifyVetoException veto)
-    {
-        for (AudioFileModificationListener listener : this.listeners)
-        {
+    public void vetoThrown(AudioFileModificationListener cause, AudioFile original, ModifyVetoException veto) {
+        for (AudioFileModificationListener listener : this.listeners) {
             AudioFileModificationListener current = listener;
             current.vetoThrown(cause, original, veto);
         }

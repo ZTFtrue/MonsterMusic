@@ -9,20 +9,16 @@ import java.io.IOException;
 /**
  * Get appropriate Artwork class
  */
-public class ArtworkFactory
-{
+public class ArtworkFactory {
 
 
-    public static Artwork getNew()
-    {
+    public static Artwork getNew() {
         //Normal
-        if(!TagOptionSingleton.getInstance().isAndroid())
-        {
+        if (!TagOptionSingleton.getInstance().isAndroid()) {
             return new StandardArtwork();
         }
         //Android
-        else
-        {
+        else {
             return new AndroidArtwork();
         }
     }
@@ -33,16 +29,13 @@ public class ArtworkFactory
      * @param coverArt
      * @return
      */
-    public static Artwork createArtworkFromMetadataBlockDataPicture(MetadataBlockDataPicture coverArt)
-    {
+    public static Artwork createArtworkFromMetadataBlockDataPicture(MetadataBlockDataPicture coverArt) {
         //Normal
-        if(!TagOptionSingleton.getInstance().isAndroid())
-        {
+        if (!TagOptionSingleton.getInstance().isAndroid()) {
             return StandardArtwork.createArtworkFromMetadataBlockDataPicture(coverArt);
         }
         //Android
-        else
-        {
+        else {
             return AndroidArtwork.createArtworkFromMetadataBlockDataPicture(coverArt);
         }
     }
@@ -54,16 +47,13 @@ public class ArtworkFactory
      * @return
      * @throws IOException
      */
-    public static Artwork createArtworkFromFile(File file) throws IOException
-    {
+    public static Artwork createArtworkFromFile(File file) throws IOException {
         //Normal
-        if(!TagOptionSingleton.getInstance().isAndroid())
-        {
+        if (!TagOptionSingleton.getInstance().isAndroid()) {
             return StandardArtwork.createArtworkFromFile(file);
         }
         //Android
-        else
-        {
+        else {
             return AndroidArtwork.createArtworkFromFile(file);
         }
     }
@@ -75,16 +65,13 @@ public class ArtworkFactory
      * @return
      * @throws IOException
      */
-    public static Artwork createLinkedArtworkFromURL(String link) throws IOException
-    {
+    public static Artwork createLinkedArtworkFromURL(String link) throws IOException {
         //Normal
-        if(!TagOptionSingleton.getInstance().isAndroid())
-        {
+        if (!TagOptionSingleton.getInstance().isAndroid()) {
             return StandardArtwork.createLinkedArtworkFromURL(link);
         }
         //Android
-        else
-        {
+        else {
             return AndroidArtwork.createLinkedArtworkFromURL(link);
         }
     }

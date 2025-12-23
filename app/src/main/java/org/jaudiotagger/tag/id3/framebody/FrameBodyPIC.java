@@ -1,30 +1,35 @@
 /**
- *  @author : Paul Taylor
- *  @author : Eric Farng
- *
- *  Version @version:$Id$
- *
- *  MusicTag Copyright (C)2003,2004
- *
- *  This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
- *  General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
- *  or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- *  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public License along with this library; if not,
- *  you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ * @author : Paul Taylor
+ * @author : Eric Farng
+ * <p>
+ * Version @version:$Id$
+ * <p>
+ * MusicTag Copyright (C)2003,2004
+ * <p>
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
+ * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
+ * or (at your option) any later version.
+ * <p>
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not,
+ * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * <p>
  * Description:
  *
  */
 package org.jaudiotagger.tag.id3.framebody;
 
 import org.jaudiotagger.tag.InvalidTagException;
-import org.jaudiotagger.tag.datatype.*;
+import org.jaudiotagger.tag.datatype.AbstractString;
+import org.jaudiotagger.tag.datatype.ByteArraySizeTerminated;
+import org.jaudiotagger.tag.datatype.DataTypes;
+import org.jaudiotagger.tag.datatype.NumberHashMap;
+import org.jaudiotagger.tag.datatype.StringFixedLength;
+import org.jaudiotagger.tag.datatype.StringNullTerminated;
 import org.jaudiotagger.tag.id3.ID3v22Frames;
 import org.jaudiotagger.tag.id3.valuepair.ImageFormats;
 import org.jaudiotagger.tag.id3.valuepair.TextEncoding;
@@ -81,20 +86,17 @@ import java.nio.charset.StandardCharsets;
  * $13  Band/artist logotype
  * $14  Publisher/Studio logotype
  */
-public class FrameBodyPIC extends AbstractID3v2FrameBody implements ID3v22FrameBody
-{
+public class FrameBodyPIC extends AbstractID3v2FrameBody implements ID3v22FrameBody {
     public static final String IMAGE_IS_URL = "-->";
 
     /**
      * Creates a new FrameBodyPIC datatype.
      */
-    public FrameBodyPIC()
-    {
+    public FrameBodyPIC() {
         setObjectValue(DataTypes.OBJ_TEXT_ENCODING, TextEncoding.ISO_8859_1);
     }
 
-    public FrameBodyPIC(FrameBodyPIC body)
-    {
+    public FrameBodyPIC(FrameBodyPIC body) {
         super(body);
     }
 
@@ -107,8 +109,7 @@ public class FrameBodyPIC extends AbstractID3v2FrameBody implements ID3v22FrameB
      * @param description
      * @param data
      */
-    public FrameBodyPIC(byte textEncoding, String imageFormat, byte pictureType, String description, byte[] data)
-    {
+    public FrameBodyPIC(byte textEncoding, String imageFormat, byte pictureType, String description, byte[] data) {
         this.setObjectValue(DataTypes.OBJ_TEXT_ENCODING, textEncoding);
         this.setObjectValue(DataTypes.OBJ_IMAGE_FORMAT, imageFormat);
         this.setPictureType(pictureType);
@@ -120,8 +121,7 @@ public class FrameBodyPIC extends AbstractID3v2FrameBody implements ID3v22FrameB
      * Conversion from v2 PIC to v3/v4 APIC
      * @param body
      */
-    public FrameBodyPIC(FrameBodyAPIC body)
-    {
+    public FrameBodyPIC(FrameBodyAPIC body) {
         this.setObjectValue(DataTypes.OBJ_TEXT_ENCODING, body.getTextEncoding());
         this.setObjectValue(DataTypes.OBJ_IMAGE_FORMAT, ImageFormats.getFormatForMimeType((String) body.getObjectValue(DataTypes.OBJ_MIME_TYPE)));
         this.setObjectValue(DataTypes.OBJ_PICTURE_DATA, body.getObjectValue(DataTypes.OBJ_PICTURE_DATA));
@@ -136,19 +136,8 @@ public class FrameBodyPIC extends AbstractID3v2FrameBody implements ID3v22FrameB
      * @param frameSize
      * @throws InvalidTagException if unable to create framebody from buffer
      */
-    public FrameBodyPIC(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyPIC(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
-    }
-
-    /**
-     * Set a description of the image
-     *
-     * @param description of the image
-     */
-    public void setDescription(String description)
-    {
-        setObjectValue(DataTypes.OBJ_DESCRIPTION, description);
     }
 
     /**
@@ -156,19 +145,17 @@ public class FrameBodyPIC extends AbstractID3v2FrameBody implements ID3v22FrameB
      *
      * @return a description of the image
      */
-    public String getDescription()
-    {
+    public String getDescription() {
         return (String) getObjectValue(DataTypes.OBJ_DESCRIPTION);
     }
 
     /**
-     * Set imageData
+     * Set a description of the image
      *
-     * @param imageData
+     * @param description of the image
      */
-    public void setImageData(byte[] imageData)
-    {
-        setObjectValue(DataTypes.OBJ_PICTURE_DATA, imageData);
+    public void setDescription(String description) {
+        setObjectValue(DataTypes.OBJ_DESCRIPTION, description);
     }
 
     /**
@@ -176,9 +163,24 @@ public class FrameBodyPIC extends AbstractID3v2FrameBody implements ID3v22FrameB
      *
      * @return
      */
-    public byte[] getImageData()
-    {
+    public byte[] getImageData() {
         return (byte[]) getObjectValue(DataTypes.OBJ_PICTURE_DATA);
+    }
+
+    /**
+     * Set imageData
+     *
+     * @param imageData
+     */
+    public void setImageData(byte[] imageData) {
+        setObjectValue(DataTypes.OBJ_PICTURE_DATA, imageData);
+    }
+
+    /**
+     * @return picturetype
+     */
+    public int getPictureType() {
+        return ((Long) getObjectValue(DataTypes.OBJ_PICTURE_TYPE)).intValue();
     }
 
     /**
@@ -186,27 +188,16 @@ public class FrameBodyPIC extends AbstractID3v2FrameBody implements ID3v22FrameB
      *
      * @param pictureType
      */
-    public void setPictureType(byte pictureType)
-    {
+    public void setPictureType(byte pictureType) {
         setObjectValue(DataTypes.OBJ_PICTURE_TYPE, pictureType);
     }
-
-    /**
-     * @return picturetype
-     */
-    public int getPictureType()
-    {
-        return ((Long) getObjectValue(DataTypes.OBJ_PICTURE_TYPE)).intValue();
-    }
-
 
     /**
      * The ID3v2 frame identifier
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v22Frames.FRAME_ID_V2_ATTACHED_PICTURE;
     }
 
@@ -214,10 +205,8 @@ public class FrameBodyPIC extends AbstractID3v2FrameBody implements ID3v22FrameB
     /**
      * If the description cannot be encoded using current encoder, change the encoder
      */
-    public void write(ByteArrayOutputStream tagBuffer)
-    {
-        if (!((AbstractString) getObject(DataTypes.OBJ_DESCRIPTION)).canBeEncoded())
-        {
+    public void write(ByteArrayOutputStream tagBuffer) {
+        if (!((AbstractString) getObject(DataTypes.OBJ_DESCRIPTION)).canBeEncoded()) {
             this.setTextEncoding(TextEncoding.UTF_16);
         }
         super.write(tagBuffer);
@@ -228,13 +217,11 @@ public class FrameBodyPIC extends AbstractID3v2FrameBody implements ID3v22FrameB
      *
      * @return a description of the image
      */
-    public String getFormatType()
-    {
+    public String getFormatType() {
         return (String) getObjectValue(DataTypes.OBJ_IMAGE_FORMAT);
     }
 
-    public boolean isImageUrl()
-    {
+    public boolean isImageUrl() {
         return getFormatType() != null && getFormatType().equals(IMAGE_IS_URL);
     }
 
@@ -243,22 +230,17 @@ public class FrameBodyPIC extends AbstractID3v2FrameBody implements ID3v22FrameB
      *
      * @return a description of the image
      */
-    public String getMimeType()
-    {
+    public String getMimeType() {
         return (String) getObjectValue(DataTypes.OBJ_MIME_TYPE);
     }
 
     /**
      * @return the image url if there is otherwise return an empty String
      */
-    public String getImageUrl()
-    {
-        if (isImageUrl())
-        {
+    public String getImageUrl() {
+        if (isImageUrl()) {
             return new String(((byte[]) getObjectValue(DataTypes.OBJ_PICTURE_DATA)), StandardCharsets.ISO_8859_1);
-        }
-        else
-        {
+        } else {
             return "";
         }
     }
@@ -266,8 +248,7 @@ public class FrameBodyPIC extends AbstractID3v2FrameBody implements ID3v22FrameB
     /**
      *
      */
-    protected void setupObjectList()
-    {
+    protected void setupObjectList() {
         objectList.add(new NumberHashMap(DataTypes.OBJ_TEXT_ENCODING, this, TextEncoding.TEXT_ENCODING_FIELD_SIZE));
         objectList.add(new StringFixedLength(DataTypes.OBJ_IMAGE_FORMAT, this, 3));
         objectList.add(new NumberHashMap(DataTypes.OBJ_PICTURE_TYPE, this, PictureTypes.PICTURE_TYPE_FIELD_SIZE));

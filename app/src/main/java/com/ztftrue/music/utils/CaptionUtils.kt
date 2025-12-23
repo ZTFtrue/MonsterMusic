@@ -29,11 +29,11 @@ object CaptionUtils {
                 LyricsType.LRC
             } else if (fileNameWithSuffix.endsWith(".srt")) {
                 LyricsType.SRT
-            } else if (fileNameWithSuffix.endsWith(".vtt")||fileNameWithSuffix.endsWith(".en.vtt")) {
+            } else if (fileNameWithSuffix.endsWith(".vtt") || fileNameWithSuffix.endsWith(".en.vtt")) {
                 LyricsType.VTT
             } else if (fileNameWithSuffix.endsWith(".txt")) {
                 LyricsType.TEXT
-            }  else {
+            } else {
                 LyricsType.TEXT
             }
         return type
@@ -186,7 +186,7 @@ object CaptionUtils {
                 }
             }
         } catch (e: Exception) {
-            Log.e("getEmbeddedLyrics",e.message?:"",e)
+            Log.e("getEmbeddedLyrics", e.message ?: "", e)
         }
         return arrayList
     }
@@ -194,7 +194,8 @@ object CaptionUtils {
     val regex = Regex("\\b\\w+'?\\w*\\b|\\p{Punct}|\\s+")
     fun splitStringIntoWordsAndSymbols(input: String): ArrayList<String> {
         val regex = Regex("\\b\\w+'?\\w*\\b|\\p{Punct}|\\s+")
-        return ArrayList(regex.findAll(input)
+        return ArrayList(
+            regex.findAll(input)
             .map { it.value.trim() }
             .filter { it.isNotEmpty() }
             .toList())

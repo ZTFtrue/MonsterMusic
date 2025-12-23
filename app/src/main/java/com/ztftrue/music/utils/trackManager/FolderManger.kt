@@ -131,7 +131,7 @@ object FolderManger {
                 var pp = it.children[0]
                 pp.parent = null
                 newParent.add(pp)
-                while (pp.children.size == 1 && pp.trackNumber == 0&&pp.children[0].trackNumber==0) {
+                while (pp.children.size == 1 && pp.trackNumber == 0 && pp.children[0].trackNumber == 0) {
                     newParent.remove(pp)
                     pp = pp.children[0]
                     pp.parent = null

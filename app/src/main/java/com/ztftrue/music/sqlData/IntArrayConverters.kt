@@ -1,14 +1,14 @@
 package com.ztftrue.music.sqlData
 
 import androidx.room.TypeConverter
-import com.google.gson.reflect.TypeToken
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import java.lang.reflect.Type
 
 
 class IntArrayConverters {
     @TypeConverter
-    fun fromString(value:String):IntArray {
+    fun fromString(value: String): IntArray {
         val listType: Type = object : TypeToken<IntArray>() {}.type
 
         return Gson().fromJson(value, listType)

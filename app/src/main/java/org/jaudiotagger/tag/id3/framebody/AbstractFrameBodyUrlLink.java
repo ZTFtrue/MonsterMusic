@@ -21,7 +21,6 @@
 package org.jaudiotagger.tag.id3.framebody;
 
 import android.os.Build;
-import android.util.Log;
 
 import org.jaudiotagger.logging.ErrorMessage;
 import org.jaudiotagger.tag.InvalidTagException;
@@ -29,7 +28,6 @@ import org.jaudiotagger.tag.datatype.DataTypes;
 import org.jaudiotagger.tag.datatype.StringSizeTerminated;
 
 import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharsetEncoder;
@@ -49,6 +47,7 @@ public abstract class AbstractFrameBodyUrlLink extends AbstractID3v2FrameBody {
 
     /**
      * Copy Constructor
+     *
      * @param body
      */
     protected AbstractFrameBodyUrlLink(AbstractFrameBodyUrlLink body) {
@@ -80,6 +79,15 @@ public abstract class AbstractFrameBodyUrlLink extends AbstractID3v2FrameBody {
     }
 
     /**
+     * Get URL Link
+     *
+     * @return the urllink
+     */
+    public String getUrlLink() {
+        return (String) getObjectValue(DataTypes.OBJ_URLLINK);
+    }
+
+    /**
      * Set URL Link
      *
      * @param urlLink
@@ -89,15 +97,6 @@ public abstract class AbstractFrameBodyUrlLink extends AbstractID3v2FrameBody {
             throw new IllegalArgumentException(ErrorMessage.GENERAL_INVALID_NULL_ARGUMENT.getMsg());
         }
         setObjectValue(DataTypes.OBJ_URLLINK, urlLink);
-    }
-
-    /**
-     * Get URL Link
-     *
-     * @return the urllink
-     */
-    public String getUrlLink() {
-        return (String) getObjectValue(DataTypes.OBJ_URLLINK);
     }
 
     /**
@@ -144,11 +143,7 @@ public abstract class AbstractFrameBodyUrlLink extends AbstractID3v2FrameBody {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // TIRAMISU 是 API 33
                 sb.append("/").append(URLEncoder.encode(splitURL[i], StandardCharsets.UTF_8));
             } else {
-                try {
-                    sb.append("/").append(URLEncoder.encode(splitURL[i], "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    Log.e("AbstractFrameBodyUrlLink", "UnsupportedEncodingException", e);
-                }
+                sb.append("/").append(URLEncoder.encode(splitURL[i], StandardCharsets.UTF_8));
             }
 
         }

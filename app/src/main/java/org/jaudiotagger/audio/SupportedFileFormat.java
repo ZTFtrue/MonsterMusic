@@ -4,8 +4,7 @@ package org.jaudiotagger.audio;
  * Files formats currently supported by Library.
  * Each enum value is associated with a file suffix (extension).
  */
-public enum SupportedFileFormat
-{
+public enum SupportedFileFormat {
     OGG("ogg"),
     MP3("mp3"),
     FLAC("flac"),
@@ -24,18 +23,17 @@ public enum SupportedFileFormat
 
     private final String filesuffix;
 
-    /** Constructor for internal use by this enum.
+    /**
+     * Constructor for internal use by this enum.
      */
-    SupportedFileFormat(String filesuffix)
-    {
+    SupportedFileFormat(String filesuffix) {
         this.filesuffix = filesuffix;
     }
 
     /**
-     *  Returns the file suffix (lower case without initial .) associated with the format.
+     * Returns the file suffix (lower case without initial .) associated with the format.
      */
-    public String getFilesuffix()
-    {
+    public String getFilesuffix() {
         return filesuffix;
     }
 }

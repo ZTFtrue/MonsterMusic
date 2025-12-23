@@ -14,58 +14,46 @@ import java.util.List;
 /**
  * Ftyp (File Type) is the first atom, can be used to help identify the mp4 container type
  */
-public class Mp4FtypBox extends AbstractMp4Box
-{
-    private String majorBrand;
-    private int majorBrandVersion;
-    private final List<String> compatibleBrands = new ArrayList<String>();
-
+public class Mp4FtypBox extends AbstractMp4Box {
     private static final int MAJOR_BRAND_POS = 0;
     private static final int MAJOR_BRAND_LENGTH = 4;
     private static final int MAJOR_BRAND_VERSION_POS = 4;
     private static final int MAJOR_BRAND_VERSION_LENGTH = 4;
     private static final int COMPATIBLE_BRAND_LENGTH = 4; //Can be multiple of these
+    private final List<String> compatibleBrands = new ArrayList<String>();
+    private String majorBrand;
+    private int majorBrandVersion;
 
     /**
      * @param header     header info
      * @param dataBuffer data of box (doesnt include header data)
      */
-    public Mp4FtypBox(Mp4BoxHeader header, ByteBuffer dataBuffer)
-    {
+    public Mp4FtypBox(Mp4BoxHeader header, ByteBuffer dataBuffer) {
         this.header = header;
         this.dataBuffer = dataBuffer;
         this.dataBuffer.order(ByteOrder.BIG_ENDIAN);
     }
 
-    public void processData() throws CannotReadException
-    {
+    public void processData() throws CannotReadException {
         CharsetDecoder decoder = StandardCharsets.ISO_8859_1.newDecoder();
-        try
-        {
+        try {
             majorBrand = decoder.decode((ByteBuffer) dataBuffer.slice().limit(MAJOR_BRAND_LENGTH)).toString();
-        }
-        catch (CharacterCodingException cee)
-        {
+        } catch (CharacterCodingException cee) {
             //Ignore
 
         }
         dataBuffer.position(dataBuffer.position() + MAJOR_BRAND_LENGTH);
         majorBrandVersion = dataBuffer.getInt();
-        while ((dataBuffer.position() < dataBuffer.limit()) && (dataBuffer.limit() - dataBuffer.position() >= COMPATIBLE_BRAND_LENGTH))
-        {
+        while ((dataBuffer.position() < dataBuffer.limit()) && (dataBuffer.limit() - dataBuffer.position() >= COMPATIBLE_BRAND_LENGTH)) {
             decoder.onMalformedInput(CodingErrorAction.REPORT);
             decoder.onMalformedInput(CodingErrorAction.REPORT);
-            try
-            {
+            try {
                 String brand = decoder.decode((ByteBuffer) dataBuffer.slice().limit(COMPATIBLE_BRAND_LENGTH)).toString();
                 //Sometimes just extra groups of four nulls
-                if (!brand.equals("\u0000\u0000\u0000\u0000"))
-                {
+                if (!brand.equals("\u0000\u0000\u0000\u0000")) {
                     compatibleBrands.add(brand);
                 }
-            }
-            catch (CharacterCodingException cee)
-            {
+            } catch (CharacterCodingException cee) {
                 //Ignore    
             }
             dataBuffer.position(dataBuffer.position() + COMPATIBLE_BRAND_LENGTH);
@@ -73,15 +61,12 @@ public class Mp4FtypBox extends AbstractMp4Box
     }
 
 
-    public String toString()
-    {
+    public String toString() {
 
         String info = "Major Brand:" + majorBrand + "Version:" + majorBrandVersion;
-        if (compatibleBrands.size() > 0)
-        {
+        if (compatibleBrands.size() > 0) {
             info += "Compatible:";
-            for (String brand : compatibleBrands)
-            {
+            for (String brand : compatibleBrands) {
                 info += brand;
                 info += ",";
             }
@@ -90,20 +75,17 @@ public class Mp4FtypBox extends AbstractMp4Box
         return info;
     }
 
-    public String getMajorBrand()
-    {
+    public String getMajorBrand() {
         return majorBrand;
     }
 
 
-    public int getMajorBrandVersion()
-    {
+    public int getMajorBrandVersion() {
         return majorBrandVersion;
     }
 
 
-    public List<String> getCompatibleBrands()
-    {
+    public List<String> getCompatibleBrands() {
         return compatibleBrands;
     }
 
@@ -112,8 +94,7 @@ public class Mp4FtypBox extends AbstractMp4Box
      * but this is not an exhaustive list, so for that reason we don't force the values read from the file
      * to tie in with this enum.
      */
-    public enum Brand
-    {
+    public enum Brand {
         ISO14496_1_BASE_MEDIA("isom", "ISO 14496-1"),
         ISO14496_12_BASE_MEDIA("iso2", "ISO 14496-12"),
         ISO14496_1_VERSION_1("mp41", "ISO 14496-1"),
@@ -135,19 +116,16 @@ public class Mp4FtypBox extends AbstractMp4Box
          * @param id          it is stored as in file
          * @param description human readable description
          */
-        Brand(String id, String description)
-        {
+        Brand(String id, String description) {
             this.id = id;
             this.description = description;
         }
 
-        public String getId()
-        {
+        public String getId() {
             return id;
         }
 
-        public String getDescription()
-        {
+        public String getDescription() {
             return description;
         }
 

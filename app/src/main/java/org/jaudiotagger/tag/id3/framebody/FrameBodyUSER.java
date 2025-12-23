@@ -16,7 +16,11 @@
 package org.jaudiotagger.tag.id3.framebody;
 
 import org.jaudiotagger.tag.InvalidTagException;
-import org.jaudiotagger.tag.datatype.*;
+import org.jaudiotagger.tag.datatype.AbstractString;
+import org.jaudiotagger.tag.datatype.DataTypes;
+import org.jaudiotagger.tag.datatype.NumberHashMap;
+import org.jaudiotagger.tag.datatype.StringHashMap;
+import org.jaudiotagger.tag.datatype.StringSizeTerminated;
 import org.jaudiotagger.tag.id3.ID3v24Frames;
 import org.jaudiotagger.tag.id3.valuepair.TextEncoding;
 import org.jaudiotagger.tag.reference.Languages;
@@ -26,8 +30,8 @@ import java.nio.ByteBuffer;
 
 /**
  * Terms of use frame.
- *
- *
+ * <p>
+ * <p>
  * This frame contains a brief description of the terms of use and
  * ownership of the file. More detailed information concerning the legal
  * terms might be available through the "WCOP" frame. Newlines are
@@ -48,20 +52,17 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyUSER extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody
-{
+public class FrameBodyUSER extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody {
     /**
      * Creates a new FrameBodyUSER datatype.
      */
-    public FrameBodyUSER()
-    {
+    public FrameBodyUSER() {
         //        setObject("Text Encoding", new Byte((byte) 0));
         //        setObject("Language", "");
         //        setObject("Text", "");
     }
 
-    public FrameBodyUSER(FrameBodyUSER body)
-    {
+    public FrameBodyUSER(FrameBodyUSER body) {
         super(body);
     }
 
@@ -72,8 +73,7 @@ public class FrameBodyUSER extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param language
      * @param text
      */
-    public FrameBodyUSER(byte textEncoding, String language, String text)
-    {
+    public FrameBodyUSER(byte textEncoding, String language, String text) {
         setObjectValue(DataTypes.OBJ_TEXT_ENCODING, textEncoding);
         setObjectValue(DataTypes.OBJ_LANGUAGE, language);
         setObjectValue(DataTypes.OBJ_TEXT, text);
@@ -87,8 +87,7 @@ public class FrameBodyUSER extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param frameSize
      * @throws InvalidTagException
      */
-    public FrameBodyUSER(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyUSER(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -97,24 +96,21 @@ public class FrameBodyUSER extends AbstractID3v2FrameBody implements ID3v24Frame
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_TERMS_OF_USE;
     }
 
     /**
      * @return lanaguage
      */
-    public String getLanguage()
-    {
+    public String getLanguage() {
         return (String) getObjectValue(DataTypes.OBJ_LANGUAGE);
     }
 
     /**
      * @param language
      */
-    public void setOwner(String language)
-    {
+    public void setOwner(String language) {
         setObjectValue(DataTypes.OBJ_LANGUAGE, language);
     }
 
@@ -124,10 +120,8 @@ public class FrameBodyUSER extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param tagBuffer
      * @throws java.io.IOException
      */
-    public void write(ByteArrayOutputStream tagBuffer)
-    {
-        if (!((AbstractString) getObject(DataTypes.OBJ_TEXT)).canBeEncoded())
-        {
+    public void write(ByteArrayOutputStream tagBuffer) {
+        if (!((AbstractString) getObject(DataTypes.OBJ_TEXT)).canBeEncoded()) {
             this.setTextEncoding(TextEncoding.UTF_16);
         }
         super.write(tagBuffer);
@@ -136,8 +130,7 @@ public class FrameBodyUSER extends AbstractID3v2FrameBody implements ID3v24Frame
     /**
      *
      */
-    protected void setupObjectList()
-    {
+    protected void setupObjectList() {
         objectList.add(new NumberHashMap(DataTypes.OBJ_TEXT_ENCODING, this, TextEncoding.TEXT_ENCODING_FIELD_SIZE));
         objectList.add(new StringHashMap(DataTypes.OBJ_LANGUAGE, this, Languages.LANGUAGE_FIELD_SIZE));
         objectList.add(new StringSizeTerminated(DataTypes.OBJ_TEXT, this));

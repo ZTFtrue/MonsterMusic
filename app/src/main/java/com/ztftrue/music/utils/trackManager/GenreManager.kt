@@ -3,8 +3,8 @@ package com.ztftrue.music.utils.trackManager
 import android.content.Context
 import android.provider.MediaStore
 import com.ztftrue.music.sqlData.model.MusicItem
-import com.ztftrue.music.utils.model.GenresList
 import com.ztftrue.music.utils.PlayListType
+import com.ztftrue.music.utils.model.GenresList
 
 object GenreManager {
     fun getGenresList(
@@ -18,7 +18,7 @@ object GenreManager {
             MediaStore.Audio.Genres.NAME,
         )
         val musicResolver = context.contentResolver
-        val sortOrder =sortOrder1.ifBlank { "${MediaStore.Audio.Genres.NAME} ASC" }
+        val sortOrder = sortOrder1.ifBlank { "${MediaStore.Audio.Genres.NAME} ASC" }
 
         val cursor = musicResolver.query(
             MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,

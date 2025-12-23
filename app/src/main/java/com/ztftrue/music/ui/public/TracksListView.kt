@@ -204,7 +204,7 @@ fun TracksListView(
 
                 // FolderData
                 stableFolderData?.let { folders ->
-                    items(folders.size, key = { folders[it].id }) { index ->
+                    items(folders.size, key={"${folders[it].id}${folders[it].children.size}${folders[it].trackNumber}${it}"}) { index ->
                         FolderItemView(
                             folders[index], musicViewModel, modifier = Modifier
                                 .wrapContentHeight()
@@ -225,8 +225,9 @@ fun TracksListView(
                 }
 
                 // TracksList
-                itemsIndexed(tracksList, key = { _, item -> item.id }) { index, music ->
-
+                itemsIndexed(
+                    tracksList,
+                    key = { index, item -> "${item.id}_$index" }) { index, music ->
                     // Top indicator
                     if (showTopIndicator) {
                         val currentF = music.name[0]

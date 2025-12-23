@@ -13,8 +13,8 @@ android {
         applicationId = "com.ztftrue.music"
         minSdk = 30
         targetSdk = 36
-        versionCode = 57
-        versionName = "0.1.57"
+        versionCode = 61
+        versionName = "0.1.61"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -129,17 +129,17 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
-    implementation("androidx.activity:activity-compose:1.12.0")
+    implementation("androidx.activity:activity-compose:1.12.2")
 
-    implementation("androidx.activity:activity-ktx:1.12.0")
+    implementation("androidx.activity:activity-ktx:1.12.2")
 
 
     implementation("androidx.appcompat:appcompat:1.7.1")
 
 //    implementation("androidx.media:media:1.7.0")
-    implementation("androidx.media3:media3-exoplayer:1.8.0")
-    implementation("androidx.media3:media3-session:1.8.0")
-    implementation("androidx.media3:media3-ui:1.8.0")
+    implementation("androidx.media3:media3-exoplayer:1.9.0")
+    implementation("androidx.media3:media3-session:1.9.0")
+    implementation("androidx.media3:media3-ui:1.9.0")
 
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
@@ -159,12 +159,12 @@ dependencies {
 
     implementation("androidx.browser:browser:1.9.0")
 
-    implementation("androidx.compose.runtime:runtime-livedata:1.9.5")
+    implementation("androidx.compose.runtime:runtime-livedata:1.10.0")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2025.11.01"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2025.12.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
@@ -200,9 +200,9 @@ dependencies {
     implementation("androidx.navigation3:navigation3-ui:1.0.0")
     // Optional add-on libraries,Navigation 3
     implementation("androidx.lifecycle:lifecycle-viewmodel-navigation3:2.10.0")
-    implementation ("androidx.compose.material3.adaptive:adaptive:1.3.0-alpha04")
-    implementation ("androidx.compose.material3.adaptive:adaptive-layout:1.3.0-alpha04")
-    implementation ("androidx.compose.material3.adaptive:adaptive-navigation:1.3.0-alpha04")
+    implementation ("androidx.compose.material3.adaptive:adaptive:1.3.0-alpha05")
+    implementation ("androidx.compose.material3.adaptive:adaptive-layout:1.3.0-alpha05")
+    implementation ("androidx.compose.material3.adaptive:adaptive-navigation:1.3.0-alpha05")
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-core:1.9.0")
 
 //    debugImplementation ("com.squareup.leakcanary:leakcanary-android:2.14")

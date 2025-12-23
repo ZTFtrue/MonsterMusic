@@ -9,43 +9,37 @@ import java.util.Map;
  * handled differently to the remainder such as musicians and their instruments which is
  * essentially an infinite list.
  */
-public enum StandardIPLSKey
-{
+public enum StandardIPLSKey {
     ENGINEER("engineer"),
     MIXER("mix"),
     DJMIXER("DJ-mix"),
     PRODUCER("producer"),
-    ARRANGER("arranger"),;
-
-    private final String key;
-
-    StandardIPLSKey(String key)
-    {
-        this.key = key;
-    }
-
-    public String getKey()
-    {
-        return key;
-    }
+    ARRANGER("arranger"),
+    ;
 
     private static final Map<String, StandardIPLSKey> lookup = new HashMap<String, StandardIPLSKey>();
 
-    static
-    {
-        for (StandardIPLSKey s : EnumSet.allOf(StandardIPLSKey.class))
-        {
+    static {
+        for (StandardIPLSKey s : EnumSet.allOf(StandardIPLSKey.class)) {
             lookup.put(s.getKey(), s);
         }
     }
 
-    public static StandardIPLSKey get(String key)
-    {
+    private final String key;
+
+    StandardIPLSKey(String key) {
+        this.key = key;
+    }
+
+    public static StandardIPLSKey get(String key) {
         return lookup.get(key);
     }
 
-    public static boolean isKey(String key)
-    {
+    public static boolean isKey(String key) {
         return get(key) != null;
+    }
+
+    public String getKey() {
+        return key;
     }
 }

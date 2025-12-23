@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
@@ -8,9 +9,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" /> <!-- <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" /> -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" /> <!-- <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" /> -->
-<!--    <uses-permission android:name="android.permission.BLUETOOTH" />-->
-<!--    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />-->
-<!--    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />-->
+    <!--    <uses-permission android:name="android.permission.BLUETOOTH" />-->
+    <!--    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />-->
+    <!--    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />-->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT" />
@@ -20,7 +21,6 @@
     </queries>
 
     <application
-        android:localeConfig="@xml/locale_config"
         android:name=".MyApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -28,6 +28,7 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:localeConfig="@xml/locale_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MusicPitch"
@@ -49,9 +50,9 @@
             android:exported="false" />
         <activity
             android:name=".MainActivity"
+            android:configChanges="locale|layoutDirection"
             android:exported="true"
             android:launchMode="singleInstance"
-            android:configChanges="locale|layoutDirection"
             android:theme="@style/Theme.MusicPitch">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -59,14 +60,62 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- 2. Alias for "Play Music" -->
+        <activity-alias
+            android:name=".PlayNextAlias"
+            android:exported="true"
+            android:label="Play Next"
+            android:targetActivity=".MainActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="audio/*" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ClearQueueAndPlayAlias"
+            android:exported="true"
+            android:label="Clear queue and Add to play"
+            android:targetActivity=".MainActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="audio/*" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+            </intent-filter>
+        </activity-alias>
+        <!-- 3. Alias for "Add to Queue" -->
+        <activity-alias
+            android:name=".AddToQueueAlias"
+            android:exported="true"
+            android:label="Add to Queue"
+            android:targetActivity=".MainActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="audio/*" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+            </intent-filter>
+        </activity-alias>
 
         <service
             android:name=".play.PlayService"
             android:enabled="true"
             android:exported="false"
-            android:stopWithTask="false"
+            android:foregroundServiceType="mediaPlayback"
             android:permission="android.permission.BIND_MEDIA_SESSION_SERVICE"
-            android:foregroundServiceType="mediaPlayback">
+            android:stopWithTask="false">
             <intent-filter>
                 <action android:name="androidx.media3.session.MediaSessionService" />
             </intent-filter>
@@ -79,6 +128,7 @@
                 android:name="autoStoreLocales"
                 android:value="true" />
         </service>
+
         <receiver
             android:name="androidx.media3.session.MediaButtonReceiver"
             android:exported="true">
@@ -98,11 +148,11 @@
                 android:resource="@xml/file_paths"
                 android:value="androidx.startup" />
         </provider>
-<!--        <receiver android:name=".utils.BluetoothConnectionReceiver" android:exported="false">-->
-<!--            <intent-filter>-->
-<!--                <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />-->
-<!--            </intent-filter>-->
-<!--        </receiver>-->
+        <!--        <receiver android:name=".utils.BluetoothConnectionReceiver" android:exported="false">-->
+        <!--            <intent-filter>-->
+        <!--                <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />-->
+        <!--            </intent-filter>-->
+        <!--        </receiver>-->
     </application>
 
 </manifest>

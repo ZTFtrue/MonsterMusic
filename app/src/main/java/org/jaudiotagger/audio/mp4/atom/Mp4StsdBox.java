@@ -13,8 +13,7 @@ import java.nio.ByteBuffer;
  * (default = 1)
  * Then if audio contains mp4a,alac or drms box
  */
-public class Mp4StsdBox extends AbstractMp4Box
-{
+public class Mp4StsdBox extends AbstractMp4Box {
     public static final int VERSION_FLAG_POS = 0;
     public static final int OTHER_FLAG_POS = 1;
     public static final int NO_OF_DESCRIPTIONS_POS = 4;
@@ -27,14 +26,12 @@ public class Mp4StsdBox extends AbstractMp4Box
      * @param header     header info
      * @param dataBuffer data of box (doesnt include header data)
      */
-    public Mp4StsdBox(Mp4BoxHeader header, ByteBuffer dataBuffer)
-    {
+    public Mp4StsdBox(Mp4BoxHeader header, ByteBuffer dataBuffer) {
         this.header = header;
         this.dataBuffer = dataBuffer;
     }
 
-    public void processData() throws CannotReadException
-    {
+    public void processData() throws CannotReadException {
         //Skip the data
         dataBuffer.position(dataBuffer.position() + VERSION_FLAG_LENGTH + OTHER_FLAG_LENGTH + NO_OF_DESCRIPTIONS_POS_LENGTH);
     }

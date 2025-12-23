@@ -6,12 +6,10 @@ import java.io.PrintWriter
 import java.io.StringWriter
 
 
-
-
 class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        if(!BuildConfig.DEBUG){
+        if (!BuildConfig.DEBUG) {
             Thread.setDefaultUncaughtExceptionHandler { _, e ->
                 handleUncaughtException(e)
             }

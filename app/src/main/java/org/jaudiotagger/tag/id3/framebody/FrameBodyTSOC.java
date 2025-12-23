@@ -8,17 +8,14 @@ import java.nio.ByteBuffer;
 /**
  * Composer Sort name (iTunes Only)
  */
-public class FrameBodyTSOC extends AbstractFrameBodyTextInfo implements ID3v24FrameBody, ID3v23FrameBody
-{
+public class FrameBodyTSOC extends AbstractFrameBodyTextInfo implements ID3v24FrameBody, ID3v23FrameBody {
     /**
      * Creates a new FrameBodyTSOC datatype.
      */
-    public FrameBodyTSOC()
-    {
+    public FrameBodyTSOC() {
     }
 
-    public FrameBodyTSOC(FrameBodyTSOC body)
-    {
+    public FrameBodyTSOC(FrameBodyTSOC body) {
         super(body);
     }
 
@@ -28,8 +25,7 @@ public class FrameBodyTSOC extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param textEncoding
      * @param text
      */
-    public FrameBodyTSOC(byte textEncoding, String text)
-    {
+    public FrameBodyTSOC(byte textEncoding, String text) {
         super(textEncoding, text);
     }
 
@@ -40,8 +36,7 @@ public class FrameBodyTSOC extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param frameSize
      * @throws InvalidTagException
      */
-    public FrameBodyTSOC(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyTSOC(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -50,8 +45,7 @@ public class FrameBodyTSOC extends AbstractFrameBodyTextInfo implements ID3v24Fr
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_COMPOSER_SORT_ORDER_ITUNES;
     }
 }

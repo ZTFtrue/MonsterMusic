@@ -1,23 +1,23 @@
 /**
- *  @author : Paul Taylor
- *  @author : Eric Farng
- *
- *  Version @version:$Id$
- *
- *  MusicTag Copyright (C)2003,2004
- *
- *  This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
- *  General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
- *  or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- *  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public License along with this library; if not,
- *  you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ * @author : Paul Taylor
+ * @author : Eric Farng
+ * <p>
+ * Version @version:$Id$
+ * <p>
+ * MusicTag Copyright (C)2003,2004
+ * <p>
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
+ * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
+ * or (at your option) any later version.
+ * <p>
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not,
+ * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * <p>
  * Description:
  *
  */
@@ -36,8 +36,7 @@ import org.jaudiotagger.tag.id3.ID3Tags;
  * In ID3Specification would be denoted as $xx xx xx xx (xx ...) , this denotes at least four bytes but may be more.
  * Sometimes may be completely optional (zero bytes)
  */
-public class NumberVariableLength extends AbstractDataType
-{
+public class NumberVariableLength extends AbstractDataType {
     private static final int MINIMUM_NO_OF_DIGITS = 1;
     private static final int MAXIMUM_NO_OF_DIGITS = 8;
 
@@ -52,8 +51,7 @@ public class NumberVariableLength extends AbstractDataType
      * @param frameBody
      * @param minimumSize
      */
-    public NumberVariableLength(String identifier, AbstractTagFrameBody frameBody, int minimumSize)
-    {
+    public NumberVariableLength(String identifier, AbstractTagFrameBody frameBody, int minimumSize) {
         super(identifier, frameBody);
 
         //Set minimum length, which can be zero if optional
@@ -61,8 +59,7 @@ public class NumberVariableLength extends AbstractDataType
 
     }
 
-    public NumberVariableLength(NumberVariableLength copy)
-    {
+    public NumberVariableLength(NumberVariableLength copy) {
         super(copy);
         this.minLength = copy.minLength;
     }
@@ -72,8 +69,7 @@ public class NumberVariableLength extends AbstractDataType
      *
      * @return the maximum number of digits that can be used to express the number
      */
-    public int getMaximumLenth()
-    {
+    public int getMaximumLenth() {
         return MAXIMUM_NO_OF_DIGITS;
     }
 
@@ -82,18 +78,15 @@ public class NumberVariableLength extends AbstractDataType
      *
      * @return the minimum number of digits that can be used to express the number
      */
-    public int getMinimumLength()
-    {
+    public int getMinimumLength() {
         return minLength;
     }
 
     /**
      * @param minimumSize
      */
-    public void setMinimumSize(int minimumSize)
-    {
-        if (minimumSize > 0)
-        {
+    public void setMinimumSize(int minimumSize) {
+        if (minimumSize > 0) {
             this.minLength = minimumSize;
         }
     }
@@ -101,24 +94,18 @@ public class NumberVariableLength extends AbstractDataType
     /**
      * @return the number of bytes required to write this to a file
      */
-    public int getSize()
-    {
-        if (value == null)
-        {
+    public int getSize() {
+        if (value == null) {
             return 0;
-        }
-        else
-        {
+        } else {
             int current;
             long temp = ID3Tags.getWholeNumber(value);
             int size = 0;
 
-            for (int i = MINIMUM_NO_OF_DIGITS; i <= MAXIMUM_NO_OF_DIGITS; i++)
-            {
+            for (int i = MINIMUM_NO_OF_DIGITS; i <= MAXIMUM_NO_OF_DIGITS; i++) {
                 current = (byte) temp & 0xFF;
 
-                if (current != 0)
-                {
+                if (current != 0) {
                     size = i;
                 }
 
@@ -133,10 +120,8 @@ public class NumberVariableLength extends AbstractDataType
      * @param obj
      * @return
      */
-    public boolean equals(Object obj)
-    {
-        if (!(obj instanceof NumberVariableLength object))
-        {
+    public boolean equals(Object obj) {
+        if (!(obj instanceof NumberVariableLength object)) {
             return false;
         }
 
@@ -152,17 +137,14 @@ public class NumberVariableLength extends AbstractDataType
      * @throws NullPointerException
      * @throws IndexOutOfBoundsException
      */
-    public void readByteArray(byte[] arr, int offset) throws InvalidDataTypeException
-    {
+    public void readByteArray(byte[] arr, int offset) throws InvalidDataTypeException {
         //Coding error, should never happen
-        if (arr == null)
-        {
+        if (arr == null) {
             throw new NullPointerException("Byte array is null");
         }
 
         //Coding error, should never happen as far as I can see
-        if (offset < 0)
-        {
+        if (offset < 0) {
             throw new IllegalArgumentException("negativer offset into an array offset:" + offset);
         }
 
@@ -170,15 +152,11 @@ public class NumberVariableLength extends AbstractDataType
         //with this additional datatype wheras it didnt exist but I think this is probably an advantage the frame is
         //more likely to be parsed by other applications if it contains optional fields.
         //if not optional problem with this frame
-        if (offset >= arr.length)
-        {
-            if (minLength == 0)
-            {
+        if (offset >= arr.length) {
+            if (minLength == 0) {
                 value = (long) 0;
                 return;
-            }
-            else
-            {
+            } else {
                 throw new InvalidDataTypeException("Offset to byte array is out of bounds: offset = " + offset + ", array.length = " + arr.length);
             }
         }
@@ -187,8 +165,7 @@ public class NumberVariableLength extends AbstractDataType
 
         //Read the bytes (starting from offset), the most significant byte of the number being constructed is read first,
         //we then shift the resulting long one byte over to make room for the next byte
-        for (int i = offset; i < arr.length; i++)
-        {
+        for (int i = offset; i < arr.length; i++) {
             lvalue <<= 8;
             lvalue += (arr[i] & 0xff);
         }
@@ -200,14 +177,10 @@ public class NumberVariableLength extends AbstractDataType
     /**
      * @return String representation of the number
      */
-    public String toString()
-    {
-        if (value == null)
-        {
+    public String toString() {
+        if (value == null) {
             return "";
-        }
-        else
-        {
+        } else {
             return value.toString();
         }
     }
@@ -217,24 +190,19 @@ public class NumberVariableLength extends AbstractDataType
      *
      * @return the datatype converted to a byte array
      */
-    public byte[] writeByteArray()
-    {
+    public byte[] writeByteArray() {
         int size = getSize();
         byte[] arr;
 
-        if (size == 0)
-        {
+        if (size == 0) {
             arr = new byte[0];
-        }
-        else
-        {
+        } else {
             long temp = ID3Tags.getWholeNumber(value);
             arr = new byte[size];
 
             //keeps shifting the number downwards and masking the last 8 bist to get the value for the next byte
             //to be written
-            for (int i = size - 1; i >= 0; i--)
-            {
+            for (int i = size - 1; i >= 0; i--) {
                 arr[i] = (byte) (temp & 0xFF);
                 temp >>= 8;
             }

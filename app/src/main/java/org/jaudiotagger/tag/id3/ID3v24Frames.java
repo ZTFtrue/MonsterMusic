@@ -29,8 +29,7 @@ import java.util.Map;
  * @author Paul Taylor
  * @version $Id$
  */
-public class ID3v24Frames extends ID3Frames
-{
+public class ID3v24Frames extends ID3Frames {
     /**
      * Frame IDs beginning with T are text frames, and with W are url frames
      */
@@ -128,28 +127,14 @@ public class ID3v24Frames extends ID3Frames
     //TODO this is temporary to provide backwards compatability
     public static final String FRAME_ID_PERFORMER_SORT_OWNER = FRAME_ID_ARTIST_SORT_ORDER;
     public static final String FRAME_ID_TITLE_SORT_OWNER = FRAME_ID_TITLE_SORT_ORDER;
-
+    private static ID3v24Frames id3v24Frames;
     protected EnumMap<FieldKey, ID3v24FieldKey> tagFieldToId3 = new EnumMap<FieldKey, ID3v24FieldKey>(FieldKey.class);
-
     /**
      * Maps from ID3 key to Generic key
      */
-    protected EnumMap<ID3v24FieldKey, FieldKey> id3ToTagField = new EnumMap<ID3v24FieldKey,FieldKey>(ID3v24FieldKey.class);
+    protected EnumMap<ID3v24FieldKey, FieldKey> id3ToTagField = new EnumMap<ID3v24FieldKey, FieldKey>(ID3v24FieldKey.class);
 
-
-    private static ID3v24Frames id3v24Frames;
-
-    public static ID3v24Frames getInstanceOf()
-    {
-        if (id3v24Frames == null)
-        {
-            id3v24Frames = new ID3v24Frames();
-        }
-        return id3v24Frames;
-    }
-
-    private ID3v24Frames()
-    {
+    private ID3v24Frames() {
         supportedFrames.add(FRAME_ID_ACCOMPANIMENT);
         supportedFrames.add(FRAME_ID_ALBUM);
         supportedFrames.add(FRAME_ID_ALBUM_SORT_ORDER);
@@ -527,28 +512,33 @@ public class ID3v24Frames extends ID3Frames
         tagFieldToId3.put(FieldKey.WORK_TYPE, ID3v24FieldKey.WORK_TYPE);
         tagFieldToId3.put(FieldKey.YEAR, ID3v24FieldKey.YEAR);
 
-        for(Map.Entry<FieldKey,ID3v24FieldKey> next:tagFieldToId3.entrySet())
-        {
+        for (Map.Entry<FieldKey, ID3v24FieldKey> next : tagFieldToId3.entrySet()) {
             id3ToTagField.put(next.getValue(), next.getKey());
         }
+    }
+
+    public static ID3v24Frames getInstanceOf() {
+        if (id3v24Frames == null) {
+            id3v24Frames = new ID3v24Frames();
+        }
+        return id3v24Frames;
     }
 
     /**
      * @param genericKey
      * @return id3 key for generic key
      */
-    public ID3v24FieldKey getId3KeyFromGenericKey(FieldKey genericKey)
-    {
+    public ID3v24FieldKey getId3KeyFromGenericKey(FieldKey genericKey) {
         return tagFieldToId3.get(genericKey);
     }
 
     /**
      * Get generic key for ID3 field key
+     *
      * @param fieldKey
      * @return
      */
-    public FieldKey getGenericKeyFromId3(ID3v24FieldKey fieldKey)
-    {
+    public FieldKey getGenericKeyFromId3(ID3v24FieldKey fieldKey) {
         return id3ToTagField.get(fieldKey);
     }
 }

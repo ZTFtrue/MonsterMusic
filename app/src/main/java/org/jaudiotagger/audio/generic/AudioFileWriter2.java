@@ -15,30 +15,25 @@ import java.nio.file.Path;
 /**
  * Created by Paul on 28/01/2016.
  */
-public abstract class AudioFileWriter2 extends AudioFileWriter
-{
+public abstract class AudioFileWriter2 extends AudioFileWriter {
     /**
      * Delete the tag (if any) present in the given file
      *
      * @param af The file to process
-     *
-     * @throws CannotWriteException if anything went wrong
+     * @throws CannotWriteException                                  if anything went wrong
      * @throws org.jaudiotagger.audio.exceptions.CannotReadException
      */
     @Override
-    public void delete(AudioFile af) throws CannotReadException, CannotWriteException
-    {
+    public void delete(AudioFile af) throws CannotReadException, CannotWriteException {
         Path file = af.getFile().toPath();
 
-        if (TagOptionSingleton.getInstance().isCheckIsWritable() && !Files.isWritable(file))
-        {
+        if (TagOptionSingleton.getInstance().isCheckIsWritable() && !Files.isWritable(file)) {
             logger.severe(Permissions.displayPermissions(file));
             throw new CannotWriteException(ErrorMessage.GENERAL_DELETE_FAILED
                     .getMsg(file));
         }
 
-        if (af.getFile().length() <= MINIMUM_FILESIZE)
-        {
+        if (af.getFile().length() <= MINIMUM_FILESIZE) {
             throw new CannotWriteException(ErrorMessage.GENERAL_DELETE_FAILED_BECAUSE_FILE_IS_TOO_SMALL
                     .getMsg(file));
         }
@@ -52,12 +47,10 @@ public abstract class AudioFileWriter2 extends AudioFileWriter
      * @throws CannotWriteException
      */
     @Override
-    public void write(AudioFile af) throws CannotWriteException
-    {
+    public void write(AudioFile af) throws CannotWriteException {
         Path file = af.getFile().toPath();
 
-        if (TagOptionSingleton.getInstance().isCheckIsWritable() && !Files.isWritable(file))
-        {
+        if (TagOptionSingleton.getInstance().isCheckIsWritable() && !Files.isWritable(file)) {
             logger.severe(Permissions.displayPermissions(file));
             logger.severe(ErrorMessage.GENERAL_WRITE_FAILED.getMsg(af.getFile()
                     .getPath()));
@@ -65,8 +58,7 @@ public abstract class AudioFileWriter2 extends AudioFileWriter
                     .getMsg(file));
         }
 
-        if (af.getFile().length() <= MINIMUM_FILESIZE)
-        {
+        if (af.getFile().length() <= MINIMUM_FILESIZE) {
             throw new CannotWriteException(ErrorMessage.GENERAL_WRITE_FAILED_BECAUSE_FILE_IS_TOO_SMALL
                     .getMsg(file));
         }
@@ -84,8 +76,7 @@ public abstract class AudioFileWriter2 extends AudioFileWriter
     protected abstract void deleteTag(Tag tag, Path file) throws CannotReadException, CannotWriteException;
 
 
-    public void deleteTag(Tag tag, RandomAccessFile raf, RandomAccessFile tempRaf) throws CannotReadException, CannotWriteException, IOException
-    {
+    public void deleteTag(Tag tag, RandomAccessFile raf, RandomAccessFile tempRaf) throws CannotReadException, CannotWriteException, IOException {
         throw new UnsupportedOperationException("Old method not used in version 2");
     }
 
@@ -98,8 +89,7 @@ public abstract class AudioFileWriter2 extends AudioFileWriter
      */
     protected abstract void writeTag(Tag tag, Path file) throws CannotWriteException;
 
-    protected   void writeTag(AudioFile audioFile, Tag tag, RandomAccessFile raf, RandomAccessFile rafTemp) throws CannotReadException, CannotWriteException, IOException
-    {
+    protected void writeTag(AudioFile audioFile, Tag tag, RandomAccessFile raf, RandomAccessFile rafTemp) throws CannotReadException, CannotWriteException, IOException {
         throw new UnsupportedOperationException("Old method not used in version 2");
     }
 }

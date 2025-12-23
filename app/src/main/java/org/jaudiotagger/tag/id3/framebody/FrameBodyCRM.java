@@ -1,23 +1,23 @@
 /**
- *  @author : Paul Taylor
- *  @author : Eric Farng
- *
- *  Version @version:$Id$
- *
- *  MusicTag Copyright (C)2003,2004
- *
- *  This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
- *  General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
- *  or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- *  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public License along with this library; if not,
- *  you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ * @author : Paul Taylor
+ * @author : Eric Farng
+ * <p>
+ * Version @version:$Id$
+ * <p>
+ * MusicTag Copyright (C)2003,2004
+ * <p>
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
+ * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
+ * or (at your option) any later version.
+ * <p>
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not,
+ * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * <p>
  * Description:
  *
  */
@@ -61,20 +61,17 @@ import java.nio.ByteBuffer;
  * Content/explanation   <textstring> $00 (00)
  * Encrypted datablock   <binary data>
  */
-public class FrameBodyCRM extends AbstractID3v2FrameBody implements ID3v22FrameBody
-{
+public class FrameBodyCRM extends AbstractID3v2FrameBody implements ID3v22FrameBody {
     /**
      * Creates a new FrameBodyCRM datatype.
      */
-    public FrameBodyCRM()
-    {
+    public FrameBodyCRM() {
         //        this.setObject(ObjectTypes.OBJ_OWNER, "");
         //        this.setObject(ObjectTypes.OBJ_DESCRIPTION, "");
         //        this.setObject("Encrypted datablock", new byte[0]);
     }
 
-    public FrameBodyCRM(FrameBodyCRM body)
-    {
+    public FrameBodyCRM(FrameBodyCRM body) {
         super(body);
     }
 
@@ -85,8 +82,7 @@ public class FrameBodyCRM extends AbstractID3v2FrameBody implements ID3v22FrameB
      * @param description
      * @param data
      */
-    public FrameBodyCRM(String owner, String description, byte[] data)
-    {
+    public FrameBodyCRM(String owner, String description, byte[] data) {
         this.setObjectValue(DataTypes.OBJ_OWNER, owner);
         this.setObjectValue(DataTypes.OBJ_DESCRIPTION, description);
         this.setObjectValue(DataTypes.OBJ_ENCRYPTED_DATABLOCK, data);
@@ -99,8 +95,7 @@ public class FrameBodyCRM extends AbstractID3v2FrameBody implements ID3v22FrameB
      * @param frameSize
      * @throws InvalidTagException if unable to create framebody from buffer
      */
-    public FrameBodyCRM(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyCRM(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -109,32 +104,28 @@ public class FrameBodyCRM extends AbstractID3v2FrameBody implements ID3v22FrameB
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v22Frames.FRAME_ID_V2_ENCRYPTED_FRAME;
     }
 
     /**
      * @return
      */
-    public String getOwner()
-    {
+    public String getOwner() {
         return (String) getObjectValue(DataTypes.OBJ_OWNER);
     }
 
     /**
      * @param description
      */
-    public void getOwner(String description)
-    {
+    public void getOwner(String description) {
         setObjectValue(DataTypes.OBJ_OWNER, description);
     }
 
     /**
      *
      */
-    protected void setupObjectList()
-    {
+    protected void setupObjectList() {
         objectList.add(new StringNullTerminated(DataTypes.OBJ_OWNER, this));
         objectList.add(new StringNullTerminated(DataTypes.OBJ_DESCRIPTION, this));
         objectList.add(new ByteArraySizeTerminated(DataTypes.OBJ_ENCRYPTED_DATABLOCK, this));

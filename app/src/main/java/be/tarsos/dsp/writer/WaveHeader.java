@@ -7,6 +7,7 @@ import java.io.OutputStream;
 /**
  * this source code is copied from : https://android.googlesource.com/platform/frameworks/base.git/+/android-4.3_r2/core/java/android/speech/srec/WaveHeader.java
  */
+
 /**
  * This class represents the header of a WAVE format audio file, which usually
  * have a .wav suffix.  The following integer valued fields are contained:
@@ -17,22 +18,26 @@ import java.io.OutputStream;
  * <li> bitsPerSample - usually 16 for PCM, 8 for ALAW, or 8 for ULAW.
  * <li> numBytes - size of audio data after this header, in bytes.
  * </ul>
- *
+ * <p>
  * Not yet ready to be supported, so
  */
 public class WaveHeader {
 
     // follows WAVE format in http://ccrma.stanford.edu/courses/422/projects/WaveFormat
 
-    private static final int HEADER_LENGTH = 44;
-
-    /** Indicates PCM format. */
+    /**
+     * Indicates PCM format.
+     */
     public static final short FORMAT_PCM = 1;
-    /** Indicates ALAW format. */
+    /**
+     * Indicates ALAW format.
+     */
     public static final short FORMAT_ALAW = 6;
-    /** Indicates ULAW format. */
+    /**
+     * Indicates ULAW format.
+     */
     public static final short FORMAT_ULAW = 7;
-
+    private static final int HEADER_LENGTH = 44;
     private short mFormat;
     private short mNumChannels;
     private int mSampleRate;
@@ -47,12 +52,13 @@ public class WaveHeader {
 
     /**
      * Construct a WaveHeader, with fields initialized.
-     * @param format format of audio data,
-     * one of {@link #FORMAT_PCM}, {@link #FORMAT_ULAW}, or {@link #FORMAT_ALAW}.
-     * @param numChannels 1 for mono, 2 for stereo.
-     * @param sampleRate typically 8000, 11025, 16000, 22050, or 44100 hz.
+     *
+     * @param format        format of audio data,
+     *                      one of {@link #FORMAT_PCM}, {@link #FORMAT_ULAW}, or {@link #FORMAT_ALAW}.
+     * @param numChannels   1 for mono, 2 for stereo.
+     * @param sampleRate    typically 8000, 11025, 16000, 22050, or 44100 hz.
      * @param bitsPerSample usually 16 for PCM, 8 for ULAW or 8 for ALAW.
-     * @param numBytes size of audio data after this header, in bytes.
+     * @param numBytes      size of audio data after this header, in bytes.
      */
     public WaveHeader(short format, short numChannels, int sampleRate, short bitsPerSample, int numBytes) {
         mFormat = format;
@@ -62,8 +68,39 @@ public class WaveHeader {
         mNumBytes = numBytes;
     }
 
+    private static void readId(InputStream in, String id) throws IOException {
+        for (int i = 0; i < id.length(); i++) {
+            if (id.charAt(i) != in.read()) throw new IOException(id + " tag not present");
+        }
+    }
+
+    private static int readInt(InputStream in) throws IOException {
+        return in.read() | (in.read() << 8) | (in.read() << 16) | (in.read() << 24);
+    }
+
+    private static short readShort(InputStream in) throws IOException {
+        return (short) (in.read() | (in.read() << 8));
+    }
+
+    private static void writeId(OutputStream out, String id) throws IOException {
+        for (int i = 0; i < id.length(); i++) out.write(id.charAt(i));
+    }
+
+    private static void writeInt(OutputStream out, int val) throws IOException {
+        out.write(val >> 0);
+        out.write(val >> 8);
+        out.write(val >> 16);
+        out.write(val >> 24);
+    }
+
+    private static void writeShort(OutputStream out, short val) throws IOException {
+        out.write(val >> 0);
+        out.write(val >> 8);
+    }
+
     /**
      * Get the format field.
+     *
      * @return format field,
      * one of {@link #FORMAT_PCM}, {@link #FORMAT_ULAW}, or {@link #FORMAT_ALAW}.
      */
@@ -73,8 +110,8 @@ public class WaveHeader {
 
     /**
      * Set the format field.
-     * @param format
-     * one of {@link #FORMAT_PCM}, {@link #FORMAT_ULAW}, or {@link #FORMAT_ALAW}.
+     *
+     * @param format one of {@link #FORMAT_PCM}, {@link #FORMAT_ULAW}, or {@link #FORMAT_ALAW}.
      * @return reference to this WaveHeader instance.
      */
     public WaveHeader setFormat(short format) {
@@ -84,6 +121,7 @@ public class WaveHeader {
 
     /**
      * Get the number of channels.
+     *
      * @return number of channels, 1 for mono, 2 for stereo.
      */
     public short getNumChannels() {
@@ -92,6 +130,7 @@ public class WaveHeader {
 
     /**
      * Set the number of channels.
+     *
      * @param numChannels 1 for mono, 2 for stereo.
      * @return reference to this WaveHeader instance.
      */
@@ -102,6 +141,7 @@ public class WaveHeader {
 
     /**
      * Get the sample rate.
+     *
      * @return sample rate, typically 8000, 11025, 16000, 22050, or 44100 hz.
      */
     public int getSampleRate() {
@@ -110,6 +150,7 @@ public class WaveHeader {
 
     /**
      * Set the sample rate.
+     *
      * @param sampleRate sample rate, typically 8000, 11025, 16000, 22050, or 44100 hz.
      * @return reference to this WaveHeader instance.
      */
@@ -120,6 +161,7 @@ public class WaveHeader {
 
     /**
      * Get the number of bits per sample.
+     *
      * @return number of bits per sample,
      * usually 16 for PCM, 8 for ULAW or 8 for ALAW.
      */
@@ -129,8 +171,9 @@ public class WaveHeader {
 
     /**
      * Set the number of bits per sample.
+     *
      * @param bitsPerSample number of bits per sample,
-     * usually 16 for PCM, 8 for ULAW or 8 for ALAW.
+     *                      usually 16 for PCM, 8 for ULAW or 8 for ALAW.
      * @return reference to this WaveHeader instance.
      */
     public WaveHeader setBitsPerSample(short bitsPerSample) {
@@ -140,6 +183,7 @@ public class WaveHeader {
 
     /**
      * Get the size of audio data after this header, in bytes.
+     *
      * @return size of audio data after this header, in bytes.
      */
     public int getNumBytes() {
@@ -148,6 +192,7 @@ public class WaveHeader {
 
     /**
      * Set the size of audio data after this header, in bytes.
+     *
      * @param numBytes size of audio data after this header, in bytes.
      * @return reference to this WaveHeader instance.
      */
@@ -158,6 +203,7 @@ public class WaveHeader {
 
     /**
      * Read and initialize a WaveHeader.
+     *
      * @param in {@link java.io.InputStream} to read from.
      * @return number of bytes consumed.
      * @throws IOException
@@ -165,7 +211,7 @@ public class WaveHeader {
     public int read(InputStream in) throws IOException {
         /* RIFF header */
         readId(in, "RIFF");
-        
+
         readId(in, "WAVE");
 
         /* fmt chunk */
@@ -191,22 +237,9 @@ public class WaveHeader {
         return HEADER_LENGTH;
     }
 
-    private static void readId(InputStream in, String id) throws IOException {
-        for (int i = 0; i < id.length(); i++) {
-            if (id.charAt(i) != in.read()) throw new IOException( id + " tag not present");
-        }
-    }
-
-    private static int readInt(InputStream in) throws IOException {
-        return in.read() | (in.read() << 8) | (in.read() << 16) | (in.read() << 24);
-    }
-
-    private static short readShort(InputStream in) throws IOException {
-        return (short)(in.read() | (in.read() << 8));
-    }
-
     /**
      * Write a WAVE file header.
+     *
      * @param out {@link java.io.OutputStream} to receive the header.
      * @return number of bytes written.
      * @throws IOException
@@ -224,7 +257,7 @@ public class WaveHeader {
         writeShort(out, mNumChannels);
         writeInt(out, mSampleRate);
         writeInt(out, mNumChannels * mSampleRate * mBitsPerSample / 8);
-        writeShort(out, (short)(mNumChannels * mBitsPerSample / 8));
+        writeShort(out, (short) (mNumChannels * mBitsPerSample / 8));
         writeShort(out, mBitsPerSample);
 
         /* data chunk */
@@ -232,22 +265,6 @@ public class WaveHeader {
         writeInt(out, mNumBytes);
 
         return HEADER_LENGTH;
-    }
-
-    private static void writeId(OutputStream out, String id) throws IOException {
-        for (int i = 0; i < id.length(); i++) out.write(id.charAt(i));
-    }
-
-    private static void writeInt(OutputStream out, int val) throws IOException {
-        out.write(val >> 0);
-        out.write(val >> 8);
-        out.write(val >> 16);
-        out.write(val >> 24);
-    }
-
-    private static void writeShort(OutputStream out, short val) throws IOException {
-        out.write(val >> 0);
-        out.write(val >> 8);
     }
 
     @Override

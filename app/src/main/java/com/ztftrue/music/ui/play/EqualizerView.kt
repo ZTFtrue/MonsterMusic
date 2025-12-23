@@ -380,7 +380,10 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                             equalizerQ.floatValue = Utils.Q
                             val bundle = Bundle()
                             bundle.putFloat("Q", musicViewModel.equalizerQ.floatValue)
-                            musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_CHANGE_Q, bundle)
+                            musicViewModel.browser?.sendCustomCommand(
+                                MediaCommands.COMMAND_CHANGE_Q,
+                                bundle
+                            )
                         },
                     ) {
                         Text(
@@ -405,7 +408,10 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                         musicViewModel.equalizerQ.floatValue = equalizerQ.floatValue
                         val bundle = Bundle()
                         bundle.putFloat("Q", musicViewModel.equalizerQ.floatValue)
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_CHANGE_Q, bundle)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_CHANGE_Q,
+                            bundle
+                        )
                     },
                 )
                 if (equalizerQ.floatValue < 2.0f) {

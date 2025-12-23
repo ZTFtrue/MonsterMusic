@@ -7,20 +7,17 @@ import java.nio.ByteBuffer;
 
 /**
  * Artist Sort name, this is what MusicBrainz uses in ID3v23 because TSOP not supported.
- *
+ * <p>
  * However iTunes uses TSOP even in ID3v23, so we have two possible options
  */
-public class FrameBodyXSOP extends AbstractFrameBodyTextInfo implements ID3v23FrameBody
-{
+public class FrameBodyXSOP extends AbstractFrameBodyTextInfo implements ID3v23FrameBody {
     /**
      * Creates a new FrameBodyTSOT datatype.
      */
-    public FrameBodyXSOP()
-    {
+    public FrameBodyXSOP() {
     }
 
-    public FrameBodyXSOP(FrameBodyXSOP body)
-    {
+    public FrameBodyXSOP(FrameBodyXSOP body) {
         super(body);
     }
 
@@ -30,8 +27,7 @@ public class FrameBodyXSOP extends AbstractFrameBodyTextInfo implements ID3v23Fr
      * @param textEncoding
      * @param text
      */
-    public FrameBodyXSOP(byte textEncoding, String text)
-    {
+    public FrameBodyXSOP(byte textEncoding, String text) {
         super(textEncoding, text);
     }
 
@@ -42,8 +38,7 @@ public class FrameBodyXSOP extends AbstractFrameBodyTextInfo implements ID3v23Fr
      * @param frameSize
      * @throws InvalidTagException
      */
-    public FrameBodyXSOP(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyXSOP(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -52,8 +47,7 @@ public class FrameBodyXSOP extends AbstractFrameBodyTextInfo implements ID3v23Fr
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v23Frames.FRAME_ID_V3_ARTIST_SORT_ORDER_MUSICBRAINZ;
     }
 }

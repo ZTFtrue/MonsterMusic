@@ -23,30 +23,26 @@ import java.nio.charset.StandardCharsets;
  *
  * <p>Originally only used by Itunes for information that was iTunes specific but now used in a wide range of uses,
  * for example Musicbrainz uses it for many of its fields.
- *
+ * <p>
  * These fields have a more complex setup
  * Box ----  shows this is a reverse dns metadata field
  * Box mean  the issuer in the form of reverse DNS domain (e.g com.apple.iTunes)
  * Box name  descriptor identifying the type of contents
  * Box data  contents
- *
+ * <p>
  * The raw data passed starts from the mean box
  */
-public class Mp4TagReverseDnsField extends Mp4TagField implements TagTextField
-{
+public class Mp4TagReverseDnsField extends Mp4TagField implements TagTextField {
     public static final String IDENTIFIER = "----";
 
     protected int dataSize;
-
-    //Issuer
-    private String issuer;
-
-    //Descriptor
-    private String descriptor;
-
     //Data Content,
     //TODO assuming always text at the moment
     protected String content;
+    //Issuer
+    private String issuer;
+    //Descriptor
+    private String descriptor;
 
     /**
      * Construct from existing file data
@@ -55,8 +51,7 @@ public class Mp4TagReverseDnsField extends Mp4TagField implements TagTextField
      * @param data
      * @throws UnsupportedEncodingException
      */
-    public Mp4TagReverseDnsField(Mp4BoxHeader parentHeader, ByteBuffer data) throws UnsupportedEncodingException
-    {
+    public Mp4TagReverseDnsField(Mp4BoxHeader parentHeader, ByteBuffer data) throws UnsupportedEncodingException {
         super(parentHeader, data);
     }
 
@@ -66,8 +61,7 @@ public class Mp4TagReverseDnsField extends Mp4TagField implements TagTextField
      * @param id
      * @param content
      */
-    public Mp4TagReverseDnsField(Mp4FieldKey id, String content)
-    {
+    public Mp4TagReverseDnsField(Mp4FieldKey id, String content) {
         super(id.getFieldName());
         this.issuer = id.getIssuer();
         this.descriptor = id.getIdentifier();
@@ -76,30 +70,28 @@ public class Mp4TagReverseDnsField extends Mp4TagField implements TagTextField
 
     /**
      * Newly created Reverse Dns field bypassing the Mp4TagField enum for creation of temporary reverse dns fields
+     *
      * @param fieldName
      * @param issuer
      * @param identifier
      * @param content
      */
-    public Mp4TagReverseDnsField(final String fieldName, final String issuer, final String identifier, final String content)
-    {
+    public Mp4TagReverseDnsField(final String fieldName, final String issuer, final String identifier, final String content) {
         super(fieldName);
-        this.issuer     = issuer;
+        this.issuer = issuer;
         this.descriptor = identifier;
-        this.content    = content;
+        this.content = content;
     }
 
     @Override
-    public Mp4FieldType getFieldType()
-    {
+    public Mp4FieldType getFieldType() {
         //TODO always assuming text at moment but may not always be the case (though dont have any concrete
         //examples)
         return Mp4FieldType.TEXT;
     }
 
     @Override
-    protected void build(ByteBuffer data) throws UnsupportedEncodingException
-    {
+    protected void build(ByteBuffer data) throws UnsupportedEncodingException {
         //Read mean box, set the issuer and skip over data
         Mp4BoxHeader meanBoxHeader = new Mp4BoxHeader(data);
         Mp4MeanBox meanBox = new Mp4MeanBox(meanBoxHeader, data);
@@ -113,15 +105,13 @@ public class Mp4TagReverseDnsField extends Mp4TagField implements TagTextField
         data.position(data.position() + nameBoxHeader.getDataLength());
 
         //Issue 198:There is not actually a data atom there cannot cant be because no room for one
-        if (parentHeader.getDataLength() == meanBoxHeader.getLength() + nameBoxHeader.getLength())
-        {
+        if (parentHeader.getDataLength() == meanBoxHeader.getLength() + nameBoxHeader.getLength()) {
             id = IDENTIFIER + ":" + issuer + ":" + descriptor;
             setContent("");
             logger.warning(ErrorMessage.MP4_REVERSE_DNS_FIELD_HAS_NO_DATA.getMsg(id));
         }
         //Usual Case
-        else
-        {
+        else {
             //Read data box, identify the data
             Mp4BoxHeader dataBoxHeader = new Mp4BoxHeader(data);
             Mp4DataBox dataBox = new Mp4DataBox(dataBoxHeader, data);
@@ -134,10 +124,8 @@ public class Mp4TagReverseDnsField extends Mp4TagField implements TagTextField
     }
 
     @Override
-    public void copyContent(TagField field)
-    {
-        if (field instanceof Mp4TagReverseDnsField)
-        {
+    public void copyContent(TagField field) {
+        if (field instanceof Mp4TagReverseDnsField) {
             this.issuer = ((Mp4TagReverseDnsField) field).getIssuer();
             this.descriptor = ((Mp4TagReverseDnsField) field).getDescriptor();
             this.content = ((Mp4TagReverseDnsField) field).getContent();
@@ -145,21 +133,28 @@ public class Mp4TagReverseDnsField extends Mp4TagField implements TagTextField
     }
 
     @Override
-    public String getContent()
-    {
+    public String getContent() {
         return content;
     }
 
     @Override
-    protected byte[] getDataBytes() throws UnsupportedEncodingException
-    {
+    public void setContent(String s) {
+        this.content = s;
+    }
+
+    @Override
+    protected byte[] getDataBytes() throws UnsupportedEncodingException {
         return content.getBytes(getEncoding());
     }
 
     @Override
-    public Charset getEncoding()
-    {
+    public Charset getEncoding() {
         return StandardCharsets.UTF_8;
+    }
+
+    @Override
+    public void setEncoding(Charset s) {
+        /* Not allowed */
     }
 
     /**
@@ -169,10 +164,8 @@ public class Mp4TagReverseDnsField extends Mp4TagField implements TagTextField
      * @throws UnsupportedEncodingException
      */
     @Override
-    public byte[] getRawContent() throws UnsupportedEncodingException
-    {
-        try
-        {
+    public byte[] getRawContent() throws UnsupportedEncodingException {
+        try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
             //Create Meanbox data
@@ -190,8 +183,7 @@ public class Mp4TagReverseDnsField extends Mp4TagField implements TagTextField
             baos.write(nameRawData);
 
             //Create DataBox data if we have data only
-            if (content.length() > 0)
-            {
+            if (content.length() > 0) {
                 baos.write(getRawContentDataOnly());
             }
             //Now wrap with reversedns box
@@ -201,20 +193,16 @@ public class Mp4TagReverseDnsField extends Mp4TagField implements TagTextField
             outerbaos.write(baos.toByteArray());
             return outerbaos.toByteArray();
 
-        }
-        catch (IOException ioe)
-        {
+        } catch (IOException ioe) {
             //This should never happen as were not actually writing to/from a file
             throw new RuntimeException(ioe);
         }
     }
 
     @Override
-    public byte[] getRawContentDataOnly() throws UnsupportedEncodingException
-    {
+    public byte[] getRawContentDataOnly() throws UnsupportedEncodingException {
         logger.fine("Getting Raw data for:" + getId());
-        try
-        {
+        try {
             //Create DataBox data
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             byte[] dataRawData = content.getBytes(getEncoding());
@@ -225,58 +213,32 @@ public class Mp4TagReverseDnsField extends Mp4TagField implements TagTextField
             baos.write(new byte[]{0, 0, 0, 0});
             baos.write(dataRawData);
             return baos.toByteArray();
-        }
-        catch (IOException ioe)
-        {
+        } catch (IOException ioe) {
             //This should never happen as were not actually writing to/from a file
             throw new RuntimeException(ioe);
         }
     }
 
     @Override
-    public boolean isBinary()
-    {
+    public boolean isBinary() {
         return false;
     }
 
     @Override
-    public boolean isEmpty()
-    {
+    public boolean isEmpty() {
         return "".equals(this.content.trim());
     }
 
     @Override
-    public void setContent(String s)
-    {
-        this.content = s;
-    }
-
-    @Override
-    public void setEncoding(Charset s)
-    {
-        /* Not allowed */
-    }
-
-    @Override
-    public String toString()
-    {
+    public String toString() {
         return content;
     }
 
     /**
      * @return the issuer
      */
-    public String getIssuer()
-    {
+    public String getIssuer() {
         return issuer;
-    }
-
-    /**
-     * @return the descriptor
-     */
-    public String getDescriptor()
-    {
-        return descriptor;
     }
 
     /**
@@ -284,9 +246,15 @@ public class Mp4TagReverseDnsField extends Mp4TagField implements TagTextField
      *
      * @param issuer
      */
-    public void setIssuer(String issuer)
-    {
+    public void setIssuer(String issuer) {
         this.issuer = issuer;
+    }
+
+    /**
+     * @return the descriptor
+     */
+    public String getDescriptor() {
+        return descriptor;
     }
 
     /**
@@ -294,8 +262,7 @@ public class Mp4TagReverseDnsField extends Mp4TagField implements TagTextField
      *
      * @param descriptor
      */
-    public void setDescriptor(String descriptor)
-    {
+    public void setDescriptor(String descriptor) {
         this.descriptor = descriptor;
     }
 }

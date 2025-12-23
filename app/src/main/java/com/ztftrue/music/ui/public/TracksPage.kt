@@ -2,6 +2,7 @@ package com.ztftrue.music.ui.public
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -87,9 +88,11 @@ import com.ztftrue.music.ui.home.GenreListOperateDialog
 import com.ztftrue.music.ui.home.PlayListOperateDialog
 import com.ztftrue.music.ui.other.FolderListOperateDialog
 import com.ztftrue.music.utils.DialogOperate
+import com.ztftrue.music.utils.MutableListExtension.removeLastSafe
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType
+import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.model.AlbumList
@@ -686,14 +689,18 @@ fun TracksListPage(
                 val result: SessionResult? = futureResultItem.get()
                 if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
                     Log.e("Client", "Failed COMMAND_GET_PLAY_LIST_ITEM ${result?.resultCode}")
-                    navController.removeLastOrNull()
+                    if(SharedPreferencesUtils.getMergeAlbum(context)){
+                        Toast.makeText(context,"In merged album mode, this title may be empty. Yes, I slacked off.",Toast.LENGTH_SHORT).show()
+                    }else{
+                        navController.removeLastSafe()
+                    }
                     return@addListener
                 }
                 result.extras.getParcelable<AnyListBase>("data")?.let {
                     musicPlayList.value = it
                 }
             } catch (e: Exception) {
-                navController.removeLastOrNull()
+                navController.removeLastSafe()
                 Log.e("Client", "Failed to toggle favorite status", e)
             }
         }, ContextCompat.getMainExecutor(context))
@@ -731,7 +738,7 @@ fun TracksListPage(
     }
     LaunchedEffect(musicViewModel.refreshPlayList.value, refreshCurrentValueList) {
         if (musicViewModel.browser == null) {
-            navController.removeLastOrNull()
+            navController.removeLastSafe()
             return@LaunchedEffect
         } else {
             musicViewModel.loadingTracks.value = true
@@ -747,7 +754,7 @@ fun TracksListPage(
                     val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
                     Log.d("Client", "result tracks: ${result?.resultCode}")
                     if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
-                        navController.removeLastOrNull()
+                        navController.removeLastSafe()
                         return@addListener
                     }
                     getPlayListMessage()
@@ -766,7 +773,7 @@ fun TracksListPage(
                     val duration = tracksList.sumOf { it.duration }
                     durationAll.value = Utils.formatTimeWithUnit(duration)
                 } catch (e: Exception) {
-                    navController.removeLastOrNull()
+                    navController.removeLastSafe()
                     // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
                     Log.e("Client", "Failed to toggle favorite status", e)
                 }

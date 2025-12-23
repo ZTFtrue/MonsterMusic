@@ -32,6 +32,7 @@ import com.ztftrue.music.ui.other.TracksSelectPage
 import com.ztftrue.music.ui.play.PlayingPage
 import com.ztftrue.music.ui.public.QueuePage
 import com.ztftrue.music.ui.public.TracksListPage
+import com.ztftrue.music.utils.MutableListExtension.removeLastSafe
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -71,7 +72,7 @@ fun BaseLayout(
     CompositionLocalProvider(LocalContext provides context) {
         NavDisplay(
             backStack = navController,
-            onBack = { navController.removeLastOrNull() },
+            onBack = { navController.removeLastSafe() },
             entryProvider = { key: Any ->
                 when (key) {
                     is Router.MainView -> NavEntry(key) {

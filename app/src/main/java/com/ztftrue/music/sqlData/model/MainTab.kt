@@ -31,7 +31,7 @@ data class MainTab(
     }
 
     override fun hashCode(): Int {
-        var result = id?:0
+        var result = id ?: 0
         result = 31 * result + name.hashCode()
         result = 31 * result + type.hashCode()
         result = 31 * result + priority.hashCode()

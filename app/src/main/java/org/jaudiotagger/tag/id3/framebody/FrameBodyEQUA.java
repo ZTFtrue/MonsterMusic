@@ -21,8 +21,8 @@ import org.jaudiotagger.tag.id3.ID3v23Frames;
 
 /**
  * Equalisation frame.
- *
- *
+ * <p>
+ * <p>
  * This is another subjective, alignment frame. It allows the user to
  * predefine an equalisation curve within the audio file. There may only
  * be one "EQUA" frame in each tag.
@@ -61,17 +61,14 @@ import org.jaudiotagger.tag.id3.ID3v23Frames;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyEQUA extends AbstractID3v2FrameBody implements ID3v23FrameBody
-{
+public class FrameBodyEQUA extends AbstractID3v2FrameBody implements ID3v23FrameBody {
     /**
      * Creates a new FrameBodyEQUA dataType.
      */
-    public FrameBodyEQUA()
-    {
+    public FrameBodyEQUA() {
     }
 
-    public FrameBodyEQUA(FrameBodyEQUA body)
-    {
+    public FrameBodyEQUA(FrameBodyEQUA body) {
         super(body);
     }
 
@@ -80,16 +77,14 @@ public class FrameBodyEQUA extends AbstractID3v2FrameBody implements ID3v23Frame
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v23Frames.FRAME_ID_V3_EQUALISATION;
     }
 
     /**
      * TODO:proper mapping
      */
-    protected void setupObjectList()
-    {
+    protected void setupObjectList() {
         objectList.add(new ByteArraySizeTerminated(DataTypes.OBJ_DATA, this));
     }
 }

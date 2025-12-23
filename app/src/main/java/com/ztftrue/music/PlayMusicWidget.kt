@@ -128,7 +128,7 @@ class PlayMusicWidget : AppWidgetProvider() {
     override fun onEnabled(context: Context) {
         // TODO send broadcast
 //        Log.d("PlayMusicWidget", "onEnabled")
-        SharedPreferencesUtils.setWidgetEnable(context,true)
+        SharedPreferencesUtils.setWidgetEnable(context, true)
 //        context.getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit().apply {
 //            putBoolean("enable", true)
 //            apply()
@@ -140,7 +140,7 @@ class PlayMusicWidget : AppWidgetProvider() {
     override fun onDisabled(
         context: Context
     ) {
-        SharedPreferencesUtils.setWidgetEnable(context,false)
+        SharedPreferencesUtils.setWidgetEnable(context, false)
 //        context.getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit().apply {
 //            putBoolean("enable", false)
 //            apply()
@@ -195,8 +195,10 @@ class PlayMusicWidget : AppWidgetProvider() {
                     R.id.play_music_widget,
                     "setBackgroundColor",
                     try {
-                        Log.d("Color",SharedPreferencesUtils.getWidgetBackground(context)
-                            ?: "#FFFFFF")
+                        Log.d(
+                            "Color", SharedPreferencesUtils.getWidgetBackground(context)
+                                ?: "#FFFFFF"
+                        )
                         (SharedPreferencesUtils.getWidgetBackground(context)
                             ?: "#FFFFFF").toColorInt()
                     } catch (e: Exception) {

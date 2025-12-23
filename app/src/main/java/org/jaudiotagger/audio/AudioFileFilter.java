@@ -1,17 +1,17 @@
 /*
  * Entagged Audio Tag library
  * Copyright (c) 2003-2005 Raphaël Slinckx <raphael@slinckx.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *  
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -32,20 +32,17 @@ import java.io.FileFilter;
  * @version $Id$
  * @since v0.01
  */
-public class AudioFileFilter implements FileFilter
-{
+public class AudioFileFilter implements FileFilter {
     /**
      * allows Directories
      */
     private final boolean allowDirectories;
 
-    public AudioFileFilter( boolean allowDirectories)
-    {
-        this.allowDirectories=allowDirectories;
+    public AudioFileFilter(boolean allowDirectories) {
+        this.allowDirectories = allowDirectories;
     }
 
-    public AudioFileFilter()
-    {
+    public AudioFileFilter() {
         this(true);
     }
 
@@ -53,35 +50,28 @@ public class AudioFileFilter implements FileFilter
      * <p>Check whether the given file meet the required conditions (supported by the library OR directory).
      * The File must also be readable and not hidden.
      *
-     * @param    f    The file to test
+     * @param f The file to test
      * @return a boolean indicating if the file is accepted or not
      */
-    public boolean accept(File f)
-    {
-        if (f.isHidden() || !f.canRead())
-        {
+    public boolean accept(File f) {
+        if (f.isHidden() || !f.canRead()) {
             return false;
         }
 
-        if (f.isDirectory())
-        {
+        if (f.isDirectory()) {
             return allowDirectories;
         }
 
         String ext = Utils.getExtension(f);
 
-        try
-        {
-            if (SupportedFileFormat.valueOf(ext.toUpperCase()) != null)
-            {
+        try {
+            if (SupportedFileFormat.valueOf(ext.toUpperCase()) != null) {
                 return true;
             }
-        }
-        catch(IllegalArgumentException iae)
-        {
+        } catch (IllegalArgumentException iae) {
             //Not known enum value
-            return false;    
+            return false;
         }
         return false;
-	}
+    }
 }

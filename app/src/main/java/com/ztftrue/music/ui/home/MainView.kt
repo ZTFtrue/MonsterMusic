@@ -76,7 +76,7 @@ fun MainView(
             }
         }
     }
-    LaunchedEffect(musicViewModel.songsList ) {
+    LaunchedEffect(musicViewModel.songsList) {
         if (musicViewModel.songsList.isEmpty()) {
             musicViewModel.loadingTracks.value = true
             val futureResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
@@ -88,9 +88,9 @@ fun MainView(
                         return@addListener
                     }
                     val albumMediaItems: List<MediaItem> = result.value ?: listOf()
-                    val list  = albumMediaItems.map { mediaItem ->
+                    val list = albumMediaItems.map { mediaItem ->
                         MediaItemUtils.mediaItemToMusicItem(mediaItem)
-                   }.fastFilterNotNull()
+                    }.fastFilterNotNull()
                     musicViewModel.songsList.addAll(list)
                 } catch (e: Exception) {
                     // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
@@ -138,7 +138,7 @@ fun MainView(
                 Bottom(
                     musicViewModel, navController
                 )
-            }, content = {innerPadding->
+            }, content = { innerPadding ->
                 HorizontalPager(
                     state = pagerState,
                     beyondViewportPageCount = tabList.size,

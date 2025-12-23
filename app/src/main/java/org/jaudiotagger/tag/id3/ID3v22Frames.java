@@ -22,15 +22,14 @@ import java.util.Map;
 
 /**
  * Defines ID3v22 frames and collections that categorise frames within an ID3v22 tag.
- *
+ * <p>
  * You can include frames here that are not officially supported as long as they can be used within an
  * ID3v22Tag
  *
  * @author Paul Taylor
  * @version $Id$
  */
-public class ID3v22Frames extends ID3Frames
-{
+public class ID3v22Frames extends ID3Frames {
     //V2 Frames (only 3 chars)
     public static final String FRAME_ID_V2_ACCOMPANIMENT = "TP2";
     public static final String FRAME_ID_V2_ALBUM = "TAL";
@@ -119,20 +118,10 @@ public class ID3v22Frames extends ID3Frames
     /**
      * Maps from ID3 key to Generic key
      */
-    protected EnumMap<ID3v22FieldKey, FieldKey> id3ToTagField = new EnumMap<ID3v22FieldKey,FieldKey>(ID3v22FieldKey.class);
+    protected EnumMap<ID3v22FieldKey, FieldKey> id3ToTagField = new EnumMap<ID3v22FieldKey, FieldKey>(ID3v22FieldKey.class);
 
 
-    public static ID3v22Frames getInstanceOf()
-    {
-        if (id3v22Frames == null)
-        {
-            id3v22Frames = new ID3v22Frames();
-        }
-        return id3v22Frames;
-    }
-
-    private ID3v22Frames()
-    {
+    private ID3v22Frames() {
         // The defined v22 frames
         supportedFrames.add(FRAME_ID_V2_ACCOMPANIMENT);
         supportedFrames.add(FRAME_ID_V2_ALBUM);
@@ -478,28 +467,33 @@ public class ID3v22Frames extends ID3Frames
         tagFieldToId3.put(FieldKey.YEAR, ID3v22FieldKey.YEAR);
 
 
-        for(Map.Entry<FieldKey,ID3v22FieldKey> next:tagFieldToId3.entrySet())
-        {
+        for (Map.Entry<FieldKey, ID3v22FieldKey> next : tagFieldToId3.entrySet()) {
             id3ToTagField.put(next.getValue(), next.getKey());
         }
+    }
+
+    public static ID3v22Frames getInstanceOf() {
+        if (id3v22Frames == null) {
+            id3v22Frames = new ID3v22Frames();
+        }
+        return id3v22Frames;
     }
 
     /**
      * @param genericKey
      * @return id3 key for generic key
      */
-    public ID3v22FieldKey getId3KeyFromGenericKey(FieldKey genericKey)
-    {
+    public ID3v22FieldKey getId3KeyFromGenericKey(FieldKey genericKey) {
         return tagFieldToId3.get(genericKey);
     }
 
     /**
      * Get generic key for ID3 field key
+     *
      * @param fieldKey
      * @return
      */
-    public FieldKey getGenericKeyFromId3(ID3v22FieldKey fieldKey)
-    {
+    public FieldKey getGenericKeyFromId3(ID3v22FieldKey fieldKey) {
         return id3ToTagField.get(fieldKey);
     }
 }

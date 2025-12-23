@@ -2,7 +2,6 @@ package org.jaudiotagger.tag.images;
 
 import android.graphics.Bitmap;
 
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
@@ -12,15 +11,15 @@ import java.io.IOException;
 public class StandardImageHandler implements ImageHandler {
     private static StandardImageHandler instance;
 
+    private StandardImageHandler() {
+
+    }
+
     public static StandardImageHandler getInstanceOf() {
         if (instance == null) {
             instance = new StandardImageHandler();
         }
         return instance;
-    }
-
-    private StandardImageHandler() {
-
     }
 
     /**

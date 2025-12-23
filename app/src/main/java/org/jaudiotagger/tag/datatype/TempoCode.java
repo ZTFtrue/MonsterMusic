@@ -1,15 +1,15 @@
 /**
- *  This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
- *  General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
- *  or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- *  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public License along with this library; if not,
- *  you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
+ * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
+ * or (at your option) any later version.
+ * <p>
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not,
+ * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  */
 package org.jaudiotagger.tag.datatype;
@@ -31,18 +31,15 @@ import org.jaudiotagger.tag.id3.ID3Tags;
  * @author <a href="mailto:hs@tagtraum.com">Hendrik Schreiber</a>
  * @version $Id:$
  */
-public class TempoCode extends AbstractDataType
-{
+public class TempoCode extends AbstractDataType {
     private static final int MINIMUM_NO_OF_DIGITS = 1;
     private static final int MAXIMUM_NO_OF_DIGITS = 2;
 
-    public TempoCode(final TempoCode copy)
-    {
+    public TempoCode(final TempoCode copy) {
         super(copy);
     }
 
-    public TempoCode(final String identifier, final AbstractTagFrameBody frameBody)
-    {
+    public TempoCode(final String identifier, final AbstractTagFrameBody frameBody) {
         super(identifier, frameBody, 0);
     }
 
@@ -52,59 +49,47 @@ public class TempoCode extends AbstractDataType
 
 
     @Override
-    public int getSize()
-    {
-        if (value == null)
-        {
+    public int getSize() {
+        if (value == null) {
             return 0;
-        }
-        else
-        {
+        } else {
             return ID3Tags.getWholeNumber(value) < 0xFF ? MINIMUM_NO_OF_DIGITS : MAXIMUM_NO_OF_DIGITS;
         }
     }
 
     @Override
-    public boolean equals(final Object that)
-    {
+    public boolean equals(final Object that) {
         return that instanceof TempoCode && super.equals(that);
     }
 
     @Override
-    public void readByteArray(final byte[] arr, final int offset) throws InvalidDataTypeException
-    {
-        if (arr == null)
-        {
+    public void readByteArray(final byte[] arr, final int offset) throws InvalidDataTypeException {
+        if (arr == null) {
             throw new NullPointerException("Byte array is null");
         }
-        if (offset < 0)
-        {
+        if (offset < 0) {
             throw new IllegalArgumentException("negative offset into an array offset:" + offset);
         }
-        if (offset >= arr.length)
-        {
+        if (offset >= arr.length) {
             throw new InvalidDataTypeException("Offset to byte array is out of bounds: offset = " + offset + ", array.length = " + arr.length);
         }
 
         long lvalue = 0;
         lvalue += (arr[offset] & 0xff);
-        if (lvalue == 0xFF)
-        {
-            lvalue += (arr[offset+1] & 0xff);
+        if (lvalue == 0xFF) {
+            lvalue += (arr[offset + 1] & 0xff);
         }
         value = lvalue;
     }
 
     @Override
-    public byte[] writeByteArray()
-    {
+    public byte[] writeByteArray() {
         final int size = getSize();
         final byte[] arr = new byte[size];
         long temp = ID3Tags.getWholeNumber(value);
         int offset = 0;
-        if (temp >= 0xFF)
-        {
-            arr[offset] = (byte)0xFF;
+        if (temp >= 0xFF) {
+            arr[offset] = (byte) 0xFF;
             offset++;
             temp -= 0xFF;
         }
@@ -113,8 +98,7 @@ public class TempoCode extends AbstractDataType
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return value == null ? "" : value.toString();
     }
 

@@ -1,23 +1,23 @@
 /**
- *  @author : Paul Taylor
- *  @author : Eric Farng
- *
- *  Version @version:$Id$
- *
- *  MusicTag Copyright (C)2003,2004
- *
- *  This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
- *  General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
- *  or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- *  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public License along with this library; if not,
- *  you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ * @author : Paul Taylor
+ * @author : Eric Farng
+ * <p>
+ * Version @version:$Id$
+ * <p>
+ * MusicTag Copyright (C)2003,2004
+ * <p>
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
+ * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
+ * or (at your option) any later version.
+ * <p>
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not,
+ * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * <p>
  * Description:
  */
 
@@ -34,8 +34,7 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
-public class Lyrics3v1 extends AbstractLyrics3
-{
+public class Lyrics3v1 extends AbstractLyrics3 {
     /**
      *
      */
@@ -44,32 +43,23 @@ public class Lyrics3v1 extends AbstractLyrics3
     /**
      * Creates a new Lyrics3v1 datatype.
      */
-    public Lyrics3v1()
-    {
+    public Lyrics3v1() {
     }
 
-    public Lyrics3v1(Lyrics3v1 copyObject)
-    {
+    public Lyrics3v1(Lyrics3v1 copyObject) {
         super(copyObject);
         this.lyric = copyObject.lyric;
     }
 
-    public Lyrics3v1(AbstractTag mp3Tag)
-    {
-        if (mp3Tag != null)
-        {
+    public Lyrics3v1(AbstractTag mp3Tag) {
+        if (mp3Tag != null) {
             Lyrics3v2 lyricTag;
 
-            if (mp3Tag instanceof Lyrics3v1)
-            {
+            if (mp3Tag instanceof Lyrics3v1) {
                 throw new UnsupportedOperationException("Copy Constructor not called. Please type cast the argument");
-            }
-            else if (mp3Tag instanceof Lyrics3v2)
-            {
+            } else if (mp3Tag instanceof Lyrics3v2) {
                 lyricTag = (Lyrics3v2) mp3Tag;
-            }
-            else
-            {
+            } else {
                 lyricTag = new Lyrics3v2(mp3Tag);
             }
 
@@ -86,14 +76,10 @@ public class Lyrics3v1 extends AbstractLyrics3
      * @throws java.io.IOException
      * @param byteBuffer
      */
-    public Lyrics3v1(ByteBuffer byteBuffer) throws TagNotFoundException, java.io.IOException
-    {
-        try
-        {
+    public Lyrics3v1(ByteBuffer byteBuffer) throws TagNotFoundException, java.io.IOException {
+        try {
             this.read(byteBuffer);
-        }
-        catch (TagException e)
-        {
+        } catch (TagException e) {
             e.printStackTrace();
         }
     }
@@ -101,32 +87,28 @@ public class Lyrics3v1 extends AbstractLyrics3
     /**
      * @return
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return "Lyrics3v1.00";
+    }
+
+    /**
+     * @return
+     */
+    public String getLyric() {
+        return lyric;
     }
 
     /**
      * @param lyric
      */
-    public void setLyric(String lyric)
-    {
+    public void setLyric(String lyric) {
         this.lyric = ID3Tags.truncate(lyric, 5100);
     }
 
     /**
      * @return
      */
-    public String getLyric()
-    {
-        return lyric;
-    }
-
-    /**
-     * @return
-     */
-    public int getSize()
-    {
+    public int getSize() {
         return "LYRICSBEGIN".length() + lyric.length() + "LYRICSEND".length();
     }
 
@@ -134,8 +116,7 @@ public class Lyrics3v1 extends AbstractLyrics3
      * @param obj
      * @return
      */
-    public boolean isSubsetOf(Object obj)
-    {
+    public boolean isSubsetOf(Object obj) {
         return (obj instanceof Lyrics3v1) && (((Lyrics3v1) obj).lyric.contains(this.lyric));
 
     }
@@ -144,10 +125,8 @@ public class Lyrics3v1 extends AbstractLyrics3
      * @param obj
      * @return
      */
-    public boolean equals(Object obj)
-    {
-        if (!(obj instanceof Lyrics3v1 object))
-        {
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Lyrics3v1 object)) {
             return false;
         }
 
@@ -160,8 +139,7 @@ public class Lyrics3v1 extends AbstractLyrics3
      * @throws java.lang.UnsupportedOperationException
      *
      */
-    public Iterator iterator()
-    {
+    public Iterator iterator() {
         /**
          * @todo Implement this org.jaudiotagger.tag.AbstractMP3Tag abstract method
          */
@@ -175,8 +153,7 @@ public class Lyrics3v1 extends AbstractLyrics3
      * @return
      * @throws IOException
      */
-    public boolean seek(ByteBuffer byteBuffer)
-    {
+    public boolean seek(ByteBuffer byteBuffer) {
         return false;
     }
 
@@ -185,13 +162,11 @@ public class Lyrics3v1 extends AbstractLyrics3
      * @throws TagNotFoundException
      * @throws IOException
      */
-    public void read(ByteBuffer byteBuffer) throws TagException
-    {
+    public void read(ByteBuffer byteBuffer) throws TagException {
         byte[] buffer = new byte[5100 + 9 + 11];
         String lyricBuffer;
 
-        if (!seek(byteBuffer))
-        {
+        if (!seek(byteBuffer)) {
             throw new TagNotFoundException("ID3v1 tag not found");
         }
 
@@ -206,8 +181,7 @@ public class Lyrics3v1 extends AbstractLyrics3
      * @return
      * @throws IOException
      */
-    public boolean seek(RandomAccessFile file) throws IOException
-    {
+    public boolean seek(RandomAccessFile file) throws IOException {
         byte[] buffer = new byte[5100 + 9 + 11];
         String lyricsEnd;
         String lyricsStart;
@@ -218,24 +192,18 @@ public class Lyrics3v1 extends AbstractLyrics3
         file.read(buffer, 0, 9);
         lyricsEnd = new String(buffer, 0, 9);
 
-        if (lyricsEnd.equals("LYRICSEND"))
-        {
+        if (lyricsEnd.equals("LYRICSEND")) {
             offset = file.getFilePointer();
-        }
-        else
-        {
+        } else {
             // check the end of the file for a lyrics tag incase an ID3
             // tag wasn't placed after it.
             file.seek(file.length() - 9);
             file.read(buffer, 0, 9);
             lyricsEnd = new String(buffer, 0, 9);
 
-            if (lyricsEnd.equals("LYRICSEND"))
-            {
+            if (lyricsEnd.equals("LYRICSEND")) {
                 offset = file.getFilePointer();
-            }
-            else
-            {
+            } else {
                 return false;
             }
         }
@@ -249,8 +217,7 @@ public class Lyrics3v1 extends AbstractLyrics3
         // search for the tag
         int i = lyricsStart.indexOf("LYRICSBEGIN");
 
-        if (i == -1)
-        {
+        if (i == -1) {
             return false;
         }
 
@@ -262,8 +229,7 @@ public class Lyrics3v1 extends AbstractLyrics3
     /**
      * @return
      */
-    public String toString()
-    {
+    public String toString() {
         String str = getIdentifier() + " " + this.getSize() + "\n";
 
         return str + lyric;
@@ -273,8 +239,7 @@ public class Lyrics3v1 extends AbstractLyrics3
      * @param file
      * @throws IOException
      */
-    public void write(RandomAccessFile file) throws IOException
-    {
+    public void write(RandomAccessFile file) throws IOException {
         String str;
         int offset;
         byte[] buffer;
@@ -289,8 +254,7 @@ public class Lyrics3v1 extends AbstractLyrics3
 
         str = "LYRICSBEGIN";
 
-        for (int i = 0; i < str.length(); i++)
-        {
+        for (int i = 0; i < str.length(); i++) {
             buffer[i] = (byte) str.charAt(i);
         }
 
@@ -298,8 +262,7 @@ public class Lyrics3v1 extends AbstractLyrics3
 
         str = ID3Tags.truncate(lyric, 5100);
 
-        for (int i = 0; i < str.length(); i++)
-        {
+        for (int i = 0; i < str.length(); i++) {
             buffer[i + offset] = (byte) str.charAt(i);
         }
 
@@ -307,8 +270,7 @@ public class Lyrics3v1 extends AbstractLyrics3
 
         str = "LYRICSEND";
 
-        for (int i = 0; i < str.length(); i++)
-        {
+        for (int i = 0; i < str.length(); i++) {
             buffer[i + offset] = (byte) str.charAt(i);
         }
 
@@ -316,8 +278,7 @@ public class Lyrics3v1 extends AbstractLyrics3
 
         file.write(buffer, 0, offset);
 
-        if (id3v1tag != null)
-        {
+        if (id3v1tag != null) {
             id3v1tag.write(file);
         }
     }

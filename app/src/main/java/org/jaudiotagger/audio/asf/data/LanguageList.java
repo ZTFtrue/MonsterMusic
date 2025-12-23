@@ -16,8 +16,7 @@ import java.util.List;
  *
  * @author Christian Laireiter
  */
-public class LanguageList extends Chunk
-{
+public class LanguageList extends Chunk {
 
     /**
      * List of language codes, complying RFC-1766
@@ -27,8 +26,7 @@ public class LanguageList extends Chunk
     /**
      * Creates a new instance.<br>
      */
-    public LanguageList()
-    {
+    public LanguageList() {
         super(GUID.GUID_LANGUAGE_LIST, 0, BigInteger.ZERO);
     }
 
@@ -38,8 +36,7 @@ public class LanguageList extends Chunk
      * @param pos  position within the ASF file.
      * @param size size of the chunk
      */
-    public LanguageList(final long pos, final BigInteger size)
-    {
+    public LanguageList(final long pos, final BigInteger size) {
         super(GUID.GUID_LANGUAGE_LIST, pos, size);
     }
 
@@ -48,17 +45,12 @@ public class LanguageList extends Chunk
      *
      * @param language language code
      */
-    public void addLanguage(final String language)
-    {
-        if (language.length() < MetadataDescriptor.MAX_LANG_INDEX)
-        {
-            if (!this.languages.contains(language))
-            {
+    public void addLanguage(final String language) {
+        if (language.length() < MetadataDescriptor.MAX_LANG_INDEX) {
+            if (!this.languages.contains(language)) {
                 this.languages.add(language);
             }
-        }
-        else
-        {
+        } else {
             throw new IllegalArgumentException(ErrorMessage.WMA_LENGTH_OF_LANGUAGE_IS_TOO_LARGE.getMsg(language.length() * 2 + 2));
         }
     }
@@ -69,8 +61,7 @@ public class LanguageList extends Chunk
      * @param index the index of the language code to get.
      * @return the language code at given index.
      */
-    public String getLanguage(final int index)
-    {
+    public String getLanguage(final int index) {
         return this.languages.get(index);
     }
 
@@ -79,8 +70,7 @@ public class LanguageList extends Chunk
      *
      * @return number of stored language codes.
      */
-    public int getLanguageCount()
-    {
+    public int getLanguageCount() {
         return this.languages.size();
     }
 
@@ -89,8 +79,7 @@ public class LanguageList extends Chunk
      *
      * @return list of language codes.
      */
-    public List<String> getLanguages()
-    {
+    public List<String> getLanguages() {
         return new ArrayList<String>(this.languages);
     }
 
@@ -98,11 +87,9 @@ public class LanguageList extends Chunk
      * {@inheritDoc}
      */
     @Override
-    public String prettyPrint(final String prefix)
-    {
+    public String prettyPrint(final String prefix) {
         final StringBuilder result = new StringBuilder(super.prettyPrint(prefix));
-        for (int i = 0; i < getLanguageCount(); i++)
-        {
+        for (int i = 0; i < getLanguageCount(); i++) {
             result.append(prefix);
             result.append("  |-> ");
             result.append(i);
@@ -118,8 +105,7 @@ public class LanguageList extends Chunk
      *
      * @param index index of language to remove.
      */
-    public void removeLanguage(final int index)
-    {
+    public void removeLanguage(final int index) {
         this.languages.remove(index);
     }
 }

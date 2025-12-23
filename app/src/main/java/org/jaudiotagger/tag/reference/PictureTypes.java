@@ -1,22 +1,22 @@
 /**
  * @author : Paul Taylor
- *
+ * <p>
  * Version @version:$Id$
- *
+ * <p>
  * Jaudiotagger Copyright (C)2004,2005
- *
+ * <p>
  * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
  * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
  * or (at your option) any later version.
- *
+ * <p>
  * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU Lesser General Public License along with this library; if not,
  * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ * <p>
  * Description:
  * Valid Picture Types in ID3
  */
@@ -30,25 +30,12 @@ import org.jaudiotagger.tag.datatype.AbstractIntStringValuePair;
  * <P>Note this list is used by APIC and PIC frames within ID3v2. It is also used by Flac format Picture blocks
  * and WMA Picture fields.
  */
-public class PictureTypes extends AbstractIntStringValuePair
-{
-    private static PictureTypes pictureTypes;
-
-    public static PictureTypes getInstanceOf()
-    {
-        if (pictureTypes == null)
-        {
-            pictureTypes = new PictureTypes();
-        }
-        return pictureTypes;
-    }
-
+public class PictureTypes extends AbstractIntStringValuePair {
     public static final int PICTURE_TYPE_FIELD_SIZE = 1;
     public static final String DEFAULT_VALUE = "Cover (front)";
     public static final Integer DEFAULT_ID = 3;
-
-    private PictureTypes()
-    {
+    private static PictureTypes pictureTypes;
+    private PictureTypes() {
         idToValue.put(0, "Other");
         idToValue.put(1, "32x32 pixels 'file icon' (PNG only)");
         idToValue.put(2, "Other file icon");
@@ -72,6 +59,13 @@ public class PictureTypes extends AbstractIntStringValuePair
         idToValue.put(20, "Publisher/Studio logotype");
 
         createMaps();
+    }
+
+    public static PictureTypes getInstanceOf() {
+        if (pictureTypes == null) {
+            pictureTypes = new PictureTypes();
+        }
+        return pictureTypes;
     }
 
 }

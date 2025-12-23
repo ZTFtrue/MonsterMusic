@@ -33,13 +33,11 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyWCOP extends AbstractFrameBodyUrlLink implements ID3v24FrameBody, ID3v23FrameBody
-{
+public class FrameBodyWCOP extends AbstractFrameBodyUrlLink implements ID3v24FrameBody, ID3v23FrameBody {
     /**
      * Creates a new FrameBodyWCOP datatype.
      */
-    public FrameBodyWCOP()
-    {
+    public FrameBodyWCOP() {
     }
 
     /**
@@ -47,13 +45,11 @@ public class FrameBodyWCOP extends AbstractFrameBodyUrlLink implements ID3v24Fra
      *
      * @param urlLink
      */
-    public FrameBodyWCOP(String urlLink)
-    {
+    public FrameBodyWCOP(String urlLink) {
         super(urlLink);
     }
 
-    public FrameBodyWCOP(FrameBodyWCOP body)
-    {
+    public FrameBodyWCOP(FrameBodyWCOP body) {
         super(body);
     }
 
@@ -65,8 +61,7 @@ public class FrameBodyWCOP extends AbstractFrameBodyUrlLink implements ID3v24Fra
      * @throws java.io.IOException
      * @throws InvalidTagException
      */
-    public FrameBodyWCOP(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyWCOP(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -75,8 +70,7 @@ public class FrameBodyWCOP extends AbstractFrameBodyUrlLink implements ID3v24Fra
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_URL_COPYRIGHT;
     }
 }

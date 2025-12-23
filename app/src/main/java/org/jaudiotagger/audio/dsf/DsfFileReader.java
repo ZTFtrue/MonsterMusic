@@ -4,6 +4,8 @@
  */
 package org.jaudiotagger.audio.dsf;
 
+import static org.jaudiotagger.audio.dsf.DsdChunk.CHUNKSIZE_LENGTH;
+
 import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.generic.AudioFileReader2;
 import org.jaudiotagger.audio.generic.GenericAudioHeader;
@@ -22,8 +24,6 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.util.logging.Level;
 
-import static org.jaudiotagger.audio.dsf.DsdChunk.CHUNKSIZE_LENGTH;
-
 /**
  * Reads the ID3 Tags as specified by <a href=
  * "http://dsd-guide.com/sites/default/files/white-papers/DSFFileFormatSpec_E.pdf"
@@ -31,47 +31,33 @@ import static org.jaudiotagger.audio.dsf.DsdChunk.CHUNKSIZE_LENGTH;
  *
  * @author Veselin Markov (veselin_m84 a_t yahoo.com)
  */
-public class DsfFileReader extends AudioFileReader2
-{
+public class DsfFileReader extends AudioFileReader2 {
     @Override
-    protected GenericAudioHeader getEncodingInfo(Path file) throws CannotReadException, IOException
-    {
-        try(FileChannel fc = FileChannel.open(file))
-        {
+    protected GenericAudioHeader getEncodingInfo(Path file) throws CannotReadException, IOException {
+        try (FileChannel fc = FileChannel.open(file)) {
             DsdChunk dsd = DsdChunk.readChunk(Utils.readFileDataIntoBufferLE(fc, DsdChunk.DSD_HEADER_LENGTH));
-            if (dsd != null)
-            {
+            if (dsd != null) {
                 ByteBuffer fmtChunkBuffer = Utils.readFileDataIntoBufferLE(fc, IffHeaderChunk.SIGNATURE_LENGTH + CHUNKSIZE_LENGTH);
                 FmtChunk fmt = FmtChunk.readChunkHeader(fmtChunkBuffer);
-                if (fmt != null)
-                {
+                if (fmt != null) {
                     return fmt.readChunkData(dsd, fc);
-                }
-                else
-                {
+                } else {
                     throw new CannotReadException(file + " Not a valid dsf file. Content does not include 'fmt ' chunk");
                 }
-            }
-            else
-            {
+            } else {
                 throw new CannotReadException(file + " Not a valid dsf file. Content does not start with 'DSD '");
             }
         }
     }
 
     @Override
-    protected Tag getTag(Path file) throws CannotReadException, IOException
-    {
-        try(FileChannel fc = FileChannel.open(file))
-        {
+    protected Tag getTag(Path file) throws CannotReadException, IOException {
+        try (FileChannel fc = FileChannel.open(file)) {
             DsdChunk dsd = DsdChunk.readChunk(Utils.readFileDataIntoBufferLE(fc, DsdChunk.DSD_HEADER_LENGTH));
-            if (dsd != null)
-            {
+            if (dsd != null) {
                 return readTag(fc, dsd, file.toString());
-            }
-            else
-            {
-                throw new CannotReadException(file +" Not a valid dsf file. Content does not start with 'DSD '.");
+            } else {
+                throw new CannotReadException(file + " Not a valid dsf file. Content does not start with 'DSD '.");
             }
         }
     }
@@ -80,52 +66,41 @@ public class DsfFileReader extends AudioFileReader2
      * Reads the ID3v2 tag starting at the {@code tagOffset} position in the
      * supplied file.
      *
-     * @param fc the filechannel from which to read
-     * @param dsd  the dsd chunk
+     * @param fc       the filechannel from which to read
+     * @param dsd      the dsd chunk
      * @param fileName
      * @return the read tag or an empty tag if something went wrong. Never
      * <code>null</code>.
      * @throws IOException if cannot read file.
      */
-    private Tag readTag(FileChannel fc, DsdChunk dsd, String fileName) throws CannotReadException,IOException
-    {
-        if(dsd.getMetadataOffset() > 0)
-        {
+    private Tag readTag(FileChannel fc, DsdChunk dsd, String fileName) throws CannotReadException, IOException {
+        if (dsd.getMetadataOffset() > 0) {
             fc.position(dsd.getMetadataOffset());
             ID3Chunk id3Chunk = ID3Chunk.readChunk(Utils.readFileDataIntoBufferLE(fc, (int) (fc.size() - fc.position())));
-            if(id3Chunk!=null)
-            {
-                int version = id3Chunk.getDataBuffer().get(AbstractID3v2Tag.FIELD_TAG_MAJOR_VERSION_POS);
-                try
-                {
-                    switch (version)
-                    {
+            if (id3Chunk != null) {
+                int version = id3Chunk.dataBuffer().get(AbstractID3v2Tag.FIELD_TAG_MAJOR_VERSION_POS);
+                try {
+                    switch (version) {
                         case ID3v22Tag.MAJOR_VERSION:
-                            return new ID3v22Tag(id3Chunk.getDataBuffer(), "");
+                            return new ID3v22Tag(id3Chunk.dataBuffer(), "");
                         case ID3v23Tag.MAJOR_VERSION:
-                            return new ID3v23Tag(id3Chunk.getDataBuffer(), "");
+                            return new ID3v23Tag(id3Chunk.dataBuffer(), "");
                         case ID3v24Tag.MAJOR_VERSION:
-                            return new ID3v24Tag(id3Chunk.getDataBuffer(), "");
+                            return new ID3v24Tag(id3Chunk.dataBuffer(), "");
                         default:
-                            logger.log(Level.WARNING,   fileName + " Unknown ID3v2 version " + version + ". Returning an empty ID3v2 Tag.");
+                            logger.log(Level.WARNING, fileName + " Unknown ID3v2 version " + version + ". Returning an empty ID3v2 Tag.");
                             return null;
                     }
-                }
-                catch (TagException e)
-                {
+                } catch (TagException e) {
                     throw new CannotReadException(fileName + " Could not read ID3v2 tag:corruption");
                 }
-            }
-            else
-            {
+            } else {
                 logger.log(Level.WARNING, fileName + " No existing ID3 tag(1)");
                 return null;
             }
-          }
-        else
-        {
+        } else {
             logger.log(Level.WARNING, fileName + " No existing ID3 tag(2)");
-            return   null;
+            return null;
         }
     }
 }

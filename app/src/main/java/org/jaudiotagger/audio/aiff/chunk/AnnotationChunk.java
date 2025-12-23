@@ -12,22 +12,19 @@ import java.nio.ByteBuffer;
  *
  * @see CommentsChunk
  */
-public class AnnotationChunk extends TextChunk
-{
+public class AnnotationChunk extends TextChunk {
 
     /**
-     * @param chunkHeader  The header for this chunk
-     * @param chunkData  The buffer from which the AIFF data are being read
+     * @param chunkHeader     The header for this chunk
+     * @param chunkData       The buffer from which the AIFF data are being read
      * @param aiffAudioHeader The AiffAudioHeader into which information is stored
      */
-    public AnnotationChunk(final ChunkHeader chunkHeader, final ByteBuffer chunkData, final AiffAudioHeader aiffAudioHeader)
-    {
+    public AnnotationChunk(final ChunkHeader chunkHeader, final ByteBuffer chunkData, final AiffAudioHeader aiffAudioHeader) {
         super(chunkHeader, chunkData, aiffAudioHeader);
     }
 
     @Override
-    public boolean readChunk() throws IOException
-    {
+    public boolean readChunk() throws IOException {
         aiffAudioHeader.addAnnotation(readChunkText());
         return true;
     }

@@ -1,25 +1,25 @@
 /*
-*      _______                       _____   _____ _____  
-*     |__   __|                     |  __ \ / ____|  __ \ 
-*        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
-*        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/ 
-*        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |     
-*        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|     
-*                                                         
-* -------------------------------------------------------------
-*
-* TarsosDSP is developed by Joren Six at IPEM, University Ghent
-*  
-* -------------------------------------------------------------
-*
-*  Info: http://0110.be/tag/TarsosDSP
-*  Github: https://github.com/JorenSix/TarsosDSP
-*  Releases: http://0110.be/releases/TarsosDSP/
-*  
-*  TarsosDSP includes modified source code by various authors,
-*  for credits and info, see README.
-* 
-*/
+ *      _______                       _____   _____ _____
+ *     |__   __|                     |  __ \ / ____|  __ \
+ *        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
+ *        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/
+ *        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |
+ *        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|
+ *
+ * -------------------------------------------------------------
+ *
+ * TarsosDSP is developed by Joren Six at IPEM, University Ghent
+ *
+ * -------------------------------------------------------------
+ *
+ *  Info: http://0110.be/tag/TarsosDSP
+ *  Github: https://github.com/JorenSix/TarsosDSP
+ *  Releases: http://0110.be/releases/TarsosDSP/
+ *
+ *  TarsosDSP includes modified source code by various authors,
+ *  for credits and info, see README.
+ *
+ */
 
 
 /*
@@ -44,61 +44,52 @@ package be.tarsos.dsp.filters;
 /**
  * A band pass filter is a filter that filters out all frequencies except for
  * those in a band centered on the current frequency of the filter.
- * 
+ *
  * @author Damien Di Fede
- * 
+ *
  */
-public class BandPass extends IIRFilter
-{
-  private float bw;
+public class BandPass extends IIRFilter {
+    private float bw;
 
-  /**
-   * Constructs a band pass filter with the requested center frequency,
-   * bandwidth and sample rate.
-   * 
-   * @param freq
-   *          the center frequency of the band to pass (in Hz)
-   * @param bandWidth
-   *          the width of the band to pass (in Hz)
-   * @param sampleRate
-   *          the sample rate of audio that will be filtered by this filter
-   */
-  public BandPass(float freq, float bandWidth, float sampleRate)
-  {
-    super(freq, sampleRate);
-    setBandWidth(bandWidth);
-  }
+    /**
+     * Constructs a band pass filter with the requested center frequency,
+     * bandwidth and sample rate.
+     *
+     * @param freq       the center frequency of the band to pass (in Hz)
+     * @param bandWidth  the width of the band to pass (in Hz)
+     * @param sampleRate the sample rate of audio that will be filtered by this filter
+     */
+    public BandPass(float freq, float bandWidth, float sampleRate) {
+        super(freq, sampleRate);
+        setBandWidth(bandWidth);
+    }
 
-  /**
-   * Sets the band width of the filter. Doing this will cause the coefficients
-   * to be recalculated.
-   * 
-   * @param bandWidth
-   *          the band width (in Hz)
-   */
-  public void setBandWidth(float bandWidth)
-  {
-    bw = bandWidth / getSampleRate();
-    calcCoeff();
-  }
+    /**
+     * Returns the band width of this filter.
+     *
+     * @return the band width (in Hz)
+     */
+    public float getBandWidth() {
+        return bw * getSampleRate();
+    }
 
-  /**
-   * Returns the band width of this filter.
-   * 
-   * @return the band width (in Hz)
-   */
-  public float getBandWidth()
-  {
-    return bw * getSampleRate();
-  }
+    /**
+     * Sets the band width of the filter. Doing this will cause the coefficients
+     * to be recalculated.
+     *
+     * @param bandWidth the band width (in Hz)
+     */
+    public void setBandWidth(float bandWidth) {
+        bw = bandWidth / getSampleRate();
+        calcCoeff();
+    }
 
-  protected void calcCoeff()
-  {
-    float R = 1 - 3 * bw;
-    float fracFreq = getFrequency() / getSampleRate();
-    float T = 2 * (float) Math.cos(2 * Math.PI * fracFreq);
-    float K = (1 - R * T + R * R) / (2 - T);
-    a = new float[] { 1 - K, (K - R) * T, R * R - K };
-    b = new float[] { R * T, -R * R };
-  }
+    protected void calcCoeff() {
+        float R = 1 - 3 * bw;
+        float fracFreq = getFrequency() / getSampleRate();
+        float T = 2 * (float) Math.cos(2 * Math.PI * fracFreq);
+        float K = (1 - R * T + R * R) / (2 - T);
+        a = new float[]{1 - K, (K - R) * T, R * R - K};
+        b = new float[]{R * T, -R * R};
+    }
 }

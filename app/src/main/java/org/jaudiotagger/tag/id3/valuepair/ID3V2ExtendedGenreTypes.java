@@ -6,20 +6,17 @@ package org.jaudiotagger.tag.id3.valuepair;
  * <p>These are additional genres added in the V2 Specification, they have a string key (RX,CV) rather than a
  * numeric key
  */
-public enum ID3V2ExtendedGenreTypes
-{
+public enum ID3V2ExtendedGenreTypes {
     RX("Remix"),
     CR("Cover");
 
     private final String description;
 
-    ID3V2ExtendedGenreTypes(String description)
-    {
+    ID3V2ExtendedGenreTypes(String description) {
         this.description = description;
     }
 
-    public String getDescription()
-    {
+    public String getDescription() {
         return description;
     }
 }

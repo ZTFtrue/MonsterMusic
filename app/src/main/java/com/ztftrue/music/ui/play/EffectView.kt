@@ -236,7 +236,10 @@ fun EffectView(musicViewModel: MusicViewModel) {
                 )
                 CustomSlider(
                     modifier = Modifier
-                        .semantics { contentDescription = context.getString(R.string.echo_delay_slider_description) },
+                        .semantics {
+                            contentDescription =
+                                context.getString(R.string.echo_delay_slider_description)
+                        },
                     value = delayTime.floatValue,
                     onValueChange = {
                         delayTime.floatValue = (it * 10f).roundToInt() / 10f
@@ -260,7 +263,10 @@ fun EffectView(musicViewModel: MusicViewModel) {
                 )
                 CustomSlider(
                     modifier = Modifier
-                        .semantics { contentDescription = context.getString(R.string.echo_decay_slider_description) },
+                        .semantics {
+                            contentDescription =
+                                context.getString(R.string.echo_decay_slider_description)
+                        },
                     value = decay.floatValue,
                     onValueChange = {
                         decay.floatValue = (it * 10f).roundToInt() / 10f

@@ -26,8 +26,8 @@ import java.nio.ByteBuffer;
 
 /**
  * Popularimeter frame.
- *
- *
+ * <p>
+ * <p>
  * The purpose of this frame is to specify how good an audio file is.
  * Many interesting applications could be found to this frame such as a
  * playlist that features better audiofiles more often than others or it
@@ -54,23 +54,21 @@ import java.nio.ByteBuffer;
  * TODO : Counter should be optional, whereas we always expect it although allow a size of zero
  * needs testing.
  */
-public class FrameBodyPOPM extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody
-{
-    private static final int    RATING_FIELD_SIZE = 1;
-    private static final int    COUNTER_MINIMUM_FIELD_SIZE = 0;
-    public  static final String MEDIA_MONKEY_NO_EMAIL = "no@email";
+public class FrameBodyPOPM extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody {
+    public static final String MEDIA_MONKEY_NO_EMAIL = "no@email";
+    private static final int RATING_FIELD_SIZE = 1;
+    private static final int COUNTER_MINIMUM_FIELD_SIZE = 0;
+
     /**
      * Creates a new FrameBodyPOPM datatype.
      */
-    public FrameBodyPOPM()
-    {
+    public FrameBodyPOPM() {
         this.setObjectValue(DataTypes.OBJ_EMAIL, "");
         this.setObjectValue(DataTypes.OBJ_RATING, (long) 0);
         this.setObjectValue(DataTypes.OBJ_COUNTER, (long) 0);
     }
 
-    public FrameBodyPOPM(FrameBodyPOPM body)
-    {
+    public FrameBodyPOPM(FrameBodyPOPM body) {
         super(body);
     }
 
@@ -81,8 +79,7 @@ public class FrameBodyPOPM extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param rating
      * @param counter
      */
-    public FrameBodyPOPM(String emailToUser, long rating, long counter)
-    {
+    public FrameBodyPOPM(String emailToUser, long rating, long counter) {
         this.setObjectValue(DataTypes.OBJ_EMAIL, emailToUser);
         this.setObjectValue(DataTypes.OBJ_RATING, rating);
         this.setObjectValue(DataTypes.OBJ_COUNTER, counter);
@@ -95,32 +92,28 @@ public class FrameBodyPOPM extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param frameSize
      * @throws InvalidTagException if unable to create framebody from buffer
      */
-    public FrameBodyPOPM(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyPOPM(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
-    }
-
-    /**
-     * @param description
-     */
-    public void setEmailToUser(String description)
-    {
-        setObjectValue(DataTypes.OBJ_EMAIL, description);
     }
 
     /**
      * @return the memail of the user who rated this
      */
-    public String getEmailToUser()
-    {
+    public String getEmailToUser() {
         return (String) getObjectValue(DataTypes.OBJ_EMAIL);
+    }
+
+    /**
+     * @param description
+     */
+    public void setEmailToUser(String description) {
+        setObjectValue(DataTypes.OBJ_EMAIL, description);
     }
 
     /**
      * @return the rating given to this file
      */
-    public long getRating()
-    {
+    public long getRating() {
         return ((Number) getObjectValue(DataTypes.OBJ_RATING)).longValue();
     }
 
@@ -129,16 +122,14 @@ public class FrameBodyPOPM extends AbstractID3v2FrameBody implements ID3v24Frame
      *
      * @param rating
      */
-    public void setRating(long rating)
-    {
+    public void setRating(long rating) {
         setObjectValue(DataTypes.OBJ_RATING, rating);
     }
 
     /**
      * @return the play count of this file
      */
-    public long getCounter()
-    {
+    public long getCounter() {
         return ((Number) getObjectValue(DataTypes.OBJ_COUNTER)).longValue();
     }
 
@@ -147,8 +138,7 @@ public class FrameBodyPOPM extends AbstractID3v2FrameBody implements ID3v24Frame
      *
      * @param counter
      */
-    public void setCounter(long counter)
-    {
+    public void setCounter(long counter) {
         setObjectValue(DataTypes.OBJ_COUNTER, counter);
     }
 
@@ -157,26 +147,20 @@ public class FrameBodyPOPM extends AbstractID3v2FrameBody implements ID3v24Frame
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_POPULARIMETER;
     }
 
-    public String getUserFriendlyValue()
-    {
-        return getEmailToUser()+":"+getRating()+":"+getCounter();
+    public String getUserFriendlyValue() {
+        return getEmailToUser() + ":" + getRating() + ":" + getCounter();
     }
 
-    public void parseString(String data)
-    {
-        try
-        {
+    public void parseString(String data) {
+        try {
             int value = Integer.parseInt(data);
             setRating(value);
             setEmailToUser(MEDIA_MONKEY_NO_EMAIL);
-        }
-        catch(NumberFormatException nfe)
-        {
+        } catch (NumberFormatException nfe) {
 
         }
     }
@@ -184,8 +168,7 @@ public class FrameBodyPOPM extends AbstractID3v2FrameBody implements ID3v24Frame
     /**
      *
      */
-    protected void setupObjectList()
-    {
+    protected void setupObjectList() {
         objectList.add(new StringNullTerminated(DataTypes.OBJ_EMAIL, this));
         objectList.add(new NumberFixedLength(DataTypes.OBJ_RATING, this, RATING_FIELD_SIZE));
         objectList.add(new NumberVariableLength(DataTypes.OBJ_COUNTER, this, COUNTER_MINIMUM_FIELD_SIZE));

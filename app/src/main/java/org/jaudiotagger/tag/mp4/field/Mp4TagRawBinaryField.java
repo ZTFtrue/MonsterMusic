@@ -18,8 +18,7 @@ import java.nio.charset.StandardCharsets;
  * follow standard conventions in order to save the data without modification so it can be safetly
  * written back to file
  */
-public class Mp4TagRawBinaryField extends Mp4TagField
-{
+public class Mp4TagRawBinaryField extends Mp4TagField {
     protected int dataSize;
     protected byte[] dataBytes;
 
@@ -32,15 +31,13 @@ public class Mp4TagRawBinaryField extends Mp4TagField
      * @throws java.io.UnsupportedEncodingException
      *
      */
-    public Mp4TagRawBinaryField(Mp4BoxHeader header, ByteBuffer raw) throws UnsupportedEncodingException
-    {
+    public Mp4TagRawBinaryField(Mp4BoxHeader header, ByteBuffer raw) throws UnsupportedEncodingException {
         super(header.getId());
         dataSize = header.getDataLength();
         build(raw);
     }
 
-    public Mp4FieldType getFieldType()
-    {
+    public Mp4FieldType getFieldType() {
         return Mp4FieldType.IMPLICIT;
     }
 
@@ -51,8 +48,7 @@ public class Mp4TagRawBinaryField extends Mp4TagField
      * @throws java.io.UnsupportedEncodingException
      *
      */
-    protected byte[] getDataBytes() throws UnsupportedEncodingException
-    {
+    protected byte[] getDataBytes() throws UnsupportedEncodingException {
         return dataBytes;
     }
 
@@ -64,60 +60,48 @@ public class Mp4TagRawBinaryField extends Mp4TagField
      *
      * @param raw
      */
-    protected void build(ByteBuffer raw)
-    {
+    protected void build(ByteBuffer raw) {
         //Read the raw data into byte array
         this.dataBytes = new byte[dataSize];
-        for (int i = 0; i < dataBytes.length; i++)
-        {
+        for (int i = 0; i < dataBytes.length; i++) {
             this.dataBytes[i] = raw.get();
         }
     }
 
-    public boolean isBinary()
-    {
+    public boolean isBinary() {
         return true;
     }
 
-    public boolean isEmpty()
-    {
+    public boolean isEmpty() {
         return this.dataBytes.length == 0;
     }
 
-    public int getDataSize()
-    {
+    public int getDataSize() {
         return dataSize;
 
     }
 
-    public byte[] getData()
-    {
+    public byte[] getData() {
         return this.dataBytes;
     }
 
-    public void setData(byte[] d)
-    {
+    public void setData(byte[] d) {
         this.dataBytes = d;
     }
 
-    public void copyContent(TagField field)
-    {
+    public void copyContent(TagField field) {
         throw new UnsupportedOperationException("not done");
     }
 
-    public byte[] getRawContent() throws UnsupportedEncodingException
-    {
+    public byte[] getRawContent() throws UnsupportedEncodingException {
         logger.fine("Getting Raw data for:" + getId());
-        try
-        {
+        try {
             ByteArrayOutputStream outerbaos = new ByteArrayOutputStream();
             outerbaos.write(Utils.getSizeBEInt32(Mp4BoxHeader.HEADER_LENGTH + dataSize));
             outerbaos.write(getId().getBytes(StandardCharsets.ISO_8859_1));
             outerbaos.write(dataBytes);
             return outerbaos.toByteArray();
-        }
-        catch (IOException ioe)
-        {
+        } catch (IOException ioe) {
             //This should never happen as were not actually writing to/from a file
             throw new RuntimeException(ioe);
         }

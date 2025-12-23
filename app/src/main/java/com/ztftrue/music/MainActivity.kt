@@ -73,6 +73,7 @@ import com.ztftrue.music.sqlData.model.SortFiledData
 import com.ztftrue.music.sqlData.model.StorageFolder
 import com.ztftrue.music.ui.home.BaseLayout
 import com.ztftrue.music.ui.theme.MusicPitchTheme
+import com.ztftrue.music.utils.MusicFileParser
 import com.ztftrue.music.utils.OperateTypeInActivity
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
@@ -613,6 +614,7 @@ class MainActivity : ComponentActivity() {
         musicViewModel.folderViewTree.value = SharedPreferencesUtils.getShowFolderTree(
             this@MainActivity
         )
+        needHandleIntent = true
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
 
             if (ActivityCompat.checkSelfPermission(
@@ -644,6 +646,105 @@ class MainActivity : ComponentActivity() {
             audioPermissionRequest.launch(Manifest.permission.READ_MEDIA_AUDIO)
         }
 
+    }
+
+    var needHandleIntent = false
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        needHandleIntent = true
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        if (intent?.action == Intent.ACTION_VIEW) {
+            val uri = intent.data
+            // Get the name of the alias used to open the app
+            val componentName = intent.component?.className
+
+            if (uri != null) {
+                lifecycleScope.launch {
+                    val musicItem: MusicItem = MusicFileParser.parse(this@MainActivity, uri)
+                    when {
+                        componentName?.contains("PlayNextAlias") == true -> {
+                            addMusicToNext(musicItem)
+                        }
+
+                        componentName?.contains("ClearQueueAndPlayAlias") == true -> {
+                            // Logic for "Add to Queue"
+                            clearQueueAndAddPlay(musicItem)
+                        }
+
+                        componentName?.contains("AddToQueueAlias") == true -> {
+                            // Logic for "Add to Queue"
+                            addMusicToQueue(musicItem)
+                        }
+
+                        else -> {
+                            // Fallback (e.g. standard open)
+                            addMusicToQueue(musicItem)
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+
+
+    private fun addMusicToNext(musicItem: MusicItem) {
+        val i = musicViewModel.browser?.currentMediaItemIndex
+        val position = if (i != null) {
+            if (i == C.INDEX_UNSET) {
+                0
+            } else {
+                i + 1
+            }
+        } else {
+            0
+        }
+        musicViewModel.musicQueue.add(
+            position,
+            musicItem
+        )
+        val mediaItem = MediaItemUtils.musicItemToMediaItem(musicItem)
+        musicViewModel.browser?.addMediaItem(
+            position,
+            mediaItem
+        )
+    }
+
+    private fun addMusicToQueue(musicItem: MusicItem) {
+        musicViewModel.musicQueue.add(musicItem)
+        val mediaItem = MediaItemUtils.musicItemToMediaItem(musicItem)
+        musicViewModel.browser?.addMediaItem(
+            mediaItem
+        )
+    }
+
+    private fun clearQueueAndAddPlay(musicItem: MusicItem) {
+        musicViewModel.musicQueue.clear()
+        musicViewModel.musicQueue.add(musicItem)
+        bundle.putBoolean("switch_queue", true)
+        SharedPreferencesUtils.enableShuffle(this@MainActivity, false)
+        musicViewModel.enableShuffleModel.value = false
+        val anyList = AnyListBase(-5)
+        musicViewModel.playListCurrent.value = anyList
+        // TODO just parma for data,then get tracks in service
+        bundle.putParcelable("playList", anyList)
+        musicViewModel.browser?.sendCustomCommand(
+            MediaCommands.COMMAND_CHANGE_PLAYLIST,
+            bundle
+        )
+        val t1 = ArrayList<MediaItem>()
+        musicViewModel.musicQueue.forEachIndexed { index, it ->
+            t1.add(MediaItemUtils.musicItemToMediaItem(it))
+        }
+        musicViewModel.browser?.shuffleModeEnabled = false
+        musicViewModel.browser?.clearMediaItems()
+        musicViewModel.browser?.setMediaItems(t1)
+        musicViewModel.browser?.seekTo(0, 0)
+        musicViewModel.browser?.playWhenReady = true
+        musicViewModel.browser?.prepare()
     }
 
     public override fun onStart() {
@@ -930,6 +1031,10 @@ class MainActivity : ComponentActivity() {
         musicViewModel.playCompleted.value =
             resultData.getBoolean("play_completed")
         musicViewModel.volume.intValue = resultData.getInt("volume", 100)
+        if (needHandleIntent) {
+            needHandleIntent = false
+            handleIntent(intent)
+        }
     }
 
     private fun updateUiWithCurrentState(player: MediaBrowser) {

@@ -13,17 +13,14 @@ import java.nio.charset.StandardCharsets;
  *
  * <p>There are usually two free boxes, one beneath the meta atom and one toplevel atom
  */
-public class Mp4FreeBox extends AbstractMp4Box
-{
+public class Mp4FreeBox extends AbstractMp4Box {
     /**
      * Construct a new FreeBox containing datasize padding (i.e doesnt include header size)
      *
      * @param datasize padding size
      */
-    public Mp4FreeBox(int datasize)
-    {
-        try
-        {
+    public Mp4FreeBox(int datasize) {
+        try {
             //Header
             header = new Mp4BoxHeader();
             ByteArrayOutputStream headerBaos = new ByteArrayOutputStream();
@@ -33,14 +30,11 @@ public class Mp4FreeBox extends AbstractMp4Box
 
             //Body
             ByteArrayOutputStream freeBaos = new ByteArrayOutputStream();
-            for (int i = 0; i < datasize; i++)
-            {
+            for (int i = 0; i < datasize; i++) {
                 freeBaos.write(0x0);
             }
             dataBuffer = ByteBuffer.wrap(freeBaos.toByteArray());
-        }
-        catch (IOException ioe)
-        {
+        } catch (IOException ioe) {
             //This should never happen as were not actually writing to/from a file
             throw new RuntimeException(ioe);
         }

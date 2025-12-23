@@ -36,17 +36,14 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyTKEY extends AbstractFrameBodyTextInfo implements ID3v24FrameBody, ID3v23FrameBody
-{
+public class FrameBodyTKEY extends AbstractFrameBodyTextInfo implements ID3v24FrameBody, ID3v23FrameBody {
     /**
      * Creates a new FrameBodyTKEY datatype.
      */
-    public FrameBodyTKEY()
-    {
+    public FrameBodyTKEY() {
     }
 
-    public FrameBodyTKEY(FrameBodyTKEY body)
-    {
+    public FrameBodyTKEY(FrameBodyTKEY body) {
         super(body);
     }
 
@@ -56,8 +53,7 @@ public class FrameBodyTKEY extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param textEncoding
      * @param text
      */
-    public FrameBodyTKEY(byte textEncoding, String text)
-    {
+    public FrameBodyTKEY(byte textEncoding, String text) {
         super(textEncoding, text);
     }
 
@@ -69,8 +65,7 @@ public class FrameBodyTKEY extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @throws java.io.IOException
      * @throws InvalidTagException
      */
-    public FrameBodyTKEY(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyTKEY(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -79,8 +74,7 @@ public class FrameBodyTKEY extends AbstractFrameBodyTextInfo implements ID3v24Fr
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_INITIAL_KEY;
     }
 
@@ -88,8 +82,7 @@ public class FrameBodyTKEY extends AbstractFrameBodyTextInfo implements ID3v24Fr
      *
      * @return true if text value is valid musical key notation
      */
-    public boolean isValid()
-    {
+    public boolean isValid() {
         return MusicalKey.isValid(getFirstTextValue());
     }
 }

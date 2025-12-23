@@ -12,18 +12,15 @@ import java.util.Set;
 /**
  * Required when a single generic field maps to multiple ID3 Frames
  */
-public class AggregatedFrame implements TagTextField
-{
+public class AggregatedFrame implements TagTextField {
     //TODO rather than just maintaining insertion order we want to define a preset order
     protected Set<AbstractID3v2Frame> frames = new LinkedHashSet<AbstractID3v2Frame>();
 
-    public void addFrame(AbstractID3v2Frame frame)
-    {
+    public void addFrame(AbstractID3v2Frame frame) {
         frames.add(frame);
     }
 
-    public Set<AbstractID3v2Frame> getFrames()
-    {
+    public Set<AbstractID3v2Frame> getFrames() {
         return frames;
     }
 
@@ -32,25 +29,12 @@ public class AggregatedFrame implements TagTextField
      *
      * @return Content
      */
-    public String getContent()
-    {
+    public String getContent() {
         StringBuilder sb = new StringBuilder();
-        for(AbstractID3v2Frame next:frames)
-        {
+        for (AbstractID3v2Frame next : frames) {
             sb.append(next.getContent());
         }
         return sb.toString();
-    }
-
-    /**
-     * Returns the current used charset encoding.
-     *
-     * @return Charset encoding.
-     */
-    public Charset getEncoding()
-    {
-        final byte textEncoding = frames.iterator().next().getBody().getTextEncoding();
-        return TextEncoding.getInstanceOf().getCharsetForId(textEncoding);
     }
 
     /**
@@ -58,9 +42,18 @@ public class AggregatedFrame implements TagTextField
      *
      * @param content fields content.
      */
-    public void setContent(String content)
-    {
+    public void setContent(String content) {
 
+    }
+
+    /**
+     * Returns the current used charset encoding.
+     *
+     * @return Charset encoding.
+     */
+    public Charset getEncoding() {
+        final byte textEncoding = frames.iterator().next().getBody().getTextEncoding();
+        return TextEncoding.getInstanceOf().getCharsetForId(textEncoding);
     }
 
     /**
@@ -68,49 +61,40 @@ public class AggregatedFrame implements TagTextField
      *
      * @param encoding charset.
      */
-    public void setEncoding(Charset encoding)
-    {
+    public void setEncoding(Charset encoding) {
 
     }
 
     //TODO:needs implementing but not sure if this method is required at all
-    public void copyContent(TagField field)
-    {
+    public void copyContent(TagField field) {
 
     }
 
-    public String getId()
-    {
+    public String getId() {
         StringBuilder sb = new StringBuilder();
-        for(AbstractID3v2Frame next:frames)
-        {
+        for (AbstractID3v2Frame next : frames) {
             sb.append(next.getId());
         }
         return sb.toString();
     }
 
 
-    public boolean isCommon()
-    {
+    public boolean isCommon() {
         return true;
     }
 
-    public boolean isBinary()
-    {
+    public boolean isBinary() {
         return false;
     }
 
-    public void isBinary(boolean b)
-    {
+    public void isBinary(boolean b) {
     }
 
-    public boolean isEmpty()
-    {
+    public boolean isEmpty() {
         return false;
     }
 
-    public byte[] getRawContent() throws UnsupportedEncodingException
-    {
+    public byte[] getRawContent() throws UnsupportedEncodingException {
         throw new UnsupportedEncodingException();
     }
 }

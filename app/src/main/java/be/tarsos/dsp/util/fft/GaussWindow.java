@@ -1,25 +1,25 @@
 /*
-*      _______                       _____   _____ _____  
-*     |__   __|                     |  __ \ / ____|  __ \ 
-*        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
-*        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/ 
-*        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |     
-*        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|     
-*                                                         
-* -------------------------------------------------------------
-*
-* TarsosDSP is developed by Joren Six at IPEM, University Ghent
-*  
-* -------------------------------------------------------------
-*
-*  Info: http://0110.be/tag/TarsosDSP
-*  Github: https://github.com/JorenSix/TarsosDSP
-*  Releases: http://0110.be/releases/TarsosDSP/
-*  
-*  TarsosDSP includes modified source code by various authors,
-*  for credits and info, see README.
-* 
-*/
+ *      _______                       _____   _____ _____
+ *     |__   __|                     |  __ \ / ____|  __ \
+ *        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
+ *        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/
+ *        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |
+ *        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|
+ *
+ * -------------------------------------------------------------
+ *
+ * TarsosDSP is developed by Joren Six at IPEM, University Ghent
+ *
+ * -------------------------------------------------------------
+ *
+ *  Info: http://0110.be/tag/TarsosDSP
+ *  Github: https://github.com/JorenSix/TarsosDSP
+ *  Releases: http://0110.be/releases/TarsosDSP/
+ *
+ *  TarsosDSP includes modified source code by various authors,
+ *  for credits and info, see README.
+ *
+ */
 
 /*
  *  Copyright (c) 2007 - 2008 by Damien Di Fede <ddf@compartmental.net>
@@ -43,35 +43,37 @@ package be.tarsos.dsp.util.fft;
 
 /**
  * A Gauss window function.
- * 
+ *
  * @author Damien Di Fede
  * @author Corban Brook
  * @see <a href="http://en.wikipedia.org/wiki/Window_function#Gauss_windows">The
- *      Gauss Window</a>
+ * Gauss Window</a>
  */
 public class GaussWindow extends WindowFunction {
-	double alpha;
+    double alpha;
 
-	/**
-	 * Constructs a Gauss window function.
-	 * 
-	 * @param alpha the alpha parameter for the window construction.
-	 */
-	public GaussWindow(double alpha) {
-		if (alpha < 0.0 || alpha > 0.5) {
-			new IllegalArgumentException(
-					"Range for GaussWindow out of bounds. Value must be <= 0.5");
-		} else {
-			this.alpha = alpha;
-		}
-	}
+    /**
+     * Constructs a Gauss window function.
+     *
+     * @param alpha the alpha parameter for the window construction.
+     */
+    public GaussWindow(double alpha) {
+        if (alpha < 0.0 || alpha > 0.5) {
+            new IllegalArgumentException(
+                    "Range for GaussWindow out of bounds. Value must be <= 0.5");
+        } else {
+            this.alpha = alpha;
+        }
+    }
 
-	/** Constructs a Gauss window with a default alpha value of 0.25 */
-	public GaussWindow() {
-		this(0.25);
-	}
+    /**
+     * Constructs a Gauss window with a default alpha value of 0.25
+     */
+    public GaussWindow() {
+        this(0.25);
+    }
 
-	protected float value(int length, int index) {
-		return (float) Math.pow(Math.E,	-0.5 * Math.pow((index - (length - 1) / (double) 2)	/ (this.alpha * (length - 1) / (double) 2), 2));
-	}
+    protected float value(int length, int index) {
+        return (float) Math.pow(Math.E, -0.5 * Math.pow((index - (length - 1) / (double) 2) / (this.alpha * (length - 1) / (double) 2), 2));
+    }
 }

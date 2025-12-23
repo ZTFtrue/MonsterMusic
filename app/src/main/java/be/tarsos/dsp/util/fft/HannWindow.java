@@ -1,25 +1,25 @@
 /*
-*      _______                       _____   _____ _____  
-*     |__   __|                     |  __ \ / ____|  __ \ 
-*        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
-*        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/ 
-*        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |     
-*        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|     
-*                                                         
-* -------------------------------------------------------------
-*
-* TarsosDSP is developed by Joren Six at IPEM, University Ghent
-*  
-* -------------------------------------------------------------
-*
-*  Info: http://0110.be/tag/TarsosDSP
-*  Github: https://github.com/JorenSix/TarsosDSP
-*  Releases: http://0110.be/releases/TarsosDSP/
-*  
-*  TarsosDSP includes modified source code by various authors,
-*  for credits and info, see README.
-* 
-*/
+ *      _______                       _____   _____ _____
+ *     |__   __|                     |  __ \ / ____|  __ \
+ *        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
+ *        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/
+ *        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |
+ *        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|
+ *
+ * -------------------------------------------------------------
+ *
+ * TarsosDSP is developed by Joren Six at IPEM, University Ghent
+ *
+ * -------------------------------------------------------------
+ *
+ *  Info: http://0110.be/tag/TarsosDSP
+ *  Github: https://github.com/JorenSix/TarsosDSP
+ *  Releases: http://0110.be/releases/TarsosDSP/
+ *
+ *  TarsosDSP includes modified source code by various authors,
+ *  for credits and info, see README.
+ *
+ */
 
 /*
  *  Copyright (c) 2007 - 2008 by Damien Di Fede <ddf@compartmental.net>
@@ -43,19 +43,21 @@ package be.tarsos.dsp.util.fft;
 
 /**
  * A Hann window function.
- * 
+ *
  * @author Damien Di Fede
  * @author Corban Brook
  * @see <a href="http://en.wikipedia.org/wiki/Window_function#Hann_window">The
- *      Hann Window</a>
+ * Hann Window</a>
  */
 public class HannWindow extends WindowFunction {
-	/** Constructs a Hann window. */
-	public HannWindow() {
-	}
+    /**
+     * Constructs a Hann window.
+     */
+    public HannWindow() {
+    }
 
-	protected float value(int length, int index) {
-		//equal to 0.5 - 0.5 * Math.cos (TWO_PI * index / (length-1f));
-		return 0.5f * (1f - (float) Math.cos(TWO_PI * index / (length - 1f)));
-	}
+    protected float value(int length, int index) {
+        //equal to 0.5 - 0.5 * Math.cos (TWO_PI * index / (length-1f));
+        return 0.5f * (1f - (float) Math.cos(TWO_PI * index / (length - 1f)));
+    }
 }

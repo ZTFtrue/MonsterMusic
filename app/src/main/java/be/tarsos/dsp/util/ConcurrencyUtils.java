@@ -1,25 +1,25 @@
 /*
-*      _______                       _____   _____ _____  
-*     |__   __|                     |  __ \ / ____|  __ \ 
-*        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
-*        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/ 
-*        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |     
-*        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|     
-*                                                         
-* -------------------------------------------------------------
-*
-* TarsosDSP is developed by Joren Six at IPEM, University Ghent
-*  
-* -------------------------------------------------------------
-*
-*  Info: http://0110.be/tag/TarsosDSP
-*  Github: https://github.com/JorenSix/TarsosDSP
-*  Releases: http://0110.be/releases/TarsosDSP/
-*  
-*  TarsosDSP includes modified source code by various authors,
-*  for credits and info, see README.
-* 
-*/
+ *      _______                       _____   _____ _____
+ *     |__   __|                     |  __ \ / ____|  __ \
+ *        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
+ *        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/
+ *        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |
+ *        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|
+ *
+ * -------------------------------------------------------------
+ *
+ * TarsosDSP is developed by Joren Six at IPEM, University Ghent
+ *
+ * -------------------------------------------------------------
+ *
+ *  Info: http://0110.be/tag/TarsosDSP
+ *  Github: https://github.com/JorenSix/TarsosDSP
+ *  Releases: http://0110.be/releases/TarsosDSP/
+ *
+ *  TarsosDSP includes modified source code by various authors,
+ *  for credits and info, see README.
+ *
+ */
 
 
 /* ***** BEGIN LICENSE BLOCK *****
@@ -65,7 +65,7 @@ import java.util.concurrent.ThreadFactory;
 
 /**
  * Concurrency utilities.
- * 
+ *
  * @author Piotr Wendykier (piotr.wendykier@gmail.com)
  */
 public class ConcurrencyUtils {
@@ -88,32 +88,9 @@ public class ConcurrencyUtils {
 
     }
 
-    private static class CustomExceptionHandler implements Thread.UncaughtExceptionHandler {
-        public void uncaughtException(Thread t, Throwable e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    private static class CustomThreadFactory implements ThreadFactory {
-        private static final ThreadFactory defaultFactory = Executors.defaultThreadFactory();
-
-        private final Thread.UncaughtExceptionHandler handler;
-
-        CustomThreadFactory(Thread.UncaughtExceptionHandler handler) {
-            this.handler = handler;
-        }
-
-        public Thread newThread(Runnable r) {
-            Thread t = defaultFactory.newThread(r);
-            t.setUncaughtExceptionHandler(handler);
-            return t;
-        }
-    }
-
     /**
      * Returns the number of available processors.
-     * 
+     *
      * @return number of available processors
      */
     public static int getNumberOfProcessors() {
@@ -122,7 +99,7 @@ public class ConcurrencyUtils {
 
     /**
      * Returns the current number of threads.
-     * 
+     *
      * @return the current number of threads.
      */
     public static int getNumberOfThreads() {
@@ -132,7 +109,7 @@ public class ConcurrencyUtils {
     /**
      * Sets the number of threads. If n is not a power-of-two number, then the
      * number of threads is set to the closest power-of-two number less than n.
-     * 
+     *
      * @param n The number of threads
      */
     public static void setNumberOfThreads(int n) {
@@ -141,7 +118,7 @@ public class ConcurrencyUtils {
 
     /**
      * Returns the minimal size of 1D data for which two threads are used.
-     * 
+     *
      * @return the minimal size of 1D data for which two threads are used
      */
     public static int getThreadsBeginN_1D_FFT_2Threads() {
@@ -149,37 +126,9 @@ public class ConcurrencyUtils {
     }
 
     /**
-     * Returns the minimal size of 1D data for which four threads are used.
-     * 
-     * @return the minimal size of 1D data for which four threads are used
-     */
-    public static int getThreadsBeginN_1D_FFT_4Threads() {
-        return THREADS_BEGIN_N_1D_FFT_4THREADS;
-    }
-
-    /**
-     * Returns the minimal size of 2D data for which threads are used.
-     * 
-     * @return the minimal size of 2D data for which threads are used
-     */
-    public static int getThreadsBeginN_2D() {
-        return THREADS_BEGIN_N_2D;
-    }
-
-    /**
-     * Returns the minimal size of 3D data for which threads are used.
-     * 
-     * @return the minimal size of 3D data for which threads are used
-     */
-    public static int getThreadsBeginN_3D() {
-        return THREADS_BEGIN_N_3D;
-    }
-
-    /**
      * Sets the minimal size of 1D data for which two threads are used.
-     * 
-     * @param n
-     *            the minimal size of 1D data for which two threads are used
+     *
+     * @param n the minimal size of 1D data for which two threads are used
      */
     public static void setThreadsBeginN_1D_FFT_2Threads(int n) {
         if (n < 512) {
@@ -190,10 +139,18 @@ public class ConcurrencyUtils {
     }
 
     /**
+     * Returns the minimal size of 1D data for which four threads are used.
+     *
+     * @return the minimal size of 1D data for which four threads are used
+     */
+    public static int getThreadsBeginN_1D_FFT_4Threads() {
+        return THREADS_BEGIN_N_1D_FFT_4THREADS;
+    }
+
+    /**
      * Sets the minimal size of 1D data for which four threads are used.
-     * 
-     * @param n
-     *            the minimal size of 1D data for which four threads are used
+     *
+     * @param n the minimal size of 1D data for which four threads are used
      */
     public static void setThreadsBeginN_1D_FFT_4Threads(int n) {
         if (n < 512) {
@@ -204,20 +161,36 @@ public class ConcurrencyUtils {
     }
 
     /**
+     * Returns the minimal size of 2D data for which threads are used.
+     *
+     * @return the minimal size of 2D data for which threads are used
+     */
+    public static int getThreadsBeginN_2D() {
+        return THREADS_BEGIN_N_2D;
+    }
+
+    /**
      * Sets the minimal size of 2D data for which threads are used.
-     * 
-     * @param n
-     *            the minimal size of 2D data for which threads are used
+     *
+     * @param n the minimal size of 2D data for which threads are used
      */
     public static void setThreadsBeginN_2D(int n) {
         THREADS_BEGIN_N_2D = n;
     }
 
     /**
+     * Returns the minimal size of 3D data for which threads are used.
+     *
+     * @return the minimal size of 3D data for which threads are used
+     */
+    public static int getThreadsBeginN_3D() {
+        return THREADS_BEGIN_N_3D;
+    }
+
+    /**
      * Sets the minimal size of 3D data for which threads are used.
-     * 
-     * @param n
-     *            the minimal size of 3D data for which threads are used
+     *
+     * @param n the minimal size of 3D data for which threads are used
      */
     public static void setThreadsBeginN_3D(int n) {
         THREADS_BEGIN_N_3D = n;
@@ -242,7 +215,7 @@ public class ConcurrencyUtils {
 
     /**
      * Returns the closest power-of-two number greater than or equal to x.
-     * 
+     *
      * @param x the number to process
      * @return the closest power-of-two number greater than or equal to x
      */
@@ -250,7 +223,7 @@ public class ConcurrencyUtils {
         if (x < 1)
             throw new IllegalArgumentException("x must be greater or equal 1");
         if ((x & (x - 1)) == 0) {
-            return x; // x is already a power-of-two number 
+            return x; // x is already a power-of-two number
         }
         x |= (x >>> 1);
         x |= (x >>> 2);
@@ -263,7 +236,7 @@ public class ConcurrencyUtils {
 
     /**
      * Returns the closest power-of-two number less than or equal to x.
-     * 
+     *
      * @param x the number to process
      * @return the closest power-of-two number less then or equal to x
      */
@@ -275,7 +248,7 @@ public class ConcurrencyUtils {
 
     /**
      * Checks if x is a power-of-two number.
-     * 
+     *
      * @param x the number to process
      * @return true if x is a power-of-two number
      */
@@ -289,7 +262,7 @@ public class ConcurrencyUtils {
     /**
      * Causes the currently executing thread to sleep (temporarily cease
      * execution) for the specified number of milliseconds.
-     * 
+     *
      * @param millis the number to millis to sleep
      */
     public static void sleep(long millis) {
@@ -303,7 +276,7 @@ public class ConcurrencyUtils {
     /**
      * Submits a Runnable task for execution and returns a Future representing
      * that task.
-     * 
+     *
      * @param task a Runnable task for execution
      * @return a Future representing the task
      */
@@ -313,7 +286,7 @@ public class ConcurrencyUtils {
 
     /**
      * Waits for all threads to complete computation.
-     * 
+     *
      * @param futures The futures which need completion.
      */
     public static void waitForCompletion(Future<?>[] futures) {
@@ -326,6 +299,24 @@ public class ConcurrencyUtils {
             ex.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
+        }
+    }
+
+    private static class CustomExceptionHandler implements Thread.UncaughtExceptionHandler {
+        public void uncaughtException(Thread t, Throwable e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private record CustomThreadFactory(
+            Thread.UncaughtExceptionHandler handler) implements ThreadFactory {
+        private static final ThreadFactory defaultFactory = Executors.defaultThreadFactory();
+
+        public Thread newThread(Runnable r) {
+            Thread t = defaultFactory.newThread(r);
+            t.setUncaughtExceptionHandler(handler);
+            return t;
         }
     }
 }

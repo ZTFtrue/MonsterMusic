@@ -1,25 +1,25 @@
 /*
-*      _______                       _____   _____ _____  
-*     |__   __|                     |  __ \ / ____|  __ \ 
-*        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
-*        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/ 
-*        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |     
-*        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|     
-*                                                         
-* -------------------------------------------------------------
-*
-* TarsosDSP is developed by Joren Six at IPEM, University Ghent
-*  
-* -------------------------------------------------------------
-*
-*  Info: http://0110.be/tag/TarsosDSP
-*  Github: https://github.com/JorenSix/TarsosDSP
-*  Releases: http://0110.be/releases/TarsosDSP/
-*  
-*  TarsosDSP includes modified source code by various authors,
-*  for credits and info, see README.
-* 
-*/
+ *      _______                       _____   _____ _____
+ *     |__   __|                     |  __ \ / ____|  __ \
+ *        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
+ *        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/
+ *        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |
+ *        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|
+ *
+ * -------------------------------------------------------------
+ *
+ * TarsosDSP is developed by Joren Six at IPEM, University Ghent
+ *
+ * -------------------------------------------------------------
+ *
+ *  Info: http://0110.be/tag/TarsosDSP
+ *  Github: https://github.com/JorenSix/TarsosDSP
+ *  Releases: http://0110.be/releases/TarsosDSP/
+ *
+ *  TarsosDSP includes modified source code by various authors,
+ *  for credits and info, see README.
+ *
+ */
 
 /******************************************************************************
  *
@@ -39,19 +39,8 @@ import java.nio.FloatBuffer;
 
 public class Resampler {
 
-    public static class Result {
-        public final int inputSamplesConsumed;
-        public final int outputSamplesGenerated;
-
-        public Result(int inputSamplesConsumed, int outputSamplesGenerated) {
-            this.inputSamplesConsumed = inputSamplesConsumed;
-            this.outputSamplesGenerated = outputSamplesGenerated;
-        }
-    }
-
     // number of values per 1/delta in impulse response
     protected static final int Npc = 4096;
-
     private final float[] Imp;
     private final float[] ImpD;
     private final float LpScl;
@@ -61,13 +50,12 @@ public class Resampler {
     private final double maxFactor;
     private final int XSize;
     private final float[] X;
-    private int Xp; // Current "now"-sample pointer for input
-    private int Xread; // Position to put new samples
     private final int Xoff;
     private final float[] Y;
+    private int Xp; // Current "now"-sample pointer for input
+    private int Xread; // Position to put new samples
     private int Yp;
     private double Time;
-
     /**
      * Clone an existing resampling session. Faster than creating one from scratch.
      *
@@ -366,12 +354,12 @@ public class Resampler {
     /**
      * Process a batch of samples. Alternative interface if you prefer to work with arrays.
      *
-     * @param factor         resampling rate for this batch
-     * @param inBuffer       array containing input samples in the range -1.0 to 1.0
-     * @param inBufferOffset offset into inBuffer at which to start processing
-     * @param inBufferLen    number of valid elements in the inputBuffer
-     * @param lastBatch      pass true if this is the last batch of samples
-     * @param outBuffer      array to hold the resampled data
+     * @param factor          resampling rate for this batch
+     * @param inBuffer        array containing input samples in the range -1.0 to 1.0
+     * @param inBufferOffset  offset into inBuffer at which to start processing
+     * @param inBufferLen     number of valid elements in the inputBuffer
+     * @param lastBatch       pass true if this is the last batch of samples
+     * @param outBuffer       array to hold the resampled data
      * @param outBufferOffset Offset in the output buffer.
      * @param outBufferLen    Output buffer length.
      * @return the number of samples consumed and generated
@@ -384,8 +372,6 @@ public class Resampler {
 
         return new Result(inputBuffer.position() - inBufferOffset, outputBuffer.position() - outBufferOffset);
     }
-
-
 
     /*
      * Sampling rate up-conversion only subroutine; Slightly faster than
@@ -469,6 +455,9 @@ public class Resampler {
 
         this.Time = CurrentTime;
         return Yp_index; // Return the number of output samples
+    }
+
+    public record Result(int inputSamplesConsumed, int outputSamplesGenerated) {
     }
 
 }

@@ -222,6 +222,17 @@ object SharedPreferencesUtils {
         }
     }
 
+    fun getMergeAlbum(context: Context): Boolean {
+        return context.getSharedPreferences("config", Context.MODE_PRIVATE)
+            .getBoolean("merge_album", false)
+    }
+
+    fun setMergeAlbum(context: Context, enable: Boolean) {
+        context.getSharedPreferences("config", Context.MODE_PRIVATE).edit {
+            putBoolean("merge_album", enable)
+        }
+    }
+
     fun getIgnoreDuration(context: Context): Long {
         return context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
             .getLong("ignore_duration", 0L)
@@ -245,7 +256,7 @@ object SharedPreferencesUtils {
     }
 
     fun setAutoHandleAudioFocus(context: Context, enable: Boolean) {
-        context.getSharedPreferences("config", Context.MODE_PRIVATE).edit {
+        context.getSharedPreferences("config", Context.MODE_PRIVATE).edit(commit = true) {
             putBoolean("auto_handle_audio_focus", enable)
         }
     }

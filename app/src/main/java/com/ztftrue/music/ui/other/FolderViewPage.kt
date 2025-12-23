@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,11 +32,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.Folder
-import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material.icons.outlined.SnippetFolder
 import androidx.compose.material3.HorizontalDivider
@@ -57,14 +54,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -101,6 +95,7 @@ import com.ztftrue.music.ui.public.CreatePlayListDialog
 import com.ztftrue.music.ui.public.QueueOperateDialog
 import com.ztftrue.music.ui.public.TopBar
 import com.ztftrue.music.ui.public.TracksListView
+import com.ztftrue.music.utils.MutableListExtension.removeLastSafe
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.Utils
@@ -628,7 +623,7 @@ fun FolderListPage(
 
     LaunchedEffect(musicViewModel.refreshPlayList.value, refreshCurrentValueList) {
         if (musicViewModel.browser == null) {
-            navController.removeLastOrNull()
+            navController.removeLastSafe()
             return@LaunchedEffect
         } else {
             musicViewModel.loadingTracks.value = true
@@ -644,7 +639,7 @@ fun FolderListPage(
                     val result: LibraryResult<ImmutableList<MediaItem>>? = futureResult.get()
                     Log.d("Client", "result tracks: ${result?.resultCode}")
                     if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
-                        navController.removeLastOrNull()
+                        navController.removeLastSafe()
                         return@addListener
                     }
                     val albumMediaItems: List<MediaItem> = result.value ?: listOf()
@@ -660,7 +655,7 @@ fun FolderListPage(
                     val duration = tracksList.sumOf { it.duration }
                     durationAll.value = Utils.formatTimeWithUnit(duration)
                 } catch (e: Exception) {
-                    navController.removeLastOrNull()
+                    navController.removeLastSafe()
                     // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
                     Log.e("Client", "Failed to toggle favorite status", e)
                 }
@@ -880,6 +875,7 @@ fun FolderItemView(
         modifier = modifier
             .combinedClickable(
                 onLongClick = {
+                    showOperateDialog = true
                 }
             ) {
 //                navController.add(Router.PlayListView(item))

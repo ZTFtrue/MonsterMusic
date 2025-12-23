@@ -26,8 +26,8 @@ import java.nio.ByteBuffer;
 
 /**
  * Audio encryption Frame.
- *
- *
+ * <p>
+ * <p>
  * This frame indicates if the actual audio stream is encrypted, and by
  * whom. Since standardisation of such encrypion scheme is beyond this
  * document, all "AENC" frames begin with a terminated string with a
@@ -63,22 +63,19 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyAENC extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody
-{
+public class FrameBodyAENC extends AbstractID3v2FrameBody implements ID3v24FrameBody, ID3v23FrameBody {
 
     /**
      * Creates a new FrameBodyAENC datatype.
      */
-    public FrameBodyAENC()
-    {
+    public FrameBodyAENC() {
         this.setObjectValue(DataTypes.OBJ_OWNER, "");
         this.setObjectValue(DataTypes.OBJ_PREVIEW_START, (short) 0);
         this.setObjectValue(DataTypes.OBJ_PREVIEW_LENGTH, (short) 0);
         this.setObjectValue(DataTypes.OBJ_ENCRYPTION_INFO, new byte[0]);
     }
 
-    public FrameBodyAENC(FrameBodyAENC body)
-    {
+    public FrameBodyAENC(FrameBodyAENC body) {
         super(body);
     }
 
@@ -90,8 +87,7 @@ public class FrameBodyAENC extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param previewLength
      * @param data
      */
-    public FrameBodyAENC(String owner, short previewStart, short previewLength, byte[] data)
-    {
+    public FrameBodyAENC(String owner, short previewStart, short previewLength, byte[] data) {
         this.setObjectValue(DataTypes.OBJ_OWNER, owner);
         this.setObjectValue(DataTypes.OBJ_PREVIEW_START, previewStart);
         this.setObjectValue(DataTypes.OBJ_PREVIEW_LENGTH, previewLength);
@@ -105,8 +101,7 @@ public class FrameBodyAENC extends AbstractID3v2FrameBody implements ID3v24Frame
      * @param frameSize
      * @throws InvalidTagException if unable to create framebody from buffer
      */
-    public FrameBodyAENC(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
-    {
+    public FrameBodyAENC(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
         super(byteBuffer, frameSize);
     }
 
@@ -115,32 +110,28 @@ public class FrameBodyAENC extends AbstractID3v2FrameBody implements ID3v24Frame
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier()
-    {
+    public String getIdentifier() {
         return ID3v24Frames.FRAME_ID_AUDIO_ENCRYPTION;
     }
 
     /**
      * @return owner
      */
-    public String getOwner()
-    {
+    public String getOwner() {
         return (String) getObjectValue(DataTypes.OBJ_OWNER);
     }
 
     /**
      * @param description
      */
-    public void getOwner(String description)
-    {
+    public void getOwner(String description) {
         setObjectValue(DataTypes.OBJ_OWNER, description);
     }
 
     /**
      *
      */
-    protected void setupObjectList()
-    {
+    protected void setupObjectList() {
         objectList.add(new StringNullTerminated(DataTypes.OBJ_OWNER, this));
         objectList.add(new NumberFixedLength(DataTypes.OBJ_PREVIEW_START, this, 2));
         objectList.add(new NumberFixedLength(DataTypes.OBJ_PREVIEW_LENGTH, this, 2));

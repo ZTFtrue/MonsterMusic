@@ -1,25 +1,25 @@
 /*
-*      _______                       _____   _____ _____  
-*     |__   __|                     |  __ \ / ____|  __ \ 
-*        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
-*        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/ 
-*        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |     
-*        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|     
-*                                                         
-* -------------------------------------------------------------
-*
-* TarsosDSP is developed by Joren Six at IPEM, University Ghent
-*  
-* -------------------------------------------------------------
-*
-*  Info: http://0110.be/tag/TarsosDSP
-*  Github: https://github.com/JorenSix/TarsosDSP
-*  Releases: http://0110.be/releases/TarsosDSP/
-*  
-*  TarsosDSP includes modified source code by various authors,
-*  for credits and info, see README.
-* 
-*/
+ *      _______                       _____   _____ _____
+ *     |__   __|                     |  __ \ / ____|  __ \
+ *        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
+ *        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/
+ *        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |
+ *        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|
+ *
+ * -------------------------------------------------------------
+ *
+ * TarsosDSP is developed by Joren Six at IPEM, University Ghent
+ *
+ * -------------------------------------------------------------
+ *
+ *  Info: http://0110.be/tag/TarsosDSP
+ *  Github: https://github.com/JorenSix/TarsosDSP
+ *  Releases: http://0110.be/releases/TarsosDSP/
+ *
+ *  TarsosDSP includes modified source code by various authors,
+ *  for credits and info, see README.
+ *
+ */
 
 
 /*
@@ -54,110 +54,109 @@ import be.tarsos.dsp.AudioProcessor;
  * defining the <code>calcCoeff()</code> function. When filling the coefficient
  * arrays, be aware that <code>b[0]</code> corresponds to
  * <code>b<sub>1</sub></code>.
- * 
+ *
  * @author Damien Di Fede
  * @author Joren Six
- * 
+ *
  */
 public abstract class IIRFilter implements AudioProcessor {
-	
-	/** The b coefficients. */
-	protected float[] b;
 
-	/** The a coefficients. */
-	protected float[] a;
+    private final float sampleRate;
+    /**
+     * The b coefficients.
+     */
+    protected float[] b;
+    /**
+     * The a coefficients.
+     */
+    protected float[] a;
+    /**
+     * The input values to the left of the output value currently being
+     * calculated.
+     */
+    protected float[] in;
+    /**
+     * The previous output values.
+     */
+    protected float[] out;
+    private float frequency;
 
-	/**
-	 * The input values to the left of the output value currently being
-	 * calculated.
-	 */
-	protected float[] in;
-	
-	/** The previous output values. */
-	protected float[] out;
 
-	private float frequency;
-	
-	private final float sampleRate;
+    /**
+     * Constructs an IIRFilter with the given cutoff frequency that will be used
+     * to filter audio recorded at <code>sampleRate</code>.
+     *
+     * @param freq       the cutoff frequency
+     * @param sampleRate the sample rate of audio to be filtered
+     */
+    public IIRFilter(float freq, float sampleRate) {
+        this.sampleRate = sampleRate;
+        this.frequency = freq;
+        calcCoeff();
+        in = new float[a.length];
+        out = new float[b.length];
+    }
+
+    /**
+     * Returns the cutoff frequency (in Hz).
+     *
+     * @return the current cutoff frequency (in Hz).
+     */
+    protected final float getFrequency() {
+        return frequency;
+    }
+
+    public void setFrequency(float freq) {
+        this.frequency = freq;
+        calcCoeff();
+    }
+
+    protected final float getSampleRate() {
+        return sampleRate;
+    }
+
+    /**
+     * Calculates the coefficients of the filter using the current cutoff
+     * frequency. To make your own IIRFilters, you must extend IIRFilter and
+     * implement this function. The frequency is expressed as a fraction of the
+     * sample rate. When filling the coefficient arrays, be aware that
+     * <code>b[0]</code> corresponds to the coefficient
+     * <code>b<sub>1</sub></code>.
+     *
+     */
+    protected abstract void calcCoeff();
 
 
-	/**
-	 * Constructs an IIRFilter with the given cutoff frequency that will be used
-	 * to filter audio recorded at <code>sampleRate</code>.
-	 * 
-	 * @param freq
-	 *            the cutoff frequency
-	 * @param sampleRate
-	 *            the sample rate of audio to be filtered
-	 */
-	public IIRFilter(float freq, float sampleRate) {
-		this.sampleRate = sampleRate;
-		this.frequency = freq;	
-		calcCoeff();
-		in = new float[a.length];
-		out = new float[b.length];
-	}
-	
-	public void setFrequency(float freq){
-		this.frequency = freq;	
-		calcCoeff();	
-	}
+    @Override
+    public boolean process(AudioEvent audioEvent) {
+        float[] audioFloatBuffer = audioEvent.getFloatBuffer();
 
-	/**
-	 * Returns the cutoff frequency (in Hz).
-	 * 
-	 * @return the current cutoff frequency (in Hz).
-	 */
-	protected final float getFrequency() {
-		return frequency;
-	}
-	
-	protected final float getSampleRate(){
-		return sampleRate;
-	}
+        for (int i = audioEvent.getOverlap(); i < audioFloatBuffer.length; i++) {
+            //shift the in array
+            System.arraycopy(in, 0, in, 1, in.length - 1);
+            in[0] = audioFloatBuffer[i];
 
-	/**
-	 * Calculates the coefficients of the filter using the current cutoff
-	 * frequency. To make your own IIRFilters, you must extend IIRFilter and
-	 * implement this function. The frequency is expressed as a fraction of the
-	 * sample rate. When filling the coefficient arrays, be aware that
-	 * <code>b[0]</code> corresponds to the coefficient
-	 * <code>b<sub>1</sub></code>.
-	 * 
-	 */
-	protected abstract void calcCoeff() ;
+            //calculate y based on a and b coefficients
+            //and in and out.
+            float y = 0;
+            for (int j = 0; j < a.length; j++) {
+                y += a[j] * in[j];
+            }
+            for (int j = 0; j < b.length; j++) {
+                y += b[j] * out[j];
+            }
+            //shift the out array
+            System.arraycopy(out, 0, out, 1, out.length - 1);
+            out[0] = y;
 
-	
-	@Override
-	public boolean process(AudioEvent audioEvent) {
-		float[] audioFloatBuffer = audioEvent.getFloatBuffer();
-		
-		for (int i = audioEvent.getOverlap(); i < audioFloatBuffer.length; i++) {
-			//shift the in array
-			System.arraycopy(in, 0, in, 1, in.length - 1);
-			in[0] = audioFloatBuffer[i];
-	
-			//calculate y based on a and b coefficients
-			//and in and out.
-			float y = 0;
-			for(int j = 0 ; j < a.length ; j++){
-				y += a[j] * in[j];
-			}			
-			for(int j = 0 ; j < b.length ; j++){
-				y += b[j] * out[j];
-			}
-			//shift the out array
-			System.arraycopy(out, 0, out, 1, out.length - 1);
-			out[0] = y;
-			
-			audioFloatBuffer[i] = y;
-		} 
-		return true;
-	}
-	
+            audioFloatBuffer[i] = y;
+        }
+        return true;
+    }
 
-	@Override
-	public void processingFinished() {
-		
-	}
+
+    @Override
+    public void processingFinished() {
+
+    }
 }

@@ -13,8 +13,7 @@ import java.io.OutputStream;
  *
  * @author Christian Laireiter
  */
-public class WriteableChunkModifer implements ChunkModifier
-{
+public class WriteableChunkModifer implements ChunkModifier {
 
     /**
      * The chunk to write.
@@ -26,24 +25,21 @@ public class WriteableChunkModifer implements ChunkModifier
      *
      * @param chunk chunk to write
      */
-    public WriteableChunkModifer(final WriteableChunk chunk)
-    {
+    public WriteableChunkModifer(final WriteableChunk chunk) {
         this.writableChunk = chunk;
     }
 
     /**
      * {@inheritDoc}
      */
-    public boolean isApplicable(final GUID guid)
-    {
+    public boolean isApplicable(final GUID guid) {
         return guid.equals(this.writableChunk.getGuid());
     }
 
     /**
      * {@inheritDoc}
      */
-    public ModificationResult modify(final GUID guid, final InputStream chunk, OutputStream destination) throws IOException
-    { // NOPMD by Christian Laireiter on 5/9/09 5:03 PM
+    public ModificationResult modify(final GUID guid, final InputStream chunk, OutputStream destination) throws IOException { // NOPMD by Christian Laireiter on 5/9/09 5:03 PM
         int chunkDiff = 0;
         long newSize = 0;
         long oldSize = 0;
@@ -52,8 +48,7 @@ public class WriteableChunkModifer implements ChunkModifier
          * evaluated.
          */
         assert (destination = new CountingOutputstream(destination)) != null;
-        if (!this.writableChunk.isEmpty())
-        {
+        if (!this.writableChunk.isEmpty()) {
             newSize = this.writableChunk.writeInto(destination);
             assert newSize == this.writableChunk.getCurrentAsfChunkSize();
             /*
@@ -62,17 +57,14 @@ public class WriteableChunkModifer implements ChunkModifier
              * getCurrentAsfChunkSize() really works correctly.
              */
             assert ((CountingOutputstream) destination).getCount() == newSize;
-            if (guid == null)
-            {
+            if (guid == null) {
                 chunkDiff++;
             }
 
         }
-        if (guid != null)
-        {
+        if (guid != null) {
             assert isApplicable(guid);
-            if (this.writableChunk.isEmpty())
-            {
+            if (this.writableChunk.isEmpty()) {
                 chunkDiff--;
             }
             oldSize = Utils.readUINT64(chunk);
