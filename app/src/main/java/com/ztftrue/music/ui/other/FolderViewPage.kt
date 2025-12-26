@@ -133,8 +133,6 @@ fun FolderListPage(
     var showAddPlayListDialog by remember { mutableStateOf(false) }
     var showCreatePlayListDialog by remember { mutableStateOf(false) }
     var showSortDialog by remember { mutableStateOf(false) }
-    val musicList = remember { musicViewModel.musicQueue }
-    var showDialog by remember { mutableStateOf(false) }
     showIndicator.value =
         musicViewModel.showIndicatorMap.getOrDefault(folderList.type.toString(), false)
     if (showSortDialog) {
@@ -431,37 +429,87 @@ fun FolderListPage(
         )
     }
 
+//    if (showAddPlayListDialog) {
+//        AddMusicToPlayListDialog(musicViewModel, null, onDismiss = { playListId, removeDuplicate ->
+//            showAddPlayListDialog = false
+//            if (playListId != null) {
+//                if (playListId == -1L) {
+//                    showCreatePlayListDialog = true
+//                } else {
+//                    Utils.addTracksToPlayList(
+//                        playListId,
+//                        context,
+//                        folderList.type,
+//                        folderList.id,
+//                        musicViewModel,
+//                        removeDuplicate
+//                    )
+//                }
+//            }
+//        })
+//    }
     if (showAddPlayListDialog) {
-        AddMusicToPlayListDialog(musicViewModel, null, onDismiss = { playListId, removeDuplicate ->
+        AddMusicToPlayListDialog(musicViewModel, null) { playListId, removeDuplicate ->
             showAddPlayListDialog = false
             if (playListId != null) {
                 if (playListId == -1L) {
                     showCreatePlayListDialog = true
                 } else {
-                    Utils.addTracksToPlayList(
-                        playListId,
-                        context,
-                        folderList.type,
-                        folderList.id,
-                        musicViewModel,
-                        removeDuplicate
-                    )
+                    val ids = ArrayList<MusicItem>(tracksList.size)
+                    tracksList.forEach {
+                        ids.add(it)
+                    }
+                    if (PlaylistManager.addMusicsToPlaylist(
+                            context,
+                            playListId,
+                            ids,
+                            removeDuplicate
+                        )
+                    ) {
+                        SongsUtils.refreshPlaylist(musicViewModel)
+                    }
                 }
             }
-        })
+        }
     }
+//    if (showCreatePlayListDialog) {
+//        CreatePlayListDialog(onDismiss = {
+//            showCreatePlayListDialog = false
+//            if (it != null) {
+//                Utils.createPlayListAddTracks(
+//                    it,
+//                    context,
+//                    folderList.type,
+//                    folderList.id,
+//                    musicViewModel,
+//                    false
+//                )
+//            }
+//        })
+//    }
+
     if (showCreatePlayListDialog) {
-        CreatePlayListDialog(onDismiss = {
+        CreatePlayListDialog(onDismiss = { playListName ->
             showCreatePlayListDialog = false
-            if (it != null) {
-                Utils.createPlayListAddTracks(
-                    it,
-                    context,
-                    folderList.type,
-                    folderList.id,
-                    musicViewModel,
-                    false
-                )
+            if (!playListName.isNullOrEmpty()) {
+                val ids = ArrayList<MusicItem>(tracksList.size)
+                tracksList.forEach {
+                    ids.add(it)
+                }
+                val idPlayList = PlaylistManager.createPlaylist(context, playListName, ids, false)
+                if (idPlayList != null) {
+                    musicViewModel.browser?.sendCustomCommand(
+                        MediaCommands.COMMAND_PlAY_LIST_CHANGE,
+                        Bundle().apply {},
+                    )
+                } else {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.create_failed),
+                        Toast.LENGTH_SHORT
+                    )
+                        .show()
+                }
             }
         })
     }
@@ -555,70 +603,7 @@ fun FolderListPage(
         }
     }
 
-    if (showDialog) {
-        QueueOperateDialog(onDismiss = {
-            if (it == OperateType.ClearQueue) {
-                musicViewModel.browser?.sendCustomCommand(
-                    MediaCommands.COMMAND_CLEAR_QUEUE,
-                    Bundle.EMPTY
-                )
-                musicViewModel.musicQueue.clear()
-                musicViewModel.currentPlay.value = null
-                musicViewModel.playListCurrent.value = null
-                musicViewModel.currentCaptionList.clear()
-                musicList.clear()
-            } else if (it == OperateType.SaveQueueToPlayList) {
-                showAddPlayListDialog = true
-            }
-        })
-    }
-    if (showAddPlayListDialog) {
-        AddMusicToPlayListDialog(musicViewModel, null) { playListId, removeDuplicate ->
-            if (playListId != null) {
-                if (playListId == -1L) {
-                    showCreatePlayListDialog = true
-                } else {
-                    val ids = ArrayList<MusicItem>(musicList.size)
-                    musicList.forEach {
-                        ids.add(it)
-                    }
-                    if (PlaylistManager.addMusicsToPlaylist(
-                            context,
-                            playListId,
-                            ids,
-                            removeDuplicate
-                        )
-                    ) {
-                        SongsUtils.refreshPlaylist(musicViewModel)
-                    }
-                }
-            }
-        }
-    }
-    if (showCreatePlayListDialog) {
-        CreatePlayListDialog(onDismiss = { playListName ->
-            if (!playListName.isNullOrEmpty()) {
-                val ids = ArrayList<MusicItem>(musicList.size)
-                musicList.forEach {
-                    ids.add(it)
-                }
-                val idPlayList = PlaylistManager.createPlaylist(context, playListName, ids, false)
-                if (idPlayList != null) {
-                    musicViewModel.browser?.sendCustomCommand(
-                        MediaCommands.COMMAND_PlAY_LIST_CHANGE,
-                        Bundle().apply {},
-                    )
-                } else {
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.create_failed),
-                        Toast.LENGTH_SHORT
-                    )
-                        .show()
-                }
-            }
-        })
-    }
+
 
 
     LaunchedEffect(musicViewModel.refreshPlayList.value, refreshCurrentValueList) {
