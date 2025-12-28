@@ -56,7 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.play.MediaCommands
+import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.equalizerMax

@@ -108,7 +108,7 @@ object SharedPreferencesUtils {
         }
     }
 
-    fun saveSelectMusicId(context: Context, id: Long) {
+    fun saveCurrentPlayMusicId(context: Context, id: Long) {
         context.getSharedPreferences(
             "SelectedPlayTrack",
             Context.MODE_PRIVATE

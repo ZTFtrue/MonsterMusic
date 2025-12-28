@@ -10,7 +10,7 @@ import androidx.media3.session.SessionResult
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.ztftrue.music.MusicViewModel
-import com.ztftrue.music.play.MediaCommands
+import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.model.AlbumList
 import com.ztftrue.music.utils.model.ArtistList

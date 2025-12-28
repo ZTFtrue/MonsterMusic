@@ -8,7 +8,7 @@ import android.widget.Toast
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.media3.session.MediaBrowser
 import com.ztftrue.music.MusicViewModel
-import com.ztftrue.music.play.MediaCommands
+import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.SortFiledData

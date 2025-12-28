@@ -47,7 +47,7 @@ import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.QueuePlayList
 import com.ztftrue.music.R
-import com.ztftrue.music.play.MediaCommands
+import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.trackManager.PlaylistManager

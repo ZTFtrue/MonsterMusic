@@ -46,7 +46,7 @@ import coil3.compose.AsyncImage
 import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.play.MediaCommands
+import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.ui.play.Drop.Companion.generateRandomChars
 import kotlinx.coroutines.delay
 import org.jaudiotagger.tag.FieldKey

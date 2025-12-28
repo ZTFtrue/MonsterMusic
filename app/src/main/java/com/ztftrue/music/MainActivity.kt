@@ -62,7 +62,7 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
-import com.ztftrue.music.play.MediaCommands
+import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE

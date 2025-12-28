@@ -251,11 +251,9 @@ object MediaItemUtils {
 
         // 2. mediaId 是必须的，我们用它来填充 id 字段
         val id = mediaItem.mediaId.toLongOrNull()
-        if (id == null) {
-            // 如果 mediaId 不是 "album_123" 这种格式，而是 "albums_root" 这种，转换会失败
+            ?: // 如果 mediaId 不是 "album_123" 这种格式，而是 "albums_root" 这种，转换会失败
             // 这种情况下我们不认为它是一个具体的专辑，返回 null
             return null
-        }
 
         val extras = metadata.extras ?: Bundle.EMPTY
 

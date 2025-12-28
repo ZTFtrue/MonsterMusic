@@ -1,4 +1,4 @@
-package com.ztftrue.music.play
+package com.ztftrue.music.play.manager
 
 import android.os.Bundle
 import androidx.media3.session.SessionCommand

@@ -419,6 +419,10 @@ class EqualizerAudioProcessor : AudioProcessor {
         return inputEnded && !this.outputBuffer.hasRemaining()
     }
 
+    override fun flush(streamMetadata: AudioProcessor.StreamMetadata) {
+        super.flush(streamMetadata)
+    }
+
     override fun flush() {
         lock.lock()
         try {

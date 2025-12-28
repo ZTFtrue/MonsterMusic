@@ -213,7 +213,6 @@ fun TracksListView(
                                     if (itemHeight == 0) {
                                         itemHeight = coordinates.size.height
                                     }
-                                    println("Composable Height in pixels: ")
                                 },
                             musicViewModel.navController
                         )

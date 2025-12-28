@@ -64,7 +64,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
-import com.ztftrue.music.play.MediaCommands
+import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.DialogOperate

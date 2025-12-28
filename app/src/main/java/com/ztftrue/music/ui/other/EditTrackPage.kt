@@ -63,7 +63,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.play.MediaCommands
+import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.BackButton
 import com.ztftrue.music.utils.Utils
@@ -144,14 +144,12 @@ fun EditTrackPage(
             enableEdit = !success
             if (success) {
                 val bundleTemp = Bundle()
-                bundleTemp.putLong("id", musicItem.id)
+                bundleTemp.putLong(MediaCommands.KEY_TRACK_ID, musicItem.id)
                 withContext(Dispatchers.Main) {
                     val futureResult: ListenableFuture<SessionResult>? =
                         musicViewModel.browser?.sendCustomCommand(
                             MediaCommands.COMMAND_TRACKS_UPDATE,
-                            Bundle().apply {
-                                bundleTemp
-                            },
+                            bundleTemp,
                         )
                     futureResult?.addListener({
                         try {
@@ -174,9 +172,6 @@ fun EditTrackPage(
                                     musicViewModel.songsList.addAll(it)
                                 }
                                 sessionResult.extras.getParcelable<MusicItem>("item")?.also {
-                                    if (musicViewModel.currentPlay.value?.id != it.id) {
-                                        musicViewModel.currentPlay.value = it
-                                    }
                                     musicViewModel.musicQueue.forEach { mIt ->
                                         if (mIt.id == it.id) {
                                             mIt.name = it.name
