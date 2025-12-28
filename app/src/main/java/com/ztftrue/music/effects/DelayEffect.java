@@ -84,7 +84,9 @@ public class DelayEffect {
         applyNewEchoLength();
         return max;
     }
+    public void flush(){
 
+    }
     public boolean isWithFeedBack() {
         return withFeedBack;
     }
