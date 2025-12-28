@@ -21,6 +21,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,6 +56,8 @@ fun EffectView(musicViewModel: MusicViewModel) {
     }
     val delayTime = remember { mutableFloatStateOf(musicViewModel.delayTime.floatValue) }
     val decay = remember { mutableFloatStateOf(musicViewModel.decay.floatValue) }
+    val virtualStrength = remember { mutableIntStateOf(musicViewModel.virtualStrength.intValue) }
+    val enableVirtual = remember { mutableStateOf(musicViewModel.enableVirtual.value) }
     val color = MaterialTheme.colorScheme.onBackground
     LazyColumn(
         state = listState,
@@ -280,6 +284,65 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         bundle.putFloat("decay", musicViewModel.decay.floatValue)
                         musicViewModel.browser?.sendCustomCommand(
                             MediaCommands.COMMAND_ECHO_SET_DECAY,
+                            bundle
+                        )
+                    },
+                )
+            }
+            Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 20.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Virtual Surround",
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Box(
+                            modifier = Modifier
+                                .width(4.dp)
+                                .height(2.dp)
+                        ) {
+                        }
+                        Switch(
+                            modifier = Modifier.clip(MaterialTheme.shapes.small),
+                            checked = musicViewModel.enableVirtual.value,
+                            onCheckedChange = {
+                                musicViewModel.enableVirtual.value = it
+                                val bundle = Bundle()
+                                bundle.putBoolean(MediaCommands.KEY_ENABLE, it)
+                                musicViewModel.browser?.sendCustomCommand(
+                                    MediaCommands.COMMAND_VIRTUALIZER_ENABLE,
+                                    bundle
+                                )
+                            }
+                        )
+                    }
+                }
+                Text(
+                    text = "Strength ${virtualStrength.intValue}",
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                CustomSlider(
+                    modifier = Modifier
+                        .semantics {
+                            contentDescription = "Strength"
+                        },
+                    value = virtualStrength.intValue.toFloat(),
+                    onValueChange = {
+                        virtualStrength.intValue = it.roundToInt()
+                    },
+                    enabled = musicViewModel.enableVirtual.value,
+                    valueRange = 0f..1000f,
+                    steps = 100,
+                    onValueChangeFinished = {
+                        musicViewModel.virtualStrength.intValue = virtualStrength.intValue
+                        val bundle = Bundle()
+                        bundle.putInt("strength", musicViewModel.virtualStrength.intValue)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_VIRTUALIZER_STRENGTH,
                             bundle
                         )
                     },

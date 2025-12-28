@@ -143,6 +143,9 @@ class MusicViewModel : ViewModel() {
     var equalizerQ = mutableFloatStateOf(Utils.Q)
     var speed = mutableFloatStateOf(1f)
 
+    var virtualStrength = mutableIntStateOf(0)
+    var enableVirtual = mutableStateOf(false)
+
     var mainTabList = mutableStateListOf<MainTab>()
 
     var sliderPosition = mutableFloatStateOf(0F)

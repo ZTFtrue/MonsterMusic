@@ -171,7 +171,7 @@ class PlayService : MediaLibraryService() {
                 val au = DefaultAudioSink.Builder(context)
                     .setEnableFloatOutput(enableFloatOutput)
                     .setEnableAudioOutputPlaybackParameters(enableAudioTrackPlaybackParams)
-                    .setAudioProcessors(arrayOf(effectManager.equalizerAudioProcessor))
+                    .setAudioProcessors(arrayOf(effectManager.equalizerAudioProcessor, effectManager.spatialAudioProcessor ))
                     .build()
 
                 return object : ForwardingAudioSink(au) {

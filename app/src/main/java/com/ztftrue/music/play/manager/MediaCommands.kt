@@ -8,6 +8,8 @@ object MediaCommands {
     val COMMAND_CHANGE_PITCH = SessionCommand("dsp.CHANGE_PITCH", Bundle.EMPTY)
     val COMMAND_CHANGE_Q = SessionCommand("dsp.CHANGE_Q", Bundle.EMPTY)
     val COMMAND_DSP_ENABLE = SessionCommand("dsp.ENABLE", Bundle.EMPTY)
+    val COMMAND_VIRTUALIZER_ENABLE = SessionCommand("dsp.VIRTUALIZER_ENABLE", Bundle.EMPTY)
+    val COMMAND_VIRTUALIZER_STRENGTH = SessionCommand("dsp.VIRTUALIZER_STRENGTH", Bundle.EMPTY)
 
     // DSP
     val COMMAND_DSP_SET_BAND = SessionCommand("dsp.SET_BAND", Bundle.EMPTY)

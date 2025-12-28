@@ -65,6 +65,8 @@ class PlaySessionCallback(
                 .add(MediaCommands.COMMAND_TRACK_DELETE)
                 .add(MediaCommands.COMMAND_PlAY_LIST_CHANGE)
                 .add(MediaCommands.COMMAND_SLEEP_STATE_UPDATE)
+                .add(MediaCommands.COMMAND_VIRTUALIZER_ENABLE)
+                .add(MediaCommands.COMMAND_VIRTUALIZER_STRENGTH)
                 .build()
 
         return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
@@ -97,6 +99,18 @@ class PlaySessionCallback(
 
             MediaCommands.COMMAND_DSP_ENABLE.customAction -> {
                 effectManager.setEqualizerEnabled(args.getBoolean("enable"))
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+// 在 onCustomCommand 中处理
+            MediaCommands.COMMAND_VIRTUALIZER_ENABLE.customAction -> {
+                val enable = args.getBoolean(MediaCommands.KEY_ENABLE)
+                effectManager.setSpatialEnabled(enable)
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            MediaCommands.COMMAND_VIRTUALIZER_STRENGTH.customAction -> {
+                val strength = args.getInt("strength") // 前端传 0-1000
+                effectManager.setSpatialStrength(strength)
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
             }
 

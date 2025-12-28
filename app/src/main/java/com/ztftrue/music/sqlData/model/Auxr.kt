@@ -23,6 +23,8 @@ data class Auxr(
     @ColumnInfo(defaultValue = Utils.Q.toString()) var equalizerQ: Float = Utils.Q,
     @field:TypeConverters(IntArrayConverters::class)
     @ColumnInfo var equalizerBand: IntArray,
+    @ColumnInfo(defaultValue = "0") var virtualizerEnabled: Boolean = false, // 虚拟环绕开关
+    @ColumnInfo(defaultValue = "0") var virtualizerStrength: Int = 0         // 强度 (0 - 1000)
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

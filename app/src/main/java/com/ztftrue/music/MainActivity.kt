@@ -1026,6 +1026,8 @@ class MainActivity : ComponentActivity() {
         musicViewModel.delayTime.floatValue = resultData.getFloat("delayTime")
         musicViewModel.decay.floatValue = resultData.getFloat("decay")
         musicViewModel.enableEcho.value = resultData.getBoolean("echoActive")
+        musicViewModel.virtualStrength.value = resultData.getInt("virtualStrength")
+        musicViewModel.enableVirtual.value = resultData.getBoolean("enableVirtual")
         musicViewModel.echoFeedBack.value = resultData.getBoolean("echoFeedBack")
         musicViewModel.repeatModel.intValue = resultData.getInt("repeat", Player.REPEAT_MODE_ALL)
         musicViewModel.playCompleted.value =

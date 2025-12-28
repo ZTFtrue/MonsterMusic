@@ -6,6 +6,7 @@ import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.ztftrue.music.effects.EqualizerAudioProcessor
+import com.ztftrue.music.effects.SpatialAudioProcessor
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.Auxr
 import com.ztftrue.music.utils.SharedPreferencesUtils
@@ -20,7 +21,7 @@ class AudioEffectManager(private val context: Context) {
 
     // 核心音频处理器，需要在 Service 创建 ExoPlayer 时通过 RenderersFactory 传入
     val equalizerAudioProcessor: EqualizerAudioProcessor = EqualizerAudioProcessor()
-
+    val spatialAudioProcessor = SpatialAudioProcessor()
     private val db: MusicDatabase = MusicDatabase.getDatabase(context)
 
     // 默认配置，稍后会从数据库覆盖
@@ -52,6 +53,9 @@ class AudioEffectManager(private val context: Context) {
         equalizerAudioProcessor.setDecay(auxr.echoDecay)
         equalizerAudioProcessor.setFeedBack(auxr.echoRevert)
         equalizerAudioProcessor.setEchoActive(auxr.echo)
+        // 初始化环绕设置
+        spatialAudioProcessor.setActive(auxr.virtualizerEnabled)
+        spatialAudioProcessor.setStrength(auxr.virtualizerStrength)
 
         // 3. 应用 Equalizer 设置
         equalizerAudioProcessor.setEqualizerActive(auxr.equalizer)
@@ -89,6 +93,16 @@ class AudioEffectManager(private val context: Context) {
         equalizerAudioProcessor.setVisualizationAudioActive(musicVisualizationEnable)
     }
 
+    fun setSpatialEnabled(enable: Boolean) {
+        spatialAudioProcessor.setActive(enable)
+        auxr.virtualizerEnabled = enable
+        updateDb()
+    }
+    fun setSpatialStrength(strength: Int) {
+        spatialAudioProcessor.setStrength(strength)
+        auxr.virtualizerStrength = strength
+        updateDb()
+    }
     // ==========================================
     // Playback Parameters (Speed & Pitch)
     // ==========================================
