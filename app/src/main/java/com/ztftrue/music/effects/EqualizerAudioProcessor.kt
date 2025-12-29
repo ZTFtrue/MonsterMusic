@@ -1,5 +1,6 @@
 package com.ztftrue.music.effects
 
+import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
@@ -10,6 +11,7 @@ import com.ztftrue.music.utils.Utils
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.pow
 
@@ -17,16 +19,11 @@ import kotlin.math.pow
 class EqualizerAudioProcessor : AudioProcessor {
 
     companion object {
-        // Soft clipping threshold
-        private const val CLIP_THRESHOLD = 1.0f
-
-        // Standard PCM 16-bit conversion factors
+        private const val TAG = "EqualizerProcessor"
         private const val PCM_16_BIT_MAX = 32767.0f
+        // 缓冲区扩容时的余量，避免频繁扩容
+        private const val BUFFER_HEADROOM = 4096
     }
-
-    // Effects per channel
-    // index 0 = Left (or Mono), index 1 = Right, etc.
-    private var channelDelays: ArrayList<DelayEffect> = arrayListOf()
 
     private var equalizerActive = false
     private var echoActive = false
@@ -35,111 +32,95 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var inputAudioFormat: AudioProcessor.AudioFormat = AudioProcessor.AudioFormat.NOT_SET
     private var outputAudioFormat: AudioProcessor.AudioFormat = AudioProcessor.AudioFormat.NOT_SET
 
-    // Audio Buffers
-    private var bufferSize = 4096
+    // ===============================================================
+    // Buffers (持久化持有，避免 GC)
+    // ===============================================================
+    // 1. 持有原生内存的容器
+    private var bufferContainer: ByteBuffer = EMPTY_BUFFER
+    // 2. 指向当前处理结果的引用 (API 要求)
     private var outputBuffer: ByteBuffer = EMPTY_BUFFER
-    private var inputAccumulator: ByteBuffer = EMPTY_BUFFER
-
-    // Processing Arrays
-    // channelBuffers[channelIndex][sampleIndex]
+    // 3. 浮点运算用的声道缓冲区 [Channel][Sample]
     private var channelBuffers: Array<FloatArray> = emptyArray()
 
-    // Max values for limiter per channel
-    private var channelEqualizerMaxs: FloatArray = FloatArray(0)
+    // 4. 用户要求的 Max 记录 (用于 Limiter 逻辑)
+    private var channelEqualizerMaxs = FloatArray(2) { 1.0f }
 
     private var inputEnded = false
 
+    // Effects
+    private var delayEffectLeft: DelayEffect = DelayEffect(0.5f, 1.0f, 44100.0f)
+    private var delayEffectRight: DelayEffect = DelayEffect(0.5f, 1.0f, 44100.0f)
+    private var channelDelays = arrayOf(delayEffectLeft, delayEffectRight)
+
+    // EQ Filters
+    private val mCoefficientLeftBiQuad: ArrayList<BiQuadraticFilter> = arrayListOf()
+    private val mCoefficientRightBiQuad: ArrayList<BiQuadraticFilter> = arrayListOf()
+    // 方便循环处理 [Channel][BandIndex]
+    private var channelFilters = arrayOf(mCoefficientLeftBiQuad, mCoefficientRightBiQuad)
+
     // EQ Configuration
-    private val gainDBAbsArray: FloatArray = FloatArray(10) { 1.0f }
     private val gainDBArray: IntArray = IntArray(10) { 0 }
-
-    // Filter coefficients per channel: channelFilters[channelIndex][bandIndex]
-    private var channelFilters: ArrayList<ArrayList<BiQuadraticFilter>> = arrayListOf()
-
-    // Echo Configuration
-    private var delayTime = 0.5f
-    private var decay = 1.0f
-    private var echoFeedBack = false
-
-    // FFT / Visualization
-    private var pcmToFrequencyDomain: PCMToFrequencyDomain? = null
-
-    // Lock for thread safety
-    private val lock = ReentrantLock()
-
-    // Visualization Circular Buffer
-    private var visBuffer: FloatArray = FloatArray(0)
-    private var visWriteIndex = 0
-    private var visReadIndex = 0
-    private var visCount = 0
+    // 用于记录分贝值的绝对系数 (用于 UI 或逻辑判断，暂保留)
+    private val gainDBAbsArray: FloatArray = FloatArray(10) { 1.0f }
 
     private var Q = Utils.Q
     private var changeDb = false
 
+    // Visualization Ring Buffer
+    private val visRingBufferLen = 4096
+    private var visRingBuffer = FloatArray(visRingBufferLen)
+    private var visWritePos = 0
+    private var pcmToFrequencyDomain: PCMToFrequencyDomain? = null
+    private var visTempArray: FloatArray = FloatArray(0)
+
+    private val lock = ReentrantLock()
+
     init {
-        // Pre-initialize for at least 2 channels to avoid allocation on main thread if possible,
-        // though configure will handle the actual sizing.
+        // 初始化滤波器列表
+        repeat(Utils.bandsCenter.count()) {
+            this.mCoefficientLeftBiQuad.add(BiQuadraticFilter())
+            this.mCoefficientRightBiQuad.add(BiQuadraticFilter())
+        }
+        // 初始化 channelFilters 引用
+        channelFilters = arrayOf(mCoefficientLeftBiQuad, mCoefficientRightBiQuad)
     }
 
     override fun configure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
-        // Check for supported encodings.
-        // We support 16-bit PCM (standard) and FLOAT PCM (high quality).
-        // If unsupported (e.g. PCM_24, PCM_8), return NOT_SET to let ExoPlayer bypass this processor (pass-through).
-        if (inputAudioFormat.encoding != C.ENCODING_PCM_16BIT &&
-            inputAudioFormat.encoding != C.ENCODING_PCM_FLOAT) {
+        if (inputAudioFormat.encoding != C.ENCODING_PCM_16BIT && inputAudioFormat.encoding != C.ENCODING_PCM_FLOAT) {
+            return AudioProcessor.AudioFormat.NOT_SET
+        }
+        if (inputAudioFormat.channelCount != 2) {
             return AudioProcessor.AudioFormat.NOT_SET
         }
 
-        // We support any channel count now.
         this.inputAudioFormat = inputAudioFormat
         this.outputAudioFormat = inputAudioFormat
 
-        val channelCount = inputAudioFormat.channelCount
-
-        // Calculate buffer size: ~100ms or smaller chunk for processing
-        bufferSize = 2048 * channelCount * if(inputAudioFormat.encoding == C.ENCODING_PCM_FLOAT) 4 else 2
-
-        // Initialize accumulator
-        inputAccumulator = ByteBuffer.allocateDirect(bufferSize * 2).order(ByteOrder.nativeOrder())
-
-        // Setup Processing Buffers (De-interleaved)
-        // Approximate samples per channel based on buffer size
-        val samplesPerChannel = 2048
-        channelBuffers = Array(channelCount) { FloatArray(samplesPerChannel) }
-        channelEqualizerMaxs = FloatArray(channelCount) { 1.0f }
-
-        // Setup Filters & Effects per channel
-        channelFilters.clear()
-        channelDelays.clear()
-
-        repeat(channelCount) {
-            // Setup Delays
-            val delay = DelayEffect(delayTime, decay, inputAudioFormat.sampleRate.toFloat())
-            delay.isWithFeedBack = echoFeedBack
-            channelDelays.add(delay)
-
-            // Setup EQ Filters (Bands)
-            val filters = ArrayList<BiQuadraticFilter>()
-            repeat(Utils.bandsCenter.count()) {
-                filters.add(BiQuadraticFilter())
-            }
-            channelFilters.add(filters)
+        // 预分配内存 (预估 200ms 数据量)
+        val frameSize = inputAudioFormat.bytesPerFrame
+        val initialSize = inputAudioFormat.sampleRate * frameSize / 5
+        if (bufferContainer.capacity() < initialSize) {
+            Log.d(TAG, "allocateDirect1")
+            bufferContainer = ByteBuffer.allocateDirect(initialSize).order(ByteOrder.nativeOrder())
         }
 
-        // FFT Setup
-        pcmToFrequencyDomain = PCMToFrequencyDomain(samplesPerChannel, inputAudioFormat.sampleRate.toFloat())
+        // 初始化/重置效果器
+        val sampleRate = inputAudioFormat.sampleRate.toFloat()
+        delayEffectLeft = DelayEffect(0.5f, 1.0f, sampleRate)
+        delayEffectRight = DelayEffect(0.5f, 1.0f, sampleRate)
+        channelDelays = arrayOf(delayEffectLeft, delayEffectRight)
 
-        // Visualization Buffer Setup (Ring Buffer)
-        // We mix at most 2 channels, or take Mono
-        visBuffer = FloatArray(samplesPerChannel * 2)
-        visWriteIndex = 0
-        visReadIndex = 0
-        visCount = 0
+        // 重置 Max 记录
+        channelEqualizerMaxs = FloatArray(inputAudioFormat.channelCount) { 1.0f }
 
-        // Apply bands to all new filters
-        for (index in 0 until Utils.bandsCenter.count()) {
-            setBand(index, gainDBArray[index])
-        }
+        // 初始化 FFT
+        val fftSize = 1024
+        pcmToFrequencyDomain = PCMToFrequencyDomain(fftSize, sampleRate)
+        visTempArray = FloatArray(fftSize)
+        visRingBuffer = FloatArray(4096)
+
+        // 应用当前的 EQ 设置到新采样率的 Filter
+        restoreBands()
 
         return outputAudioFormat
     }
@@ -148,86 +129,23 @@ class EqualizerAudioProcessor : AudioProcessor {
         return outputAudioFormat != AudioProcessor.AudioFormat.NOT_SET
     }
 
-    fun isSetActive(): Boolean = equalizerActive
-
     override fun queueInput(inputBuffer: ByteBuffer) {
         if (!inputBuffer.hasRemaining()) return
-        lock.lock()
-        try {
-            while (inputBuffer.hasRemaining()) {
-                if (inputAccumulator.remaining() < inputBuffer.remaining()) {
-                    val newSize = (inputAccumulator.capacity() + inputBuffer.remaining()) * 2
-                    val newBuffer = ByteBuffer.allocateDirect(newSize).order(ByteOrder.nativeOrder())
-                    inputAccumulator.flip()
-                    newBuffer.put(inputAccumulator)
-                    inputAccumulator = newBuffer
-                }
-                val oldLimit = inputBuffer.limit()
-                inputAccumulator.put(inputBuffer)
-                inputBuffer.limit(oldLimit)
-            }
-        } finally {
-            lock.unlock()
+        processChunk(inputBuffer, inputBuffer.remaining())
+        if (inputBuffer.hasRemaining()) {
+            inputBuffer.position(inputBuffer.limit())
         }
     }
 
-    /**
-     * Helper to manage output buffer size
-     */
-    private fun replaceOutputBuffer(count: Int): ByteBuffer {
-        if (outputBuffer.capacity() < count) {
-            outputBuffer = ByteBuffer.allocateDirect(count).order(ByteOrder.nativeOrder())
-        } else {
-            outputBuffer.clear()
-        }
-        return outputBuffer
-    }
-
-    override fun getOutput(): ByteBuffer {
-        lock.lock()
-        try {
-            if (inputAccumulator.position() >= bufferSize || (inputEnded && inputAccumulator.position() > 0)) {
-                inputAccumulator.flip()
-
-                // Align processing chunk to full frames
-                val bytesPerFrame = inputAudioFormat.channelCount * if (inputAudioFormat.encoding == C.ENCODING_PCM_FLOAT) 4 else 2
-                var bytesToProcess = inputAccumulator.remaining()
-                if (bytesToProcess >= bufferSize) {
-                    bytesToProcess = bufferSize
-                }
-                // Ensure we process full frames
-                bytesToProcess = (bytesToProcess / bytesPerFrame) * bytesPerFrame
-
-                if (bytesToProcess > 0) {
-                    processChunk(inputAccumulator, bytesToProcess)
-                }
-
-                inputAccumulator.compact()
-                val result = this.outputBuffer
-                this.outputBuffer = EMPTY_BUFFER
-                return result
-            }
-            return EMPTY_BUFFER
-        } finally {
-            lock.unlock()
-        }
-    }
-
-    /**
-     * Core processing logic: Bytes -> Float (De-interleave) -> Effects -> Bytes (Interleave)
-     */
     private fun processChunk(data: ByteBuffer, length: Int) {
         val needsProcessing = equalizerActive || echoActive || visualizationAudioActive
 
-        // Prepare output buffer
+        // 1. 获取输出容器 (复用)
         val resultBuffer = replaceOutputBuffer(length)
 
+        // 2. Fast Path
         if (!needsProcessing) {
-            // Passthrough
-            val limit = data.limit()
-            data.limit(data.position() + length)
             resultBuffer.put(data)
-            data.limit(limit)
             resultBuffer.flip()
             return
         }
@@ -238,73 +156,76 @@ class EqualizerAudioProcessor : AudioProcessor {
         val sampleCountTotal = length / bytesPerSample
         val framesCount = sampleCountTotal / channelCount
 
-        // 1. Resize Channel Buffers if needed
-        if (channelBuffers[0].size < framesCount) {
-            // Re-allocate for all channels
-            for (i in 0 until channelCount) {
-                channelBuffers[i] = FloatArray(framesCount)
+        // 3. 准备声道浮点数组 (只增不减策略)
+        if (channelBuffers.isEmpty() || channelBuffers[0].size < framesCount) {
+            val newSize = framesCount + BUFFER_HEADROOM
+            if (channelBuffers.size != channelCount) {
+                Log.d("CHANNEL","BUFFRT")
+                channelBuffers = Array(channelCount) { FloatArray(newSize) }
+            } else {
+                for (i in 0 until channelCount) {
+                    channelBuffers[i] = FloatArray(newSize)
+                }
             }
         }
 
-        // 2. De-interleave & Convert to Float
+        // 4. De-interleave & Convert to Float
         val startPos = data.position()
-
         if (encoding == C.ENCODING_PCM_FLOAT) {
-            // Float Input
             for (i in 0 until framesCount) {
                 for (ch in 0 until channelCount) {
-                    // ByteBuffer.getFloat automatically advances 4 bytes
-                    channelBuffers[ch][i] = data.getFloat(startPos + (i * channelCount + ch) * 4)
+                    val offset = startPos + (i * channelCount + ch) * 4
+                    channelBuffers[ch][i] = data.getFloat(offset)
                 }
             }
         } else {
-            // 16-bit PCM Input
+            // 16-bit PCM
             for (i in 0 until framesCount) {
                 for (ch in 0 until channelCount) {
-                    val byteIndex = startPos + (i * channelCount + ch) * 2
-                    // Manually get short (Little Endian)
-                    val byte1 = data.get(byteIndex).toInt() and 0xFF
-                    val byte2 = data.get(byteIndex + 1).toInt() shl 8
+                    val offset = startPos + (i * channelCount + ch) * 2
+                    val byte1 = data.get(offset).toInt() and 0xFF
+                    val byte2 = data.get(offset + 1).toInt() shl 8
                     val shortVal = (byte1 or byte2).toShort()
                     channelBuffers[ch][i] = shortVal / PCM_16_BIT_MAX
                 }
             }
         }
-        data.position(startPos + length)
 
-        // 3. Reset Filters if needed
+        // 5. 重置 Filter 状态 (如果参数发生了变化)
         if (changeDb) {
-            for (chFilters in channelFilters) {
-                for (filter in chFilters) filter.reset()
+            lock.lock()
+            try {
+                for (chFilters in channelFilters) {
+                    for (filter in chFilters) filter.reset()
+                }
+                // 重置 Max 值，防止之前的爆音记录持续压低音量
+                channelEqualizerMaxs.fill(1.0f)
+                changeDb = false
+            } finally {
+                lock.unlock()
             }
-            changeDb = false
         }
 
-        // 4. Apply Effects (Per Channel)
+        // 6. 应用音效 (EQ & Echo) & Limiter Logic
         for (ch in 0 until channelCount) {
             val samples = channelBuffers[ch]
 
-            // Echo
+            // A. Echo
             if (echoActive) {
-                channelDelays[ch].process(samples)
+                channelDelays[ch].process(samples, framesCount)
             }
 
-            // Equalizer
+            // B. EQ
             if (equalizerActive) {
-                applyEqualizer(samples, channelFilters[ch])
+                applyEqualizer(samples, channelFilters[ch], framesCount)
             }
-        }
 
-        // 5. Soft Clipping / Limiting (Per Channel)
-        if (equalizerActive || echoActive) {
-            for (ch in 0 until channelCount) {
-                val samples = channelBuffers[ch]
-                // Preserve logic: Calculate max peak using Limiter.process
-                channelEqualizerMaxs[ch] = max(
-                    channelEqualizerMaxs[ch],
-                    Limiter.process(samples)
-                )
+            // C. Limiter Logic (用户要求保留的部分)
+            if (echoActive || equalizerActive) {
+                // 2. 更新历史 Max
+                channelEqualizerMaxs[ch] = max(channelEqualizerMaxs[ch],   Limiter.process(samples))
 
+                // 3. 如果超过 1.0，进行全局归一化
                 if (channelEqualizerMaxs[ch] > 1.0f) {
                     val invMax = 1.0f / channelEqualizerMaxs[ch]
                     for (i in 0 until framesCount) {
@@ -314,30 +235,24 @@ class EqualizerAudioProcessor : AudioProcessor {
             }
         }
 
-        // 6. Visualization (Mix down to stereo or mono)
+        // 7. Visualization
         if (visualizationAudioActive) {
-            // If we have at least 2 channels, use 0 and 1. If mono, use 0 and 0.
-            val left = channelBuffers[0]
-            val right = if (channelCount > 1) channelBuffers[1] else channelBuffers[0]
-            processVisualization(left, right, framesCount)
+            processVisualization(channelBuffers[0], channelBuffers[1], framesCount)
         }
 
-        // 7. Interleave & Convert back to Output Format
+        // 8. Interleave & Output
         if (encoding == C.ENCODING_PCM_FLOAT) {
-            // Float Output
             for (i in 0 until framesCount) {
                 for (ch in 0 until channelCount) {
                     resultBuffer.putFloat(channelBuffers[ch][i])
                 }
             }
         } else {
-            // 16-bit PCM Output
             for (i in 0 until framesCount) {
                 for (ch in 0 until channelCount) {
                     var valFloat = channelBuffers[ch][i] * PCM_16_BIT_MAX
-
-                    // Hard clamp
-                    if (valFloat > 32767) valFloat = 32767f else if (valFloat < -32768) valFloat = -32768f
+                    if (valFloat > 32767f) valFloat = 32767f
+                    else if (valFloat < -32768f) valFloat = -32768f
 
                     val shortVal = valFloat.toInt()
                     resultBuffer.put(shortVal.toByte())
@@ -349,48 +264,76 @@ class EqualizerAudioProcessor : AudioProcessor {
         resultBuffer.flip()
     }
 
-    private fun applyEqualizer(samples: FloatArray, filters: ArrayList<BiQuadraticFilter>) {
-        // Optimized loop: Process all samples per filter chain, or filter chain per sample?
-        // Usually filtering is stateful per sample sequence.
-        // It's safer to loop samples, then filters for stability, or maintain state correctly.
-        // The original code was: Loop samples, then Loop filters.
-        for (i in samples.indices) {
-            var sample = samples[i]
-            for (filter in filters) {
-                sample = filter.filter(sample)
+    private fun replaceOutputBuffer(count: Int): ByteBuffer {
+        if (bufferContainer.capacity() < count) {
+            val newSize = count + BUFFER_HEADROOM
+            Log.d(TAG, "allocateDirect2")
+            bufferContainer = ByteBuffer.allocateDirect(newSize).order(ByteOrder.nativeOrder())
+        }
+        bufferContainer.clear()
+        outputBuffer = bufferContainer
+        return outputBuffer
+    }
+
+    private fun applyEqualizer(samples: FloatArray, filters: ArrayList<BiQuadraticFilter>, length: Int) {
+        // 内层循环优化：避免迭代器
+        val filterSize = filters.size
+        for (i in 0 until length) {
+            var s = samples[i]
+            for (j in 0 until filterSize) {
+                s = filters[j].filter(s)
             }
-            samples[i] = sample
+            samples[i] = s
         }
     }
 
     private fun processVisualization(left: FloatArray, right: FloatArray, count: Int) {
-        // 1. Add mixed mono data to circular buffer
         for (i in 0 until count) {
-            visBuffer[visWriteIndex] = (left[i] + right[i]) / 2f
-            visWriteIndex = (visWriteIndex + 1) % visBuffer.size
-            visCount++
+            val mix = (left[i] + right[i]) / 2f
+            visRingBuffer[visWritePos] = mix
+            visWritePos = (visWritePos + 1) and (visRingBufferLen - 1)
         }
+        val fftSize = visTempArray.size
+        var readPos = (visWritePos - fftSize)
+        if (readPos < 0) readPos += visRingBufferLen
+        for (i in 0 until fftSize) {
+            visTempArray[i] = visRingBuffer[readPos]
+            readPos = (readPos + 1) and (visRingBufferLen - 1)
+        }
+        pcmToFrequencyDomain?.let { fft ->
+            val magnitudes = fft.process(visTempArray)
+            val m = downsampleMagnitudes(
+                magnitudes, 32, -60f, needNormalize = false,
+                needPositive = true
+            )
+            AudioDataRepository.postVisualizationData(m)
+        }
+    }
 
-        // 2. Consume if we have enough data for FFT
-        // Note: Assuming FFT size is fixed (e.g. 512 or 1024), using 2048 here based on buffer calc
-        val fftSize = 2048.coerceAtMost(visBuffer.size / 2)
+    override fun getOutput(): ByteBuffer {
+        val ret = outputBuffer
+        outputBuffer = EMPTY_BUFFER
+        return ret
+    }
 
-        if (visCount >= fftSize) {
-            val tempFftBuffer = FloatArray(fftSize)
-            for (i in 0 until fftSize) {
-                tempFftBuffer[i] = visBuffer[visReadIndex]
-                visReadIndex = (visReadIndex + 1) % visBuffer.size
+    override fun isEnded(): Boolean {
+        return inputEnded && !outputBuffer.hasRemaining()
+    }
+
+    override fun flush() {
+        lock.lock()
+        try {
+            outputBuffer = EMPTY_BUFFER
+            bufferContainer.clear()
+            inputEnded = false
+            for (chFilters in channelFilters) {
+                for (filter in chFilters) filter.reset()
             }
-            visCount -= fftSize
-
-            val magnitude = pcmToFrequencyDomain?.process(tempFftBuffer)
-            if (magnitude != null) {
-                val m = downsampleMagnitudes(
-                    magnitude, 32, -60f, needNormalize = false,
-                    needPositive = true
-                )
-                AudioDataRepository.postVisualizationData(m)
-            }
+            channelEqualizerMaxs.fill(1.0f) // Reset Limiter state
+            delayEffectLeft.flush()
+            delayEffectRight.flush()
+        } finally {
+            lock.unlock()
         }
     }
 
@@ -398,53 +341,25 @@ class EqualizerAudioProcessor : AudioProcessor {
         inputEnded = true
     }
 
-    override fun isEnded(): Boolean {
-        return inputEnded && !outputBuffer.hasRemaining() && inputAccumulator.position() == 0
-    }
-
-    override fun flush() {
-        lock.lock()
-        try {
-            outputBuffer = EMPTY_BUFFER
-            inputAccumulator.clear()
-            inputEnded = false
-
-            // Reset all channel filters
-            for (chFilters in channelFilters) {
-                for (filter in chFilters) filter.reset()
-            }
-
-            // Flush delays
-            for (delay in channelDelays) {
-                delay.flush()
-            }
-        } finally {
-            lock.unlock()
-        }
-    }
-
     override fun reset() {
         flush()
         inputAudioFormat = AudioProcessor.AudioFormat.NOT_SET
         outputAudioFormat = AudioProcessor.AudioFormat.NOT_SET
-        pcmToFrequencyDomain = null
-        channelFilters.clear()
-        channelDelays.clear()
-        channelEqualizerMaxs = FloatArray(0)
+        bufferContainer = EMPTY_BUFFER
     }
 
-    // --- Configuration Setters ---
+    // ===================================
+    // Configuration & Getters
+    // ===================================
+    fun isSetActive(): Boolean = equalizerActive
 
     fun setEqualizerActive(active: Boolean) {
-        if (this.equalizerActive != active) {
+        if (equalizerActive != active) {
             lock.lock()
             try {
-                this.equalizerActive = active
+                equalizerActive = active
                 if (active) {
-                    // Re-apply gains to all channels
-                    for (index in 0 until Utils.bandsCenter.count()) {
-                        setBand(index, gainDBArray[index])
-                    }
+                    restoreBands()
                 }
             } finally {
                 lock.unlock()
@@ -453,106 +368,115 @@ class EqualizerAudioProcessor : AudioProcessor {
     }
 
     fun setEchoActive(active: Boolean) {
-        this.echoActive = active
+        echoActive = active
     }
 
     fun setVisualizationAudioActive(active: Boolean) {
-        this.visualizationAudioActive = active
+        visualizationAudioActive = active
     }
 
+    /**
+     * 设置特定频段的增益
+     */
+    fun setBand(index: Int, value: Int) {
+        lock.lock()
+        try {
+            if (index in gainDBArray.indices) {
+                gainDBArray[index] = value
+                gainDBAbsArray[index] = 10.0.pow(value.toDouble() / 20.0).toFloat()
+                configureBandFilter(index, value)
+                // 标记变化，以便 processChunk 重置滤波器历史状态
+                changeDb = true
+            }
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    /**
+     * 将所有频段重置为 0dB
+     */
     fun flatBand(): Boolean {
         lock.lock()
         try {
-            changeDb = true
-            val count = Utils.bandsCenter.count()
-            for (index in 0 until count) {
-                gainDBAbsArray[index] = 10.0.pow(0 / 20.0).toFloat()
-                gainDBArray[index] = 0
+            if (!isActive()) return false
 
-                if (outputAudioFormat.sampleRate > 0) {
-                    val centerFreq = Utils.bandsCenter[index]
-                    val rate = outputAudioFormat.sampleRate.toFloat()
-
-                    // Apply to all channels
-                    for (chFilters in channelFilters) {
-                        if (index < chFilters.size) {
-                            chFilters[index].configure(
-                                BiQuadraticFilter.PEAK,
-                                centerFreq,
-                                rate,
-                                Q,
-                                0f
-                            )
-                        }
-                    }
-                }
+            for (i in gainDBArray.indices) {
+                gainDBArray[i] = 0
+                gainDBAbsArray[i] = 1.0f
+                configureBandFilter(i, 0)
             }
+
+            // 重要的：重置限幅器最大值，否则之前的高音量会一直压制声音
+            channelEqualizerMaxs.fill(1.0f)
+            changeDb = true
             return true
         } finally {
             lock.unlock()
         }
     }
 
-    fun setBand(index: Int, value: Int) {
+    /**
+     * 设置 Q 值 (Quality Factor) 并重新应用到所有滤波器
+     */
+    fun setQ(value: Float, needChange: Boolean = true) {
         lock.lock()
         try {
-            changeDb = true
-            gainDBAbsArray[index] = 10.0.pow(value.toDouble() / 20.0).toFloat()
-            gainDBArray[index] = value
-
-            if (outputAudioFormat.sampleRate > 0) {
-                val centerFreq = Utils.bandsCenter[index]
-                val rate = outputAudioFormat.sampleRate.toFloat()
-
-                // Apply to all channels
-                for (chFilters in channelFilters) {
-                    if (index < chFilters.size) {
-                        chFilters[index].configure(
-                            BiQuadraticFilter.PEAK,
-                            centerFreq,
-                            rate,
-                            Q,
-                            value.toFloat()
-                        )
-                    }
-                }
+            this.Q = value
+            if (needChange) {
+                restoreBands()
+                changeDb = true
             }
         } finally {
             lock.unlock()
         }
     }
 
-    fun setDelayTime(value: Float) {
-        delayTime = value
-        for (delay in channelDelays) {
-            delay.setEchoLength(delayTime)
+    /**
+     * 获取当前所有频段的增益数组副本
+     */
+    fun getBandLevels(): IntArray {
+        lock.lock()
+        try {
+            return gainDBArray.clone()
+        } finally {
+            lock.unlock()
         }
+    }
+
+    fun setDelayTime(value: Float) {
+        delayEffectLeft.setEchoLength(value)
+        delayEffectRight.setEchoLength(value)
     }
 
     fun setDecay(value: Float) {
-        if (value in 0.0..1.0) {
-            this.decay = value
-            for (delay in channelDelays) {
-                delay.setDecay(value)
-            }
-        }
+        delayEffectLeft.setDecay(value)
+        delayEffectRight.setDecay(value)
     }
 
     fun setFeedBack(value: Boolean) {
-        this.echoFeedBack = value
-        for (delay in channelDelays) {
-            delay.isWithFeedBack = value
+        delayEffectLeft.isWithFeedBack = value
+        delayEffectRight.isWithFeedBack = value
+    }
+
+    // ===================================
+    // Internal Helper
+    // ===================================
+
+    private fun restoreBands() {
+        for (i in gainDBArray.indices) {
+            configureBandFilter(i, gainDBArray[i])
         }
     }
 
-    fun setQ(value: Float, needChange: Boolean = true) {
-        this.Q = value
-        if (needChange) {
-            for (i in 0 until Utils.bandsCenter.count()) {
-                setBand(i, gainDBArray[i])
-            }
+    private fun configureBandFilter(index: Int, value: Int) {
+        // 只有当采样率有效时才配置，否则 configure() 会在初始化时调用 restoreBands
+        if (outputAudioFormat.sampleRate > 0) {
+            val freq = Utils.bandsCenter[index]
+            val rate = outputAudioFormat.sampleRate.toFloat()
+            // 为左右声道配置相同的参数
+            mCoefficientLeftBiQuad[index].configure(BiQuadraticFilter.PEAK, freq, rate, Q, value.toFloat())
+            mCoefficientRightBiQuad[index].configure(BiQuadraticFilter.PEAK, freq, rate, Q, value.toFloat())
         }
     }
-
-    fun getBandLevels(): IntArray = gainDBArray.clone()
 }
