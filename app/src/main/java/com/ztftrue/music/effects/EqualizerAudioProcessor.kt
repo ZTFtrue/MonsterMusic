@@ -438,7 +438,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     fun getBandLevels(): IntArray {
         lock.lock()
         try {
-            return gainDBArray.clone()
+            return gainDBArray
         } finally {
             lock.unlock()
         }
