@@ -11,7 +11,6 @@ import com.ztftrue.music.utils.Utils
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.locks.ReentrantLock
-import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.pow
 
@@ -399,7 +398,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     fun flatBand(): Boolean {
         lock.lock()
         try {
-            if (!isActive()) return false
+            if (!isSetActive()) return false
 
             for (i in gainDBArray.indices) {
                 gainDBArray[i] = 0
