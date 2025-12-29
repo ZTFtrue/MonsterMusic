@@ -292,6 +292,8 @@ class PlayService : MediaLibraryService() {
         bundle.putFloat("decay", effectManager.auxr.echoDecay)
         bundle.putBoolean("echoActive", effectManager.auxr.echo)
         bundle.putBoolean("echoFeedBack", effectManager.auxr.echoRevert)
+        bundle.putInt("virtualStrength", effectManager.auxr.virtualizerStrength)
+        bundle.putBoolean("enableVirtual", effectManager.auxr.virtualizerEnabled)
 
         // --- 4. 睡眠定时器 (来自 SleepTimerManager) ---
         bundle.putLong("sleepTime", sleepManager.sleepTime)

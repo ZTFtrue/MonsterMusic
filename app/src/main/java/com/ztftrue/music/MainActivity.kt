@@ -62,9 +62,9 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
-import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.PlayService
+import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
 import com.ztftrue.music.sqlData.model.GENRE_TYPE
 import com.ztftrue.music.sqlData.model.MainTab
@@ -736,7 +736,7 @@ class MainActivity : ComponentActivity() {
             bundle
         )
         val t1 = ArrayList<MediaItem>()
-        musicViewModel.musicQueue.forEachIndexed { index, it ->
+        musicViewModel.musicQueue.forEach {
             t1.add(MediaItemUtils.musicItemToMediaItem(it))
         }
         musicViewModel.browser?.shuffleModeEnabled = false
@@ -1026,7 +1026,7 @@ class MainActivity : ComponentActivity() {
         musicViewModel.delayTime.floatValue = resultData.getFloat("delayTime")
         musicViewModel.decay.floatValue = resultData.getFloat("decay")
         musicViewModel.enableEcho.value = resultData.getBoolean("echoActive")
-        musicViewModel.virtualStrength.value = resultData.getInt("virtualStrength")
+        musicViewModel.virtualStrength.intValue = resultData.getInt("virtualStrength")
         musicViewModel.enableVirtual.value = resultData.getBoolean("enableVirtual")
         musicViewModel.echoFeedBack.value = resultData.getBoolean("echoFeedBack")
         musicViewModel.repeatModel.intValue = resultData.getInt("repeat", Player.REPEAT_MODE_ALL)

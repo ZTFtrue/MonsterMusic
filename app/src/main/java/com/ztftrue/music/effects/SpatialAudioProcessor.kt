@@ -6,6 +6,7 @@ import androidx.media3.common.audio.BaseAudioProcessor
 import androidx.media3.common.util.UnstableApi
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlin.math.abs
 
 /**
  * 自定义虚化环绕处理器
@@ -17,7 +18,8 @@ class SpatialAudioProcessor : BaseAudioProcessor() {
 
     private var strength: Float = 0f // 0f (关闭) ~ 1f (最大)
     private var enabled: Boolean = false
-
+    // 预留余量系数：强度越高，我们预先降低的音量越多，防止爆音
+    private var headroomFactor: Float = 1.0f
     /**
      * 设置强度
      * @param value 0 到 1000 的整数
@@ -26,6 +28,7 @@ class SpatialAudioProcessor : BaseAudioProcessor() {
         // 将 0-1000 映射到 0.0 - 2.0 (增益倍数)
         // 1.0 表示原声，>1.0 表示增强 Side
         this.strength = (value / 1000f) * 1.5f
+        this.headroomFactor = 1.0f - (this.strength * 0.2f)
     }
 
     fun setActive(active: Boolean) {
@@ -72,27 +75,65 @@ class SpatialAudioProcessor : BaseAudioProcessor() {
             val rLow = inputBuffer.get().toInt()
             val rHigh = inputBuffer.get().toInt()
 
-            val leftSample = ((lHigh shl 8) or (lLow and 0xFF)).toShort()
-            val rightSample = ((rHigh shl 8) or (rLow and 0xFF)).toShort()
+            val leftRaw = ((lHigh shl 8) or (lLow and 0xFF)).toShort()
+            val rightRaw = ((rHigh shl 8) or (rLow and 0xFF)).toShort()
 
-            val mid = (leftSample + rightSample) / 2
-            val side = (leftSample - rightSample) / 2
+            // 1. 应用 Headroom (衰减输入)，转为 Float 计算
+            val left = leftRaw * headroomFactor
+            val right = rightRaw * headroomFactor
 
-            val sideFactor = 1.0f + strength
-            val newSide = (side * sideFactor).toInt()
+            // 2. M/S 处理
+            val mid = (left + right) / 2
+            val side = (left - right) / 2
 
-            var newLeft = mid + newSide
-            var newRight = mid - newSide
+            // 增强 Side
+            val newSide = side * (1.0f + strength)
 
-            newLeft = newLeft.coerceIn(-32768, 32767)
-            newRight = newRight.coerceIn(-32768, 32767)
+            // 还原 L/R
+            var outL = mid + newSide
+            var outR = mid - newSide
 
-            buffer.put((newLeft and 0xFF).toByte())
-            buffer.put(((newLeft shr 8) and 0xFF).toByte())
-            buffer.put((newRight and 0xFF).toByte())
-            buffer.put(((newRight shr 8) and 0xFF).toByte())
+            // 3. 【关键策略 B：简单的软限幅 (Soft Limiting)】
+            // 防止数值硬冲过 32767
+            outL = softLimit(outL)
+            outR = softLimit(outR)
+
+            // 转换回 Short 写入
+            val outLShort = outL.toInt().toShort()
+            val outRShort = outR.toInt().toShort()
+
+            buffer.put((outLShort.toInt() and 0xFF).toByte())
+            buffer.put(((outLShort.toInt() shr 8) and 0xFF).toByte())
+            buffer.put((outRShort.toInt() and 0xFF).toByte())
+            buffer.put(((outRShort.toInt() shr 8) and 0xFF).toByte())
         }
 
         buffer.flip()
+    }
+    /**
+     * 软限幅函数
+     * 当数值在安全范围内 (-28000 ~ 28000) 线性输出
+     * 当数值接近极限时，进行平滑压缩，避免硬切
+     */
+    private fun softLimit(sample: Float): Float {
+        val threshold = 29000f // 阈值，保留一点头部空间
+        val maxVal = 32767f
+
+        // 快速路径：如果在阈值内，直接返回
+        if (sample in -threshold..threshold) {
+            return sample
+        }
+
+        // 超过阈值，使用简单的压缩算法
+        // 这里使用一个简化的曲线，避免复杂的 tanh 计算 (太耗 CPU)
+        if (sample > threshold) {
+            val diff = sample - threshold
+            // 让超过的部分按比例衰减，无限趋近于 maxVal 但不硬切
+            return threshold + (diff / (1 + (diff / (maxVal - threshold))))
+        } else {
+            // 负方向同理
+            val diff = sample + threshold // diff is negative
+            return -threshold + (diff / (1 + (abs(diff) / (maxVal - threshold))))
+        }
     }
 }
