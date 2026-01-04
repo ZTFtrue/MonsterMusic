@@ -334,14 +334,16 @@ class PlaySessionCallback(
 
             MediaCommands.COMMAND_PlAY_LIST_CHANGE.customAction -> {
                 scope.launch {
-                    val newPlaylists =
-                        repository.getPlayLists() // 强制刷新逻辑在 Repository 内部或 refreshAll
-                    // 这里其实可以调用 repository.refreshAll() 或者只刷新 Playlist
-                    // 为了简单，我们返回当前列表
-                    val resultData = Bundle().apply {
-                        putInt("new_playlist_count", newPlaylists.size)
+                    withContext(Dispatchers.IO) {
+                        val newPlaylists =
+                            repository.getPlayLists() // 强制刷新逻辑在 Repository 内部或 refreshAll
+                        // 这里其实可以调用 repository.refreshAll() 或者只刷新 Playlist
+                        // 为了简单，我们返回当前列表
+                        val resultData = Bundle().apply {
+                            putInt("new_playlist_count", newPlaylists.size)
+                        }
+                        future.set(SessionResult(SessionResult.RESULT_SUCCESS, resultData))
                     }
-                    future.set(SessionResult(SessionResult.RESULT_SUCCESS, resultData))
                 }
                 return future
             }
