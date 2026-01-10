@@ -206,7 +206,7 @@ class PlayService : MediaLibraryService() {
                 .build(),
             true // 初始 focus 处理
         )
-
+        exoPlayer.setHandleAudioBecomingNoisy(true)
         exoPlayer.shuffleOrder = NoShuffleOrder(0)
         exoPlayer.addListener(playerListener)
     }
