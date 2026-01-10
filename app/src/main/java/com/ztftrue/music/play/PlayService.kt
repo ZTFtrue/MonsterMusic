@@ -42,6 +42,7 @@ import com.ztftrue.music.play.manager.SleepTimerManager
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.CurrentList
 import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.sqlData.model.PlayConfig
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.model.AnyListBase
 import kotlinx.coroutines.CompletableDeferred
@@ -258,6 +259,22 @@ class PlayService : MediaLibraryService() {
 
         override fun onVolumeChanged(volume: Float) {
             SharedPreferencesUtils.saveVolume(this@PlayService, (volume * 100).toInt())
+        }
+
+        override fun onRepeatModeChanged(repeatMode: Int) {
+            super.onRepeatModeChanged(repeatMode)
+            serviceScope.launch {
+                withContext(Dispatchers.IO) {
+                    val config = db.PlayConfigDao().findConfig()
+                    if (config != null) {
+                        config.repeatModel = repeatMode
+                        db.PlayConfigDao().update(config)
+                    } else {
+                        val config = PlayConfig(0, Player.REPEAT_MODE_ALL)
+                        db.PlayConfigDao().insert(config)
+                    }
+                }
+            }
         }
     }
 
