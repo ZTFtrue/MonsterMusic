@@ -44,6 +44,7 @@ import com.ztftrue.music.sqlData.model.CurrentList
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.model.AnyListBase
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -51,7 +52,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.CompletableDeferred
 
 @UnstableApi
 class PlayService : MediaLibraryService() {
@@ -171,7 +171,12 @@ class PlayService : MediaLibraryService() {
                 val au = DefaultAudioSink.Builder(context)
                     .setEnableFloatOutput(enableFloatOutput)
                     .setEnableAudioOutputPlaybackParameters(enableAudioTrackPlaybackParams)
-                    .setAudioProcessors(arrayOf(effectManager.equalizerAudioProcessor, effectManager.spatialAudioProcessor ))
+                    .setAudioProcessors(
+                        arrayOf(
+                            effectManager.equalizerAudioProcessor,
+                            effectManager.spatialAudioProcessor
+                        )
+                    )
                     .build()
 
                 return object : ForwardingAudioSink(au) {
@@ -534,6 +539,7 @@ class PlayService : MediaLibraryService() {
             exoPlayer.playWhenReady = false // 默认不自动播放
         }
     }
+
     /**
      * 处理歌曲信息更新
      * 1. 更新 Repository 缓存
@@ -610,6 +616,7 @@ class PlayService : MediaLibraryService() {
 
         return updatedItem
     }
+
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? {
         return mediaSession
     }
