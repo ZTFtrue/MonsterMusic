@@ -101,7 +101,7 @@ object FolderManger {
                         val tf = FolderList(
                             children = ArrayList(),
                             path = tempPath,
-                            name = tempPath.substring(tempPath.lastIndexOf(File.separator) + 1),
+                            name = tempPath.substringAfterLast(File.separator),
                             id = tempPath.hashCode().toLong(),
                             trackNumber = 0,
                         )
