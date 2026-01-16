@@ -275,8 +275,8 @@ fun EffectView(musicViewModel: MusicViewModel) {
                     onValueChange = {
                         decay.floatValue = (it * 10f).roundToInt() / 10f
                     },
-                    valueRange = 0f..1f,
-                    steps = 10,
+                    valueRange = 0.1f..1f,
+                    steps = 9,
                     enabled = musicViewModel.enableEcho.value,
                     onValueChangeFinished = {
                         musicViewModel.decay.floatValue = decay.floatValue

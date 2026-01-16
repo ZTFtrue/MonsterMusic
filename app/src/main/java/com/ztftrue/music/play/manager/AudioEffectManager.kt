@@ -98,6 +98,7 @@ class AudioEffectManager(private val context: Context) {
         auxr.virtualizerEnabled = enable
         updateDb()
     }
+
     fun setSpatialStrength(strength: Int) {
         spatialAudioProcessor.setStrength(strength)
         auxr.virtualizerStrength = strength
@@ -123,6 +124,15 @@ class AudioEffectManager(private val context: Context) {
         exoPlayer.playbackParameters = params
     }
 
+    fun changedPlaPlaybackParameters(parameters: PlaybackParameters) {
+        val currentSpeed = parameters.speed
+        val currentPitch = parameters.pitch
+        if (auxr.speed != currentSpeed || auxr.pitch != currentPitch) {
+            auxr.speed = currentSpeed
+            auxr.pitch = currentPitch
+            updateDb()
+        }
+    }
     // ==========================================
     // Equalizer (EQ)
     // ==========================================

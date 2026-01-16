@@ -45,20 +45,24 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var channelEqualizerMaxs = FloatArray(2) { 1.0f }
 
     private var inputEnded = false
+    private var echoDelay = 0.0f
+    private var echoDecay = 0.0f
 
     // Effects
-    private var delayEffectLeft: DelayEffect = DelayEffect(0.5f, 1.0f, 44100.0f)
-    private var delayEffectRight: DelayEffect = DelayEffect(0.5f, 1.0f, 44100.0f)
+    private var delayEffectLeft: DelayEffect = DelayEffect(echoDelay, echoDecay, 44100.0f)
+    private var delayEffectRight: DelayEffect = DelayEffect(echoDelay, echoDecay, 44100.0f)
     private var channelDelays = arrayOf(delayEffectLeft, delayEffectRight)
 
     // EQ Filters
     private val mCoefficientLeftBiQuad: ArrayList<BiQuadraticFilter> = arrayListOf()
     private val mCoefficientRightBiQuad: ArrayList<BiQuadraticFilter> = arrayListOf()
+
     // 方便循环处理 [Channel][BandIndex]
     private var channelFilters = arrayOf(mCoefficientLeftBiQuad, mCoefficientRightBiQuad)
 
     // EQ Configuration
     private val gainDBArray: IntArray = IntArray(10) { 0 }
+
     // 用于记录分贝值的绝对系数 (用于 UI 或逻辑判断，暂保留)
     private val gainDBAbsArray: FloatArray = FloatArray(10) { 1.0f }
 
@@ -105,8 +109,8 @@ class EqualizerAudioProcessor : AudioProcessor {
 
         // 初始化/重置效果器
         val sampleRate = inputAudioFormat.sampleRate.toFloat()
-        delayEffectLeft = DelayEffect(0.5f, 1.0f, sampleRate)
-        delayEffectRight = DelayEffect(0.5f, 1.0f, sampleRate)
+        delayEffectLeft = DelayEffect(echoDelay, echoDecay, sampleRate)
+        delayEffectRight = DelayEffect(echoDelay, echoDecay, sampleRate)
         channelDelays = arrayOf(delayEffectLeft, delayEffectRight)
 
         // 重置 Max 记录
@@ -159,7 +163,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         if (channelBuffers.isEmpty() || channelBuffers[0].size < framesCount) {
             val newSize = framesCount + BUFFER_HEADROOM
             if (channelBuffers.size != channelCount) {
-                Log.d("CHANNEL","BUFFRT")
+                Log.d("CHANNEL", "BUFFRT")
                 channelBuffers = Array(channelCount) { FloatArray(newSize) }
             } else {
                 for (i in 0 until channelCount) {
@@ -222,7 +226,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             // C. Limiter Logic (用户要求保留的部分)
             if (echoActive || equalizerActive) {
                 // 2. 更新历史 Max
-                channelEqualizerMaxs[ch] = max(channelEqualizerMaxs[ch],   Limiter.process(samples))
+                channelEqualizerMaxs[ch] = max(channelEqualizerMaxs[ch], Limiter.process(samples))
 
                 // 3. 如果超过 1.0，进行全局归一化
                 if (channelEqualizerMaxs[ch] > 1.0f) {
@@ -274,7 +278,11 @@ class EqualizerAudioProcessor : AudioProcessor {
         return outputBuffer
     }
 
-    private fun applyEqualizer(samples: FloatArray, filters: ArrayList<BiQuadraticFilter>, length: Int) {
+    private fun applyEqualizer(
+        samples: FloatArray,
+        filters: ArrayList<BiQuadraticFilter>,
+        length: Int
+    ) {
         // 内层循环优化：避免迭代器
         val filterSize = filters.size
         for (i in 0 until length) {
@@ -444,11 +452,13 @@ class EqualizerAudioProcessor : AudioProcessor {
     }
 
     fun setDelayTime(value: Float) {
+        echoDelay = value
         delayEffectLeft.setEchoLength(value)
         delayEffectRight.setEchoLength(value)
     }
 
     fun setDecay(value: Float) {
+        echoDecay = value
         delayEffectLeft.setDecay(value)
         delayEffectRight.setDecay(value)
     }
@@ -474,8 +484,20 @@ class EqualizerAudioProcessor : AudioProcessor {
             val freq = Utils.bandsCenter[index]
             val rate = outputAudioFormat.sampleRate.toFloat()
             // 为左右声道配置相同的参数
-            mCoefficientLeftBiQuad[index].configure(BiQuadraticFilter.PEAK, freq, rate, Q, value.toFloat())
-            mCoefficientRightBiQuad[index].configure(BiQuadraticFilter.PEAK, freq, rate, Q, value.toFloat())
+            mCoefficientLeftBiQuad[index].configure(
+                BiQuadraticFilter.PEAK,
+                freq,
+                rate,
+                Q,
+                value.toFloat()
+            )
+            mCoefficientRightBiQuad[index].configure(
+                BiQuadraticFilter.PEAK,
+                freq,
+                rate,
+                Q,
+                value.toFloat()
+            )
         }
     }
 }
