@@ -536,7 +536,10 @@ class MusicViewModel : ViewModel() {
         return withContext(Dispatchers.IO) {
             try {
                 val folder = File(context.externalCacheDir, "album_cover")
-                folder.mkdirs()
+                // 优化：只有当文件夹不存在时才调用 mkdirs
+                if (!folder.exists()) {
+                    folder.mkdirs()
+                }
                 val coverPath = File(folder, "$id.jpg")
                 if (coverPath.exists()) {
                     Log.d("AlbumCover", "Loaded from cache: ${coverPath.path}")
@@ -561,16 +564,16 @@ class MusicViewModel : ViewModel() {
                 }
                 val defaultCoverResId = customMusicCover.value
                 if (defaultCoverResId is Int) {
-                    val bm = BitmapFactory.decodeResource(context.resources, defaultCoverResId)
-                    FileOutputStream(coverPath).use { outStream ->
-                        bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
-                    }
-                    bm.recycle()
+//                    val bm = BitmapFactory.decodeResource(context.resources, defaultCoverResId)
+//                    FileOutputStream(coverPath).use { outStream ->
+//                        bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
+//                    }
+//                    bm.recycle()
                     return@withContext defaultCoverResId
                 } else if (defaultCoverResId is String) {
                     val sourceFile = File(defaultCoverResId)
                     if (sourceFile.exists()) {
-                        sourceFile.copyTo(coverPath, true)
+//                        sourceFile.copyTo(coverPath, true)
                         return@withContext defaultCoverResId
                     }
 //                    Files.copy(sourceFile.toPath(), coverPath.toPath(), StandardCopyOption.REPLACE_EXISTING)

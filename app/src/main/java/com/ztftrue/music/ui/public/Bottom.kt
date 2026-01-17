@@ -27,12 +27,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
@@ -54,6 +57,7 @@ fun Bottom(musicViewModel: MusicViewModel, navController: SnapshotStateList<Any>
     }
     val imageModel: ImageSource by musicViewModel.currentMusicCover
 
+    val context = LocalContext.current
 
 
 
@@ -76,7 +80,11 @@ fun Bottom(musicViewModel: MusicViewModel, navController: SnapshotStateList<Any>
             ) {
                 key(musicViewModel.currentPlay.value) {
                     AsyncImage(
-                        model = imageModel.asModel(),
+                        model = ImageRequest.Builder(context)
+                            .data(imageModel.asModel())
+                            .crossfade(true)
+                            .size(100, 100)
+                            .build(),
                         contentDescription = "song cover",
                         modifier = Modifier
                             .width(60.dp)

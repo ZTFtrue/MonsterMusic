@@ -37,12 +37,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
@@ -74,6 +77,7 @@ fun CoverView(musicViewModel: MusicViewModel) {
     }
     val imageModel: ImageSource by musicViewModel.currentMusicCover
 
+    val context = LocalContext.current
 
 
 
@@ -147,6 +151,7 @@ fun CoverView(musicViewModel: MusicViewModel) {
             lifecycle.removeObserver(observer)
         }
     }
+
     LaunchedEffect(musicViewModel.playStatus.value, musicVisualizationEnable.value, shouldRun) {
         while (musicViewModel.playStatus.value && musicVisualizationEnable.value && shouldRun) {
             val screenBottom = canvasHeight.floatValue + dropHeight
@@ -198,7 +203,11 @@ fun CoverView(musicViewModel: MusicViewModel) {
                 if (!musicVisualizationEnable.value || musicViewModel.showMusicCover.value) {
                     key(musicViewModel.currentPlay.value) {
                         AsyncImage(
-                            model = imageModel.asModel(),
+                            model = ImageRequest.Builder(context)
+                                .data(imageModel.asModel())
+                                .crossfade(true)
+                                .size(600, 600)
+                                .build(),
                             contentDescription = stringResource(R.string.cover),
                             modifier = Modifier
                                 .size(minOf(maxWidth, maxHeight))

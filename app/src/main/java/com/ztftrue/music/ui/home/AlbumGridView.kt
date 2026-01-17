@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +51,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -58,14 +60,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.compose.ui.zIndex
-import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.LibraryResult
+import coil3.compose.AsyncImage
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
@@ -144,6 +146,9 @@ fun AlbumGridView(
         }
         return
     }
+    val backgroundModifier = Modifier
+        .background(MaterialTheme.colorScheme.background)
+        .fillMaxSize()
     when (scrollDirection) {
         ScrollDirectionType.LIST_VERTICAL -> {
         }
@@ -157,24 +162,21 @@ fun AlbumGridView(
             LazyRow(
                 contentPadding = PaddingValues(5.dp),
                 state = rowListSate,
-                modifier = modifier
-                    .background(MaterialTheme.colorScheme.background)
-                    .fillMaxSize()
+                modifier = modifier.then(backgroundModifier)
             ) {
-                items(albumList.size) { index ->
+                items(
+                    count = albumList.size,
+                    key = { index -> albumList[index].id }) { index ->
                     val item = albumList[index]
-                    Box(
+                    AlbumItemView(
+                        item,
+                        musicViewModel,
+                        navController,
+                        type,
                         modifier = Modifier
                             .padding(5.dp)
                             .width(width)
-                    ) {
-                        AlbumItemView(
-                            item,
-                            musicViewModel,
-                            navController,
-                            type,
-                        )
-                    }
+                    )
                 }
             }
         }
@@ -188,16 +190,17 @@ fun AlbumGridView(
                 contentPadding = PaddingValues(5.dp),
                 state = listState
             ) {
-                items(albumList.size) { index ->
+                items(
+                    count = albumList.size,
+                    key = { index -> albumList[index].id }) { index ->
                     val item = albumList[index]
-                    Box(modifier = Modifier.padding(5.dp)) {
-                        AlbumItemView(
-                            item,
-                            musicViewModel,
-                            navController,
-                            type,
-                        )
-                    }
+                    AlbumItemView(
+                        item,
+                        musicViewModel,
+                        navController,
+                        type,
+                        modifier = Modifier.padding(5.dp)
+                    )
                 }
             }
         }
@@ -214,6 +217,7 @@ fun AlbumItemView(
     musicViewModel: MusicViewModel,
     navController: SnapshotStateList<Any>,
     type: PlayListType = PlayListType.Albums,
+    modifier: Modifier = Modifier // 接收外部 Modifier
 ) {
     val number = item.trackNumber
     val context = LocalContext.current
@@ -274,19 +278,22 @@ fun AlbumItemView(
     }
 
     val albumCoverModel by produceState<Any>(
-        initialValue = R.drawable.songs_thumbnail_cover, // 初始显示默认封面
+        initialValue = R.drawable.songs_thumbnail_cover,
         key1 = item.id
     ) {
         value = musicViewModel.getAlbumCover(item.id, context)
     }
+    // 优化4: 使用 derivedStateOf 监听播放状态
+    // 只有当 isPlaying 的结果真正改变时，才会触发重组，而不是每次 ViewModel 变动都重组
+    val isPlaying by remember(item.id) {
+        derivedStateOf {
+            item.id == musicViewModel.playListCurrent.value?.id &&
+                    item.type == musicViewModel.playListCurrent.value?.type
+        }
+    }
 
-    val painter = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(context)
-            .data(albumCoverModel)
-            .build()
-    )
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(5.dp))
             .clip(RoundedCornerShape(5.dp))
@@ -297,31 +304,33 @@ fun AlbumItemView(
             ) {
                 navController.add(Router.PlayListView(item))
             }) {
-        ConstraintLayout {
-            val (playIndicator) = createRefs()
-            Image(
-                painter = painter,
+        // 优化5: 替换 ConstraintLayout 为 Box
+        // ConstraintLayout 在简单布局中性能开销较大，Box 足以应付覆盖层
+        Box(modifier = Modifier.aspectRatio(1f)) {
+            // 优化6: 使用 Coil 的 AsyncImage 代替 Image + rememberAsyncImagePainter
+            // 并强制设置尺寸以减少内存占用
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(albumCoverModel)
+                    .crossfade(true)
+                    .size(200, 200) // 限制加载图片的尺寸，极大提升滑动流畅度
+                    .build(),
                 contentDescription = stringResource(id = R.string.album_cover),
                 modifier = Modifier
-                    .zIndex(0f)
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-                    .aspectRatio(1f),
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentScale = ContentScale.Crop
             )
-            if (item.id == musicViewModel.playListCurrent.value?.id && item.type == musicViewModel.playListCurrent.value?.type) {
+            if (isPlaying) {
+                // 播放指示器
                 Image(
-                    painter = painterResource(
-                        R.drawable.pause
-                    ),
+                    painter = painterResource(R.drawable.pause),
                     contentDescription = stringResource(id = R.string.playing),
                     modifier = Modifier
-                        .width(30.dp)
-                        .height(30.dp)
-                        .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape)
-                        .constrainAs(playIndicator) {
-                            bottom.linkTo(anchor = parent.bottom, margin = 10.dp)
-                            end.linkTo(anchor = parent.end, margin = 10.dp)
-                        },
+                        .align(Alignment.BottomEnd) // 使用 Box 的对齐方式
+                        .padding(10.dp)
+                        .size(30.dp)
+                        .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape),
                     colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
                 )
             }
@@ -330,16 +339,18 @@ fun AlbumItemView(
         Column(
             modifier = Modifier
                 .padding(5.dp)
-                .clip(RoundedCornerShape(5.dp))
+            // 移除 clip，文本不需要 clip
         ) {
             Text(
                 text = item.name,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.horizontalScroll(rememberScrollState(0))
+                modifier = Modifier.horizontalScroll(rememberScrollState(0)),
+                maxLines = 1 // 建议限制行数
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically // 确保垂直居中
             ) {
                 Text(
                     text = stringResource(
@@ -348,23 +359,22 @@ fun AlbumItemView(
                         if (number <= 1L) "" else stringResource(id = R.string.s)
                     ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall // 建议设置具体样式
                 )
                 IconButton(
-                    modifier = Modifier
-                        .width(50.dp)
-                        .height(20.dp), onClick = {
-                        showOperateDialog = true
-                    }) {
+                    modifier = Modifier.size(24.dp), // 调整点击区域大小
+                    onClick = { showOperateDialog = true }
+                ) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
                         contentDescription = stringResource(R.string.operate_more_will_open_dialog),
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clip(CircleShape),
+                        modifier = Modifier.size(20.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
+
+
         }
 
     }
