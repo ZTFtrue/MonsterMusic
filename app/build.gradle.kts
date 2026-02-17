@@ -203,7 +203,7 @@ dependencies {
     implementation("androidx.compose.material3.adaptive:adaptive:1.3.0-alpha06")
     implementation("androidx.compose.material3.adaptive:adaptive-layout:1.3.0-alpha06")
     implementation("androidx.compose.material3.adaptive:adaptive-navigation:1.3.0-alpha06")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
 
 //    debugImplementation ("com.squareup.leakcanary:leakcanary-android:2.14")
 //    implementation("uk.me.berndporr:iirj:1.7")

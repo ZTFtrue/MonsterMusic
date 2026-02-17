@@ -65,6 +65,7 @@ class PlayService : MediaLibraryService() {
     lateinit var repository: MusicLibraryRepository
     lateinit var effectManager: AudioEffectManager
     lateinit var sleepManager: SleepTimerManager
+    var isSleeping = false
     val isInitialized = CompletableDeferred<Unit>()
 
     // --- 协程作用域 (核心补充) ---
@@ -234,6 +235,10 @@ class PlayService : MediaLibraryService() {
                 SharedPreferencesUtils.saveCurrentPlayMusicId(this@PlayService, nextTrack.id)
                 if (reason != Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
                     SharedPreferencesUtils.saveCurrentDuration(this@PlayService, 0)
+                    if (isSleeping) {
+                        isSleeping = false
+                        exoPlayer.pause()
+                    }
                 }
                 updateWidget(exoPlayer.isPlaying)
             }
@@ -277,6 +282,7 @@ class PlayService : MediaLibraryService() {
                 }
             }
         }
+
         override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
             super.onPlaybackParametersChanged(playbackParameters)
             effectManager.changedPlaPlaybackParameters(playbackParameters)
@@ -470,7 +476,9 @@ class PlayService : MediaLibraryService() {
     }
 
     private fun handleSleepFinish(playCompleted: Boolean) {
-        if (!playCompleted) {
+        if (playCompleted) {
+            isSleeping = true
+        } else {
             exoPlayer.pause()
         }
         // 如果 playCompleted 为 true，则等待当前歌曲播放完毕 (逻辑需在 onMediaItemTransition 中处理标记位)
