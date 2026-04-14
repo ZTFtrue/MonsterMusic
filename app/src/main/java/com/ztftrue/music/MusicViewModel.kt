@@ -4,7 +4,6 @@ import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
@@ -67,7 +66,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.File
-import java.io.FileOutputStream
 import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -78,7 +76,7 @@ var SongsPlayList = AnyListBase(-1, PlayListType.Songs)
 var QueuePlayList = AnyListBase(-1, PlayListType.Queue)
 
 sealed class ImageSource {
-    data class Resource(@DrawableRes val id: Int) : ImageSource()
+    data class Resource(@param:DrawableRes val id: Int) : ImageSource()
     data class FilePath(val path: String) : ImageSource()
     data class BitmapFile(val bitmap: Bitmap) : ImageSource()
 
@@ -457,7 +455,7 @@ class MusicViewModel : ViewModel() {
                 currentCaptionList.addAll(embeddedLyrics)
             }
             val duration = currentPlay.duration
-            // every lyrics line duration
+            // every lyric's line duration
             itemDuration =
                 duration / if (currentCaptionList.isEmpty()) 1 else currentCaptionList.size
             currentCaptionListLoading.value = false
