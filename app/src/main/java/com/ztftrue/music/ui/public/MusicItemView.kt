@@ -156,7 +156,12 @@ fun MusicItemView(
                     }
 
                     OperateType.PlayNext -> {
-                        val i = viewModel.browser?.currentMediaItemIndex
+                        val l = viewModel.browser?.mediaItemCount
+                        val i = if (l == null || l <= 0) {
+                            C.INDEX_UNSET
+                        } else {
+                            viewModel.browser?.currentMediaItemIndex
+                        }
                         val position = if (i != null) {
                             if (i == C.INDEX_UNSET) {
                                 0

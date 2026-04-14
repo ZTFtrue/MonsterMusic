@@ -692,7 +692,12 @@ class MainActivity : ComponentActivity() {
 
 
     private fun addMusicToNext(musicItem: MusicItem) {
-        val i = musicViewModel.browser?.currentMediaItemIndex
+        val l = musicViewModel.browser?.mediaItemCount
+        val i = if (l == null || l <= 0) {
+            C.INDEX_UNSET
+        } else {
+            musicViewModel.browser?.currentMediaItemIndex
+        }
         val position = if (i != null) {
             if (i == C.INDEX_UNSET) {
                 0
