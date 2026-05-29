@@ -96,6 +96,7 @@ import com.ztftrue.music.sqlData.model.ARTIST_TYPE
 import com.ztftrue.music.sqlData.model.LYRICS_TYPE
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.StorageFolder
+import com.ztftrue.music.sqlData.model.TRACKS_TYPE
 import com.ztftrue.music.ui.public.BackTopBar
 import com.ztftrue.music.utils.LyricsSettings.FIRST_EMBEDDED_LYRICS
 import com.ztftrue.music.utils.SharedPreferencesName.LYRICS_SETTINGS
@@ -1731,6 +1732,37 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
                         .height(50.dp)
                         .padding(0.dp)
                         .clickable {
+                            onDismiss()
+                            Utils.setTracksFolder(context)
+                        }
+                        .drawBehind {
+                            drawLine(
+                                color = color,
+                                start = Offset(0f, size.height - 1.dp.toPx()),
+                                end = Offset(size.width, size.height - 1.dp.toPx()),
+                                strokeWidth = 1.dp.toPx()
+                            )
+                        },
+                ) {
+                    Text(
+                        text = "Add Tracks Folder",
+                        Modifier.padding(start = 10.dp),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(color = MaterialTheme.colorScheme.onBackground)
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .padding(0.dp)
+                        .clickable {
                             onConfirmation()
                             Utils.setLyricsFolder(context)
                         }
@@ -1845,7 +1877,9 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
                                 Text(
                                     text = if (item.type == LYRICS_TYPE) stringResource(R.string.text_prefix_lyrics) else if (item.type == ARTIST_TYPE) stringResource(
                                         R.string.text_prefix_artist
-                                    ) else stringResource(R.string.text_prefix_genre),
+                                    ) else if (item.type == TRACKS_TYPE) stringResource(R.string.text_tracks_folder) else stringResource(
+                                        R.string.text_prefix_genre
+                                    ),
                                     color = MaterialTheme.colorScheme.onBackground,
                                     modifier = Modifier.horizontalScroll(rememberScrollState(0))
                                 )

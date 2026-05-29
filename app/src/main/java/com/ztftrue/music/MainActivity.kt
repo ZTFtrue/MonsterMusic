@@ -71,6 +71,7 @@ import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.SortFiledData
 import com.ztftrue.music.sqlData.model.StorageFolder
+import com.ztftrue.music.sqlData.model.TRACKS_TYPE
 import com.ztftrue.music.ui.home.BaseLayout
 import com.ztftrue.music.ui.theme.MusicPitchTheme
 import com.ztftrue.music.utils.MusicFileParser
@@ -438,6 +439,28 @@ class MainActivity : ComponentActivity() {
 
                         }
 
+                    }
+                }
+            }
+        }
+    val tracksFolderPickerLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == RESULT_OK) {
+                if (result.data != null) {
+                    val treeUri = result.data?.data
+                    if (treeUri != null) {
+                        contentResolver.takePersistableUriPermission(
+                            treeUri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        )
+                        CoroutineScope(Dispatchers.IO).launch {
+                            musicViewModel.getDb(this@MainActivity).StorageFolderDao().insert(
+                                StorageFolder(null, treeUri.toString(),TRACKS_TYPE)
+                            )
+                            musicViewModel.refreshAllTracks(this@MainActivity)
+                         }
                     }
                 }
             }

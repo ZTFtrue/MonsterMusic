@@ -159,12 +159,12 @@ dependencies {
 
     implementation("androidx.browser:browser:1.10.0")
 
-    implementation("androidx.compose.runtime:runtime-livedata:1.10.6")
+    implementation("androidx.compose.runtime:runtime-livedata:1.11.2")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2026.03.01"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2026.05.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
@@ -192,7 +192,7 @@ dependencies {
     // optional - Paging 3 Integration
     implementation("androidx.room:room-paging:$roomVersion")
 
-    implementation("com.github.skydoves:colorpicker-compose:1.1.3")
+    implementation("com.github.skydoves:colorpicker-compose:1.1.4")
 
 
     // Core Navigation 3 libraries

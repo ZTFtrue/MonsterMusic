@@ -326,47 +326,7 @@ fun DrawMenu(
                         )
                     }
                     .clickable {
-                        val futureResult: ListenableFuture<SessionResult>? =
-                            musicViewModel.browser?.sendCustomCommand(
-                                MediaCommands.COMMAND_REFRESH_ALL,
-                                Bundle().apply { },
-                            )
-                        futureResult?.addListener({
-                            try {
-                                val sessionResult = futureResult.get()
-                                if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
-                                    musicViewModel.refreshPlayList.value =
-                                        !musicViewModel.refreshPlayList.value
-                                    musicViewModel.refreshAlbum.value =
-                                        !musicViewModel.refreshAlbum.value
-                                    musicViewModel.refreshArtist.value =
-                                        !musicViewModel.refreshArtist.value
-                                    musicViewModel.refreshGenre.value =
-                                        !musicViewModel.refreshGenre.value
-                                    musicViewModel.refreshFolder.value =
-                                        !musicViewModel.refreshFolder.value
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                        sessionResult.extras.getParcelableArrayList(
-                                            "songsList", MusicItem::class.java
-                                        )?.also {
-                                            musicViewModel.songsList.clear()
-                                            musicViewModel.songsList.addAll(it)
-                                        }
-                                    } else {
-                                        @Suppress("DEPRECATION")
-                                        sessionResult.extras.getParcelableArrayList<MusicItem>(
-                                            "songsList"
-                                        )?.also {
-                                            musicViewModel.songsList.clear()
-                                            musicViewModel.songsList.addAll(it)
-                                        }
-                                    }
-
-                                }
-                            } catch (e: Exception) {
-                                Log.e("Client", "Failed to toggle favorite status", e)
-                            }
-                        }, ContextCompat.getMainExecutor(context))
+                        musicViewModel.refreshAllTracks(context)
                     },
                 contentAlignment = Alignment.CenterStart
             ) {

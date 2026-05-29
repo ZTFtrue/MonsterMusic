@@ -117,7 +117,7 @@
     <string name="add_lyrics_folders">Add lyrics folders</string>
     <string name="set_artist_folder_artist_name_jpg_jpeg_png">Set artist folder(artist_name.jpg/jpeg/png)</string>
     <string name="set_genre_folder_genre_name_jpg_jpeg_png">Set genre folder(genre_name.jpg/jpeg/png)</string>
-    <string name="manage_lyrics_folders">Manage folders</string>
+    <string name="manage_lyrics_folders">Manage folders(For lyrics,Artists Cover,Genres Cover)</string>
     <string name="manage_ignore_folder">Manage ignore folder</string>
     <string name="save">Save</string>
     <string name="clear_album_cover_cache">Clear Album Cover Cache</string>
@@ -174,6 +174,7 @@
     <string name="settings_enable_auto_play_description">Enable auto play when bluetooth connected or headset connected. Need restart app.</string>
     <string name="settings_wait_time_before_auto_play">Wait time before auto play</string>
     <string name="text_prefix_lyrics">Lyrics: </string>
+    <string name="text_tracks_folder">Tracks folder: </string>
     <string name="text_prefix_artist">Artist: </string>
     <string name="text_prefix_genre">Genre: </string>
     <string name="content_description_remove_folder">Remove folder</string>

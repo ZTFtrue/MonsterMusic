@@ -10,6 +10,8 @@ import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.SortFiledData
+import com.ztftrue.music.sqlData.model.StorageFolder
+import com.ztftrue.music.sqlData.model.TRACKS_TYPE
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.model.*
@@ -115,6 +117,8 @@ class MusicLibraryRepository(private val context: Context) {
 
     private fun loadSongsAndFolders() {
         val sortData = db.SortFiledDao().findSortByType(PlayListType.Songs.name)
+//        val folders: List<StorageFolder> = db.StorageFolderDao().findAllByType(TRACKS_TYPE)
+//        folders.forEach { it.uri }
         // 调用工具类填充 foldersLinkedHashMap, tracksLinkedHashMap, allTracksLinkedHashMap
         TracksManager.getFolderList(
             context,
@@ -134,6 +138,7 @@ class MusicLibraryRepository(private val context: Context) {
             }
         }
     }
+
     /**
      * 重新加载指定 ID 的歌曲信息（用于标签修改后的刷新）
      * @return 返回更新后的 MusicItem，如果找不到则返回 null

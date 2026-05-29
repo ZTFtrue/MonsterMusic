@@ -6,7 +6,9 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.media.MediaScannerConnection
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.provider.DocumentsContract
 import android.util.Log
 import android.widget.Toast
@@ -43,6 +45,7 @@ import com.ztftrue.music.sqlData.model.LYRICS_TYPE
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.StorageFolder
+import com.ztftrue.music.sqlData.model.TRACKS_TYPE
 import com.ztftrue.music.ui.play.Lyrics
 import com.ztftrue.music.utils.CaptionUtils
 import com.ztftrue.music.utils.CaptionUtils.getLyricsTypeFromExtension
@@ -690,6 +693,128 @@ class MusicViewModel : ViewModel() {
                 })
         }
 
+    }
+
+
+    fun isMusicFile(fileName: String?): Boolean {
+        if (fileName == null) return false
+        val extensions = listOf("mp3", "flac", "m4a", "wav", "ogg", "aac")
+        return extensions.any { fileName.endsWith(it, ignoreCase = true) }
+    }
+
+    // 尝试将 treeUri 中的 DocumentFile 转换为物理路径
+    fun getPathFromDocumentUri(context: Context, uri: Uri): String? {
+        if (DocumentsContract.isDocumentUri(context, uri)) {
+            val docId = DocumentsContract.getDocumentId(uri)
+            val split = docId.split(":")
+            val type = split[0]
+            if ("primary".equals(type, ignoreCase = true)) {
+                return "${Environment.getExternalStorageDirectory()}/${split[1]}"
+            } else {
+                // 处理 SD 卡路径
+                val storageManager =
+                    context.getSystemService(Context.STORAGE_SERVICE) as android.os.storage.StorageManager
+                val volumes = storageManager.storageVolumes
+                for (volume in volumes) {
+                    val uuid = volume.uuid
+                    if (uuid != null && uuid == type) {
+                        return "/storage/$uuid/${split[1]}"
+                    }
+                }
+            }
+        }
+        return null
+    }
+
+    fun refreshAllTracks(context: Context) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val pathsToScan = mutableListOf<String>()
+            val publicDirs = listOf(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC),
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PODCASTS),
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_AUDIOBOOKS)
+            )
+            publicDirs.forEach { dir ->
+                if (dir.exists()) {
+                    dir.walk().maxDepth(3) // 限制深度提高性能
+                        .filter { it.isFile && isMusicFile(it.name) }
+                        .forEach { pathsToScan.add(it.absolutePath) }
+                }
+            }
+
+            val folderList = getDb(context).StorageFolderDao().findAllByType(TRACKS_TYPE)
+            folderList.forEach { storageFolder ->
+                val treeUri = storageFolder.uri.toUri()
+                val rootDoc = DocumentFile.fromTreeUri(context, treeUri)
+
+                // 遍历自定义授权的文件夹
+                rootDoc?.listFiles()?.forEach { docFile ->
+                    if (docFile.isFile && isMusicFile(docFile.name)) {
+                        // 尝试获取物理路径
+                        val path = getPathFromDocumentUri(context, docFile.uri)
+                        if (path != null) {
+                            pathsToScan.add(path)
+                        }
+                    }
+                }
+            }
+
+            // 3. 执行强制系统扫描
+            if (pathsToScan.isNotEmpty()) {
+                // 分批次扫描，防止数组过大
+                val pathArray = pathsToScan.toTypedArray()
+                MediaScannerConnection.scanFile(
+                    context,
+                    pathArray,
+                    null // 让系统根据扩展名自动识别 MIME
+                ) { path, uri ->
+                }
+            }
+            withContext(Dispatchers.Main) {
+                val futureResult: ListenableFuture<SessionResult>? =
+                    browser?.sendCustomCommand(
+                        MediaCommands.COMMAND_REFRESH_ALL,
+                        Bundle().apply { },
+                    )
+                futureResult?.addListener({
+                    try {
+                        val sessionResult = futureResult.get()
+                        if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
+                            refreshPlayList.value =
+                                !refreshPlayList.value
+                            refreshAlbum.value =
+                                !refreshAlbum.value
+                            refreshArtist.value =
+                                !refreshArtist.value
+                            refreshGenre.value =
+                                !refreshGenre.value
+                            refreshFolder.value =
+                                !refreshFolder.value
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                sessionResult.extras.getParcelableArrayList(
+                                    "songsList", MusicItem::class.java
+                                )?.also {
+                                    songsList.clear()
+                                    songsList.addAll(it)
+                                }
+                            } else {
+                                @Suppress("DEPRECATION")
+                                sessionResult.extras.getParcelableArrayList<MusicItem>(
+                                    "songsList"
+                                )?.also {
+                                    songsList.clear()
+                                    songsList.addAll(it)
+                                }
+                            }
+
+                        }
+                    } catch (e: Exception) {
+                        Log.e("Client", "Failed to toggle favorite status", e)
+                    }
+                }, ContextCompat.getMainExecutor(context))
+            }
+        }
     }
 
     fun playShuffled(playListType: PlayListType, playListId: Long) {
