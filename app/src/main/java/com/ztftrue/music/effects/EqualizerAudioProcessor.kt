@@ -92,9 +92,6 @@ class EqualizerAudioProcessor : AudioProcessor {
         if (inputAudioFormat.encoding != C.ENCODING_PCM_16BIT && inputAudioFormat.encoding != C.ENCODING_PCM_FLOAT) {
             return AudioProcessor.AudioFormat.NOT_SET
         }
-        if (inputAudioFormat.channelCount != 2) {
-            return AudioProcessor.AudioFormat.NOT_SET
-        }
 
         this.inputAudioFormat = inputAudioFormat
         this.outputAudioFormat = inputAudioFormat
