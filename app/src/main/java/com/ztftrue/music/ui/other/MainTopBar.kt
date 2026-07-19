@@ -21,6 +21,8 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.VolumeOff
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Done
@@ -28,6 +30,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Alarm
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.FolderCopy
 import androidx.compose.material.icons.outlined.Snooze
@@ -58,6 +61,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -88,6 +93,7 @@ import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.CreatePlayListDialog
 import com.ztftrue.music.ui.public.QueueOperateDialog
 import com.ztftrue.music.ui.public.SleepTimeDialog
+import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.SharedPreferencesUtils
@@ -102,6 +108,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlin.math.roundToLong
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,7 +129,96 @@ fun MainTopBar(
     } else {
         Icons.Outlined.Snooze
     }
-
+    var popupVolumeWindow by remember { mutableStateOf(false) }
+    val volumeIcon: ImageVector = if (musicViewModel.volume.intValue == 0) {
+        Icons.AutoMirrored.Outlined.VolumeOff
+    } else {
+        Icons.AutoMirrored.Outlined.VolumeUp
+    }
+    if (popupVolumeWindow) {
+        Popup(
+            // on below line we are adding
+            // alignment and properties.
+            alignment = Alignment.TopCenter,
+            properties = PopupProperties(),
+            offset = IntOffset(
+                0.dp.toPx(context),
+                40.dp.toPx(context)
+            ),
+            onDismissRequest = {
+                popupVolumeWindow = false
+            }
+        ) {
+            val windowInfo = LocalWindowInfo.current
+            val density = LocalDensity.current
+            val containerWidthDp = with(density) { windowInfo.containerSize.width.toDp() }
+            Column(
+                modifier = Modifier
+                    .width(containerWidthDp - 20.dp)
+                    .padding(top = 5.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.background,
+                        RoundedCornerShape(10.dp)
+                    )
+                    .border(
+                        1.dp,
+                        color = MaterialTheme.colorScheme.primary,
+                        RoundedCornerShape(10.dp)
+                    )
+            ) {
+                LazyColumn(
+                    contentPadding = PaddingValues(5.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    item {
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            CustomSlider(
+                                modifier = Modifier
+                                    .semantics { contentDescription = "Slider" },
+                                value = musicViewModel.volume.intValue.toFloat(),
+                                onValueChange = {
+                                    musicViewModel.volume.intValue =
+                                        it.roundToLong().toInt()
+                                },
+                                valueRange = 0f..100f,
+                                steps = 100,
+                                onValueChangeFinished = {
+                                    musicViewModel.browser?.setVolume(
+                                        musicViewModel.volume.intValue.toFloat() / 100
+                                    )
+                                },
+                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 10.dp, end = 0.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = buildString {
+                                        append(musicViewModel.volume.intValue.toString())
+                                        append("%")
+                                    },
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                                IconButton(onClick = { popupVolumeWindow = false }) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Close,
+                                        contentDescription = stringResource(R.string.content_description_remove_folder),
+                                        modifier = Modifier
+                                            .size(30.dp)
+                                            .clip(CircleShape),
+                                        tint = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
     Column {
         if (showSleepDialog) {
             SleepTimeDialog(musicViewModel, onDismiss = {
@@ -671,6 +767,7 @@ fun MainTopBar(
             },
             title = { },
             actions = {
+
                 if (musicViewModel.mainTabList.size > pagerState.currentPage && musicViewModel.mainTabList[pagerState.currentPage].type != PlayListType.Folders) {
                     IconButton(
                         modifier = Modifier.width(50.dp), onClick = {
@@ -738,6 +835,23 @@ fun MainTopBar(
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
+                }
+                IconButton(
+                    modifier = Modifier
+                        .semantics {
+                            contentDescription = "Adjust Volume"
+                        },
+                    onClick = {
+                        popupVolumeWindow = true
+                    }) {
+                    Icon(
+                        imageVector = volumeIcon,
+                        contentDescription = "Operate More, will open popup",
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape),
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
                 }
                 IconButton(modifier = Modifier.semantics {
                     contentDescription = "Set sleep time"
