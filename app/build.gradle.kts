@@ -13,8 +13,8 @@ android {
         applicationId = "com.ztftrue.music"
         minSdk = 30
         targetSdk = 37
-        versionCode = 70
-        versionName = "0.1.70"
+        versionCode = 71
+        versionName = "0.1.71"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -35,7 +35,7 @@ android {
 
     bundle {
         language {
-            enableSplit = false // don't split language, for Google play app bundle
+            enableSplit = false // don't split language, for Google Play app bundle
         }
     }
 
@@ -91,21 +91,15 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-//    kotlin {
-//        jvmToolchain(17)
-//        compilerOptions {
-//            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-//        }
-//    }
     kotlin {
         jvmToolchain(17) // Automatically sets jvmTarget to 17
     }
+
     buildFeatures {
         compose = true
         viewBinding = true
         buildConfig = true
     }
-
 
     packaging {
         resources {
