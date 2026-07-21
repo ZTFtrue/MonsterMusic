@@ -34,7 +34,6 @@ import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.PlayMusicWidget
-import com.ztftrue.music.R
 import com.ztftrue.music.play.manager.AudioEffectManager
 import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.play.manager.MusicLibraryRepository
@@ -67,6 +66,7 @@ class PlayService : MediaLibraryService() {
     lateinit var sleepManager: SleepTimerManager
     var isSleeping = false
     val isInitialized = CompletableDeferred<Unit>()
+    private var errorCount = 0
 
     // --- 协程作用域 (核心补充) ---
     // SupervisorJob 确保一个子协程失败不会导致整个 Scope 取消
@@ -252,14 +252,23 @@ class PlayService : MediaLibraryService() {
 
         override fun onPlayerError(error: PlaybackException) {
             Log.e("PlayService", "Player Error", error)
-            Toast.makeText(
-                this@PlayService,
-                getString(R.string.play_error_play_next),
-                Toast.LENGTH_SHORT
-            ).show()
-            if (exoPlayer.hasNextMediaItem()) {
-                exoPlayer.seekToNextMediaItem()
-                exoPlayer.prepare()
+            if (errorCount > 3) {
+                Toast.makeText(
+                    this@PlayService,
+                    "Many times play error, Play paused",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                Toast.makeText(
+                    this@PlayService,
+                    "Play error, auto play next",
+                    Toast.LENGTH_SHORT
+                ).show()
+                if (exoPlayer.hasNextMediaItem()) {
+                    exoPlayer.seekToNextMediaItem()
+                    exoPlayer.prepare()
+                }
+                errorCount++
             }
         }
 
