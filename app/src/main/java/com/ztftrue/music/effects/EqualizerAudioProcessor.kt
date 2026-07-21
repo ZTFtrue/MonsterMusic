@@ -20,6 +20,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     companion object {
         private const val TAG = "EqualizerProcessor"
         private const val PCM_16_BIT_MAX = 32767.0f
+
         // 缓冲区扩容时的余量，避免频繁扩容
         private const val BUFFER_HEADROOM = 4096
     }
@@ -36,8 +37,10 @@ class EqualizerAudioProcessor : AudioProcessor {
     // ===============================================================
     // 1. 持有原生内存的容器
     private var bufferContainer: ByteBuffer = EMPTY_BUFFER
+
     // 2. 指向当前处理结果的引用 (API 要求)
     private var outputBuffer: ByteBuffer = EMPTY_BUFFER
+
     // 3. 浮点运算用的声道缓冲区 [Channel][Sample]
     private var channelBuffers: Array<FloatArray> = emptyArray()
 
@@ -237,7 +240,11 @@ class EqualizerAudioProcessor : AudioProcessor {
 
         // 7. Visualization
         if (visualizationAudioActive) {
-            processVisualization(channelBuffers[0], channelBuffers[1], framesCount)
+            processVisualization(
+                channelBuffers[0],
+                if (channelBuffers.size == 2) channelBuffers[1] else channelBuffers[0],
+                framesCount
+            )
         }
 
         // 8. Interleave & Output
