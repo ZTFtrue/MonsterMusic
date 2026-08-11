@@ -50,6 +50,8 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
+import java.nio.charset.Charset
 import java.util.Locale
 
 enum class OperateTypeInActivity {
@@ -722,6 +724,7 @@ object Utils {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
         (context as MainActivity).folderPickerLauncher.launch(intent)
     }
+
     @OptIn(UnstableApi::class)
     fun setTracksFolder(context: Context) {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
@@ -833,6 +836,43 @@ object Utils {
         val componentName = ComponentName(context, widgetProviderClass)
         val appWidgetIds: IntArray = appWidgetManager.getAppWidgetIds(componentName)
         return appWidgetIds.isNotEmpty()
+    }
+
+    fun detectCharset(file: InputStream?): Charset {
+        file?.use { input ->
+            val bom = ByteArray(3)
+            val count = input.read(bom)
+            if (count >= 2) {
+                // UTF-16 BE: FE FF
+                if (
+                    bom[0].toInt() and 0xFF == 0xFE &&
+                    bom[1].toInt() and 0xFF == 0xFF
+                ) {
+                    return Charsets.UTF_16BE
+                }
+
+                // UTF-16 LE: FF FE
+                if (
+                    bom[0].toInt() and 0xFF == 0xFF &&
+                    bom[1].toInt() and 0xFF == 0xFE
+                ) {
+                    return Charsets.UTF_16LE
+                }
+            }
+
+            if (count >= 3) {
+                // UTF-8 BOM: EF BB BF
+                if (
+                    bom[0].toInt() and 0xFF == 0xEF &&
+                    bom[1].toInt() and 0xFF == 0xBB &&
+                    bom[2].toInt() and 0xFF == 0xBF
+                ) {
+                    return Charsets.UTF_8
+                }
+            }
+        }
+
+        return Charsets.UTF_8
     }
 
 }

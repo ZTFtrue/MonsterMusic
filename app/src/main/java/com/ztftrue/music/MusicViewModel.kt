@@ -55,6 +55,7 @@ import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.SharedPreferencesName.LYRICS_SETTINGS
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.Utils.detectCharset
 import com.ztftrue.music.utils.Utils.getCover
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.model.Caption
@@ -69,7 +70,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.File
+import java.io.InputStream
 import java.io.InputStreamReader
+import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.util.concurrent.locks.ReentrantLock
@@ -384,9 +387,11 @@ class MusicViewModel : ViewModel() {
                 val fileInternal = Utils.checkLyrics(path)
                 if (fileInternal != null) {
                     lyricsType = fileInternal.type
+                    val file = File(fileInternal.path)
+                    val charset = detectCharset(file.inputStream())
                     fileLyrics.addAll(
                         readCaptions(
-                            File(fileInternal.path).bufferedReader(),
+                            file.bufferedReader(charset),
                             fileInternal.type,
                             context
                         )
@@ -402,9 +407,11 @@ class MusicViewModel : ViewModel() {
                     )
                     if (fileR != null) {
                         lyricsType = fileR.type
+                        val file = File(fileR.path)
+                        val charset = detectCharset(file.inputStream())
                         fileLyrics.addAll(
                             readCaptions(
-                                File(fileR.path).bufferedReader(),
+                                file.bufferedReader(charset),
                                 fileR.type,
                                 context
                             )
@@ -475,7 +482,8 @@ class MusicViewModel : ViewModel() {
         lyricsType = captionType
         val inputStream =
             context.contentResolver.openInputStream(uri)
-        val i = InputStreamReader(inputStream)
+        val charset = detectCharset(inputStream)
+        val i = InputStreamReader(inputStream, charset)
         val reader =
             BufferedReader(i)
         val r = readCaptions(reader, lyricsType, context)
