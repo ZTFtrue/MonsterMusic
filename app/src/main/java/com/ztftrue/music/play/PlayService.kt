@@ -183,19 +183,14 @@ class PlayService : MediaLibraryService() {
                     .build()
 
                 return object : ForwardingAudioSink(au) {
-                    override fun configure(
-                        inputFormat: Format,
-                        specifiedBufferSize: Int,
-                        outputChannels: IntArray?
-                    ) {
-                        // 每次配置音频 sink 时保存时长等信息
+                    override fun configure(audioSinkConfig: AudioSink.AudioSinkConfig) {
                         serviceScope.launch {
                             SharedPreferencesUtils.saveCurrentDuration(
                                 this@PlayService,
                                 exoPlayer.duration
                             )
                         }
-                        super.configure(inputFormat, specifiedBufferSize, outputChannels)
+                        super.configure(audioSinkConfig)
                     }
                 }
             }

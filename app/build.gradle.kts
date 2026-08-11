@@ -13,8 +13,8 @@ android {
         applicationId = "com.ztftrue.music"
         minSdk = 30
         targetSdk = 37
-        versionCode = 71
-        versionName = "0.1.71"
+        versionCode = 72
+        versionName = "0.1.72"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -108,8 +108,9 @@ android {
     }
 }
 composeCompiler {
-    reportsDestination = layout.buildDirectory.dir("compose_compiler")
+//    reportsDestination = layout.buildDirectory.dir("compose_compiler")
     stabilityConfigurationFiles.add(rootProject.layout.projectDirectory.file("stability_config.conf"))
+    // Set these to false or remove them entirely
 }
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
@@ -128,9 +129,9 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.7.1")
 
 //    implementation("androidx.media:media:1.7.0")
-    implementation("androidx.media3:media3-exoplayer:1.10.1")
-    implementation("androidx.media3:media3-session:1.10.1")
-    implementation("androidx.media3:media3-ui:1.10.1")
+    implementation("androidx.media3:media3-exoplayer:1.11.0")
+    implementation("androidx.media3:media3-session:1.11.0")
+    implementation("androidx.media3:media3-ui:1.11.0")
 
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
@@ -140,7 +141,7 @@ dependencies {
 
     // splash
     implementation("androidx.core:core-splashscreen:1.2.0")
-    implementation("androidx.constraintlayout:constraintlayout-compose:1.1.1")
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.1.2")
 
     // load image
     implementation("io.coil-kt.coil3:coil-compose:3.5.0")
@@ -187,8 +188,8 @@ dependencies {
 
 
     // Core Navigation 3 libraries
-    implementation("androidx.navigation3:navigation3-runtime:1.1.4")
-    implementation("androidx.navigation3:navigation3-ui:1.1.4")
+    implementation("androidx.navigation3:navigation3-runtime:1.1.5")
+    implementation("androidx.navigation3:navigation3-ui:1.1.5")
     // Optional add-on libraries,Navigation 3
     implementation("androidx.lifecycle:lifecycle-viewmodel-navigation3:2.11.0")
     implementation("androidx.compose.material3.adaptive:adaptive:1.3.0-rc01")
