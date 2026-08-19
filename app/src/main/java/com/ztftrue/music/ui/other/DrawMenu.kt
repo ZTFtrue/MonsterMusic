@@ -1,8 +1,6 @@
 package com.ztftrue.music.ui.other
 
-import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -44,21 +42,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.session.SessionResult
 import coil3.compose.AsyncImage
-import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.manager.MediaCommands
-import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import kotlinx.coroutines.launch

@@ -95,6 +95,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Locale
+import kotlin.time.Duration.Companion.milliseconds
 
 
 @Suppress("DEPRECATION")
@@ -992,7 +993,7 @@ class MainActivity : ComponentActivity() {
                     if (jobSeek?.isActive == true) return@withLock
                     jobSeek = launch {
                         while (isActive) {
-                            delay(1000)
+                            delay(1000.milliseconds)
                             val f = musicViewModel.browser?.currentPosition ?: 0
                             if (f < 0) {
                                 continue

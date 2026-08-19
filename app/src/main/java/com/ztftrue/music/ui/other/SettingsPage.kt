@@ -2457,11 +2457,9 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                                         .padding(8.dp)
                                         .semantics {
                                             contentDescription = if (showTopIndicator) {
-                                                "Show top indicator"
                                                 context.getString(R.string.content_description_show_top_indicator)
 
                                             } else {
-                                                "Hide top indicator"
                                                 context.getString(R.string.content_description_hide_top_indicator)
                                             }
                                         }

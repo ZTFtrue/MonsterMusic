@@ -92,7 +92,6 @@ import com.ztftrue.music.sqlData.model.SortFiledData
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.Bottom
 import com.ztftrue.music.ui.public.CreatePlayListDialog
-import com.ztftrue.music.ui.public.QueueOperateDialog
 import com.ztftrue.music.ui.public.TopBar
 import com.ztftrue.music.ui.public.TracksListView
 import com.ztftrue.music.utils.MutableListExtension.removeLastSafe

@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Data class to hold search results
@@ -57,7 +58,7 @@ class SearchScreenViewModel(
     init {
         viewModelScope.launch {
             _keywords
-                .debounce(300L) // Debounce user input to avoid excessive search calls
+                .debounce(300L.milliseconds) // Debounce user input to avoid excessive search calls
                 .filter { it.length > 1 || it.isEmpty() } // Only search for keywords longer than 1 char, or when cleared
                 .mapLatest { keyword -> // Use mapLatest to cancel previous search if new keyword arrives
                     if (keyword.length > 1) {
