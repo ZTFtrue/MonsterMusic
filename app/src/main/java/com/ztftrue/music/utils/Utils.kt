@@ -41,6 +41,7 @@ import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.play.Lyrics
 import com.ztftrue.music.utils.model.AnyListBase
+import com.ztftrue.music.utils.model.ListStringCaption
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.SongsUtils
 import kotlinx.coroutines.CoroutineScope
@@ -86,6 +87,13 @@ fun stringToEnumForPlayListType(enumString: String): PlayListType {
         PlayListType.Songs
     }
 }
+
+data class LyricsLoadResult(
+    val lyrics: List<ListStringCaption>,
+    val lyricsType: LyricsType,
+    val isEmbedded: Boolean,
+    val tags: Map<String, String>
+)
 
 
 enum class OperateType {

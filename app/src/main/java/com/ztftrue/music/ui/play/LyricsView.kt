@@ -336,7 +336,7 @@ fun LyricsView(
             // TODO deprecated
             LocalClipboardManager.current
         )
-        var longpress = false
+        var longPress = false
         CompositionLocalProvider(
             textToolbarProvider,
         ) {
@@ -352,14 +352,14 @@ fun LyricsView(
                         .motionEventSpy {
                             when (it.action) {
                                 MotionEvent.ACTION_DOWN -> {
-                                    longpress = false
+                                    longPress = false
                                     downtime = System.currentTimeMillis()
                                     textToolbar.hide()
                                     focusManager.clearFocus()
                                 }
 
                                 MotionEvent.ACTION_UP -> {
-                                    longpress = System.currentTimeMillis() - downtime >= 200
+                                    longPress = System.currentTimeMillis() - downtime >= 200
                                     val a = it.y - 115.dp.toPx(context)
                                     popupOffset =
                                         IntOffset(it.x.toInt() - 60.dp.toPx(context), a.toInt())
@@ -416,7 +416,7 @@ fun LyricsView(
                                                     link = LinkAnnotation.Clickable(
                                                         tag = "text",
                                                         linkInteractionListener = { _ ->
-                                                            if (!longpress) {
+                                                            if (!longPress) {
                                                                 if (textToolbar.status == TextToolbarStatus.Shown) {
                                                                     textToolbar.hide()
                                                                     focusManager.clearFocus()

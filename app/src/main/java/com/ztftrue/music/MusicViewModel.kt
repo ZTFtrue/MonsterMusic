@@ -35,8 +35,8 @@ import androidx.media3.session.SessionResult
 import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.play.AudioDataRepository
 import com.ztftrue.music.play.CustomMetadataKeys
-import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.play.MediaItemUtils
+import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
 import com.ztftrue.music.sqlData.model.DictionaryApp
@@ -50,6 +50,7 @@ import com.ztftrue.music.ui.play.Lyrics
 import com.ztftrue.music.utils.CaptionUtils
 import com.ztftrue.music.utils.CaptionUtils.getLyricsTypeFromExtension
 import com.ztftrue.music.utils.CaptionUtils.splitStringIntoWordsAndSymbols
+import com.ztftrue.music.utils.LyricsLoadResult
 import com.ztftrue.music.utils.LyricsSettings.FIRST_EMBEDDED_LYRICS
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.PlayListType
@@ -64,7 +65,9 @@ import com.ztftrue.music.utils.model.ListStringCaption
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -73,7 +76,7 @@ import java.io.File
 import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
-import java.util.concurrent.locks.ReentrantLock
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.milliseconds
 
 
@@ -238,7 +241,6 @@ class MusicViewModel : ViewModel() {
     }
 
     val tags = mutableStateMapOf<String, String>()
-    private val lock = ReentrantLock()
     private var lyricsJob: Job? = null
     private var dealCurrentPlayJob: Job? = null
 
@@ -251,7 +253,6 @@ class MusicViewModel : ViewModel() {
             if (index == 0 && reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
                 delay(100.milliseconds)
             }
-
             sliderPosition.floatValue = 0f
             currentCaptionList.clear()
             if (mediaItem != null) {
@@ -342,136 +343,722 @@ class MusicViewModel : ViewModel() {
         return false
     }
 
-    fun dealLyrics(context: Context, currentPlay: MusicItem) {
-        lock.lock()
-        currentCaptionListLoading.value = true
-        currentCaptionList.clear()
-        lyricsType = LyricsType.TEXT
-        if (lyricsJob != null && lyricsJob?.isActive == true) {
-            lyricsJob?.cancel()
+
+    fun dealLyrics(
+        context: Context,
+        currentPlay: MusicItem
+    ) {
+        // ---------------------------------------------------------
+        // 取消上一首歌曲的歌词任务
+        // ---------------------------------------------------------
+        lyricsJob?.cancel()
+
+        /*
+         * 保存当前歌曲路径。
+         *
+         * 除了 Job cancellation 之外，
+         * 再增加一层歌曲身份检查。
+         *
+         * 因为 detectCharset / readCaptions /
+         * getEmbeddedLyrics 等可能包含普通阻塞 IO，
+         * cancel() 不一定能够让它们立即停止。
+         */
+        val requestMusicPath = currentPlay.path
+
+        val newJob = viewModelScope.launch {
+
+            currentCaptionListLoading.value = true
+
+            // 切歌以后立即清除上一首歌词
+            currentCaptionList.clear()
+
+            try {
+
+                // =================================================
+                // 真正的文件读取全部放到 IO 线程
+                // =================================================
+
+                val result = withContext(Dispatchers.IO) {
+                    loadLyricsData(
+                        context = context,
+                        currentPlay = currentPlay
+                    )
+                }
+
+                // 如果协程已经取消，这里直接停止
+                currentCoroutineContext().ensureActive()
+
+
+                // =================================================
+                // 再次检查这是不是当前最新歌词任务
+                // =================================================
+
+                if (lyricsJob !== coroutineContext[Job]) {
+                    return@launch
+                }
+
+                /*
+                 * 这里可以继续使用 path 作为额外保护。
+                 *
+                 * 当前任务创建时对应的就是 requestMusicPath。
+                 */
+                if (currentPlay.path != requestMusicPath) {
+                    return@launch
+                }
+
+
+                // =================================================
+                // 回到 Main 后统一修改 UI / Compose State
+                // =================================================
+
+                currentCaptionList.clear()
+                currentCaptionList.addAll(result.lyrics)
+
+                tags.clear()
+                tags.putAll(result.tags)
+
+                lyricsType = result.lyricsType
+
+                isEmbeddedLyrics.value =
+                    result.isEmbedded
+
+
+                // =================================================
+                // 每行歌词持续时间
+                // =================================================
+
+                itemDuration =
+                    currentPlay.duration /
+                            currentCaptionList
+                                .size
+                                .coerceAtLeast(1)
+
+            } catch (e: CancellationException) {
+
+                // 协程取消不能吞掉
+                throw e
+
+            } catch (e: Exception) {
+
+                e.printStackTrace()
+
+                /*
+                 * 只有当前任务发生错误，
+                 * 才允许清除当前 UI。
+                 *
+                 * 避免已经过期的任务影响新任务。
+                 */
+                if (lyricsJob === coroutineContext[Job]) {
+
+                    currentCaptionList.clear()
+
+                    tags.clear()
+
+                    isEmbeddedLyrics.value = false
+
+                    lyricsType = LyricsType.TEXT
+                }
+
+            } finally {
+
+                /*
+                 * 非常重要：
+                 *
+                 * 只有最新任务才能关闭 loading。
+                 *
+                 * 否则：
+                 *
+                 * A 开始
+                 * B 开始并取消 A
+                 * A finally
+                 * A 把 loading=false
+                 *
+                 * 此时 B 明明还在加载。
+                 */
+                if (lyricsJob === coroutineContext[Job]) {
+                    currentCaptionListLoading.value = false
+                }
+            }
         }
-        lyricsJob = CoroutineScope(Dispatchers.IO).launch {
-            val regexPattern = Regex("[<>\"/~'{}?,+=)(^&*%!@#$]")
-            val artistsFolder = currentPlay.artist.replace(
+
+        lyricsJob = newJob
+    }
+
+
+    /**
+     * 在 Dispatchers.IO 中执行真正的歌词读取。
+     *
+     * 这里尽可能只操作局部变量。
+     *
+     * 不直接修改：
+     *
+     * currentCaptionList
+     * tags
+     * lyricsType
+     * isEmbeddedLyrics
+     * currentCaptionListLoading
+     */
+    private suspend fun loadLyricsData(
+        context: Context,
+        currentPlay: MusicItem
+    ): LyricsLoadResult {
+
+        // =========================================================
+        // 文件名非法字符处理
+        // =========================================================
+
+        val regexPattern =
+            Regex("[<>\"/~'{}?,+=)(^&*%!@#$]")
+
+
+        // =========================================================
+        // App 自己的歌词目录
+        // Lyrics/歌手/歌曲
+        // =========================================================
+
+        val artistsFolder =
+            currentPlay.artist.replace(
                 regexPattern,
                 "_"
             )
-            val folderPath = "$Lyrics/$artistsFolder"
-            val folder = context.getExternalFilesDir(
+
+        val folderPath =
+            "$Lyrics/$artistsFolder"
+
+        val folder =
+            context.getExternalFilesDir(
                 folderPath
             )
-            folder?.mkdirs()
-            val id = currentPlay.name.replace(regexPattern, "_")
-            val path = "${context.getExternalFilesDir(folderPath)?.absolutePath}/$id"
-            val firstEmbeddedLyrics =
-                context.getSharedPreferences(LYRICS_SETTINGS, Context.MODE_PRIVATE)
-                    .getBoolean(FIRST_EMBEDDED_LYRICS, false)
-            val embeddedLyrics = arrayListOf<ListStringCaption>()
-            val fileLyrics = arrayListOf<ListStringCaption>()
-            tags.clear()
-            // if embedded lyrics is prior, first import lyrics
-            if (firstEmbeddedLyrics) {
+
+        folder?.mkdirs()
+
+        val lyricsId =
+            currentPlay.name.replace(
+                regexPattern,
+                "_"
+            )
+
+        val internalLyricsPath =
+            folder?.let {
+                File(
+                    it,
+                    lyricsId
+                ).absolutePath
+            }
+
+
+        // =========================================================
+        // 是否优先读取内嵌歌词
+        // =========================================================
+
+        val firstEmbeddedLyrics =
+            context
+                .getSharedPreferences(
+                    LYRICS_SETTINGS,
+                    Context.MODE_PRIVATE
+                )
+                .getBoolean(
+                    FIRST_EMBEDDED_LYRICS,
+                    false
+                )
+
+
+        // =========================================================
+        // 所有临时状态均为局部变量
+        // =========================================================
+
+        val embeddedLyrics =
+            ArrayList<ListStringCaption>()
+
+        val fileLyrics =
+            ArrayList<ListStringCaption>()
+
+        /*
+         * 后台线程不要直接操作：
+         *
+         * mutableStateMapOf<String, String>()
+         *
+         * 使用普通 MutableMap。
+         */
+        val localTags =
+            mutableMapOf<String, String>()
+
+
+        var resultLyricsType =
+            LyricsType.TEXT
+
+
+        // =========================================================
+        // 第一阶段：
+        //
+        // 如果设置成 Embedded Lyrics 优先，
+        // 首先读取音乐文件中的内嵌歌词。
+        // =========================================================
+
+        if (firstEmbeddedLyrics) {
+
+            currentCoroutineContext()
+                .ensureActive()
+
+            try {
+
                 embeddedLyrics.addAll(
                     CaptionUtils.getEmbeddedLyrics(
                         currentPlay.path,
                         context,
-                        tags
+                        localTags
                     )
                 )
+
+            } catch (e: CancellationException) {
+
+                throw e
+
+            } catch (e: Exception) {
+
+                e.printStackTrace()
             }
-            if (embeddedLyrics.isNotEmpty()) {
-                lyricsType = LyricsType.TEXT
-            } else {
-                // import lyrics
-                val fileInternal = Utils.checkLyrics(path)
+        }
+
+
+        // =========================================================
+        // 如果 Embedded Lyrics 已经找到，
+        // 就不继续寻找外部歌词。
+        // =========================================================
+
+        if (embeddedLyrics.isNotEmpty()) {
+
+            resultLyricsType =
+                LyricsType.TEXT
+
+        } else {
+
+            // =====================================================
+            // 第二阶段：
+            //
+            // 查找 App 自己保存的歌词文件
+            // =====================================================
+
+            currentCoroutineContext()
+                .ensureActive()
+
+            if (internalLyricsPath != null) {
+
+                val fileInternal =
+                    try {
+
+                        Utils.checkLyrics(
+                            internalLyricsPath
+                        )
+
+                    } catch (e: Exception) {
+
+                        e.printStackTrace()
+                        null
+                    }
+
+
                 if (fileInternal != null) {
-                    lyricsType = fileInternal.type
-                    val file = File(fileInternal.path)
-                    val charset = detectCharset(file.inputStream())
-                    fileLyrics.addAll(
-                        readCaptions(
-                            file.bufferedReader(charset),
-                            fileInternal.type,
-                            context
-                        )
-                    )
-                }
-                // Same as tracks file
-                if (fileLyrics.isEmpty()) {
-                    val fileR = Utils.checkLyrics(
-                        currentPlay.path.substring(
-                            0,
-                            currentPlay.path.lastIndexOf("."),
-                        )
-                    )
-                    if (fileR != null) {
-                        lyricsType = fileR.type
-                        val file = File(fileR.path)
-                        val charset = detectCharset(file.inputStream())
-                        fileLyrics.addAll(
-                            readCaptions(
-                                file.bufferedReader(charset),
-                                fileR.type,
-                                context
-                            )
-                        )
+
+                    resultLyricsType =
+                        fileInternal.type
+
+                    val file =
+                        File(fileInternal.path)
+
+                    try {
+
+                        // -----------------------------------------
+                        // 检测编码
+                        // -----------------------------------------
+
+                        val charset =
+                            file.inputStream().use { input ->
+
+                                detectCharset(
+                                    input
+                                )
+                            }
+
+
+                        currentCoroutineContext()
+                            .ensureActive()
+
+
+                        // -----------------------------------------
+                        // 读取歌词
+                        // -----------------------------------------
+
+                        file
+                            .bufferedReader(charset)
+                            .use { reader ->
+
+                                fileLyrics.addAll(
+                                    readCaptions(
+                                        reader,
+                                        fileInternal.type,
+                                        context
+                                    )
+                                )
+                            }
+
+
+                        /*
+                         * 如果这是你需要保存的歌词实际路径，
+                         * 就记录到 tags。
+                         */
+                        localTags["lyricsPath"] =
+                            fileInternal.path
+
+                    } catch (e: CancellationException) {
+
+                        throw e
+
+                    } catch (e: Exception) {
+
+                        e.printStackTrace()
                     }
                 }
-                if (fileLyrics.isEmpty()) {
-                    val musicName: String = try {
-                        currentPlay.path.substring(
-                            currentPlay.path.lastIndexOf("/") + 1,
-                            currentPlay.path.lastIndexOf(".")
-                        )
-                    } catch (_: Exception) {
-                        ""
-                    }
-                    val files = getDb(context).StorageFolderDao().findAllByType(LYRICS_TYPE)
-                    outer@ for (storageFolder in files) {
+            }
+
+
+            // =====================================================
+            // 第三阶段：
+            //
+            // 查找歌曲同目录歌词：
+            //
+            // abc.mp3
+            // abc.lrc
+            //
+            // 不再使用 substring + lastIndexOf(".")
+            // =====================================================
+
+            if (fileLyrics.isEmpty()) {
+
+                currentCoroutineContext()
+                    .ensureActive()
+
+
+                val musicFile =
+                    File(currentPlay.path)
+
+                val parentFolder =
+                    musicFile.parentFile
+
+
+                if (parentFolder != null) {
+
+                    val musicPathWithoutExtension =
+                        File(
+                            parentFolder,
+                            musicFile.nameWithoutExtension
+                        ).absolutePath
+
+
+                    val fileR =
                         try {
-                            if (loadLyrics(context, storageFolder, musicName, fileLyrics)) {
-                                break@outer
-                            }
+
+                            Utils.checkLyrics(
+                                musicPathWithoutExtension
+                            )
+
                         } catch (e: Exception) {
+
                             e.printStackTrace()
-                            getDb(context).StorageFolderDao().deleteById(storageFolder.id!!)
-                            CoroutineScope(Dispatchers.Main).launch {
-                                Toast.makeText(
-                                    context,
-                                    "There has error, can't read some lyrics. Most of times, this occur after you reinstall app.",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
+                            null
                         }
 
+
+                    if (fileR != null) {
+
+                        resultLyricsType =
+                            fileR.type
+
+                        val file =
+                            File(fileR.path)
+
+
+                        try {
+
+                            val charset =
+                                file
+                                    .inputStream()
+                                    .use { input ->
+
+                                        detectCharset(
+                                            input
+                                        )
+                                    }
+
+
+                            currentCoroutineContext()
+                                .ensureActive()
+
+
+                            file
+                                .bufferedReader(charset)
+                                .use { reader ->
+
+                                    fileLyrics.addAll(
+                                        readCaptions(
+                                            reader,
+                                            fileR.type,
+                                            context
+                                        )
+                                    )
+                                }
+
+
+                            localTags["lyricsPath"] =
+                                fileR.path
+
+                        } catch (e: CancellationException) {
+
+                            throw e
+
+                        } catch (e: Exception) {
+
+                            e.printStackTrace()
+                        }
                     }
                 }
             }
-            if (fileLyrics.isEmpty() && !firstEmbeddedLyrics) {
+
+
+            // =====================================================
+            // 第四阶段：
+            //
+            // 查找用户配置的歌词目录
+            // =====================================================
+
+            if (fileLyrics.isEmpty()) {
+
+                currentCoroutineContext()
+                    .ensureActive()
+
+
+                val musicName =
+                    File(
+                        currentPlay.path
+                    ).nameWithoutExtension
+
+
+                val storageFolders =
+                    try {
+
+                        getDb(context)
+                            .StorageFolderDao()
+                            .findAllByType(
+                                LYRICS_TYPE
+                            )
+
+                    } catch (e: Exception) {
+
+                        e.printStackTrace()
+
+                        emptyList()
+                    }
+
+
+                for (storageFolder in storageFolders) {
+
+                    currentCoroutineContext()
+                        .ensureActive()
+
+                    try {
+
+                        val loaded =
+                            loadLyrics(
+                                context,
+                                storageFolder,
+                                musicName,
+                                fileLyrics
+                            )
+
+
+                        if (loaded) {
+
+                            /*
+                             * 这里没有直接得到实际歌词文件 path，
+                             * 因此暂时不写 lyricsPath。
+                             *
+                             * 如果你的 loadLyrics() 能返回路径，
+                             * 后面可以进一步优化。
+                             */
+
+                            break
+                        }
+
+                    } catch (e: CancellationException) {
+
+                        throw e
+
+                    } catch (e: Exception) {
+
+                        e.printStackTrace()
+
+
+                        // -----------------------------------------
+                        // 原来的逻辑：
+                        //
+                        // 读取失效目录后删除数据库记录
+                        // -----------------------------------------
+
+                        try {
+
+                            storageFolder.id?.let { id ->
+
+                                getDb(context)
+                                    .StorageFolderDao()
+                                    .deleteById(id)
+                            }
+
+                        } catch (dbException: Exception) {
+
+                            dbException.printStackTrace()
+                        }
+
+
+                        // Toast 必须在 Main
+                        withContext(Dispatchers.Main) {
+
+                            Toast.makeText(
+                                context,
+                                "There has error, can't read some lyrics. " +
+                                        "Most of times, this occur after you reinstall app.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            }
+        }
+
+
+        // =========================================================
+        // 第五阶段：
+        //
+        // 如果：
+        //
+        // 1. 没找到文件歌词
+        // 2. Embedded Lyrics 不是第一优先级
+        //
+        // 最后尝试 Embedded Lyrics
+        // =========================================================
+
+        if (
+            fileLyrics.isEmpty() &&
+            !firstEmbeddedLyrics
+        ) {
+
+            currentCoroutineContext()
+                .ensureActive()
+
+            try {
+
                 embeddedLyrics.addAll(
                     CaptionUtils.getEmbeddedLyrics(
                         currentPlay.path,
                         context,
-                        tags
+                        localTags
                     )
                 )
-            }
-            if (fileLyrics.isNotEmpty()) {
-                isEmbeddedLyrics.value = false
-                currentCaptionList.addAll(fileLyrics)
-            } else if (embeddedLyrics.isNotEmpty()) {
-                isEmbeddedLyrics.value = true
-                currentCaptionList.addAll(embeddedLyrics)
-            }
-            val duration = currentPlay.duration
-            // every lyric's line duration
-            itemDuration =
-                duration / if (currentCaptionList.isEmpty()) 1 else currentCaptionList.size
-            currentCaptionListLoading.value = false
-        }
-        lock.unlock()
 
+            } catch (e: CancellationException) {
+
+                throw e
+
+            } catch (e: Exception) {
+
+                e.printStackTrace()
+            }
+        }
+
+
+        // =========================================================
+        // 确定最终歌词
+        // =========================================================
+
+        val finalLyrics: List<ListStringCaption>
+
+        val isEmbedded: Boolean
+
+
+        if (fileLyrics.isNotEmpty()) {
+
+            // 文件歌词
+            finalLyrics =
+                fileLyrics
+
+            isEmbedded =
+                false
+
+        } else if (embeddedLyrics.isNotEmpty()) {
+
+            // 内嵌歌词
+            finalLyrics =
+                embeddedLyrics
+
+            isEmbedded =
+                true
+
+            resultLyricsType =
+                LyricsType.TEXT
+
+        } else {
+
+            // 完全没有歌词
+            finalLyrics =
+                emptyList()
+
+            isEmbedded =
+                false
+        }
+
+
+        // =========================================================
+        // 基本歌曲信息
+        //
+        // 如果 Embedded Lyrics 自己已经解析出了：
+        //
+        // artist
+        // title
+        //
+        // putIfAbsent 不会覆盖它们。
+        // =========================================================
+
+        localTags.putIfAbsent(
+            "artist",
+            currentPlay.artist
+        )
+
+        localTags.putIfAbsent(
+            "title",
+            currentPlay.name
+        )
+
+        localTags.putIfAbsent(
+            "musicPath",
+            currentPlay.path
+        )
+
+
+        currentCoroutineContext()
+            .ensureActive()
+
+
+        // =========================================================
+        // 返回结果
+        // =========================================================
+
+        return LyricsLoadResult(
+            lyrics = finalLyrics,
+            lyricsType = resultLyricsType,
+            isEmbedded = isEmbedded,
+            tags = localTags
+        )
     }
+
 
     private fun fileRead(
         uri: Uri,

@@ -157,7 +157,7 @@ object CaptionUtils {
     fun getEmbeddedLyrics(
         path: String,
         context: Context,
-        tags: SnapshotStateMap<String, String>
+        tags: MutableMap<String, String>
     ): ArrayList<ListStringCaption> {
         val audioFile = File(path)
         val arrayList = arrayListOf<ListStringCaption>()
