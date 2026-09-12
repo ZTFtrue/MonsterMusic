@@ -11,6 +11,7 @@ import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.Tag
 import java.io.BufferedReader
 import java.io.File
+import java.text.BreakIterator
 import java.util.Locale
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -193,12 +194,62 @@ object CaptionUtils {
 
     val regex = Regex("\\b\\w+'?\\w*\\b|\\p{Punct}|\\s+")
     fun splitStringIntoWordsAndSymbols(input: String): ArrayList<String> {
-        val regex = Regex("\\b\\w+'?\\w*\\b|\\p{Punct}|\\s+")
-        return ArrayList(
-            regex.findAll(input)
-            .map { it.value.trim() }
-            .filter { it.isNotEmpty() }
-            .toList())
+        val result = ArrayList<String>()
+        val latinWord = StringBuilder()
+
+        fun flushLatinWord() {
+            if (latinWord.isNotEmpty()) {
+                result.add(latinWord.toString())
+                latinWord.clear()
+            }
+        }
+
+        val iterator =
+            BreakIterator.getCharacterInstance(Locale.getDefault())
+
+        iterator.setText(input)
+
+        var start = iterator.first()
+        var end = iterator.next()
+
+        while (end != BreakIterator.DONE) {
+            val grapheme = input.substring(start, end)
+
+            val firstCodePoint =
+                grapheme.codePointAt(0)
+
+            when {
+                grapheme.isBlank() -> {
+                    flushLatinWord()
+                }
+
+                Character.UnicodeScript.of(firstCodePoint) ==
+                        Character.UnicodeScript.LATIN -> {
+                    latinWord.append(grapheme)
+                }
+
+                Character.isDigit(firstCodePoint) -> {
+                    latinWord.append(grapheme)
+                }
+
+                (grapheme == "'" || grapheme == "’") &&
+                        latinWord.isNotEmpty() -> {
+                    latinWord.append(grapheme)
+                }
+
+                else -> {
+                    flushLatinWord()
+                    result.add(grapheme)
+                }
+            }
+
+            start = end
+            end = iterator.next()
+        }
+
+        flushLatinWord()
+
+        return result
     }
 
     private fun captionTimestampToMilliseconds(timestamp: String, splitter: String = "."): Long {

@@ -82,6 +82,7 @@ import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.Utils.isCjkLike
 import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.model.ListStringCaption
 import com.ztftrue.music.utils.textToolbar.CustomTextToolbar
@@ -197,6 +198,10 @@ fun LyricsView(
             val list = musicViewModel.dictionaryAppList
             list.forEach {
                 if (it.autoGo) {
+                    if (musicViewModel.autoDismissDicPop.value) {
+                        // 可以不显示pop
+                        showMenu = false
+                    }
                     val intent = Intent()
                     intent.action = Intent.ACTION_PROCESS_TEXT
                     intent.setClassName(
@@ -437,10 +442,19 @@ fun LyricsView(
                                             }
 
                                             if (index < tex.size - 1) {
-                                                val regex = Regex("\\p{Punct}")
-                                                if (!regex.matches(tex[index + 1])) {
+                                                val nextText = tex[index + 1]
+                                                val punctuationRegex = Regex("[\\p{P}\\p{S}]")
+                                                val currentIsCjk = isCjkLike(text)
+                                                val nextIsPunctuation =
+                                                    punctuationRegex.matches(nextText)
+                                                if (
+                                                    !nextIsPunctuation && !currentIsCjk
+                                                ) {
                                                     pop()
-                                                    pushStringAnnotation("space", "")
+                                                    pushStringAnnotation(
+                                                        tag = "space",
+                                                        annotation = ""
+                                                    )
                                                     append(" ")
                                                     pop()
                                                 }

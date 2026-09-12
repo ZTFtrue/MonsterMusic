@@ -123,8 +123,8 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
-import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.play.MediaItemUtils
+import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
@@ -180,6 +180,9 @@ fun PlayingPage(
     val pagerTabState = rememberPagerState { playViewTab.size }
     val coroutineScope = rememberCoroutineScope()
     var showDialog by remember { mutableStateOf(false) }
+    var isCheckedAudoDismissDicPop by remember {
+        musicViewModel.autoDismissDicPop
+    }
 
     @Suppress("ASSIGNED_VALUE_IS_NEVER_READ")
     var showAddPlayListDialog by remember { mutableStateOf(false) }
@@ -973,13 +976,29 @@ fun PlayingPage(
                             verticalAlignment = Alignment.CenterVertically
                         )
                         {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .width(140.dp)
+                                    .padding(start = 5.dp)
+                            ) {
+                                Text(
+                                    text = "Auto Dismiss",
                                     modifier = Modifier
-                                        .size(60.dp)
-
-                                ) { }
-                                Box(modifier = Modifier.width(80.dp)) { }
+                                        .horizontalScroll(rememberScrollState(0)),
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    maxLines = 1
+                                )
+                                Checkbox(
+                                    checked = isCheckedAudoDismissDicPop,
+                                    onCheckedChange = { v ->
+                                        isCheckedAudoDismissDicPop = v
+                                    },
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .semantics {
+                                        }
+                                )
                             }
                             Text(
                                 text = stringResource(R.string.show),
@@ -1163,6 +1182,12 @@ fun PlayingPage(
                                         result
                                     )
                                     popupWindowDictionary = false
+                                    musicViewModel.autoDismissDicPop.value =
+                                        isCheckedAudoDismissDicPop
+                                    SharedPreferencesUtils.setAutoDismissDicPop(
+                                        context,
+                                        isCheckedAudoDismissDicPop
+                                    )
                                 },
                                 modifier = Modifier
                                     .padding(8.dp)

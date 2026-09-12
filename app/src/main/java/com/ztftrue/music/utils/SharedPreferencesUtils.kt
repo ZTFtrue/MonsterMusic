@@ -291,4 +291,15 @@ object SharedPreferencesUtils {
                 "#" + context.resources.getColor(R.color.light_blue_900, null).toHexString()
             )
     }
+
+    fun setAutoDismissDicPop(context: Context, auto: Boolean) {
+        context.getSharedPreferences("config", Context.MODE_PRIVATE).edit {
+            putBoolean("auto_dismiss_dic_pop", auto)
+        }
+    }
+
+    fun getAutoDismissDicPop(context: Context): Boolean {
+        return context.getSharedPreferences("config", Context.MODE_PRIVATE)
+            .getBoolean("auto_dismiss_dic_pop", false)
+    }
 }

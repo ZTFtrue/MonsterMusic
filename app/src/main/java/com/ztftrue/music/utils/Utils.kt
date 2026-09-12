@@ -882,5 +882,18 @@ object Utils {
 
         return Charsets.UTF_8
     }
+    fun isCjkLike(text: String): Boolean {
+        if (text.isEmpty()) return false
 
+        val codePoint = text.codePointAt(0)
+
+        return when (Character.UnicodeScript.of(codePoint)) {
+            Character.UnicodeScript.HAN,
+            Character.UnicodeScript.HIRAGANA,
+            Character.UnicodeScript.KATAKANA,
+            Character.UnicodeScript.HANGUL -> true
+
+            else -> false
+        }
+    }
 }
