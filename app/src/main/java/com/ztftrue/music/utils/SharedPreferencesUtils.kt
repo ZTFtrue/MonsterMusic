@@ -3,6 +3,7 @@ package com.ztftrue.music.utils
 import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.ui.text.style.TextAlign
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.ztftrue.music.R
 import com.ztftrue.music.sqlData.model.MusicItem
@@ -288,7 +289,7 @@ object SharedPreferencesUtils {
         return context.getSharedPreferences("config", Context.MODE_PRIVATE)
             .getString(
                 "widget_background",
-                "#" + context.resources.getColor(R.color.light_blue_900, null).toHexString()
+                "#" + ContextCompat.getColor(context, R.color.light_blue_900).toHexString()
             )
     }
 

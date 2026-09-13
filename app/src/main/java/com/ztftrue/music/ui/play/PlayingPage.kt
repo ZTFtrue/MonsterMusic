@@ -394,8 +394,8 @@ fun PlayingPage(
             alignment = Alignment.TopCenter,
             properties = PopupProperties(),
             offset = IntOffset(
-                0.dp.toPx(context),
-                40.dp.toPx(context)
+                0.dp.toPx(),
+                40.dp.toPx()
             ),
             onDismissRequest = {
                 popupWindow = false
@@ -792,8 +792,8 @@ fun PlayingPage(
             alignment = Alignment.TopCenter,
             properties = PopupProperties(),
             offset = IntOffset(
-                0.dp.toPx(context),
-                40.dp.toPx(context)
+                0.dp.toPx(),
+                40.dp.toPx()
             ),
             onDismissRequest = {
                 popupWindow = false
@@ -1019,6 +1019,7 @@ fun PlayingPage(
 
                             items(list.size) { listIndex ->
                                 val item = list[listIndex]
+                                val itemHeightPx = with(LocalDensity.current) { 60.dp.roundToPx() }
                                 var offset by remember { mutableFloatStateOf(0f) }
                                 Row(
                                     modifier = Modifier
@@ -1042,7 +1043,7 @@ fun PlayingPage(
                                                     },
                                                     onDragStopped = { _ ->
                                                         var position =
-                                                            listIndex + (offset / 60.dp.toPx(context)).toInt()
+                                                            listIndex + (offset / itemHeightPx).toInt()
                                                         if (position < 0) {
                                                             position = 0
                                                         }

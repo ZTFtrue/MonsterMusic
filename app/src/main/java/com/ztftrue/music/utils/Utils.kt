@@ -16,6 +16,8 @@ import android.util.Log
 import android.util.TypedValue
 import android.widget.Toast
 import androidx.annotation.OptIn
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -803,6 +805,11 @@ object Utils {
             return CheckLyricsData("$path.vtt", LyricsType.VTT)
         }
         return null
+    }
+
+    @Composable
+    fun Dp.toPx(): Int {
+        return with(LocalDensity.current) { this@toPx.roundToPx() }
     }
 
     fun Dp.toPx(context: Context): Int {

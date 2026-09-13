@@ -20,14 +20,18 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.imageResource
 import androidx.core.view.WindowCompat
 import androidx.media3.common.util.UnstableApi
 import androidx.palette.graphics.Palette
 import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MusicViewModel
+import com.ztftrue.music.R
 import com.ztftrue.music.utils.CustomColorUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -110,6 +114,7 @@ fun MusicPitchTheme(
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
+    val defaultCoverBitmap = ImageBitmap.imageResource(R.drawable.songs_thumbnail_cover).asAndroidBitmap()
     val colorScheme = remember {
         mutableStateOf(LightColorScheme)
     }
@@ -198,17 +203,19 @@ fun MusicPitchTheme(
         } else if (musicViewModel.themeSelected.intValue == 3) {
             when (val cover = musicViewModel.currentMusicCover.value) {
                 is ImageSource.Resource -> {
-                    withContext(Dispatchers.IO) {
-                        val bitmap = BitmapFactory.decodeResource(context.resources, cover.id)
-                        if (bitmap != null) {
-                            withContext(Dispatchers.Main) {
-                                generateAndApplyColorScheme(
-                                    bitmap,
-                                    colorScheme,
-                                    if (darkTheme) DarkColorScheme else LightColorScheme
-                                )
-                            }
+                    val bitmap = if (cover.id == R.drawable.songs_thumbnail_cover) {
+                        defaultCoverBitmap
+                    } else {
+                        withContext(Dispatchers.IO) {
+                            BitmapFactory.decodeResource(context.applicationContext.resources, cover.id)
                         }
+                    }
+                    if (bitmap != null) {
+                        generateAndApplyColorScheme(
+                            bitmap,
+                            colorScheme,
+                            if (darkTheme) DarkColorScheme else LightColorScheme
+                        )
                     }
                 }
 

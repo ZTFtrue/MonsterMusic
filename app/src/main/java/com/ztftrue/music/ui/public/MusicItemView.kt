@@ -43,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -75,7 +76,6 @@ import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.TracksUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.deleteTrackUpdate
-import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.model.MusicPlayList
 import com.ztftrue.music.utils.trackManager.PlaylistManager
@@ -420,6 +420,7 @@ fun MusicItemView(
                     )
                 }
                 if (playList.type == PlayListType.Queue || playList.type == PlayListType.PlayLists) {
+                    val itemHeightPx = with(LocalDensity.current) { 80.dp.roundToPx() }
                     Box(
                         modifier = Modifier
                             .height(45.dp)
@@ -431,7 +432,7 @@ fun MusicItemView(
                                 },
                                 onDragStopped = { _ ->
                                     var targetPosition =
-                                        index + (offset / 80.dp.toPx(context)).toInt()
+                                        index + (offset / itemHeightPx).toInt()
                                     if (targetPosition < 0) {
                                         targetPosition = 0
                                     }

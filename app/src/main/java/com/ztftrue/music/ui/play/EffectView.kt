@@ -29,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -48,7 +47,6 @@ fun EffectView(musicViewModel: MusicViewModel) {
     val pitch = remember { mutableFloatStateOf(musicViewModel.pitch.floatValue) }
     val speed = remember { mutableFloatStateOf(musicViewModel.speed.floatValue) }
     val bands = remember { musicViewModel.equalizerBands }
-    val context = LocalContext.current
     val tempBandValue = ArrayList<MutableFloatState>(Utils.bandsCenter.size)
     bands.forEach { band ->
         val bandValue = remember { mutableFloatStateOf(band.value.toFloat()) }

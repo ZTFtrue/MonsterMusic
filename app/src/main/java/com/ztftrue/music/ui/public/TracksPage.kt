@@ -171,8 +171,8 @@ fun TracksListPage(
             alignment = Alignment.TopEnd,
             properties = PopupProperties(),
             offset = IntOffset(
-                -10.dp.toPx(context),
-                50.dp.toPx(context)
+                -10.dp.toPx(),
+                50.dp.toPx()
             ),
             onDismissRequest = {
                 showSortDialog = false
@@ -592,8 +592,8 @@ fun TracksListPage(
             alignment = Alignment.TopEnd,
             properties = PopupProperties(),
             offset = IntOffset(
-                -10.dp.toPx(context),
-                50.dp.toPx(context)
+                -10.dp.toPx(),
+                50.dp.toPx()
             ),
             onDismissRequest = {
                 showOperatePopup = false

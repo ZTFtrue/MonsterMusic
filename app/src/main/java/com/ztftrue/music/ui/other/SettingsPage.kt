@@ -542,6 +542,7 @@ fun SettingsPage(
                     ) {
                         Column {
 
+                            val saveIgnoreDurationSuccess = stringResource(R.string.ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect)
                             Text(
                                 text = stringResource(R.string.ignore_tracks_duration_less_than),
                                 Modifier.padding(start = 10.dp),
@@ -563,6 +564,7 @@ fun SettingsPage(
                                     onDone = {
                                         saveIgnoreDuration(
                                             durationValue, context,
+                                            String.format(saveIgnoreDurationSuccess, durationValue),
                                             focusRequester,
                                             keyboardController
                                         )
@@ -626,6 +628,7 @@ fun SettingsPage(
                                             onClick = {
                                                 saveIgnoreDuration(
                                                     durationValue, context,
+                                                    String.format(saveIgnoreDurationSuccess, durationValue),
                                                     focusRequester,
                                                     keyboardController
                                                 )
@@ -984,6 +987,7 @@ fun SettingsPage(
 fun saveIgnoreDuration(
     durationValue: String,
     context: Context,
+    successMessage: String,
     focusRequester: FocusRequester,
     keyboardController: SoftwareKeyboardController?
 ) {
@@ -994,10 +998,7 @@ fun saveIgnoreDuration(
     SharedPreferencesUtils.setIgnoreDuration(context, durationValue.toLong())
     Toast.makeText(
         context,
-        context.getString(
-            R.string.ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect,
-            durationValue
-        ),
+        successMessage,
         Toast.LENGTH_SHORT
     ).show()
     focusRequester.freeFocus()
@@ -2537,6 +2538,7 @@ fun SwitchLanguageDialog(onDismiss: () -> Unit) {
     var locale by remember { mutableStateOf(Locale.getDefault().language) }
     val supportedLanguages = listOf("en", "zh", "de", "eo", "hu", "ru") // App-supported languages
     val systemLanguage = LocalConfiguration.current.locales[0].language
+    val followSystemText = stringResource(R.string.language_follow_system)
 
     LaunchedEffect(Unit) {
         locale = if (systemLanguage in supportedLanguages) {
@@ -2550,7 +2552,7 @@ fun SwitchLanguageDialog(onDismiss: () -> Unit) {
         language.add(LanguageModel("Esperanto", "eo"))
         language.add(LanguageModel("Magyar", "hu"))
         language.add(LanguageModel("Русский", "ru"))
-        language.add(LanguageModel(context.getString(R.string.language_follow_system), ""))
+        language.add(LanguageModel(followSystemText, ""))
         SharedPreferencesUtils.getCurrentLanguage(context).let {
             locale = if (it.isNullOrEmpty()) {
                 Locale.getDefault().language

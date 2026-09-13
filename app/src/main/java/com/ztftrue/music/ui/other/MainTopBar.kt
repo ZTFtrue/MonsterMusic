@@ -143,8 +143,8 @@ fun MainTopBar(
             alignment = Alignment.TopCenter,
             properties = PopupProperties(),
             offset = IntOffset(
-                0.dp.toPx(context),
-                40.dp.toPx(context)
+                0.dp.toPx(),
+                40.dp.toPx()
             ),
             onDismissRequest = {
                 popupVolumeWindow = false
@@ -278,8 +278,8 @@ fun MainTopBar(
                 alignment = Alignment.TopEnd,
                 properties = PopupProperties(),
                 offset = IntOffset(
-                    -10.dp.toPx(context),
-                    50.dp.toPx(context)
+                    -10.dp.toPx(),
+                    50.dp.toPx()
                 ),
                 onDismissRequest = {
                     showSortDialog = false
@@ -664,8 +664,8 @@ fun MainTopBar(
                 alignment = Alignment.TopEnd,
                 properties = PopupProperties(),
                 offset = IntOffset(
-                    -100.dp.toPx(context),
-                    50.dp.toPx(context)
+                    -100.dp.toPx(),
+                    50.dp.toPx()
                 ),
                 onDismissRequest = {
                     showOperateDialog = false

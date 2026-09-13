@@ -84,7 +84,6 @@ fun TopBar(
     musicViewModel: MusicViewModel,
     content: @Composable RowScope.() -> Unit
 ) {
-    val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
     var popupVolumeWindow by remember { mutableStateOf(false) }
     val timerIcon: ImageVector = if (musicViewModel.remainTime.longValue == 0L) {
@@ -109,8 +108,8 @@ fun TopBar(
             alignment = Alignment.TopCenter,
             properties = PopupProperties(),
             offset = IntOffset(
-                0.dp.toPx(context),
-                40.dp.toPx(context)
+                0.dp.toPx(),
+                40.dp.toPx()
             ),
             onDismissRequest = {
                 popupVolumeWindow = false

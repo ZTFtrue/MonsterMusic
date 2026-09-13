@@ -55,6 +55,7 @@ import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalTextToolbar
 import androidx.compose.ui.platform.LocalView
@@ -83,7 +84,6 @@ import com.ztftrue.music.R
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.isCjkLike
-import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.model.ListStringCaption
 import com.ztftrue.music.utils.textToolbar.CustomTextToolbar
 import kotlinx.coroutines.Dispatchers
@@ -99,6 +99,9 @@ fun LyricsView(
     musicViewModel: MusicViewModel,
 ) {
     val context = LocalContext.current
+    val density = LocalDensity.current
+    val popupOffsetX = with(density) { 60.dp.roundToPx() }
+    val popupOffsetY = with(density) { 115.dp.roundToPx() }
     val listState = rememberLazyListState()
     var currentI by remember { mutableIntStateOf(-1) }
     var isSelected by remember { mutableStateOf(false) }
@@ -368,9 +371,9 @@ fun LyricsView(
 
                                 MotionEvent.ACTION_UP -> {
                                     longPress = System.currentTimeMillis() - downtime >= 200
-                                    val a = it.y - 115.dp.toPx(context)
+                                    val a = it.y - popupOffsetY
                                     popupOffset =
-                                        IntOffset(it.x.toInt() - 60.dp.toPx(context), a.toInt())
+                                        IntOffset(it.x.toInt() - popupOffsetX, a.toInt())
                                     if (showMenu) {
                                         showMenu = false
                                         isSelected = false
