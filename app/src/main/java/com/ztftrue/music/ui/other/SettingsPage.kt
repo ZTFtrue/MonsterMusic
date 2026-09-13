@@ -2536,7 +2536,7 @@ fun SwitchLanguageDialog(onDismiss: () -> Unit) {
     var size by remember { mutableIntStateOf(0) }
     var selectIndex by remember { mutableIntStateOf(0) }
     var locale by remember { mutableStateOf(Locale.getDefault().language) }
-    val supportedLanguages = listOf("en", "zh", "zh-TW", "ja", "fr", "ar", "de", "eo", "hu", "ru") // App-supported languages
+    val supportedLanguages = listOf("en", "zh", "zh-TW", "ja", "fr", "ar", "de", "eo", "hu", "ru", "tr") // App-supported languages
     val currentLocale = LocalConfiguration.current.locales[0]
     val systemLanguage = if (currentLocale.country.equals("TW", ignoreCase = true) || currentLocale.script.equals("Hant", ignoreCase = true)) {
         "zh-TW"
@@ -2561,6 +2561,7 @@ fun SwitchLanguageDialog(onDismiss: () -> Unit) {
         language.add(LanguageModel("Esperanto", "eo"))
         language.add(LanguageModel("Magyar", "hu"))
         language.add(LanguageModel("Русский", "ru"))
+        language.add(LanguageModel("Türkçe", "tr"))
         language.add(LanguageModel(followSystemText, ""))
         val savedLang = SharedPreferencesUtils.getCurrentLanguage(context)
         locale = if (savedLang.isNullOrEmpty()) {

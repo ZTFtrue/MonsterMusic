@@ -222,4 +222,5 @@
     <string name="language_japanese">日本語</string>
     <string name="language_taiwanese_mandarin">繁體中文 (台灣)</string>
     <string name="file_not_found_please_rescan">檔案不存在或已被刪除，請重新掃描音樂</string>
+    <string name="language_turkish">土耳其語</string>
 </resources>

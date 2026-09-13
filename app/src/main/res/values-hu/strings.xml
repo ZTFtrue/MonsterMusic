@@ -222,4 +222,5 @@
     <string name="language_japanese">日本語</string>
     <string name="language_taiwanese_mandarin">繁體中文 (台灣)</string>
     <string name="file_not_found_please_rescan">A fájl nem található vagy törölve lett, kérjük, keresse újra a zenéket</string>
+    <string name="language_turkish">Török</string>
 </resources>

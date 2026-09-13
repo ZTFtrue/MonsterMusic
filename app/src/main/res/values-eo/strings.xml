@@ -222,4 +222,5 @@
     <string name="language_japanese">日本語</string>
     <string name="language_taiwanese_mandarin">繁體中文 (台灣)</string>
     <string name="file_not_found_please_rescan">Dosiero ne trovita aŭ forigita, bonvolu reskani muzikon</string>
+    <string name="language_turkish">Turka</string>
 </resources>

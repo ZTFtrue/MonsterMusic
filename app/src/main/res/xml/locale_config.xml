@@ -8,6 +8,7 @@
     <locale android:name="hu" /> <!-- Hungarian -->
     <locale android:name="ja" /> <!-- Japanese -->
     <locale android:name="ru" /> <!-- Russian -->
+    <locale android:name="tr" /> <!-- Turkish -->
     <locale android:name="zh-Hans" /> <!-- Chinese (Simplified) -->
     <locale android:name="zh-Hant" /> <!-- Chinese (Traditional) -->
     <locale android:name="zh-TW" /> <!-- Chinese (Taiwan) -->
