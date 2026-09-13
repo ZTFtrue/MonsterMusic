@@ -522,10 +522,10 @@ class MainActivity : ComponentActivity() {
 
     private var compatSplashScreen: SplashScreen? = null
     override fun attachBaseContext(newBase: Context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val languageCode = SharedPreferencesUtils.getCurrentLanguage(newBase)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && languageCode.isNullOrEmpty()) {
             super.attachBaseContext(newBase)
         } else {
-            val languageCode = SharedPreferencesUtils.getCurrentLanguage(newBase)
             super.attachBaseContext(newBase.wrapInLocale(languageCode))
         }
     }
@@ -534,7 +534,12 @@ class MainActivity : ComponentActivity() {
         if (language.isNullOrEmpty()) {
             return this
         }
-        val locale = Locale(language)
+        val locale = if (language.contains("-") || language.contains("_")) {
+            val parts = language.split("-", "_")
+            Locale(parts[0], parts[1])
+        } else {
+            Locale(language)
+        }
         Locale.setDefault(locale)
         val config = Configuration(resources.configuration)
         config.setLocale(locale)

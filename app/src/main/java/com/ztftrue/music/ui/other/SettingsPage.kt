@@ -2536,8 +2536,13 @@ fun SwitchLanguageDialog(onDismiss: () -> Unit) {
     var size by remember { mutableIntStateOf(0) }
     var selectIndex by remember { mutableIntStateOf(0) }
     var locale by remember { mutableStateOf(Locale.getDefault().language) }
-    val supportedLanguages = listOf("en", "zh", "de", "eo", "hu", "ru") // App-supported languages
-    val systemLanguage = LocalConfiguration.current.locales[0].language
+    val supportedLanguages = listOf("en", "zh", "zh-TW", "ja", "fr", "ar", "de", "eo", "hu", "ru") // App-supported languages
+    val currentLocale = LocalConfiguration.current.locales[0]
+    val systemLanguage = if (currentLocale.country.equals("TW", ignoreCase = true) || currentLocale.script.equals("Hant", ignoreCase = true)) {
+        "zh-TW"
+    } else {
+        currentLocale.language
+    }
     val followSystemText = stringResource(R.string.language_follow_system)
 
     LaunchedEffect(Unit) {
@@ -2548,19 +2553,23 @@ fun SwitchLanguageDialog(onDismiss: () -> Unit) {
         }
         language.add(LanguageModel("English", "en"))
         language.add(LanguageModel("中文", "zh"))
+        language.add(LanguageModel("繁體中文 (台灣)", "zh-TW"))
+        language.add(LanguageModel("日本語", "ja"))
+        language.add(LanguageModel("Français", "fr"))
+        language.add(LanguageModel("العربية", "ar"))
         language.add(LanguageModel("Deutsch", "de"))
         language.add(LanguageModel("Esperanto", "eo"))
         language.add(LanguageModel("Magyar", "hu"))
         language.add(LanguageModel("Русский", "ru"))
         language.add(LanguageModel(followSystemText, ""))
-        SharedPreferencesUtils.getCurrentLanguage(context).let {
-            locale = if (it.isNullOrEmpty()) {
-                Locale.getDefault().language
-            } else {
-                it
-            }
+        val savedLang = SharedPreferencesUtils.getCurrentLanguage(context)
+        locale = if (savedLang.isNullOrEmpty()) {
+            ""
+        } else {
+            savedLang
         }
-        selectIndex = language.indexOfFirst { it.code == locale }
+        val foundIndex = language.indexOfFirst { it.code == locale }
+        selectIndex = if (foundIndex != -1) foundIndex else language.indexOfFirst { it.code == "" }.coerceAtLeast(0)
         size = language.size
     }
     fun onConfirmation() {
