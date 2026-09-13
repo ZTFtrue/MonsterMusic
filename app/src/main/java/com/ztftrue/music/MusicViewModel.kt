@@ -62,7 +62,6 @@ import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.model.Caption
 import com.ztftrue.music.utils.model.EqualizerBand
 import com.ztftrue.music.utils.model.ListStringCaption
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext

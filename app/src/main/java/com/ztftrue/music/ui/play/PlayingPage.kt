@@ -144,7 +144,6 @@ import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.SongsUtils
 import com.ztftrue.music.utils.trackManager.TracksManager
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.math.roundToLong

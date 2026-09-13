@@ -46,7 +46,6 @@ import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.model.ListStringCaption
 import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.SongsUtils
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
