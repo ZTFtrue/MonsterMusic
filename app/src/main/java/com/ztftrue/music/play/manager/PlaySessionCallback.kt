@@ -217,12 +217,16 @@ class PlaySessionCallback(
             // --- Data Retrieval (委托给 Repository) ---
             MediaCommands.COMMAND_GET_INITIALIZED_DATA.customAction -> {
                 scope.launch {
-                    // 等待 Service 数据加载完毕
-                    service.isInitialized.await()
+                    try {
+                        // 等待 Service 数据加载完毕
+                        service.isInitialized.await()
 
-                    val bundle = Bundle()
-                    service.fillInitializedData(bundle)
-                    future.set(SessionResult(SessionResult.RESULT_SUCCESS, bundle))
+                        val bundle = Bundle()
+                        service.fillInitializedData(bundle)
+                        future.set(SessionResult(SessionResult.RESULT_SUCCESS, bundle))
+                    } catch (e: Exception) {
+                        future.setException(e)
+                    }
                 }
                 return future
             }
@@ -247,25 +251,29 @@ class PlaySessionCallback(
 
             MediaCommands.COMMAND_TRACK_DELETE.customAction -> {
                 scope.launch {
-                    val idToDelete = args.getLong("id")
-                    // 调用 Repository 删除，并在 Service 中处理播放状态
-                    val deletedId = repository.deleteTrack(idToDelete, service.musicQueue)
-                    val wasInQueue = deletedId > -1
+                    try {
+                        val idToDelete = args.getLong("id")
+                        // 调用 Repository 删除，并在 Service 中处理播放状态
+                        val deletedId = repository.deleteTrack(idToDelete, service.musicQueue)
+                        val wasInQueue = deletedId > -1
 
-                    if (wasInQueue) {
-                        withContext(Dispatchers.Main) {
-                            service.removeTrackFromPlayer(deletedId)
+                        if (wasInQueue) {
+                            withContext(Dispatchers.Main) {
+                                service.removeTrackFromPlayer(deletedId)
+                            }
                         }
-                    }
 
-                    val resultData = Bundle().apply {
-                        putBoolean("success", true)
-                        putBoolean("wasInQueue", wasInQueue)
-                        putInt("playIndex", service.exoPlayer.currentMediaItemIndex)
-                        putLong("id", deletedId)
-                        putParcelableArrayList("queue", service.musicQueue)
+                        val resultData = Bundle().apply {
+                            putBoolean("success", true)
+                            putBoolean("wasInQueue", wasInQueue)
+                            putInt("playIndex", service.exoPlayer.currentMediaItemIndex)
+                            putLong("id", deletedId)
+                            putParcelableArrayList("queue", service.musicQueue)
+                        }
+                        future.set(SessionResult(SessionResult.RESULT_SUCCESS, resultData))
+                    } catch (e: Exception) {
+                        future.setException(e)
                     }
-                    future.set(SessionResult(SessionResult.RESULT_SUCCESS, resultData))
                 }
                 return future
             }
@@ -334,15 +342,19 @@ class PlaySessionCallback(
 
             MediaCommands.COMMAND_PlAY_LIST_CHANGE.customAction -> {
                 scope.launch {
-                    withContext(Dispatchers.IO) {
-                        val newPlaylists =
-                            repository.getPlayLists() // 强制刷新逻辑在 Repository 内部或 refreshAll
-                        // 这里其实可以调用 repository.refreshAll() 或者只刷新 Playlist
-                        // 为了简单，我们返回当前列表
-                        val resultData = Bundle().apply {
-                            putInt("new_playlist_count", newPlaylists.size)
+                    try {
+                        withContext(Dispatchers.IO) {
+                            val newPlaylists =
+                                repository.getPlayLists() // 强制刷新逻辑在 Repository 内部或 refreshAll
+                            // 这里其实可以调用 repository.refreshAll() 或者只刷新 Playlist
+                            // 为了简单，我们返回当前列表
+                            val resultData = Bundle().apply {
+                                putInt("new_playlist_count", newPlaylists.size)
+                            }
+                            future.set(SessionResult(SessionResult.RESULT_SUCCESS, resultData))
                         }
-                        future.set(SessionResult(SessionResult.RESULT_SUCCESS, resultData))
+                    } catch (e: Exception) {
+                        future.setException(e)
                     }
                 }
                 return future

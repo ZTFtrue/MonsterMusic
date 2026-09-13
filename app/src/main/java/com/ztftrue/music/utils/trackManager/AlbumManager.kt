@@ -50,15 +50,17 @@ object AlbumManager {
                     val firstYear = cursor.getString(firstYearColumn)
                     val lastYear = cursor.getString(lastYearColumn)
                     if (needMerge) {
-                        val uniqueKey = "${albumResult.trim()}|${artist.trim()}"
+                        val albumName = albumResult ?: "Unknown Album"
+                        val artistName = artist ?: "Unknown"
+                        val uniqueKey = "${albumName.trim()}|${artistName.trim()}"
                         if (mergedMap.containsKey(uniqueKey)) {
                             val existingAlbum = mergedMap[uniqueKey]!!
                             existingAlbum.trackNumber += numberSongs
                         } else {
                             val albumList = AlbumList(
                                 albumId, // We use the ID of the first part found (for Album Art)
-                                albumResult ?: "Unknown Album",
-                                artist ?: "Unknown",
+                                albumName,
+                                artistName,
                                 firstYear ?: "",
                                 lastYear ?: "",
                                 numberSongs
@@ -129,16 +131,18 @@ object AlbumManager {
                     val firstYear = cursor.getString(firstYearColumn)
                     val lastYear = cursor.getString(lastYearColumn)
 
-                    val uniqueKey = "${albumResult.trim()}|${artist.trim()}"
                     if (needMerge) {
+                        val albumName = albumResult ?: "Unknown Album"
+                        val artistName = artist ?: "Unknown"
+                        val uniqueKey = "${albumName.trim()}|${artistName.trim()}"
                         if (mergedMap.containsKey(uniqueKey)) {
                             val existingAlbum = mergedMap[uniqueKey]!!
                             existingAlbum.trackNumber += numberSongs
                         } else {
                             val albumList = AlbumList(
                                 albumId, // We use the ID of the first part found (for Album Art)
-                                albumResult ?: "Unknown Album",
-                                artist ?: "Unknown",
+                                albumName,
+                                artistName,
                                 firstYear ?: "",
                                 lastYear ?: "",
                                 numberSongs
@@ -183,28 +187,26 @@ object AlbumManager {
         )
 
         // Create a cursor to query the media store for tracks in the genre
-        val trackCursor = context.contentResolver.query(
+        val list = ArrayList<AlbumList>()
+        context.contentResolver.query(
             genreId,
             trackProjection,
             selection,
             selectionArgs,
             sortOrder
-        )
-
-        // Process the cursor and count the number of tracks
-        val list = ArrayList<AlbumList>()
-        if (trackCursor != null && trackCursor.moveToFirst()) {
-            val idColumn = trackCursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ID)
-            do {
-                val trackId: Long = trackCursor.getLong(idColumn)
-                albumsHashMap[trackId]?.let {
-                    if (!list.contains(it)) {
-                        list.add(it)
+        )?.use { trackCursor ->
+            if (trackCursor.moveToFirst()) {
+                val idColumn = trackCursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ID)
+                do {
+                    val trackId: Long = trackCursor.getLong(idColumn)
+                    albumsHashMap[trackId]?.let {
+                        if (!list.contains(it)) {
+                            list.add(it)
+                        }
                     }
-                }
-            } while (trackCursor.moveToNext())
+                } while (trackCursor.moveToNext())
+            }
         }
-        trackCursor?.close()
         return list
     }
 
@@ -225,28 +227,26 @@ object AlbumManager {
         )
 
         // Create a cursor to query the media store for tracks in the genre
-        val trackCursor = context.contentResolver.query(
+        val list = ArrayList<AlbumList>()
+        context.contentResolver.query(
             genreId,
             trackProjection,
             selection,
             selectionArgs,
             sortOrder
-        )
-
-        // Process the cursor and count the number of tracks
-        val list = ArrayList<AlbumList>()
-        if (trackCursor != null && trackCursor.moveToFirst()) {
-            val idColumn = trackCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
-            do {
-                val trackId: Long = trackCursor.getLong(idColumn)
-                albumsHashMap[trackId]?.let {
-                    if (!list.contains(it)) {
-                        list.add(it)
+        )?.use { trackCursor ->
+            if (trackCursor.moveToFirst()) {
+                val idColumn = trackCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
+                do {
+                    val trackId: Long = trackCursor.getLong(idColumn)
+                    albumsHashMap[trackId]?.let {
+                        if (!list.contains(it)) {
+                            list.add(it)
+                        }
                     }
-                }
-            } while (trackCursor.moveToNext())
+                } while (trackCursor.moveToNext())
+            }
         }
-        trackCursor?.close()
         return list
     }
 

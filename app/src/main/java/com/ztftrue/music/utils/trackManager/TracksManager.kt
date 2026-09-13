@@ -79,93 +79,93 @@ object TracksManager {
 
         val selection = selectionBuilder.toString()
         val musicResolver = context.contentResolver
-        val cursor = musicResolver.query(
-            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-            trackMediaProjection, selection, selectionArgs.toTypedArray(), sortOrder
-        )
         val mapFolder = LinkedHashMap<Long, FolderList>()
         val map: HashMap<Long, LinkedHashMap<Long, MusicItem>> = HashMap()
-        if (cursor != null && cursor.moveToFirst()) {
-            val bucketIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.BUCKET_ID)
-            val bucketNameColumn =
-                cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.BUCKET_DISPLAY_NAME)
-            val iDColumn = cursor.getColumnIndex(MediaStore.Audio.Media._ID)
-            val dataColumn = cursor.getColumnIndex(MediaStore.Audio.Media.DATA)
-            val artistColumn = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)
-            val durationColumn = cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)
-            val titleColumn = cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)
-            val displayNameColumn =
-                cursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME)
-            val isMusicColumn = cursor.getColumnIndex(MediaStore.Audio.Media.IS_MUSIC)
-            val albumIdColumn = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
-            val albumColumn = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM)
-            val artistIdColumn = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST_ID)
-            val genreColumn =
-                cursor.getColumnIndex(MediaStore.Audio.Media.GENRE)
-            val genreIdColumn =
-                cursor.getColumnIndex(MediaStore.Audio.Media.GENRE_ID)
-            val yearColumn = cursor.getColumnIndex(MediaStore.Audio.Media.YEAR)
+        musicResolver.query(
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+            trackMediaProjection, selection, selectionArgs.toTypedArray(), sortOrder
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                val bucketIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.BUCKET_ID)
+                val bucketNameColumn =
+                    cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.BUCKET_DISPLAY_NAME)
+                val iDColumn = cursor.getColumnIndex(MediaStore.Audio.Media._ID)
+                val dataColumn = cursor.getColumnIndex(MediaStore.Audio.Media.DATA)
+                val artistColumn = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)
+                val durationColumn = cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)
+                val titleColumn = cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)
+                val displayNameColumn =
+                    cursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME)
+                val isMusicColumn = cursor.getColumnIndex(MediaStore.Audio.Media.IS_MUSIC)
+                val albumIdColumn = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
+                val albumColumn = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM)
+                val artistIdColumn = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST_ID)
+                val genreColumn =
+                    cursor.getColumnIndex(MediaStore.Audio.Media.GENRE)
+                val genreIdColumn =
+                    cursor.getColumnIndex(MediaStore.Audio.Media.GENRE_ID)
+                val yearColumn = cursor.getColumnIndex(MediaStore.Audio.Media.YEAR)
 //            val discNumberColumn = cursor.getColumnIndex(MediaStore.Audio.Media.DISC_NUMBER)
-            val songNumberColumn = cursor.getColumnIndex(MediaStore.Audio.Media.TRACK)
-            do {
-                val musicID = cursor.getLong(iDColumn)
-                val folderId = cursor.getLong(bucketIdColumn)
-                val folderName = cursor.getString(bucketNameColumn)
-                val path = cursor.getString(dataColumn) ?: ""
-                val displayName = cursor.getString(displayNameColumn) ?: "Unknown"
-                val thisTitle = cursor.getString(titleColumn) ?: "Unknown Title"
-                val thisArtist = cursor.getString(artistColumn) ?: "Unknown Artist"
-                val duration = cursor.getLong(durationColumn)
-                val albumId = cursor.getLong(albumIdColumn)
-                val artistId = cursor.getLong(artistIdColumn)
-                val album = cursor.getString(albumColumn) ?: "Unknown Album"
-                val isMusic = cursor.getInt(isMusicColumn) != 0
-                val genre = cursor.getString(genreColumn) ?: "Unknown genre"
-                val genreId = cursor.getLong(genreIdColumn)
-                val year = cursor.getInt(yearColumn)
+                val songNumberColumn = cursor.getColumnIndex(MediaStore.Audio.Media.TRACK)
+                do {
+                    val musicID = cursor.getLong(iDColumn)
+                    val folderId = cursor.getLong(bucketIdColumn)
+                    val folderName = cursor.getString(bucketNameColumn)
+                    val path = cursor.getString(dataColumn) ?: ""
+                    val displayName = cursor.getString(displayNameColumn) ?: "Unknown"
+                    val thisTitle = cursor.getString(titleColumn) ?: "Unknown Title"
+                    val thisArtist = cursor.getString(artistColumn) ?: "Unknown Artist"
+                    val duration = cursor.getLong(durationColumn)
+                    val albumId = cursor.getLong(albumIdColumn)
+                    val artistId = cursor.getLong(artistIdColumn)
+                    val album = cursor.getString(albumColumn) ?: "Unknown Album"
+                    val isMusic = cursor.getInt(isMusicColumn) != 0
+                    val genre = cursor.getString(genreColumn) ?: "Unknown genre"
+                    val genreId = cursor.getLong(genreIdColumn)
+                    val year = cursor.getInt(yearColumn)
 //                val discNumber = cursor.getInt(discNumberColumn)
-                val songNumber = cursor.getInt(songNumberColumn)
-                val musicItem = MusicItem(
-                    null,
-                    musicID,
-                    thisTitle,
-                    path,
-                    duration,
-                    displayName,
-                    album,
-                    albumId,
-                    thisArtist,
-                    artistId,
-                    genre,
-                    genreId,
-                    year,
+                    val songNumber = cursor.getInt(songNumberColumn)
+                    val musicItem = MusicItem(
+                        null,
+                        musicID,
+                        thisTitle,
+                        path,
+                        duration,
+                        displayName,
+                        album,
+                        albumId,
+                        thisArtist,
+                        artistId,
+                        genre,
+                        genreId,
+                        year,
 //                    discNumber,
-                    songNumber
-                )
-                // For songs
-                if (isMusic) {
-                    tracksHashMap[musicID] = musicItem
-                }
-                // For not songs, example RingTones
-                allTracksHashMap?.set(musicID, musicItem)
-                map.getOrPut(folderId) {
-                    LinkedHashMap()
-                }[musicID] = musicItem
-                mapFolder.putIfAbsent(
-                    folderId, FolderList(
-                        path = path.substringBeforeLast('/', ""),
-                        name = folderName ?: "/",
-                        id = folderId,
-                        trackNumber = map[folderId]?.size ?: 0,
+                        songNumber
                     )
-                )
-            } while (cursor.moveToNext())
+                    // For songs
+                    if (isMusic) {
+                        tracksHashMap[musicID] = musicItem
+                    }
+                    // For not songs, example RingTones
+                    allTracksHashMap?.set(musicID, musicItem)
+                    map.getOrPut(folderId) {
+                        LinkedHashMap()
+                    }[musicID] = musicItem
+                    mapFolder.putIfAbsent(
+                        folderId, FolderList(
+                            path = path.substringBeforeLast('/', ""),
+                            name = folderName ?: "/",
+                            id = folderId,
+                            trackNumber = map[folderId]?.size ?: 0,
+                        )
+                    )
+                } while (cursor.moveToNext())
+            }
         }
 
         mapFolder.forEach { it.value.trackNumber = map[it.key]?.size ?: 0 }
         folderListLinkedHashMap.clear()
         folderListLinkedHashMap.putAll(mapFolder)
-        cursor?.close()
     }
 
 
@@ -183,24 +183,22 @@ object TracksManager {
             MediaStore.Audio.Media._ID,
         )
         val sortOrder = sortOrder1?.ifBlank { "${MediaStore.Audio.Media.TITLE} ASC" }
-        // Create a cursor to query the media store for tracks in the genre
-        val trackCursor = context.contentResolver.query(
+        val list = ArrayList<MusicItem>()
+        context.contentResolver.query(
             uri,
             trackProjection,
             selection,
             selectionArgs,
             sortOrder
-        )
-        // Process the cursor and count the number of tracks
-        val list = ArrayList<MusicItem>()
-        if (trackCursor != null && trackCursor.moveToFirst()) {
-            val idColumn = trackCursor.getColumnIndex(MediaStore.Audio.Media._ID)
-            do {
-                val trackId: Long = trackCursor.getLong(idColumn)
-                tracksHashMap[trackId]?.let { list.add(it) }
-            } while (trackCursor.moveToNext())
+        )?.use { trackCursor ->
+            if (trackCursor.moveToFirst()) {
+                val idColumn = trackCursor.getColumnIndex(MediaStore.Audio.Media._ID)
+                do {
+                    val trackId: Long = trackCursor.getLong(idColumn)
+                    tracksHashMap[trackId]?.let { list.add(it) }
+                } while (trackCursor.moveToNext())
+            }
         }
-        trackCursor?.close()
         return list
     }
 
@@ -218,23 +216,22 @@ object TracksManager {
         val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
 
         // Create a cursor to query the media store for tracks in the genre
-        val trackCursor = context.contentResolver.query(
+        val list = ArrayList<MusicItem>()
+        context.contentResolver.query(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
             trackProjection,
             selection,
             selectionArgs,
             sortOrder
-        )
-        // Process the cursor and count the number of tracks
-        val list = ArrayList<MusicItem>()
-        if (trackCursor != null && trackCursor.moveToFirst()) {
-            val idColumn = trackCursor.getColumnIndex(MediaStore.Audio.Media._ID)
-            do {
-                val trackId: Long = trackCursor.getLong(idColumn)
-                tracksHashMap[trackId]?.let { list.add(it) }
-            } while (trackCursor.moveToNext())
+        )?.use { trackCursor ->
+            if (trackCursor.moveToFirst()) {
+                val idColumn = trackCursor.getColumnIndex(MediaStore.Audio.Media._ID)
+                do {
+                    val trackId: Long = trackCursor.getLong(idColumn)
+                    tracksHashMap[trackId]?.let { list.add(it) }
+                } while (trackCursor.moveToNext())
+            }
         }
-        trackCursor?.close()
         return list
     }
 
@@ -545,7 +542,7 @@ object TracksManager {
 
             // 2. Modify the tags using Jaudiotagger
             val f = AudioFileIO.read(cacheFile)
-            val tag: Tag = f.tag
+            val tag: Tag = f.tagOrCreateAndSetDefault
 
             bitmap?.let {
                 val byteArrayOutputStream = ByteArrayOutputStream()

@@ -69,7 +69,7 @@ class SpatialAudioProcessor : BaseAudioProcessor() {
         // 下面是正常的 DSP 处理逻辑
         val buffer = replaceOutputBuffer(remaining)
 
-        while (inputBuffer.hasRemaining()) {
+        while (inputBuffer.remaining() >= 4) {
             val lLow = inputBuffer.get().toInt()
             val lHigh = inputBuffer.get().toInt()
             val rLow = inputBuffer.get().toInt()
@@ -106,6 +106,10 @@ class SpatialAudioProcessor : BaseAudioProcessor() {
             buffer.put(((outLShort.toInt() shr 8) and 0xFF).toByte())
             buffer.put((outRShort.toInt() and 0xFF).toByte())
             buffer.put(((outRShort.toInt() shr 8) and 0xFF).toByte())
+        }
+
+        while (inputBuffer.hasRemaining()) {
+            buffer.put(inputBuffer.get())
         }
 
         buffer.flip()

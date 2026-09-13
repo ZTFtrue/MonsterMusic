@@ -74,7 +74,7 @@ object PlaylistManager {
                             getTracksByPlayListId(
                                 context,
                                 contentUri,
-                                file.parent!!,
+                                file.parent ?: "",
                                 tracksHashMap,
                                 sortFiled,
                                 sortMethod
@@ -185,9 +185,10 @@ object PlaylistManager {
                 outputStream.bufferedWriter().use { writer ->
                     writer.write("#EXTM3U\n")
                     for (item in tracks) {
-                        if (removeDuplicate && checkDuplicateMap[item.path] == null) {
-                            checkDuplicateMap.put(item.path, true)
-                            writer.write("${item.path}\n")
+                        if (removeDuplicate) {
+                            if (checkDuplicateMap.put(item.path, true) == null) {
+                                writer.write("${item.path}\n")
+                            }
                         } else {
                             writer.write("${item.path}\n")
                         }
@@ -308,7 +309,7 @@ object PlaylistManager {
                             val absoluteSongPath = if (songFile.isAbsolute) {
                                 songFile.canonicalPath // canonicalPath可以解析 ".." 等
                             } else {
-                                File(playListFile.parent, rawSongPath).canonicalPath
+                                File(playListFile.parent ?: "", rawSongPath).canonicalPath
                             }
                             val foundSong = trackMapPath[absoluteSongPath]
                             if (foundSong != null && hashMapAlreadyAdd.get(foundSong.id) == null) {

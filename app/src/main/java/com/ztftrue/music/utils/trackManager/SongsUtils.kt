@@ -20,6 +20,9 @@ import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.model.MusicPlayList
 import java.io.File
 import java.io.FileOutputStream
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @OptIn(UnstableApi::class)
 object SongsUtils {
@@ -50,25 +53,29 @@ object SongsUtils {
         list: ArrayList<MusicPlayList>,
         field: String?,
         order: String?
-    ) {
+    ): ArrayList<MusicPlayList> {
         val comparator: Comparator<MusicPlayList> = when (field) {
             MediaStore.Audio.Playlists.NAME -> compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }
             else -> {
-                return
+                return list
             }
         }
-        when (order?.uppercase()) {
-            "ASC" -> list.sortWith(comparator)
-            "DESC" -> list.sortWith(comparator.reversed())
-            else -> return
+        val sortedList = when (order?.uppercase()) {
+            "ASC" -> list.sortedWith(comparator)
+            "DESC" -> list.sortedWith(comparator.reversed())
+            else -> return list
         }
+        return ArrayList(sortedList)
     }
 
     fun sendRequest(uri: Uri, context: MainActivity) {
         try {
-            val pendingIntent = MediaStore.createWriteRequest(context.contentResolver, listOf(uri))
-            val intentSenderRequest: IntentSenderRequest =
-                IntentSenderRequest.Builder(pendingIntent.intentSender)
+            val arrayList = ArrayList<Uri>()
+            arrayList.add(uri)
+            val editPendingIntent =
+                MediaStore.createWriteRequest(context.contentResolver, arrayList)
+            val intentSenderRequest =
+                IntentSenderRequest.Builder(editPendingIntent.intentSender)
                     .setFlags(
                         Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
                         Intent.FLAG_GRANT_READ_URI_PERMISSION
@@ -84,24 +91,26 @@ object SongsUtils {
         context: Context, uri: Uri, m3uPath: String,
         arrayList: ArrayList<MusicItem>,
     ) {
-        val pfd: ParcelFileDescriptor? = context.contentResolver.openFileDescriptor(uri, "r")
         val file = (File(m3uPath).parent ?: "") + "/"
         val stringBu = StringBuilder("#EXTM3U").append("\n")
         arrayList.forEach {
             val p = it.path.replace(file, "")
             stringBu.append(p).append("\n")
         }
-        if (pfd != null) {
-            val pfdWT = context.contentResolver.openFileDescriptor(uri, "wt")
-            if (pfdWT != null) {
-                val fileOutputStream = FileOutputStream(pfdWT.fileDescriptor)
-                val a = stringBu.toString().toByteArray()
-                fileOutputStream.write(a)
-                fileOutputStream.flush()
-                fileOutputStream.close()
-                pfdWT.close()
+        try {
+            val pfd: ParcelFileDescriptor? = context.contentResolver.openFileDescriptor(uri, "r")
+            pfd?.use {
+                val pfdWT = context.contentResolver.openFileDescriptor(uri, "wt")
+                pfdWT?.use { wt ->
+                    FileOutputStream(wt.fileDescriptor).use { fileOutputStream ->
+                        val a = stringBu.toString().toByteArray()
+                        fileOutputStream.write(a)
+                        fileOutputStream.flush()
+                    }
+                }
             }
-            pfd.close()
+        } catch (e: Exception) {
+            Log.e("SongsUtils", "Error writing M3U file", e)
         }
     }
 
@@ -117,8 +126,10 @@ object SongsUtils {
             try {
                 val sessionResult = futureResult.get()
                 if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
-                    musicViewModel.refreshPlayList.value =
-                        !musicViewModel.refreshPlayList.value
+                    musicViewModel.viewModelScope.launch(Dispatchers.Main) {
+                        musicViewModel.refreshPlayList.value =
+                            !musicViewModel.refreshPlayList.value
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("Client", "Failed to toggle favorite status", e)

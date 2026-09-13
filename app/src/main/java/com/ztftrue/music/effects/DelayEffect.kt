@@ -37,8 +37,8 @@ class DelayEffect(
         var cursor = position
         val localDecay = decay
         val feedback = isWithFeedBack
-
-        for (i in 0 until length) {
+        val actualLength = minOf(length, floatBuffer.size)
+        for (i in 0 until actualLength) {
             val inputSample = floatBuffer[i]
             val delaySample = echoBuffer[cursor]
 

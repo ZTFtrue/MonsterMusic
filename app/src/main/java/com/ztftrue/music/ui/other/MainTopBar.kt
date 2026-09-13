@@ -56,6 +56,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -244,8 +245,9 @@ fun MainTopBar(
             })
         }
         if (showSortDialog) {
+            val currentTab = musicViewModel.mainTabList.getOrNull(pagerState.currentPage) ?: return
             val sortFiledOptions =
-                PlayUtils.sortFiledMap[musicViewModel.mainTabList[pagerState.currentPage].type.name]
+                PlayUtils.sortFiledMap[currentTab.type.name]
 
             if (sortFiledOptions.isNullOrEmpty()) {
                 return
@@ -257,19 +259,17 @@ fun MainTopBar(
             val (methodSelected, onMethodOptionSelected) = remember {
                 mutableStateOf("")
             }
-            var sortDb: SortFiledDao?
+            var sortDb: SortFiledDao? = null
 
             LaunchedEffect(key1 = Unit) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    sortDb = MusicDatabase.getDatabase(context).SortFiledDao()
-                    val sortData1 =
-                        sortDb?.findSortByType(musicViewModel.mainTabList[pagerState.currentPage].type.name)
-                    if (sortData1 != null) {
-                        val f = sortData1.filedName
-                        val m = sortData1.methodName
-                        onFiledOptionSelected(f)
-                        onMethodOptionSelected(m)
-                    }
+                val sortData1 = withContext(Dispatchers.IO) {
+                    val db = MusicDatabase.getDatabase(context).SortFiledDao()
+                    sortDb = db
+                    db.findSortByType(currentTab.type.name)
+                }
+                if (sortData1 != null) {
+                    onFiledOptionSelected(sortData1.filedName)
+                    onMethodOptionSelected(sortData1.methodName)
                 }
             }
             Popup(
@@ -445,7 +445,7 @@ fun MainTopBar(
                                             sortDb =
                                                 MusicDatabase.getDatabase(context).SortFiledDao()
                                             var sortData =
-                                                sortDb.findSortByType(musicViewModel.mainTabList[pagerState.currentPage].type.name)
+                                                sortDb.findSortByType(currentTab.type.name)
                                             if (sortData != null) {
                                                 sortData.method =
                                                     PlayUtils.methodMap[methodSelected] ?: ""
@@ -456,7 +456,7 @@ fun MainTopBar(
                                                 sortDb.update(sortData)
                                             } else {
                                                 sortData = SortFiledData(
-                                                    musicViewModel.mainTabList[pagerState.currentPage].type.name,
+                                                    currentTab.type.name,
                                                     sortFiledOptions[filedSelected]
                                                         ?: "",
                                                     PlayUtils.methodMap[methodSelected] ?: "",

@@ -1171,7 +1171,7 @@ fun PlayingPage(
                                     result.forEachIndexed { index, item ->
                                         item.id = index
                                     }
-                                    CoroutineScope(Dispatchers.IO).launch {
+                                    coroutineScope.launch(Dispatchers.IO) {
                                         musicViewModel.getDb(context).DictionaryAppDao()
                                             .deleteAll()
                                         musicViewModel.getDb(context).DictionaryAppDao()

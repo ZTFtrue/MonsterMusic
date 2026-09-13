@@ -16,6 +16,9 @@ object SoundUtils {
         needNormalize: Boolean = true,
         needPositive: Boolean = true
     ): FloatArray {
+        if (magnitudes.isEmpty() || targetSize <= 0) {
+            return FloatArray(maxOf(0, targetSize))
+        }
         // 定义一个参考值，防止 log(0) 出现。同时它也定义了0dB的位置。
         val refValue = 1.0f
         val downsampled = FloatArray(targetSize)

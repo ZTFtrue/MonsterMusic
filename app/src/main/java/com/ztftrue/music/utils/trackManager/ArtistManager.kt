@@ -63,7 +63,7 @@ object ArtistManager {
                     val numberOfAlbums = cursor.getInt(numberOfAlbumsColumn)
                     val artistList = ArtistList(
                         id,
-                        artist,
+                        artist ?: "Unknown Artist",
                         numberOfTracks,
                         numberOfAlbums
                     )
@@ -86,36 +86,36 @@ object ArtistManager {
             MediaStore.Audio.Artists.NUMBER_OF_TRACKS,
         )
         val musicResolver = context.contentResolver
-        val cursor = musicResolver.query(
+        val playList = LinkedHashMap<Long, ArtistList>()
+        musicResolver.query(
             MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI,
             playListProjection,
             null,
             null,
             sortOrder1.ifBlank { null }
-        )
-        val playList = LinkedHashMap<Long, ArtistList>()
-        if (cursor != null && cursor.moveToFirst()) {
-            val iDColumn = cursor.getColumnIndex(MediaStore.Audio.Artists._ID)
-            val artistColumn = cursor.getColumnIndex(MediaStore.Audio.Artists.ARTIST)
-            val numberOfAlbumsColumn =
-                cursor.getColumnIndex(MediaStore.Audio.Artists.NUMBER_OF_ALBUMS)
-            val numberOfTracksColumn =
-                cursor.getColumnIndex(MediaStore.Audio.Artists.NUMBER_OF_TRACKS)
-            do {
-                val id = cursor.getLong(iDColumn)
-                val artist = cursor.getString(artistColumn)
-                val numberOfTracks = cursor.getInt(numberOfTracksColumn)
-                val numberOfAlbums = cursor.getInt(numberOfAlbumsColumn)
-                val artistList = ArtistList(
-                    id,
-                    artist ?: "Unknown Artist",
-                    numberOfTracks,
-                    numberOfAlbums
-                )
-                playList[id] = artistList
-            } while (cursor.moveToNext())
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                val iDColumn = cursor.getColumnIndex(MediaStore.Audio.Artists._ID)
+                val artistColumn = cursor.getColumnIndex(MediaStore.Audio.Artists.ARTIST)
+                val numberOfAlbumsColumn =
+                    cursor.getColumnIndex(MediaStore.Audio.Artists.NUMBER_OF_ALBUMS)
+                val numberOfTracksColumn =
+                    cursor.getColumnIndex(MediaStore.Audio.Artists.NUMBER_OF_TRACKS)
+                do {
+                    val id = cursor.getLong(iDColumn)
+                    val artist = cursor.getString(artistColumn)
+                    val numberOfTracks = cursor.getInt(numberOfTracksColumn)
+                    val numberOfAlbums = cursor.getInt(numberOfAlbumsColumn)
+                    val artistList = ArtistList(
+                        id,
+                        artist ?: "Unknown Artist",
+                        numberOfTracks,
+                        numberOfAlbums
+                    )
+                    playList[id] = artistList
+                } while (cursor.moveToNext())
+            }
         }
         list.putAll(playList)
-        cursor?.close()
     }
 }

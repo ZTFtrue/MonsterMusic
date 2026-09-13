@@ -47,6 +47,7 @@ import com.ztftrue.music.utils.trackManager.SongsUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -180,30 +181,24 @@ object Utils {
     }
 
     fun initSettingsData(musicViewModel: MusicViewModel, context: Context) {
-        CoroutineScope(Dispatchers.IO).launch {
-            musicViewModel.showSlideIndicators.value =
-                SharedPreferencesUtils.getShowSlideIndicators(context)
-            musicViewModel.musicVisualizationEnable.value =
-                SharedPreferencesUtils.getEnableMusicVisualization(context)
-            musicViewModel.showMusicCover.value =
-                SharedPreferencesUtils.getShowMusicCover(context)
-            musicViewModel.themeSelected.intValue = context.getSharedPreferences(
+        musicViewModel.viewModelScope.launch(Dispatchers.IO) {
+            val showSlideIndicators = SharedPreferencesUtils.getShowSlideIndicators(context)
+            val musicVisualizationEnable = SharedPreferencesUtils.getEnableMusicVisualization(context)
+            val showMusicCover = SharedPreferencesUtils.getShowMusicCover(context)
+            val themeSelected = context.getSharedPreferences(
                 "SelectedTheme",
                 Context.MODE_PRIVATE
             ).getInt("SelectedTheme", 0)
-            musicViewModel.textAlign.value =
-                SharedPreferencesUtils.getDisplayAlign(context)
-            musicViewModel.fontSize.intValue = SharedPreferencesUtils.getFontSize(context)
-            musicViewModel.autoScroll.value =
-                SharedPreferencesUtils.getAutoScroll(context)
-            musicViewModel.autoHighLight.value =
-                SharedPreferencesUtils.getAutoHighLight(context)
+            val textAlign = SharedPreferencesUtils.getDisplayAlign(context)
+            val fontSize = SharedPreferencesUtils.getFontSize(context)
+            val autoScroll = SharedPreferencesUtils.getAutoScroll(context)
+            val autoHighLight = SharedPreferencesUtils.getAutoHighLight(context)
             val dicApps = musicViewModel.getDb(context).DictionaryAppDao().findAllDictionaryApp()
-            if (dicApps.isEmpty()) {
-                val list = ArrayList<DictionaryApp>()
+            val list = if (dicApps.isEmpty()) {
+                val arrayList = ArrayList<DictionaryApp>()
                 getAllDictionaryActivity(context)
                     .forEachIndexed { index, it ->
-                        list.add(
+                        arrayList.add(
                             DictionaryApp(
                                 index,
                                 it.activityInfo.name,
@@ -214,9 +209,21 @@ object Utils {
                             )
                         )
                     }
-                musicViewModel.dictionaryAppList.addAll(list)
+                arrayList
             } else {
-                musicViewModel.dictionaryAppList.addAll(dicApps)
+                dicApps
+            }
+            withContext(Dispatchers.Main) {
+                musicViewModel.showSlideIndicators.value = showSlideIndicators
+                musicViewModel.musicVisualizationEnable.value = musicVisualizationEnable
+                musicViewModel.showMusicCover.value = showMusicCover
+                musicViewModel.themeSelected.intValue = themeSelected
+                musicViewModel.textAlign.value = textAlign
+                musicViewModel.fontSize.intValue = fontSize
+                musicViewModel.autoScroll.value = autoScroll
+                musicViewModel.autoHighLight.value = autoHighLight
+                musicViewModel.dictionaryAppList.clear()
+                musicViewModel.dictionaryAppList.addAll(list)
             }
         }
     }

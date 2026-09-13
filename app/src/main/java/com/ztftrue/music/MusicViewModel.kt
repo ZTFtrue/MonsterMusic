@@ -1185,7 +1185,7 @@ class MusicViewModel : ViewModel() {
 
     fun prepareArtistAndGenreCover(context: Context) {
         if (genreCover.isEmpty()) {
-            CoroutineScope(Dispatchers.IO).launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 val files = getDb(context).StorageFolderDao().findAllByType(GENRE_TYPE)
                 outer@ for (storageFolder in files) {
                     try {
@@ -1219,7 +1219,7 @@ class MusicViewModel : ViewModel() {
         }
 
         if (artistCover.isEmpty()) {
-            CoroutineScope(Dispatchers.IO).launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 val files = getDb(context).StorageFolderDao().findAllByType(ARTIST_TYPE)
                 outer@ for (storageFolder in files) {
                     try {
@@ -1323,7 +1323,7 @@ class MusicViewModel : ViewModel() {
     }
 
     fun refreshAllTracks(context: Context) {
-        CoroutineScope(Dispatchers.IO).launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val pathsToScan = mutableListOf<String>()
             val publicDirs = listOf(
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC),

@@ -73,6 +73,7 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.media3.common.MediaItem
+import kotlinx.coroutines.withContext
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.LibraryResult
 import androidx.media3.session.SessionResult
@@ -147,18 +148,16 @@ fun FolderListPage(
         val (methodSelected, onMethodOptionSelected) = remember {
             mutableStateOf("")
         }
-        var sortDb: SortFiledDao?
+        var sortDb: SortFiledDao? = null
         LaunchedEffect(key1 = Unit) {
-            CoroutineScope(Dispatchers.IO).launch {
-                sortDb = MusicDatabase.getDatabase(context).SortFiledDao()
-                val sortData1 =
-                    sortDb?.findSortByType(folderList.type.name + "@Tracks")
-                if (sortData1 != null) {
-                    val f = sortData1.filedName
-                    val m = sortData1.methodName
-                    onFiledOptionSelected(f)
-                    onMethodOptionSelected(m)
-                }
+            val sortData1 = withContext(Dispatchers.IO) {
+                val db = MusicDatabase.getDatabase(context).SortFiledDao()
+                sortDb = db
+                db.findSortByType(folderList.type.name + "@Tracks")
+            }
+            if (sortData1 != null) {
+                onFiledOptionSelected(sortData1.filedName)
+                onMethodOptionSelected(sortData1.methodName)
             }
         }
         Popup(
