@@ -664,10 +664,11 @@ class PlayService : MediaLibraryService() {
 
         SharedPreferencesUtils.saveCurrentDuration(this, exoPlayer.currentPosition)
 
+        effectManager.release()
         mediaSession?.release()
         exoPlayer.release()
 
-        if (headsetCallback != null) {
+        if (this::audioManager.isInitialized && headsetCallback != null) {
             audioManager.unregisterAudioDeviceCallback(headsetCallback)
         }
         super.onDestroy()

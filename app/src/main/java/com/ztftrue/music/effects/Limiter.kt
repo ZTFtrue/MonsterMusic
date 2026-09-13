@@ -7,9 +7,9 @@ object Limiter {
     // 0.8f 是一个比较通用的值，意味着 0~0.8 的声音完全保留原样，0.8 以上开始变圆
     private const val THRESHOLD = 0.8f
 
-    fun process(buffer: FloatArray): Float {
+    fun process(buffer: FloatArray, length: Int = buffer.size): Float {
         var maxAbs = 0.001f // 防止除以0
-        val size = buffer.size
+        val size = minOf(buffer.size, length)
 
         // 使用原生循环，零 GC
         for (i in 0 until size) {

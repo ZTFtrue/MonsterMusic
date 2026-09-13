@@ -91,7 +91,6 @@ import kotlinx.coroutines.launch
 
 
 const val Lyrics = "lyrics"
-var size = mutableStateOf(IntSize.Zero)
 
 @UnstableApi
 @OptIn(ExperimentalComposeUiApi::class)
@@ -166,7 +165,11 @@ fun LyricsView(
                 }
             }
         } else {
-            currentI = (timeState / musicViewModel.itemDuration).toInt()
+            currentI = if (musicViewModel.itemDuration > 0f) {
+                (timeState / musicViewModel.itemDuration).toInt()
+            } else {
+                0
+            }
             if (musicViewModel.currentCaptionList.getOrElse(currentI) {
                     ListStringCaption(arrayListOf(), 0)
                 }.text.isNotEmpty()) {

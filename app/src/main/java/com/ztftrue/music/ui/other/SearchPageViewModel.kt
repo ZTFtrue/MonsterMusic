@@ -48,7 +48,7 @@ class SearchScreenViewModel(
     private val _keywords = MutableStateFlow("")
     val keywords: StateFlow<String> = _keywords.asStateFlow()
 
-    var _tracksList = mutableStateListOf<MusicItem>()
+    val _tracksList = mutableStateListOf<MusicItem>()
 
     val _albumsList = mutableStateListOf<AlbumList>()
 
@@ -70,7 +70,6 @@ class SearchScreenViewModel(
                 }
                 .collect { searchResults ->
                     _tracksList.clear()
-                    _tracksList=mutableStateListOf<MusicItem>()
                     _tracksList.addAll(searchResults.tracks)
                     _albumsList.clear()
                     _albumsList.addAll(searchResults.albums)

@@ -13,6 +13,8 @@ import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -235,9 +237,18 @@ class AudioEffectManager(private val context: Context) {
     // Helper Methods
     // ==========================================
 
+    private val effectJob = SupervisorJob()
+    private val effectScope = CoroutineScope(Dispatchers.IO + effectJob)
+    private var updateJob: Job? = null
+
     private fun updateDb() {
-        CoroutineScope(Dispatchers.IO).launch {
+        updateJob?.cancel()
+        updateJob = effectScope.launch {
             db.AuxDao().update(auxr)
         }
+    }
+
+    fun release() {
+        effectJob.cancel()
     }
 }

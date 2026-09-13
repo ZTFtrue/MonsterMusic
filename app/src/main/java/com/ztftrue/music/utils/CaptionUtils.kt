@@ -165,7 +165,8 @@ object CaptionUtils {
 
         try {
             val f = AudioFileIO.read(audioFile)
-            val tag: Tag = f.tag
+            val tag: Tag? = f.tag
+            if (tag == null) return arrayList
 //            tag.fields.forEach {
 //                if (it.id == FieldKey.LYRICS.name) {
 //
@@ -253,13 +254,18 @@ object CaptionUtils {
     }
 
     private fun captionTimestampToMilliseconds(timestamp: String, splitter: String = "."): Long {
-        val parts = timestamp.split(":")
-        val hours = parts[0].toLong()
-        val minutes = parts[1].toLong()
-        val secondsAndMilliseconds = parts[2].split(splitter)
-        val seconds = secondsAndMilliseconds[0].toLong()
-        val milliseconds = secondsAndMilliseconds[1].toLong()
-        return ((hours * 3600 + minutes * 60 + seconds) * 1000 + milliseconds)
+        return try {
+            val parts = timestamp.trim().split(":")
+            val hours = parts[0].toLong()
+            val minutes = parts[1].toLong()
+            val secondsAndMilliseconds = parts[2].split(splitter)
+            val seconds = secondsAndMilliseconds[0].toLong()
+            val msStr = if (secondsAndMilliseconds.size > 1) secondsAndMilliseconds[1] else "0"
+            val milliseconds = msStr.padEnd(3, '0').take(3).toLong()
+            ((hours * 3600 + minutes * 60 + seconds) * 1000 + milliseconds)
+        } catch (e: Exception) {
+            0L
+        }
     }
 
     /**
@@ -269,14 +275,18 @@ object CaptionUtils {
         if (timeStr.isNullOrEmpty()) {
             return 0L
         }
-        val timeParts = timeStr.split(":".toRegex()).dropLastWhile { it.isEmpty() }
-            .toTypedArray()
-        val minutes = timeParts[0].toInt()
-        val secondsParts = timeParts[1].split("\\.".toRegex()).dropLastWhile { it.isEmpty() }
-            .toTypedArray()
-        val seconds = secondsParts[0].toInt()
-        val milliseconds = secondsParts[1].toInt()
-        return (minutes * 60 * 1000L + seconds * 1000 + milliseconds)
+        return try {
+            val timeParts = timeStr.split(":")
+            if (timeParts.size < 2) return 0L
+            val minutes = timeParts[0].trim().toLongOrNull() ?: 0L
+            val secondsParts = timeParts[1].split(".")
+            val seconds = secondsParts[0].trim().toLongOrNull() ?: 0L
+            val msStr = if (secondsParts.size > 1) secondsParts[1].trim() else "0"
+            val milliseconds = msStr.padEnd(3, '0').take(3).toLongOrNull() ?: 0L
+            (minutes * 60 * 1000L + seconds * 1000L + milliseconds)
+        } catch (e: Exception) {
+            0L
+        }
     }
 
     // other

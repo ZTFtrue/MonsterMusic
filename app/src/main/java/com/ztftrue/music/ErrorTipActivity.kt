@@ -104,7 +104,6 @@ class ErrorTipActivity : ComponentActivity() {
                                     "Copy"
                                 )
                             )
-                            activity.startActivity(intent)
                         }
                     ) {
                         Text(

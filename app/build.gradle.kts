@@ -172,17 +172,12 @@ dependencies {
 
     val roomVersion = "2.8.4"
     implementation("androidx.room:room-runtime:$roomVersion")
-    annotationProcessor("androidx.room:room-compiler:$roomVersion")
     // To use Kotlin Symbol Processing (KSP)
     ksp("androidx.room:room-compiler:$roomVersion")
-    // optional - Kotlin Extensions and Coroutines support for Room
+    // Kotlin Extensions and Coroutines support for Room
     implementation("androidx.room:room-ktx:$roomVersion")
-    // optional - RxJava3 support for Room
-    implementation("androidx.room:room-rxjava3:$roomVersion")
-    // optional - Test helpers
-    implementation("androidx.room:room-testing:$roomVersion")
-    // optional - Paging 3 Integration
-    implementation("androidx.room:room-paging:$roomVersion")
+    // Test helpers
+    testImplementation("androidx.room:room-testing:$roomVersion")
 
     implementation("com.github.skydoves:colorpicker-compose:1.2.0")
 

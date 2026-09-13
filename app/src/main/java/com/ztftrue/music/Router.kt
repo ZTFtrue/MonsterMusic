@@ -13,8 +13,8 @@ sealed class Router() {
     data object QueuePage : Router()
     data object SearchPage : Router()
 
-    data class TracksSelectPage(val listBase: MusicPlayList)
-    data class PlayListView(val listBase: AnyListBase)
-    data class EditTrackPage(val music: MusicItem)
-    data class FolderListPage(val folderList: FolderList)
+    data class TracksSelectPage(val listBase: MusicPlayList) : Router()
+    data class PlayListView(val listBase: AnyListBase) : Router()
+    data class EditTrackPage(val music: MusicItem) : Router()
+    data class FolderListPage(val folderList: FolderList) : Router()
 }

@@ -230,38 +230,30 @@ class MainActivity : ComponentActivity() {
                 if (result.data != null) {
                     val selectedFileUri: Uri? = result.data?.data
                     if (selectedFileUri != null) {
-                        val cursor = this@MainActivity.contentResolver.query(
+                        val name = this@MainActivity.contentResolver.query(
                             selectedFileUri,
                             null,
                             null,
                             null,
                             null
-                        ) ?: return@registerForActivityResult
-                        val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                        cursor.moveToFirst()
-                        val name = cursor.getString(nameIndex)
-                        lyricsPath += if (name.lowercase().endsWith(".lrc")) {
-                            "lrc"
-                        } else if (name.lowercase().endsWith(".srt")) {
-                            "srt"
-                        } else if (name.lowercase().endsWith(".vtt")) {
-                            "vtt"
-                        } else if (name.lowercase().endsWith(".txt")) {
-                            "txt"
-                        } else {
-                            return@registerForActivityResult
+                        )?.use { cursor ->
+                            if (cursor.moveToFirst()) {
+                                val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                                if (nameIndex != -1) cursor.getString(nameIndex) else null
+                            } else null
+                        } ?: return@registerForActivityResult
+                        val ext = when {
+                            name.lowercase().endsWith(".lrc") -> "lrc"
+                            name.lowercase().endsWith(".srt") -> "srt"
+                            name.lowercase().endsWith(".vtt") -> "vtt"
+                            name.lowercase().endsWith(".txt") -> "txt"
+                            else -> return@registerForActivityResult
                         }
-                        val inputStream =
-                            this@MainActivity.contentResolver.openInputStream(selectedFileUri)
-                        if (inputStream != null) {
-                            val outputStream = FileOutputStream(File(lyricsPath))
-                            val buffer = ByteArray(1024)
-                            var length: Int
-                            while (inputStream.read(buffer).also { length = it } > 0) {
-                                outputStream.write(buffer, 0, length)
+                        lyricsPath += ext
+                        this@MainActivity.contentResolver.openInputStream(selectedFileUri)?.use { inputStream ->
+                            FileOutputStream(File(lyricsPath)).use { outputStream ->
+                                inputStream.copyTo(outputStream)
                             }
-                            inputStream.close()
-                            outputStream.close()
                         }
                         if (musicViewModel.currentPlay.value != null) {
                             musicViewModel.dealLyrics(
@@ -282,8 +274,7 @@ class MainActivity : ComponentActivity() {
                 if (result.data != null) {
                     val selectedFileUri: Uri? = result.data?.data
                     if (selectedFileUri != null) {
-                        val inputStream = contentResolver.openInputStream(selectedFileUri)
-                        if (inputStream != null) {
+                        contentResolver.openInputStream(selectedFileUri)?.use { inputStream ->
                             try {
                                 //  read file name
                                 val fileName =
@@ -313,58 +304,15 @@ class MainActivity : ComponentActivity() {
                                     val tempPath: String? =
                                         this@MainActivity.getExternalFilesDir(folderPath)?.absolutePath
                                     val targetFile = File(tempPath, "track_cover.$fileExtension")
-                                    val outputStream = FileOutputStream(targetFile)
-                                    inputStream.copyTo(outputStream)
-                                    inputStream.close()
-                                    outputStream.close()
+                                    FileOutputStream(targetFile).use { outputStream ->
+                                        inputStream.copyTo(outputStream)
+                                    }
                                     musicViewModel.customMusicCover.value = targetFile.absolutePath
                                     SharedPreferencesUtils.setTrackCoverData(
                                         this@MainActivity,
                                         targetFile.absolutePath
                                     )
                                     musicViewModel.getCurrentMusicCover(this@MainActivity)
-//                                getSharedPreferences("Widgets", MODE_PRIVATE).getBoolean(
-//                                    "enable",
-//                                    false
-//                                )
-//                                    .let {
-//                                        if (it) {
-//                                            val intent =
-//                                                Intent(this@MainActivity, PlayMusicWidget::class.java)
-//                                            intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-//                                            intent.putExtra("source", this@MainActivity.packageName)
-//                                            val ids = AppWidgetManager.getInstance(
-//                                                application
-//                                            ).getAppWidgetIds(
-//                                                ComponentName(
-//                                                    application,
-//                                                    PlayMusicWidget::class.java
-//                                                )
-//                                            )
-//                                            intent.putExtra(
-//                                                "playingStatus",
-//                                                musicViewModel.playStatus.value
-//                                            )
-//                                            intent.putExtra(
-//                                                "title",
-//                                                musicViewModel.currentPlay.value?.name ?: ""
-//                                            )
-//                                            intent.putExtra(
-//                                                "author",
-//                                                musicViewModel.currentPlay.value?.artist ?: ""
-//                                            )
-//                                            intent.putExtra(
-//                                                "path",
-//                                                musicViewModel.currentPlay.value?.path ?: ""
-//                                            )
-//                                            intent.putExtra(
-//                                                "id",
-//                                                musicViewModel.currentPlay.value?.id ?: 0L
-//                                            )
-//                                            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-//                                            sendBroadcast(intent)
-//                                        }
-//                                    }
                                 }
                             } catch (e: Exception) {
                                 e.printStackTrace()
@@ -382,33 +330,12 @@ class MainActivity : ComponentActivity() {
                 if (result.data != null) {
                     val selectedFileUri: Uri? = result.data!!.data
                     if (selectedFileUri != null) {
-                        val inputStream =
-                            this@MainActivity.contentResolver.openInputStream(selectedFileUri)
-                        val outputStream = ByteArrayOutputStream()
-                        if (inputStream != null) {
-                            try {
+                        try {
+                            this@MainActivity.contentResolver.openInputStream(selectedFileUri)?.use { inputStream ->
                                 coverBitmap?.value = BitmapFactory.decodeStream(inputStream)
-//                                val cache=File(externalCacheDir,"cache1.jpg")
-//                                if(cache.exists()){
-//                                    cache.delete()
-//                                }
-//                                cache.createNewFile()
-//                                coverBitmap?.value!!.compress(Bitmap.CompressFormat.JPEG, 90, FileOutputStream(cache))
-//                                coverBitmap?.value = BitmapFactory.decodeFile(cache.absolutePath)
-//                           Bitmap.createBitmap(coverBitmap.value!!.width,coverBitmap.value!!.height,Bitmap.Config.ARGB_8888)
-//                                    .compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
-//                                BitmapFactory.decodeByteArray(
-//                                    outputStream.toByteArray(),
-//                                    0,
-//                                    outputStream.size()
-//                                )
-                                inputStream.close()
-                                outputStream.close()
-                            } catch (e: Exception) {
-                                inputStream.close()
-                                outputStream.close()
-                                e.printStackTrace()
                             }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
                         }
                     }
                 }
@@ -426,7 +353,7 @@ class MainActivity : ComponentActivity() {
                             treeUri,
                             Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                         )
-                        CoroutineScope(Dispatchers.IO).launch {
+                        lifecycleScope.launch(Dispatchers.IO) {
                             musicViewModel.getDb(this@MainActivity).StorageFolderDao().insert(
                                 StorageFolder(null, treeUri.toString())
                             )
@@ -456,7 +383,7 @@ class MainActivity : ComponentActivity() {
                             treeUri,
                             Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                         )
-                        CoroutineScope(Dispatchers.IO).launch {
+                        lifecycleScope.launch(Dispatchers.IO) {
                             musicViewModel.getDb(this@MainActivity).StorageFolderDao().insert(
                                 StorageFolder(null, treeUri.toString(),TRACKS_TYPE)
                             )
@@ -478,7 +405,7 @@ class MainActivity : ComponentActivity() {
                             treeUri,
                             Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                         )
-                        CoroutineScope(Dispatchers.IO).launch {
+                        lifecycleScope.launch(Dispatchers.IO) {
                             musicViewModel.getDb(this@MainActivity).StorageFolderDao().insert(
                                 StorageFolder(null, treeUri.toString(), GENRE_TYPE)
                             )
@@ -501,7 +428,7 @@ class MainActivity : ComponentActivity() {
                             treeUri,
                             Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                         )
-                        CoroutineScope(Dispatchers.IO).launch {
+                        lifecycleScope.launch(Dispatchers.IO) {
                             musicViewModel.getDb(this@MainActivity).StorageFolderDao().insert(
                                 StorageFolder(null, treeUri.toString(), ARTIST_TYPE)
                             )
@@ -754,16 +681,17 @@ class MainActivity : ComponentActivity() {
     private fun clearQueueAndAddPlay(musicItem: MusicItem) {
         musicViewModel.musicQueue.clear()
         musicViewModel.musicQueue.add(musicItem)
-        bundle.putBoolean("switch_queue", true)
+        val cmdBundle = Bundle()
+        cmdBundle.putBoolean("switch_queue", true)
         SharedPreferencesUtils.enableShuffle(this@MainActivity, false)
         musicViewModel.enableShuffleModel.value = false
         val anyList = AnyListBase(-5)
         musicViewModel.playListCurrent.value = anyList
         // TODO just parma for data,then get tracks in service
-        bundle.putParcelable("playList", anyList)
+        cmdBundle.putParcelable("playList", anyList)
         musicViewModel.browser?.sendCustomCommand(
             MediaCommands.COMMAND_CHANGE_PLAYLIST,
-            bundle
+            cmdBundle
         )
         val t1 = ArrayList<MediaItem>()
         musicViewModel.musicQueue.forEach {

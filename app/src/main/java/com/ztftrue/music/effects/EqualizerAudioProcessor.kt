@@ -51,17 +51,15 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var echoDelay = 0.0f
     private var echoDecay = 0.0f
 
-    // Effects
-    private var delayEffectLeft: DelayEffect = DelayEffect(echoDelay, echoDecay, 44100.0f)
-    private var delayEffectRight: DelayEffect = DelayEffect(echoDelay, echoDecay, 44100.0f)
-    private var channelDelays = arrayOf(delayEffectLeft, delayEffectRight)
-
-    // EQ Filters
-    private val mCoefficientLeftBiQuad: ArrayList<BiQuadraticFilter> = arrayListOf()
-    private val mCoefficientRightBiQuad: ArrayList<BiQuadraticFilter> = arrayListOf()
-
-    // 方便循环处理 [Channel][BandIndex]
-    private var channelFilters = arrayOf(mCoefficientLeftBiQuad, mCoefficientRightBiQuad)
+    private var isWithFeedBack: Boolean = false
+    private var channelDelays = Array(2) { DelayEffect(echoDelay, echoDecay, 44100.0f) }
+    private var channelFilters = Array(2) {
+        val list = ArrayList<BiQuadraticFilter>()
+        repeat(Utils.bandsCenter.count()) {
+            list.add(BiQuadraticFilter())
+        }
+        list
+    }
 
     // EQ Configuration
     private val gainDBArray: IntArray = IntArray(10) { 0 }
@@ -81,16 +79,6 @@ class EqualizerAudioProcessor : AudioProcessor {
 
     private val lock = ReentrantLock()
 
-    init {
-        // 初始化滤波器列表
-        repeat(Utils.bandsCenter.count()) {
-            this.mCoefficientLeftBiQuad.add(BiQuadraticFilter())
-            this.mCoefficientRightBiQuad.add(BiQuadraticFilter())
-        }
-        // 初始化 channelFilters 引用
-        channelFilters = arrayOf(mCoefficientLeftBiQuad, mCoefficientRightBiQuad)
-    }
-
     override fun configure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
         if (inputAudioFormat.encoding != C.ENCODING_PCM_16BIT && inputAudioFormat.encoding != C.ENCODING_PCM_FLOAT) {
             return AudioProcessor.AudioFormat.NOT_SET
@@ -109,12 +97,22 @@ class EqualizerAudioProcessor : AudioProcessor {
 
         // 初始化/重置效果器
         val sampleRate = inputAudioFormat.sampleRate.toFloat()
-        delayEffectLeft = DelayEffect(echoDelay, echoDecay, sampleRate)
-        delayEffectRight = DelayEffect(echoDelay, echoDecay, sampleRate)
-        channelDelays = arrayOf(delayEffectLeft, delayEffectRight)
+        val channelCount = inputAudioFormat.channelCount
+        channelDelays = Array(channelCount) {
+            DelayEffect(echoDelay, echoDecay, sampleRate).apply {
+                isWithFeedBack = this@EqualizerAudioProcessor.isWithFeedBack
+            }
+        }
+        channelFilters = Array(channelCount) {
+            val list = ArrayList<BiQuadraticFilter>()
+            repeat(Utils.bandsCenter.count()) {
+                list.add(BiQuadraticFilter())
+            }
+            list
+        }
 
         // 重置 Max 记录
-        channelEqualizerMaxs = FloatArray(inputAudioFormat.channelCount) { 1.0f }
+        channelEqualizerMaxs = FloatArray(channelCount) { 1.0f }
 
         // 初始化 FFT
         val fftSize = 1024
@@ -226,7 +224,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             // C. Limiter Logic (用户要求保留的部分)
             if (echoActive || equalizerActive) {
                 // 2. 更新历史 Max
-                channelEqualizerMaxs[ch] = max(channelEqualizerMaxs[ch], Limiter.process(samples))
+                channelEqualizerMaxs[ch] = max(channelEqualizerMaxs[ch], Limiter.process(samples, framesCount))
 
                 // 3. 如果超过 1.0，进行全局归一化
                 if (channelEqualizerMaxs[ch] > 1.0f) {
@@ -242,7 +240,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         if (visualizationAudioActive) {
             processVisualization(
                 channelBuffers[0],
-                if (channelBuffers.size == 2) channelBuffers[1] else channelBuffers[0],
+                if (channelBuffers.size > 1) channelBuffers[1] else channelBuffers[0],
                 framesCount
             )
         }
@@ -341,8 +339,9 @@ class EqualizerAudioProcessor : AudioProcessor {
                 for (filter in chFilters) filter.reset()
             }
             channelEqualizerMaxs.fill(1.0f) // Reset Limiter state
-            delayEffectLeft.flush()
-            delayEffectRight.flush()
+            for (delay in channelDelays) {
+                delay.flush()
+            }
         } finally {
             lock.unlock()
         }
@@ -457,19 +456,17 @@ class EqualizerAudioProcessor : AudioProcessor {
 
     fun setDelayTime(value: Float) {
         echoDelay = value
-        delayEffectLeft.setEchoLength(value)
-        delayEffectRight.setEchoLength(value)
+        channelDelays.forEach { it.setEchoLength(value) }
     }
 
     fun setDecay(value: Float) {
         echoDecay = value
-        delayEffectLeft.setDecay(value)
-        delayEffectRight.setDecay(value)
+        channelDelays.forEach { it.setDecay(value) }
     }
 
     fun setFeedBack(value: Boolean) {
-        delayEffectLeft.isWithFeedBack = value
-        delayEffectRight.isWithFeedBack = value
+        isWithFeedBack = value
+        channelDelays.forEach { it.isWithFeedBack = value }
     }
 
     // ===================================
@@ -487,21 +484,15 @@ class EqualizerAudioProcessor : AudioProcessor {
         if (outputAudioFormat.sampleRate > 0) {
             val freq = Utils.bandsCenter[index]
             val rate = outputAudioFormat.sampleRate.toFloat()
-            // 为左右声道配置相同的参数
-            mCoefficientLeftBiQuad[index].configure(
-                BiQuadraticFilter.PEAK,
-                freq,
-                rate,
-                Q,
-                value.toFloat()
-            )
-            mCoefficientRightBiQuad[index].configure(
-                BiQuadraticFilter.PEAK,
-                freq,
-                rate,
-                Q,
-                value.toFloat()
-            )
+            for (chFilters in channelFilters) {
+                chFilters[index].configure(
+                    BiQuadraticFilter.PEAK,
+                    freq,
+                    rate,
+                    Q,
+                    value.toFloat()
+                )
+            }
         }
     }
 }

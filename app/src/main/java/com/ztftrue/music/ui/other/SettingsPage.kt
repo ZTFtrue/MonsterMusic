@@ -102,13 +102,14 @@ import com.ztftrue.music.utils.LyricsSettings.FIRST_EMBEDDED_LYRICS
 import com.ztftrue.music.utils.SharedPreferencesName.LYRICS_SETTINGS
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
+import androidx.compose.runtime.rememberCoroutineScope
 import com.ztftrue.music.utils.Utils.openBrowser
 import com.ztftrue.music.utils.model.FolderList
 import com.ztftrue.music.utils.model.LanguageModel
 import com.ztftrue.music.utils.trackManager.FolderManger
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Locale
 
 
@@ -1007,18 +1008,17 @@ fun saveIgnoreDuration(
 fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 
     val context = LocalContext.current
-    val scopeMain = CoroutineScope(Dispatchers.IO)
+    val coroutineScope = rememberCoroutineScope()
 
     val mainTabList = remember { mutableStateListOf<MainTab>() }
     var size by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
-        scopeMain.launch {
-            mainTabList.addAll(
-                musicViewModel.getDb(context).MainTabDao().findAllMainTabSortByPriority()
-            )
-            size = mainTabList.size
+        val tabs = withContext(Dispatchers.IO) {
+            musicViewModel.getDb(context).MainTabDao().findAllMainTabSortByPriority()
         }
+        mainTabList.addAll(tabs)
+        size = mainTabList.size
     }
     fun onConfirmation() {
         musicViewModel.mainTabList.clear()
@@ -1032,8 +1032,10 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                 musicViewModel.mainTabList.add(it)
             }
         }
-        scopeMain.launch {
-            musicViewModel.getDb(context).MainTabDao().updateAll(mainTabList)
+        coroutineScope.launch {
+            withContext(Dispatchers.IO) {
+                musicViewModel.getDb(context).MainTabDao().updateAll(mainTabList)
+            }
             onDismiss()
         }
     }
@@ -1445,7 +1447,6 @@ fun AboutDialog(onDismiss: () -> Unit) {
 fun ManageAutoPlayDialog(onDismiss: () -> Unit) {
 
     val context = LocalContext.current
-    val scopeMain = CoroutineScope(Dispatchers.IO)
 
     var enableAutoPlay by remember { mutableStateOf(false) }
     var waitTime by remember { mutableLongStateOf(1000) }
@@ -1460,9 +1461,7 @@ fun ManageAutoPlayDialog(onDismiss: () -> Unit) {
     fun onConfirmation() {
         SharedPreferencesUtils.setAutoPlayEnable(context, enableAutoPlay)
         SharedPreferencesUtils.setAutoPlayWaitTime(context, waitTime)
-        scopeMain.launch {
-            onDismiss()
-        }
+        onDismiss()
     }
 
     Dialog(
@@ -1688,7 +1687,7 @@ fun ManageAutoPlayDialog(onDismiss: () -> Unit) {
 fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 
     val context = LocalContext.current
-    val scopeMain = CoroutineScope(Dispatchers.IO)
+    val coroutineScope = rememberCoroutineScope()
     val windowInfo = LocalWindowInfo.current
     val containerHeightPx = windowInfo.containerSize.height
 //    val density = LocalDensity.current
@@ -1696,16 +1695,13 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
     val folderList = remember { mutableStateListOf<StorageFolder>() }
 
     LaunchedEffect(Unit) {
-        scopeMain.launch {
-            val files = musicViewModel.getDb(context).StorageFolderDao().findAll()
-            folderList.addAll(files)
+        val files = withContext(Dispatchers.IO) {
+            musicViewModel.getDb(context).StorageFolderDao().findAll()
         }
+        folderList.addAll(files)
     }
     fun onConfirmation() {
-
-        scopeMain.launch {
-            onDismiss()
-        }
+        onDismiss()
     }
 
 
@@ -1898,12 +1894,12 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
                             IconButton(
                                 modifier = Modifier.width(50.dp),
                                 onClick = {
-                                    scopeMain.launch {
+                                    coroutineScope.launch {
                                         item.id?.let { it1 ->
-                                            musicViewModel.getDb(context).StorageFolderDao()
-                                                .deleteById(
-                                                    it1
-                                                )
+                                            withContext(Dispatchers.IO) {
+                                                musicViewModel.getDb(context).StorageFolderDao()
+                                                    .deleteById(it1)
+                                            }
                                         }
                                         folderList.removeAt(it)
                                     }
@@ -1950,26 +1946,26 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
 fun ManageFolderDialog(onDismiss: () -> Unit) {
 
     val context = LocalContext.current
-    val scopeMain = CoroutineScope(Dispatchers.IO)
 
     val folderList = remember { mutableStateListOf<FolderList>() }
 
     LaunchedEffect(Unit) {
-        scopeMain.launch {
+        val folderMap: HashMap<Long, FolderList> = withContext(Dispatchers.IO) {
             val sharedPreferences =
                 context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
             // -1 don't ignore any,0 ignore duration less than or equal 0s,
             val ignoreFolders = sharedPreferences.getString("ignore_folders", "")
-            val folderMap: HashMap<Long, FolderList> = FolderManger.getMusicFolders(context)
+            val map = FolderManger.getMusicFolders(context)
             if (!ignoreFolders.isNullOrEmpty()) {
                 ignoreFolders.split(",").forEach {
                     if (it.isNotEmpty()) {
-                        folderMap[it.toLong()]?.isShow = false
+                        map[it.toLong()]?.isShow = false
                     }
                 }
             }
-            folderList.addAll(folderMap.values)
+            map
         }
+        folderList.addAll(folderMap.values)
     }
     fun onConfirmation() {
         val hideFolderIds = StringBuilder()
@@ -1984,9 +1980,7 @@ fun ManageFolderDialog(onDismiss: () -> Unit) {
         }
         val sharedPreferences = context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
         sharedPreferences.edit { putString("ignore_folders", hideFolderIds.toString()) }
-        scopeMain.launch {
-            onDismiss()
-        }
+        onDismiss()
     }
 
 
@@ -2125,7 +2119,6 @@ fun ManageFolderDialog(onDismiss: () -> Unit) {
 fun SetWidgetDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 
     val context = LocalContext.current
-    val scopeMain = CoroutineScope(Dispatchers.Main)
     rememberColorPickerController()
     var colorString by remember { mutableStateOf(Color.Blue.toArgb().toHexString()) }
 
@@ -2138,29 +2131,27 @@ fun SetWidgetDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
         ).toArgb().toHexString()
     }
     fun onConfirmation() {
-        scopeMain.launch {
-            SharedPreferencesUtils.setWidgetBackground(context, colorString)
-            val intent = Intent(context, PlayMusicWidget::class.java)
-            intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-            intent.putExtra("source", context.packageName)
-            val ids = AppWidgetManager.getInstance(
-                context
-            ).getAppWidgetIds(
-                ComponentName(
-                    context,
-                    PlayMusicWidget::class.java
-                )
+        SharedPreferencesUtils.setWidgetBackground(context, colorString)
+        val intent = Intent(context, PlayMusicWidget::class.java)
+        intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+        intent.putExtra("source", context.packageName)
+        val ids = AppWidgetManager.getInstance(
+            context
+        ).getAppWidgetIds(
+            ComponentName(
+                context,
+                PlayMusicWidget::class.java
             )
-            intent.putExtra("playingStatus", musicViewModel.browser?.isPlaying)
-            intent.putExtra("title", musicViewModel.currentPlay.value?.name ?: "")
-            intent.putExtra("author", musicViewModel.currentPlay.value?.artist ?: "")
-            intent.putExtra("path", musicViewModel.currentPlay.value?.path ?: "")
-            intent.putExtra("id", musicViewModel.currentPlay.value?.id ?: 0L)
-            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-            context.sendBroadcast(intent)
-            onDismiss()
-        }
+        )
+        intent.putExtra("playingStatus", musicViewModel.browser?.isPlaying)
+        intent.putExtra("title", musicViewModel.currentPlay.value?.name ?: "")
+        intent.putExtra("author", musicViewModel.currentPlay.value?.artist ?: "")
+        intent.putExtra("path", musicViewModel.currentPlay.value?.path ?: "")
+        intent.putExtra("id", musicViewModel.currentPlay.value?.id ?: 0L)
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+        context.sendBroadcast(intent)
+        onDismiss()
     }
 
 
@@ -2256,17 +2247,10 @@ fun SetWidgetDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 fun ClearAlbumCoverDialog(onDismiss: () -> Unit) {
 
     val context = LocalContext.current
-    val scopeMain = CoroutineScope(Dispatchers.IO)
 
-
-    LaunchedEffect(Unit) {
-
-    }
     fun onConfirmation() {
         Utils.clearAlbumCoverCache(context)
-        scopeMain.launch {
-            onDismiss()
-        }
+        onDismiss()
     }
 
 
@@ -2343,29 +2327,24 @@ fun ClearAlbumCoverDialog(onDismiss: () -> Unit) {
 @Composable
 fun SetListIndicatorDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
-    val coroutineScope = CoroutineScope(Dispatchers.IO)
     var showSlideIndicator by remember { mutableStateOf(false) }
     var showTopIndicator by remember { mutableStateOf(false) }
     var showQueueIndicator by remember { mutableStateOf(false) }
     val sharedPreferences =
         context.getSharedPreferences("list_indicator_config", Context.MODE_PRIVATE)
     LaunchedEffect(Unit) {
-        coroutineScope.launch {
-            showSlideIndicator = sharedPreferences.getBoolean("show_slide_indicator", true)
-            showTopIndicator = sharedPreferences.getBoolean("show_top_indicator", true)
-            showQueueIndicator = sharedPreferences.getBoolean("show_queue_indicator", false)
-        }
+        showSlideIndicator = sharedPreferences.getBoolean("show_slide_indicator", true)
+        showTopIndicator = sharedPreferences.getBoolean("show_top_indicator", true)
+        showQueueIndicator = sharedPreferences.getBoolean("show_queue_indicator", false)
     }
     @SuppressLint("ApplySharedPref")
     fun onConfirmation() {
-        coroutineScope.launch {
-            sharedPreferences.edit {
-                putBoolean("show_slide_indicator", showSlideIndicator)
-                    .putBoolean("show_top_indicator", showTopIndicator)
-                    .putBoolean("show_queue_indicator", showQueueIndicator)
-            }
-            onDismiss()
+        sharedPreferences.edit {
+            putBoolean("show_slide_indicator", showSlideIndicator)
+                .putBoolean("show_top_indicator", showTopIndicator)
+                .putBoolean("show_queue_indicator", showQueueIndicator)
         }
+        onDismiss()
     }
 
 
@@ -2549,7 +2528,6 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
 @Composable
 fun SwitchLanguageDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
-    val scopeMain = CoroutineScope(Dispatchers.IO)
 
     val language = remember { mutableStateListOf<LanguageModel>() }
     var size by remember { mutableIntStateOf(0) }
@@ -2559,28 +2537,26 @@ fun SwitchLanguageDialog(onDismiss: () -> Unit) {
     val systemLanguage = LocalConfiguration.current.locales[0].language
 
     LaunchedEffect(Unit) {
-        scopeMain.launch {
-            locale = if (systemLanguage in supportedLanguages) {
-                systemLanguage // Use system language if supported
-            } else {
-                "en" // Fallback to English
-            }
-            language.add(LanguageModel("English", "en"))
-            language.add(LanguageModel("中文", "zh"))
-            language.add(LanguageModel("Deutsch", "de"))
-            language.add(LanguageModel("Esperanto", "eo"))
-            language.add(LanguageModel("Magyar", "hu"))
-            language.add(LanguageModel("Follow System", ""))
-            SharedPreferencesUtils.getCurrentLanguage(context).let {
-                locale = if (it.isNullOrEmpty()) {
-                    Locale.getDefault().language
-                } else {
-                    it
-                }
-            }
-            selectIndex = language.indexOfFirst { it.code == locale }
-            size = language.size
+        locale = if (systemLanguage in supportedLanguages) {
+            systemLanguage // Use system language if supported
+        } else {
+            "en" // Fallback to English
         }
+        language.add(LanguageModel("English", "en"))
+        language.add(LanguageModel("中文", "zh"))
+        language.add(LanguageModel("Deutsch", "de"))
+        language.add(LanguageModel("Esperanto", "eo"))
+        language.add(LanguageModel("Magyar", "hu"))
+        language.add(LanguageModel("Follow System", ""))
+        SharedPreferencesUtils.getCurrentLanguage(context).let {
+            locale = if (it.isNullOrEmpty()) {
+                Locale.getDefault().language
+            } else {
+                it
+            }
+        }
+        selectIndex = language.indexOfFirst { it.code == locale }
+        size = language.size
     }
     fun onConfirmation() {
         val activity = context as? Activity
@@ -2593,10 +2569,7 @@ fun SwitchLanguageDialog(onDismiss: () -> Unit) {
 //        AppCompatDelegate.setApplicationLocales(localeList)
 //        val currentLocale = AppCompatDelegate.getApplicationLocales()[0]
 //        Log.d("LanguageChange", "Current Language: $currentLocale")
-        scopeMain.launch {
-            onDismiss()
-
-        }
+        onDismiss()
     }
 
 
@@ -2724,19 +2697,7 @@ fun SwitchLanguageDialog(onDismiss: () -> Unit) {
 @Composable
 fun ReplaceCoverDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 
-    val scopeMain = CoroutineScope(Dispatchers.IO)
     val context = LocalContext.current
-
-    LaunchedEffect(Unit) {
-        scopeMain.launch {
-
-        }
-    }
-    fun onConfirmation() {
-        scopeMain.launch {
-            onDismiss()
-        }
-    }
 
 
     Dialog(

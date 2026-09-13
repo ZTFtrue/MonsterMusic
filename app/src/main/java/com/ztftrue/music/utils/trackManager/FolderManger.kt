@@ -19,33 +19,32 @@ object FolderManger {
             MediaStore.Audio.Media.RELATIVE_PATH
         )
 
-        val cursor = contentResolver.query(musicUri, projection, null, null, null)
-
-        if (cursor != null && cursor.moveToFirst()) {
-            val musicFolders: HashMap<Long, FolderList> = HashMap()
-            do {
-                val bucketId =
-                    cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.BUCKET_ID))
-                val bucketName =
-                    cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.BUCKET_DISPLAY_NAME))
-                val tracksNumber =
-                    cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.NUM_TRACKS))
-                val relativePath =
-                    cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.RELATIVE_PATH))
-                musicFolders.putIfAbsent(
-                    bucketId,
-                    FolderList(
-                        children = ArrayList(),
-                        path = relativePath ?: "/",
-                        name = bucketName ?: "/",
-                        id = bucketId,
-                        trackNumber = tracksNumber,
-                        type = PlayListType.Folders
+        contentResolver.query(musicUri, projection, null, null, null)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                val musicFolders: HashMap<Long, FolderList> = HashMap()
+                do {
+                    val bucketId =
+                        cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.BUCKET_ID))
+                    val bucketName =
+                        cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.BUCKET_DISPLAY_NAME))
+                    val tracksNumber =
+                        cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.NUM_TRACKS))
+                    val relativePath =
+                        cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.RELATIVE_PATH))
+                    musicFolders.putIfAbsent(
+                        bucketId,
+                        FolderList(
+                            children = ArrayList(),
+                            path = relativePath ?: "/",
+                            name = bucketName ?: "/",
+                            id = bucketId,
+                            trackNumber = tracksNumber,
+                            type = PlayListType.Folders
+                        )
                     )
-                )
-            } while (cursor.moveToNext())
-            cursor.close()
-            return musicFolders
+                } while (cursor.moveToNext())
+                return musicFolders
+            }
         }
         return HashMap()
     }

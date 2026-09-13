@@ -153,7 +153,7 @@ object TracksManager {
                 }[musicID] = musicItem
                 mapFolder.putIfAbsent(
                     folderId, FolderList(
-                        path = path.take(path.lastIndexOf("/")),
+                        path = path.substringBeforeLast('/', ""),
                         name = folderName ?: "/",
                         id = folderId,
                         trackNumber = map[folderId]?.size ?: 0,
