@@ -503,7 +503,7 @@ fun FolderListPage(
                 } else {
                     Toast.makeText(
                         context,
-                        context.getString(R.string.create_failed),
+                        R.string.create_failed,
                         Toast.LENGTH_SHORT
                     )
                         .show()
@@ -813,7 +813,7 @@ fun FolderItemView(
                         }
                         Toast.makeText(
                             context,
-                            context.getString(R.string.ignored_this_folder_please_restart_the_app_to_take_effect),
+                            R.string.ignored_this_folder_please_restart_the_app_to_take_effect,
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -928,11 +928,11 @@ fun FolderItemView(
 
                     if (musicViewModel.folderViewTree.value && folderNumber != 0) {
                         Text(
-                            text = "$folderNumber Folder${
-                                if (folderNumber <= 1L) "" else stringResource(
-                                    id = R.string.s
-                                )
-                            }",
+                            text = stringResource(
+                                R.string.folders_count,
+                                folderNumber,
+                                if (folderNumber <= 1L) "" else stringResource(id = R.string.s)
+                            ),
                             color = MaterialTheme.colorScheme.onBackground,
                         )
                     }

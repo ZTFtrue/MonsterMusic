@@ -21,6 +21,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.util.fastFilterNotNull
@@ -56,6 +57,7 @@ fun MainView(
     val context = LocalContext.current
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val mainPageDescription = stringResource(R.string.this_is_main_page)
     val sharedPreferences =
         context.getSharedPreferences("list_indicator_config", Context.MODE_PRIVATE)
     val queueD = remember {
@@ -129,8 +131,7 @@ fun MainView(
         Scaffold(
             modifier = Modifier
                 .semantics {
-                    contentDescription =
-                        context.getString(R.string.this_is_main_page)
+                    contentDescription = mainPageDescription
                 },
             topBar = {
                 MainTopBar(musicViewModel, drawerState, pagerState, navController)

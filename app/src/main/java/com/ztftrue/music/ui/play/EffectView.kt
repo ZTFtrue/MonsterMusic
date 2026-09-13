@@ -59,6 +59,10 @@ fun EffectView(musicViewModel: MusicViewModel) {
     val virtualStrength = remember { mutableIntStateOf(musicViewModel.virtualStrength.intValue) }
     val enableVirtual = remember { mutableStateOf(musicViewModel.enableVirtual.value) }
     val color = MaterialTheme.colorScheme.onBackground
+    val pitchSliderDesc = stringResource(R.string.pitch_slider)
+    val speedSliderDesc = stringResource(R.string.speed_slider)
+    val echoDelaySliderDesc = stringResource(R.string.echo_delay_slider_description)
+    val echoDecaySliderDesc = stringResource(R.string.echo_decay_slider_description)
     LazyColumn(
         state = listState,
         modifier = Modifier
@@ -112,7 +116,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                 CustomSlider(
                     modifier = Modifier
                         .semantics {
-                            contentDescription = context.getString(R.string.pitch_slider)
+                            contentDescription = pitchSliderDesc
                         },
                     value = pitch.floatValue,
                     onValueChange = {
@@ -155,7 +159,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                 CustomSlider(
                     modifier = Modifier
                         .semantics {
-                            contentDescription = context.getString(R.string.speed_slider)
+                            contentDescription = speedSliderDesc
                         },
                     value = speed.floatValue,
                     onValueChange = {
@@ -241,8 +245,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                 CustomSlider(
                     modifier = Modifier
                         .semantics {
-                            contentDescription =
-                                context.getString(R.string.echo_delay_slider_description)
+                            contentDescription = echoDelaySliderDesc
                         },
                     value = delayTime.floatValue,
                     onValueChange = {
@@ -268,8 +271,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                 CustomSlider(
                     modifier = Modifier
                         .semantics {
-                            contentDescription =
-                                context.getString(R.string.echo_decay_slider_description)
+                            contentDescription = echoDecaySliderDesc
                         },
                     value = decay.floatValue,
                     onValueChange = {
@@ -297,7 +299,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "Virtual Surround",
+                            text = stringResource(R.string.virtual_surround),
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Box(
@@ -321,14 +323,15 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         )
                     }
                 }
+                val virtualStrengthText = stringResource(R.string.strength_format, virtualStrength.intValue)
                 Text(
-                    text = "Strength ${virtualStrength.intValue}",
+                    text = virtualStrengthText,
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 CustomSlider(
                     modifier = Modifier
                         .semantics {
-                            contentDescription = "Strength"
+                            contentDescription = virtualStrengthText
                         },
                     value = virtualStrength.intValue.toFloat(),
                     onValueChange = {

@@ -207,4 +207,14 @@
     <string name="auto_remove_duplicate_songs">Auto remove duplicate songs</string>
     <string name="duration">Duration: %1$s</string>
     <string name="title">Title</string>
+    <string name="disable_audio_focus">Disable audio focus</string>
+    <string name="folders_count">%1$s Folder%2$s</string>
+    <string name="merge_same_album">Merge same name and artist album(Don\'t recommend, need restart app)</string>
+    <string name="add_tracks_folder">Add Tracks Folder</string>
+    <string name="virtual_surround">Virtual Surround</string>
+    <string name="strength_format">Strength %1$s</string>
+    <string name="auto_dismiss">Auto Dismiss</string>
+    <string name="unknown_route">Unknown route</string>
+    <string name="back">Back</string>
+    <string name="language_russian">Русский</string>
 </resources>

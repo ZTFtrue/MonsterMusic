@@ -173,7 +173,7 @@ fun DrawMenu(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Disable audio focus",
+                    text = stringResource(R.string.disable_audio_focus),
                     Modifier.padding(start = 10.dp),
                     color = MaterialTheme.colorScheme.onBackground,
                 )
@@ -344,6 +344,7 @@ fun FeedBackDialog(onDismiss: () -> Unit) {
     }
 
     val color = MaterialTheme.colorScheme.onBackground
+    val feedbackSubject = stringResource(R.string.monster_music_feedback_subject)
 
 
     Dialog(
@@ -428,7 +429,7 @@ fun FeedBackDialog(onDismiss: () -> Unit) {
                                     onConfirmation()
                                     Utils.sendEmail(
                                         "ztftrue@gmail.com",
-                                        context.getString(R.string.monster_music_feedback_subject),
+                                        feedbackSubject,
                                         context
                                     )
                                 },

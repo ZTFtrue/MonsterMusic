@@ -13,6 +13,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation3.runtime.NavEntry
@@ -23,6 +24,7 @@ import coil3.gif.GifDecoder
 import coil3.svg.SvgDecoder
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
+import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.ui.other.EditTrackPage
 import com.ztftrue.music.ui.other.FolderListPage
@@ -139,7 +141,7 @@ fun BaseLayout(
                         )
                     }
 
-                    else -> NavEntry(Unit) { Text("Unknown route") }
+                    else -> NavEntry(Unit) { Text(stringResource(R.string.unknown_route)) }
                 }
             },
         )

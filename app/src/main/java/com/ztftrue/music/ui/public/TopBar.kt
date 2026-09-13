@@ -237,11 +237,12 @@ fun TopBar(
                     tint = MaterialTheme.colorScheme.onBackground
                 )
             }
+            val searchDescription = stringResource(R.string.search)
             IconButton(
                 modifier = Modifier
                     .size(50.dp)
                     .semantics {
-                        contentDescription = context.getString(R.string.search)
+                        contentDescription = searchDescription
                     },
                 onClick = {
                     navController.add(Router.SearchPage)
@@ -252,7 +253,7 @@ fun TopBar(
                 Icon(
                     Icons.Filled.Search,
                     modifier = Modifier.size(30.dp),
-                    contentDescription = "Search",
+                    contentDescription = searchDescription,
                     tint = MaterialTheme.colorScheme.onBackground
                 )
             }

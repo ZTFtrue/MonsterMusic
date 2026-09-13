@@ -75,6 +75,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.SoftwareKeyboardController
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -347,7 +348,7 @@ fun SettingsPage(
                                             )
                                             Toast.makeText(
                                                 context,
-                                                context.getString(R.string.failed_to_open_language_settings),
+                                                R.string.failed_to_open_language_settings,
                                                 Toast.LENGTH_SHORT
                                             ).show()
                                         }
@@ -952,7 +953,7 @@ fun SettingsPage(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Merge same name and artist album(Don't recommend, need restart app)",
+                                text = stringResource(R.string.merge_same_album),
                                 Modifier
                                     .padding(start = 10.dp)
                                     .weight(1f),
@@ -1308,7 +1309,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "tarsos.dsp", Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.settings_link_tarsos_dsp), Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -1334,7 +1335,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "BiQuadDesigner", Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.settings_link_biquad_designer), Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -1360,7 +1361,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Media3", Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.settings_link_media3), Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -1386,7 +1387,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Stackoverflow answer", Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.settings_link_stackoverflow_answer), Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -1412,7 +1413,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Thanks for translating", Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.settings_thanks_for_translating), Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -1741,7 +1742,7 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
                         },
                 ) {
                     Text(
-                        text = "Add Tracks Folder",
+                        text = stringResource(R.string.add_tracks_folder),
                         Modifier.padding(start = 10.dp),
                         color = MaterialTheme.colorScheme.onBackground
                     )
@@ -2119,16 +2120,12 @@ fun ManageFolderDialog(onDismiss: () -> Unit) {
 fun SetWidgetDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 
     val context = LocalContext.current
+    val defaultWidgetColor = colorResource(R.color.light_blue_900)
     rememberColorPickerController()
     var colorString by remember { mutableStateOf(Color.Blue.toArgb().toHexString()) }
 
     LaunchedEffect(Unit) {
-        colorString = SharedPreferencesUtils.getWidgetBackground(context) ?: Color(
-            context.resources.getColor(
-                R.color.light_blue_900,
-                null
-            )
-        ).toArgb().toHexString()
+        colorString = SharedPreferencesUtils.getWidgetBackground(context) ?: defaultWidgetColor.toArgb().toHexString()
     }
     fun onConfirmation() {
         SharedPreferencesUtils.setWidgetBackground(context, colorString)
@@ -2377,6 +2374,8 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                     )
                     LazyColumn(modifier = Modifier.fillMaxWidth()) {
                         item {
+                            val showSlideDesc = stringResource(R.string.content_description_show_slide_indicator)
+                            val hideSlideDesc = stringResource(R.string.content_description_hide_slide_indicator)
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -2402,15 +2401,17 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                                         .padding(8.dp)
                                         .semantics {
                                             contentDescription = if (showSlideIndicator) {
-                                                context.getString(R.string.content_description_show_slide_indicator)
+                                                showSlideDesc
                                             } else {
-                                                context.getString(R.string.content_description_hide_slide_indicator)
+                                                hideSlideDesc
                                             }
                                         }
                                 )
                             }
                         }
                         item {
+                            val showTopDesc = stringResource(R.string.content_description_show_top_indicator)
+                            val hideTopDesc = stringResource(R.string.content_description_hide_top_indicator)
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -2436,16 +2437,17 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                                         .padding(8.dp)
                                         .semantics {
                                             contentDescription = if (showTopIndicator) {
-                                                context.getString(R.string.content_description_show_top_indicator)
-
+                                                showTopDesc
                                             } else {
-                                                context.getString(R.string.content_description_hide_top_indicator)
+                                                hideTopDesc
                                             }
                                         }
                                 )
                             }
                         }
                         item {
+                            val showQueueDesc = stringResource(R.string.content_description_show_indicator_in_queue)
+                            val hideQueueDesc = stringResource(R.string.content_description_hide_indicator_in_queue)
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -2471,9 +2473,9 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                                         .padding(8.dp)
                                         .semantics {
                                             contentDescription = if (showQueueIndicator) {
-                                                context.getString(R.string.content_description_show_indicator_in_queue)
+                                                showQueueDesc
                                             } else {
-                                                context.getString(R.string.content_description_hide_indicator_in_queue)
+                                                hideQueueDesc
                                             }
                                         }
                                 )
@@ -2533,7 +2535,7 @@ fun SwitchLanguageDialog(onDismiss: () -> Unit) {
     var size by remember { mutableIntStateOf(0) }
     var selectIndex by remember { mutableIntStateOf(0) }
     var locale by remember { mutableStateOf(Locale.getDefault().language) }
-    val supportedLanguages = listOf("en", "de", "eo", "hu") // App-supported languages
+    val supportedLanguages = listOf("en", "zh", "de", "eo", "hu", "ru") // App-supported languages
     val systemLanguage = LocalConfiguration.current.locales[0].language
 
     LaunchedEffect(Unit) {
@@ -2547,7 +2549,8 @@ fun SwitchLanguageDialog(onDismiss: () -> Unit) {
         language.add(LanguageModel("Deutsch", "de"))
         language.add(LanguageModel("Esperanto", "eo"))
         language.add(LanguageModel("Magyar", "hu"))
-        language.add(LanguageModel("Follow System", ""))
+        language.add(LanguageModel("Русский", "ru"))
+        language.add(LanguageModel(context.getString(R.string.language_follow_system), ""))
         SharedPreferencesUtils.getCurrentLanguage(context).let {
             locale = if (it.isNullOrEmpty()) {
                 Locale.getDefault().language

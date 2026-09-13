@@ -7,6 +7,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.res.stringResource
+import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.utils.MutableListExtension.removeLastSafe
 
@@ -30,7 +32,7 @@ fun BackButton(
     }) {
         Icon(
             Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = "Back",
+            contentDescription = stringResource(R.string.back),
             tint = MaterialTheme.colorScheme.onBackground
         )
     }

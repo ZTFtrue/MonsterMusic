@@ -983,7 +983,7 @@ fun PlayingPage(
                                     .padding(start = 5.dp)
                             ) {
                                 Text(
-                                    text = "Auto Dismiss",
+                                    text = stringResource(R.string.auto_dismiss),
                                     modifier = Modifier
                                         .horizontalScroll(rememberScrollState(0)),
                                     color = MaterialTheme.colorScheme.onBackground,
