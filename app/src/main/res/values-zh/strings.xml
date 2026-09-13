@@ -221,4 +221,5 @@
     <string name="language_french">Français</string>
     <string name="language_japanese">日本語</string>
     <string name="language_taiwanese_mandarin">繁體中文 (台灣)</string>
+    <string name="file_not_found_please_rescan">文件不存在或已被删除，请重新扫描音乐</string>
 </resources>

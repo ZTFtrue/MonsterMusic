@@ -8,14 +8,19 @@ import android.graphics.Bitmap
 import android.media.MediaScannerConnection
 import android.media.MediaScannerConnection.MediaScannerConnectionClient
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.os.ParcelFileDescriptor
 import android.os.Process
 import android.provider.MediaStore
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
 import androidx.annotation.OptIn
 import androidx.core.text.isDigitsOnly
 import androidx.media3.common.util.UnstableApi
 import com.ztftrue.music.MainActivity
+import com.ztftrue.music.R
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.OperateTypeInActivity
 import com.ztftrue.music.utils.SharedPreferencesUtils
@@ -238,8 +243,7 @@ object TracksManager {
     @UnstableApi
     fun removeMusicById(context: Context, musicId: Long): Boolean {
         val contentResolver = context.contentResolver
-        var uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        uri = ContentUris.withAppendedId(uri, musicId)
+        val uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, musicId)
         if (context.checkUriPermission(
                 uri,
                 Process.myPid(),
@@ -247,24 +251,44 @@ object TracksManager {
                 Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
-            contentResolver.delete(uri, null, null)
-            return true
+            return try {
+                val deleted = contentResolver.delete(uri, null, null) > 0
+                if (!deleted) {
+                    Handler(Looper.getMainLooper()).post {
+                        Toast.makeText(context, R.string.file_not_found_please_rescan, Toast.LENGTH_SHORT).show()
+                    }
+                }
+                deleted
+            } catch (e: Exception) {
+                Log.e("TracksManager", "Failed to delete track $musicId", e)
+                Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(context, R.string.file_not_found_please_rescan, Toast.LENGTH_SHORT).show()
+                }
+                false
+            }
         } else {
             if (context is MainActivity) {
                 val bundle = context.bundle
                 bundle.putString("action", OperateTypeInActivity.RemoveTrackFromStorage.name)
                 bundle.putParcelable("uri", uri)
                 bundle.putLong("musicId", musicId)
-                val pendingIntent =
-                    MediaStore.createWriteRequest(contentResolver, setOf(uri))
-                val intentSenderRequest: IntentSenderRequest =
-                    IntentSenderRequest.Builder(pendingIntent.intentSender)
-                        .setFlags(
-                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION
-                        )
-                        .build()
-                context.modifyMediaLauncher.launch(intentSenderRequest)
+                try {
+                    val pendingIntent =
+                        MediaStore.createWriteRequest(contentResolver, setOf(uri))
+                    val intentSenderRequest: IntentSenderRequest =
+                        IntentSenderRequest.Builder(pendingIntent.intentSender)
+                            .setFlags(
+                                Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            )
+                            .build()
+                    context.modifyMediaLauncher.launch(intentSenderRequest)
+                } catch (e: Exception) {
+                    Log.e("TracksManager", "Failed to create write request for track $musicId", e)
+                    Handler(Looper.getMainLooper()).post {
+                        Toast.makeText(context, R.string.file_not_found_please_rescan, Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         }
         return false
@@ -380,8 +404,7 @@ object TracksManager {
         lyrics: String?
     ): Boolean {
         val contentResolver = context.contentResolver
-        var uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        uri = ContentUris.withAppendedId(uri, musicId)
+        val uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, musicId)
         if (context.checkUriPermission(
                 uri,
                 Process.myPid(),
@@ -408,16 +431,23 @@ object TracksManager {
                 bundle.putString("action", OperateTypeInActivity.EditTrackInfo.name)
                 bundle.putParcelable("uri", uri)
                 bundle.putLong("musicId", musicId)
-                val pendingIntent =
-                    MediaStore.createWriteRequest(contentResolver, setOf(uri))
-                val intentSenderRequest: IntentSenderRequest =
-                    IntentSenderRequest.Builder(pendingIntent.intentSender)
-                        .setFlags(
-                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION
-                        )
-                        .build()
-                context.modifyMediaLauncher.launch(intentSenderRequest)
+                try {
+                    val pendingIntent =
+                        MediaStore.createWriteRequest(contentResolver, setOf(uri))
+                    val intentSenderRequest: IntentSenderRequest =
+                        IntentSenderRequest.Builder(pendingIntent.intentSender)
+                            .setFlags(
+                                Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            )
+                            .build()
+                    context.modifyMediaLauncher.launch(intentSenderRequest)
+                } catch (e: Exception) {
+                    Log.e("TracksManager", "Failed to create write request for track $musicId", e)
+                    Handler(Looper.getMainLooper()).post {
+                        Toast.makeText(context, R.string.file_not_found_please_rescan, Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         }
         return false
@@ -429,8 +459,7 @@ object TracksManager {
         musicId: Long,
     ): Boolean {
         val contentResolver = context.contentResolver
-        var uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        uri = ContentUris.withAppendedId(uri, musicId)
+        val uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, musicId)
         if (context.checkUriPermission(
                 uri,
                 Process.myPid(),
@@ -445,16 +474,23 @@ object TracksManager {
                 bundle.putString("action", OperateTypeInActivity.EditTrackInfo.name)
                 bundle.putParcelable("uri", uri)
                 bundle.putLong("musicId", musicId)
-                val pendingIntent =
-                    MediaStore.createWriteRequest(contentResolver, setOf(uri))
-                val intentSenderRequest: IntentSenderRequest =
-                    IntentSenderRequest.Builder(pendingIntent.intentSender)
-                        .setFlags(
-                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION
-                        )
-                        .build()
-                context.modifyMediaLauncher.launch(intentSenderRequest)
+                try {
+                    val pendingIntent =
+                        MediaStore.createWriteRequest(contentResolver, setOf(uri))
+                    val intentSenderRequest: IntentSenderRequest =
+                        IntentSenderRequest.Builder(pendingIntent.intentSender)
+                            .setFlags(
+                                Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            )
+                            .build()
+                    context.modifyMediaLauncher.launch(intentSenderRequest)
+                } catch (e: Exception) {
+                    Log.e("TracksManager", "Failed to create write request for track $musicId", e)
+                    Handler(Looper.getMainLooper()).post {
+                        Toast.makeText(context, R.string.file_not_found_please_rescan, Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         }
         return false
@@ -518,13 +554,14 @@ object TracksManager {
         var cacheFile: File? = null
 
         try {
-            var uri: Uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            uri = ContentUris.withAppendedId(uri, musicId)
+            val uri: Uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, musicId)
 
             // 1. Read the existing file into a temporary cache
             pfd = context.contentResolver.openFileDescriptor(uri, "r")
             if (pfd == null) {
-//                println("Failed to open file descriptor for reading.")
+                Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(context, R.string.file_not_found_please_rescan, Toast.LENGTH_SHORT).show()
+                }
                 return
             }
             inputStream = ParcelFileDescriptor.AutoCloseInputStream(pfd) as FileInputStream
@@ -543,7 +580,6 @@ object TracksManager {
             // 2. Modify the tags using Jaudiotagger
             val f = AudioFileIO.read(cacheFile)
             val tag: Tag = f.tagOrCreateAndSetDefault
-
             bitmap?.let {
                 val byteArrayOutputStream = ByteArrayOutputStream()
                 it.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
@@ -568,7 +604,9 @@ object TracksManager {
             // 3. Write the modified cache file back to the original location
             pfdWt = context.contentResolver.openFileDescriptor(uri, "wt")
             if (pfdWt == null) {
-//                println("Failed to open file descriptor for writing.")
+                Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(context, R.string.file_not_found_please_rescan, Toast.LENGTH_SHORT).show()
+                }
                 return
             }
             cacheOut = FileInputStream(cacheFile)
@@ -584,6 +622,9 @@ object TracksManager {
 
         } catch (e: Exception) {
             e.printStackTrace()
+            Handler(Looper.getMainLooper()).post {
+                Toast.makeText(context, R.string.file_not_found_please_rescan, Toast.LENGTH_SHORT).show()
+            }
         } finally {
             // Close all streams and file descriptors in a finally block to ensure they are released
             try {

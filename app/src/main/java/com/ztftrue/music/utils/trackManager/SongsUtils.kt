@@ -4,9 +4,12 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
@@ -15,6 +18,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
+import com.ztftrue.music.R
 import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.model.MusicPlayList
@@ -84,6 +88,9 @@ object SongsUtils {
             context.modifyMediaLauncher.launch(intentSenderRequest)
         } catch (e: Exception) {
             e.printStackTrace()
+            Handler(Looper.getMainLooper()).post {
+                Toast.makeText(context, R.string.file_not_found_please_rescan, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
