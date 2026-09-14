@@ -70,6 +70,36 @@ class EqualizerAudioProcessor : AudioProcessor {
         visArray: FloatArray?
     ): Int
     private external fun setEqualizerTypeNative(handle: Long, type: Int)
+    private external fun setVirtualizerNative(handle: Long, enabled: Boolean, strength: Float)
+    private external fun setReverbNative(
+        handle: Long,
+        enabled: Boolean,
+        roomSize: Float,
+        damping: Float,
+        mix: Float
+    )
+    private external fun setChorusNative(
+        handle: Long,
+        enabled: Boolean,
+        rate: Float,
+        depth: Float,
+        mix: Float
+    )
+    private external fun setFlangerNative(
+        handle: Long,
+        enabled: Boolean,
+        rate: Float,
+        depth: Float,
+        feedback: Float,
+        mix: Float
+    )
+    private external fun setPolyphonyNative(
+        handle: Long,
+        enabled: Boolean,
+        semitones: Int,
+        detuneCents: Float,
+        mix: Float
+    )
 
     // Native FFT JNI
     private var nativeFftHandle: Long = 0L
@@ -86,6 +116,31 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var equalizerActive = false
     private var echoActive = false
     private var visualizationAudioActive = false
+
+    // Effect states
+    private var virtualizerActive = false
+    private var virtualizerStrength = 0.0f
+
+    private var reverbActive = false
+    private var reverbRoomSize = 0.5f
+    private var reverbDamping = 0.5f
+    private var reverbMix = 0.3f
+
+    private var chorusActive = false
+    private var chorusRate = 1.5f
+    private var chorusDepth = 0.5f
+    private var chorusMix = 0.5f
+
+    private var flangerActive = false
+    private var flangerRate = 0.5f
+    private var flangerDepth = 0.7f
+    private var flangerFeedback = 0.5f
+    private var flangerMix = 0.5f
+
+    private var polyphonyActive = false
+    private var polyphonySemitones = 0
+    private var polyphonyDetune = 0.0f
+    private var polyphonyMix = 0.5f
 
     private var inputAudioFormat: AudioProcessor.AudioFormat = AudioProcessor.AudioFormat.NOT_SET
     private var outputAudioFormat: AudioProcessor.AudioFormat = AudioProcessor.AudioFormat.NOT_SET
@@ -140,6 +195,11 @@ class EqualizerAudioProcessor : AudioProcessor {
             nativeEqualizerHandle = initNativeEqualizer(channelCount, Utils.bandsCenter.count(), sampleRate)
             setEqualizerTypeNative(nativeEqualizerHandle, equalizerType)
             setEchoParamsNative(nativeEqualizerHandle, echoDelay, echoDecay, isWithFeedBack, sampleRate)
+            setVirtualizerNative(nativeEqualizerHandle, virtualizerActive, virtualizerStrength)
+            setReverbNative(nativeEqualizerHandle, reverbActive, reverbRoomSize, reverbDamping, reverbMix)
+            setChorusNative(nativeEqualizerHandle, chorusActive, chorusRate, chorusDepth, chorusMix)
+            setFlangerNative(nativeEqualizerHandle, flangerActive, flangerRate, flangerDepth, flangerFeedback, flangerMix)
+            setPolyphonyNative(nativeEqualizerHandle, polyphonyActive, polyphonySemitones, polyphonyDetune, polyphonyMix)
 
             if (nativeFftHandle != 0L) {
                 freeNativeFft(nativeFftHandle)
@@ -170,7 +230,8 @@ class EqualizerAudioProcessor : AudioProcessor {
     }
 
     private fun processChunk(data: ByteBuffer, length: Int) {
-        val needsProcessing = equalizerActive || echoActive || visualizationAudioActive
+        val needsProcessing = equalizerActive || echoActive || visualizationAudioActive ||
+                virtualizerActive || reverbActive || chorusActive || flangerActive || polyphonyActive
 
         val resultBuffer = replaceOutputBuffer(length)
 
@@ -443,6 +504,80 @@ class EqualizerAudioProcessor : AudioProcessor {
                     value.toFloat()
                 )
             }
+        }
+    }
+
+    fun setVirtualizer(enabled: Boolean, strength: Float) {
+        lock.lock()
+        try {
+            virtualizerActive = enabled
+            virtualizerStrength = strength
+            if (nativeEqualizerHandle != 0L) {
+                setVirtualizerNative(nativeEqualizerHandle, enabled, strength)
+            }
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    fun setReverb(enabled: Boolean, roomSize: Float, damping: Float, mix: Float) {
+        lock.lock()
+        try {
+            reverbActive = enabled
+            reverbRoomSize = roomSize
+            reverbDamping = damping
+            reverbMix = mix
+            if (nativeEqualizerHandle != 0L) {
+                setReverbNative(nativeEqualizerHandle, enabled, roomSize, damping, mix)
+            }
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    fun setChorus(enabled: Boolean, rate: Float, depth: Float, mix: Float) {
+        lock.lock()
+        try {
+            chorusActive = enabled
+            chorusRate = rate
+            chorusDepth = depth
+            chorusMix = mix
+            if (nativeEqualizerHandle != 0L) {
+                setChorusNative(nativeEqualizerHandle, enabled, rate, depth, mix)
+            }
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    fun setFlanger(enabled: Boolean, rate: Float, depth: Float, feedback: Float, mix: Float) {
+        lock.lock()
+        try {
+            flangerActive = enabled
+            flangerRate = rate
+            flangerDepth = depth
+            flangerFeedback = feedback
+            flangerMix = mix
+            if (nativeEqualizerHandle != 0L) {
+                setFlangerNative(nativeEqualizerHandle, enabled, rate, depth, feedback, mix)
+            }
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    fun setPolyphony(enabled: Boolean, semitones: Int, detuneCents: Float, mix: Float) {
+        lock.lock()
+        try {
+            polyphonyActive = enabled
+            polyphonySemitones = semitones
+            polyphonyDetune = detuneCents
+            polyphonyMix = mix
+            if (nativeEqualizerHandle != 0L) {
+                setPolyphonyNative(nativeEqualizerHandle, enabled, semitones, detuneCents, mix)
+            }
+        } finally {
+            lock.unlock()
         }
     }
 }

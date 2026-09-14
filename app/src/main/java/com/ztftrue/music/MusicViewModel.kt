@@ -151,6 +151,31 @@ class MusicViewModel : ViewModel() {
     var virtualStrength = mutableIntStateOf(0)
     var enableVirtual = mutableStateOf(false)
 
+    // Reverb
+    var enableReverb = mutableStateOf(false)
+    var reverbRoomSize = mutableFloatStateOf(0.5f)
+    var reverbDamping = mutableFloatStateOf(0.5f)
+    var reverbMix = mutableFloatStateOf(0.3f)
+
+    // Chorus
+    var enableChorus = mutableStateOf(false)
+    var chorusRate = mutableFloatStateOf(1.5f)
+    var chorusDepth = mutableFloatStateOf(0.5f)
+    var chorusMix = mutableFloatStateOf(0.5f)
+
+    // Flanger
+    var enableFlanger = mutableStateOf(false)
+    var flangerRate = mutableFloatStateOf(0.5f)
+    var flangerDepth = mutableFloatStateOf(0.7f)
+    var flangerFeedback = mutableFloatStateOf(0.5f)
+    var flangerMix = mutableFloatStateOf(0.5f)
+
+    // Polyphony
+    var enablePolyphony = mutableStateOf(false)
+    var polyphonySemitones = mutableIntStateOf(0)
+    var polyphonyDetune = mutableFloatStateOf(0.0f)
+    var polyphonyMix = mutableFloatStateOf(0.5f)
+
     var mainTabList = mutableStateListOf<MainTab>()
 
     var sliderPosition = mutableFloatStateOf(0F)

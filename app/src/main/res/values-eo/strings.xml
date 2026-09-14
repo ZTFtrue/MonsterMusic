@@ -230,4 +230,17 @@
     <string name="equalizer_type">Egaligilo-tipo</string>
     <string name="equalizer_iir">IIR</string>
     <string name="equalizer_fft">FFT</string>
+    <string name="all">Ĉiuj</string>
+    <string name="reverb">Eĥo</string>
+    <string name="room_size">Ĉambrogrando</string>
+    <string name="damping">Malsekiĝo</string>
+    <string name="wet_dry_mix">Miksaĵo</string>
+    <string name="chorus">Ĥoro</string>
+    <string name="chorus_rate">Rapideco</string>
+    <string name="chorus_depth">Profundo</string>
+    <string name="flanger">Flanĝo</string>
+    <string name="flanger_feedback">Retrokuplo</string>
+    <string name="polyphony">Polifonio</string>
+    <string name="pitch_shift_semitones">Duontonoj</string>
+    <string name="detune">Maldagordo (cendoj)</string>
 </resources>

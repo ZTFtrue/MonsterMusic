@@ -38,13 +38,9 @@ class SpatialAudioProcessor : BaseAudioProcessor() {
     }
 
     override fun onConfigure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
-        // 仅支持 16-bit PCM 立体声
-        // 如果是单声道 (Mono)，M/S 算法无法工作（因为 L=R，Side=0），直接透传
-        if (inputAudioFormat.encoding != C.ENCODING_PCM_16BIT) {
+        if (inputAudioFormat.encoding != C.ENCODING_PCM_16BIT && inputAudioFormat.encoding != C.ENCODING_PCM_FLOAT) {
             return AudioProcessor.AudioFormat.NOT_SET
         }
-        // 如果是单声道，ExoPlayer 会继续使用 outputAudioFormat，
-        // 但我们在 queueInput 里会做判断不做处理
         return inputAudioFormat
     }
 

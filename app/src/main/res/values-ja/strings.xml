@@ -230,4 +230,17 @@
     <string name="equalizer_type">イコライザータイプ</string>
     <string name="equalizer_iir">IIR</string>
     <string name="equalizer_fft">FFT</string>
+    <string name="all">すべて</string>
+    <string name="reverb">リバーブ</string>
+    <string name="room_size">ルームサイズ</string>
+    <string name="damping">ダンピング</string>
+    <string name="wet_dry_mix">ミックス</string>
+    <string name="chorus">コーラス</string>
+    <string name="chorus_rate">レート</string>
+    <string name="chorus_depth">デプス</string>
+    <string name="flanger">フランジャー</string>
+    <string name="flanger_feedback">フィードバック</string>
+    <string name="polyphony">ポリフォニー</string>
+    <string name="pitch_shift_semitones">半音</string>
+    <string name="detune">デチューン (セント)</string>
 </resources>

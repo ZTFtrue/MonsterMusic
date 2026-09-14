@@ -303,11 +303,38 @@ BiquadEqualizer* biquad_equalizer_create(int channel_count, int band_count, floa
         eq->fft_out_fifo_count[ch] = eq->hop_size;
     }
 
+    // Advanced Audio Effects
+    eq->virtualizer = virtualizer_create(eq->sample_rate);
+    eq->reverb = reverb_create(eq->sample_rate);
+    eq->chorus = chorus_create(eq->sample_rate);
+    eq->flanger = flanger_create(eq->sample_rate);
+    eq->polyphony = polyphony_create(eq->sample_rate);
+
     return eq;
 }
 
 void biquad_equalizer_destroy(BiquadEqualizer* eq) {
     if (!eq) return;
+    if (eq->virtualizer) {
+        virtualizer_destroy(eq->virtualizer);
+        eq->virtualizer = NULL;
+    }
+    if (eq->reverb) {
+        reverb_destroy(eq->reverb);
+        eq->reverb = NULL;
+    }
+    if (eq->chorus) {
+        chorus_destroy(eq->chorus);
+        eq->chorus = NULL;
+    }
+    if (eq->flanger) {
+        flanger_destroy(eq->flanger);
+        eq->flanger = NULL;
+    }
+    if (eq->polyphony) {
+        polyphony_destroy(eq->polyphony);
+        eq->polyphony = NULL;
+    }
     if (eq->filters) {
         free(eq->filters);
         eq->filters = NULL;
@@ -373,6 +400,11 @@ void biquad_equalizer_reset(BiquadEqualizer* eq) {
         eq->fft_out_fifo_count[ch] = eq->hop_size;
         memset(eq->fft_out_fifo[ch], 0, eq->fft_out_fifo_capacity * sizeof(float));
     }
+    if (eq->virtualizer) virtualizer_reset(eq->virtualizer);
+    if (eq->reverb) reverb_reset(eq->reverb);
+    if (eq->chorus) chorus_reset(eq->chorus);
+    if (eq->flanger) flanger_reset(eq->flanger);
+    if (eq->polyphony) polyphony_reset(eq->polyphony);
 }
 
 void biquad_equalizer_reset_limiter(BiquadEqualizer* eq) {
@@ -405,6 +437,31 @@ void biquad_equalizer_set_echo_params(BiquadEqualizer* eq, float delay_time, flo
 void biquad_equalizer_set_type(BiquadEqualizer* eq, int type) {
     if (!eq) return;
     eq->eq_type = (type == EQ_TYPE_FFT) ? EQ_TYPE_FFT : EQ_TYPE_IIR;
+}
+
+void biquad_equalizer_set_virtualizer_params(BiquadEqualizer* eq, int enabled, float strength) {
+    if (!eq || !eq->virtualizer) return;
+    virtualizer_set_params(eq->virtualizer, enabled, strength, eq->sample_rate);
+}
+
+void biquad_equalizer_set_reverb_params(BiquadEqualizer* eq, int enabled, float room_size, float damping, float mix) {
+    if (!eq || !eq->reverb) return;
+    reverb_set_params(eq->reverb, enabled, room_size, damping, mix, eq->sample_rate);
+}
+
+void biquad_equalizer_set_chorus_params(BiquadEqualizer* eq, int enabled, float rate, float depth, float mix) {
+    if (!eq || !eq->chorus) return;
+    chorus_set_params(eq->chorus, enabled, rate, depth, mix, eq->sample_rate);
+}
+
+void biquad_equalizer_set_flanger_params(BiquadEqualizer* eq, int enabled, float rate, float depth, float feedback, float mix) {
+    if (!eq || !eq->flanger) return;
+    flanger_set_params(eq->flanger, enabled, rate, depth, feedback, mix, eq->sample_rate);
+}
+
+void biquad_equalizer_set_polyphony_params(BiquadEqualizer* eq, int enabled, int semitones, float detune_cents, float mix) {
+    if (!eq || !eq->polyphony) return;
+    polyphony_set_params(eq->polyphony, enabled, semitones, detune_cents, mix, eq->sample_rate);
 }
 
 static void ensure_channel_capacity(BiquadEqualizer* eq, int frames_count) {
@@ -551,10 +608,12 @@ void biquad_equalizer_process_pcm(
         }
     }
 
-    // 2. Apply Echo Delay (if active)
-    if (echo_active) {
-        for (int ch = 0; ch < active_channels; ch++) {
-            echo_delay_process(&eq->channel_delays[ch], eq->channel_buffers[ch], frames_count);
+    // 2. Apply Polyphony (Pitch Shifter / Harmonizer)
+    if (eq->polyphony && eq->polyphony->enabled) {
+        if (active_channels >= 2) {
+            polyphony_process(eq->polyphony, eq->channel_buffers[0], eq->channel_buffers[1], frames_count);
+        } else {
+            polyphony_process(eq->polyphony, eq->channel_buffers[0], eq->channel_buffers[0], frames_count);
         }
     }
 
@@ -586,8 +645,54 @@ void biquad_equalizer_process_pcm(
         }
     }
 
-    // 4. Limiter Logic (if EQ or Echo active)
-    if (eq_active || echo_active) {
+    // 4. Apply Chorus
+    if (eq->chorus && eq->chorus->enabled) {
+        if (active_channels >= 2) {
+            chorus_process(eq->chorus, eq->channel_buffers[0], eq->channel_buffers[1], frames_count);
+        } else {
+            chorus_process(eq->chorus, eq->channel_buffers[0], eq->channel_buffers[0], frames_count);
+        }
+    }
+
+    // 5. Apply Flanger
+    if (eq->flanger && eq->flanger->enabled) {
+        if (active_channels >= 2) {
+            flanger_process(eq->flanger, eq->channel_buffers[0], eq->channel_buffers[1], frames_count);
+        } else {
+            flanger_process(eq->flanger, eq->channel_buffers[0], eq->channel_buffers[0], frames_count);
+        }
+    }
+
+    // 6. Apply Echo Delay (if active)
+    if (echo_active) {
+        for (int ch = 0; ch < active_channels; ch++) {
+            echo_delay_process(&eq->channel_delays[ch], eq->channel_buffers[ch], frames_count);
+        }
+    }
+
+    // 7. Apply Reverb
+    if (eq->reverb && eq->reverb->enabled) {
+        if (active_channels >= 2) {
+            reverb_process(eq->reverb, eq->channel_buffers[0], eq->channel_buffers[1], frames_count);
+        } else {
+            reverb_process(eq->reverb, eq->channel_buffers[0], eq->channel_buffers[0], frames_count);
+        }
+    }
+
+    // 8. Apply 3D Virtual Surround (Spatializer)
+    if (eq->virtualizer && eq->virtualizer->enabled && active_channels >= 2) {
+        virtualizer_process(eq->virtualizer, eq->channel_buffers[0], eq->channel_buffers[1], frames_count);
+    }
+
+    // 9. Limiter Logic (if any effect or EQ active)
+    int any_effect_active = eq_active || echo_active ||
+        (eq->polyphony && eq->polyphony->enabled) ||
+        (eq->chorus && eq->chorus->enabled) ||
+        (eq->flanger && eq->flanger->enabled) ||
+        (eq->reverb && eq->reverb->enabled) ||
+        (eq->virtualizer && eq->virtualizer->enabled);
+
+    if (any_effect_active) {
         for (int ch = 0; ch < active_channels; ch++) {
             float* samples = eq->channel_buffers[ch];
             float max_val = 0.0f;

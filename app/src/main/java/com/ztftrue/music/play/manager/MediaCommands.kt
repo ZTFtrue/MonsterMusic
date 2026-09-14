@@ -22,6 +22,22 @@ object MediaCommands {
     val COMMAND_ECHO_SET_DECAY = SessionCommand("echo.SET_DECAY", Bundle.EMPTY)
     val COMMAND_ECHO_SET_FEEDBACK = SessionCommand("echo.SET_FEEDBACK", Bundle.EMPTY)
 
+    // Reverb
+    val COMMAND_REVERB_ENABLE = SessionCommand("reverb.ENABLE", Bundle.EMPTY)
+    val COMMAND_REVERB_SET_PARAMS = SessionCommand("reverb.SET_PARAMS", Bundle.EMPTY)
+
+    // Chorus
+    val COMMAND_CHORUS_ENABLE = SessionCommand("chorus.ENABLE", Bundle.EMPTY)
+    val COMMAND_CHORUS_SET_PARAMS = SessionCommand("chorus.SET_PARAMS", Bundle.EMPTY)
+
+    // Flanger
+    val COMMAND_FLANGER_ENABLE = SessionCommand("flanger.ENABLE", Bundle.EMPTY)
+    val COMMAND_FLANGER_SET_PARAMS = SessionCommand("flanger.SET_PARAMS", Bundle.EMPTY)
+
+    // Polyphony
+    val COMMAND_POLYPHONY_ENABLE = SessionCommand("polyphony.ENABLE", Bundle.EMPTY)
+    val COMMAND_POLYPHONY_SET_PARAMS = SessionCommand("polyphony.SET_PARAMS", Bundle.EMPTY)
+
     val COMMAND_SEARCH = SessionCommand("app.SEARCH", Bundle.EMPTY)
 
     val COMMAND_SET_AUTO_HANDLE_AUDIO_FOCUS =
@@ -73,6 +89,14 @@ object MediaCommands {
     const val KEY_SEARCH_QUERY = "search_query"
     const val KEY_USE_NATIVE_FFT = "use_native_fft"
     const val KEY_EQUALIZER_TYPE = "equalizer_type"
+    const val KEY_ROOM_SIZE = "room_size"
+    const val KEY_DAMPING = "damping"
+    const val KEY_MIX = "mix"
+    const val KEY_RATE = "rate"
+    const val KEY_DEPTH = "depth"
+    const val KEY_FEEDBACK = "feedback"
+    const val KEY_SEMITONES = "semitones"
+    const val KEY_DETUNE = "detune"
 
     val COMMAND_CLEAR_QUEUE = SessionCommand("queue.CLEAR", Bundle.EMPTY)
 

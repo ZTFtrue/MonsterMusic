@@ -992,6 +992,27 @@ class MainActivity : ComponentActivity() {
         musicViewModel.virtualStrength.intValue = resultData.getInt("virtualStrength")
         musicViewModel.enableVirtual.value = resultData.getBoolean("enableVirtual")
         musicViewModel.echoFeedBack.value = resultData.getBoolean("echoFeedBack")
+
+        musicViewModel.enableReverb.value = resultData.getBoolean("enableReverb", false)
+        musicViewModel.reverbRoomSize.floatValue = resultData.getFloat("reverbRoomSize", 0.5f)
+        musicViewModel.reverbDamping.floatValue = resultData.getFloat("reverbDamping", 0.5f)
+        musicViewModel.reverbMix.floatValue = resultData.getFloat("reverbMix", 0.3f)
+
+        musicViewModel.enableChorus.value = resultData.getBoolean("enableChorus", false)
+        musicViewModel.chorusRate.floatValue = resultData.getFloat("chorusRate", 1.5f)
+        musicViewModel.chorusDepth.floatValue = resultData.getFloat("chorusDepth", 0.5f)
+        musicViewModel.chorusMix.floatValue = resultData.getFloat("chorusMix", 0.5f)
+
+        musicViewModel.enableFlanger.value = resultData.getBoolean("enableFlanger", false)
+        musicViewModel.flangerRate.floatValue = resultData.getFloat("flangerRate", 0.5f)
+        musicViewModel.flangerDepth.floatValue = resultData.getFloat("flangerDepth", 0.7f)
+        musicViewModel.flangerFeedback.floatValue = resultData.getFloat("flangerFeedback", 0.5f)
+        musicViewModel.flangerMix.floatValue = resultData.getFloat("flangerMix", 0.5f)
+
+        musicViewModel.enablePolyphony.value = resultData.getBoolean("enablePolyphony", false)
+        musicViewModel.polyphonySemitones.intValue = resultData.getInt("polyphonySemitones", 0)
+        musicViewModel.polyphonyDetune.floatValue = resultData.getFloat("polyphonyDetune", 0.0f)
+        musicViewModel.polyphonyMix.floatValue = resultData.getFloat("polyphonyMix", 0.5f)
         musicViewModel.repeatModel.intValue = resultData.getInt("repeat", Player.REPEAT_MODE_ALL)
         musicViewModel.playCompleted.value =
             resultData.getBoolean("play_completed")

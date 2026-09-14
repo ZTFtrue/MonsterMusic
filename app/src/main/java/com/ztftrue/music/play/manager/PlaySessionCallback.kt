@@ -69,6 +69,14 @@ class PlaySessionCallback(
                 .add(MediaCommands.COMMAND_SLEEP_STATE_UPDATE)
                 .add(MediaCommands.COMMAND_VIRTUALIZER_ENABLE)
                 .add(MediaCommands.COMMAND_VIRTUALIZER_STRENGTH)
+                .add(MediaCommands.COMMAND_REVERB_ENABLE)
+                .add(MediaCommands.COMMAND_REVERB_SET_PARAMS)
+                .add(MediaCommands.COMMAND_CHORUS_ENABLE)
+                .add(MediaCommands.COMMAND_CHORUS_SET_PARAMS)
+                .add(MediaCommands.COMMAND_FLANGER_ENABLE)
+                .add(MediaCommands.COMMAND_FLANGER_SET_PARAMS)
+                .add(MediaCommands.COMMAND_POLYPHONY_ENABLE)
+                .add(MediaCommands.COMMAND_POLYPHONY_SET_PARAMS)
                 .build()
 
         return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
@@ -157,6 +165,67 @@ class PlaySessionCallback(
 
             MediaCommands.COMMAND_ECHO_SET_FEEDBACK.customAction -> {
                 effectManager.setEchoFeedback(args.getBoolean(MediaCommands.KEY_ENABLE))
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            // --- Reverb ---
+            MediaCommands.COMMAND_REVERB_ENABLE.customAction -> {
+                effectManager.setReverbEnabled(args.getBoolean(MediaCommands.KEY_ENABLE))
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            MediaCommands.COMMAND_REVERB_SET_PARAMS.customAction -> {
+                effectManager.setReverbParams(
+                    args.getFloat(MediaCommands.KEY_ROOM_SIZE, 0.5f),
+                    args.getFloat(MediaCommands.KEY_DAMPING, 0.5f),
+                    args.getFloat(MediaCommands.KEY_MIX, 0.3f)
+                )
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            // --- Chorus ---
+            MediaCommands.COMMAND_CHORUS_ENABLE.customAction -> {
+                effectManager.setChorusEnabled(args.getBoolean(MediaCommands.KEY_ENABLE))
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            MediaCommands.COMMAND_CHORUS_SET_PARAMS.customAction -> {
+                effectManager.setChorusParams(
+                    args.getFloat(MediaCommands.KEY_RATE, 1.5f),
+                    args.getFloat(MediaCommands.KEY_DEPTH, 0.5f),
+                    args.getFloat(MediaCommands.KEY_MIX, 0.5f)
+                )
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            // --- Flanger ---
+            MediaCommands.COMMAND_FLANGER_ENABLE.customAction -> {
+                effectManager.setFlangerEnabled(args.getBoolean(MediaCommands.KEY_ENABLE))
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            MediaCommands.COMMAND_FLANGER_SET_PARAMS.customAction -> {
+                effectManager.setFlangerParams(
+                    args.getFloat(MediaCommands.KEY_RATE, 0.5f),
+                    args.getFloat(MediaCommands.KEY_DEPTH, 0.7f),
+                    args.getFloat(MediaCommands.KEY_FEEDBACK, 0.5f),
+                    args.getFloat(MediaCommands.KEY_MIX, 0.5f)
+                )
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            // --- Polyphony ---
+            MediaCommands.COMMAND_POLYPHONY_ENABLE.customAction -> {
+                effectManager.setPolyphonyEnabled(args.getBoolean(MediaCommands.KEY_ENABLE))
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            MediaCommands.COMMAND_POLYPHONY_SET_PARAMS.customAction -> {
+                effectManager.setPolyphonyParams(
+                    args.getInt(MediaCommands.KEY_SEMITONES, 0),
+                    args.getFloat(MediaCommands.KEY_DETUNE, 0.0f),
+                    args.getFloat(MediaCommands.KEY_MIX, 0.5f)
+                )
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
             }
 

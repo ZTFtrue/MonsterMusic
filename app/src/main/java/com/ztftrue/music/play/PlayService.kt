@@ -331,6 +331,31 @@ class PlayService : MediaLibraryService() {
         bundle.putInt("virtualStrength", effectManager.auxr.virtualizerStrength)
         bundle.putBoolean("enableVirtual", effectManager.auxr.virtualizerEnabled)
 
+        // Reverb
+        bundle.putBoolean("enableReverb", SharedPreferencesUtils.getReverbEnabled(this))
+        bundle.putFloat("reverbRoomSize", SharedPreferencesUtils.getReverbRoomSize(this))
+        bundle.putFloat("reverbDamping", SharedPreferencesUtils.getReverbDamping(this))
+        bundle.putFloat("reverbMix", SharedPreferencesUtils.getReverbMix(this))
+
+        // Chorus
+        bundle.putBoolean("enableChorus", SharedPreferencesUtils.getChorusEnabled(this))
+        bundle.putFloat("chorusRate", SharedPreferencesUtils.getChorusRate(this))
+        bundle.putFloat("chorusDepth", SharedPreferencesUtils.getChorusDepth(this))
+        bundle.putFloat("chorusMix", SharedPreferencesUtils.getChorusMix(this))
+
+        // Flanger
+        bundle.putBoolean("enableFlanger", SharedPreferencesUtils.getFlangerEnabled(this))
+        bundle.putFloat("flangerRate", SharedPreferencesUtils.getFlangerRate(this))
+        bundle.putFloat("flangerDepth", SharedPreferencesUtils.getFlangerDepth(this))
+        bundle.putFloat("flangerFeedback", SharedPreferencesUtils.getFlangerFeedback(this))
+        bundle.putFloat("flangerMix", SharedPreferencesUtils.getFlangerMix(this))
+
+        // Polyphony
+        bundle.putBoolean("enablePolyphony", SharedPreferencesUtils.getPolyphonyEnabled(this))
+        bundle.putInt("polyphonySemitones", SharedPreferencesUtils.getPolyphonySemitones(this))
+        bundle.putFloat("polyphonyDetune", SharedPreferencesUtils.getPolyphonyDetune(this))
+        bundle.putFloat("polyphonyMix", SharedPreferencesUtils.getPolyphonyMix(this))
+
         // --- 4. 睡眠定时器 (来自 SleepTimerManager) ---
         bundle.putLong("sleepTime", sleepManager.sleepTime)
         bundle.putLong("remaining", sleepManager.remainingTime)

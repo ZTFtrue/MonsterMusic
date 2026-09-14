@@ -132,6 +132,60 @@ Java_com_ztftrue_music_effects_EqualizerAudioProcessor_setEqualizerTypeNative(
     biquad_equalizer_set_type(eq, type);
 }
 
+JNIEXPORT void JNICALL
+Java_com_ztftrue_music_effects_EqualizerAudioProcessor_setVirtualizerNative(
+        JNIEnv *env, jobject thiz, jlong handle, jboolean enabled, jfloat strength) {
+    (void)env;
+    (void)thiz;
+    if (handle == 0) return;
+    BiquadEqualizer* eq = (BiquadEqualizer*)(intptr_t)handle;
+    biquad_equalizer_set_virtualizer_params(eq, enabled ? 1 : 0, strength);
+}
+
+JNIEXPORT void JNICALL
+Java_com_ztftrue_music_effects_EqualizerAudioProcessor_setReverbNative(
+        JNIEnv *env, jobject thiz, jlong handle, jboolean enabled,
+        jfloat room_size, jfloat damping, jfloat mix) {
+    (void)env;
+    (void)thiz;
+    if (handle == 0) return;
+    BiquadEqualizer* eq = (BiquadEqualizer*)(intptr_t)handle;
+    biquad_equalizer_set_reverb_params(eq, enabled ? 1 : 0, room_size, damping, mix);
+}
+
+JNIEXPORT void JNICALL
+Java_com_ztftrue_music_effects_EqualizerAudioProcessor_setChorusNative(
+        JNIEnv *env, jobject thiz, jlong handle, jboolean enabled,
+        jfloat rate, jfloat depth, jfloat mix) {
+    (void)env;
+    (void)thiz;
+    if (handle == 0) return;
+    BiquadEqualizer* eq = (BiquadEqualizer*)(intptr_t)handle;
+    biquad_equalizer_set_chorus_params(eq, enabled ? 1 : 0, rate, depth, mix);
+}
+
+JNIEXPORT void JNICALL
+Java_com_ztftrue_music_effects_EqualizerAudioProcessor_setFlangerNative(
+        JNIEnv *env, jobject thiz, jlong handle, jboolean enabled,
+        jfloat rate, jfloat depth, jfloat feedback, jfloat mix) {
+    (void)env;
+    (void)thiz;
+    if (handle == 0) return;
+    BiquadEqualizer* eq = (BiquadEqualizer*)(intptr_t)handle;
+    biquad_equalizer_set_flanger_params(eq, enabled ? 1 : 0, rate, depth, feedback, mix);
+}
+
+JNIEXPORT void JNICALL
+Java_com_ztftrue_music_effects_EqualizerAudioProcessor_setPolyphonyNative(
+        JNIEnv *env, jobject thiz, jlong handle, jboolean enabled,
+        jint semitones, jfloat detune_cents, jfloat mix) {
+    (void)env;
+    (void)thiz;
+    if (handle == 0) return;
+    BiquadEqualizer* eq = (BiquadEqualizer*)(intptr_t)handle;
+    biquad_equalizer_set_polyphony_params(eq, enabled ? 1 : 0, semitones, detune_cents, mix);
+}
+
 // =========================================================================
 // Native FFT JNI Methods
 // =========================================================================

@@ -230,4 +230,17 @@
     <string name="equalizer_type">نوع المعادل</string>
     <string name="equalizer_iir">IIR</string>
     <string name="equalizer_fft">FFT</string>
+    <string name="all">الكل</string>
+    <string name="reverb">تردد الصوت</string>
+    <string name="room_size">حجم الغرفة</string>
+    <string name="damping">تخميد</string>
+    <string name="wet_dry_mix">المزيج</string>
+    <string name="chorus">كورس</string>
+    <string name="chorus_rate">المعدل</string>
+    <string name="chorus_depth">العمق</string>
+    <string name="flanger">فلانجر</string>
+    <string name="flanger_feedback">التغذية الراجعة</string>
+    <string name="polyphony">تعدد النغمات</string>
+    <string name="pitch_shift_semitones">أنصاف النغمات</string>
+    <string name="detune">ضبط دقيق (سنت)</string>
 </resources>

@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "fft.h"
+#include "effects_dsp.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -67,6 +68,13 @@ typedef struct {
     int* fft_out_fifo_head;
     int* fft_out_fifo_count;
     int fft_out_fifo_capacity;
+
+    // Advanced Audio Effects
+    Virtualizer3D* virtualizer;
+    ReverbEffect* reverb;
+    ChorusEffect* chorus;
+    FlangerEffect* flanger;
+    PolyphonyEffect* polyphony;
 } BiquadEqualizer;
 
 void biquad_reset(BiquadFilter* filter);
@@ -80,6 +88,12 @@ void biquad_equalizer_reset_limiter(BiquadEqualizer* eq);
 void biquad_equalizer_configure_band(BiquadEqualizer* eq, int channel, int band, int type, float center_freq, float sample_rate, float Q, float gainDB);
 void biquad_equalizer_set_echo_params(BiquadEqualizer* eq, float delay_time, float decay, int feedback, float sample_rate);
 void biquad_equalizer_set_type(BiquadEqualizer* eq, int type);
+
+void biquad_equalizer_set_virtualizer_params(BiquadEqualizer* eq, int enabled, float strength);
+void biquad_equalizer_set_reverb_params(BiquadEqualizer* eq, int enabled, float room_size, float damping, float mix);
+void biquad_equalizer_set_chorus_params(BiquadEqualizer* eq, int enabled, float rate, float depth, float mix);
+void biquad_equalizer_set_flanger_params(BiquadEqualizer* eq, int enabled, float rate, float depth, float feedback, float mix);
+void biquad_equalizer_set_polyphony_params(BiquadEqualizer* eq, int enabled, int semitones, float detune_cents, float mix);
 
 // Processes interleaved PCM directly:
 // input: input PCM byte buffer

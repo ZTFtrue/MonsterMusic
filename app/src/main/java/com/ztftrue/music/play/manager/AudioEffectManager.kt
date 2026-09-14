@@ -55,19 +55,50 @@ class AudioEffectManager(private val context: Context) {
         equalizerAudioProcessor.setDecay(auxr.echoDecay)
         equalizerAudioProcessor.setFeedBack(auxr.echoRevert)
         equalizerAudioProcessor.setEchoActive(auxr.echo)
-        // 初始化环绕设置
-        spatialAudioProcessor.setActive(auxr.virtualizerEnabled)
-        spatialAudioProcessor.setStrength(auxr.virtualizerStrength)
+        // 初始化环绕设置 (通过 Native C 优化版 DSP 实现)
+        equalizerAudioProcessor.setVirtualizer(auxr.virtualizerEnabled, auxr.virtualizerStrength / 1000f)
+        spatialAudioProcessor.setActive(false)
 
-        // 3. 应用 Equalizer 设置
+        // 3. 应用 Reverb, Chorus, Flanger, Polyphony 设置
+        loadAdvancedEffectsSettings()
+
+        // 4. 应用 Equalizer 设置
         equalizerAudioProcessor.setEqualizerActive(auxr.equalizer)
         equalizerAudioProcessor.setQ(auxr.equalizerQ, false)
 
-        // 4. 加载 EQ 预设 (Preset)
+        // 5. 加载 EQ 预设 (Preset)
         loadEqPresets()
 
-        // 5. 加载可视化设置
+        // 6. 加载可视化设置
         loadVisualizationSettings()
+    }
+
+    private fun loadAdvancedEffectsSettings() {
+        equalizerAudioProcessor.setReverb(
+            SharedPreferencesUtils.getReverbEnabled(context),
+            SharedPreferencesUtils.getReverbRoomSize(context),
+            SharedPreferencesUtils.getReverbDamping(context),
+            SharedPreferencesUtils.getReverbMix(context)
+        )
+        equalizerAudioProcessor.setChorus(
+            SharedPreferencesUtils.getChorusEnabled(context),
+            SharedPreferencesUtils.getChorusRate(context),
+            SharedPreferencesUtils.getChorusDepth(context),
+            SharedPreferencesUtils.getChorusMix(context)
+        )
+        equalizerAudioProcessor.setFlanger(
+            SharedPreferencesUtils.getFlangerEnabled(context),
+            SharedPreferencesUtils.getFlangerRate(context),
+            SharedPreferencesUtils.getFlangerDepth(context),
+            SharedPreferencesUtils.getFlangerFeedback(context),
+            SharedPreferencesUtils.getFlangerMix(context)
+        )
+        equalizerAudioProcessor.setPolyphony(
+            SharedPreferencesUtils.getPolyphonyEnabled(context),
+            SharedPreferencesUtils.getPolyphonySemitones(context),
+            SharedPreferencesUtils.getPolyphonyDetune(context),
+            SharedPreferencesUtils.getPolyphonyMix(context)
+        )
     }
 
     private fun loadEqPresets() {
@@ -98,14 +129,14 @@ class AudioEffectManager(private val context: Context) {
     }
 
     fun setSpatialEnabled(enable: Boolean) {
-        spatialAudioProcessor.setActive(enable)
         auxr.virtualizerEnabled = enable
+        equalizerAudioProcessor.setVirtualizer(enable, auxr.virtualizerStrength / 1000f)
         updateDb()
     }
 
     fun setSpatialStrength(strength: Int) {
-        spatialAudioProcessor.setStrength(strength)
         auxr.virtualizerStrength = strength
+        equalizerAudioProcessor.setVirtualizer(auxr.virtualizerEnabled, strength / 1000f)
         updateDb()
     }
     // ==========================================
@@ -238,6 +269,101 @@ class AudioEffectManager(private val context: Context) {
     fun setEqualizerType(type: Int) {
         equalizerAudioProcessor.setEqualizerType(type)
         SharedPreferencesUtils.saveEqualizerType(context, type)
+    }
+
+    // ==========================================
+    // Advanced Effects (Reverb, Chorus, Flanger, Polyphony)
+    // ==========================================
+
+    fun setReverbEnabled(enable: Boolean) {
+        SharedPreferencesUtils.saveReverbEnabled(context, enable)
+        equalizerAudioProcessor.setReverb(
+            enable,
+            SharedPreferencesUtils.getReverbRoomSize(context),
+            SharedPreferencesUtils.getReverbDamping(context),
+            SharedPreferencesUtils.getReverbMix(context)
+        )
+    }
+
+    fun setReverbParams(roomSize: Float, damping: Float, mix: Float) {
+        SharedPreferencesUtils.saveReverbRoomSize(context, roomSize)
+        SharedPreferencesUtils.saveReverbDamping(context, damping)
+        SharedPreferencesUtils.saveReverbMix(context, mix)
+        equalizerAudioProcessor.setReverb(
+            SharedPreferencesUtils.getReverbEnabled(context),
+            roomSize,
+            damping,
+            mix
+        )
+    }
+
+    fun setChorusEnabled(enable: Boolean) {
+        SharedPreferencesUtils.saveChorusEnabled(context, enable)
+        equalizerAudioProcessor.setChorus(
+            enable,
+            SharedPreferencesUtils.getChorusRate(context),
+            SharedPreferencesUtils.getChorusDepth(context),
+            SharedPreferencesUtils.getChorusMix(context)
+        )
+    }
+
+    fun setChorusParams(rate: Float, depth: Float, mix: Float) {
+        SharedPreferencesUtils.saveChorusRate(context, rate)
+        SharedPreferencesUtils.saveChorusDepth(context, depth)
+        SharedPreferencesUtils.saveChorusMix(context, mix)
+        equalizerAudioProcessor.setChorus(
+            SharedPreferencesUtils.getChorusEnabled(context),
+            rate,
+            depth,
+            mix
+        )
+    }
+
+    fun setFlangerEnabled(enable: Boolean) {
+        SharedPreferencesUtils.saveFlangerEnabled(context, enable)
+        equalizerAudioProcessor.setFlanger(
+            enable,
+            SharedPreferencesUtils.getFlangerRate(context),
+            SharedPreferencesUtils.getFlangerDepth(context),
+            SharedPreferencesUtils.getFlangerFeedback(context),
+            SharedPreferencesUtils.getFlangerMix(context)
+        )
+    }
+
+    fun setFlangerParams(rate: Float, depth: Float, feedback: Float, mix: Float) {
+        SharedPreferencesUtils.saveFlangerRate(context, rate)
+        SharedPreferencesUtils.saveFlangerDepth(context, depth)
+        SharedPreferencesUtils.saveFlangerFeedback(context, feedback)
+        SharedPreferencesUtils.saveFlangerMix(context, mix)
+        equalizerAudioProcessor.setFlanger(
+            SharedPreferencesUtils.getFlangerEnabled(context),
+            rate,
+            depth,
+            feedback,
+            mix
+        )
+    }
+
+    fun setPolyphonyEnabled(enable: Boolean) {
+        SharedPreferencesUtils.savePolyphonyEnabled(context, enable)
+        equalizerAudioProcessor.setPolyphony(
+            enable,
+            SharedPreferencesUtils.getPolyphonySemitones(context),
+            SharedPreferencesUtils.getPolyphonyDetune(context),
+            SharedPreferencesUtils.getPolyphonyMix(context)
+        )
+    }
+
+    fun setPolyphonyParams(semitones: Int, detune: Float, mix: Float) {
+        SharedPreferencesUtils.savePolyphonySemitones(context, semitones)
+        SharedPreferencesUtils.savePolyphonyDetune(context, detune)
+        SharedPreferencesUtils.savePolyphonyMix(context, mix)
+        equalizerAudioProcessor.setPolyphony(
+            SharedPreferencesUtils.getPolyphonyEnabled(context),
+            semitones,
+            detune,
+            mix
+        )
     }
 
     // ==========================================

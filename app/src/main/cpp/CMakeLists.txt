@@ -5,6 +5,7 @@ project("monster_audio" C)
 add_library(monster_audio SHARED
     biquad_filter.c
     fft.c
+    effects_dsp.c
     biquad_jni.c
 )
 

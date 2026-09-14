@@ -230,4 +230,17 @@
     <string name="equalizer_type">Equalizer Type</string>
     <string name="equalizer_iir">IIR</string>
     <string name="equalizer_fft">FFT</string>
+    <string name="all">All</string>
+    <string name="reverb">Reverb</string>
+    <string name="room_size">Room Size</string>
+    <string name="damping">Damping</string>
+    <string name="wet_dry_mix">Mix</string>
+    <string name="chorus">Chorus</string>
+    <string name="chorus_rate">Rate</string>
+    <string name="chorus_depth">Depth</string>
+    <string name="flanger">Flanger</string>
+    <string name="flanger_feedback">Feedback</string>
+    <string name="polyphony">Polyphony</string>
+    <string name="pitch_shift_semitones">Semitones</string>
+    <string name="detune">Detune (cents)</string>
 </resources>

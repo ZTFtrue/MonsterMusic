@@ -230,4 +230,17 @@
     <string name="equalizer_type">等化器類型</string>
     <string name="equalizer_iir">IIR</string>
     <string name="equalizer_fft">FFT</string>
+    <string name="all">全部</string>
+    <string name="reverb">殘響</string>
+    <string name="room_size">空間大小</string>
+    <string name="damping">高頻阻尼</string>
+    <string name="wet_dry_mix">乾濕比</string>
+    <string name="chorus">合唱</string>
+    <string name="chorus_rate">速率</string>
+    <string name="chorus_depth">深度</string>
+    <string name="flanger">鑲邊</string>
+    <string name="flanger_feedback">反饋</string>
+    <string name="polyphony">複音變調</string>
+    <string name="pitch_shift_semitones">半音移調</string>
+    <string name="detune">微調 (音分)</string>
 </resources>

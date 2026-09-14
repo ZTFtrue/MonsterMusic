@@ -230,4 +230,17 @@
     <string name="equalizer_type">Тип эквалайзера</string>
     <string name="equalizer_iir">IIR</string>
     <string name="equalizer_fft">FFT</string>
+    <string name="all">Все</string>
+    <string name="reverb">Реверберация</string>
+    <string name="room_size">Размер комнаты</string>
+    <string name="damping">Демпфирование</string>
+    <string name="wet_dry_mix">Микс</string>
+    <string name="chorus">Хорус</string>
+    <string name="chorus_rate">Скорость</string>
+    <string name="chorus_depth">Глубина</string>
+    <string name="flanger">Фленджер</string>
+    <string name="flanger_feedback">Обратная связь</string>
+    <string name="polyphony">Полифония</string>
+    <string name="pitch_shift_semitones">Полутона</string>
+    <string name="detune">Расстройка (центы)</string>
 </resources>

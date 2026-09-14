@@ -314,4 +314,170 @@ object SharedPreferencesUtils {
         return context.getSharedPreferences("config", Context.MODE_PRIVATE)
             .getBoolean("auto_dismiss_dic_pop", false)
     }
+
+    // ==========================================
+    // Audio Effects Settings
+    // ==========================================
+    private const val PREFS_AUDIO_EFFECTS = "audio_effects_prefs"
+
+    // Reverb
+    fun saveReverbEnabled(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putBoolean("reverb_enabled", enabled)
+        }
+    }
+    fun getReverbEnabled(context: Context): Boolean {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getBoolean("reverb_enabled", false)
+    }
+    fun saveReverbRoomSize(context: Context, value: Float) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putFloat("reverb_room_size", value)
+        }
+    }
+    fun getReverbRoomSize(context: Context): Float {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getFloat("reverb_room_size", 0.5f)
+    }
+    fun saveReverbDamping(context: Context, value: Float) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putFloat("reverb_damping", value)
+        }
+    }
+    fun getReverbDamping(context: Context): Float {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getFloat("reverb_damping", 0.5f)
+    }
+    fun saveReverbMix(context: Context, value: Float) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putFloat("reverb_mix", value)
+        }
+    }
+    fun getReverbMix(context: Context): Float {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getFloat("reverb_mix", 0.3f)
+    }
+
+    // Chorus
+    fun saveChorusEnabled(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putBoolean("chorus_enabled", enabled)
+        }
+    }
+    fun getChorusEnabled(context: Context): Boolean {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getBoolean("chorus_enabled", false)
+    }
+    fun saveChorusRate(context: Context, value: Float) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putFloat("chorus_rate", value)
+        }
+    }
+    fun getChorusRate(context: Context): Float {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getFloat("chorus_rate", 1.5f)
+    }
+    fun saveChorusDepth(context: Context, value: Float) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putFloat("chorus_depth", value)
+        }
+    }
+    fun getChorusDepth(context: Context): Float {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getFloat("chorus_depth", 0.5f)
+    }
+    fun saveChorusMix(context: Context, value: Float) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putFloat("chorus_mix", value)
+        }
+    }
+    fun getChorusMix(context: Context): Float {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getFloat("chorus_mix", 0.5f)
+    }
+
+    // Flanger
+    fun saveFlangerEnabled(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putBoolean("flanger_enabled", enabled)
+        }
+    }
+    fun getFlangerEnabled(context: Context): Boolean {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getBoolean("flanger_enabled", false)
+    }
+    fun saveFlangerRate(context: Context, value: Float) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putFloat("flanger_rate", value)
+        }
+    }
+    fun getFlangerRate(context: Context): Float {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getFloat("flanger_rate", 0.5f)
+    }
+    fun saveFlangerDepth(context: Context, value: Float) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putFloat("flanger_depth", value)
+        }
+    }
+    fun getFlangerDepth(context: Context): Float {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getFloat("flanger_depth", 0.7f)
+    }
+    fun saveFlangerFeedback(context: Context, value: Float) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putFloat("flanger_feedback", value)
+        }
+    }
+    fun getFlangerFeedback(context: Context): Float {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getFloat("flanger_feedback", 0.5f)
+    }
+    fun saveFlangerMix(context: Context, value: Float) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putFloat("flanger_mix", value)
+        }
+    }
+    fun getFlangerMix(context: Context): Float {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getFloat("flanger_mix", 0.5f)
+    }
+
+    // Polyphony
+    fun savePolyphonyEnabled(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putBoolean("polyphony_enabled", enabled)
+        }
+    }
+    fun getPolyphonyEnabled(context: Context): Boolean {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getBoolean("polyphony_enabled", false)
+    }
+    fun savePolyphonySemitones(context: Context, value: Int) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putInt("polyphony_semitones", value)
+        }
+    }
+    fun getPolyphonySemitones(context: Context): Int {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getInt("polyphony_semitones", 0)
+    }
+    fun savePolyphonyDetune(context: Context, value: Float) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putFloat("polyphony_detune", value)
+        }
+    }
+    fun getPolyphonyDetune(context: Context): Float {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getFloat("polyphony_detune", 0.0f)
+    }
+    fun savePolyphonyMix(context: Context, value: Float) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putFloat("polyphony_mix", value)
+        }
+    }
+    fun getPolyphonyMix(context: Context): Float {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getFloat("polyphony_mix", 0.5f)
+    }
 }

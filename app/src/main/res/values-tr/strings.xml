@@ -229,4 +229,17 @@
     <string name="equalizer_type">Ekolayzer Türü</string>
     <string name="equalizer_iir">IIR</string>
     <string name="equalizer_fft">FFT</string>
+    <string name="all">Tümü</string>
+    <string name="reverb">Yankı</string>
+    <string name="room_size">Oda Boyutu</string>
+    <string name="damping">Sönümleme</string>
+    <string name="wet_dry_mix">Karışım</string>
+    <string name="chorus">Koro</string>
+    <string name="chorus_rate">Oran</string>
+    <string name="chorus_depth">Derinlik</string>
+    <string name="flanger">Flanş</string>
+    <string name="flanger_feedback">Geri Bildirim</string>
+    <string name="polyphony">Polifoni</string>
+    <string name="pitch_shift_semitones">Yarım tonlar</string>
+    <string name="detune">İnce Ayar (sent)</string>
 </resources>
