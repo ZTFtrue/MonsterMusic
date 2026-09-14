@@ -98,6 +98,17 @@ object SharedPreferencesUtils {
         }
     }
 
+    fun getEqualizerType(context: Context): Int {
+        return context.getSharedPreferences("Equalizer", Context.MODE_PRIVATE)
+            .getInt("EqualizerType", 0)
+    }
+
+    fun saveEqualizerType(context: Context, type: Int) {
+        context.getSharedPreferences("Equalizer", Context.MODE_PRIVATE).edit {
+            putInt("EqualizerType", type)
+        }
+    }
+
     fun getShowMusicCover(context: Context): Boolean {
         return context.getSharedPreferences("Visualization", Context.MODE_PRIVATE)
             .getBoolean("Cover", true)

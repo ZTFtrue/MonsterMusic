@@ -161,6 +161,7 @@ class MusicViewModel : ViewModel() {
     var dictionaryAppList = mutableStateListOf<DictionaryApp>()
 
     var enableEqualizer = mutableStateOf(false)
+    var equalizerType = mutableIntStateOf(0)
     var enableEcho = mutableStateOf(false)
 
     var playStatus = mutableStateOf(false)

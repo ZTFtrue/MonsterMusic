@@ -30,6 +30,8 @@ object MediaCommands {
 
     // Visualization
     val COMMAND_VISUALIZATION_ENABLE = SessionCommand("vis.ENABLE", Bundle.EMPTY)
+    val COMMAND_SET_FFT_ENGINE = SessionCommand("vis.SET_FFT_ENGINE", Bundle.EMPTY)
+    val COMMAND_SET_EQUALIZER_TYPE = SessionCommand("dsp.SET_EQUALIZER_TYPE", Bundle.EMPTY)
 
     // Sleep Timer
     val COMMAND_SET_SLEEP_TIMER = SessionCommand("timer.SET_SLEEP", Bundle.EMPTY)
@@ -69,6 +71,8 @@ object MediaCommands {
     const val KEY_DELAY = "delay"
     const val KEY_DECAY = "decay"
     const val KEY_SEARCH_QUERY = "search_query"
+    const val KEY_USE_NATIVE_FFT = "use_native_fft"
+    const val KEY_EQUALIZER_TYPE = "equalizer_type"
 
     val COMMAND_CLEAR_QUEUE = SessionCommand("queue.CLEAR", Bundle.EMPTY)
 

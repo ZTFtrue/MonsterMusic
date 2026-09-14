@@ -223,4 +223,11 @@
     <string name="language_taiwanese_mandarin">繁體中文 (台灣)</string>
     <string name="file_not_found_please_rescan">ファイルが見つからないか削除されています。音楽を再スキャンしてください</string>
     <string name="language_turkish">トルコ語</string>
+    <string name="music_visualization">音楽ビジュアライザー</string>
+    <string name="fft_engine">FFTエンジン</string>
+    <string name="fft_native">ネイティブ (C)</string>
+    <string name="fft_kotlin">Kotlin</string>
+    <string name="equalizer_type">イコライザータイプ</string>
+    <string name="equalizer_iir">IIR</string>
+    <string name="equalizer_fft">FFT</string>
 </resources>

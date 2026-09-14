@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +25,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -184,6 +186,88 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp, bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    Text(
+                        text = stringResource(R.string.equalizer_type) + ": ",
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable {
+                            if (musicViewModel.equalizerType.intValue != 0) {
+                                musicViewModel.equalizerType.intValue = 0
+                                val bundle = Bundle().apply {
+                                    putInt(MediaCommands.KEY_EQUALIZER_TYPE, 0)
+                                }
+                                musicViewModel.browser?.sendCustomCommand(
+                                    MediaCommands.COMMAND_SET_EQUALIZER_TYPE,
+                                    bundle
+                                )
+                            }
+                        }
+                    ) {
+                        RadioButton(
+                            selected = musicViewModel.equalizerType.intValue == 0,
+                            onClick = {
+                                musicViewModel.equalizerType.intValue = 0
+                                val bundle = Bundle().apply {
+                                    putInt(MediaCommands.KEY_EQUALIZER_TYPE, 0)
+                                }
+                                musicViewModel.browser?.sendCustomCommand(
+                                    MediaCommands.COMMAND_SET_EQUALIZER_TYPE,
+                                    bundle
+                                )
+                            }
+                        )
+                        Text(
+                            text = stringResource(R.string.equalizer_iir),
+                            modifier = Modifier.padding(start = 2.dp),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable {
+                            if (musicViewModel.equalizerType.intValue != 1) {
+                                musicViewModel.equalizerType.intValue = 1
+                                val bundle = Bundle().apply {
+                                    putInt(MediaCommands.KEY_EQUALIZER_TYPE, 1)
+                                }
+                                musicViewModel.browser?.sendCustomCommand(
+                                    MediaCommands.COMMAND_SET_EQUALIZER_TYPE,
+                                    bundle
+                                )
+                            }
+                        }
+                    ) {
+                        RadioButton(
+                            selected = musicViewModel.equalizerType.intValue == 1,
+                            onClick = {
+                                musicViewModel.equalizerType.intValue = 1
+                                val bundle = Bundle().apply {
+                                    putInt(MediaCommands.KEY_EQUALIZER_TYPE, 1)
+                                }
+                                musicViewModel.browser?.sendCustomCommand(
+                                    MediaCommands.COMMAND_SET_EQUALIZER_TYPE,
+                                    bundle
+                                )
+                            }
+                        )
+                        Text(
+                            text = stringResource(R.string.equalizer_fft),
+                            modifier = Modifier.padding(start = 2.dp),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
 

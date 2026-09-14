@@ -222,4 +222,11 @@
     <string name="language_taiwanese_mandarin">繁體中文 (台灣)</string>
     <string name="file_not_found_please_rescan">Dosya bulunamadı veya silinmiş, lütfen müziği yeniden tarayın</string>
     <string name="language_turkish">Türkçe</string>
+    <string name="music_visualization">Müzik Görselleştirme</string>
+    <string name="fft_engine">FFT Motoru</string>
+    <string name="fft_native">Yerel (C)</string>
+    <string name="fft_kotlin">Kotlin</string>
+    <string name="equalizer_type">Ekolayzer Türü</string>
+    <string name="equalizer_iir">IIR</string>
+    <string name="equalizer_fft">FFT</string>
 </resources>

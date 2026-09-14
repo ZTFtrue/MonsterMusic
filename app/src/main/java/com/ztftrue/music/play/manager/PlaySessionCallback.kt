@@ -48,6 +48,8 @@ class PlaySessionCallback(
                 .add(MediaCommands.COMMAND_ECHO_SET_FEEDBACK)
                 .add(MediaCommands.COMMAND_SEARCH)
                 .add(MediaCommands.COMMAND_VISUALIZATION_ENABLE)
+                .add(MediaCommands.COMMAND_SET_FFT_ENGINE)
+                .add(MediaCommands.COMMAND_SET_EQUALIZER_TYPE)
                 .add(MediaCommands.COMMAND_SET_SLEEP_TIMER)
                 .add(MediaCommands.COMMAND_VISUALIZATION_CONNECTED)
                 .add(MediaCommands.COMMAND_VISUALIZATION_DISCONNECTED)
@@ -171,6 +173,16 @@ class PlaySessionCallback(
 
             MediaCommands.COMMAND_VISUALIZATION_DISCONNECTED.customAction -> {
                 effectManager.onVisualizationDisconnected()
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            MediaCommands.COMMAND_SET_FFT_ENGINE.customAction -> {
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            MediaCommands.COMMAND_SET_EQUALIZER_TYPE.customAction -> {
+                val eqType = args.getInt(MediaCommands.KEY_EQUALIZER_TYPE, 0)
+                effectManager.setEqualizerType(eqType)
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
             }
 

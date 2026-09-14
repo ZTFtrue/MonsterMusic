@@ -223,4 +223,11 @@
     <string name="language_taiwanese_mandarin">繁體中文 (台灣)</string>
     <string name="file_not_found_please_rescan">Dosiero ne trovita aŭ forigita, bonvolu reskani muzikon</string>
     <string name="language_turkish">Turka</string>
+    <string name="music_visualization">Muzika bildigo</string>
+    <string name="fft_engine">FFT-motoro</string>
+    <string name="fft_native">Gepatra (C)</string>
+    <string name="fft_kotlin">Kotlin</string>
+    <string name="equalizer_type">Egaligilo-tipo</string>
+    <string name="equalizer_iir">IIR</string>
+    <string name="equalizer_fft">FFT</string>
 </resources>

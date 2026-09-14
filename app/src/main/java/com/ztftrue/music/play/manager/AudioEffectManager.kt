@@ -93,6 +93,8 @@ class AudioEffectManager(private val context: Context) {
     private fun loadVisualizationSettings() {
         musicVisualizationEnable = SharedPreferencesUtils.getEnableMusicVisualization(context)
         equalizerAudioProcessor.setVisualizationAudioActive(musicVisualizationEnable)
+        val eqType = SharedPreferencesUtils.getEqualizerType(context)
+        equalizerAudioProcessor.setEqualizerType(eqType)
     }
 
     fun setSpatialEnabled(enable: Boolean) {
@@ -231,6 +233,11 @@ class AudioEffectManager(private val context: Context) {
 
     fun onVisualizationDisconnected() {
         equalizerAudioProcessor.setVisualizationAudioActive(false)
+    }
+
+    fun setEqualizerType(type: Int) {
+        equalizerAudioProcessor.setEqualizerType(type)
+        SharedPreferencesUtils.saveEqualizerType(context, type)
     }
 
     // ==========================================

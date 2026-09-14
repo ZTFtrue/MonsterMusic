@@ -185,6 +185,7 @@ object Utils {
         musicViewModel.viewModelScope.launch(Dispatchers.IO) {
             val showSlideIndicators = SharedPreferencesUtils.getShowSlideIndicators(context)
             val musicVisualizationEnable = SharedPreferencesUtils.getEnableMusicVisualization(context)
+            val equalizerType = SharedPreferencesUtils.getEqualizerType(context)
             val showMusicCover = SharedPreferencesUtils.getShowMusicCover(context)
             val themeSelected = context.getSharedPreferences(
                 "SelectedTheme",
@@ -217,6 +218,7 @@ object Utils {
             withContext(Dispatchers.Main) {
                 musicViewModel.showSlideIndicators.value = showSlideIndicators
                 musicViewModel.musicVisualizationEnable.value = musicVisualizationEnable
+                musicViewModel.equalizerType.intValue = equalizerType
                 musicViewModel.showMusicCover.value = showMusicCover
                 musicViewModel.themeSelected.intValue = themeSelected
                 musicViewModel.textAlign.value = textAlign

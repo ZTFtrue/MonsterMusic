@@ -223,4 +223,11 @@
     <string name="language_taiwanese_mandarin">繁體中文 (台灣)</string>
     <string name="file_not_found_please_rescan">Fichier introuvable ou supprimé, veuillez réanalyser la musique</string>
     <string name="language_turkish">Turc</string>
+    <string name="music_visualization">Visualisation musicale</string>
+    <string name="fft_engine">Moteur FFT</string>
+    <string name="fft_native">Natif (C)</string>
+    <string name="fft_kotlin">Kotlin</string>
+    <string name="equalizer_type">Type d\'égaliseur</string>
+    <string name="equalizer_iir">IIR</string>
+    <string name="equalizer_fft">FFT</string>
 </resources>

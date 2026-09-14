@@ -223,4 +223,11 @@
     <string name="language_taiwanese_mandarin">繁體中文 (台灣)</string>
     <string name="file_not_found_please_rescan">A fájl nem található vagy törölve lett, kérjük, keresse újra a zenéket</string>
     <string name="language_turkish">Török</string>
+    <string name="music_visualization">Zenei vizualizáció</string>
+    <string name="fft_engine">FFT motor</string>
+    <string name="fft_native">Natív (C)</string>
+    <string name="fft_kotlin">Kotlin</string>
+    <string name="equalizer_type">Hangszínszabályzó típusa</string>
+    <string name="equalizer_iir">IIR</string>
+    <string name="equalizer_fft">FFT</string>
 </resources>
