@@ -7,24 +7,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-static inline float undenormalise(float x) {
-    if (fabsf(x) < 1.0e-15f) return 0.0f;
-    return x;
-}
 
-static inline float soft_clip(float x) {
-    if (isnan(x)) return 0.0f;
-    if (x > 0.95f) {
-        float diff = x - 0.95f;
-        float res = 0.95f + (0.05f * diff) / (0.05f + diff);
-        return res > 1.0f ? 1.0f : res;
-    } else if (x < -0.95f) {
-        float diff = -0.95f - x;
-        float res = -0.95f - (0.05f * diff) / (0.05f + diff);
-        return res < -1.0f ? -1.0f : res;
-    }
-    return x;
-}
 
 // =========================================================================
 // Single Biquad Filter Implementation
@@ -472,6 +455,7 @@ void biquad_equalizer_reset(BiquadEqualizer* eq) {
     if (eq->chorus) chorus_reset(eq->chorus);
     if (eq->flanger) flanger_reset(eq->flanger);
     if (eq->polyphony) polyphony_reset(eq->polyphony);
+    biquad_equalizer_reset_limiter(eq);
 }
 
 void biquad_equalizer_reset_limiter(BiquadEqualizer* eq) {
@@ -856,17 +840,18 @@ void biquad_equalizer_process_pcm(
             }
         }
 
-        // Instant attack, smooth exponential release (~100ms)
+        // Track maximum value resulting from soft_clip & audio processing across all channels
         if (peak_val > eq->limiter_envelope) {
             eq->limiter_envelope = peak_val;
-        } else {
-            float decay = expf(-((float)frames_count / (eq->sample_rate * 0.100f)));
-            eq->limiter_envelope = 1.0f + (eq->limiter_envelope - 1.0f) * decay;
-            if (eq->limiter_envelope < 1.0f) eq->limiter_envelope = 1.0f;
+        }
+        for (int ch = 0; ch < eq->channel_count; ch++) {
+            if (eq->limiter_envelope > eq->channel_maxs[ch]) {
+                eq->channel_maxs[ch] = eq->limiter_envelope;
+            }
         }
 
-        // Apply identical attenuation across ALL channels to strictly preserve stereo balance
-        if (eq->limiter_envelope > 1.0001f) {
+        // Scale based on this maximum value until a reconfiguration or other relevant event occurs
+        if (eq->limiter_envelope > 1.0f) {
             float inv_max = 1.0f / eq->limiter_envelope;
             for (int ch = 0; ch < active_channels; ch++) {
                 float* samples = eq->channel_buffers[ch];

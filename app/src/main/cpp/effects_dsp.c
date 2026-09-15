@@ -11,24 +11,7 @@
 // Helpers
 // =========================================================================
 
-static inline float soft_clip(float x) {
-    if (isnan(x)) return 0.0f;
-    if (x > 0.95f) {
-        float diff = x - 0.95f;
-        float res = 0.95f + (0.05f * diff) / (0.05f + diff);
-        return res > 1.0f ? 1.0f : res;
-    } else if (x < -0.95f) {
-        float diff = -0.95f - x;
-        float res = -0.95f - (0.05f * diff) / (0.05f + diff);
-        return res < -1.0f ? -1.0f : res;
-    }
-    return x;
-}
 
-static inline float undenormalise(float x) {
-    if (fabsf(x) < 1.0e-15f) return 0.0f;
-    return x;
-}
 
 static inline float read_fractional(const float* buffer, int size, float read_index) {
     if (!buffer || size <= 0 || isnan(read_index) || isinf(read_index)) return 0.0f;

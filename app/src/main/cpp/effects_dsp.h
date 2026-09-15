@@ -3,10 +3,59 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <math.h>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// =========================================================================
+// Shared DSP Helpers
+// =========================================================================
+
+static inline float undenormalise(float x) {
+    if (fabsf(x) < 1.0e-15f) return 0.0f;
+    return x;
+}
+
+// Optimized soft clipping: asymptotic saturation towards 1.0f without hard-clipping discontinuity
+static inline float soft_clip_optimized(float x) {
+    if (isnan(x)) return 0.0f;
+    if (x > 0.95f) {
+        float diff = x - 0.95f;
+        float res = 0.95f + (0.05f * diff) / (0.05f + diff);
+        return res;
+    } else if (x < -0.95f) {
+        float diff = -0.95f - x;
+        float res = -0.95f - (0.05f * diff) / (0.05f + diff);
+        return res;
+    }
+    return x;
+}
+
+// Original soft clipping formula (res reaches up to ~1.95f, intended for use with peak tracking & scaling)
+static inline float soft_clip_original(float x) {
+    if (isnan(x)) return 0.0f;
+    if (x > 0.95f) {
+        float diff = x - 0.95f;
+        float res = 0.95f + diff / (1.0f + diff);
+        return res;
+    } else if (x < -0.95f) {
+        float diff = -0.95f - x;
+        float res = -0.95f - diff / (1.0f + diff);
+        return res;
+    }
+    return x;
+}
+
+static inline float soft_clip(float x) {
+    return soft_clip_optimized(x);
+}
+
 
 // =========================================================================
 // 1. 3D Virtual Surround (Optimized Spatializer)
