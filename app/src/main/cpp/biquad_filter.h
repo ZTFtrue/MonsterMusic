@@ -49,6 +49,7 @@ typedef struct {
     int eq_type;              // 0 = IIR, 1 = FFT
     BiquadFilter* filters;    // channel_count * band_count
     float* channel_maxs;      // [channel_count]
+    float limiter_envelope;   // Stereo-linked peak limiter envelope with release decay
     float** channel_buffers;  // [channel_count][buffer_capacity]
     int buffer_capacity;
     EchoDelay* channel_delays;// [channel_count]

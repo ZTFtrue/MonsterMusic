@@ -67,6 +67,11 @@ typedef struct {
     float mix;                // 0.0f .. 1.0f
     float feedback;
 
+    // DC Blocker filter state
+    float dc_in;
+    float dc_out;
+    float dc_r;
+
     CombFilter combs_l[FREEVERB_NUM_COMBS];
     CombFilter combs_r[FREEVERB_NUM_COMBS];
     AllpassFilter allpasses_l[FREEVERB_NUM_ALLPASSES];

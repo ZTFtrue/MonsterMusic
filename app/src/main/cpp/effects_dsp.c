@@ -22,7 +22,13 @@ static inline float soft_clip(float x) {
     return x;
 }
 
+static inline float undenormalise(float x) {
+    if (fabsf(x) < 1.0e-15f) return 0.0f;
+    return x;
+}
+
 static inline float read_fractional(const float* buffer, int size, float read_index) {
+    if (!buffer || size <= 0 || isnan(read_index) || isinf(read_index)) return 0.0f;
     while (read_index < 0.0f) read_index += (float)size;
     while (read_index >= (float)size) read_index -= (float)size;
 
@@ -31,7 +37,8 @@ static inline float read_fractional(const float* buffer, int size, float read_in
     if (idx1 >= size) idx1 = 0;
 
     float frac = read_index - (float)idx0;
-    return buffer[idx0] * (1.0f - frac) + buffer[idx1] * frac;
+    float val = buffer[idx0] * (1.0f - frac) + buffer[idx1] * frac;
+    return undenormalise(val);
 }
 
 // =========================================================================
@@ -121,10 +128,12 @@ void virtualizer_process(Virtualizer3D* v, float* left, float* right, int count)
     for (int i = 0; i < count; i++) {
         float in_l = left[i];
         float in_r = right[i];
+        if (isnan(in_l) || isinf(in_l)) in_l = 0.0f;
+        if (isnan(in_r) || isinf(in_r)) in_r = 0.0f;
 
         // 1. Bass Anchor (Low frequencies stay solid & centered in mono)
-        b_lp_l = bass_a * b_lp_l + bass_b * in_l;
-        b_lp_r = bass_a * b_lp_r + bass_b * in_r;
+        b_lp_l = undenormalise(bass_a * b_lp_l + bass_b * in_l);
+        b_lp_r = undenormalise(bass_a * b_lp_r + bass_b * in_r);
         float bass_mono = 0.5f * (b_lp_l + b_lp_r);
 
         float high_l = in_l - b_lp_l;
@@ -145,8 +154,8 @@ void virtualizer_process(Virtualizer3D* v, float* left, float* right, int count)
         float opp_r = v->cross_buf_right[read_idx];
         float opp_l = v->cross_buf_left[read_idx];
 
-        c_lp_l = cross_a * c_lp_l + cross_b * opp_r;
-        c_lp_r = cross_a * c_lp_r + cross_b * opp_l;
+        c_lp_l = undenormalise(cross_a * c_lp_l + cross_b * opp_r);
+        c_lp_r = undenormalise(cross_a * c_lp_r + cross_b * opp_l);
 
         head++;
         if (head >= buf_size) head = 0;
@@ -159,10 +168,10 @@ void virtualizer_process(Virtualizer3D* v, float* left, float* right, int count)
         right[i] = soft_clip(out_r);
     }
 
-    v->bass_lp_left = b_lp_l;
-    v->bass_lp_right = b_lp_r;
-    v->cross_lp_left = c_lp_l;
-    v->cross_lp_right = c_lp_r;
+    v->bass_lp_left = undenormalise(b_lp_l);
+    v->bass_lp_right = undenormalise(b_lp_r);
+    v->cross_lp_left = undenormalise(c_lp_l);
+    v->cross_lp_right = undenormalise(c_lp_r);
     v->cross_head = head;
 }
 
@@ -215,6 +224,9 @@ ReverbEffect* reverb_create(float sample_rate) {
     }
 
     reverb_set_params(rev, 0, 0.5f, 0.5f, 0.3f, rev->sample_rate);
+    rev->dc_in = 0.0f;
+    rev->dc_out = 0.0f;
+    rev->dc_r = 1.0f - (2.0f * (float)M_PI * 20.0f / rev->sample_rate);
     return rev;
 }
 
@@ -233,6 +245,8 @@ void reverb_destroy(ReverbEffect* rev) {
 
 void reverb_reset(ReverbEffect* rev) {
     if (!rev) return;
+    rev->dc_in = 0.0f;
+    rev->dc_out = 0.0f;
     for (int i = 0; i < FREEVERB_NUM_COMBS; i++) {
         if (rev->combs_l[i].buffer) memset(rev->combs_l[i].buffer, 0, rev->combs_l[i].size * sizeof(float));
         rev->combs_l[i].index = 0;
@@ -253,15 +267,19 @@ void reverb_reset(ReverbEffect* rev) {
 
 void reverb_set_params(ReverbEffect* rev, int enabled, float room_size, float damping, float mix, float sample_rate) {
     if (!rev) return;
-    if (sample_rate > 0.0f) rev->sample_rate = sample_rate;
+    if (sample_rate > 0.0f) {
+        rev->sample_rate = sample_rate;
+        rev->dc_r = 1.0f - (2.0f * (float)M_PI * 20.0f / rev->sample_rate);
+    }
 
     rev->enabled = enabled;
     rev->room_size = room_size < 0.0f ? 0.0f : (room_size > 1.0f ? 1.0f : room_size);
     rev->damping = damping < 0.0f ? 0.0f : (damping > 1.0f ? 1.0f : damping) * 0.4f;
     rev->mix = mix < 0.0f ? 0.0f : (mix > 1.0f ? 1.0f : mix);
 
-    // Freeverb feedback formula
-    rev->feedback = rev->room_size * 0.28f + 0.7f;
+    // Freeverb feedback formula capped at 0.96 to ensure stability
+    rev->feedback = rev->room_size * 0.26f + 0.7f;
+    if (rev->feedback > 0.96f) rev->feedback = 0.96f;
 }
 
 void reverb_process(ReverbEffect* rev, float* left, float* right, int count) {
@@ -274,49 +292,70 @@ void reverb_process(ReverbEffect* rev, float* left, float* right, int count) {
     float wet = mix * 0.025f; // Scale factor for sum of 8 comb filters
     float damp = rev->damping;
     float feedback = rev->feedback;
+    float dc_r = rev->dc_r;
+    float dc_in = rev->dc_in;
+    float dc_out = rev->dc_out;
 
     for (int i = 0; i < count; i++) {
         float in_l = left[i];
         float in_r = right[i];
-        float in_mono = (in_l + in_r) * 0.5f;
+        float raw_mono = (in_l + in_r) * 0.5f;
+
+        // 1. DC Blocker high-pass filter (~20 Hz) to eliminate DC accumulation in comb loops
+        float next_dc_out = raw_mono - dc_in + dc_r * dc_out;
+        dc_in = raw_mono;
+        dc_out = undenormalise(next_dc_out);
+        float in_mono = dc_out;
 
         float out_l = 0.0f;
         float out_r = 0.0f;
 
-        // 8 parallel Low-pass Feedback Comb Filters
+        // 2. 8 parallel Low-pass Feedback Comb Filters
         for (int c = 0; c < FREEVERB_NUM_COMBS; c++) {
             // Left Comb
             CombFilter* comb_l = &rev->combs_l[c];
-            float y_l = comb_l->buffer[comb_l->index];
-            comb_l->filter_store = y_l * (1.0f - damp) + comb_l->filter_store * damp;
-            comb_l->buffer[comb_l->index] = in_mono + comb_l->filter_store * feedback;
+            float y_l = undenormalise(comb_l->buffer[comb_l->index]);
+            comb_l->filter_store = undenormalise(y_l * (1.0f - damp) + comb_l->filter_store * damp);
+            float next_comb_l = in_mono + comb_l->filter_store * feedback;
+            if (next_comb_l > 3.0f) next_comb_l = 3.0f;
+            else if (next_comb_l < -3.0f) next_comb_l = -3.0f;
+            comb_l->buffer[comb_l->index] = next_comb_l;
             if (++comb_l->index >= comb_l->size) comb_l->index = 0;
             out_l += y_l;
 
             // Right Comb
             CombFilter* comb_r = &rev->combs_r[c];
-            float y_r = comb_r->buffer[comb_r->index];
-            comb_r->filter_store = y_r * (1.0f - damp) + comb_r->filter_store * damp;
-            comb_r->buffer[comb_r->index] = in_mono + comb_r->filter_store * feedback;
+            float y_r = undenormalise(comb_r->buffer[comb_r->index]);
+            comb_r->filter_store = undenormalise(y_r * (1.0f - damp) + comb_r->filter_store * damp);
+            float next_comb_r = in_mono + comb_r->filter_store * feedback;
+            if (next_comb_r > 3.0f) next_comb_r = 3.0f;
+            else if (next_comb_r < -3.0f) next_comb_r = -3.0f;
+            comb_r->buffer[comb_r->index] = next_comb_r;
             if (++comb_r->index >= comb_r->size) comb_r->index = 0;
             out_r += y_r;
         }
 
-        // 4 series Allpass Filters for dense diffusion
+        // 3. 4 series Allpass Filters for dense diffusion
         for (int a = 0; a < FREEVERB_NUM_ALLPASSES; a++) {
             // Left Allpass
             AllpassFilter* ap_l = &rev->allpasses_l[a];
-            float buf_l = ap_l->buffer[ap_l->index];
+            float buf_l = undenormalise(ap_l->buffer[ap_l->index]);
             float ap_out_l = -out_l + buf_l;
-            ap_l->buffer[ap_l->index] = out_l + (buf_l * ap_l->feedback);
+            float next_ap_l = out_l + (buf_l * ap_l->feedback);
+            if (next_ap_l > 3.0f) next_ap_l = 3.0f;
+            else if (next_ap_l < -3.0f) next_ap_l = -3.0f;
+            ap_l->buffer[ap_l->index] = undenormalise(next_ap_l);
             if (++ap_l->index >= ap_l->size) ap_l->index = 0;
             out_l = ap_out_l;
 
             // Right Allpass
             AllpassFilter* ap_r = &rev->allpasses_r[a];
-            float buf_r = ap_r->buffer[ap_r->index];
+            float buf_r = undenormalise(ap_r->buffer[ap_r->index]);
             float ap_out_r = -out_r + buf_r;
-            ap_r->buffer[ap_r->index] = out_r + (buf_r * ap_r->feedback);
+            float next_ap_r = out_r + (buf_r * ap_r->feedback);
+            if (next_ap_r > 3.0f) next_ap_r = 3.0f;
+            else if (next_ap_r < -3.0f) next_ap_r = -3.0f;
+            ap_r->buffer[ap_r->index] = undenormalise(next_ap_r);
             if (++ap_r->index >= ap_r->size) ap_r->index = 0;
             out_r = ap_out_r;
         }
@@ -324,6 +363,9 @@ void reverb_process(ReverbEffect* rev, float* left, float* right, int count) {
         left[i] = soft_clip(in_l * dry + out_l * wet);
         right[i] = soft_clip(in_r * dry + out_r * wet);
     }
+
+    rev->dc_in = dc_in;
+    rev->dc_out = dc_out;
 }
 
 // =========================================================================
@@ -335,9 +377,10 @@ ChorusEffect* chorus_create(float sample_rate) {
     if (!c) return NULL;
 
     c->sample_rate = sample_rate > 0.0f ? sample_rate : 44100.0f;
-    // Buffer for up to 60 ms delay
-    c->buffer_size = (int)(0.060f * c->sample_rate);
-    if (c->buffer_size < 1024) c->buffer_size = 1024;
+    // Buffer for up to 60 ms delay with headroom up to 192 kHz
+    float max_sr = c->sample_rate > 192000.0f ? c->sample_rate : 192000.0f;
+    c->buffer_size = (int)(0.060f * max_sr);
+    if (c->buffer_size < 2048) c->buffer_size = 2048;
 
     c->buffer_l = (float*)calloc(c->buffer_size, sizeof(float));
     c->buffer_r = (float*)calloc(c->buffer_size, sizeof(float));
@@ -400,6 +443,8 @@ void chorus_process(ChorusEffect* c, float* left, float* right, int count) {
     for (int i = 0; i < count; i++) {
         float in_l = left[i];
         float in_r = right[i];
+        if (isnan(in_l) || isinf(in_l)) in_l = 0.0f;
+        if (isnan(in_r) || isinf(in_r)) in_r = 0.0f;
 
         c->buffer_l[w_pos] = in_l;
         c->buffer_r[w_pos] = in_r;
@@ -437,9 +482,10 @@ FlangerEffect* flanger_create(float sample_rate) {
     if (!f) return NULL;
 
     f->sample_rate = sample_rate > 0.0f ? sample_rate : 44100.0f;
-    // Buffer for up to 15 ms delay
-    f->buffer_size = (int)(0.015f * f->sample_rate);
-    if (f->buffer_size < 512) f->buffer_size = 512;
+    // Buffer for up to 20 ms delay with headroom up to 192 kHz
+    float max_sr = f->sample_rate > 192000.0f ? f->sample_rate : 192000.0f;
+    f->buffer_size = (int)(0.020f * max_sr);
+    if (f->buffer_size < 1024) f->buffer_size = 1024;
 
     f->buffer_l = (float*)calloc(f->buffer_size, sizeof(float));
     f->buffer_r = (float*)calloc(f->buffer_size, sizeof(float));
@@ -507,6 +553,8 @@ void flanger_process(FlangerEffect* f, float* left, float* right, int count) {
     for (int i = 0; i < count; i++) {
         float in_l = left[i];
         float in_r = right[i];
+        if (isnan(in_l) || isinf(in_l)) in_l = 0.0f;
+        if (isnan(in_r) || isinf(in_r)) in_r = 0.0f;
 
         // Modulation sweeps between 0 and 1
         float mod_l = 0.5f * (1.0f + sinf(lfo));
@@ -521,9 +569,9 @@ void flanger_process(FlangerEffect* f, float* left, float* right, int count) {
         float delayed_l = read_fractional(f->buffer_l, b_size, read_l);
         float delayed_r = read_fractional(f->buffer_r, b_size, read_r);
 
-        // Feedback comb filtering
-        f->buffer_l[w_pos] = in_l + delayed_l * feedback;
-        f->buffer_r[w_pos] = in_r + delayed_r * feedback;
+        // Feedback comb filtering with soft saturation and anti-denormalization
+        f->buffer_l[w_pos] = undenormalise(soft_clip(in_l + delayed_l * feedback));
+        f->buffer_r[w_pos] = undenormalise(soft_clip(in_r + delayed_r * feedback));
 
         left[i] = soft_clip(in_l * dry + delayed_l * wet);
         right[i] = soft_clip(in_r * dry + delayed_r * wet);
@@ -623,15 +671,23 @@ void polyphony_process(PolyphonyEffect* p, float* left, float* right, int count)
     for (int i = 0; i < count; i++) {
         float in_l = left[i];
         float in_r = right[i];
+        if (isnan(in_l) || isinf(in_l)) in_l = 0.0f;
+        if (isnan(in_r) || isinf(in_r)) in_r = 0.0f;
 
         p->buffer_l[w_pos] = in_l;
         p->buffer_r[w_pos] = in_r;
 
-        // Symmetric linear crossfade envelope (w1 + w2 = 1.0 always)
+        // Symmetric linear crossfade envelope normalized to constant total amplitude
         float w1 = 1.0f - fabsf((g1 - half_win) / half_win);
         float w2 = 1.0f - fabsf((g2 - half_win) / half_win);
         if (w1 < 0.0f) w1 = 0.0f;
         if (w2 < 0.0f) w2 = 0.0f;
+        float total_w = w1 + w2;
+        if (total_w > 1e-6f) {
+            float inv_w = 1.0f / total_w;
+            w1 *= inv_w;
+            w2 *= inv_w;
+        }
 
         float read1 = (float)w_pos - g1;
         float read2 = (float)w_pos - g2;

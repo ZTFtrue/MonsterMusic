@@ -192,7 +192,8 @@ class EqualizerAudioProcessor : AudioProcessor {
             if (nativeEqualizerHandle != 0L) {
                 freeNativeEqualizer(nativeEqualizerHandle)
             }
-            nativeEqualizerHandle = initNativeEqualizer(channelCount, Utils.bandsCenter.count(), sampleRate)
+            val allocChannels = maxOf(channelCount, 2)
+            nativeEqualizerHandle = initNativeEqualizer(allocChannels, Utils.bandsCenter.count(), sampleRate)
             setEqualizerTypeNative(nativeEqualizerHandle, equalizerType)
             setEchoParamsNative(nativeEqualizerHandle, echoDelay, echoDecay, isWithFeedBack, sampleRate)
             setVirtualizerNative(nativeEqualizerHandle, virtualizerActive, virtualizerStrength)
@@ -491,8 +492,8 @@ class EqualizerAudioProcessor : AudioProcessor {
         if (outputAudioFormat.sampleRate > 0 && nativeEqualizerHandle != 0L) {
             val freq = Utils.bandsCenter[index]
             val rate = outputAudioFormat.sampleRate.toFloat()
-            val channelCount = inputAudioFormat.channelCount
-            for (ch in 0 until channelCount) {
+            val targetChannels = maxOf(inputAudioFormat.channelCount, 2)
+            for (ch in 0 until targetChannels) {
                 configureBandNative(
                     nativeEqualizerHandle,
                     ch,

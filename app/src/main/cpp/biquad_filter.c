@@ -7,6 +7,22 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+static inline float undenormalise(float x) {
+    if (fabsf(x) < 1.0e-15f) return 0.0f;
+    return x;
+}
+
+static inline float soft_clip(float x) {
+    if (x > 0.95f) {
+        float diff = x - 0.95f;
+        return 0.95f + diff / (1.0f + diff);
+    } else if (x < -0.95f) {
+        float diff = -0.95f - x;
+        return -0.95f - diff / (1.0f + diff);
+    }
+    return x;
+}
+
 // =========================================================================
 // Single Biquad Filter Implementation
 // =========================================================================
@@ -22,8 +38,38 @@ void biquad_reset(BiquadFilter* filter) {
 void biquad_configure(BiquadFilter* filter, int type, float center_freq, float sample_rate, float Q, float gainDB) {
     if (!filter || sample_rate <= 0.0f) return;
     biquad_reset(filter);
-    if (Q == 0.0f) {
+    if (Q <= 0.0f) {
         Q = 1e-9f;
+    }
+
+    // Peak filter with ~0 dB gain is transparent identity
+    if (type == BIQUAD_PEAK && fabsf(gainDB) < 0.01f) {
+        filter->b0 = 1.0f;
+        filter->b1 = 0.0f;
+        filter->b2 = 0.0f;
+        filter->a1 = 0.0f;
+        filter->a2 = 0.0f;
+        return;
+    }
+
+    // Nyquist guard: frequencies above 0.45 * sample_rate cannot be safely
+    // realized by IIR biquad filters without pole divergence or severe cramping.
+    // For peaking filters above the track's audible Nyquist band, treat as pass-through.
+    float max_safe_freq = sample_rate * 0.45f;
+    if (center_freq > max_safe_freq) {
+        if (type == BIQUAD_PEAK || type == BIQUAD_NOTCH || type == BIQUAD_BANDPASS) {
+            filter->b0 = 1.0f;
+            filter->b1 = 0.0f;
+            filter->b2 = 0.0f;
+            filter->a1 = 0.0f;
+            filter->a2 = 0.0f;
+            return;
+        } else {
+            center_freq = max_safe_freq;
+        }
+    }
+    if (center_freq < 10.0f) {
+        center_freq = 10.0f;
     }
 
     float gain_abs = powf(10.0f, gainDB / 40.0f);
@@ -104,6 +150,12 @@ void biquad_configure(BiquadFilter* filter, int type, float center_freq, float s
             break;
     }
 
+    if (fabsf(a0) < 1e-9f) {
+        filter->b0 = 1.0f;
+        filter->b1 = filter->b2 = filter->a1 = filter->a2 = 0.0f;
+        return;
+    }
+
     // prescale filter constants
     filter->b0 = b0 / a0;
     filter->b1 = b1 / a0;
@@ -115,6 +167,12 @@ void biquad_configure(BiquadFilter* filter, int type, float center_freq, float s
 float biquad_filter_sample(BiquadFilter* filter, float x) {
     float y = filter->b0 * x + filter->b1 * filter->x1 + filter->b2 * filter->x2
               - filter->a1 * filter->y1 - filter->a2 * filter->y2;
+    if (isnan(y) || isinf(y)) {
+        y = 0.0f;
+        filter->x1 = filter->x2 = filter->y1 = filter->y2 = 0.0f;
+    } else if (fabsf(y) < 1e-15f) {
+        y = 0.0f;
+    }
     filter->x2 = filter->x1;
     filter->x1 = x;
     filter->y2 = filter->y1;
@@ -186,12 +244,16 @@ static void echo_delay_process(EchoDelay* echo, float* samples, int count) {
     float decay = echo->decay;
     int feedback = echo->feedback;
 
+    // When feedback is enabled, cap decay to 0.85 to strictly prevent infinite runaway
+    if (feedback && decay > 0.85f) decay = 0.85f;
+
     for (int i = 0; i < count; i++) {
         float in = samples[i];
-        float delay_sample = echo->buffer[cursor];
+        if (isnan(in) || isinf(in)) in = 0.0f;
+        float delay_sample = undenormalise(echo->buffer[cursor]);
         float out = in + (delay_sample * decay);
-        samples[i] = out;
-        echo->buffer[cursor] = feedback ? out : in;
+        samples[i] = soft_clip(out);
+        echo->buffer[cursor] = undenormalise(soft_clip(feedback ? out : in));
         cursor++;
         if (cursor >= buffer_len) {
             cursor = 0;
@@ -244,22 +306,24 @@ static void biquad_equalizer_update_fft_gains(BiquadEqualizer* eq) {
 
 BiquadEqualizer* biquad_equalizer_create(int channel_count, int band_count, float sample_rate) {
     if (channel_count <= 0 || band_count <= 0) return NULL;
+    int actual_channels = channel_count < 2 ? 2 : channel_count;
     BiquadEqualizer* eq = (BiquadEqualizer*) malloc(sizeof(BiquadEqualizer));
     if (!eq) return NULL;
 
-    eq->channel_count = channel_count;
+    eq->channel_count = actual_channels;
     eq->band_count = band_count;
     eq->sample_rate = sample_rate > 0.0f ? sample_rate : 44100.0f;
     eq->eq_type = EQ_TYPE_IIR;
+    eq->limiter_envelope = 1.0f;
 
-    int total_filters = channel_count * band_count;
+    int total_filters = actual_channels * band_count;
     eq->filters = (BiquadFilter*) calloc(total_filters, sizeof(BiquadFilter));
-    eq->channel_maxs = (float*) malloc(channel_count * sizeof(float));
-    eq->channel_buffers = (float**) malloc(channel_count * sizeof(float*));
-    eq->channel_delays = (EchoDelay*) malloc(channel_count * sizeof(EchoDelay));
+    eq->channel_maxs = (float*) malloc(actual_channels * sizeof(float));
+    eq->channel_buffers = (float**) malloc(actual_channels * sizeof(float*));
+    eq->channel_delays = (EchoDelay*) malloc(actual_channels * sizeof(EchoDelay));
 
     eq->buffer_capacity = 4096;
-    for (int ch = 0; ch < channel_count; ch++) {
+    for (int ch = 0; ch < actual_channels; ch++) {
         eq->channel_maxs[ch] = 1.0f;
         eq->channel_buffers[ch] = (float*) malloc(eq->buffer_capacity * sizeof(float));
         echo_delay_init(&eq->channel_delays[ch], eq->sample_rate);
@@ -286,16 +350,16 @@ BiquadEqualizer* biquad_equalizer_create(int channel_count, int band_count, floa
         eq->fft_eq_gains[k] = 1.0f;
     }
 
-    eq->fft_in_fifo = (float**) malloc(channel_count * sizeof(float*));
-    eq->fft_in_fifo_count = (int*) calloc(channel_count, sizeof(int));
-    eq->fft_history = (float**) malloc(channel_count * sizeof(float*));
-    eq->fft_overlap = (float**) malloc(channel_count * sizeof(float*));
+    eq->fft_in_fifo = (float**) malloc(actual_channels * sizeof(float*));
+    eq->fft_in_fifo_count = (int*) calloc(actual_channels, sizeof(int));
+    eq->fft_history = (float**) malloc(actual_channels * sizeof(float*));
+    eq->fft_overlap = (float**) malloc(actual_channels * sizeof(float*));
     eq->fft_out_fifo_capacity = 8192;
-    eq->fft_out_fifo = (float**) malloc(channel_count * sizeof(float*));
-    eq->fft_out_fifo_head = (int*) calloc(channel_count, sizeof(int));
-    eq->fft_out_fifo_count = (int*) calloc(channel_count, sizeof(int));
+    eq->fft_out_fifo = (float**) malloc(actual_channels * sizeof(float*));
+    eq->fft_out_fifo_head = (int*) calloc(actual_channels, sizeof(int));
+    eq->fft_out_fifo_count = (int*) calloc(actual_channels, sizeof(int));
 
-    for (int ch = 0; ch < channel_count; ch++) {
+    for (int ch = 0; ch < actual_channels; ch++) {
         eq->fft_in_fifo[ch] = (float*) calloc(eq->hop_size, sizeof(float));
         eq->fft_history[ch] = (float*) calloc(eq->hop_size, sizeof(float));
         eq->fft_overlap[ch] = (float*) calloc(eq->hop_size, sizeof(float));
@@ -408,19 +472,28 @@ void biquad_equalizer_reset(BiquadEqualizer* eq) {
 }
 
 void biquad_equalizer_reset_limiter(BiquadEqualizer* eq) {
-    if (!eq || !eq->channel_maxs) return;
-    for (int ch = 0; ch < eq->channel_count; ch++) {
-        eq->channel_maxs[ch] = 1.0f;
+    if (!eq) return;
+    eq->limiter_envelope = 1.0f;
+    if (eq->channel_maxs) {
+        for (int ch = 0; ch < eq->channel_count; ch++) {
+            eq->channel_maxs[ch] = 1.0f;
+        }
     }
 }
 
 void biquad_equalizer_configure_band(BiquadEqualizer* eq, int channel, int band, int type, float center_freq, float sample_rate, float Q, float gainDB) {
     if (!eq || !eq->filters) return;
-    if (channel < 0 || channel >= eq->channel_count) return;
     if (band < 0 || band >= eq->band_count) return;
 
-    int idx = channel * eq->band_count + band;
-    biquad_configure(&eq->filters[idx], type, center_freq, sample_rate, Q, gainDB);
+    if (channel < 0) {
+        for (int ch = 0; ch < eq->channel_count; ch++) {
+            int idx = ch * eq->band_count + band;
+            biquad_configure(&eq->filters[idx], type, center_freq, sample_rate, Q, gainDB);
+        }
+    } else if (channel < eq->channel_count) {
+        int idx = channel * eq->band_count + band;
+        biquad_configure(&eq->filters[idx], type, center_freq, sample_rate, Q, gainDB);
+    }
 
     eq->band_gains_db[band] = gainDB;
     eq->band_center_freqs[band] = center_freq;
@@ -464,7 +537,74 @@ void biquad_equalizer_set_polyphony_params(BiquadEqualizer* eq, int enabled, int
     polyphony_set_params(eq->polyphony, enabled, semitones, detune_cents, mix, eq->sample_rate);
 }
 
-static void ensure_channel_capacity(BiquadEqualizer* eq, int frames_count) {
+static void fft_equalizer_ensure_fifo_capacity(BiquadEqualizer* eq, int max_needed) {
+    if (!eq) return;
+    int cap = eq->fft_out_fifo_capacity;
+    if (max_needed <= cap) return;
+
+    int new_cap = max_needed + 2048;
+    for (int ch = 0; ch < eq->channel_count; ch++) {
+        float* old_buf = eq->fft_out_fifo[ch];
+        float* new_buf = (float*) malloc(new_cap * sizeof(float));
+        if (!new_buf) continue;
+        int head = eq->fft_out_fifo_head[ch];
+        int count = eq->fft_out_fifo_count[ch];
+        for (int i = 0; i < count; i++) {
+            new_buf[i] = old_buf[(head + i) % cap];
+        }
+        free(old_buf);
+        eq->fft_out_fifo[ch] = new_buf;
+        eq->fft_out_fifo_head[ch] = 0;
+    }
+    eq->fft_out_fifo_capacity = new_cap;
+}
+
+static void ensure_channel_capacity(BiquadEqualizer* eq, int frames_count, int channel_count) {
+    if (!eq) return;
+
+    // 1. Dynamically expand channel count if input has more channels than eq currently has
+    if (channel_count > eq->channel_count) {
+        int old_ch = eq->channel_count;
+        int new_ch = channel_count;
+
+        eq->filters = (BiquadFilter*) realloc(eq->filters, new_ch * eq->band_count * sizeof(BiquadFilter));
+        eq->channel_maxs = (float*) realloc(eq->channel_maxs, new_ch * sizeof(float));
+        eq->channel_buffers = (float**) realloc(eq->channel_buffers, new_ch * sizeof(float*));
+        eq->channel_delays = (EchoDelay*) realloc(eq->channel_delays, new_ch * sizeof(EchoDelay));
+
+        eq->fft_in_fifo = (float**) realloc(eq->fft_in_fifo, new_ch * sizeof(float*));
+        eq->fft_in_fifo_count = (int*) realloc(eq->fft_in_fifo_count, new_ch * sizeof(int));
+        eq->fft_history = (float**) realloc(eq->fft_history, new_ch * sizeof(float*));
+        eq->fft_overlap = (float**) realloc(eq->fft_overlap, new_ch * sizeof(float*));
+        eq->fft_out_fifo = (float**) realloc(eq->fft_out_fifo, new_ch * sizeof(float*));
+        eq->fft_out_fifo_head = (int*) realloc(eq->fft_out_fifo_head, new_ch * sizeof(int));
+        eq->fft_out_fifo_count = (int*) realloc(eq->fft_out_fifo_count, new_ch * sizeof(int));
+
+        for (int ch = old_ch; ch < new_ch; ch++) {
+            eq->channel_maxs[ch] = 1.0f;
+            eq->channel_buffers[ch] = (float*) malloc(eq->buffer_capacity * sizeof(float));
+            echo_delay_init(&eq->channel_delays[ch], eq->sample_rate);
+
+            // Copy filter parameters from channel 0 so all channels have matching EQ curves
+            for (int b = 0; b < eq->band_count; b++) {
+                int src_idx = 0 * eq->band_count + b;
+                int dst_idx = ch * eq->band_count + b;
+                eq->filters[dst_idx] = eq->filters[src_idx];
+                biquad_reset(&eq->filters[dst_idx]);
+            }
+
+            eq->fft_in_fifo[ch] = (float*) calloc(eq->hop_size, sizeof(float));
+            eq->fft_in_fifo_count[ch] = 0;
+            eq->fft_history[ch] = (float*) calloc(eq->hop_size, sizeof(float));
+            eq->fft_overlap[ch] = (float*) calloc(eq->hop_size, sizeof(float));
+            eq->fft_out_fifo[ch] = (float*) calloc(eq->fft_out_fifo_capacity, sizeof(float));
+            eq->fft_out_fifo_head[ch] = 0;
+            eq->fft_out_fifo_count[ch] = eq->hop_size;
+        }
+        eq->channel_count = new_ch;
+    }
+
+    // 2. Expand frame buffer capacity if needed
     if (frames_count > eq->buffer_capacity) {
         int new_cap = frames_count + 1024;
         for (int ch = 0; ch < eq->channel_count; ch++) {
@@ -494,17 +634,10 @@ static void fft_equalizer_process_channel(BiquadEqualizer* eq, int ch, float* sa
 
     int needed = out_count + frames_count + H + 512;
     if (needed > cap) {
-        int new_cap = needed + 2048;
-        float* new_buf = (float*) malloc(new_cap * sizeof(float));
-        for (int i = 0; i < out_count; i++) {
-            new_buf[i] = out_fifo[(head + i) % cap];
-        }
-        free(out_fifo);
-        eq->fft_out_fifo[ch] = new_buf;
-        out_fifo = new_buf;
-        head = 0;
-        cap = new_cap;
-        eq->fft_out_fifo_capacity = new_cap;
+        fft_equalizer_ensure_fifo_capacity(eq, needed);
+        cap = eq->fft_out_fifo_capacity;
+        out_fifo = eq->fft_out_fifo[ch];
+        head = eq->fft_out_fifo_head[ch];
     }
 
     for (int i = 0; i < frames_count; i++) {
@@ -585,7 +718,7 @@ void biquad_equalizer_process_pcm(
         return;
     }
 
-    ensure_channel_capacity(eq, frames_count);
+    ensure_channel_capacity(eq, frames_count, channel_count);
     int active_channels = channel_count < eq->channel_count ? channel_count : eq->channel_count;
 
     // 1. De-interleave & Convert to Float [-1.0, 1.0]
@@ -620,6 +753,12 @@ void biquad_equalizer_process_pcm(
     // 3. Apply Equalizer (if active)
     if (eq_active) {
         if (eq->eq_type == EQ_TYPE_FFT) {
+            int max_needed = frames_count + eq->hop_size + 512;
+            for (int ch = 0; ch < active_channels; ch++) {
+                int ch_needed = eq->fft_out_fifo_count[ch] + frames_count + eq->hop_size + 512;
+                if (ch_needed > max_needed) max_needed = ch_needed;
+            }
+            fft_equalizer_ensure_fifo_capacity(eq, max_needed);
             for (int ch = 0; ch < active_channels; ch++) {
                 fft_equalizer_process_channel(eq, ch, eq->channel_buffers[ch], frames_count);
             }
@@ -633,6 +772,12 @@ void biquad_equalizer_process_pcm(
                     for (int b = 0; b < band_count; b++) {
                         BiquadFilter* f = &filters[b];
                         float y = f->b0 * s + f->b1 * f->x1 + f->b2 * f->x2 - f->a1 * f->y1 - f->a2 * f->y2;
+                        if (isnan(y) || isinf(y)) {
+                            y = 0.0f;
+                            f->x1 = f->x2 = f->y1 = f->y2 = 0.0f;
+                        } else if (fabsf(y) < 1e-15f) {
+                            y = 0.0f;
+                        }
                         f->x2 = f->x1;
                         f->x1 = s;
                         f->y2 = f->y1;
@@ -684,7 +829,7 @@ void biquad_equalizer_process_pcm(
         virtualizer_process(eq->virtualizer, eq->channel_buffers[0], eq->channel_buffers[1], frames_count);
     }
 
-    // 9. Limiter Logic (if any effect or EQ active)
+    // 9. Stereo-Linked Peak Limiter (if any effect or EQ active)
     int any_effect_active = eq_active || echo_active ||
         (eq->polyphony && eq->polyphony->enabled) ||
         (eq->chorus && eq->chorus->enabled) ||
@@ -693,18 +838,35 @@ void biquad_equalizer_process_pcm(
         (eq->virtualizer && eq->virtualizer->enabled);
 
     if (any_effect_active) {
+        // Find unified peak amplitude across ALL active channels
+        float peak_val = 0.0f;
         for (int ch = 0; ch < active_channels; ch++) {
             float* samples = eq->channel_buffers[ch];
-            float max_val = 0.0f;
             for (int i = 0; i < frames_count; i++) {
-                float abs_val = fabsf(samples[i]);
-                if (abs_val > max_val) max_val = abs_val;
+                float val = samples[i];
+                if (isnan(val) || isinf(val)) {
+                    samples[i] = 0.0f;
+                    val = 0.0f;
+                }
+                float abs_val = fabsf(val);
+                if (abs_val > peak_val) peak_val = abs_val;
             }
-            if (max_val > eq->channel_maxs[ch]) {
-                eq->channel_maxs[ch] = max_val;
-            }
-            if (eq->channel_maxs[ch] > 1.0f) {
-                float inv_max = 1.0f / eq->channel_maxs[ch];
+        }
+
+        // Instant attack, smooth exponential release (~100ms)
+        if (peak_val > eq->limiter_envelope) {
+            eq->limiter_envelope = peak_val;
+        } else {
+            float decay = expf(-((float)frames_count / (eq->sample_rate * 0.100f)));
+            eq->limiter_envelope = 1.0f + (eq->limiter_envelope - 1.0f) * decay;
+            if (eq->limiter_envelope < 1.0f) eq->limiter_envelope = 1.0f;
+        }
+
+        // Apply identical attenuation across ALL channels to strictly preserve stereo balance
+        if (eq->limiter_envelope > 1.0001f) {
+            float inv_max = 1.0f / eq->limiter_envelope;
+            for (int ch = 0; ch < active_channels; ch++) {
+                float* samples = eq->channel_buffers[ch];
                 for (int i = 0; i < frames_count; i++) {
                     samples[i] *= inv_max;
                 }
@@ -712,7 +874,7 @@ void biquad_equalizer_process_pcm(
         }
     }
 
-    // 5. Downmix for Visualization (if requested)
+    // 10. Downmix for Visualization (if requested)
     if (vis_out != NULL && max_vis_count > 0) {
         int vis_samples = frames_count < max_vis_count ? frames_count : max_vis_count;
         if (active_channels >= 2) {
@@ -729,24 +891,32 @@ void biquad_equalizer_process_pcm(
         if (actual_vis_count) *actual_vis_count = 0;
     }
 
-    // 6. Interleave & Write Output
+    // 11. Interleave & Write Output
     if (encoding == 1) {
         // Float PCM
         float* out_float = (float*) output;
+        const float* in_float = (const float*) input;
         for (int i = 0; i < frames_count; i++) {
             for (int ch = 0; ch < active_channels; ch++) {
                 out_float[i * channel_count + ch] = eq->channel_buffers[ch][i];
+            }
+            for (int ch = active_channels; ch < channel_count; ch++) {
+                out_float[i * channel_count + ch] = in_float[i * channel_count + ch];
             }
         }
     } else {
         // 16-bit PCM with saturation clipping
         int16_t* out_16 = (int16_t*) output;
+        const int16_t* in_16 = (const int16_t*) input;
         for (int i = 0; i < frames_count; i++) {
             for (int ch = 0; ch < active_channels; ch++) {
                 float v = eq->channel_buffers[ch][i] * 32767.0f;
                 if (v > 32767.0f) v = 32767.0f;
                 else if (v < -32768.0f) v = -32768.0f;
                 out_16[i * channel_count + ch] = (int16_t) v;
+            }
+            for (int ch = active_channels; ch < channel_count; ch++) {
+                out_16[i * channel_count + ch] = in_16[i * channel_count + ch];
             }
         }
     }
