@@ -12,12 +12,15 @@
 // =========================================================================
 
 static inline float soft_clip(float x) {
+    if (isnan(x)) return 0.0f;
     if (x > 0.95f) {
         float diff = x - 0.95f;
-        return 0.95f + diff / (1.0f + diff);
+        float res = 0.95f + (0.05f * diff) / (0.05f + diff);
+        return res > 1.0f ? 1.0f : res;
     } else if (x < -0.95f) {
         float diff = -0.95f - x;
-        return -0.95f - diff / (1.0f + diff);
+        float res = -0.95f - (0.05f * diff) / (0.05f + diff);
+        return res < -1.0f ? -1.0f : res;
     }
     return x;
 }
