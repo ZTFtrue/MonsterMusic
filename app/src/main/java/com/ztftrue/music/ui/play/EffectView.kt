@@ -91,8 +91,10 @@ fun EffectView(musicViewModel: MusicViewModel) {
     val speed = remember { mutableFloatStateOf(musicViewModel.speed.floatValue) }
 
     val enableDelay = remember { mutableStateOf(musicViewModel.enableDelay.value) }
-    val delayEffectTime = remember { mutableFloatStateOf(musicViewModel.delayEffectTime.floatValue) }
-    val delayEffectFeedback = remember { mutableFloatStateOf(musicViewModel.delayEffectFeedback.floatValue) }
+    val delayEffectTime =
+        remember { mutableFloatStateOf(musicViewModel.delayEffectTime.floatValue) }
+    val delayEffectFeedback =
+        remember { mutableFloatStateOf(musicViewModel.delayEffectFeedback.floatValue) }
     val delayEffectMix = remember { mutableFloatStateOf(musicViewModel.delayEffectMix.floatValue) }
 
     val enableReverb = remember { mutableStateOf(musicViewModel.enableReverb.value) }
@@ -115,12 +117,15 @@ fun EffectView(musicViewModel: MusicViewModel) {
     val enableFlanger = remember { mutableStateOf(musicViewModel.enableFlanger.value) }
     val flangerRate = remember { mutableFloatStateOf(musicViewModel.flangerRate.floatValue) }
     val flangerDepth = remember { mutableFloatStateOf(musicViewModel.flangerDepth.floatValue) }
-    val flangerFeedback = remember { mutableFloatStateOf(musicViewModel.flangerFeedback.floatValue) }
+    val flangerFeedback =
+        remember { mutableFloatStateOf(musicViewModel.flangerFeedback.floatValue) }
     val flangerMix = remember { mutableFloatStateOf(musicViewModel.flangerMix.floatValue) }
 
     val enablePolyphony = remember { mutableStateOf(musicViewModel.enablePolyphony.value) }
-    val polyphonySemitones = remember { mutableIntStateOf(musicViewModel.polyphonySemitones.intValue) }
-    val polyphonyDetune = remember { mutableFloatStateOf(musicViewModel.polyphonyDetune.floatValue) }
+    val polyphonySemitones =
+        remember { mutableIntStateOf(musicViewModel.polyphonySemitones.intValue) }
+    val polyphonyDetune =
+        remember { mutableFloatStateOf(musicViewModel.polyphonyDetune.floatValue) }
     val polyphonyMix = remember { mutableFloatStateOf(musicViewModel.polyphonyMix.floatValue) }
 
     Column(
@@ -147,11 +152,19 @@ fun EffectView(musicViewModel: MusicViewModel) {
                             isProgrammaticScroll = false
                         }
                     },
-                    label = { Text(label, style = MaterialTheme.typography.labelMedium) },
+                    label = {
+                        Text(
+                            text = label,
+                            fontWeight = if (selectedCategory == id) FontWeight.Medium else FontWeight.Light
+                        )
+                    },
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                        labelColor = MaterialTheme.colorScheme.onPrimary,
+                        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    border = null
                 )
             }
         }
@@ -179,7 +192,10 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         musicViewModel.pitch.floatValue = 1f
                         pitch.floatValue = 1f
                         val bundleP = Bundle().apply { putFloat("pitch", 1f) }
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_CHANGE_PITCH, bundleP)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_CHANGE_PITCH,
+                            bundleP
+                        )
 
                         musicViewModel.speed.floatValue = 1f
                         speed.floatValue = 1f
@@ -188,7 +204,11 @@ fun EffectView(musicViewModel: MusicViewModel) {
                 ) {
                     // Pitch Slider
                     Text(
-                        text = stringResource(R.string.pitch) + ": " + String.format(Locale.ROOT, "%.1fx", pitch.floatValue),
+                        text = stringResource(R.string.pitch) + ": " + String.format(
+                            Locale.ROOT,
+                            "%.1fx",
+                            pitch.floatValue
+                        ),
                         color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -202,7 +222,10 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         onValueChangeFinished = {
                             musicViewModel.pitch.floatValue = pitch.floatValue
                             val bundle = Bundle().apply { putFloat("pitch", pitch.floatValue) }
-                            musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_CHANGE_PITCH, bundle)
+                            musicViewModel.browser?.sendCustomCommand(
+                                MediaCommands.COMMAND_CHANGE_PITCH,
+                                bundle
+                            )
                         }
                     )
 
@@ -210,7 +233,11 @@ fun EffectView(musicViewModel: MusicViewModel) {
 
                     // Speed Slider
                     Text(
-                        text = stringResource(R.string.speed) + ": " + String.format(Locale.ROOT, "%.1fx", speed.floatValue),
+                        text = stringResource(R.string.speed) + ": " + String.format(
+                            Locale.ROOT,
+                            "%.1fx",
+                            speed.floatValue
+                        ),
                         color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -238,7 +265,10 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         enableDelay.value = it
                         musicViewModel.enableDelay.value = it
                         val bundle = Bundle().apply { putBoolean(MediaCommands.KEY_ENABLE, it) }
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_DELAY_ENABLE, bundle)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_DELAY_ENABLE,
+                            bundle
+                        )
                     },
                     onReset = {
                         delayEffectTime.floatValue = 0.35f
@@ -253,12 +283,19 @@ fun EffectView(musicViewModel: MusicViewModel) {
                             putFloat(MediaCommands.KEY_FEEDBACK, 0.4f)
                             putFloat(MediaCommands.KEY_MIX, 0.4f)
                         }
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_DELAY_SET_PARAMS, bundle)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_DELAY_SET_PARAMS,
+                            bundle
+                        )
                     }
                 ) {
                     // Delay Time (0.01s - 2.00s)
                     Text(
-                        text = stringResource(R.string.delay_time) + ": " + String.format(Locale.ROOT, "%.2f s", delayEffectTime.floatValue),
+                        text = stringResource(R.string.delay_time) + ": " + String.format(
+                            Locale.ROOT,
+                            "%.2f s",
+                            delayEffectTime.floatValue
+                        ),
                         color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -272,7 +309,12 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         steps = 198,
                         onValueChangeFinished = {
                             musicViewModel.delayEffectTime.floatValue = delayEffectTime.floatValue
-                            sendDelayParams(musicViewModel, delayEffectTime.floatValue, delayEffectFeedback.floatValue, delayEffectMix.floatValue)
+                            sendDelayParams(
+                                musicViewModel,
+                                delayEffectTime.floatValue,
+                                delayEffectFeedback.floatValue,
+                                delayEffectMix.floatValue
+                            )
                         }
                     )
 
@@ -293,8 +335,14 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         valueRange = 0.0f..0.85f,
                         steps = 16,
                         onValueChangeFinished = {
-                            musicViewModel.delayEffectFeedback.floatValue = delayEffectFeedback.floatValue
-                            sendDelayParams(musicViewModel, delayEffectTime.floatValue, delayEffectFeedback.floatValue, delayEffectMix.floatValue)
+                            musicViewModel.delayEffectFeedback.floatValue =
+                                delayEffectFeedback.floatValue
+                            sendDelayParams(
+                                musicViewModel,
+                                delayEffectTime.floatValue,
+                                delayEffectFeedback.floatValue,
+                                delayEffectMix.floatValue
+                            )
                         }
                     )
 
@@ -306,7 +354,12 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         onMixChange = { delayEffectMix.floatValue = it },
                         onMixChangeFinished = {
                             musicViewModel.delayEffectMix.floatValue = delayEffectMix.floatValue
-                            sendDelayParams(musicViewModel, delayEffectTime.floatValue, delayEffectFeedback.floatValue, delayEffectMix.floatValue)
+                            sendDelayParams(
+                                musicViewModel,
+                                delayEffectTime.floatValue,
+                                delayEffectFeedback.floatValue,
+                                delayEffectMix.floatValue
+                            )
                         },
                         enabled = enableDelay.value
                     )
@@ -322,7 +375,10 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         enableReverb.value = it
                         musicViewModel.enableReverb.value = it
                         val bundle = Bundle().apply { putBoolean(MediaCommands.KEY_ENABLE, it) }
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_REVERB_ENABLE, bundle)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_REVERB_ENABLE,
+                            bundle
+                        )
                     },
                     onReset = {
                         reverbRoomSize.floatValue = 0.5f
@@ -337,7 +393,10 @@ fun EffectView(musicViewModel: MusicViewModel) {
                             putFloat(MediaCommands.KEY_DAMPING, 0.5f)
                             putFloat(MediaCommands.KEY_MIX, 0.3f)
                         }
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_REVERB_SET_PARAMS, bundle)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_REVERB_SET_PARAMS,
+                            bundle
+                        )
                     }
                 ) {
                     // Room Size
@@ -356,7 +415,12 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         steps = 17,
                         onValueChangeFinished = {
                             musicViewModel.reverbRoomSize.floatValue = reverbRoomSize.floatValue
-                            sendReverbParams(musicViewModel, reverbRoomSize.floatValue, reverbDamping.floatValue, reverbMix.floatValue)
+                            sendReverbParams(
+                                musicViewModel,
+                                reverbRoomSize.floatValue,
+                                reverbDamping.floatValue,
+                                reverbMix.floatValue
+                            )
                         }
                     )
 
@@ -378,7 +442,12 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         steps = 19,
                         onValueChangeFinished = {
                             musicViewModel.reverbDamping.floatValue = reverbDamping.floatValue
-                            sendReverbParams(musicViewModel, reverbRoomSize.floatValue, reverbDamping.floatValue, reverbMix.floatValue)
+                            sendReverbParams(
+                                musicViewModel,
+                                reverbRoomSize.floatValue,
+                                reverbDamping.floatValue,
+                                reverbMix.floatValue
+                            )
                         }
                     )
 
@@ -390,7 +459,12 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         onMixChange = { reverbMix.floatValue = it },
                         onMixChangeFinished = {
                             musicViewModel.reverbMix.floatValue = reverbMix.floatValue
-                            sendReverbParams(musicViewModel, reverbRoomSize.floatValue, reverbDamping.floatValue, reverbMix.floatValue)
+                            sendReverbParams(
+                                musicViewModel,
+                                reverbRoomSize.floatValue,
+                                reverbDamping.floatValue,
+                                reverbMix.floatValue
+                            )
                         },
                         enabled = enableReverb.value
                     )
@@ -406,7 +480,10 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         enableEcho.value = it
                         musicViewModel.enableEcho.value = it
                         val bundle = Bundle().apply { putBoolean(MediaCommands.KEY_ENABLE, it) }
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_ECHO_ENABLE, bundle)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_ECHO_ENABLE,
+                            bundle
+                        )
                     },
                     onReset = {
                         delayTime.floatValue = 0.5f
@@ -415,14 +492,24 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         musicViewModel.decay.floatValue = 0.5f
 
                         val bundleDelay = Bundle().apply { putFloat(MediaCommands.KEY_DELAY, 0.5f) }
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_ECHO_SET_DELAY, bundleDelay)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_ECHO_SET_DELAY,
+                            bundleDelay
+                        )
 
                         val bundleDecay = Bundle().apply { putFloat(MediaCommands.KEY_DECAY, 0.5f) }
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_ECHO_SET_DECAY, bundleDecay)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_ECHO_SET_DECAY,
+                            bundleDecay
+                        )
                     }
                 ) {
                     Text(
-                        text = stringResource(R.string.delay) + ": " + String.format(Locale.ROOT, "%.1f", delayTime.floatValue) + " " + stringResource(R.string.seconds),
+                        text = stringResource(R.string.delay) + ": " + String.format(
+                            Locale.ROOT,
+                            "%.1f",
+                            delayTime.floatValue
+                        ) + " " + stringResource(R.string.seconds),
                         color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -436,15 +523,27 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         steps = 19,
                         onValueChangeFinished = {
                             musicViewModel.delayTime.floatValue = delayTime.floatValue
-                            val bundle = Bundle().apply { putFloat(MediaCommands.KEY_DELAY, delayTime.floatValue) }
-                            musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_ECHO_SET_DELAY, bundle)
+                            val bundle = Bundle().apply {
+                                putFloat(
+                                    MediaCommands.KEY_DELAY,
+                                    delayTime.floatValue
+                                )
+                            }
+                            musicViewModel.browser?.sendCustomCommand(
+                                MediaCommands.COMMAND_ECHO_SET_DELAY,
+                                bundle
+                            )
                         }
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = stringResource(R.string.decay) + ": " + String.format(Locale.ROOT, "%.1f", decay.floatValue),
+                        text = stringResource(R.string.decay) + ": " + String.format(
+                            Locale.ROOT,
+                            "%.1f",
+                            decay.floatValue
+                        ),
                         color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -458,8 +557,16 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         steps = 9,
                         onValueChangeFinished = {
                             musicViewModel.decay.floatValue = decay.floatValue
-                            val bundle = Bundle().apply { putFloat(MediaCommands.KEY_DECAY, decay.floatValue) }
-                            musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_ECHO_SET_DECAY, bundle)
+                            val bundle = Bundle().apply {
+                                putFloat(
+                                    MediaCommands.KEY_DECAY,
+                                    decay.floatValue
+                                )
+                            }
+                            musicViewModel.browser?.sendCustomCommand(
+                                MediaCommands.COMMAND_ECHO_SET_DECAY,
+                                bundle
+                            )
                         }
                     )
                 }
@@ -474,16 +581,23 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         enableVirtual.value = it
                         musicViewModel.enableVirtual.value = it
                         val bundle = Bundle().apply { putBoolean(MediaCommands.KEY_ENABLE, it) }
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_VIRTUALIZER_ENABLE, bundle)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_VIRTUALIZER_ENABLE,
+                            bundle
+                        )
                     },
                     onReset = {
                         virtualStrength.intValue = 0
                         musicViewModel.virtualStrength.intValue = 0
                         val bundle = Bundle().apply { putInt("strength", 0) }
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_VIRTUALIZER_STRENGTH, bundle)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_VIRTUALIZER_STRENGTH,
+                            bundle
+                        )
                     }
                 ) {
-                    val virtualStrengthText = stringResource(R.string.strength_format, virtualStrength.intValue)
+                    val virtualStrengthText =
+                        stringResource(R.string.strength_format, virtualStrength.intValue)
                     Text(
                         text = virtualStrengthText,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -500,8 +614,12 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         steps = 100,
                         onValueChangeFinished = {
                             musicViewModel.virtualStrength.intValue = virtualStrength.intValue
-                            val bundle = Bundle().apply { putInt("strength", virtualStrength.intValue) }
-                            musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_VIRTUALIZER_STRENGTH, bundle)
+                            val bundle =
+                                Bundle().apply { putInt("strength", virtualStrength.intValue) }
+                            musicViewModel.browser?.sendCustomCommand(
+                                MediaCommands.COMMAND_VIRTUALIZER_STRENGTH,
+                                bundle
+                            )
                         }
                     )
                 }
@@ -516,7 +634,10 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         enableChorus.value = it
                         musicViewModel.enableChorus.value = it
                         val bundle = Bundle().apply { putBoolean(MediaCommands.KEY_ENABLE, it) }
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_CHORUS_ENABLE, bundle)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_CHORUS_ENABLE,
+                            bundle
+                        )
                     },
                     onReset = {
                         chorusRate.floatValue = 1.5f
@@ -531,12 +652,19 @@ fun EffectView(musicViewModel: MusicViewModel) {
                             putFloat(MediaCommands.KEY_DEPTH, 0.5f)
                             putFloat(MediaCommands.KEY_MIX, 0.5f)
                         }
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_CHORUS_SET_PARAMS, bundle)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_CHORUS_SET_PARAMS,
+                            bundle
+                        )
                     }
                 ) {
                     // Rate
                     Text(
-                        text = stringResource(R.string.chorus_rate) + ": " + String.format(Locale.ROOT, "%.1f Hz", chorusRate.floatValue),
+                        text = stringResource(R.string.chorus_rate) + ": " + String.format(
+                            Locale.ROOT,
+                            "%.1f Hz",
+                            chorusRate.floatValue
+                        ),
                         color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -550,7 +678,12 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         steps = 48,
                         onValueChangeFinished = {
                             musicViewModel.chorusRate.floatValue = chorusRate.floatValue
-                            sendChorusParams(musicViewModel, chorusRate.floatValue, chorusDepth.floatValue, chorusMix.floatValue)
+                            sendChorusParams(
+                                musicViewModel,
+                                chorusRate.floatValue,
+                                chorusDepth.floatValue,
+                                chorusMix.floatValue
+                            )
                         }
                     )
 
@@ -572,7 +705,12 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         steps = 19,
                         onValueChangeFinished = {
                             musicViewModel.chorusDepth.floatValue = chorusDepth.floatValue
-                            sendChorusParams(musicViewModel, chorusRate.floatValue, chorusDepth.floatValue, chorusMix.floatValue)
+                            sendChorusParams(
+                                musicViewModel,
+                                chorusRate.floatValue,
+                                chorusDepth.floatValue,
+                                chorusMix.floatValue
+                            )
                         }
                     )
 
@@ -584,7 +722,12 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         onMixChange = { chorusMix.floatValue = it },
                         onMixChangeFinished = {
                             musicViewModel.chorusMix.floatValue = chorusMix.floatValue
-                            sendChorusParams(musicViewModel, chorusRate.floatValue, chorusDepth.floatValue, chorusMix.floatValue)
+                            sendChorusParams(
+                                musicViewModel,
+                                chorusRate.floatValue,
+                                chorusDepth.floatValue,
+                                chorusMix.floatValue
+                            )
                         },
                         enabled = enableChorus.value
                     )
@@ -600,7 +743,10 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         enableFlanger.value = it
                         musicViewModel.enableFlanger.value = it
                         val bundle = Bundle().apply { putBoolean(MediaCommands.KEY_ENABLE, it) }
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_FLANGER_ENABLE, bundle)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_FLANGER_ENABLE,
+                            bundle
+                        )
                     },
                     onReset = {
                         flangerRate.floatValue = 0.5f
@@ -618,12 +764,19 @@ fun EffectView(musicViewModel: MusicViewModel) {
                             putFloat(MediaCommands.KEY_FEEDBACK, 0.5f)
                             putFloat(MediaCommands.KEY_MIX, 0.5f)
                         }
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_FLANGER_SET_PARAMS, bundle)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_FLANGER_SET_PARAMS,
+                            bundle
+                        )
                     }
                 ) {
                     // Rate
                     Text(
-                        text = stringResource(R.string.chorus_rate) + ": " + String.format(Locale.ROOT, "%.2f Hz", flangerRate.floatValue),
+                        text = stringResource(R.string.chorus_rate) + ": " + String.format(
+                            Locale.ROOT,
+                            "%.2f Hz",
+                            flangerRate.floatValue
+                        ),
                         color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -637,7 +790,13 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         steps = 29,
                         onValueChangeFinished = {
                             musicViewModel.flangerRate.floatValue = flangerRate.floatValue
-                            sendFlangerParams(musicViewModel, flangerRate.floatValue, flangerDepth.floatValue, flangerFeedback.floatValue, flangerMix.floatValue)
+                            sendFlangerParams(
+                                musicViewModel,
+                                flangerRate.floatValue,
+                                flangerDepth.floatValue,
+                                flangerFeedback.floatValue,
+                                flangerMix.floatValue
+                            )
                         }
                     )
 
@@ -659,7 +818,13 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         steps = 19,
                         onValueChangeFinished = {
                             musicViewModel.flangerDepth.floatValue = flangerDepth.floatValue
-                            sendFlangerParams(musicViewModel, flangerRate.floatValue, flangerDepth.floatValue, flangerFeedback.floatValue, flangerMix.floatValue)
+                            sendFlangerParams(
+                                musicViewModel,
+                                flangerRate.floatValue,
+                                flangerDepth.floatValue,
+                                flangerFeedback.floatValue,
+                                flangerMix.floatValue
+                            )
                         }
                     )
 
@@ -681,7 +846,13 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         steps = 33,
                         onValueChangeFinished = {
                             musicViewModel.flangerFeedback.floatValue = flangerFeedback.floatValue
-                            sendFlangerParams(musicViewModel, flangerRate.floatValue, flangerDepth.floatValue, flangerFeedback.floatValue, flangerMix.floatValue)
+                            sendFlangerParams(
+                                musicViewModel,
+                                flangerRate.floatValue,
+                                flangerDepth.floatValue,
+                                flangerFeedback.floatValue,
+                                flangerMix.floatValue
+                            )
                         }
                     )
 
@@ -693,7 +864,13 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         onMixChange = { flangerMix.floatValue = it },
                         onMixChangeFinished = {
                             musicViewModel.flangerMix.floatValue = flangerMix.floatValue
-                            sendFlangerParams(musicViewModel, flangerRate.floatValue, flangerDepth.floatValue, flangerFeedback.floatValue, flangerMix.floatValue)
+                            sendFlangerParams(
+                                musicViewModel,
+                                flangerRate.floatValue,
+                                flangerDepth.floatValue,
+                                flangerFeedback.floatValue,
+                                flangerMix.floatValue
+                            )
                         },
                         enabled = enableFlanger.value
                     )
@@ -709,7 +886,10 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         enablePolyphony.value = it
                         musicViewModel.enablePolyphony.value = it
                         val bundle = Bundle().apply { putBoolean(MediaCommands.KEY_ENABLE, it) }
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_POLYPHONY_ENABLE, bundle)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_POLYPHONY_ENABLE,
+                            bundle
+                        )
                     },
                     onReset = {
                         polyphonySemitones.intValue = 0
@@ -724,7 +904,10 @@ fun EffectView(musicViewModel: MusicViewModel) {
                             putFloat(MediaCommands.KEY_DETUNE, 0.0f)
                             putFloat(MediaCommands.KEY_MIX, 0.5f)
                         }
-                        musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_POLYPHONY_SET_PARAMS, bundle)
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_POLYPHONY_SET_PARAMS,
+                            bundle
+                        )
                     }
                 ) {
                     // Semitones (-12 .. +12)
@@ -745,7 +928,12 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         steps = 23,
                         onValueChangeFinished = {
                             musicViewModel.polyphonySemitones.intValue = polyphonySemitones.intValue
-                            sendPolyphonyParams(musicViewModel, polyphonySemitones.intValue, polyphonyDetune.floatValue, polyphonyMix.floatValue)
+                            sendPolyphonyParams(
+                                musicViewModel,
+                                polyphonySemitones.intValue,
+                                polyphonyDetune.floatValue,
+                                polyphonyMix.floatValue
+                            )
                         }
                     )
 
@@ -769,7 +957,12 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         steps = 49,
                         onValueChangeFinished = {
                             musicViewModel.polyphonyDetune.floatValue = polyphonyDetune.floatValue
-                            sendPolyphonyParams(musicViewModel, polyphonySemitones.intValue, polyphonyDetune.floatValue, polyphonyMix.floatValue)
+                            sendPolyphonyParams(
+                                musicViewModel,
+                                polyphonySemitones.intValue,
+                                polyphonyDetune.floatValue,
+                                polyphonyMix.floatValue
+                            )
                         }
                     )
 
@@ -781,7 +974,12 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         onMixChange = { polyphonyMix.floatValue = it },
                         onMixChangeFinished = {
                             musicViewModel.polyphonyMix.floatValue = polyphonyMix.floatValue
-                            sendPolyphonyParams(musicViewModel, polyphonySemitones.intValue, polyphonyDetune.floatValue, polyphonyMix.floatValue)
+                            sendPolyphonyParams(
+                                musicViewModel,
+                                polyphonySemitones.intValue,
+                                polyphonyDetune.floatValue,
+                                polyphonyMix.floatValue
+                            )
                         },
                         enabled = enablePolyphony.value
                     )
@@ -843,12 +1041,12 @@ fun EffectCard(
                 if (onReset != null) {
                     OutlinedButton(
                         onClick = onReset,
-                        modifier = Modifier.padding(0.dp)
+                        modifier = Modifier.padding(0.dp),
                     ) {
                         Text(
                             text = stringResource(R.string.reset),
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
                 }
@@ -913,7 +1111,12 @@ fun DryWetMixSlider(
     }
 }
 
-private fun sendDelayParams(musicViewModel: MusicViewModel, time: Float, feedback: Float, mix: Float) {
+private fun sendDelayParams(
+    musicViewModel: MusicViewModel,
+    time: Float,
+    feedback: Float,
+    mix: Float
+) {
     val bundle = Bundle().apply {
         putFloat(MediaCommands.KEY_DELAY, time)
         putFloat(MediaCommands.KEY_FEEDBACK, feedback)
@@ -922,7 +1125,12 @@ private fun sendDelayParams(musicViewModel: MusicViewModel, time: Float, feedbac
     musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_DELAY_SET_PARAMS, bundle)
 }
 
-private fun sendReverbParams(musicViewModel: MusicViewModel, roomSize: Float, damping: Float, mix: Float) {
+private fun sendReverbParams(
+    musicViewModel: MusicViewModel,
+    roomSize: Float,
+    damping: Float,
+    mix: Float
+) {
     val bundle = Bundle().apply {
         putFloat(MediaCommands.KEY_ROOM_SIZE, roomSize)
         putFloat(MediaCommands.KEY_DAMPING, damping)
@@ -931,7 +1139,12 @@ private fun sendReverbParams(musicViewModel: MusicViewModel, roomSize: Float, da
     musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_REVERB_SET_PARAMS, bundle)
 }
 
-private fun sendChorusParams(musicViewModel: MusicViewModel, rate: Float, depth: Float, mix: Float) {
+private fun sendChorusParams(
+    musicViewModel: MusicViewModel,
+    rate: Float,
+    depth: Float,
+    mix: Float
+) {
     val bundle = Bundle().apply {
         putFloat(MediaCommands.KEY_RATE, rate)
         putFloat(MediaCommands.KEY_DEPTH, depth)
@@ -940,7 +1153,13 @@ private fun sendChorusParams(musicViewModel: MusicViewModel, rate: Float, depth:
     musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_CHORUS_SET_PARAMS, bundle)
 }
 
-private fun sendFlangerParams(musicViewModel: MusicViewModel, rate: Float, depth: Float, feedback: Float, mix: Float) {
+private fun sendFlangerParams(
+    musicViewModel: MusicViewModel,
+    rate: Float,
+    depth: Float,
+    feedback: Float,
+    mix: Float
+) {
     val bundle = Bundle().apply {
         putFloat(MediaCommands.KEY_RATE, rate)
         putFloat(MediaCommands.KEY_DEPTH, depth)
@@ -950,7 +1169,12 @@ private fun sendFlangerParams(musicViewModel: MusicViewModel, rate: Float, depth
     musicViewModel.browser?.sendCustomCommand(MediaCommands.COMMAND_FLANGER_SET_PARAMS, bundle)
 }
 
-private fun sendPolyphonyParams(musicViewModel: MusicViewModel, semitones: Int, detune: Float, mix: Float) {
+private fun sendPolyphonyParams(
+    musicViewModel: MusicViewModel,
+    semitones: Int,
+    detune: Float,
+    mix: Float
+) {
     val bundle = Bundle().apply {
         putInt(MediaCommands.KEY_SEMITONES, semitones)
         putFloat(MediaCommands.KEY_DETUNE, detune)

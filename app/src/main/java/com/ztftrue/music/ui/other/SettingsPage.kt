@@ -2131,12 +2131,13 @@ fun SetWidgetDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
         properties = DialogProperties(
             usePlatformDefaultWidth = false,
             dismissOnBackPress = true,
-            dismissOnClickOutside = true
+            dismissOnClickOutside = false
         )
     ) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth(0.95f)
+                .fillMaxHeight(0.88f)
                 .clip(RoundedCornerShape(16.dp)),
             color = MaterialTheme.colorScheme.background,
             shape = RoundedCornerShape(16.dp)

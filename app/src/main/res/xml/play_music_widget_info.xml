@@ -12,4 +12,4 @@
     android:targetCellWidth="4"
     android:targetCellHeight="2"
     android:widgetCategory="home_screen"
-    android:widgetFeatures="reconfigurable|configuration_optional" />
+    android:widgetFeatures="reconfigurable" />
