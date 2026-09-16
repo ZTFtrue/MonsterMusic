@@ -1,6 +1,7 @@
 package com.ztftrue.music.utils
 
 import android.annotation.SuppressLint
+import android.appwidget.AppWidgetManager
 import android.content.Context
 import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.ContextCompat
@@ -289,19 +290,49 @@ object SharedPreferencesUtils {
         return context.getSharedPreferences("Cover", Context.MODE_PRIVATE).getString("path", "")
     }
 
-    fun setWidgetBackground(context: Context, color: String) {
+    fun setWidgetBackground(context: Context, color: String, appWidgetId: Int? = null) {
         context.getSharedPreferences("config", Context.MODE_PRIVATE).edit(commit = true) {
             putString("widget_background", color)
+            if (appWidgetId != null && appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
+                putString("widget_background_$appWidgetId", color)
+            }
         }
     }
 
     @OptIn(ExperimentalStdlibApi::class)
-    fun getWidgetBackground(context: Context): String? {
-        return context.getSharedPreferences("config", Context.MODE_PRIVATE)
-            .getString(
-                "widget_background",
-                "#" + ContextCompat.getColor(context, R.color.light_blue_900).toHexString()
-            )
+    fun getWidgetBackground(context: Context, appWidgetId: Int? = null): String {
+        val prefs = context.getSharedPreferences("config", Context.MODE_PRIVATE)
+        val defaultColor = "#" + ContextCompat.getColor(context, R.color.light_blue_900).toHexString()
+        if (appWidgetId != null && appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
+            val specific = prefs.getString("widget_background_$appWidgetId", null)
+            if (specific != null) return specific
+        }
+        return prefs.getString("widget_background", defaultColor) ?: defaultColor
+    }
+
+    fun setWidgetTextContrast(context: Context, mode: String, appWidgetId: Int? = null) {
+        context.getSharedPreferences("config", Context.MODE_PRIVATE).edit(commit = true) {
+            putString("widget_text_contrast", mode)
+            if (appWidgetId != null && appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
+                putString("widget_text_contrast_$appWidgetId", mode)
+            }
+        }
+    }
+
+    fun getWidgetTextContrast(context: Context, appWidgetId: Int? = null): String {
+        val prefs = context.getSharedPreferences("config", Context.MODE_PRIVATE)
+        if (appWidgetId != null && appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
+            val specific = prefs.getString("widget_text_contrast_$appWidgetId", null)
+            if (specific != null) return specific
+        }
+        return prefs.getString("widget_text_contrast", "auto") ?: "auto"
+    }
+
+    fun removeWidgetConfig(context: Context, appWidgetId: Int) {
+        context.getSharedPreferences("config", Context.MODE_PRIVATE).edit(commit = true) {
+            remove("widget_background_$appWidgetId")
+            remove("widget_text_contrast_$appWidgetId")
+        }
     }
 
     fun setAutoDismissDicPop(context: Context, auto: Boolean) {

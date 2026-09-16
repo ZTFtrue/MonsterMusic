@@ -249,4 +249,16 @@
     <string name="dry">Dry</string>
     <string name="wet">Wet</string>
     <string name="dry_wet_tip">💡 Dry: original sound (no effect) | Wet: processed effect sound</string>
+    <string name="widget_config_title">Widget Configuration</string>
+    <string name="widget_preview">Preview</string>
+    <string name="widget_add_to_home">Add to Home Screen</string>
+    <string name="widget_pin_success">Widget added to home screen</string>
+    <string name="widget_pin_not_supported">Your launcher does not support adding widgets directly</string>
+    <string name="widget_opacity">Background Opacity</string>
+    <string name="widget_text_color">Text &amp; Icon Color</string>
+    <string name="widget_text_auto">Auto (Contrast)</string>
+    <string name="widget_text_light">Light (White)</string>
+    <string name="widget_text_dark">Dark (Black)</string>
+    <string name="widget_presets">Presets</string>
+    <string name="widget_no_track_playing">No music playing</string>
 </resources>

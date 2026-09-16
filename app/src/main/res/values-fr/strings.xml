@@ -249,4 +249,16 @@
     <string name="dry">Dry</string>
     <string name="wet">Wet</string>
     <string name="dry_wet_tip">💡 Dry : son original (sans effet) | Wet : son traité avec effet</string>
+    <string name="widget_config_title">Configuration du widget</string>
+    <string name="widget_preview">Aperçu</string>
+    <string name="widget_add_to_home">Ajouter à l\'écran d\'accueil</string>
+    <string name="widget_pin_success">Widget ajouté à l\'écran d\'accueil</string>
+    <string name="widget_pin_not_supported">Votre lanceur ne prend pas en charge l\'ajout direct de widgets</string>
+    <string name="widget_opacity">Opacité de l\'arrière-plan</string>
+    <string name="widget_text_color">Couleur du texte et des icônes</string>
+    <string name="widget_text_auto">Auto (Contraste)</string>
+    <string name="widget_text_light">Clair (Blanc)</string>
+    <string name="widget_text_dark">Sombre (Noir)</string>
+    <string name="widget_presets">Préréglages</string>
+    <string name="widget_no_track_playing">Aucune musique en cours</string>
 </resources>

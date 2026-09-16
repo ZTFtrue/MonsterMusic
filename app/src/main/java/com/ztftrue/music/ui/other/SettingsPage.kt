@@ -46,7 +46,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
@@ -93,6 +95,7 @@ import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.PlayMusicWidget
 import com.ztftrue.music.R
+import com.ztftrue.music.ui.widget.WidgetConfigContent
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
 import com.ztftrue.music.sqlData.model.LYRICS_TYPE
 import com.ztftrue.music.sqlData.model.MainTab
@@ -2119,125 +2122,51 @@ fun ManageFolderDialog(onDismiss: () -> Unit) {
 @OptIn(ExperimentalStdlibApi::class)
 @Composable
 fun SetWidgetDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
-
     val context = LocalContext.current
-    val defaultWidgetColor = colorResource(R.color.light_blue_900)
-    rememberColorPickerController()
-    var colorString by remember { mutableStateOf(Color.Blue.toArgb().toHexString()) }
-
-    LaunchedEffect(Unit) {
-        colorString = SharedPreferencesUtils.getWidgetBackground(context) ?: defaultWidgetColor.toArgb().toHexString()
-    }
-    fun onConfirmation() {
-        SharedPreferencesUtils.setWidgetBackground(context, colorString)
-        val intent = Intent(context, PlayMusicWidget::class.java)
-        intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-        intent.putExtra("source", context.packageName)
-        val ids = AppWidgetManager.getInstance(
-            context
-        ).getAppWidgetIds(
-            ComponentName(
-                context,
-                PlayMusicWidget::class.java
-            )
-        )
-        intent.putExtra("playingStatus", musicViewModel.browser?.isPlaying)
-        intent.putExtra("title", musicViewModel.currentPlay.value?.name ?: "")
-        intent.putExtra("author", musicViewModel.currentPlay.value?.artist ?: "")
-        intent.putExtra("path", musicViewModel.currentPlay.value?.path ?: "")
-        intent.putExtra("id", musicViewModel.currentPlay.value?.id ?: 0L)
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-        context.sendBroadcast(intent)
-        onDismiss()
-    }
-
+    val initialColor = SharedPreferencesUtils.getWidgetBackground(context)
+    val initialContrast = SharedPreferencesUtils.getWidgetTextContrast(context)
 
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
-            usePlatformDefaultWidth = true, dismissOnBackPress = true,
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = true,
             dismissOnClickOutside = true
-        ),
-        content = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(color = MaterialTheme.colorScheme.background),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    text = stringResource(R.string.settings_set_widget_background),
-                    modifier = Modifier
-                        .padding(2.dp),
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+        )
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth(0.95f)
+                .clip(RoundedCornerShape(16.dp)),
+            color = MaterialTheme.colorScheme.background,
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            WidgetConfigContent(
+                initialColorHex = initialColor,
+                initialContrast = initialContrast,
+                canPinWidget = true,
+                currentTrackName = musicViewModel.currentPlay.value?.name,
+                currentArtistName = musicViewModel.currentPlay.value?.artist,
+                currentCoverPath = musicViewModel.currentPlay.value?.path,
+                isPlaying = musicViewModel.browser?.isPlaying ?: false,
+                onSave = { colorHex, contrast ->
+                    SharedPreferencesUtils.setWidgetBackground(context, colorHex)
+                    SharedPreferencesUtils.setWidgetTextContrast(context, contrast)
+                    SharedPreferencesUtils.setWidgetEnable(context, true)
 
-                HorizontalDivider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .background(color = MaterialTheme.colorScheme.onBackground)
-                )
-                LazyColumn {
-                    item {
-                        MyAdvancedColorPicker(
-                            onColorChanged = { colorEnvelope: ColorEnvelope ->
-                                val hexCode: String =
-                                    colorEnvelope.hexCode
-                                colorString = "#$hexCode"
-                            }
-                        )
-
-                    }
-                }
-                HorizontalDivider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .background(color = MaterialTheme.colorScheme.onBackground)
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    TextButton(
-                        onClick = { onDismiss() },
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .fillMaxWidth(0.5f),
-                    ) {
-                        Text(
-                            stringResource(R.string.cancel),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                    HorizontalDivider(
-                        modifier = Modifier
-                            .background(MaterialTheme.colorScheme.onBackground)
-                            .width(1.dp)
-                            .height(50.dp)
+                    val appWidgetManager = AppWidgetManager.getInstance(context)
+                    val ids = appWidgetManager.getAppWidgetIds(
+                        ComponentName(context, PlayMusicWidget::class.java)
                     )
-                    TextButton(
-                        onClick = {
-                            onConfirmation()
-                        },
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .fillMaxWidth(),
-
-                        ) {
-                        Text(
-                            stringResource(R.string.confirm),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
+                    for (id in ids) {
+                        PlayMusicWidget.updateAppWidget(context, appWidgetManager, id)
                     }
-                }
-            }
+                    onDismiss()
+                },
+                onDismiss = onDismiss
+            )
         }
-    )
+    }
 }
 
 @UnstableApi

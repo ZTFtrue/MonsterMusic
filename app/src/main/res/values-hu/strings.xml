@@ -249,4 +249,16 @@
     <string name="dry">Dry</string>
     <string name="wet">Wet</string>
     <string name="dry_wet_tip">💡 Dry: eredeti hang (effekt nélkül) | Wet: effektezett hang</string>
+    <string name="widget_config_title">Widget konfiguráció</string>
+    <string name="widget_preview">Előnézet</string>
+    <string name="widget_add_to_home">Hozzáadás a kezdőképernyőhöz</string>
+    <string name="widget_pin_success">Widget hozzáadva a kezdőképernyőhöz</string>
+    <string name="widget_pin_not_supported">A launcher nem támogatja a widgetek közvetlen hozzáadását</string>
+    <string name="widget_opacity">Háttér átlátszatlansága</string>
+    <string name="widget_text_color">Szöveg és ikon színe</string>
+    <string name="widget_text_auto">Automatikus (Kontraszt)</string>
+    <string name="widget_text_light">Világos (Fehér)</string>
+    <string name="widget_text_dark">Sötét (Fekete)</string>
+    <string name="widget_presets">Előbeállítások</string>
+    <string name="widget_no_track_playing">Nem szól zene</string>
 </resources>

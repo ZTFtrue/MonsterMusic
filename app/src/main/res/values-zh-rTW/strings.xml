@@ -249,4 +249,16 @@
     <string name="dry">乾音</string>
     <string name="wet">濕音</string>
     <string name="dry_wet_tip">💡 乾音：原始聲音（無效果） | 濕音：處理後的效果聲</string>
+    <string name="widget_config_title">桌面小組件配置</string>
+    <string name="widget_preview">效果預覽</string>
+    <string name="widget_add_to_home">新增至主畫面</string>
+    <string name="widget_pin_success">小組件已新增至主畫面</string>
+    <string name="widget_pin_not_supported">目前啟動器不支援直接新增小組件</string>
+    <string name="widget_opacity">背景不透明度</string>
+    <string name="widget_text_color">文字與圖示顏色</string>
+    <string name="widget_text_auto">自動（高對比度）</string>
+    <string name="widget_text_light">淺色（白色）</string>
+    <string name="widget_text_dark">深色（黑色）</string>
+    <string name="widget_presets">預設</string>
+    <string name="widget_no_track_playing">暫無播放音樂</string>
 </resources>

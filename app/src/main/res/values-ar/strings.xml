@@ -249,4 +249,16 @@
     <string name="dry">جاف</string>
     <string name="wet">رطب</string>
     <string name="dry_wet_tip">💡 جاف: الصوت الأصلي (بدون تأثير) | رطب: صوت التأثير المعالج</string>
+    <string name="widget_config_title">تكوين الأداة</string>
+    <string name="widget_preview">معاينة</string>
+    <string name="widget_add_to_home">إضافة إلى الشاشة الرئيسية</string>
+    <string name="widget_pin_success">تمت إضافة الأداة إلى الشاشة الرئيسية</string>
+    <string name="widget_pin_not_supported">مشغل التطبيقات لا يدعم إضافة الأدوات مباشرة</string>
+    <string name="widget_opacity">عتامة الخلفية</string>
+    <string name="widget_text_color">لون النص والأيقونات</string>
+    <string name="widget_text_auto">تلقائي (تباين)</string>
+    <string name="widget_text_light">فاتح (أبيض)</string>
+    <string name="widget_text_dark">داكن (أسود)</string>
+    <string name="widget_presets">الإعدادات المسبقة</string>
+    <string name="widget_no_track_playing">لا توجد موسيقى قيد التشغيل</string>
 </resources>

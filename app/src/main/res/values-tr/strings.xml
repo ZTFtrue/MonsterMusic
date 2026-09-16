@@ -248,4 +248,16 @@
     <string name="dry">Kuru</string>
     <string name="wet">Islak</string>
     <string name="dry_wet_tip">💡 Kuru: orijinal ses (efektsiz) | Islak: işlenmiş efekt sesi</string>
+    <string name="widget_config_title">Widget Yapılandırması</string>
+    <string name="widget_preview">Önizleme</string>
+    <string name="widget_add_to_home">Ana Ekrana Ekle</string>
+    <string name="widget_pin_success">Widget ana ekrana eklendi</string>
+    <string name="widget_pin_not_supported">Başlatıcınız doğrudan widget eklemeyi desteklemiyor</string>
+    <string name="widget_opacity">Arka Plan Opaklığı</string>
+    <string name="widget_text_color">Metin ve Simge Rengi</string>
+    <string name="widget_text_auto">Otomatik (Kontrast)</string>
+    <string name="widget_text_light">Açık (Beyaz)</string>
+    <string name="widget_text_dark">Koyu (Siyah)</string>
+    <string name="widget_presets">Ön Ayarlar</string>
+    <string name="widget_no_track_playing">Müzik çalmıyor</string>
 </resources>

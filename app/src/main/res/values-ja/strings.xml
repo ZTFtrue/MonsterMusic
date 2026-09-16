@@ -249,4 +249,16 @@
     <string name="dry">原音</string>
     <string name="wet">エフェクト音</string>
     <string name="dry_wet_tip">💡 原音：加工前のオリジナル音 | エフェクト音：加工後の音</string>
+    <string name="widget_config_title">ウィジェット設定</string>
+    <string name="widget_preview">プレビュー</string>
+    <string name="widget_add_to_home">ホーム画面に追加</string>
+    <string name="widget_pin_success">ウィジェットがホーム画面に追加されました</string>
+    <string name="widget_pin_not_supported">お使いのランチャーはウィジェットの直接追加に対応していません</string>
+    <string name="widget_opacity">背景の不透明度</string>
+    <string name="widget_text_color">テキストとアイコンの色</string>
+    <string name="widget_text_auto">自動（高コントラスト）</string>
+    <string name="widget_text_light">ライト（白）</string>
+    <string name="widget_text_dark">ダーク（黒）</string>
+    <string name="widget_presets">プリセット</string>
+    <string name="widget_no_track_playing">音楽を再生していません</string>
 </resources>

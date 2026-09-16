@@ -249,4 +249,16 @@
     <string name="dry">Seka</string>
     <string name="wet">Malseka</string>
     <string name="dry_wet_tip">💡 Seka: origina sono (sen efekto) | Malseka: prilaborita efekta sono</string>
+    <string name="widget_config_title">Agordo de fenestraĵo</string>
+    <string name="widget_preview">Antaŭrigardo</string>
+    <string name="widget_add_to_home">Aldoni al hejmekrano</string>
+    <string name="widget_pin_success">Fenestraĵo aldonita al hejmekrano</string>
+    <string name="widget_pin_not_supported">Via lanĉilo ne subtenas rektan aldonon de fenestraĵoj</string>
+    <string name="widget_opacity">Fona malklareco</string>
+    <string name="widget_text_color">Koloro de teksto kaj ikonoj</string>
+    <string name="widget_text_auto">Aŭtomata (Kontrasto)</string>
+    <string name="widget_text_light">Hela (Blanka)</string>
+    <string name="widget_text_dark">Malhela (Nigra)</string>
+    <string name="widget_presets">Antaŭagordoj</string>
+    <string name="widget_no_track_playing">Neniu muziko ludas</string>
 </resources>

@@ -249,4 +249,16 @@
     <string name="dry">Dry</string>
     <string name="wet">Wet</string>
     <string name="dry_wet_tip">💡 Dry: Originalton (kein Effekt) | Wet: bearbeiteter Effektsound</string>
+    <string name="widget_config_title">Widget-Konfiguration</string>
+    <string name="widget_preview">Vorschau</string>
+    <string name="widget_add_to_home">Zum Startbildschirm hinzufügen</string>
+    <string name="widget_pin_success">Widget zum Startbildschirm hinzugefügt</string>
+    <string name="widget_pin_not_supported">Ihr Launcher unterstützt das direkte Hinzufügen von Widgets nicht</string>
+    <string name="widget_opacity">Hintergrund-Deckkraft</string>
+    <string name="widget_text_color">Text- &amp; Symbolfarbe</string>
+    <string name="widget_text_auto">Automatisch (Kontrast)</string>
+    <string name="widget_text_light">Hell (Weiß)</string>
+    <string name="widget_text_dark">Dunkel (Schwarz)</string>
+    <string name="widget_presets">Voreinstellungen</string>
+    <string name="widget_no_track_playing">Keine Musik wird abgespielt</string>
 </resources>

@@ -18,7 +18,6 @@ import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 
-
 /**
  * Implementation of App Widget functionality.
  */
@@ -27,9 +26,7 @@ class PlayMusicWidget : AppWidgetProvider() {
     @OptIn(UnstableApi::class)
     override fun onReceive(context: Context?, intent: Intent?) {
         super.onReceive(context, intent)
-        if (context != null && intent != null && intent.action.equals(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
-            && intent.getStringExtra("source").equals(context.packageName)
-        ) {
+        if (context != null && intent != null && intent.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE) {
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val appWidgetIds = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS)
                 ?: appWidgetManager.getAppWidgetIds(ComponentName(context, PlayMusicWidget::class.java))
@@ -46,33 +43,19 @@ class PlayMusicWidget : AppWidgetProvider() {
         newOptions: Bundle?
     ) {
         super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
-        if (context != null && newOptions != null && appWidgetManager != null) {
-//            val minWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
-//            val minHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
-//            val maxWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH)
-//            val maxHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT)
-//            val density = context.resources?.displayMetrics?.density ?: 1f
-//            val columnCount = (minWidth / (60.dp.toPx(context)))
+        if (context != null && appWidgetManager != null) {
             updateAppWidget(context, appWidgetManager, appWidgetId)
         }
-
-//        val remoteViews = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//            RemoteViews(sizes.associateWith(::createRemoteViews))
-//        } else {
-//
-//        }
-//        appWidgetManager.updateAppWidget(appWidgetId, remoteViews)
-
     }
 
     override fun onDeleted(context: Context?, appWidgetIds: IntArray?) {
         super.onDeleted(context, appWidgetIds)
+        if (context != null && appWidgetIds != null) {
+            for (id in appWidgetIds) {
+                SharedPreferencesUtils.removeWidgetConfig(context, id)
+            }
+        }
     }
-
-//    override fun onRestored(context: Context?, oldWidgetIds: IntArray?, newWidgetIds: IntArray?) {
-//        super.onRestored(context, oldWidgetIds, newWidgetIds)
-////        Log.d("PlayMusicWidget", "onRestored")
-//    }
 
     @OptIn(UnstableApi::class)
     override fun onUpdate(
@@ -80,25 +63,6 @@ class PlayMusicWidget : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-//        val sessionToken = SessionToken(context, ComponentName(context, PlayService::class.java))
-//        val controllerFuture: ListenableFuture<MediaController> =
-//            MediaController.Builder(context, sessionToken).buildAsync()
-//
-//        controllerFuture.addListener({
-//            try {
-//                val controller = controllerFuture.get()
-//                // 使用获取到的 controller 更新所有小部件实例
-//                appWidgetIds.forEach { appWidgetId ->
-//                    updateAppWidget(context, appWidgetManager, appWidgetId, controller)
-//                }
-//            } catch (e: Exception) {
-//                // 处理连接失败的情况
-//            } finally {
-//                // (重要) 释放 controller future
-//                MediaController.releaseFuture(controllerFuture)
-//            }
-//        }, ContextCompat.getMainExecutor(context))
-        //this line replace the original
         for (appWidgetId in appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId)
         }
@@ -106,174 +70,183 @@ class PlayMusicWidget : AppWidgetProvider() {
 
     @OptIn(UnstableApi::class)
     override fun onEnabled(context: Context) {
-        // TODO send broadcast
-//        Log.d("PlayMusicWidget", "onEnabled")
         SharedPreferencesUtils.setWidgetEnable(context, true)
-//        context.getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit().apply {
-//            putBoolean("enable", true)
-//            apply()
-//        }
-//        Toast.makeText(context, "You can set background color in setting", Toast.LENGTH_SHORT).show()
-        // Enter relevant functionality for when the first widget is created
     }
 
-    override fun onDisabled(
-        context: Context
-    ) {
+    override fun onDisabled(context: Context) {
         SharedPreferencesUtils.setWidgetEnable(context, false)
-//        context.getSharedPreferences("Widgets", Context.MODE_PRIVATE).edit().apply {
-//            putBoolean("enable", false)
-//            apply()
-//        }
     }
 
-    @UnstableApi
-    fun getPendingIntent(
-        context: Context,
-        keyEvent: Int
-    ): PendingIntent {
-        val intent = Intent(context, PlayService::class.java).apply {
-            action = Intent.ACTION_MEDIA_BUTTON
-            putExtra(
-                Intent.EXTRA_KEY_EVENT,
-                KeyEvent(KeyEvent.ACTION_DOWN, keyEvent)
-            )
-        }
-        val pendingIntent = PendingIntent.getService(
-            context,
-            keyEvent,
-            intent,
-            PendingIntent.FLAG_IMMUTABLE
-        )
-        return pendingIntent
-    }
-
-    @OptIn(UnstableApi::class)
-    internal fun updateAppWidget(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetId: Int
-    ) {
-        // 获取 Widget 的当前配置参数
-        val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
-
-        // 获取最小/最大宽高（单位：dp）
-        val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
-//        val maxWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
-//        val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
-//        val maxHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
-
-        val views = RemoteViews(
-            context.packageName,
-            R.layout.play_music_widget
-        ).apply {
-            setInt(
-                R.id.play_music_widget,
-                "setBackgroundColor",
-                try {
-                    (SharedPreferencesUtils.getWidgetBackground(context)
-                        ?: "#FFFFFF").toColorInt()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    Color.WHITE
-                }
-            )
-
-            setOnClickPendingIntent(
-                R.id.preview,
-                getPendingIntent(
-                    context,
-                    KeyEvent.KEYCODE_MEDIA_PREVIOUS
+    companion object {
+        @UnstableApi
+        fun getPendingIntent(
+            context: Context,
+            keyEvent: Int
+        ): PendingIntent {
+            val intent = Intent(context, PlayService::class.java).apply {
+                action = Intent.ACTION_MEDIA_BUTTON
+                putExtra(
+                    Intent.EXTRA_KEY_EVENT,
+                    KeyEvent(KeyEvent.ACTION_DOWN, keyEvent)
                 )
-            )
-
-            setOnClickPendingIntent(
-                R.id.pause, getPendingIntent(
-                    context,
-                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
-                )
-            )
-
-            setOnClickPendingIntent(
-                R.id.next, getPendingIntent(
-                    context,
-                    KeyEvent.KEYCODE_MEDIA_NEXT
-                )
-            )
-
-            val intent = Intent(context, MainActivity::class.java)
-            val pendingIntent = PendingIntent.getActivity(
+            }
+            return PendingIntent.getService(
                 context,
-                0,
+                keyEvent,
                 intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                PendingIntent.FLAG_IMMUTABLE
             )
-            setOnClickPendingIntent(R.id.play_music_widget, pendingIntent)
         }
-        updateView(context, views, minWidth)
-        appWidgetManager.updateAppWidget(appWidgetId, views)
-    }
 
-    private fun updateView(context: Context, it: RemoteViews, minWidth: Int) {
-        context.getSharedPreferences("Widgets", Context.MODE_PRIVATE)
-            .also { sharedPreferences ->
-                val playingStatus = sharedPreferences.getBoolean("playingStatus", false)
-                val title = sharedPreferences.getString("title", "")
-                val author = sharedPreferences.getString("author", "")
-                val path = sharedPreferences.getString("path", "")
-//                val id = sharedPreferences.getLong("id", 0L)
-                if (minWidth <= 180) {
-                    it.setViewVisibility(R.id.cover, View.VISIBLE)
-                    it.setViewVisibility(R.id.content, View.GONE)
-                    it.setInt(
-                        R.id.play_music_widget,
-                        "setBackgroundColor",
-                        Color.TRANSPARENT
-                    )
+        private fun isColorDark(color: Int): Boolean {
+            val alpha = Color.alpha(color)
+            if (alpha < 64) {
+                // Highly transparent background: standard Android launcher assumption is white text with shadow
+                return true
+            }
+            val r = Color.red(color)
+            val g = Color.green(color)
+            val b = Color.blue(color)
+            val darkness = 1.0 - (0.299 * r + 0.587 * g + 0.114 * b) / 255.0
+            return darkness >= 0.45
+        }
 
-                } else if (minWidth <= 275) {
-                    it.setViewVisibility(R.id.cover, View.GONE)
-                    it.setViewVisibility(R.id.content, View.VISIBLE)
-                    it.setViewVisibility(R.id.small_cover, View.VISIBLE)
-                    it.setInt(
-                        R.id.play_music_widget,
-                        "setBackgroundColor",
-                        try {
-                            (SharedPreferencesUtils.getWidgetBackground(context)
-                                ?: "#FFFFFF").toColorInt()
-                        } catch (_: Exception) {
-                            Color.WHITE
-                        }
-                    )
-                } else {
-                    it.setViewVisibility(R.id.small_cover, View.GONE)
-                    it.setViewVisibility(R.id.cover, View.VISIBLE)
-                    it.setViewVisibility(R.id.content, View.VISIBLE)
-                    it.setInt(
-                        R.id.play_music_widget,
-                        "setBackgroundColor",
-                        try {
-                            (SharedPreferencesUtils.getWidgetBackground(context)
-                                ?: "#FFFFFF").toColorInt()
-                        } catch (_: Exception) {
-                            Color.WHITE
-                        }
-                    )
-                }
-                it.setImageViewResource(
-                    R.id.pause,
-                    if (playingStatus) R.drawable.pause else R.drawable.play
-                )
-                if (!path.isNullOrEmpty()) {
-                    val cover = Utils.getCoverBitmap(context, path)
-                    it.setImageViewBitmap(R.id.cover, cover)
-                    it.setImageViewBitmap(R.id.small_cover, cover)
-                }
-                it.setTextViewText(R.id.title, title)
-                it.setTextViewText(R.id.author, author)
+        @OptIn(UnstableApi::class)
+        fun updateAppWidget(
+            context: Context,
+            appWidgetManager: AppWidgetManager,
+            appWidgetId: Int
+        ) {
+            val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
+            val minWidth = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0) ?: 0
+
+            val bgColorStr = SharedPreferencesUtils.getWidgetBackground(context, appWidgetId)
+            val bgColor = try {
+                bgColorStr.toColorInt()
+            } catch (_: Exception) {
+                Color.WHITE
             }
 
+            val contrastMode = SharedPreferencesUtils.getWidgetTextContrast(context, appWidgetId)
+            val useLightText = when (contrastMode) {
+                "light" -> true
+                "dark" -> false
+                else -> isColorDark(bgColor)
+            }
+
+            val titleColor = if (useLightText) Color.WHITE else Color.parseColor("#1C1B1F")
+            val authorColor = if (useLightText) Color.parseColor("#B3FFFFFF") else Color.parseColor("#79747E")
+            val iconColor = if (useLightText) Color.WHITE else Color.parseColor("#1C1B1F")
+
+            val views = RemoteViews(
+                context.packageName,
+                R.layout.play_music_widget
+            ).apply {
+                setOnClickPendingIntent(
+                    R.id.preview,
+                    getPendingIntent(context, KeyEvent.KEYCODE_MEDIA_PREVIOUS)
+                )
+
+                setOnClickPendingIntent(
+                    R.id.pause,
+                    getPendingIntent(context, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
+                )
+
+                setOnClickPendingIntent(
+                    R.id.next,
+                    getPendingIntent(context, KeyEvent.KEYCODE_MEDIA_NEXT)
+                )
+
+                val intent = Intent(context, MainActivity::class.java)
+                val pendingIntent = PendingIntent.getActivity(
+                    context,
+                    0,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                setOnClickPendingIntent(R.id.play_music_widget, pendingIntent)
+
+                // Apply dynamic contrast colors
+                setTextColor(R.id.title, titleColor)
+                setTextColor(R.id.author, authorColor)
+                setInt(R.id.preview, "setColorFilter", iconColor)
+                setInt(R.id.pause, "setColorFilter", iconColor)
+                setInt(R.id.next, "setColorFilter", iconColor)
+            }
+
+            updateView(context, views, minWidth, bgColor)
+            appWidgetManager.updateAppWidget(appWidgetId, views)
+        }
+
+        private fun updateView(
+            context: Context,
+            it: RemoteViews,
+            minWidth: Int,
+            bgColor: Int
+        ) {
+            val sharedPreferences = context.getSharedPreferences("Widgets", Context.MODE_PRIVATE)
+            val playingStatus = sharedPreferences.getBoolean("playingStatus", false)
+            val title = sharedPreferences.getString("title", "")
+            val author = sharedPreferences.getString("author", "")
+            val path = sharedPreferences.getString("path", "")
+
+            // Only collapse to cover-only if width is specifically measured between 1 and 180dp.
+            // When minWidth == 0 (uninitialized or default on many launchers), default to full mode!
+            if (minWidth in 1..180) {
+                it.setViewVisibility(R.id.cover, View.VISIBLE)
+                it.setViewVisibility(R.id.content, View.GONE)
+                it.setInt(
+                    R.id.play_music_widget,
+                    "setBackgroundColor",
+                    Color.TRANSPARENT
+                )
+            } else if (minWidth in 181..275) {
+                it.setViewVisibility(R.id.cover, View.GONE)
+                it.setViewVisibility(R.id.content, View.VISIBLE)
+                it.setViewVisibility(R.id.small_cover, View.VISIBLE)
+                it.setInt(
+                    R.id.play_music_widget,
+                    "setBackgroundColor",
+                    bgColor
+                )
+            } else {
+                it.setViewVisibility(R.id.small_cover, View.GONE)
+                it.setViewVisibility(R.id.cover, View.VISIBLE)
+                it.setViewVisibility(R.id.content, View.VISIBLE)
+                it.setInt(
+                    R.id.play_music_widget,
+                    "setBackgroundColor",
+                    bgColor
+                )
+            }
+
+            it.setImageViewResource(
+                R.id.pause,
+                if (playingStatus) R.drawable.pause else R.drawable.play
+            )
+
+            if (!path.isNullOrEmpty()) {
+                val cover = Utils.getCoverBitmap(context, path)
+                it.setImageViewBitmap(R.id.cover, cover)
+                it.setImageViewBitmap(R.id.small_cover, cover)
+            } else {
+                it.setImageViewResource(R.id.cover, R.drawable.songs_thumbnail_cover)
+                it.setImageViewResource(R.id.small_cover, R.drawable.songs_thumbnail_cover)
+            }
+
+            val displayTitle = if (title.isNullOrEmpty()) {
+                context.getString(R.string.app_name)
+            } else {
+                title
+            }
+            val displayAuthor = if (author.isNullOrEmpty()) {
+                context.getString(R.string.widget_no_track_playing)
+            } else {
+                author
+            }
+
+            it.setTextViewText(R.id.title, displayTitle)
+            it.setTextViewText(R.id.author, displayAuthor)
+        }
     }
 }
-
-

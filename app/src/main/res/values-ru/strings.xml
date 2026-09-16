@@ -249,4 +249,16 @@
     <string name="dry">Сухой</string>
     <string name="wet">Влажный</string>
     <string name="dry_wet_tip">💡 Сухой: исходный звук (без эффекта) | Влажный: обработанный звук эффекта</string>
+    <string name="widget_config_title">Настройка виджета</string>
+    <string name="widget_preview">Предпросмотр</string>
+    <string name="widget_add_to_home">Добавить на главный экран</string>
+    <string name="widget_pin_success">Виджет добавлен на главный экран</string>
+    <string name="widget_pin_not_supported">Ваш лаунчер не поддерживает прямое добавление виджетов</string>
+    <string name="widget_opacity">Непрозрачность фона</string>
+    <string name="widget_text_color">Цвет текста и значков</string>
+    <string name="widget_text_auto">Авто (Контраст)</string>
+    <string name="widget_text_light">Светлый (Белый)</string>
+    <string name="widget_text_dark">Темный (Черный)</string>
+    <string name="widget_presets">Пресеты</string>
+    <string name="widget_no_track_playing">Музыка не играет</string>
 </resources>

@@ -249,4 +249,16 @@
     <string name="dry">干音</string>
     <string name="wet">湿音</string>
     <string name="dry_wet_tip">💡 干音：原始声音（无效果） | 湿音：处理后的效果声</string>
+    <string name="widget_config_title">桌面小部件配置</string>
+    <string name="widget_preview">效果预览</string>
+    <string name="widget_add_to_home">添加至桌面</string>
+    <string name="widget_pin_success">小部件已添加至桌面</string>
+    <string name="widget_pin_not_supported">当前启动器不支持直接添加小部件</string>
+    <string name="widget_opacity">背景不透明度</string>
+    <string name="widget_text_color">文字与图标颜色</string>
+    <string name="widget_text_auto">自动（高对比度）</string>
+    <string name="widget_text_light">浅色（白色）</string>
+    <string name="widget_text_dark">深色（黑色）</string>
+    <string name="widget_presets">预设</string>
+    <string name="widget_no_track_playing">暂无播放音乐</string>
 </resources>
