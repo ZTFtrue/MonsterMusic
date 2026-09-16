@@ -246,4 +246,7 @@
     <string name="delay_effect">Effet Delay</string>
     <string name="delay_time">Temps de delay</string>
     <string name="delay_feedback">Feedback</string>
+    <string name="dry">Dry</string>
+    <string name="wet">Wet</string>
+    <string name="dry_wet_tip">💡 Dry : son original (sans effet) | Wet : son traité avec effet</string>
 </resources>

@@ -300,24 +300,15 @@ fun EffectView(musicViewModel: MusicViewModel) {
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // Wet/Dry Mix (0% - 100%)
-                    Text(
-                        text = stringResource(R.string.wet_dry_mix) + ": " + (delayEffectMix.floatValue * 100).roundToInt() + "%",
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    CustomSlider(
-                        value = delayEffectMix.floatValue,
-                        onValueChange = {
-                            delayEffectMix.floatValue = (it * 20f).roundToInt() / 20f
-                        },
-                        enabled = enableDelay.value,
-                        valueRange = 0.0f..1.0f,
-                        steps = 19,
-                        onValueChangeFinished = {
+                    // Wet/Dry Mix
+                    DryWetMixSlider(
+                        mix = delayEffectMix.floatValue,
+                        onMixChange = { delayEffectMix.floatValue = it },
+                        onMixChangeFinished = {
                             musicViewModel.delayEffectMix.floatValue = delayEffectMix.floatValue
                             sendDelayParams(musicViewModel, delayEffectTime.floatValue, delayEffectFeedback.floatValue, delayEffectMix.floatValue)
-                        }
+                        },
+                        enabled = enableDelay.value
                     )
                 }
             }
@@ -394,23 +385,14 @@ fun EffectView(musicViewModel: MusicViewModel) {
                     Spacer(modifier = Modifier.height(4.dp))
 
                     // Wet/Dry Mix
-                    Text(
-                        text = stringResource(R.string.wet_dry_mix) + ": " + (reverbMix.floatValue * 100).roundToInt() + "%",
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    CustomSlider(
-                        value = reverbMix.floatValue,
-                        onValueChange = {
-                            reverbMix.floatValue = (it * 20f).roundToInt() / 20f
-                        },
-                        enabled = enableReverb.value,
-                        valueRange = 0.0f..1.0f,
-                        steps = 19,
-                        onValueChangeFinished = {
+                    DryWetMixSlider(
+                        mix = reverbMix.floatValue,
+                        onMixChange = { reverbMix.floatValue = it },
+                        onMixChangeFinished = {
                             musicViewModel.reverbMix.floatValue = reverbMix.floatValue
                             sendReverbParams(musicViewModel, reverbRoomSize.floatValue, reverbDamping.floatValue, reverbMix.floatValue)
-                        }
+                        },
+                        enabled = enableReverb.value
                     )
                 }
             }
@@ -597,23 +579,14 @@ fun EffectView(musicViewModel: MusicViewModel) {
                     Spacer(modifier = Modifier.height(4.dp))
 
                     // Mix
-                    Text(
-                        text = stringResource(R.string.wet_dry_mix) + ": " + (chorusMix.floatValue * 100).roundToInt() + "%",
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    CustomSlider(
-                        value = chorusMix.floatValue,
-                        onValueChange = {
-                            chorusMix.floatValue = (it * 20f).roundToInt() / 20f
-                        },
-                        enabled = enableChorus.value,
-                        valueRange = 0.0f..1.0f,
-                        steps = 19,
-                        onValueChangeFinished = {
+                    DryWetMixSlider(
+                        mix = chorusMix.floatValue,
+                        onMixChange = { chorusMix.floatValue = it },
+                        onMixChangeFinished = {
                             musicViewModel.chorusMix.floatValue = chorusMix.floatValue
                             sendChorusParams(musicViewModel, chorusRate.floatValue, chorusDepth.floatValue, chorusMix.floatValue)
-                        }
+                        },
+                        enabled = enableChorus.value
                     )
                 }
             }
@@ -715,23 +688,14 @@ fun EffectView(musicViewModel: MusicViewModel) {
                     Spacer(modifier = Modifier.height(4.dp))
 
                     // Mix
-                    Text(
-                        text = stringResource(R.string.wet_dry_mix) + ": " + (flangerMix.floatValue * 100).roundToInt() + "%",
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    CustomSlider(
-                        value = flangerMix.floatValue,
-                        onValueChange = {
-                            flangerMix.floatValue = (it * 20f).roundToInt() / 20f
-                        },
-                        enabled = enableFlanger.value,
-                        valueRange = 0.0f..1.0f,
-                        steps = 19,
-                        onValueChangeFinished = {
+                    DryWetMixSlider(
+                        mix = flangerMix.floatValue,
+                        onMixChange = { flangerMix.floatValue = it },
+                        onMixChangeFinished = {
                             musicViewModel.flangerMix.floatValue = flangerMix.floatValue
                             sendFlangerParams(musicViewModel, flangerRate.floatValue, flangerDepth.floatValue, flangerFeedback.floatValue, flangerMix.floatValue)
-                        }
+                        },
+                        enabled = enableFlanger.value
                     )
                 }
             }
@@ -812,23 +776,14 @@ fun EffectView(musicViewModel: MusicViewModel) {
                     Spacer(modifier = Modifier.height(4.dp))
 
                     // Mix
-                    Text(
-                        text = stringResource(R.string.wet_dry_mix) + ": " + (polyphonyMix.floatValue * 100).roundToInt() + "%",
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    CustomSlider(
-                        value = polyphonyMix.floatValue,
-                        onValueChange = {
-                            polyphonyMix.floatValue = (it * 20f).roundToInt() / 20f
-                        },
-                        enabled = enablePolyphony.value,
-                        valueRange = 0.0f..1.0f,
-                        steps = 19,
-                        onValueChangeFinished = {
+                    DryWetMixSlider(
+                        mix = polyphonyMix.floatValue,
+                        onMixChange = { polyphonyMix.floatValue = it },
+                        onMixChangeFinished = {
                             musicViewModel.polyphonyMix.floatValue = polyphonyMix.floatValue
                             sendPolyphonyParams(musicViewModel, polyphonySemitones.intValue, polyphonyDetune.floatValue, polyphonyMix.floatValue)
-                        }
+                        },
+                        enabled = enablePolyphony.value
                     )
                 }
             }
@@ -903,6 +858,58 @@ fun EffectCard(
 
             content()
         }
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DryWetMixSlider(
+    mix: Float,
+    onMixChange: (Float) -> Unit,
+    onMixChangeFinished: () -> Unit,
+    enabled: Boolean = true
+) {
+    val dryPct = ((1.0f - mix) * 100f).roundToInt()
+    val wetPct = (mix * 100f).roundToInt()
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.wet_dry_mix) + ": " + (mix * 100).roundToInt() + "%",
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "${stringResource(R.string.dry)}: $dryPct%  •  ${stringResource(R.string.wet)}: $wetPct%",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+        CustomSlider(
+            value = mix,
+            onValueChange = {
+                onMixChange((it * 20f).roundToInt() / 20f)
+            },
+            enabled = enabled,
+            valueRange = 0.0f..1.0f,
+            steps = 19,
+            onValueChangeFinished = onMixChangeFinished
+        )
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        Text(
+            text = stringResource(R.string.dry_wet_tip),
+            color = MaterialTheme.colorScheme.outline,
+            style = MaterialTheme.typography.labelSmall
+        )
     }
 }
 

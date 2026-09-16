@@ -246,4 +246,7 @@
     <string name="delay_effect">Prokrasta efekto</string>
     <string name="delay_time">Prokrasta tempo</string>
     <string name="delay_feedback">Retrokuplo</string>
+    <string name="dry">Seka</string>
+    <string name="wet">Malseka</string>
+    <string name="dry_wet_tip">💡 Seka: origina sono (sen efekto) | Malseka: prilaborita efekta sono</string>
 </resources>

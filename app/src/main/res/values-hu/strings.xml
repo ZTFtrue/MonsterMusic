@@ -246,4 +246,7 @@
     <string name="delay_effect">Delay effekt</string>
     <string name="delay_time">Késleltetési idő</string>
     <string name="delay_feedback">Visszacsatolás</string>
+    <string name="dry">Dry</string>
+    <string name="wet">Wet</string>
+    <string name="dry_wet_tip">💡 Dry: eredeti hang (effekt nélkül) | Wet: effektezett hang</string>
 </resources>

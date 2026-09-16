@@ -246,4 +246,7 @@
     <string name="delay_effect">延遲音效</string>
     <string name="delay_time">延遲時間</string>
     <string name="delay_feedback">反饋</string>
+    <string name="dry">乾音</string>
+    <string name="wet">濕音</string>
+    <string name="dry_wet_tip">💡 乾音：原始聲音（無效果） | 濕音：處理後的效果聲</string>
 </resources>

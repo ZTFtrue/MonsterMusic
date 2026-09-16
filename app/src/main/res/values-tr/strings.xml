@@ -245,4 +245,7 @@
     <string name="delay_effect">Gecikme Efekti</string>
     <string name="delay_time">Gecikme Süresi</string>
     <string name="delay_feedback">Geri Besleme</string>
+    <string name="dry">Kuru</string>
+    <string name="wet">Islak</string>
+    <string name="dry_wet_tip">💡 Kuru: orijinal ses (efektsiz) | Islak: işlenmiş efekt sesi</string>
 </resources>

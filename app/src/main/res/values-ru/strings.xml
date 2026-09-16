@@ -246,4 +246,7 @@
     <string name="delay_effect">Эффект задержки</string>
     <string name="delay_time">Время задержки</string>
     <string name="delay_feedback">Обратная связь</string>
+    <string name="dry">Сухой</string>
+    <string name="wet">Влажный</string>
+    <string name="dry_wet_tip">💡 Сухой: исходный звук (без эффекта) | Влажный: обработанный звук эффекта</string>
 </resources>

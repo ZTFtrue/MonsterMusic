@@ -246,4 +246,7 @@
     <string name="delay_effect">تأثير التأخير</string>
     <string name="delay_time">وقت التأخير</string>
     <string name="delay_feedback">التغذية الراجعة</string>
+    <string name="dry">جاف</string>
+    <string name="wet">رطب</string>
+    <string name="dry_wet_tip">💡 جاف: الصوت الأصلي (بدون تأثير) | رطب: صوت التأثير المعالج</string>
 </resources>
