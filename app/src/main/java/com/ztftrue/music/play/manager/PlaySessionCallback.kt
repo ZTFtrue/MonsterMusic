@@ -77,6 +77,8 @@ class PlaySessionCallback(
                 .add(MediaCommands.COMMAND_FLANGER_SET_PARAMS)
                 .add(MediaCommands.COMMAND_POLYPHONY_ENABLE)
                 .add(MediaCommands.COMMAND_POLYPHONY_SET_PARAMS)
+                .add(MediaCommands.COMMAND_DELAY_ENABLE)
+                .add(MediaCommands.COMMAND_DELAY_SET_PARAMS)
                 .build()
 
         return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
@@ -225,6 +227,21 @@ class PlaySessionCallback(
                     args.getInt(MediaCommands.KEY_SEMITONES, 0),
                     args.getFloat(MediaCommands.KEY_DETUNE, 0.0f),
                     args.getFloat(MediaCommands.KEY_MIX, 0.5f)
+                )
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            // --- Delay Effect ---
+            MediaCommands.COMMAND_DELAY_ENABLE.customAction -> {
+                effectManager.setDelayEnabled(args.getBoolean(MediaCommands.KEY_ENABLE))
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            MediaCommands.COMMAND_DELAY_SET_PARAMS.customAction -> {
+                effectManager.setDelayParams(
+                    args.getFloat(MediaCommands.KEY_DELAY, 0.35f),
+                    args.getFloat(MediaCommands.KEY_FEEDBACK, 0.4f),
+                    args.getFloat(MediaCommands.KEY_MIX, 0.4f)
                 )
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
             }

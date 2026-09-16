@@ -243,4 +243,7 @@
     <string name="polyphony">Polifonio</string>
     <string name="pitch_shift_semitones">Duontonoj</string>
     <string name="detune">Maldagordo (cendoj)</string>
+    <string name="delay_effect">Prokrasta efekto</string>
+    <string name="delay_time">Prokrasta tempo</string>
+    <string name="delay_feedback">Retrokuplo</string>
 </resources>

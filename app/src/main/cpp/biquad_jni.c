@@ -186,7 +186,19 @@ Java_com_ztftrue_music_effects_EqualizerAudioProcessor_setPolyphonyNative(
     biquad_equalizer_set_polyphony_params(eq, enabled ? 1 : 0, semitones, detune_cents, mix);
 }
 
+JNIEXPORT void JNICALL
+Java_com_ztftrue_music_effects_EqualizerAudioProcessor_setDelayNative(
+        JNIEnv *env, jobject thiz, jlong handle, jboolean enabled,
+        jfloat delay_time, jfloat feedback, jfloat mix) {
+    (void)env;
+    (void)thiz;
+    if (handle == 0) return;
+    BiquadEqualizer* eq = (BiquadEqualizer*)(intptr_t)handle;
+    biquad_equalizer_set_delay_params(eq, enabled ? 1 : 0, delay_time, feedback, mix);
+}
+
 // =========================================================================
+
 // Native FFT JNI Methods
 // =========================================================================
 

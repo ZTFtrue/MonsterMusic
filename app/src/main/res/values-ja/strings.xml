@@ -243,4 +243,7 @@
     <string name="polyphony">ポリフォニー</string>
     <string name="pitch_shift_semitones">半音</string>
     <string name="detune">デチューン (セント)</string>
+    <string name="delay_effect">ディレイ効果</string>
+    <string name="delay_time">ディレイ時間</string>
+    <string name="delay_feedback">フィードバック</string>
 </resources>

@@ -1013,6 +1013,12 @@ class MainActivity : ComponentActivity() {
         musicViewModel.polyphonySemitones.intValue = resultData.getInt("polyphonySemitones", 0)
         musicViewModel.polyphonyDetune.floatValue = resultData.getFloat("polyphonyDetune", 0.0f)
         musicViewModel.polyphonyMix.floatValue = resultData.getFloat("polyphonyMix", 0.5f)
+
+        musicViewModel.enableDelay.value = resultData.getBoolean("enableDelay", false)
+        musicViewModel.delayEffectTime.floatValue = resultData.getFloat("delayEffectTime", 0.35f)
+        musicViewModel.delayEffectFeedback.floatValue = resultData.getFloat("delayEffectFeedback", 0.4f)
+        musicViewModel.delayEffectMix.floatValue = resultData.getFloat("delayEffectMix", 0.4f)
+
         musicViewModel.repeatModel.intValue = resultData.getInt("repeat", Player.REPEAT_MODE_ALL)
         musicViewModel.playCompleted.value =
             resultData.getBoolean("play_completed")

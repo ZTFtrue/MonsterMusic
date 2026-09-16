@@ -356,6 +356,12 @@ class PlayService : MediaLibraryService() {
         bundle.putFloat("polyphonyDetune", SharedPreferencesUtils.getPolyphonyDetune(this))
         bundle.putFloat("polyphonyMix", SharedPreferencesUtils.getPolyphonyMix(this))
 
+        // Delay Effect
+        bundle.putBoolean("enableDelay", SharedPreferencesUtils.getDelayEnabled(this))
+        bundle.putFloat("delayEffectTime", SharedPreferencesUtils.getDelayTime(this))
+        bundle.putFloat("delayEffectFeedback", SharedPreferencesUtils.getDelayFeedback(this))
+        bundle.putFloat("delayEffectMix", SharedPreferencesUtils.getDelayMix(this))
+
         // --- 4. 睡眠定时器 (来自 SleepTimerManager) ---
         bundle.putLong("sleepTime", sleepManager.sleepTime)
         bundle.putLong("remaining", sleepManager.remainingTime)

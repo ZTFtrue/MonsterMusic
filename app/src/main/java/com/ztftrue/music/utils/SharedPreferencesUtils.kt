@@ -480,4 +480,42 @@ object SharedPreferencesUtils {
         return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
             .getFloat("polyphony_mix", 0.5f)
     }
+
+    // Delay Effect
+    fun saveDelayEnabled(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putBoolean("delay_enabled", enabled)
+        }
+    }
+    fun getDelayEnabled(context: Context): Boolean {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getBoolean("delay_enabled", false)
+    }
+    fun saveDelayTime(context: Context, value: Float) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putFloat("delay_time", value)
+        }
+    }
+    fun getDelayTime(context: Context): Float {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getFloat("delay_time", 0.35f)
+    }
+    fun saveDelayFeedback(context: Context, value: Float) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putFloat("delay_feedback", value)
+        }
+    }
+    fun getDelayFeedback(context: Context): Float {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getFloat("delay_feedback", 0.4f)
+    }
+    fun saveDelayMix(context: Context, value: Float) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putFloat("delay_mix", value)
+        }
+    }
+    fun getDelayMix(context: Context): Float {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getFloat("delay_mix", 0.4f)
+    }
 }

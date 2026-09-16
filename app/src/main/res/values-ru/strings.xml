@@ -243,4 +243,7 @@
     <string name="polyphony">Полифония</string>
     <string name="pitch_shift_semitones">Полутона</string>
     <string name="detune">Расстройка (центы)</string>
+    <string name="delay_effect">Эффект задержки</string>
+    <string name="delay_time">Время задержки</string>
+    <string name="delay_feedback">Обратная связь</string>
 </resources>

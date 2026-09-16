@@ -76,6 +76,7 @@ typedef struct {
     ChorusEffect* chorus;
     FlangerEffect* flanger;
     PolyphonyEffect* polyphony;
+    DelayEffect* delay;
 } BiquadEqualizer;
 
 void biquad_reset(BiquadFilter* filter);
@@ -95,6 +96,8 @@ void biquad_equalizer_set_reverb_params(BiquadEqualizer* eq, int enabled, float 
 void biquad_equalizer_set_chorus_params(BiquadEqualizer* eq, int enabled, float rate, float depth, float mix);
 void biquad_equalizer_set_flanger_params(BiquadEqualizer* eq, int enabled, float rate, float depth, float feedback, float mix);
 void biquad_equalizer_set_polyphony_params(BiquadEqualizer* eq, int enabled, int semitones, float detune_cents, float mix);
+void biquad_equalizer_set_delay_params(BiquadEqualizer* eq, int enabled, float delay_time, float feedback, float mix);
+
 
 // Processes interleaved PCM directly:
 // input: input PCM byte buffer

@@ -706,3 +706,102 @@ void polyphony_process(PolyphonyEffect* p, float* left, float* right, int count)
     p->grain_pos2 = g2;
     p->write_pos = w_pos;
 }
+
+// =========================================================================
+// 6. Delay Effect Implementation
+// =========================================================================
+
+DelayEffect* delay_create(float sample_rate) {
+    DelayEffect* d = (DelayEffect*)calloc(1, sizeof(DelayEffect));
+    if (!d) return NULL;
+
+    d->sample_rate = sample_rate > 0.0f ? sample_rate : 44100.0f;
+    float max_sr = d->sample_rate > 192000.0f ? d->sample_rate : 192000.0f;
+    d->buffer_size = (int)(2.5f * max_sr);
+    if (d->buffer_size < 4096) d->buffer_size = 4096;
+
+    d->buffer_l = (float*)calloc(d->buffer_size, sizeof(float));
+    d->buffer_r = (float*)calloc(d->buffer_size, sizeof(float));
+
+    delay_set_params(d, 0, 0.35f, 0.4f, 0.4f, d->sample_rate);
+    return d;
+}
+
+void delay_destroy(DelayEffect* d) {
+    if (!d) return;
+    if (d->buffer_l) free(d->buffer_l);
+    if (d->buffer_r) free(d->buffer_r);
+    free(d);
+}
+
+void delay_reset(DelayEffect* d) {
+    if (!d) return;
+    d->write_pos = 0;
+    if (d->buffer_l) memset(d->buffer_l, 0, d->buffer_size * sizeof(float));
+    if (d->buffer_r) memset(d->buffer_r, 0, d->buffer_size * sizeof(float));
+}
+
+void delay_set_params(DelayEffect* d, int enabled, float delay_time, float feedback, float mix, float sample_rate) {
+    if (!d) return;
+    if (sample_rate > 0.0f) d->sample_rate = sample_rate;
+
+    d->enabled = enabled;
+
+    if (delay_time < 0.01f) delay_time = 0.01f;
+    if (delay_time > 2.0f) delay_time = 2.0f;
+    d->delay_time = delay_time;
+
+    if (feedback < 0.0f) feedback = 0.0f;
+    if (feedback > 0.85f) feedback = 0.85f;
+    d->feedback = feedback;
+
+    if (mix < 0.0f) mix = 0.0f;
+    if (mix > 1.0f) mix = 1.0f;
+    d->mix = mix;
+
+    // Rich stereo delay offset (20ms)
+    d->stereo_offset = 0.020f;
+}
+
+void delay_process(DelayEffect* d, float* left, float* right, int count) {
+    if (!d || !d->enabled || !left || !right || count <= 0) return;
+
+    float mix = d->mix;
+    if (mix <= 0.001f) return;
+
+    float dry = 1.0f - mix;
+    float wet = mix;
+    float feedback = d->feedback;
+
+    float delay_samples_l = d->delay_time * d->sample_rate;
+    float delay_samples_r = (d->delay_time + d->stereo_offset) * d->sample_rate;
+
+    int w_pos = d->write_pos;
+    int b_size = d->buffer_size;
+
+    for (int i = 0; i < count; i++) {
+        float in_l = left[i];
+        float in_r = right[i];
+        if (isnan(in_l) || isinf(in_l)) in_l = 0.0f;
+        if (isnan(in_r) || isinf(in_r)) in_r = 0.0f;
+
+        float read_l = (float)w_pos - delay_samples_l;
+        float read_r = (float)w_pos - delay_samples_r;
+
+        float delayed_l = read_fractional(d->buffer_l, b_size, read_l);
+        float delayed_r = read_fractional(d->buffer_r, b_size, read_r);
+
+        // Feedback path with soft-clip saturation and anti-denormalization
+        d->buffer_l[w_pos] = undenormalise(soft_clip(in_l + delayed_l * feedback));
+        d->buffer_r[w_pos] = undenormalise(soft_clip(in_r + delayed_r * feedback));
+
+        left[i] = soft_clip(in_l * dry + delayed_l * wet);
+        right[i] = soft_clip(in_r * dry + delayed_r * wet);
+
+        w_pos++;
+        if (w_pos >= b_size) w_pos = 0;
+    }
+
+    d->write_pos = w_pos;
+}
+

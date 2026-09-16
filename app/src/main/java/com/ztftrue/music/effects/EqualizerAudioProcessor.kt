@@ -100,6 +100,13 @@ class EqualizerAudioProcessor : AudioProcessor {
         detuneCents: Float,
         mix: Float
     )
+    private external fun setDelayNative(
+        handle: Long,
+        enabled: Boolean,
+        delayTime: Float,
+        feedback: Float,
+        mix: Float
+    )
 
     // Native FFT JNI
     private var nativeFftHandle: Long = 0L
@@ -141,6 +148,11 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var polyphonySemitones = 0
     private var polyphonyDetune = 0.0f
     private var polyphonyMix = 0.5f
+
+    private var delayActive = false
+    private var delayEffectTime = 0.35f
+    private var delayEffectFeedback = 0.4f
+    private var delayEffectMix = 0.4f
 
     private var inputAudioFormat: AudioProcessor.AudioFormat = AudioProcessor.AudioFormat.NOT_SET
     private var outputAudioFormat: AudioProcessor.AudioFormat = AudioProcessor.AudioFormat.NOT_SET
@@ -201,6 +213,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             setChorusNative(nativeEqualizerHandle, chorusActive, chorusRate, chorusDepth, chorusMix)
             setFlangerNative(nativeEqualizerHandle, flangerActive, flangerRate, flangerDepth, flangerFeedback, flangerMix)
             setPolyphonyNative(nativeEqualizerHandle, polyphonyActive, polyphonySemitones, polyphonyDetune, polyphonyMix)
+            setDelayNative(nativeEqualizerHandle, delayActive, delayEffectTime, delayEffectFeedback, delayEffectMix)
 
             if (nativeFftHandle != 0L) {
                 freeNativeFft(nativeFftHandle)
@@ -576,6 +589,21 @@ class EqualizerAudioProcessor : AudioProcessor {
             polyphonyMix = mix
             if (nativeEqualizerHandle != 0L) {
                 setPolyphonyNative(nativeEqualizerHandle, enabled, semitones, detuneCents, mix)
+            }
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    fun setDelay(enabled: Boolean, delayTime: Float, feedback: Float, mix: Float) {
+        lock.lock()
+        try {
+            delayActive = enabled
+            delayEffectTime = delayTime
+            delayEffectFeedback = feedback
+            delayEffectMix = mix
+            if (nativeEqualizerHandle != 0L) {
+                setDelayNative(nativeEqualizerHandle, enabled, delayTime, feedback, mix)
             }
         } finally {
             lock.unlock()

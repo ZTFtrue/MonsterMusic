@@ -207,6 +207,29 @@ void polyphony_reset(PolyphonyEffect* p);
 void polyphony_set_params(PolyphonyEffect* p, int enabled, int semitones, float detune_cents, float mix, float sample_rate);
 void polyphony_process(PolyphonyEffect* p, float* left, float* right, int count);
 
+// =========================================================================
+// 6. Delay Effect (Stereo Delay with Feedback, Mix, and Stereo Spread)
+// =========================================================================
+typedef struct {
+    float sample_rate;
+    int enabled;
+    float delay_time;         // 0.01f .. 2.0f seconds (default 0.35s)
+    float feedback;           // 0.0f .. 0.85f (default 0.4f)
+    float mix;                // 0.0f .. 1.0f (default 0.4f)
+    float stereo_offset;      // 0.0f .. 0.2f seconds for stereo spread
+
+    float* buffer_l;
+    float* buffer_r;
+    int buffer_size;
+    int write_pos;
+} DelayEffect;
+
+DelayEffect* delay_create(float sample_rate);
+void delay_destroy(DelayEffect* d);
+void delay_reset(DelayEffect* d);
+void delay_set_params(DelayEffect* d, int enabled, float delay_time, float feedback, float mix, float sample_rate);
+void delay_process(DelayEffect* d, float* left, float* right, int count);
+
 #ifdef __cplusplus
 }
 #endif

@@ -243,4 +243,7 @@
     <string name="polyphony">Polyphony</string>
     <string name="pitch_shift_semitones">Semitones</string>
     <string name="detune">Detune (cents)</string>
+    <string name="delay_effect">Delay Effect</string>
+    <string name="delay_time">Delay Time</string>
+    <string name="delay_feedback">Feedback</string>
 </resources>

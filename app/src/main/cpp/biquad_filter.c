@@ -359,6 +359,7 @@ BiquadEqualizer* biquad_equalizer_create(int channel_count, int band_count, floa
     eq->chorus = chorus_create(eq->sample_rate);
     eq->flanger = flanger_create(eq->sample_rate);
     eq->polyphony = polyphony_create(eq->sample_rate);
+    eq->delay = delay_create(eq->sample_rate);
 
     return eq;
 }
@@ -384,6 +385,10 @@ void biquad_equalizer_destroy(BiquadEqualizer* eq) {
     if (eq->polyphony) {
         polyphony_destroy(eq->polyphony);
         eq->polyphony = NULL;
+    }
+    if (eq->delay) {
+        delay_destroy(eq->delay);
+        eq->delay = NULL;
     }
     if (eq->filters) {
         free(eq->filters);
@@ -455,6 +460,7 @@ void biquad_equalizer_reset(BiquadEqualizer* eq) {
     if (eq->chorus) chorus_reset(eq->chorus);
     if (eq->flanger) flanger_reset(eq->flanger);
     if (eq->polyphony) polyphony_reset(eq->polyphony);
+    if (eq->delay) delay_reset(eq->delay);
     biquad_equalizer_reset_limiter(eq);
 }
 
@@ -522,6 +528,11 @@ void biquad_equalizer_set_flanger_params(BiquadEqualizer* eq, int enabled, float
 void biquad_equalizer_set_polyphony_params(BiquadEqualizer* eq, int enabled, int semitones, float detune_cents, float mix) {
     if (!eq || !eq->polyphony) return;
     polyphony_set_params(eq->polyphony, enabled, semitones, detune_cents, mix, eq->sample_rate);
+}
+
+void biquad_equalizer_set_delay_params(BiquadEqualizer* eq, int enabled, float delay_time, float feedback, float mix) {
+    if (!eq || !eq->delay) return;
+    delay_set_params(eq->delay, enabled, delay_time, feedback, mix, eq->sample_rate);
 }
 
 static void fft_equalizer_ensure_fifo_capacity(BiquadEqualizer* eq, int max_needed) {
@@ -777,7 +788,16 @@ void biquad_equalizer_process_pcm(
         }
     }
 
-    // 4. Apply Chorus
+    // 4. Apply Delay Effect
+    if (eq->delay && eq->delay->enabled) {
+        if (active_channels >= 2) {
+            delay_process(eq->delay, eq->channel_buffers[0], eq->channel_buffers[1], frames_count);
+        } else {
+            delay_process(eq->delay, eq->channel_buffers[0], eq->channel_buffers[0], frames_count);
+        }
+    }
+
+    // 5. Apply Chorus
     if (eq->chorus && eq->chorus->enabled) {
         if (active_channels >= 2) {
             chorus_process(eq->chorus, eq->channel_buffers[0], eq->channel_buffers[1], frames_count);
@@ -786,7 +806,7 @@ void biquad_equalizer_process_pcm(
         }
     }
 
-    // 5. Apply Flanger
+    // 6. Apply Flanger
     if (eq->flanger && eq->flanger->enabled) {
         if (active_channels >= 2) {
             flanger_process(eq->flanger, eq->channel_buffers[0], eq->channel_buffers[1], frames_count);
@@ -795,14 +815,14 @@ void biquad_equalizer_process_pcm(
         }
     }
 
-    // 6. Apply Echo Delay (if active)
+    // 7. Apply Echo Delay (if active)
     if (echo_active) {
         for (int ch = 0; ch < active_channels; ch++) {
             echo_delay_process(&eq->channel_delays[ch], eq->channel_buffers[ch], frames_count);
         }
     }
 
-    // 7. Apply Reverb
+    // 8. Apply Reverb
     if (eq->reverb && eq->reverb->enabled) {
         if (active_channels >= 2) {
             reverb_process(eq->reverb, eq->channel_buffers[0], eq->channel_buffers[1], frames_count);
@@ -811,14 +831,15 @@ void biquad_equalizer_process_pcm(
         }
     }
 
-    // 8. Apply 3D Virtual Surround (Spatializer)
+    // 9. Apply 3D Virtual Surround (Spatializer)
     if (eq->virtualizer && eq->virtualizer->enabled && active_channels >= 2) {
         virtualizer_process(eq->virtualizer, eq->channel_buffers[0], eq->channel_buffers[1], frames_count);
     }
 
-    // 9. Stereo-Linked Peak Limiter (if any effect or EQ active)
+    // 10. Stereo-Linked Peak Limiter (if any effect or EQ active)
     int any_effect_active = eq_active || echo_active ||
         (eq->polyphony && eq->polyphony->enabled) ||
+        (eq->delay && eq->delay->enabled) ||
         (eq->chorus && eq->chorus->enabled) ||
         (eq->flanger && eq->flanger->enabled) ||
         (eq->reverb && eq->reverb->enabled) ||

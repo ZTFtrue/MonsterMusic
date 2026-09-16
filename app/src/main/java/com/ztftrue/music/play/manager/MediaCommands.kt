@@ -38,6 +38,10 @@ object MediaCommands {
     val COMMAND_POLYPHONY_ENABLE = SessionCommand("polyphony.ENABLE", Bundle.EMPTY)
     val COMMAND_POLYPHONY_SET_PARAMS = SessionCommand("polyphony.SET_PARAMS", Bundle.EMPTY)
 
+    // Delay Effect
+    val COMMAND_DELAY_ENABLE = SessionCommand("delay.ENABLE", Bundle.EMPTY)
+    val COMMAND_DELAY_SET_PARAMS = SessionCommand("delay.SET_PARAMS", Bundle.EMPTY)
+
     val COMMAND_SEARCH = SessionCommand("app.SEARCH", Bundle.EMPTY)
 
     val COMMAND_SET_AUTO_HANDLE_AUDIO_FOCUS =

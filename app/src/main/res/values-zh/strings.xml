@@ -243,4 +243,7 @@
     <string name="polyphony">复音变调</string>
     <string name="pitch_shift_semitones">半音移调</string>
     <string name="detune">微调 (音分)</string>
+    <string name="delay_effect">延迟音效</string>
+    <string name="delay_time">延迟时间</string>
+    <string name="delay_feedback">反馈</string>
 </resources>

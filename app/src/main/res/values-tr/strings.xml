@@ -242,4 +242,7 @@
     <string name="polyphony">Polifoni</string>
     <string name="pitch_shift_semitones">Yarım tonlar</string>
     <string name="detune">İnce Ayar (sent)</string>
+    <string name="delay_effect">Gecikme Efekti</string>
+    <string name="delay_time">Gecikme Süresi</string>
+    <string name="delay_feedback">Geri Besleme</string>
 </resources>

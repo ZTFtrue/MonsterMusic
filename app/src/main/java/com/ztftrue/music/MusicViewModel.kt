@@ -176,6 +176,12 @@ class MusicViewModel : ViewModel() {
     var polyphonyDetune = mutableFloatStateOf(0.0f)
     var polyphonyMix = mutableFloatStateOf(0.5f)
 
+    // Delay Effect
+    var enableDelay = mutableStateOf(false)
+    var delayEffectTime = mutableFloatStateOf(0.35f)
+    var delayEffectFeedback = mutableFloatStateOf(0.4f)
+    var delayEffectMix = mutableFloatStateOf(0.4f)
+
     var mainTabList = mutableStateListOf<MainTab>()
 
     var sliderPosition = mutableFloatStateOf(0F)

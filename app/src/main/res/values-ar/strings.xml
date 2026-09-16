@@ -243,4 +243,7 @@
     <string name="polyphony">تعدد النغمات</string>
     <string name="pitch_shift_semitones">أنصاف النغمات</string>
     <string name="detune">ضبط دقيق (سنت)</string>
+    <string name="delay_effect">تأثير التأخير</string>
+    <string name="delay_time">وقت التأخير</string>
+    <string name="delay_feedback">التغذية الراجعة</string>
 </resources>

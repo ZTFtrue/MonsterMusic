@@ -243,4 +243,7 @@
     <string name="polyphony">Polifónia</string>
     <string name="pitch_shift_semitones">Félhangok</string>
     <string name="detune">Finomhangolás (cent)</string>
+    <string name="delay_effect">Delay effekt</string>
+    <string name="delay_time">Késleltetési idő</string>
+    <string name="delay_feedback">Visszacsatolás</string>
 </resources>

@@ -99,6 +99,12 @@ class AudioEffectManager(private val context: Context) {
             SharedPreferencesUtils.getPolyphonyDetune(context),
             SharedPreferencesUtils.getPolyphonyMix(context)
         )
+        equalizerAudioProcessor.setDelay(
+            SharedPreferencesUtils.getDelayEnabled(context),
+            SharedPreferencesUtils.getDelayTime(context),
+            SharedPreferencesUtils.getDelayFeedback(context),
+            SharedPreferencesUtils.getDelayMix(context)
+        )
     }
 
     private fun loadEqPresets() {
@@ -362,6 +368,28 @@ class AudioEffectManager(private val context: Context) {
             SharedPreferencesUtils.getPolyphonyEnabled(context),
             semitones,
             detune,
+            mix
+        )
+    }
+
+    fun setDelayEnabled(enable: Boolean) {
+        SharedPreferencesUtils.saveDelayEnabled(context, enable)
+        equalizerAudioProcessor.setDelay(
+            enable,
+            SharedPreferencesUtils.getDelayTime(context),
+            SharedPreferencesUtils.getDelayFeedback(context),
+            SharedPreferencesUtils.getDelayMix(context)
+        )
+    }
+
+    fun setDelayParams(time: Float, feedback: Float, mix: Float) {
+        SharedPreferencesUtils.saveDelayTime(context, time)
+        SharedPreferencesUtils.saveDelayFeedback(context, feedback)
+        SharedPreferencesUtils.saveDelayMix(context, mix)
+        equalizerAudioProcessor.setDelay(
+            SharedPreferencesUtils.getDelayEnabled(context),
+            time,
+            feedback,
             mix
         )
     }
