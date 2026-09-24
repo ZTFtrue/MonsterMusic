@@ -233,6 +233,21 @@ fun LyricsView(
     var currentI by remember { mutableIntStateOf(-1) }
     var isSelected by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
+    var word by remember {
+        mutableStateOf("")
+    }
+    var selectedTag by remember {
+        mutableStateOf("")
+    }
+    var selectionEpoch by remember {
+        mutableIntStateOf(0)
+    }
+    val clearSelection = {
+        isSelected = false
+        selectedTag = ""
+        word = ""
+        selectionEpoch++
+    }
     var arrowOffsetY by remember { mutableFloatStateOf(0f) }
     var isDraggingArrow by remember { mutableStateOf(false) }
     var pointedIndex by remember { mutableIntStateOf(-1) }
@@ -248,6 +263,8 @@ fun LyricsView(
     // Reset current active line when switching songs
     LaunchedEffect(musicViewModel.currentPlay.value?.id) {
         currentI = -1
+        showMenu = false
+        clearSelection()
     }
 
     val captionCount = musicViewModel.currentCaptionList.size
@@ -290,17 +307,6 @@ fun LyricsView(
     }
     val fontSize by remember {
         musicViewModel.fontSize
-    }
-    var word by remember {
-        mutableStateOf("")
-    }
-    var selectedTag by remember {
-        mutableStateOf("")
-    }
-    val clearSelection = {
-        isSelected = false
-        selectedTag = ""
-        word = ""
     }
 
     var popupOffset by remember {
@@ -460,7 +466,9 @@ fun LyricsView(
         customTextToolbar.onShow = {
             isSelected = true
         }
-        customTextToolbar.onDismiss = {
+        val dismissAllPopupsAndSelection = {
+            customTextToolbar.hideAll()
+            showMenu = false
             clearSelection()
         }
         val primaryColor = MaterialTheme.colorScheme.primary
@@ -479,6 +487,25 @@ fun LyricsView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight()
+                    .pointerInput(Unit) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown(pass = PointerEventPass.Initial, requireUnconsumed = false)
+                            val isPopupOpen = customTextToolbar.status == TextToolbarStatus.Shown || isSelected || showMenu
+                            if (!isPopupOpen) {
+                                return@awaitEachGesture
+                            }
+                            val up = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                                waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                            }
+                            if (up != null) {
+                                val distance = (up.position - down.position).getDistance()
+                                if (distance <= viewConfiguration.touchSlop) {
+                                    up.consume()
+                                    dismissAllPopupsAndSelection()
+                                }
+                            }
+                        }
+                    }
             ) {
                 val halfHeight = maxHeight / 2
                 val viewportHeightPx = with(density) { maxHeight.toPx() }
@@ -489,8 +516,9 @@ fun LyricsView(
                             source: NestedScrollSource
                         ): Offset {
                             try {
-                                customTextToolbar.hide()
-                                focusManager.clearFocus()
+                                if (customTextToolbar.status == TextToolbarStatus.Shown || isSelected || showMenu) {
+                                    dismissAllPopupsAndSelection()
+                                }
                             } catch (_: Exception) {
 
                             }
@@ -578,9 +606,7 @@ fun LyricsView(
                                     indication = null
                                 ) {
                                     if (customTextToolbar.status == TextToolbarStatus.Shown || isSelected || showMenu) {
-                                        focusManager.clearFocus()
-                                        customTextToolbar.hide()
-                                        clearSelection()
+                                        dismissAllPopupsAndSelection()
                                     }
                                 },
                             verticalAlignment = Alignment.CenterVertically,
@@ -613,82 +639,82 @@ fun LyricsView(
                                     )
                                 }
                             }
-                            SelectionContainer(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(
-                                        top = 2.dp,
-                                        bottom = 2.dp,
-                                        start = if (showSlideIndicators) 10.dp else 20.dp,
-                                        end = if (showRightIndicator) 44.dp else 20.dp,
-                                    )
-                            ) {
-                                BasicText(
-                                    text = annotatedString,
-                                    onTextLayout = { textLayoutResult = it },
-                                    style = TextStyle(
-                                        color = if (isDraggingArrow && pointedIndex == listIndex) {
-                                            MaterialTheme.colorScheme.onPrimaryContainer
-                                        } else if (currentI == listIndex && musicViewModel.autoHighLight.value) {
-                                            MaterialTheme.colorScheme.onTertiaryContainer
-                                        } else {
-                                            MaterialTheme.colorScheme.onBackground
-                                        },
-                                        fontSize = fontSize.sp,
-                                        textAlign = musicViewModel.textAlign.value,
-                                        lineHeight = (fontSize * 1.5).sp,
-                                        textIndent = if (musicViewModel.textAlign.value == TextAlign.Justify || musicViewModel.textAlign.value == TextAlign.Start) {
-                                            TextIndent(fontSize.sp * 2)
-                                        } else {
-                                            TextIndent.None
-                                        }
-                                    ),
+                            key(selectionEpoch) {
+                                SelectionContainer(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .onGloballyPositioned { textCoordinates = it }
-                                        .pointerInput(listIndex, tex) {
-                                            awaitEachGesture {
-                                                val down = awaitFirstDown(pass = PointerEventPass.Main, requireUnconsumed = false)
-                                                val up = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
-                                                    waitForUpOrCancellation(pass = PointerEventPass.Main)
-                                                }
-                                                if (up != null && !up.isConsumed) {
-                                                    val distance = (up.position - down.position).getDistance()
-                                                    if (distance <= viewConfiguration.touchSlop) {
-                                                        if (customTextToolbar.status == TextToolbarStatus.Shown || isSelected || showMenu) {
-                                                            focusManager.clearFocus()
-                                                            customTextToolbar.hide()
-                                                            clearSelection()
-                                                            return@awaitEachGesture
-                                                        }
-                                                        val layout = textLayoutResult ?: return@awaitEachGesture
-                                                        val line = layout.getLineForVerticalPosition(down.position.y)
-                                                        if (down.position.x < layout.getLineLeft(line) || down.position.x > layout.getLineRight(line)) {
-                                                            return@awaitEachGesture
-                                                        }
-                                                        val charOffset = layout.getOffsetForPosition(down.position)
-                                                        val wordInfo = words.find { charOffset in it.start until it.end }
-                                                            ?: words.find { charOffset in it.start..it.end }
-                                                            ?: return@awaitEachGesture
-                                                        val clickedWord = wordInfo.word.trim()
-                                                        if (clickedWord.isEmpty()) return@awaitEachGesture
+                                        .weight(1f)
+                                        .padding(
+                                            top = 2.dp,
+                                            bottom = 2.dp,
+                                            start = if (showSlideIndicators) 10.dp else 20.dp,
+                                            end = if (showRightIndicator) 44.dp else 20.dp,
+                                        )
+                                ) {
+                                    BasicText(
+                                        text = annotatedString,
+                                        onTextLayout = { textLayoutResult = it },
+                                        style = TextStyle(
+                                            color = if (isDraggingArrow && pointedIndex == listIndex) {
+                                                MaterialTheme.colorScheme.onPrimaryContainer
+                                            } else if (currentI == listIndex && musicViewModel.autoHighLight.value) {
+                                                MaterialTheme.colorScheme.onTertiaryContainer
+                                            } else {
+                                                MaterialTheme.colorScheme.onBackground
+                                            },
+                                            fontSize = fontSize.sp,
+                                            textAlign = musicViewModel.textAlign.value,
+                                            lineHeight = (fontSize * 1.5).sp,
+                                            textIndent = if (musicViewModel.textAlign.value == TextAlign.Justify || musicViewModel.textAlign.value == TextAlign.Start) {
+                                                TextIndent(fontSize.sp * 2)
+                                            } else {
+                                                TextIndent.None
+                                            }
+                                        ),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .onGloballyPositioned { textCoordinates = it }
+                                            .pointerInput(listIndex, tex) {
+                                                awaitEachGesture {
+                                                    val down = awaitFirstDown(pass = PointerEventPass.Main, requireUnconsumed = false)
+                                                    val up = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                                                        waitForUpOrCancellation(pass = PointerEventPass.Main)
+                                                    }
+                                                    if (up != null && !up.isConsumed) {
+                                                        val distance = (up.position - down.position).getDistance()
+                                                        if (distance <= viewConfiguration.touchSlop) {
+                                                            if (customTextToolbar.status == TextToolbarStatus.Shown || isSelected || showMenu) {
+                                                                dismissAllPopupsAndSelection()
+                                                                return@awaitEachGesture
+                                                            }
+                                                            val layout = textLayoutResult ?: return@awaitEachGesture
+                                                            val line = layout.getLineForVerticalPosition(down.position.y)
+                                                            if (down.position.x < layout.getLineLeft(line) || down.position.x > layout.getLineRight(line)) {
+                                                                return@awaitEachGesture
+                                                            }
+                                                            val charOffset = layout.getOffsetForPosition(down.position)
+                                                            val wordInfo = words.find { charOffset in it.start until it.end }
+                                                                ?: words.find { charOffset in it.start..it.end }
+                                                                ?: return@awaitEachGesture
+                                                            val clickedWord = wordInfo.word.trim()
+                                                            if (clickedWord.isEmpty()) return@awaitEachGesture
 
-                                                        val coords = textCoordinates
-                                                        if (coords != null && coords.isAttached) {
-                                                            val rootPos = coords.localToRoot(down.position)
-                                                            popupOffset = IntOffset(
-                                                                (rootPos.x - popupOffsetX).toInt().coerceAtLeast(0),
-                                                                (rootPos.y - popupOffsetY).toInt().coerceAtLeast(0)
-                                                            )
+                                                            val coords = textCoordinates
+                                                            if (coords != null && coords.isAttached) {
+                                                                val rootPos = coords.localToRoot(down.position)
+                                                                popupOffset = IntOffset(
+                                                                    (rootPos.x - popupOffsetX).toInt().coerceAtLeast(0),
+                                                                    (rootPos.y - popupOffsetY).toInt().coerceAtLeast(0)
+                                                                )
+                                                            }
+                                                            selectedTag = clickedWord
+                                                            word = clickedWord
+                                                            showMenu = true
                                                         }
-                                                        selectedTag = clickedWord
-                                                        word = clickedWord
-                                                        showMenu = true
                                                     }
                                                 }
                                             }
-                                        }
-                                )
+                                    )
+                                }
                             }
                         }
                     }
@@ -831,6 +857,9 @@ fun LyricsView(
                                 awaitEachGesture {
                                     val down = awaitFirstDown(requireUnconsumed = false)
                                     down.consume()
+                                    if (customTextToolbar.status == TextToolbarStatus.Shown || isSelected || showMenu) {
+                                        dismissAllPopupsAndSelection()
+                                    }
                                     isDraggingArrow = true
                                     pointedIndex = centerItemIndex
 

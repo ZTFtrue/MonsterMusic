@@ -169,4 +169,64 @@ class ExampleUnitTest {
         // Seeking to end of song (50000ms): last line (line 2)
         assertEquals(2, getLrcIndex(50000f))
     }
+
+    @Test
+    fun lyricsSelectionDismissal_onTapElsewhere() {
+        var isSelected = true
+        var isToolbarShown = true
+        var showMenu = false
+        var selectionEpoch = 0
+        var word = "test"
+        var selectedTag = "test"
+
+        val dismissAllPopupsAndSelection = {
+            isToolbarShown = false
+            showMenu = false
+            isSelected = false
+            word = ""
+            selectedTag = ""
+            selectionEpoch++
+        }
+
+        fun onPointerTap(distance: Float, touchSlop: Float): Boolean {
+            val isPopupOpen = isToolbarShown || isSelected || showMenu
+            if (!isPopupOpen) return false
+            if (distance <= touchSlop) {
+                dismissAllPopupsAndSelection()
+                return true
+            }
+            return false
+        }
+
+        // 1. Text is selected, user taps elsewhere (distance = 2px, touchSlop = 8px)
+        val handled = onPointerTap(distance = 2f, touchSlop = 8f)
+        assertTrue(handled)
+        assertFalse(isSelected)
+        assertFalse(isToolbarShown)
+        assertFalse(showMenu)
+        assertEquals("", word)
+        assertEquals("", selectedTag)
+        assertEquals(1, selectionEpoch)
+
+        // 2. Now nothing is selected, user taps again
+        val handledWhenEmpty = onPointerTap(distance = 2f, touchSlop = 8f)
+        assertFalse(handledWhenEmpty)
+        assertEquals(1, selectionEpoch) // No unnecessary resets
+
+        // 3. User selects a word (dictionary popup open)
+        showMenu = true
+        selectedTag = "word"
+        word = "word"
+        val handledMenu = onPointerTap(distance = 3f, touchSlop = 8f)
+        assertTrue(handledMenu)
+        assertFalse(showMenu)
+        assertEquals("", selectedTag)
+        assertEquals(2, selectionEpoch)
+
+        // 4. User drags/scrolls (distance = 45px > touchSlop = 8px) -> should not be treated as tap dismissal
+        isSelected = true
+        val handledDrag = onPointerTap(distance = 45f, touchSlop = 8f)
+        assertFalse(handledDrag)
+        assertTrue(isSelected) // Preserved for drag / scroll handler
+    }
 }
