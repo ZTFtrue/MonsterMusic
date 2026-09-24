@@ -40,6 +40,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowLeft
 import androidx.compose.material.icons.automirrored.outlined.FormatAlignLeft
 import androidx.compose.material.icons.automirrored.outlined.FormatAlignRight
 import androidx.compose.material.icons.filled.Close
@@ -753,6 +754,26 @@ fun PlayingPage(
                                     .width(24.dp)
                                     .height(24.dp),
                                 tint = if (musicViewModel.showSlideIndicators.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
+                    item {
+                        IconButton(
+                            modifier = Modifier.width(50.dp), onClick = {
+                                musicViewModel.showRightIndicator.value =
+                                    !musicViewModel.showRightIndicator.value
+                                SharedPreferencesUtils.setShowRightIndicator(
+                                    context,
+                                    musicViewModel.showRightIndicator.value
+                                )
+                            }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowLeft,
+                                contentDescription = "Set show right indicator",
+                                modifier = Modifier
+                                    .width(24.dp)
+                                    .height(24.dp),
+                                tint = if (musicViewModel.showRightIndicator.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
                             )
                         }
                     }

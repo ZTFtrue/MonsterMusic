@@ -56,7 +56,12 @@ internal class TextActionModeCallback(
             if (item.groupId == 0) {
                 try {
                     when (item.itemId) {
-                        MenuItemOption.Copy.id -> onCopyRequested?.invoke()
+                        MenuItemOption.Copy.id -> {
+                            onCopyRequested?.invoke()
+                            textToolbar?.view?.context?.let { ctx ->
+                                android.widget.Toast.makeText(ctx, ctx.getString(android.R.string.copy), android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        }
                         MenuItemOption.Paste.id -> onPasteRequested?.invoke()
                         MenuItemOption.Cut.id -> onCutRequested?.invoke()
                         MenuItemOption.SelectAll.id -> onSelectAllRequested?.invoke()

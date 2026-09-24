@@ -184,6 +184,7 @@ object Utils {
     fun initSettingsData(musicViewModel: MusicViewModel, context: Context) {
         musicViewModel.viewModelScope.launch(Dispatchers.IO) {
             val showSlideIndicators = SharedPreferencesUtils.getShowSlideIndicators(context)
+            val showRightIndicator = SharedPreferencesUtils.getShowRightIndicator(context)
             val musicVisualizationEnable = SharedPreferencesUtils.getEnableMusicVisualization(context)
             val equalizerType = SharedPreferencesUtils.getEqualizerType(context)
             val showMusicCover = SharedPreferencesUtils.getShowMusicCover(context)
@@ -217,6 +218,7 @@ object Utils {
             }
             withContext(Dispatchers.Main) {
                 musicViewModel.showSlideIndicators.value = showSlideIndicators
+                musicViewModel.showRightIndicator.value = showRightIndicator
                 musicViewModel.musicVisualizationEnable.value = musicVisualizationEnable
                 musicViewModel.equalizerType.intValue = equalizerType
                 musicViewModel.showMusicCover.value = showMusicCover

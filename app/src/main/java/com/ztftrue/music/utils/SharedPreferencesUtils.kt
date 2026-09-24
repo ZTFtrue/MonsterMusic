@@ -224,6 +224,17 @@ object SharedPreferencesUtils {
         }
     }
 
+    fun getShowRightIndicator(context: Context): Boolean {
+        return context.getSharedPreferences("display", Context.MODE_PRIVATE)
+            .getBoolean("lyrics_right_indicator", true)
+    }
+
+    fun setShowRightIndicator(context: Context, enable: Boolean) {
+        context.getSharedPreferences("display", Context.MODE_PRIVATE).edit {
+            putBoolean("lyrics_right_indicator", enable)
+        }
+    }
+
     fun getAutoToTopRandom(context: Context): Boolean {
         return context.getSharedPreferences("config", Context.MODE_PRIVATE)
             .getBoolean("auto_to_top_when_random", false)

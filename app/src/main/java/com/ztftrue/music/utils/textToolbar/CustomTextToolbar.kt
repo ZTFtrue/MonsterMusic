@@ -14,23 +14,32 @@ import com.ztftrue.music.sqlData.model.DictionaryApp
 
 
 internal class CustomTextToolbar(
-    private val view: View,
+    internal val view: View,
     private val customApp: List<DictionaryApp>,
     private val focusManager: FocusManager,
-    private val clipboardManager: ClipboardManager
+    private val clipboardManager: ClipboardManager,
+    var onShow: (() -> Unit)? = null,
+    var onDismiss: (() -> Unit)? = null
 ) : TextToolbar {
     private var actionMode: ActionMode? = null
     private val textActionModeCallback: TextActionModeCallback =
-        TextActionModeCallback(textToolbar = this)
+        TextActionModeCallback(
+            textToolbar = this,
+            onActionModeDestroy = {
+                status = TextToolbarStatus.Hidden
+                actionMode = null
+                onDismiss?.invoke()
+            }
+        )
 
     override var status: TextToolbarStatus = TextToolbarStatus.Hidden
         private set
 
     override fun hide() {
-//        focusManager.clearFocus()
         status = TextToolbarStatus.Hidden
         actionMode?.finish()
         actionMode = null
+        onDismiss?.invoke()
     }
 
     fun hideAll() {
@@ -38,6 +47,7 @@ internal class CustomTextToolbar(
         status = TextToolbarStatus.Hidden
         actionMode?.finish()
         actionMode = null
+        onDismiss?.invoke()
     }
 
     override fun showMenu(
@@ -74,7 +84,7 @@ internal class CustomTextToolbar(
                 )
                 intent.putExtra(
                     Intent.EXTRA_PROCESS_TEXT,
-                    t
+                    t?.text ?: t?.toString() ?: ""
                 )
                 view.context.startActivity(intent)
             } catch (e: Exception) {
@@ -82,6 +92,7 @@ internal class CustomTextToolbar(
             }
         }
         status = TextToolbarStatus.Shown
+        onShow?.invoke()
         if (actionMode == null) {
             actionMode =
                 TextToolbarHelperMethods.startActionMode(
@@ -90,7 +101,10 @@ internal class CustomTextToolbar(
                     ActionMode.TYPE_FLOATING
                 )
         } else {
-            actionMode?.invalidate()
+            actionMode?.let {
+                it.invalidate()
+                TextToolbarHelperMethods.invalidateContentRect(it)
+            }
         }
     }
 

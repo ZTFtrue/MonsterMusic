@@ -212,6 +212,7 @@ class MusicViewModel : ViewModel() {
     var textAlign = mutableStateOf(TextAlign.Center)
 
     var showSlideIndicators = mutableStateOf(false)
+    var showRightIndicator = mutableStateOf(true)
 
     // sleep time
     var sleepTime = mutableLongStateOf(0L)
