@@ -60,7 +60,7 @@
             android:exported="false" />
         <activity
             android:name=".MainActivity"
-            android:configChanges="locale|layoutDirection"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|locale|layoutDirection"
             android:exported="true"
             android:launchMode="singleInstance"
             android:theme="@style/Theme.MusicPitch">

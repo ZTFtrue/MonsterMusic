@@ -186,6 +186,7 @@ object Utils {
             val showSlideIndicators = SharedPreferencesUtils.getShowSlideIndicators(context)
             val showRightIndicator = SharedPreferencesUtils.getShowRightIndicator(context)
             val musicVisualizationEnable = SharedPreferencesUtils.getEnableMusicVisualization(context)
+            val visualizationMode = SharedPreferencesUtils.getVisualizationMode(context)
             val equalizerType = SharedPreferencesUtils.getEqualizerType(context)
             val showMusicCover = SharedPreferencesUtils.getShowMusicCover(context)
             val themeSelected = context.getSharedPreferences(
@@ -222,6 +223,7 @@ object Utils {
                 musicViewModel.showSlideIndicators.value = showSlideIndicators
                 musicViewModel.showRightIndicator.value = showRightIndicator
                 musicViewModel.musicVisualizationEnable.value = musicVisualizationEnable
+                musicViewModel.visualizationMode.value = visualizationMode
                 musicViewModel.equalizerType.intValue = equalizerType
                 musicViewModel.showMusicCover.value = showMusicCover
                 musicViewModel.themeSelected.intValue = themeSelected

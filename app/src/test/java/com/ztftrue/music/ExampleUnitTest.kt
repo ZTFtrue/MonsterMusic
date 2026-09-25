@@ -3,6 +3,7 @@ package com.ztftrue.music
 import org.junit.Test
 import kotlin.math.roundToInt
 import com.ztftrue.music.ui.play.DualKnobHelper
+import com.ztftrue.music.effects.SoundUtils
 
 import org.junit.Assert.*
 
@@ -415,5 +416,96 @@ class ExampleUnitTest {
         // When fine-tuning is disabled: coarse slider snaps to tenths
         val fineInactiveNewPitch = newBigTenths / 10f
         assertEquals(1.30f, fineInactiveNewPitch, 0.0001f)
+    }
+
+    @Test
+    fun soundUtils_downsampleMagnitudes_normalization() {
+        // Silence input (all zeros): should produce 0.0f (representing minDb)
+        val silence = FloatArray(128) { 0f }
+        val downsampledSilence = SoundUtils.downsampleMagnitudes(silence, targetSize = 12, minDb = -60f, needNormalize = true)
+        assertEquals(12, downsampledSilence.size)
+        for (value in downsampledSilence) {
+            assertEquals(0.0f, value, 0.0001f)
+        }
+
+        // Peak input (all 1.0f = 0dB relative to refValue 1.0): should produce 1.0f
+        val peak = FloatArray(128) { 1.0f }
+        val downsampledPeak = SoundUtils.downsampleMagnitudes(peak, targetSize = 12, minDb = -60f, needNormalize = true)
+        assertEquals(12, downsampledPeak.size)
+        for (value in downsampledPeak) {
+            assertEquals(1.0f, value, 0.0001f)
+        }
+
+        // -20 dB input (amplitude = 0.1f since 20*log10(0.1) = -20 dB):
+        // Normalized = (-20 - (-60)) / 60 = 40 / 60 = 2/3 ≈ 0.6667f
+        val minus20Db = FloatArray(128) { 0.1f }
+        val downsampled20Db = SoundUtils.downsampleMagnitudes(minus20Db, targetSize = 12, minDb = -60f, needNormalize = true)
+        for (value in downsampled20Db) {
+            assertEquals(2f / 3f, value, 0.001f)
+        }
+
+        // Monotonic test: louder signal strictly produces >= normalized magnitude
+        val soft = FloatArray(128) { 0.01f } // -40dB -> 20/60 ≈ 0.333
+        val medium = FloatArray(128) { 0.1f } // -20dB -> 40/60 ≈ 0.667
+        val loud = FloatArray(128) { 0.5f }   // -6dB  -> 54/60 ≈ 0.900
+        val downSoft = SoundUtils.downsampleMagnitudes(soft, targetSize = 12, minDb = -60f, needNormalize = true)
+        val downMedium = SoundUtils.downsampleMagnitudes(medium, targetSize = 12, minDb = -60f, needNormalize = true)
+        val downLoud = SoundUtils.downsampleMagnitudes(loud, targetSize = 12, minDb = -60f, needNormalize = true)
+        for (i in 0 until 12) {
+            assertTrue(downSoft[i] < downMedium[i])
+            assertTrue(downMedium[i] < downLoud[i])
+        }
+
+        // Edge case: Empty input array produces targetSize array of 0f without crashing
+        val emptyResult = SoundUtils.downsampleMagnitudes(FloatArray(0), targetSize = 12, needNormalize = true)
+        assertEquals(12, emptyResult.size)
+        for (v in emptyResult) assertEquals(0f, v, 0.0001f)
+    }
+
+    @Test
+    fun visualizer_columnAndBandCalculations() {
+        // Test column count calculation for various screen widths and column spacings
+        val columnSpacing = 20f
+        val portraitWidth = 1080f
+        val portraitCols = maxOf(1, (portraitWidth / columnSpacing).toInt())
+        assertEquals(54, portraitCols)
+
+        val landscapeWidth = 2400f
+        val landscapeCols = maxOf(1, (landscapeWidth / columnSpacing).toInt())
+        assertEquals(120, landscapeCols)
+
+        // Frequency band mapping for Matrix columns: 32 FFT frequency bands
+        val freqBands = IntArray(landscapeCols) { c ->
+            ((c.toFloat() / landscapeCols) * 32).toInt().coerceIn(0, 31)
+        }
+        // First column maps to band 0 (sub-bass)
+        assertEquals(0, freqBands[0])
+        // Last column maps to band 31 (high treble)
+        assertEquals(31, freqBands[landscapeCols - 1])
+        // Mid column maps to band 16 (midrange)
+        assertEquals(16, freqBands[landscapeCols / 2])
+    }
+
+    @Test
+    fun visualizer_spectrumPeakHoldPhysics() {
+        // Physics verification of peak-hold dot behavior
+        var smoothed = 0f
+        var peak = 0f
+        val smoothingFactor = 0.3f
+        val gravity = 0.02f
+
+        // Audio beat hits with high magnitude (0.8f)
+        val hitEnergy = 0.8f
+        smoothed += (hitEnergy - smoothed) * smoothingFactor
+        if (smoothed > peak) peak = smoothed
+        assertEquals(0.24f, smoothed, 0.001f)
+        assertEquals(0.24f, peak, 0.001f)
+
+        // Next frame, audio drops to silence
+        smoothed += (0f - smoothed) * smoothingFactor
+        peak = maxOf(smoothed, peak - gravity)
+        assertEquals(0.168f, smoothed, 0.001f)
+        assertEquals(0.22f, peak, 0.001f) // peak stayed higher than current bar, falling slowly with gravity
+        assertTrue(peak > smoothed)
     }
 }

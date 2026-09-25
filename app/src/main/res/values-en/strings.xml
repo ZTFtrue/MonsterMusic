@@ -263,4 +263,9 @@
     <string name="widget_text_dark">Dark (Black)</string>
     <string name="widget_presets">Presets</string>
     <string name="widget_no_track_playing">No music playing</string>
+    <string name="fullscreen">Fullscreen</string>
+    <string name="exit_fullscreen">Exit Fullscreen</string>
+    <string name="landscape">Landscape</string>
+    <string name="portrait">Portrait</string>
+    <string name="spectrum">Spectrum</string>
 </resources>

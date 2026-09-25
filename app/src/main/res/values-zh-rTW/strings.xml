@@ -263,4 +263,9 @@
     <string name="widget_text_dark">深色（黑色）</string>
     <string name="widget_presets">預設</string>
     <string name="widget_no_track_playing">暫無播放音樂</string>
+    <string name="fullscreen">全螢幕</string>
+    <string name="exit_fullscreen">退出全螢幕</string>
+    <string name="landscape">橫屏</string>
+    <string name="portrait">直屏</string>
+    <string name="spectrum">頻譜</string>
 </resources>

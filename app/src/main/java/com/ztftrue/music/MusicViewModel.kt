@@ -124,6 +124,7 @@ class MusicViewModel : ViewModel() {
 //    val artistScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
 //    val genreScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
     var musicVisualizationEnable = mutableStateOf(false)
+    var visualizationMode = mutableStateOf("Matrix")
     var showMusicCover = mutableStateOf(false)
     var customMusicCover = mutableStateOf<Any>(R.drawable.songs_thumbnail_cover)
 

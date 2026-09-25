@@ -1,5 +1,8 @@
 package com.ztftrue.music.ui.play
 
+import android.app.Activity
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
@@ -44,7 +47,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowLeft
 import androidx.compose.material.icons.automirrored.outlined.FormatAlignLeft
 import androidx.compose.material.icons.automirrored.outlined.FormatAlignRight
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.outlined.Adjust
 import androidx.compose.material.icons.outlined.CodeOff
 import androidx.compose.material.icons.outlined.Equalizer
@@ -64,6 +69,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SecondaryScrollableTabRow
@@ -97,6 +103,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -386,6 +393,19 @@ fun PlayingPage(
     }
     var popupWindowDictionary by remember {
         mutableStateOf(false)
+    }
+    var isVisualizerFullscreen by remember {
+        mutableStateOf(false)
+    }
+
+    if (isVisualizerFullscreen) {
+        VisualizerFullscreenView(
+            musicViewModel = musicViewModel,
+            onDismiss = {
+                isVisualizerFullscreen = false
+            }
+        )
+        return
     }
     if (popupWindow) {
         Popup(
@@ -804,7 +824,6 @@ fun PlayingPage(
     val list = remember {
         mutableStateListOf<DictionaryApp>()
     }
-    var selectedOption by remember { mutableStateOf("Matrix") }
     if (visualizationPopupWindow) {
         Popup(
             // on below line we are adding
@@ -816,7 +835,7 @@ fun PlayingPage(
                 40.dp.toPx()
             ),
             onDismissRequest = {
-                popupWindow = false
+                visualizationPopupWindow = false
             }
         ) {
             val windowInfo = LocalWindowInfo.current
@@ -872,7 +891,7 @@ fun PlayingPage(
                         Row(
                             modifier = Modifier.padding(16.dp),
                             horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 "Cover ${if (musicViewModel.showMusicCover.value) "Show" else "Hide"}",
@@ -894,14 +913,82 @@ fun PlayingPage(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(
                                 enabled = musicViewModel.musicVisualizationEnable.value,
-                                selected = selectedOption == "Matrix",
-                                onClick = { selectedOption = "Matrix" }
+                                selected = musicViewModel.visualizationMode.value == "Matrix",
+                                onClick = {
+                                    musicViewModel.visualizationMode.value = "Matrix"
+                                    SharedPreferencesUtils.saveVisualizationMode(context, "Matrix")
+                                }
                             )
                             Text(
                                 text = stringResource(R.string.matrix),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
+                        }
+                    }
+                    item {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                enabled = musicViewModel.musicVisualizationEnable.value,
+                                selected = musicViewModel.visualizationMode.value == "Spectrum",
+                                onClick = {
+                                    musicViewModel.visualizationMode.value = "Spectrum"
+                                    SharedPreferencesUtils.saveVisualizationMode(context, "Spectrum")
+                                }
+                            )
+                            Text(
+                                text = stringResource(R.string.spectrum),
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedButton(
+                                enabled = musicViewModel.musicVisualizationEnable.value,
+                                onClick = {
+                                    visualizationPopupWindow = false
+                                    isVisualizerFullscreen = true
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Fullscreen,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(stringResource(R.string.fullscreen))
+                            }
+
+                            val activity = context as? Activity
+                            val configuration = LocalConfiguration.current
+                            val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+                            OutlinedButton(
+                                onClick = {
+                                    if (activity != null) {
+                                        activity.requestedOrientation = if (isLandscape) {
+                                            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                                        } else {
+                                            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ScreenRotation,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(if (isLandscape) stringResource(R.string.portrait) else stringResource(R.string.landscape))
+                            }
                         }
                     }
                 }
@@ -1346,7 +1433,9 @@ fun PlayingPage(
                 ) { id ->
                     when (playViewTab[id].id) {
                         CoverID -> {
-                            CoverView(musicViewModel)
+                            CoverView(musicViewModel, onEnterFullscreen = {
+                                isVisualizerFullscreen = true
+                            })
                         }
 
                         LyricsID -> {

@@ -99,6 +99,17 @@ object SharedPreferencesUtils {
         }
     }
 
+    fun getVisualizationMode(context: Context): String {
+        return context.getSharedPreferences("Visualization", Context.MODE_PRIVATE)
+            .getString("mode", "Matrix") ?: "Matrix"
+    }
+
+    fun saveVisualizationMode(context: Context, mode: String) {
+        context.getSharedPreferences("Visualization", Context.MODE_PRIVATE).edit {
+            putString("mode", mode)
+        }
+    }
+
     fun getEqualizerType(context: Context): Int {
         return context.getSharedPreferences("Equalizer", Context.MODE_PRIVATE)
             .getInt("EqualizerType", 0)

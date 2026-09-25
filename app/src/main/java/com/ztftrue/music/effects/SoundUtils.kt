@@ -33,28 +33,30 @@ object SoundUtils {
             val endIdx = FastMath.pow(((i + 1).toDouble() / targetSize), 2.0) * totalSize
 
             // Convert to valid index
-            val start = startIdx.toInt().coerceAtLeast(0).coerceAtMost(totalSize - 1)
-            val end = endIdx.toInt().coerceAtLeast(0).coerceAtMost(totalSize - 1)
+            val start = startIdx.toInt().coerceIn(0, totalSize - 1)
+            val end = maxOf(start + 1, endIdx.toInt().coerceIn(0, totalSize))
 
             var sum = 0f
             for (j in start until end) {
                 sum += magnitudes[j]
             }
             val avg = if (end > start) sum / (end - start) else 0f
-            downsampled[i] = if (avg > 0) {
-                //  dB = 20 * log10(amplitude / ref)
-                val db = 20 * log10((avg / refValue).toDouble()).toFloat()
-                val dbResult = if (db < minDb) minDb else db
-                if (needPositive) abs(dbResult) else dbResult
+            val db = if (avg > 0) {
+                // dB = 20 * log10(amplitude / ref)
+                val rawDb = 20 * log10((avg / refValue).toDouble()).toFloat()
+                if (rawDb < minDb) minDb else if (rawDb > 0f) 0f else rawDb
             } else {
-                if (needPositive) abs(minDb) else minDb
+                minDb
             }
             if (needNormalize) {
-                if (normalizationRange > 1e-6f) {
-                    downsampled[i] = (downsampled[i] - minDb) / normalizationRange
+                // Normalize [minDb..0dB] to [0.0..1.0] where 1.0 is loudest (0dB) and 0.0 is silence (minDb)
+                downsampled[i] = if (normalizationRange > 1e-6f) {
+                    ((db - minDb) / normalizationRange).coerceIn(0f, 1f)
                 } else {
-                    downsampled[i] = 0.0f
+                    0.0f
                 }
+            } else {
+                downsampled[i] = if (needPositive) abs(db) else db
             }
         }
 
