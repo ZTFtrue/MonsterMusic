@@ -47,29 +47,9 @@ jobs:
       if: always()
       run: rm -f release_keystore.jks
 
-    - name: Prepare APKs with descriptive names
-      run: |
-        TAG_NAME="${{ github.ref_name }}"
-        [ -z "$TAG_NAME" ] && TAG_NAME="latest"
-        mkdir -p release-apks
-        cp app/release/app-arm64-v8a-release.apk "release-apks/app-arm64-v8a-release.apk"
-        cp app/release/app-armeabi-v7a-release.apk "release-apks/app-armeabi-v7a-release.apk"
-        cp app/release/app-x86_64-release.apk "release-apks/app-x86_64-release.apk"
-        cp app/release/app-x86-release.apk "release-apks/app-x86-release.apk"
-        cp app/release/app-universal-release.apk "release-apks/app-universal-release.apk"
-        cp app/release/app-release.apk "release-apks/app-release.apk"
-        cp app/release/app-arm64-v8a-release.apk "release-apks/MonsterMusic-${TAG_NAME}-arm64-v8a.apk"
-        cp app/release/app-armeabi-v7a-release.apk "release-apks/MonsterMusic-${TAG_NAME}-armeabi-v7a.apk"
-        cp app/release/app-x86_64-release.apk "release-apks/MonsterMusic-${TAG_NAME}-x86_64.apk"
-        cp app/release/app-x86-release.apk "release-apks/MonsterMusic-${TAG_NAME}-x86.apk"
-        cp app/release/app-universal-release.apk "release-apks/MonsterMusic-${TAG_NAME}-universal.apk"
-        ls -lh release-apks/
-
     - name: Upload Release Assets
       uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: |
-          release-apks/*.apk
-          app/build/outputs/mapping/release/mapping.txt
+        files: app/release/*.apk
         generate_release_notes: true

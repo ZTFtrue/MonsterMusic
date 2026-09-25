@@ -244,10 +244,6 @@ tasks.register("copyReleaseApks") {
                     apkFile.copyTo(File(outputDir, apkFile.name), overwrite = true)
                 }
             }
-            val universalApk = File(outputDir, "app-universal-release.apk")
-            if (universalApk.exists()) {
-                universalApk.copyTo(File(outputDir, "app-release.apk"), overwrite = true)
-            }
         }
     }
 }
