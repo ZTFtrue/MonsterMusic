@@ -6,6 +6,7 @@ import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.database.ContentObserver
@@ -748,6 +749,11 @@ class MainActivity : ComponentActivity() {
             return super.onCustomCommand(controller, command, args)
         }
 
+        override fun onDisconnected(controller: MediaController) {
+            Log.w("MainActivity", "MediaBrowser disconnected from service")
+            musicViewModel.browser = null
+            super.onDisconnected(controller)
+        }
     }
 
     private fun initializeAndConnect() {
@@ -820,9 +826,27 @@ class MainActivity : ComponentActivity() {
     public override fun onStop() {
         super.onStop()
         if (::browserFuture.isInitialized) {
-            musicViewModel.browser?.removeListener(playerListener)
-            MediaBrowser.releaseFuture(browserFuture)
+            try {
+                musicViewModel.browser?.removeListener(playerListener)
+            } catch (e: Exception) {
+                Log.w("MainActivity", "Error removing playerListener: ${e.message}")
+            }
+            try {
+                MediaBrowser.releaseFuture(browserFuture)
+            } catch (e: Exception) {
+                Log.w("MainActivity", "Error releasing MediaBrowser future: ${e.message}")
+            }
             musicViewModel.browser = null
+        }
+    }
+
+    override fun unbindService(conn: ServiceConnection) {
+        try {
+            super.unbindService(conn)
+        } catch (e: IllegalArgumentException) {
+            Log.w("MainActivity", "ServiceConnection already unbound or not registered: ${e.message}")
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Unexpected error in unbindService", e)
         }
     }
 

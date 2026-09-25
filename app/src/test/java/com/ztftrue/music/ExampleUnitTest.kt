@@ -576,4 +576,37 @@ class ExampleUnitTest {
         assertEquals(14, trebleTrailLen)
         assertTrue(bassTrailLen > trebleTrailLen)
     }
+
+    @Test
+    fun exceptionFilter_identifiesHarmlessServiceUnbindException() {
+        fun isHarmlessServiceUnbindException(e: Throwable): Boolean {
+            var current: Throwable? = e
+            while (current != null) {
+                val msg = current.message ?: ""
+                if (current is IllegalArgumentException && msg.contains("Service not registered")) {
+                    return true
+                }
+                current = current.cause
+            }
+            return false
+        }
+
+        // Exact exception reported by user
+        val userException = IllegalArgumentException(
+            "Service not registered: androidx.media3.session.MediaControllerImplBase\$SessionServiceConnection@2a2f222"
+        )
+        assertTrue(isHarmlessServiceUnbindException(userException))
+
+        // Wrapped in RuntimeException
+        val wrappedException = RuntimeException("Wrapper", userException)
+        assertTrue(isHarmlessServiceUnbindException(wrappedException))
+
+        // Unrelated IllegalArgumentException should NOT be filtered
+        val otherArgException = IllegalArgumentException("Invalid slider value: -1")
+        assertFalse(isHarmlessServiceUnbindException(otherArgException))
+
+        // Null pointer exception should NOT be filtered
+        val npe = NullPointerException("Track item is null")
+        assertFalse(isHarmlessServiceUnbindException(npe))
+    }
 }

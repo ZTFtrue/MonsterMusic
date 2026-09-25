@@ -2,6 +2,8 @@ package com.ztftrue.music
 
 import android.app.Application
 import android.content.Intent
+import android.content.ServiceConnection
+import android.util.Log
 import java.io.PrintWriter
 import java.io.StringWriter
 
@@ -10,10 +12,36 @@ class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         if (!BuildConfig.DEBUG) {
-            Thread.setDefaultUncaughtExceptionHandler { _, e ->
+            Thread.setDefaultUncaughtExceptionHandler { thread, e ->
+                if (isHarmlessServiceUnbindException(e)) {
+                    Log.w("MyApplication", "Ignoring harmless service unbind exception on ${thread.name}: ${e.message}")
+                    return@setDefaultUncaughtExceptionHandler
+                }
                 handleUncaughtException(e)
             }
         }
+    }
+
+    override fun unbindService(conn: ServiceConnection) {
+        try {
+            super.unbindService(conn)
+        } catch (e: IllegalArgumentException) {
+            Log.w("MyApplication", "ServiceConnection already unbound or not registered: ${e.message}")
+        } catch (e: Exception) {
+            Log.e("MyApplication", "Unexpected exception during unbindService", e)
+        }
+    }
+
+    private fun isHarmlessServiceUnbindException(e: Throwable): Boolean {
+        var current: Throwable? = e
+        while (current != null) {
+            val msg = current.message ?: ""
+            if (current is IllegalArgumentException && msg.contains("Service not registered")) {
+                return true
+            }
+            current = current.cause
+        }
+        return false
     }
 
     private fun handleUncaughtException(e: Throwable) {
