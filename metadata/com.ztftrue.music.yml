@@ -40,7 +40,7 @@ Builds:
     gradle:
       - yes
     ndk: r27c
-    output: app/build/outputs/apk/release/app-universal-release.apk
+    output: app/release/app-release.apk
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags

@@ -28,19 +28,41 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
+    - name: Decode Release Keystore
+      if: env.SIGNING_KEY != ''
+      env:
+        SIGNING_KEY: ${{ secrets.MONSTER_MUSIC }}
+      run: |
+        echo "$SIGNING_KEY" | base64 --decode > release_keystore.jks
+
     - name: Build Release APKs
+      env:
+        KEYSTORE_PATH: ${{ github.workspace }}/release_keystore.jks
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
       run: ./gradlew assembleRelease
+
+    - name: Clean up Keystore
+      if: always()
+      run: rm -f release_keystore.jks
 
     - name: Prepare APKs with descriptive names
       run: |
         TAG_NAME="${{ github.ref_name }}"
         [ -z "$TAG_NAME" ] && TAG_NAME="latest"
         mkdir -p release-apks
-        cp app/build/outputs/apk/release/app-arm64-v8a-release.apk "release-apks/MonsterMusic-${TAG_NAME}-arm64-v8a.apk"
-        cp app/build/outputs/apk/release/app-armeabi-v7a-release.apk "release-apks/MonsterMusic-${TAG_NAME}-armeabi-v7a.apk"
-        cp app/build/outputs/apk/release/app-x86_64-release.apk "release-apks/MonsterMusic-${TAG_NAME}-x86_64.apk"
-        cp app/build/outputs/apk/release/app-x86-release.apk "release-apks/MonsterMusic-${TAG_NAME}-x86.apk"
-        cp app/build/outputs/apk/release/app-universal-release.apk "release-apks/MonsterMusic-${TAG_NAME}-universal.apk"
+        cp app/release/app-arm64-v8a-release.apk "release-apks/app-arm64-v8a-release.apk"
+        cp app/release/app-armeabi-v7a-release.apk "release-apks/app-armeabi-v7a-release.apk"
+        cp app/release/app-x86_64-release.apk "release-apks/app-x86_64-release.apk"
+        cp app/release/app-x86-release.apk "release-apks/app-x86-release.apk"
+        cp app/release/app-universal-release.apk "release-apks/app-universal-release.apk"
+        cp app/release/app-release.apk "release-apks/app-release.apk"
+        cp app/release/app-arm64-v8a-release.apk "release-apks/MonsterMusic-${TAG_NAME}-arm64-v8a.apk"
+        cp app/release/app-armeabi-v7a-release.apk "release-apks/MonsterMusic-${TAG_NAME}-armeabi-v7a.apk"
+        cp app/release/app-x86_64-release.apk "release-apks/MonsterMusic-${TAG_NAME}-x86_64.apk"
+        cp app/release/app-x86-release.apk "release-apks/MonsterMusic-${TAG_NAME}-x86.apk"
+        cp app/release/app-universal-release.apk "release-apks/MonsterMusic-${TAG_NAME}-universal.apk"
         ls -lh release-apks/
 
     - name: Upload Release Assets

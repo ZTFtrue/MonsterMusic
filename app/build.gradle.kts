@@ -25,6 +25,19 @@ android {
     }
 
     signingConfigs {
+        create("release") {
+            val envKeystore = System.getenv("KEYSTORE_PATH")?.let { file(it) }
+                ?: rootProject.file("release_keystore.jks").takeIf { it.exists() }
+                ?: rootProject.file("keystore.jks").takeIf { it.exists() }
+                ?: file("../keystore.jks")
+
+            if (envKeystore.exists()) {
+                storeFile = envKeystore
+                storePassword = System.getenv("KEY_STORE_PASSWORD") ?: "qazwsx"
+                keyPassword = System.getenv("KEY_PASSWORD") ?: "111111"
+                keyAlias = System.getenv("KEY_ALIAS") ?: "music"
+            }
+        }
         getByName("debug") {
             storeFile = file("../keystore.jks")
             storePassword = "qazwsx"
@@ -84,7 +97,12 @@ android {
                     }
                 }
             }
-            signingConfig = signingConfigs.getByName("debug")
+            val releaseSigning = signingConfigs.getByName("release")
+            if (releaseSigning.storeFile?.exists() == true) {
+                signingConfig = releaseSigning
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
         getByName("debug") {
             applicationIdSuffix = ".debug" // Appends ".debug" to the
@@ -213,4 +231,27 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
 
 //    debugImplementation ("com.squareup.leakcanary:leakcanary-android:2.14")
+}
+
+tasks.register("copyReleaseApks") {
+    doLast {
+        val outputDir = file("release")
+        val buildApkDir = layout.buildDirectory.dir("outputs/apk/release").get().asFile
+        if (buildApkDir.exists()) {
+            outputDir.mkdirs()
+            buildApkDir.listFiles()?.forEach { apkFile ->
+                if (apkFile.extension == "apk" || apkFile.name == "output-metadata.json") {
+                    apkFile.copyTo(File(outputDir, apkFile.name), overwrite = true)
+                }
+            }
+            val universalApk = File(outputDir, "app-universal-release.apk")
+            if (universalApk.exists()) {
+                universalApk.copyTo(File(outputDir, "app-release.apk"), overwrite = true)
+            }
+        }
+    }
+}
+
+tasks.matching { it.name == "assembleRelease" }.configureEach {
+    finalizedBy("copyReleaseApks")
 }

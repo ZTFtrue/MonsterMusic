@@ -25,5 +25,21 @@ jobs:
     - name: Run Unit Tests
       run: ./gradlew testDebugUnitTest
 
+    - name: Decode Release Keystore
+      if: env.SIGNING_KEY != ''
+      env:
+        SIGNING_KEY: ${{ secrets.MONSTER_MUSIC }}
+      run: |
+        echo "$SIGNING_KEY" | base64 --decode > release_keystore.jks
+
     - name: Build APKs with Gradle
+      env:
+        KEYSTORE_PATH: ${{ github.workspace }}/release_keystore.jks
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
       run: ./gradlew assembleRelease
+
+    - name: Clean up Keystore
+      if: always()
+      run: rm -f release_keystore.jks
