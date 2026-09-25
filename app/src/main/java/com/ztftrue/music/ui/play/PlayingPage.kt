@@ -966,29 +966,6 @@ fun PlayingPage(
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(stringResource(R.string.fullscreen))
                             }
-
-                            val activity = context as? Activity
-                            val configuration = LocalConfiguration.current
-                            val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-                            OutlinedButton(
-                                onClick = {
-                                    if (activity != null) {
-                                        activity.requestedOrientation = if (isLandscape) {
-                                            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                                        } else {
-                                            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                                        }
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ScreenRotation,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(if (isLandscape) stringResource(R.string.portrait) else stringResource(R.string.landscape))
-                            }
                         }
                     }
                 }

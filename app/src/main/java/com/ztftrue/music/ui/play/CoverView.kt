@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material3.Icon
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -64,7 +65,7 @@ fun CoverView(
         val lifecycle = lifecycleOwner.lifecycle
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_START -> {
+                Lifecycle.Event.ON_START, Lifecycle.Event.ON_RESUME -> {
                     musicViewModel.browser?.sendCustomCommand(
                         MediaCommands.COMMAND_VISUALIZATION_CONNECTED,
                         Bundle()
@@ -83,6 +84,10 @@ fun CoverView(
         }
 
         lifecycle.addObserver(observer)
+        musicViewModel.browser?.sendCustomCommand(
+            MediaCommands.COMMAND_VISUALIZATION_CONNECTED,
+            Bundle()
+        )
         onDispose {
             lifecycle.removeObserver(observer)
         }
@@ -99,6 +104,7 @@ fun CoverView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
+                    .clipToBounds()
             ) {
                 val isCoverVisible = !musicVisualizationEnable.value || musicViewModel.showMusicCover.value
                 if (isCoverVisible) {
@@ -134,12 +140,12 @@ fun CoverView(
                     if (mode == "Spectrum") {
                         SpectrumVisualizer(
                             musicViewModel = musicViewModel,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize().clipToBounds()
                         )
                     } else {
                         MatrixRainVisualizer(
                             musicViewModel = musicViewModel,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize().clipToBounds()
                         )
                     }
 

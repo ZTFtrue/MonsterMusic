@@ -12,38 +12,60 @@ import kotlin.math.log10
 
 object SoundUtils {
     fun downsampleMagnitudes(
-        magnitudes: FloatArray, targetSize: Int = 12, minDb: Float = -60f,
+        magnitudes: FloatArray,
+        targetSize: Int = 12,
+        minDb: Float = -60f,
         needNormalize: Boolean = true,
-        needPositive: Boolean = true
+        needPositive: Boolean = true,
+        refValue: Float = 1.0f,
+        tiltFactor: Float = 0f
     ): FloatArray {
         if (magnitudes.isEmpty() || targetSize <= 0) {
             return FloatArray(maxOf(0, targetSize))
         }
-        // 定义一个参考值，防止 log(0) 出现。同时它也定义了0dB的位置。
-        val refValue = 1.0f
         val downsampled = FloatArray(targetSize)
         val totalSize = magnitudes.size
         val normalizationRange = abs(minDb)
-        // The short answer is: Decibels are negative
-        // because they represent how much quieter
-        // a sound is compared to the LOUDEST POSSIBLE sound.
-        for (i in downsampled.indices) {
-            // Exponential scaling
-            val startIdx = FastMath.pow((i.toDouble() / targetSize), 2.0) * totalSize
-            val endIdx = FastMath.pow(((i + 1).toDouble() / targetSize), 2.0) * totalSize
 
-            // Convert to valid index
-            val start = startIdx.toInt().coerceIn(0, totalSize - 1)
-            val end = maxOf(start + 1, endIdx.toInt().coerceIn(0, totalSize))
+        // Logarithmic frequency distribution covering musical spectrum (sub-bass ~25Hz to Nyquist)
+        val minRatio = 0.0015
+        val maxRatio = 1.0
+        val logRatio = FastMath.log(maxRatio / minRatio)
+
+        for (i in downsampled.indices) {
+            val startFrac = if (i == 0) 0.0 else minRatio * FastMath.exp(logRatio * (i.toDouble() / targetSize))
+            val endFrac = if (i == targetSize - 1) 1.0 else minRatio * FastMath.exp(logRatio * ((i + 1).toDouble() / targetSize))
+
+            val startIdx = (startFrac * totalSize).toInt()
+            val endIdx = (endFrac * totalSize).toInt()
+
+            // Ensure distinct non-empty bin ranges: early bass bands get distinct bins
+            val start = maxOf(minOf(i, totalSize - 1), startIdx.coerceIn(0, totalSize - 1))
+            val end = maxOf(start + 1, endIdx.coerceIn(0, totalSize))
 
             var sum = 0f
+            var maxVal = 0f
             for (j in start until end) {
-                sum += magnitudes[j]
+                val v = magnitudes[j]
+                sum += v
+                if (v > maxVal) maxVal = v
             }
-            val avg = if (end > start) sum / (end - start) else 0f
-            val db = if (avg > 0) {
+            val count = end - start
+            val avg = if (count > 0) sum / count else 0f
+            // Combine average and peak in wider bands to avoid drowning sharp instrument tones
+            val bandVal = if (count > 1) maxOf(avg, maxVal * 0.75f) else avg
+
+            // Optional acoustic tilt (compensates for natural pink noise rolloff in music)
+            val tilt = if (tiltFactor > 0f && targetSize > 1) {
+                1.0f + (i.toFloat() / (targetSize - 1)) * tiltFactor
+            } else {
+                1.0f
+            }
+            val effectiveVal = bandVal * tilt
+
+            val db = if (effectiveVal > 0) {
                 // dB = 20 * log10(amplitude / ref)
-                val rawDb = 20 * log10((avg / refValue).toDouble()).toFloat()
+                val rawDb = 20 * log10((effectiveVal / refValue).toDouble()).toFloat()
                 if (rawDb < minDb) minDb else if (rawDb > 0f) 0f else rawDb
             } else {
                 minDb

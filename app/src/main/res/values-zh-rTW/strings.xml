@@ -15,7 +15,7 @@
     <string name="warning_for_tracks_tab"></string>
     <string name="artist">演出者: %1$s</string>
     <string name="album">專輯: %1$s</string>
-    <string name="cover"></string>
+    <string name="cover">封面</string>
     <string name="operate"></string>
     <string name="add_to_queue">新增至待播清單</string>
     <string name="play_next">下一首播放</string>

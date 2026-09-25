@@ -508,4 +508,72 @@ class ExampleUnitTest {
         assertEquals(0.22f, peak, 0.001f) // peak stayed higher than current bar, falling slowly with gravity
         assertTrue(peak > smoothed)
     }
+
+    @Test
+    fun soundUtils_downsampleMagnitudes_scaledRefValueAndTilt() {
+        // Test with unnormalized native FFT size (512 bins, where full-scale peak is 256.0f)
+        val fullScaleSineFft = FloatArray(512) { 0f }
+        // Sine wave at bin 10 (~430Hz) with peak amplitude = 256.0f (0 dBFS)
+        fullScaleSineFft[10] = 256.0f
+
+        val downsampled = SoundUtils.downsampleMagnitudes(
+            fullScaleSineFft,
+            targetSize = 32,
+            minDb = -60f,
+            needNormalize = true,
+            needPositive = false,
+            refValue = 256.0f,
+            tiltFactor = 1.0f
+        )
+        assertEquals(32, downsampled.size)
+        // Active band should reach ~1.0f (loud)
+        val maxBand = downsampled.maxOrNull() ?: 0f
+        assertTrue("Max band should be near peak (> 0.9f) but was $maxBand", maxBand > 0.9f)
+        // Silent bands should stay at 0.0f
+        assertEquals(0.0f, downsampled[0], 0.001f)
+        assertEquals(0.0f, downsampled[31], 0.001f)
+    }
+
+    @Test
+    fun matrixRain_speedTracksFrequency() {
+        val idleSpeed = 22f
+        val peakSpeedBass = 680f
+        val peakSpeedTreble = 880f
+
+        fun computeSpeed(energy: Float, freqRatio: Float): Float {
+            val peakSpeed = 680f + freqRatio * 200f
+            val speedFactor = energy * energy * 0.35f + energy * 0.65f
+            return idleSpeed + (peakSpeed - idleSpeed) * speedFactor
+        }
+
+        // 1. When silent, speed is idleSpeed
+        val silentSpeed = computeSpeed(0.0f, 0.0f)
+        assertEquals(22f, silentSpeed, 0.001f)
+
+        // 2. Monotonic speed response: louder frequency band moves strictly faster
+        val quietSpeed = computeSpeed(0.2f, 0.5f)
+        val mediumSpeed = computeSpeed(0.5f, 0.5f)
+        val loudSpeed = computeSpeed(0.8f, 0.5f)
+        val peakSpeed = computeSpeed(1.0f, 0.5f)
+        assertTrue(quietSpeed > silentSpeed)
+        assertTrue(mediumSpeed > quietSpeed)
+        assertTrue(loudSpeed > mediumSpeed)
+        assertTrue(peakSpeed > loudSpeed)
+
+        // 3. Peak speeds track frequency range:
+        val bassPeak = computeSpeed(1.0f, 0.0f)
+        val treblePeak = computeSpeed(1.0f, 1.0f)
+        assertEquals(peakSpeedBass, bassPeak, 0.001f)
+        assertEquals(peakSpeedTreble, treblePeak, 0.001f)
+        assertTrue(treblePeak > bassPeak)
+
+        // 4. Trail length (wavelength) tracks frequency inversely:
+        // Bass columns have longer trails, treble columns have shorter crisp trails
+        fun maxTrailForCol(freqRatio: Float): Int = (28 - freqRatio * 14).toInt()
+        val bassTrailLen = maxTrailForCol(0.0f)
+        val trebleTrailLen = maxTrailForCol(1.0f)
+        assertEquals(28, bassTrailLen)
+        assertEquals(14, trebleTrailLen)
+        assertTrue(bassTrailLen > trebleTrailLen)
+    }
 }

@@ -15,7 +15,7 @@
     <string name="warning_for_tracks_tab"></string>
     <string name="artist">Artiste : %1$s</string>
     <string name="album">Album : %1$s</string>
-    <string name="cover"></string>
+    <string name="cover">Couverture</string>
     <string name="operate"></string>
     <string name="add_to_queue">Ajouter à la file</string>
     <string name="play_next">Lire ensuite</string>

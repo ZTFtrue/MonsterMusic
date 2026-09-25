@@ -3,7 +3,9 @@ package com.ztftrue.music.ui.play
 import android.app.Activity
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.os.Bundle
 import android.view.MotionEvent
+import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -12,14 +14,18 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -58,6 +64,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.motionEventSpy
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -70,9 +77,17 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.Player
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
+import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
@@ -115,6 +130,50 @@ fun VisualizerFullscreenView(
         }
     }
 
+    // Keep screen on when in landscape mode
+    DisposableEffect(isLandscape, activity) {
+        val window = activity?.window
+        if (isLandscape && window != null) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+        onDispose {
+            if (activity != null && activity.resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE) {
+                activity.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
+        }
+    }
+
+    // Ensure audio processor visualization stream is connected in fullscreen view
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, musicViewModel.browser) {
+        val lifecycle = lifecycleOwner.lifecycle
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START, Lifecycle.Event.ON_RESUME -> {
+                    musicViewModel.browser?.sendCustomCommand(
+                        MediaCommands.COMMAND_VISUALIZATION_CONNECTED,
+                        Bundle()
+                    )
+                }
+                Lifecycle.Event.ON_STOP -> {
+                    musicViewModel.browser?.sendCustomCommand(
+                        MediaCommands.COMMAND_VISUALIZATION_DISCONNECTED,
+                        Bundle()
+                    )
+                }
+                else -> Unit
+            }
+        }
+        lifecycle.addObserver(observer)
+        musicViewModel.browser?.sendCustomCommand(
+            MediaCommands.COMMAND_VISUALIZATION_CONNECTED,
+            Bundle()
+        )
+        onDispose {
+            lifecycle.removeObserver(observer)
+        }
+    }
+
     // Handle Android system back gesture to exit fullscreen
     BackHandler {
         onDismiss()
@@ -139,6 +198,29 @@ fun VisualizerFullscreenView(
                 showControls = !showControls
             }
     ) {
+        // Optional album cover backdrop (when showMusicCover is enabled)
+        if (musicViewModel.showMusicCover.value) {
+            val imageModel: ImageSource by musicViewModel.currentMusicCover
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(imageModel.asModel())
+                        .crossfade(true)
+                        .size(1000, 1000)
+                        .build(),
+                    contentDescription = stringResource(R.string.cover),
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxHeight(if (isLandscape) 0.75f else 0.45f)
+                        .aspectRatio(1f)
+                        .clip(RoundedCornerShape(16.dp))
+                )
+            }
+        }
+
         // Active visualizer engine filling 100% of the screen
         val mode = musicViewModel.visualizationMode.value
         if (mode == "Spectrum") {
@@ -205,11 +287,28 @@ fun VisualizerFullscreenView(
                     )
                 }
 
-                // Mode Selector (Matrix / Spectrum)
+                // Options: Cover toggle, Mode Selector (Matrix / Spectrum), Orientation
                 Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    FilterChip(
+                        selected = musicViewModel.showMusicCover.value,
+                        onClick = {
+                            val newCoverState = !musicViewModel.showMusicCover.value
+                            musicViewModel.showMusicCover.value = newCoverState
+                            SharedPreferencesUtils.saveShowMusicCover(context, newCoverState)
+                        },
+                        label = { Text(stringResource(R.string.cover), fontSize = 11.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            containerColor = Color.White.copy(alpha = 0.15f),
+                            labelColor = Color.White
+                        )
+                    )
+
                     FilterChip(
                         selected = musicViewModel.visualizationMode.value == "Matrix",
                         onClick = {

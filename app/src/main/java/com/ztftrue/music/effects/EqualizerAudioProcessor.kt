@@ -327,8 +327,13 @@ class EqualizerAudioProcessor : AudioProcessor {
         if (nativeFftHandle != 0L) {
             processNativeFft(nativeFftHandle, visTempArray, nativeFftMagnitudes)
             val m = downsampleMagnitudes(
-                nativeFftMagnitudes, 32, -60f, needNormalize = true,
-                needPositive = false
+                nativeFftMagnitudes,
+                targetSize = 32,
+                minDb = -60f,
+                needNormalize = true,
+                needPositive = false,
+                refValue = (fftSize / 4f), // 256f full-scale reference for 1024-pt Hann window FFT
+                tiltFactor = 1.0f          // Equal-loudness acoustic compensation across spectrum
             )
             AudioDataRepository.postVisualizationData(m)
         }

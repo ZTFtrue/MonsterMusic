@@ -21,6 +21,7 @@ import android.os.Looper
 import android.provider.OpenableColumns
 import android.provider.Settings
 import android.util.Log
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -556,6 +557,9 @@ class MainActivity : ComponentActivity() {
 //            AppCompatDelegate.setApplicationLocales(localeList)
 //        }
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
         compatSplashScreen = installSplashScreen()
         compatSplashScreen?.setKeepOnScreenCondition { musicViewModel.mainTabList.isEmpty() }
         Utils.initSettingsData(musicViewModel, this)
@@ -789,8 +793,22 @@ class MainActivity : ComponentActivity() {
     public override fun onResume() {
         super.onResume()
         volumeControlStream = AudioManager.STREAM_MUSIC
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
         musicViewModel.browser?.let {
             updateUiWithCurrentState(it)
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
     }
 

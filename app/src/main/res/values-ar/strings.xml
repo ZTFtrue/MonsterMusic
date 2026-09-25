@@ -15,7 +15,7 @@
     <string name="warning_for_tracks_tab"></string>
     <string name="artist">الفنان: %1$s</string>
     <string name="album">الألبوم: %1$s</string>
-    <string name="cover"></string>
+    <string name="cover">غلاف</string>
     <string name="operate"></string>
     <string name="add_to_queue">إضافة إلى قائمة الانتظار</string>
     <string name="play_next">تشغيل التالي</string>

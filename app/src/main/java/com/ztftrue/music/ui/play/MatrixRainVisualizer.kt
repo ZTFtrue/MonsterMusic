@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -52,9 +53,9 @@ fun MatrixRainVisualizer(
 
     val magnitudes by musicViewModel.visualizationData.observeAsState(initial = emptyList())
     val density = LocalDensity.current
-    val columnSpacingPx = with(density) { 18.dp.toPx() }
-    val charHeightPx = with(density) { 18.dp.toPx() }
-    val textSizePx = with(density) { 14.dp.toPx() }
+    val columnSpacingPx = with(density) { 15.dp.toPx() }
+    val charHeightPx = with(density) { 16.dp.toPx() }
+    val textSizePx = with(density) { 13.dp.toPx() }
 
     val simulation = remember(columnSpacingPx, charHeightPx, textSizePx) {
         MatrixRainSimulation(
@@ -75,7 +76,10 @@ fun MatrixRainVisualizer(
             withFrameMillis { frameTime ->
                 if (lastTime != 0L) {
                     val dt = (frameTime - lastTime).coerceIn(1L, 100L)
-                    simulation.update(dt.toFloat(), magnitudes, isPlaying)
+                    try {
+                        simulation.update(dt.toFloat(), magnitudes, isPlaying)
+                    } catch (_: Exception) {
+                    }
                     frameTick++
                 }
                 lastTime = frameTime
@@ -83,7 +87,7 @@ fun MatrixRainVisualizer(
         }
     }
 
-    Canvas(modifier = modifier.fillMaxSize()) {
+    Canvas(modifier = modifier.fillMaxSize().clipToBounds()) {
         // Read frameTick to trigger redraw per frame
         @Suppress("UNUSED_VARIABLE")
         val tick = frameTick
@@ -102,6 +106,7 @@ class MatrixRainSimulation(
     private val charHeight: Float,
     private val textSize: Float
 ) {
+    private val lock = Any()
     private var width = 0f
     private var height = 0f
     private var columnCount = 0
@@ -112,7 +117,6 @@ class MatrixRainSimulation(
     private var trailLengths = IntArray(0)
     private var chars = Array(0) { CharArray(0) }
     private var mutationCounters = IntArray(0)
-    private var freqBands = IntArray(0)
 
     // Smoothed audio envelope
     private val smoothedEnergy = FloatArray(32)
@@ -155,33 +159,37 @@ class MatrixRainSimulation(
     }
 
     fun ensureDimensions(newWidth: Float, newHeight: Float) {
-        if (width == newWidth && height == newHeight && columnCount > 0) return
+        synchronized(lock) {
+            if (width == newWidth && height == newHeight && columnCount > 0) return
 
-        width = newWidth
-        height = newHeight
-        val newColumnCount = max(1, (width / columnSpacing).toInt())
+            width = newWidth
+            height = newHeight
+            val newColumnCount = max(1, (width / columnSpacing).toInt())
 
-        if (newColumnCount != columnCount) {
-            columnCount = newColumnCount
-            headY = FloatArray(columnCount)
-            speeds = FloatArray(columnCount)
-            trailLengths = IntArray(columnCount)
-            chars = Array(columnCount) { CharArray(maxTrail) }
-            mutationCounters = IntArray(columnCount)
-            freqBands = IntArray(columnCount)
+            if (newColumnCount != columnCount) {
+                columnCount = newColumnCount
+                headY = FloatArray(columnCount)
+                speeds = FloatArray(columnCount)
+                trailLengths = IntArray(columnCount)
+                chars = Array(columnCount) { CharArray(maxTrail) }
+                mutationCounters = IntArray(columnCount)
 
-            for (c in 0 until columnCount) {
-                resetColumn(c, randomizeStart = true)
-                // Map columns across 32 FFT frequency bands
-                freqBands[c] = ((c.toFloat() / columnCount) * 32).toInt().coerceIn(0, 31)
+                for (c in 0 until columnCount) {
+                    resetColumn(c, randomizeStart = true)
+                }
             }
         }
     }
 
     private fun resetColumn(col: Int, randomizeStart: Boolean = false) {
-        val trailLen = Random.nextInt(10, maxTrail)
+        val freqRatio = if (columnCount > 1) col.toFloat() / (columnCount - 1) else 0.5f
+        // Wavelength tracks frequency: Bass has longer trails (20-28), treble has shorter crisp trails (10-16)
+        val maxLen = (28 - freqRatio * 14).toInt().coerceIn(12, maxTrail)
+        val minLen = (maxLen - 5).coerceAtLeast(8)
+        val trailLen = Random.nextInt(minLen, maxLen + 1)
         trailLengths[col] = trailLen
-        speeds[col] = Random.nextFloat() * 120f + 160f // Base speed 160-280 px/s
+        // Subtle column speed variation (0.95f..1.05f) so columns are natural
+        speeds[col] = Random.nextFloat() * 0.1f + 0.95f
 
         // Fill trail glyphs
         for (i in 0 until maxTrail) {
@@ -198,61 +206,73 @@ class MatrixRainSimulation(
     }
 
     fun update(dtMs: Float, rawMagnitudes: List<Float>, isPlaying: Boolean) {
-        val dtSec = dtMs / 1000f
+        synchronized(lock) {
+            val dtSec = dtMs / 1000f
 
-        // 1. Smooth audio magnitudes (attack fast, decay smoothly)
-        val magSize = rawMagnitudes.size
-        for (i in 0 until 32) {
-            val target = if (i < magSize) rawMagnitudes[i].coerceIn(0f, 1f) else 0f
-            if (target > smoothedEnergy[i]) {
-                smoothedEnergy[i] = target // Instant attack
-            } else {
-                smoothedEnergy[i] = max(0f, smoothedEnergy[i] - dtSec * 3.5f) // Smooth decay
-            }
-        }
-
-        // 2. Update columns
-        for (c in 0 until columnCount) {
-            val band = freqBands[c]
-            val energy = if (isPlaying) smoothedEnergy[band] else 0f
-
-            // Low-freq (bass) boost gives dynamic punch
-            val bassBoost = if (band < 8) energy * 1.5f else energy
-            val speedMultiplier = if (isPlaying) (1f + bassBoost * 2.8f) else 0.6f
-            val currentSpeed = speeds[c] * speedMultiplier
-
-            headY[c] += currentSpeed * dtSec
-
-            // Periodic glyph mutations (flicker)
-            mutationCounters[c]--
-            val mutationThreshold = if (energy > 0.4f) 2 else 0 // High energy flickers faster
-            if (mutationCounters[c] <= mutationThreshold) {
-                mutationCounters[c] = Random.nextInt(4, 16)
-                val mutateIdx = Random.nextInt(trailLengths[c])
-                chars[c][mutateIdx] = getRandomGlyph()
+            // 1. Smooth audio magnitudes (attack fast, decay smoothly)
+            val magSize = rawMagnitudes.size
+            for (i in 0 until 32) {
+                val target = if (i < magSize) rawMagnitudes[i].coerceIn(0f, 1f) else 0f
+                if (target > smoothedEnergy[i]) {
+                    smoothedEnergy[i] = target // Instant attack
+                } else {
+                    smoothedEnergy[i] = max(0f, smoothedEnergy[i] - dtSec * 3.5f) // Smooth decay
+                }
             }
 
-            // Recycle column when trail has fully passed bottom
-            val trailHeight = trailLengths[c] * charHeight
-            if (headY[c] - trailHeight > height) {
-                resetColumn(c, randomizeStart = false)
+            // 2. Update columns: movement speed directly tracks the frequency
+            for (c in 0 until columnCount) {
+                val freqRatio = if (columnCount > 1) c.toFloat() / (columnCount - 1) else 0.5f
+                val bandPos = freqRatio * 31f
+                val bandLow = bandPos.toInt().coerceIn(0, 31)
+                val bandHigh = minOf(31, bandLow + 1)
+                val frac = bandPos - bandLow
+                val energy = if (isPlaying) {
+                    (smoothedEnergy[bandLow] * (1f - frac) + smoothedEnergy[bandHigh] * frac).coerceIn(0f, 1f)
+                } else 0f
+
+                // Movement speed directly tracks the frequency magnitude:
+                // Idle speed when quiet (22 px/s), accelerating dynamically up to 850 px/s on loud frequency hits
+                val idleSpeed = if (isPlaying) 22f else 12f
+                val peakSpeed = 680f + freqRatio * 200f // Bass has heavy drops, treble has snappy darts
+                val speedFactor = energy * energy * 0.35f + energy * 0.65f
+                val currentSpeed = (idleSpeed + (peakSpeed - idleSpeed) * speedFactor) * speeds[c]
+
+                headY[c] += currentSpeed * dtSec
+
+                // Periodic glyph mutations (flicker rate tracks frequency energy)
+                mutationCounters[c]--
+                val mutationThreshold = if (energy > 0.5f) 2 else if (energy > 0.2f) 1 else 0
+                if (mutationCounters[c] <= mutationThreshold) {
+                    mutationCounters[c] = Random.nextInt(3, 14)
+                    val mutateIdx = Random.nextInt(trailLengths[c])
+                    chars[c][mutateIdx] = getRandomGlyph()
+                }
+
+                // Recycle column when trail has fully passed bottom
+                val trailHeight = trailLengths[c] * charHeight
+                if (headY[c] - trailHeight > height) {
+                    resetColumn(c, randomizeStart = false)
+                }
             }
         }
     }
 
     fun draw(canvas: android.graphics.Canvas, currentWidth: Float, currentHeight: Float) {
-        for (c in 0 until columnCount) {
-            val x = c * columnSpacing + (columnSpacing - textSize) / 2f
-            val head = headY[c]
-            val len = trailLengths[c]
+        synchronized(lock) {
+            for (c in 0 until columnCount) {
+                val x = c * columnSpacing + (columnSpacing - textSize) / 2f
+                val head = headY[c]
+                val len = trailLengths[c]
 
-            for (i in 0 until len) {
-                val y = head - i * charHeight
-                // Only draw visible characters
-                if (y in -charHeight..currentHeight + charHeight) {
-                    textPaint.color = trailColors[min(i, maxTrail - 1)]
-                    val ch = chars[c][i]
-                    canvas.drawText(ch.toString(), x, y, textPaint)
+                for (i in 0 until len) {
+                    val y = head - i * charHeight
+                    // Only draw visible characters strictly within canvas height
+                    if (y in -charHeight..currentHeight) {
+                        textPaint.color = trailColors[min(i, maxTrail - 1)]
+                        val ch = chars[c][i]
+                        canvas.drawText(ch.toString(), x, y, textPaint)
+                    }
                 }
             }
         }
