@@ -1,0 +1,53 @@
+name: Release APKs
+
+on:
+  push:
+    tags:
+      - 'v*'
+      - '[0-9]+.[0-9]+.[0-9]+*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build & Publish Release APKs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Build Release APKs
+      run: ./gradlew assembleRelease
+
+    - name: Prepare APKs with descriptive names
+      run: |
+        TAG_NAME="${{ github.ref_name }}"
+        [ -z "$TAG_NAME" ] && TAG_NAME="latest"
+        mkdir -p release-apks
+        cp app/build/outputs/apk/release/app-arm64-v8a-release.apk "release-apks/MonsterMusic-${TAG_NAME}-arm64-v8a.apk"
+        cp app/build/outputs/apk/release/app-armeabi-v7a-release.apk "release-apks/MonsterMusic-${TAG_NAME}-armeabi-v7a.apk"
+        cp app/build/outputs/apk/release/app-x86_64-release.apk "release-apks/MonsterMusic-${TAG_NAME}-x86_64.apk"
+        cp app/build/outputs/apk/release/app-x86-release.apk "release-apks/MonsterMusic-${TAG_NAME}-x86.apk"
+        cp app/build/outputs/apk/release/app-universal-release.apk "release-apks/MonsterMusic-${TAG_NAME}-universal.apk"
+        ls -lh release-apks/
+
+    - name: Upload Release Assets
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          release-apks/*.apk
+          app/build/outputs/mapping/release/mapping.txt
+        generate_release_notes: true
