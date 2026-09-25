@@ -164,22 +164,29 @@ object CaptionUtils {
 
         try {
             val f = AudioFileIO.read(audioFile)
+            f.audioHeader?.let { header ->
+                if (header.bitsPerSample > 0) {
+                    tags["bitsPerSample"] = "${header.bitsPerSample}-bit"
+                }
+                header.format?.let { tags["audioFormat"] = it }
+                if (header.sampleRateAsNumber > 0) {
+                    tags["audioSampleRate"] = header.sampleRateAsNumber.toString()
+                }
+                if (header.bitRateAsNumber > 0) {
+                    tags["audioBitRate"] = header.bitRate
+                }
+                header.channels?.let { tags["audioChannels"] = it }
+            }
             val tag: Tag? = f.tag
             if (tag == null) return arrayList
-//            tag.fields.forEach {
-//                if (it.id == FieldKey.LYRICS.name) {
-//
-//                }
-//
-//            }
-            tags[FieldKey.COMMENT.name] = tag.getFirst(FieldKey.COMMENT)
-            tags[FieldKey.YEAR.name] = tag.getFirst(FieldKey.YEAR)
+            tags[FieldKey.COMMENT.name] = tag.getFirst(FieldKey.COMMENT) ?: ""
+            tags[FieldKey.YEAR.name] = tag.getFirst(FieldKey.YEAR) ?: ""
             val lyrics: String = tag.getFirst(FieldKey.LYRICS)
             if (lyrics.trim().isNotEmpty()) {
                 lyrics.split("\n").forEach {
                     val captions = parseLyricLine(it, context)
                     val an = ListStringCaption(
-                        text = splitStringIntoWordsAndSymbols(captions.text),// ArrayList(captions.text.split(Regex("[\\n\\r\\s]+"))),
+                        text = splitStringIntoWordsAndSymbols(captions.text),
                         timeStart = captions.timeStart,
                         timeEnd = captions.timeEnd
                     )
@@ -190,6 +197,34 @@ object CaptionUtils {
             Log.e("getEmbeddedLyrics", e.message ?: "", e)
         }
         return arrayList
+    }
+
+    fun readAudioTagsAndHeader(path: String, tags: MutableMap<String, String>) {
+        try {
+            val audioFile = File(path)
+            if (!audioFile.exists()) return
+            val f = AudioFileIO.read(audioFile)
+            f.audioHeader?.let { header ->
+                if (header.bitsPerSample > 0) {
+                    tags["bitsPerSample"] = "${header.bitsPerSample}-bit"
+                }
+                header.format?.let { tags["audioFormat"] = it }
+                if (header.sampleRateAsNumber > 0) {
+                    tags["audioSampleRate"] = header.sampleRateAsNumber.toString()
+                }
+                if (header.bitRateAsNumber > 0) {
+                    tags["audioBitRate"] = header.bitRate
+                }
+                header.channels?.let { tags["audioChannels"] = it }
+            }
+            val tag: Tag? = f.tag
+            if (tag != null) {
+                tags[FieldKey.COMMENT.name] = tag.getFirst(FieldKey.COMMENT) ?: ""
+                tags[FieldKey.YEAR.name] = tag.getFirst(FieldKey.YEAR) ?: ""
+            }
+        } catch (e: Exception) {
+            Log.e("readAudioTagsAndHeader", e.message ?: "", e)
+        }
     }
 
     val regex = Regex("\\b\\w+'?\\w*\\b|\\p{Punct}|\\s+")

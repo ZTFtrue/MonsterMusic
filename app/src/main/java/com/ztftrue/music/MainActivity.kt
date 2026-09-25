@@ -928,9 +928,26 @@ class MainActivity : ComponentActivity() {
                     for (i in 0 until trackGroup.length) {
                         val format = trackGroup.getTrackFormat(i)
                         formatMap["Codec"] = format.codecs ?: ""
-                        formatMap["SampleRate"] = format.sampleRate.toString()
-                        formatMap["ChannelCount"] = format.channelCount.toString()
-                        formatMap["Bitrate"] = format.bitrate.toString()
+                        formatMap["MimeType"] = format.sampleMimeType ?: ""
+                        if (format.sampleRate > 0) {
+                            formatMap["SampleRate"] = format.sampleRate.toString()
+                        }
+                        if (format.channelCount > 0) {
+                            formatMap["ChannelCount"] = format.channelCount.toString()
+                        }
+                        if (format.bitrate > 0) {
+                            formatMap["Bitrate"] = format.bitrate.toString()
+                        }
+                        val bitDepth = when (format.pcmEncoding) {
+                            C.ENCODING_PCM_16BIT -> "16-bit"
+                            C.ENCODING_PCM_24BIT -> "24-bit"
+                            C.ENCODING_PCM_32BIT -> "32-bit"
+                            C.ENCODING_PCM_FLOAT -> "32-bit Float"
+                            else -> ""
+                        }
+                        if (bitDepth.isNotEmpty()) {
+                            formatMap["BitDepth"] = bitDepth
+                        }
                         break
                     }
                 }

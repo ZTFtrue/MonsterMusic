@@ -7,6 +7,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.material3.IconButton
@@ -175,106 +178,69 @@ fun CoverView(
             if (showOtherMessage.value) {
                 Column(Modifier.padding(15.dp)) {
                     musicViewModel.currentPlay.value?.let { it1 ->
-                        Text(
-                            text = it1.path,
-                            modifier = Modifier
-                                .padding(0.dp)
-                                .horizontalScroll(rememberScrollState(0))
-                                .fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = MaterialTheme.typography.titleSmall.fontSize
+                        if (it1.path.isNotEmpty()) {
+                            Text(
+                                text = it1.path,
+                                modifier = Modifier
+                                    .padding(0.dp)
+                                    .horizontalScroll(rememberScrollState(0))
+                                    .fillMaxWidth(),
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                                fontSize = MaterialTheme.typography.bodySmall.fontSize
+                            )
+                        }
+                        if (it1.artist.isNotEmpty()) {
+                            Text(
+                                text = stringResource(R.string.artist, it1.artist),
+                                modifier = Modifier
+                                    .padding(top = 4.dp)
+                                    .horizontalScroll(rememberScrollState(0))
+                                    .fillMaxWidth(),
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontSize = MaterialTheme.typography.titleSmall.fontSize
+                            )
+                        }
+                        if (it1.album.isNotEmpty()) {
+                            Text(
+                                text = stringResource(R.string.album, it1.album),
+                                modifier = Modifier
+                                    .padding(top = 4.dp)
+                                    .horizontalScroll(rememberScrollState(0))
+                                    .fillMaxWidth(),
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontSize = MaterialTheme.typography.titleSmall.fontSize
+                            )
+                        }
+                        val comment = musicViewModel.tags[FieldKey.COMMENT.name] ?: ""
+                        if (comment.isNotEmpty()) {
+                            Text(
+                                text = stringResource(R.string.comment, comment),
+                                modifier = Modifier
+                                    .padding(top = 4.dp)
+                                    .horizontalScroll(rememberScrollState(0))
+                                    .fillMaxWidth(),
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontSize = MaterialTheme.typography.titleSmall.fontSize
+                            )
+                        }
+                        val year = musicViewModel.tags[FieldKey.YEAR.name] ?: ""
+                        if (year.isNotEmpty()) {
+                            Text(
+                                text = stringResource(R.string.year_tracks, year),
+                                modifier = Modifier
+                                    .padding(top = 4.dp)
+                                    .horizontalScroll(rememberScrollState(0))
+                                    .fillMaxWidth(),
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontSize = MaterialTheme.typography.titleSmall.fontSize
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        androidx.compose.material3.HorizontalDivider(
+                            modifier = Modifier.padding(bottom = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant
                         )
-                        Text(
-                            text = stringResource(R.string.artist, it1.artist),
-                            modifier = Modifier
-                                .padding(0.dp)
-                                .height(30.dp)
-                                .horizontalScroll(rememberScrollState(0))
-                                .fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = MaterialTheme.typography.titleSmall.fontSize
-                        )
-                        Text(
-                            text = stringResource(R.string.album, it1.album),
-                            modifier = Modifier
-                                .padding(top = 10.dp)
-                                .horizontalScroll(rememberScrollState(0))
-                                .fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = MaterialTheme.typography.titleSmall.fontSize
-                        )
-                        Text(
-                            text = stringResource(
-                                R.string.comment,
-                                musicViewModel.tags[FieldKey.COMMENT.name] ?: ""
-                            ),
-                            modifier = Modifier
-                                .padding(top = 10.dp)
-                                .horizontalScroll(rememberScrollState(0))
-                                .fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = MaterialTheme.typography.titleSmall.fontSize
-                        )
-                        Text(
-                            text = stringResource(
-                                R.string.year_tracks,
-                                musicViewModel.tags[FieldKey.YEAR.name] ?: ""
-                            ),
-                            modifier = Modifier
-                                .padding(top = 10.dp)
-                                .horizontalScroll(rememberScrollState(0))
-                                .fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = MaterialTheme.typography.titleSmall.fontSize
-                        )
-                        Text(
-                            text = stringResource(
-                                R.string.sample_rate_hz_format,
-                                musicViewModel.currentInputFormat["SampleRate"] ?: ""
-                            ),
-                            modifier = Modifier
-                                .padding(top = 10.dp)
-                                .horizontalScroll(rememberScrollState(0))
-                                .fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = MaterialTheme.typography.titleSmall.fontSize
-                        )
-                        Text(
-                            text = stringResource(
-                                R.string.bitrate_format,
-                                musicViewModel.currentInputFormat["Bitrate"] ?: ""
-                            ),
-                            modifier = Modifier
-                                .padding(top = 10.dp)
-                                .horizontalScroll(rememberScrollState(0))
-                                .fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = MaterialTheme.typography.titleSmall.fontSize
-                        )
-                        Text(
-                            text = stringResource(
-                                R.string.channel_count_format,
-                                musicViewModel.currentInputFormat["ChannelCount"] ?: ""
-                            ),
-                            modifier = Modifier
-                                .padding(top = 10.dp)
-                                .horizontalScroll(rememberScrollState(0))
-                                .fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = MaterialTheme.typography.titleSmall.fontSize
-                        )
-                        Text(
-                            text = stringResource(
-                                R.string.codec_format,
-                                musicViewModel.currentInputFormat["Codec"] ?: ""
-                            ),
-                            modifier = Modifier
-                                .padding(top = 10.dp)
-                                .horizontalScroll(rememberScrollState(0))
-                                .fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = MaterialTheme.typography.titleSmall.fontSize
-                        )
+                        AudioChainView(musicViewModel = musicViewModel)
                     }
                 }
             }

@@ -229,7 +229,7 @@
     <string name="fft_engine">FFT 算法引擎</string>
     <string name="fft_native">原生 (C)</string>
     <string name="fft_kotlin">Kotlin</string>
-    <string name="equalizer_type">均衡器类型</string>
+    <string name="equalizer_type">滤波器类型</string>
     <string name="equalizer_iir">IIR</string>
     <string name="equalizer_fft">FFT</string>
     <string name="all">全部</string>
@@ -268,4 +268,27 @@
     <string name="landscape">横屏</string>
     <string name="portrait">竖屏</string>
     <string name="spectrum">频谱</string>
+    <string name="track_info">曲目信息</string>
+    <string name="decoder">解码器</string>
+    <string name="resampler">重采样器</string>
+    <string name="dsp">数字音频处理 (DSP)</string>
+    <string name="output_device">输出设备</string>
+    <string name="format_label">格式</string>
+    <string name="bit_depth">位深</string>
+    <string name="sample_rate_label">采样率</string>
+    <string name="bitrate_label">比特率</string>
+    <string name="channels_label">声道</string>
+    <string name="decoder_name">解码器名称</string>
+    <string name="io_rate">输入/输出采样率</string>
+    <string name="type_label">类型</string>
+    <string name="cutoff">截止频率</string>
+    <string name="quality">质量</string>
+    <string name="pcm_format">PCM 格式</string>
+    <string name="eq_preset">均衡器预设</string>
+    <string name="stereo_expand">立体声增强</string>
+    <string name="buffers">缓冲区</string>
+    <string name="latency">延迟</string>
+    <string name="visualizer_latency">可视化延迟</string>
+    <string name="output_api">输出接口</string>
+    <string name="device_name">设备名称</string>
 </resources>

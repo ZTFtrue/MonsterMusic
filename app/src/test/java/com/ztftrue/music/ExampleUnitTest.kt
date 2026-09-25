@@ -609,4 +609,55 @@ class ExampleUnitTest {
         val npe = NullPointerException("Track item is null")
         assertFalse(isHarmlessServiceUnbindException(npe))
     }
+
+    @Test
+    fun audioPathHelper_formatsFormatNameCorrectly() {
+        assertEquals("FLAC", com.ztftrue.music.utils.AudioPathHelper.formatFormatName("audio/flac", "/storage/test.flac", "FLAC 24 bits"))
+        assertEquals("MP3", com.ztftrue.music.utils.AudioPathHelper.formatFormatName("audio/mpeg", "/storage/test.mp3", "MPEG-1 Layer 3"))
+        assertEquals("AAC", com.ztftrue.music.utils.AudioPathHelper.formatFormatName("audio/mp4a-latm", "/storage/test.m4a", null))
+        assertEquals("OPUS", com.ztftrue.music.utils.AudioPathHelper.formatFormatName("audio/opus", "/storage/test.opus", null))
+        assertEquals("OGG", com.ztftrue.music.utils.AudioPathHelper.formatFormatName("audio/vorbis", "/storage/test.ogg", null))
+        assertEquals("WAV", com.ztftrue.music.utils.AudioPathHelper.formatFormatName("audio/raw", "/storage/test.wav", null))
+        assertEquals("DSD", com.ztftrue.music.utils.AudioPathHelper.formatFormatName(null, "/storage/test.dsf", null))
+    }
+
+    @Test
+    fun audioPathHelper_resolvesDecoderNameCorrectly() {
+        assertEquals("c2.android.flac.decoder", com.ztftrue.music.utils.AudioPathHelper.resolveDecoderName("audio/flac", "FLAC"))
+        assertEquals("c2.android.mp3.decoder", com.ztftrue.music.utils.AudioPathHelper.resolveDecoderName("audio/mpeg", "MP3"))
+        assertEquals("c2.android.aac.decoder", com.ztftrue.music.utils.AudioPathHelper.resolveDecoderName("audio/mp4a-latm", "AAC"))
+        assertEquals("c2.android.opus.decoder", com.ztftrue.music.utils.AudioPathHelper.resolveDecoderName("audio/opus", "OPUS"))
+        assertEquals("c2.android.vorbis.decoder", com.ztftrue.music.utils.AudioPathHelper.resolveDecoderName("audio/vorbis", "OGG"))
+    }
+
+    @Test
+    fun audioPathHelper_formatsChannelsCorrectly() {
+        assertEquals("1 (Mono)", com.ztftrue.music.utils.AudioPathHelper.formatChannels(1))
+        assertEquals("2 (Stereo)", com.ztftrue.music.utils.AudioPathHelper.formatChannels(2))
+        assertEquals("6 (5.1 Surround)", com.ztftrue.music.utils.AudioPathHelper.formatChannels(6))
+        assertEquals("8 (7.1 Surround)", com.ztftrue.music.utils.AudioPathHelper.formatChannels(8))
+    }
+
+    @Test
+    fun audioPathHelper_formatsBitrateCorrectly() {
+        assertEquals("320 kbps", com.ztftrue.music.utils.AudioPathHelper.formatBitrate(320000L, null))
+        assertEquals("2812 kbps", com.ztftrue.music.utils.AudioPathHelper.formatBitrate(2812000L, null))
+        assertEquals("—", com.ztftrue.music.utils.AudioPathHelper.formatBitrate(0L, null))
+        assertEquals("256 kbps", com.ztftrue.music.utils.AudioPathHelper.formatBitrate(-1L, "256"))
+    }
+
+    @Test
+    fun audioPathHelper_formatsBitDepthCorrectly() {
+        assertEquals("24-bit", com.ztftrue.music.utils.AudioPathHelper.formatBitDepth("24-bit", "FLAC", null))
+        assertEquals("24-bit", com.ztftrue.music.utils.AudioPathHelper.formatBitDepth(null, "FLAC", null))
+        assertEquals("16-bit", com.ztftrue.music.utils.AudioPathHelper.formatBitDepth(null, "MP3", null))
+        assertEquals("32-bit Float", com.ztftrue.music.utils.AudioPathHelper.formatBitDepth(null, "WAV", "32-bit Float"))
+    }
+
+    @Test
+    fun audioPathHelper_calculatesBuffersCorrectly() {
+        assertEquals("2x (120ms, 11520 frames)", com.ztftrue.music.utils.AudioPathHelper.calculateBuffers(96000))
+        assertEquals("2x (120ms, 5760 frames)", com.ztftrue.music.utils.AudioPathHelper.calculateBuffers(48000))
+        assertEquals("2x (120ms, 5292 frames)", com.ztftrue.music.utils.AudioPathHelper.calculateBuffers(44100))
+    }
 }

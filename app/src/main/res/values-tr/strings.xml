@@ -226,7 +226,7 @@
     <string name="fft_engine">FFT Motoru</string>
     <string name="fft_native">Yerel (C)</string>
     <string name="fft_kotlin">Kotlin</string>
-    <string name="equalizer_type">Ekolayzer Türü</string>
+    <string name="equalizer_type">Filtre Türü</string>
     <string name="equalizer_iir">IIR</string>
     <string name="equalizer_fft">FFT</string>
     <string name="all">Tümü</string>
@@ -260,4 +260,27 @@
     <string name="widget_text_dark">Koyu (Siyah)</string>
     <string name="widget_presets">Ön Ayarlar</string>
     <string name="widget_no_track_playing">Müzik çalmıyor</string>
+    <string name="track_info">Track Info</string>
+    <string name="decoder">Decoder</string>
+    <string name="resampler">Resampler</string>
+    <string name="dsp">DSP</string>
+    <string name="output_device">Output Device</string>
+    <string name="format_label">Format</string>
+    <string name="bit_depth">Bit Depth</string>
+    <string name="sample_rate_label">Sample Rate</string>
+    <string name="bitrate_label">Bitrate</string>
+    <string name="channels_label">Channels</string>
+    <string name="decoder_name">Decoder Name</string>
+    <string name="io_rate">I/O Rate</string>
+    <string name="type_label">Type</string>
+    <string name="cutoff">Cutoff</string>
+    <string name="quality">Quality</string>
+    <string name="pcm_format">PCM Format</string>
+    <string name="eq_preset">EQ Preset</string>
+    <string name="stereo_expand">Stereo Expand</string>
+    <string name="buffers">Buffers</string>
+    <string name="latency">Latency</string>
+    <string name="visualizer_latency">Visualizer Latency</string>
+    <string name="output_api">Output API</string>
+    <string name="device_name">Device Name</string>
 </resources>

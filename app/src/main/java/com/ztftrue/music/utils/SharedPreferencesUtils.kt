@@ -594,4 +594,11 @@ object SharedPreferencesUtils {
         return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
             .getBoolean("show_speed_fine", false)
     }
+
+    fun getCurrentEqualizerName(context: Context): String {
+        return context.getSharedPreferences(
+            "SelectedPreset",
+            Context.MODE_PRIVATE
+        ).getString("SelectedPreset", Utils.custom) ?: Utils.custom
+    }
 }

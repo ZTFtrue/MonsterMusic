@@ -1053,6 +1053,10 @@ class MusicViewModel : ViewModel() {
         }
 
 
+        if (!localTags.containsKey("bitsPerSample")) {
+            CaptionUtils.readAudioTagsAndHeader(currentPlay.path, localTags)
+        }
+
         // =========================================================
         // 基本歌曲信息
         //
