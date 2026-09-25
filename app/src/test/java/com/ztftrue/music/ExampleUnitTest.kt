@@ -2,6 +2,7 @@ package com.ztftrue.music
 
 import org.junit.Test
 import kotlin.math.roundToInt
+import com.ztftrue.music.ui.play.DualKnobHelper
 
 import org.junit.Assert.*
 
@@ -228,5 +229,191 @@ class ExampleUnitTest {
         val handledDrag = onPointerTap(distance = 45f, touchSlop = 8f)
         assertFalse(handledDrag)
         assertTrue(isSelected) // Preserved for drag / scroll handler
+    }
+
+    @Test
+    fun dualKnob_decompositionAndRanges() {
+        // Value 1.15f: Big knob 1.1f, small knob range 1.10f ~ 1.19f, small offset 5
+        val h115 = DualKnobHelper.toTotalHundredths(1.15f)
+        assertEquals(115, h115)
+        assertEquals(1.1f, DualKnobHelper.getBigValue(h115), 0.001f)
+        assertEquals(1.10f, DualKnobHelper.getSmallMin(h115), 0.001f)
+        assertEquals(1.19f, DualKnobHelper.getSmallMax(h115), 0.001f)
+        assertEquals(5, DualKnobHelper.getSmallOffset(h115))
+
+        // Value 1.00f: Big knob 1.0f, small knob range 1.00f ~ 1.09f, small offset 0
+        val h100 = DualKnobHelper.toTotalHundredths(1.00f)
+        assertEquals(100, h100)
+        assertEquals(1.0f, DualKnobHelper.getBigValue(h100), 0.001f)
+        assertEquals(1.00f, DualKnobHelper.getSmallMin(h100), 0.001f)
+        assertEquals(1.09f, DualKnobHelper.getSmallMax(h100), 0.001f)
+        assertEquals(0, DualKnobHelper.getSmallOffset(h100))
+
+        // Value 0.50f: Big knob 0.5f, small knob range 0.50f ~ 0.59f
+        val h050 = DualKnobHelper.toTotalHundredths(0.50f)
+        assertEquals(50, h050)
+        assertEquals(0.5f, DualKnobHelper.getBigValue(h050), 0.001f)
+        assertEquals(0.50f, DualKnobHelper.getSmallMin(h050), 0.001f)
+        assertEquals(0.59f, DualKnobHelper.getSmallMax(h050), 0.001f)
+
+        // Value 2.00f: Big knob 2.0f, small knob range 2.00f ~ 2.09f
+        val h200 = DualKnobHelper.toTotalHundredths(2.00f)
+        assertEquals(200, h200)
+        assertEquals(2.0f, DualKnobHelper.getBigValue(h200), 0.001f)
+        assertEquals(2.00f, DualKnobHelper.getSmallMin(h200), 0.001f)
+        assertEquals(2.09f, DualKnobHelper.getSmallMax(h200), 0.001f)
+    }
+
+    @Test
+    fun dualKnob_bigKnobStepAmount() {
+        // "Change the pitch and speed by sliding it to a knob, and the change amount is 0.1 each time."
+        val initial = 1.15f
+        val steppedUp = DualKnobHelper.stepBig(initial, 1)
+        assertEquals(1.25f, steppedUp, 0.001f)
+        assertEquals(0.10f, steppedUp - initial, 0.001f)
+
+        val steppedDown = DualKnobHelper.stepBig(initial, -1)
+        assertEquals(1.05f, steppedDown, 0.001f)
+        assertEquals(-0.10f, steppedDown - initial, 0.001f)
+
+        // Stepping by 2 steps (+0.2)
+        val steppedTwo = DualKnobHelper.stepBig(initial, 2)
+        assertEquals(1.35f, steppedTwo, 0.001f)
+    }
+
+    @Test
+    fun dualKnob_smallKnobStepAmountAndRangeCoupling() {
+        // "Add a small knob next to it, and the change amount is 0.01 each time.
+        // But the range is limited to one decimal place after the big knob.
+        // For example, if the big knob is adjusted to 1.1, the adjustment range of the small knob is 1.10~1.19."
+        val initial = 1.15f
+
+        // Step up by 0.01
+        val stepUp = DualKnobHelper.stepSmall(initial, 1)
+        assertEquals(1.16f, stepUp, 0.001f)
+        assertEquals(0.01f, stepUp - initial, 0.001f)
+
+        // Step down by 0.01
+        val stepDown = DualKnobHelper.stepSmall(initial, -1)
+        assertEquals(1.14f, stepDown, 0.001f)
+        assertEquals(-0.01f, stepDown - initial, 0.001f)
+
+        // Upper bound restriction (1.19 max when big is 1.1)
+        val atMax = 1.19f
+        val tryOverMax = DualKnobHelper.stepSmall(atMax, 1)
+        assertEquals(1.19f, tryOverMax, 0.001f) // Strictly clamped at 1.19, cannot jump to 1.20
+
+        // Lower bound restriction (1.10 min when big is 1.1)
+        val atMin = 1.10f
+        val tryUnderMin = DualKnobHelper.stepSmall(atMin, -1)
+        assertEquals(1.10f, tryUnderMin, 0.001f) // Strictly clamped at 1.10, cannot drop to 1.09
+    }
+
+    @Test
+    fun dualKnob_boundaryClamping() {
+        // Big knob clamping at MAX (2.0f)
+        val atMaxBig = 2.05f
+        val overMaxBig = DualKnobHelper.stepBig(atMaxBig, 1)
+        assertEquals(2.05f, overMaxBig, 0.001f)
+
+        // Big knob clamping at MIN (0.5f)
+        val atMinBig = 0.55f
+        val underMinBig = DualKnobHelper.stepBig(atMinBig, -1)
+        assertEquals(0.55f, underMinBig, 0.001f)
+    }
+
+    @Test
+    fun dualKnob_fullRangeContinuousStepping() {
+        // Verify stepping from 1.0f all the way up to 2.0f (not stuck at 1.1)
+        var v = 1.00f
+        val expectedUp = listOf(1.10f, 1.20f, 1.30f, 1.40f, 1.50f, 1.60f, 1.70f, 1.80f, 1.90f, 2.00f)
+        for (expected in expectedUp) {
+            v = DualKnobHelper.stepBig(v, 1)
+            assertEquals(expected, v, 0.001f)
+        }
+        // Further stepping up stays clamped at 2.00f
+        v = DualKnobHelper.stepBig(v, 1)
+        assertEquals(2.00f, v, 0.001f)
+
+        // Verify stepping from 2.0f all the way down to 0.5f (not stuck at 0.9)
+        val expectedDown = listOf(
+            1.90f, 1.80f, 1.70f, 1.60f, 1.50f, 1.40f, 1.30f, 1.20f, 1.10f,
+            1.00f, 0.90f, 0.80f, 0.70f, 0.60f, 0.50f
+        )
+        for (expected in expectedDown) {
+            v = DualKnobHelper.stepBig(v, -1)
+            assertEquals(expected, v, 0.001f)
+        }
+        // Further stepping down stays clamped at 0.50f
+        v = DualKnobHelper.stepBig(v, -1)
+        assertEquals(0.50f, v, 0.001f)
+    }
+
+    @Test
+    fun fineSlider_stepCalculationsAndResolution() {
+        // Coarse slider: range 0.5f..2.0f, steps = 14
+        val coarseMin = 0.5f
+        val coarseMax = 2.0f
+        val coarseSteps = 14
+        val coarseInterval = (coarseMax - coarseMin) / (coarseSteps + 1)
+        assertEquals(0.1f, coarseInterval, 0.0001f)
+
+        // Fine slider: range smallMin..smallMax (span 0.09f), steps = 8
+        val fineSteps = 8
+        for (tenths in 5..20) {
+            val totalHundredths = tenths * 10
+            val smallMin = DualKnobHelper.getSmallMin(totalHundredths)
+            val smallMax = DualKnobHelper.getSmallMax(totalHundredths)
+            val fineSpan = smallMax - smallMin
+            assertEquals(0.09f, fineSpan, 0.0001f)
+
+            val fineInterval = fineSpan / (fineSteps + 1)
+            assertEquals(0.01f, fineInterval, 0.0001f)
+
+            // Verify all 10 discrete steps from 0 to 9 hundredths
+            for (step in 0..9) {
+                val stepVal = (smallMin + step * fineInterval)
+                val rounded = (stepVal * 100f).roundToInt() / 100f
+                val expected = (tenths * 10 + step) / 100f
+                assertEquals(expected, rounded, 0.0001f)
+            }
+        }
+    }
+
+    @Test
+    fun fineSlider_rangeCouplingWithCoarseTenths() {
+        // For coarse = 1.1x -> range is 1.10 ~ 1.19
+        val h11 = DualKnobHelper.toTotalHundredths(1.1f)
+        assertEquals(1.10f, DualKnobHelper.getSmallMin(h11), 0.0001f)
+        assertEquals(1.19f, DualKnobHelper.getSmallMax(h11), 0.0001f)
+
+        // For coarse = 0.5x -> range is 0.50 ~ 0.59
+        val h05 = DualKnobHelper.toTotalHundredths(0.5f)
+        assertEquals(0.50f, DualKnobHelper.getSmallMin(h05), 0.0001f)
+        assertEquals(0.59f, DualKnobHelper.getSmallMax(h05), 0.0001f)
+
+        // For coarse = 2.0x -> range is 2.00 ~ 2.09
+        val h20 = DualKnobHelper.toTotalHundredths(2.0f)
+        assertEquals(2.00f, DualKnobHelper.getSmallMin(h20), 0.0001f)
+        assertEquals(2.09f, DualKnobHelper.getSmallMax(h20), 0.0001f)
+    }
+
+    @Test
+    fun fineSlider_coarseOffsetRetention() {
+        // When fine-tuning is enabled: coarse slider movement preserves the fine hundredths offset
+        val initialPitch = 1.15f
+        val pitchHundredths = DualKnobHelper.toTotalHundredths(initialPitch)
+        val offset = DualKnobHelper.getSmallOffset(pitchHundredths)
+        assertEquals(5, offset)
+
+        // Drag coarse to 1.3:
+        val targetCoarse = 1.3f
+        val newBigTenths = (targetCoarse * 10f).roundToInt()
+        val fineActiveNewPitch = (newBigTenths * 10 + offset) / 100f
+        assertEquals(1.35f, fineActiveNewPitch, 0.0001f)
+
+        // When fine-tuning is disabled: coarse slider snaps to tenths
+        val fineInactiveNewPitch = newBigTenths / 10f
+        assertEquals(1.30f, fineInactiveNewPitch, 0.0001f)
     }
 }

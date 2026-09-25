@@ -23,6 +23,8 @@
     <string name="pitch">音調</string>
     <string name="reset">重設</string>
     <string name="speed">速度</string>
+    <string name="coarse">粗調</string>
+    <string name="fine">微調</string>
     <string name="echo">迴音</string>
     <string name="delay">延遲</string>
     <string name="decay">衰減</string>

@@ -560,4 +560,27 @@ object SharedPreferencesUtils {
         return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
             .getFloat("delay_mix", 0.4f)
     }
+
+    // Pitch & Speed Fine-tuning Slider Display
+    fun saveShowPitchFine(context: Context, value: Boolean) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putBoolean("show_pitch_fine", value)
+        }
+    }
+
+    fun getShowPitchFine(context: Context): Boolean {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getBoolean("show_pitch_fine", false)
+    }
+
+    fun saveShowSpeedFine(context: Context, value: Boolean) {
+        context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE).edit {
+            putBoolean("show_speed_fine", value)
+        }
+    }
+
+    fun getShowSpeedFine(context: Context): Boolean {
+        return context.getSharedPreferences(PREFS_AUDIO_EFFECTS, Context.MODE_PRIVATE)
+            .getBoolean("show_speed_fine", false)
+    }
 }

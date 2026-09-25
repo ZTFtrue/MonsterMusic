@@ -147,6 +147,8 @@ class MusicViewModel : ViewModel() {
     var pitch = mutableFloatStateOf(1f)
     var equalizerQ = mutableFloatStateOf(Utils.Q)
     var speed = mutableFloatStateOf(1f)
+    var showPitchFine = mutableStateOf(false)
+    var showSpeedFine = mutableStateOf(false)
 
     var virtualStrength = mutableIntStateOf(0)
     var enableVirtual = mutableStateOf(false)

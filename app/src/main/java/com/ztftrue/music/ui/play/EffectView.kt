@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -37,6 +38,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -46,6 +49,7 @@ import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.utils.CustomSlider
+import com.ztftrue.music.utils.SharedPreferencesUtils
 import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -66,7 +70,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
 
     // Categories in user specified order:
     // Pitch Speed, Delay Effect, Reverb, Echo, Virtual Surround, Chorus, Flanger, Polyphony
-    val catPitch = stringResource(R.string.pitch) + " / " + stringResource(R.string.speed)
+    val catPitch = stringResource(R.string.pitch).trimEnd(':', ' ') + " / " + stringResource(R.string.speed).trimEnd(':', ' ')
     val catDelay = stringResource(R.string.delay_effect)
     val catReverb = stringResource(R.string.reverb)
     val catEcho = stringResource(R.string.echo)
@@ -86,9 +90,26 @@ fun EffectView(musicViewModel: MusicViewModel) {
         7 to catPolyphony
     )
 
+    val context = LocalContext.current
+
     // Local mutable states synced with ViewModel
     val pitch = remember { mutableFloatStateOf(musicViewModel.pitch.floatValue) }
     val speed = remember { mutableFloatStateOf(musicViewModel.speed.floatValue) }
+    val showPitchFine = remember { mutableStateOf(musicViewModel.showPitchFine.value) }
+    val showSpeedFine = remember { mutableStateOf(musicViewModel.showSpeedFine.value) }
+
+    LaunchedEffect(musicViewModel.pitch.floatValue) {
+        pitch.floatValue = musicViewModel.pitch.floatValue
+    }
+    LaunchedEffect(musicViewModel.speed.floatValue) {
+        speed.floatValue = musicViewModel.speed.floatValue
+    }
+    LaunchedEffect(musicViewModel.showPitchFine.value) {
+        showPitchFine.value = musicViewModel.showPitchFine.value
+    }
+    LaunchedEffect(musicViewModel.showSpeedFine.value) {
+        showSpeedFine.value = musicViewModel.showSpeedFine.value
+    }
 
     val enableDelay = remember { mutableStateOf(musicViewModel.enableDelay.value) }
     val delayEffectTime =
@@ -186,8 +207,13 @@ fun EffectView(musicViewModel: MusicViewModel) {
         ) {
             // 0. Pitch & Speed
             item {
+                val pitchHundredths = DualKnobHelper.toTotalHundredths(pitch.floatValue)
+                val coarsePitch = DualKnobHelper.getBigValue(pitchHundredths)
+                val speedHundredths = DualKnobHelper.toTotalHundredths(speed.floatValue)
+                val coarseSpeed = DualKnobHelper.getBigValue(speedHundredths)
+
                 EffectCard(
-                    title = stringResource(R.string.pitch) + " & " + stringResource(R.string.speed),
+                    title = stringResource(R.string.pitch).trimEnd(':', ' ') + " & " + stringResource(R.string.speed).trimEnd(':', ' '),
                     onReset = {
                         musicViewModel.pitch.floatValue = 1f
                         pitch.floatValue = 1f
@@ -202,23 +228,66 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         musicViewModel.browser?.setPlaybackSpeed(1f)
                     }
                 ) {
-                    // Pitch Slider
-                    Text(
-                        text = stringResource(R.string.pitch) + ": " + String.format(
-                            Locale.ROOT,
-                            "%.1fx",
-                            pitch.floatValue
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    // Pitch Header
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.pitch).trimEnd(':', ' ') + ": " + String.format(
+                                Locale.ROOT,
+                                if (showPitchFine.value || (pitchHundredths % 10 != 0)) "%.2fx" else "%.1fx",
+                                pitch.floatValue
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.fine),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Switch(
+                                checked = showPitchFine.value,
+                                modifier = Modifier
+                                    .scale(0.7f)
+                                    .semantics {
+                                        contentDescription = "Pitch Fine Switch"
+                                    },
+                                onCheckedChange = {
+                                    showPitchFine.value = it
+                                    musicViewModel.showPitchFine.value = it
+                                    SharedPreferencesUtils.saveShowPitchFine(context, it)
+                                }
+                            )
+                        }
+                    }
+
+                    // Pitch Coarse Slider
                     CustomSlider(
-                        value = pitch.floatValue,
+                        modifier = Modifier
+                            .semantics {
+                                contentDescription = "Pitch Slider"
+                            }
+                            .fillMaxWidth(),
+                        value = coarsePitch,
                         onValueChange = {
-                            pitch.floatValue = (it * 10f).roundToInt() / 10f
+                            val newBigTenths = (it * 10f).roundToInt()
+                            val v = if (showPitchFine.value) {
+                                val offset = DualKnobHelper.getSmallOffset(pitchHundredths)
+                                (newBigTenths * 10 + offset) / 100f
+                            } else {
+                                newBigTenths / 10f
+                            }
+                            pitch.floatValue = v
                         },
                         valueRange = 0.5f..2.0f,
-                        steps = 15,
+                        steps = 14,
                         onValueChangeFinished = {
                             musicViewModel.pitch.floatValue = pitch.floatValue
                             val bundle = Bundle().apply { putFloat("pitch", pitch.floatValue) }
@@ -229,30 +298,171 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         }
                     )
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    // Pitch Fine Slider (Conditional)
+                    if (showPitchFine.value) {
+                        val smallMin = DualKnobHelper.getSmallMin(pitchHundredths)
+                        val smallMax = DualKnobHelper.getSmallMax(pitchHundredths)
 
-                    // Speed Slider
-                    Text(
-                        text = stringResource(R.string.speed) + ": " + String.format(
-                            Locale.ROOT,
-                            "%.1fx",
-                            speed.floatValue
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.fine) + ": " + String.format(
+                                    Locale.ROOT,
+                                    "%.2fx",
+                                    pitch.floatValue
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = String.format(Locale.ROOT, "(%.2f ~ %.2f)", smallMin, smallMax),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                        }
+                        CustomSlider(
+                            modifier = Modifier
+                                .semantics {
+                                    contentDescription = "Pitch Fine Slider"
+                                }
+                                .fillMaxWidth(),
+                            value = pitch.floatValue.coerceIn(smallMin, smallMax),
+                            onValueChange = {
+                                pitch.floatValue = (it * 100f).roundToInt() / 100f
+                            },
+                            valueRange = smallMin..smallMax,
+                            steps = 8,
+                            onValueChangeFinished = {
+                                musicViewModel.pitch.floatValue = pitch.floatValue
+                                val bundle = Bundle().apply { putFloat("pitch", pitch.floatValue) }
+                                musicViewModel.browser?.sendCustomCommand(
+                                    MediaCommands.COMMAND_CHANGE_PITCH,
+                                    bundle
+                                )
+                            }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Speed Header
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.speed).trimEnd(':', ' ') + ": " + String.format(
+                                Locale.ROOT,
+                                if (showSpeedFine.value || (speedHundredths % 10 != 0)) "%.2fx" else "%.1fx",
+                                speed.floatValue
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.fine),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Switch(
+                                checked = showSpeedFine.value,
+                                modifier = Modifier
+                                    .scale(0.7f)
+                                    .semantics {
+                                        contentDescription = "Speed Fine Switch"
+                                    },
+                                onCheckedChange = {
+                                    showSpeedFine.value = it
+                                    musicViewModel.showSpeedFine.value = it
+                                    SharedPreferencesUtils.saveShowSpeedFine(context, it)
+                                }
+                            )
+                        }
+                    }
+
+                    // Speed Coarse Slider
                     CustomSlider(
-                        value = speed.floatValue,
+                        modifier = Modifier
+                            .semantics {
+                                contentDescription = "Speed Slider"
+                            }
+                            .fillMaxWidth(),
+                        value = coarseSpeed,
                         onValueChange = {
-                            speed.floatValue = (it * 10f).roundToInt() / 10f
+                            val newBigTenths = (it * 10f).roundToInt()
+                            val v = if (showSpeedFine.value) {
+                                val offset = DualKnobHelper.getSmallOffset(speedHundredths)
+                                (newBigTenths * 10 + offset) / 100f
+                            } else {
+                                newBigTenths / 10f
+                            }
+                            speed.floatValue = v
                         },
                         valueRange = 0.5f..2.0f,
-                        steps = 15,
+                        steps = 14,
                         onValueChangeFinished = {
                             musicViewModel.speed.floatValue = speed.floatValue
                             musicViewModel.browser?.setPlaybackSpeed(speed.floatValue)
                         }
                     )
+
+                    // Speed Fine Slider (Conditional)
+                    if (showSpeedFine.value) {
+                        val smallMin = DualKnobHelper.getSmallMin(speedHundredths)
+                        val smallMax = DualKnobHelper.getSmallMax(speedHundredths)
+
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.fine) + ": " + String.format(
+                                    Locale.ROOT,
+                                    "%.2fx",
+                                    speed.floatValue
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = String.format(Locale.ROOT, "(%.2f ~ %.2f)", smallMin, smallMax),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                        }
+                        CustomSlider(
+                            modifier = Modifier
+                                .semantics {
+                                    contentDescription = "Speed Fine Slider"
+                                }
+                                .fillMaxWidth(),
+                            value = speed.floatValue.coerceIn(smallMin, smallMax),
+                            onValueChange = {
+                                speed.floatValue = (it * 100f).roundToInt() / 100f
+                            },
+                            valueRange = smallMin..smallMax,
+                            steps = 8,
+                            onValueChangeFinished = {
+                                musicViewModel.speed.floatValue = speed.floatValue
+                                musicViewModel.browser?.setPlaybackSpeed(speed.floatValue)
+                            }
+                        )
+                    }
                 }
             }
 
@@ -505,7 +715,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                     }
                 ) {
                     Text(
-                        text = stringResource(R.string.delay) + ": " + String.format(
+                        text = stringResource(R.string.delay).trimEnd(':', ' ') + ": " + String.format(
                             Locale.ROOT,
                             "%.1f",
                             delayTime.floatValue
@@ -539,7 +749,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = stringResource(R.string.decay) + ": " + String.format(
+                        text = stringResource(R.string.decay).trimEnd(':', ' ') + ": " + String.format(
                             Locale.ROOT,
                             "%.1f",
                             decay.floatValue

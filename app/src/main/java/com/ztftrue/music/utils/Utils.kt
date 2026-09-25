@@ -196,6 +196,8 @@ object Utils {
             val fontSize = SharedPreferencesUtils.getFontSize(context)
             val autoScroll = SharedPreferencesUtils.getAutoScroll(context)
             val autoHighLight = SharedPreferencesUtils.getAutoHighLight(context)
+            val showPitchFine = SharedPreferencesUtils.getShowPitchFine(context)
+            val showSpeedFine = SharedPreferencesUtils.getShowSpeedFine(context)
             val dicApps = musicViewModel.getDb(context).DictionaryAppDao().findAllDictionaryApp()
             val list = if (dicApps.isEmpty()) {
                 val arrayList = ArrayList<DictionaryApp>()
@@ -227,6 +229,8 @@ object Utils {
                 musicViewModel.fontSize.intValue = fontSize
                 musicViewModel.autoScroll.value = autoScroll
                 musicViewModel.autoHighLight.value = autoHighLight
+                musicViewModel.showPitchFine.value = showPitchFine
+                musicViewModel.showSpeedFine.value = showSpeedFine
                 musicViewModel.dictionaryAppList.clear()
                 musicViewModel.dictionaryAppList.addAll(list)
             }

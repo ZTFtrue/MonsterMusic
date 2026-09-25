@@ -24,9 +24,11 @@
     <string name="pitch">Pitch</string>
     <string name="reset">Reset</string>
     <string name="speed">Speed</string>
+    <string name="coarse">Coarse</string>
+    <string name="fine">Fine</string>
     <string name="echo">Echo</string>
-    <string name="delay">"Delay: "</string>
-    <string name="decay">"Decay: "</string>
+    <string name="delay">Delay</string>
+    <string name="decay">Decay</string>
     <string name="equalizer">Equalizer</string>
     <string name="flatten_failed">flatten failed</string>
     <string name="flatten">Flatten</string>
