@@ -30,6 +30,7 @@ class SpatialAudioProcessor : BaseAudioProcessor() {
         this.headroomFactor = 1.0f - (this.strength * 0.2f)
     }
 
+    @Suppress("DEPRECATION")
     fun setActive(active: Boolean) {
         if (this.enabled != active) {
             this.enabled = active

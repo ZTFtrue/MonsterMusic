@@ -165,13 +165,19 @@ fun EditTrackPage(
                                     !musicViewModel.refreshGenre.value
                                 musicViewModel.refreshFolder.value =
                                     !musicViewModel.refreshFolder.value
-                                sessionResult.extras.getParcelableArrayList<MusicItem>(
-                                    "songsList"
+                                androidx.core.os.BundleCompat.getParcelableArrayList(
+                                    sessionResult.extras,
+                                    "songsList",
+                                    MusicItem::class.java
                                 )?.also {
                                     musicViewModel.songsList.clear()
                                     musicViewModel.songsList.addAll(it)
                                 }
-                                sessionResult.extras.getParcelable<MusicItem>("item")?.also {
+                                androidx.core.os.BundleCompat.getParcelable(
+                                    sessionResult.extras,
+                                    "item",
+                                    MusicItem::class.java
+                                )?.also {
                                     musicViewModel.musicQueue.forEach { mIt ->
                                         if (mIt.id == it.id) {
                                             mIt.name = it.name

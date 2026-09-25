@@ -53,6 +53,7 @@ object SongsUtils {
         return ArrayList(sortedList)
     }
 
+    @Suppress("DEPRECATION")
     fun sortPlayList(
         list: ArrayList<MusicPlayList>,
         field: String?,

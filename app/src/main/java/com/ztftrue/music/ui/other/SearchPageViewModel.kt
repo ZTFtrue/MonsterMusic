@@ -115,13 +115,13 @@ class SearchScreenViewModel(
                     // b. 检查操作是否成功
                     if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
                         val tracks =
-                            sessionResult.extras.getParcelableArrayList<MusicItem>("tracks")
+                            androidx.core.os.BundleCompat.getParcelableArrayList(sessionResult.extras, "tracks", MusicItem::class.java)
                                 ?: emptyList()
                         val albums =
-                            sessionResult.extras.getParcelableArrayList<AlbumList>("albums")
+                            androidx.core.os.BundleCompat.getParcelableArrayList(sessionResult.extras, "albums", AlbumList::class.java)
                                 ?: emptyList()
                         val artists =
-                            sessionResult.extras.getParcelableArrayList<ArtistList>("artist")
+                            androidx.core.os.BundleCompat.getParcelableArrayList(sessionResult.extras, "artist", ArtistList::class.java)
                                 ?: emptyList()
                         continuation.resume(SearchResults(tracks, albums, artists))
                     } else {

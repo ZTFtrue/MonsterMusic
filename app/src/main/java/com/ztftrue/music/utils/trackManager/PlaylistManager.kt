@@ -23,7 +23,7 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
 
-@Suppress("UNUSED")
+@Suppress("UNUSED", "DEPRECATION")
 @OptIn(UnstableApi::class)
 object PlaylistManager {
     fun getPlaylists(

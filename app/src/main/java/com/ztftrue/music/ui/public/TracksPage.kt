@@ -695,7 +695,7 @@ fun TracksListPage(
                     }
                     return@addListener
                 }
-                result.extras.getParcelable<AnyListBase>("data")?.let {
+                androidx.core.os.BundleCompat.getParcelable(result.extras, "data", AnyListBase::class.java)?.let {
                     musicPlayList.value = it
                 }
             } catch (e: Exception) {

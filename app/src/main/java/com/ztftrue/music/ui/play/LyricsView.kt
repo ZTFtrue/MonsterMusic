@@ -454,6 +454,7 @@ fun LyricsView(
     } else {
         val view = LocalView.current
         val focusManager = LocalFocusManager.current
+        @Suppress("DEPRECATION")
         val clipboardManager = LocalClipboardManager.current
         val customTextToolbar = remember(view, focusManager, clipboardManager) {
             CustomTextToolbar(

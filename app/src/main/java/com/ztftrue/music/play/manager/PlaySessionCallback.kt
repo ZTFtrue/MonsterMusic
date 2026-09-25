@@ -27,6 +27,7 @@ class PlaySessionCallback(
     // 使用 Service 的 Scope 来执行协程任务
     private val scope = service.serviceScope
 
+    @Suppress("DEPRECATION")
     override fun onConnect(
         session: MediaSession,
         controller: MediaSession.ControllerInfo

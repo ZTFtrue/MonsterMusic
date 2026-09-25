@@ -349,6 +349,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         return inputEnded && !outputBuffer.hasRemaining()
     }
 
+    @Deprecated("Deprecated in AudioProcessor")
     override fun flush() {
         lock.lock()
         try {
@@ -368,6 +369,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         inputEnded = true
     }
 
+    @Suppress("DEPRECATION")
     override fun reset() {
         flush()
         inputAudioFormat = AudioProcessor.AudioFormat.NOT_SET

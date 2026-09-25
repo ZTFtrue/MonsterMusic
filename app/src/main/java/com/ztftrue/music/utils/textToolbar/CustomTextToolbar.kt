@@ -13,6 +13,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import com.ztftrue.music.sqlData.model.DictionaryApp
 
 
+@Suppress("DEPRECATION")
 internal class CustomTextToolbar(
     internal val view: View,
     private val customApp: List<DictionaryApp>,
