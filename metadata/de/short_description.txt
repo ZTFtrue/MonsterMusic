@@ -1,1 +1,1 @@
-Ein Player für die lokale Musiksammlung mit Equalizer und mehr
+Lokaler Musikplayer mit nativer DSP-Engine, Studioeffekten, Visualizer & Songtexten

@@ -1,0 +1,14 @@
+Builds:
+  - versionName: 0.1.74
+    versionCode: 74
+    commit: 0.1.74
+    subdir: app
+    gradle:
+      - yes
+    ndk: r27c
+    output: app/build/outputs/apk/release/app-universal-release.apk
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: 0.1.74
+CurrentVersionCode: 74

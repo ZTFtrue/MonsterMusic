@@ -1,1 +1,1 @@
-A Music Player with Equalizer and more
+Offline music player with native C DSP engine, studio effects, visualizers & lyrics

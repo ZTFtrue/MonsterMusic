@@ -1,0 +1,7 @@
+v0.1.74:
+• Native C DSP Engine: Biquad IIR & FFT FIR filter modes with stereo-linked soft limiting.
+• Studio Effects: Stereo Delay, Reverb, Chorus, Flanger, Polyphony & Stereo Widening with Dry/Wet mix sliders.
+• Audio Chain Inspector: Live signal flow view (Decoder, Resampler, DSP filter, Output Sink).
+• Reactive Visualizers: Matrix Rain & 32-band Spectrum with Fullscreen & Landscape mode.
+• Pitch & Speed: Dual coarse & 0.01x fine-tuning sliders.
+• Synced Lyrics: Drag-to-seek, centering & dictionary lookup.

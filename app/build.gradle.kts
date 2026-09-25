@@ -13,8 +13,8 @@ android {
         applicationId = "com.ztftrue.music"
         minSdk = 30
         targetSdk = 37
-        versionCode = 73
-        versionName = "0.1.73"
+        versionCode = 74
+        versionName = "0.1.74"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -36,6 +36,15 @@ android {
     namespace = "com.ztftrue.music"
     compileSdk = 37
     ndkVersion = "27.3.13750724"
+
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            isUniversalApk = true
+        }
+    }
 
     bundle {
         language {

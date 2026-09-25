@@ -1,0 +1,7 @@
+v0.1.74:
+• Nativer C DSP-Audio-Engine: Biquad-IIR & FFT-FIR Filter mit Soft-Limiter.
+• Studio-Audioeffekte: Stereo-Delay, Reverb, Chorus, Flanger, Polyphonie & Stereo-Verbreiterung mit Dry/Wet-Reglern.
+• Audiosignal-Inspektor: Live-Anzeige von Decoder, Resampler, DSP-Filter und Ausgabe-Sink.
+• Reaktive Visualisierungen: Matrix-Code-Regen & 32-Band-Spektrum mit Vollbild- und Querformat-Sperre.
+• Tonhöhe & Tempo: Grob- und 0,01x Feinabstimmungs-Regler.
+• Songtexte: Drag-to-Seek & Wörterbuch-Suchfunktion.

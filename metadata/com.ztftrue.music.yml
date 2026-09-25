@@ -5,14 +5,22 @@ AuthorName: ztftrue
 AuthorEmail: ztftrue@gmail.com
 SourceCode: https://github.com/ZTFtrue/MonsterMusic
 IssueTracker: https://github.com/ZTFtrue/MonsterMusic/issues
+Changelog: https://github.com/ZTFtrue/MonsterMusic/releases
 
 AutoName: MonsterMusic
+Summary: Modern local music player with native C DSP engine, equalizer, and synced lyrics
 Description: |-
-  [MonsterMusic] is open source, free and freedom. Enjoy all the features without any cost!
-  🔊 Advanced Equalizer: Customize your sound experience with our built-in equalizer. Fine-tune the audio to match your preferences and immerse yourself in crystal-clear, high-quality sound.
-  🌈 Multiple Themes: Personalize your music player with a variety of themes. Switch effortlessly between themes to match your mood or style. Your music, your way!
-  📜 Lyrics Support: Dive deeper into the lyrics of your favorite songs. [MonsterMusic] supports lyrics display, you can import txt or lyrics file. Click the lyrics word, you can find a feature.
-  🔒 Privacy First: Rest easy knowing that your privacy is our top priority. No unnecessary permissions, just pure music enjoyment.
+  MonsterMusic is an open-source, private, and customizable local music player for Android.
+
+  Key Features:
+  • Native C DSP Audio Engine: Low-latency audio processing powered by high-performance native C.
+  • Dual Filter Architectures: High-precision Biquad IIR filters & 2048-tap linear-phase FFT FIR filters with master soft limiter.
+  • Studio Audio Effects: Stereo Delay with ping-pong feedback, Reverb, Chorus, Flanger, Polyphony, and Stereo Widening, each with dedicated Dry/Wet mix blending.
+  • Audio Processing Chain Inspector: Real-time audio signal flow visualization below cover art (input stream details, decoder, resampler, DSP filter mode, and audio sink).
+  • Dynamic Audio Visualizers: Matrix Digital Rain and 32-band Audio Spectrum visualizers with frequency reactivity, fullscreen mode, and landscape orientation lock.
+  • Dual Pitch & Speed Controls: Coarse (0.1x) and fine-tuning (0.01x) sliders for tempo and pitch stretching.
+  • Interactive Synced Lyrics: Smooth auto-scrolling, drag-to-seek timestamp navigation, and tap-to-lookup dictionary popup with multi-dictionary support.
+  • Privacy First: 100% offline, zero network requests, no analytics, and no intrusive permissions.
 
 RepoType: git
 Repo: https://github.com/ZTFtrue/MonsterMusic
@@ -25,7 +33,16 @@ Builds:
     gradle:
       - yes
 
+  - versionName: 0.1.74
+    versionCode: 74
+    commit: 0.1.74
+    subdir: app
+    gradle:
+      - yes
+    ndk: r27c
+    output: app/build/outputs/apk/release/app-universal-release.apk
+
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: 0.1.17
-CurrentVersionCode: 17
+CurrentVersion: 0.1.74
+CurrentVersionCode: 74
