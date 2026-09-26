@@ -1,0 +1,6 @@
+v0.1.78:
+• Pauses Matrix rain and Spectrum visualizers when playback is paused or window loses focus (0% CPU).
+• Fixed Spectrum visualizer freezing after screen unlock.
+• Background calculations and data transmission now immediately halt on focus loss.
+• High-performance zero-allocation visualizer rendering and 60 FPS throttled audio DSP.
+• Refined cover page information display.

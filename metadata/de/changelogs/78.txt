@@ -1,0 +1,6 @@
+v0.1.78:
+• Matrix-Regen- und Spektrum-Visualisierer pausieren bei Wiedergabepause oder Fokusverlust (0% CPU).
+• Spektrum-Visualisierer nach Entsperren des Bildschirms repariert.
+• Audioberechnungen und Datenübertragung stoppen sofort bei Fokusverlust.
+• Zero-Allocation-Rendering für Visualisierer und 60-FPS-Drosselung im Audio-DSP.
+• Standardisierte Titel- und Künstleranzeige auf der Cover-Seite.

@@ -6,6 +6,15 @@ The project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.1.78] - 2026-09-26
+- **Visualizer Lifecycle**: Matrix digital rain and spectrum animations now immediately pause and freeze when playback is paused or the window loses focus, using 0% CPU.
+- **Screen Unlock Fix**: Resolved issue where Spectrum visualizer would stop responding after unlocking the device due to asynchronous media browser reconnection.
+- **Resource Optimization**: Calculations and visualization data transmission halt immediately upon focus loss or screen-off.
+- **Performance & Smoothness**: Zero-allocation rendering in Matrix rain visualizer; rate-limited FFT and downsampling in audio processor to 60 FPS.
+- **UI Refinements**: Standardized song and artist info layout on the album cover view and cleaned up navigation indicators.
+
+---
+
 ## [0.1.77] - 2026-09-26
 - **Build System**: Upgraded Android NDK to `r30` (`30.0.16248370`).
 - **Native DSP**: Added `-fno-finite-math-only` to compiler options to preserve floating-point sanity checks under fast-math optimizations.
