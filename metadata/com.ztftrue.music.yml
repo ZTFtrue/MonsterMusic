@@ -42,7 +42,16 @@ Builds:
     ndk: r27c
     output: app/release/app-universal-release.apk
 
+  - versionName: 0.1.75
+    versionCode: 75
+    commit: 0.1.75
+    subdir: app
+    gradle:
+      - yes
+    ndk: r27c
+    output: app/release/app-universal-release-unsigned.apk
+
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: 0.1.74
-CurrentVersionCode: 74
+CurrentVersion: 0.1.75
+CurrentVersionCode: 75
