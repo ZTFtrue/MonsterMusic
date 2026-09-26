@@ -26,20 +26,20 @@ android {
 
     signingConfigs {
         create("release") {
-            val envKeystore = System.getenv("KEYSTORE_PATH")?.let { file(it) }
-                ?: rootProject.file("release_keystore.jks").takeIf { it.exists() }
-                ?: rootProject.file("keystore.jks").takeIf { it.exists() }
-                ?: file("../keystore.jks")
-
-            if (envKeystore.exists()) {
-                storeFile = envKeystore
-                storePassword = System.getenv("KEY_STORE_PASSWORD") ?: "qazwsx"
-                keyPassword = System.getenv("KEY_PASSWORD") ?: "111111"
-                keyAlias = System.getenv("KEY_ALIAS") ?: "music"
+            val keystorePath = System.getenv("KEYSTORE_PATH")
+            if (!keystorePath.isNullOrBlank()) {
+                val keystoreFile = file(keystorePath)
+                if (keystoreFile.exists()) {
+                    storeFile = keystoreFile
+                    storePassword = System.getenv("KEY_STORE_PASSWORD")
+                    keyPassword = System.getenv("KEY_PASSWORD")
+                    keyAlias = System.getenv("KEY_ALIAS")
+                }
             }
         }
+
         getByName("debug") {
-            storeFile = file("../keystore.jks")
+            storeFile = file("../debug_keystore.jks")
             storePassword = "qazwsx"
             keyPassword = "111111"
             keyAlias = "music"
@@ -101,7 +101,7 @@ android {
             if (releaseSigning.storeFile?.exists() == true) {
                 signingConfig = releaseSigning
             } else {
-                signingConfig = signingConfigs.getByName("debug")
+                signingConfig = null
             }
         }
         getByName("debug") {

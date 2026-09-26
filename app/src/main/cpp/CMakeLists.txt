@@ -17,3 +17,9 @@ target_link_libraries(monster_audio
     ${log-lib}
     m
 )
+
+target_link_options(
+        monster_audio
+        PRIVATE
+        "-Wl,--build-id=none"
+)

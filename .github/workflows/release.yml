@@ -15,41 +15,61 @@ jobs:
       contents: write
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
-    - name: Decode Release Keystore
-      if: env.SIGNING_KEY != ''
-      env:
-        SIGNING_KEY: ${{ secrets.MONSTER_MUSIC }}
-      run: |
-        echo "$SIGNING_KEY" | base64 --decode > release_keystore.jks
+      - name: Check signing secrets
+        env:
+          SIGNING_KEY: ${{ secrets.MONSTER_MUSIC }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+        run: |
+          test -n "$SIGNING_KEY" || { echo "MONSTER_MUSIC is missing"; exit 1; }
+          test -n "$KEY_ALIAS" || { echo "KEY_ALIAS is missing"; exit 1; }
+          test -n "$KEY_PASSWORD" || { echo "KEY_PASSWORD is missing"; exit 1; }
+          test -n "$KEY_STORE_PASSWORD" || { echo "KEY_STORE_PASSWORD is missing"; exit 1; }
 
-    - name: Build Release APKs
-      env:
-        KEYSTORE_PATH: ${{ github.workspace }}/release_keystore.jks
-        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
-      run: ./gradlew assembleRelease
+      - name: Decode Release Keystore
+        env:
+          SIGNING_KEY: ${{ secrets.MONSTER_MUSIC }}
+        run: |
+          echo "$SIGNING_KEY" | base64 --decode > release_keystore.jks
 
-    - name: Clean up Keystore
-      if: always()
-      run: rm -f release_keystore.jks
+      - name: Build Release APKs
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/release_keystore.jks
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+        run: ./gradlew clean assembleRelease
 
-    - name: Upload Release Assets
-      uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        files: app/release/*.apk
-        generate_release_notes: true
+      - name: Verify APKs are signed
+        run: |
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n1)"
+
+          for apk in app/release/*.apk; do
+            echo "Verifying $apk"
+            "$APKSIGNER" verify --verbose "$apk"
+          done
+
+      - name: Clean up Keystore
+        if: always()
+        run: rm -f release_keystore.jks
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: app/release/*.apk
+          generate_release_notes: true
