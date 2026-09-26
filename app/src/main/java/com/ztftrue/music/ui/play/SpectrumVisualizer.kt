@@ -35,11 +35,17 @@ fun SpectrumVisualizer(
     modifier: Modifier = Modifier
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
-    var isLifecycleActive by remember { mutableStateOf(true) }
+    var isLifecycleActive by remember {
+        mutableStateOf(lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
+    }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            isLifecycleActive = event.targetState.isAtLeast(Lifecycle.State.STARTED)
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> isLifecycleActive = true
+                Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> isLifecycleActive = false
+                else -> Unit
+            }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
@@ -62,9 +68,9 @@ fun SpectrumVisualizer(
     var frameTick by remember { mutableLongStateOf(0L) }
 
     LaunchedEffect(isLifecycleActive, isPlaying) {
-        if (!isLifecycleActive) return@LaunchedEffect
+        if (!isLifecycleActive || !isPlaying) return@LaunchedEffect
         var lastTime = 0L
-        while (isLifecycleActive) {
+        while (isLifecycleActive && isPlaying) {
             withFrameMillis { frameTime ->
                 if (lastTime != 0L) {
                     val dt = ((frameTime - lastTime).coerceIn(1L, 100L)) / 1000f
@@ -78,7 +84,7 @@ fun SpectrumVisualizer(
                         if (target > currentHeights[i]) {
                             currentHeights[i] = target
                         } else {
-                            currentHeights[i] = max(0f, currentHeights[i] - dt * 2.2f)
+                            currentHeights[i] = max(0f, currentHeights[i] - dt * 3.2f)
                         }
 
                         // Peak hold and gravity fall
@@ -86,7 +92,7 @@ fun SpectrumVisualizer(
                             peakHeights[i] = currentHeights[i]
                             peakVelocities[i] = 0f
                         } else {
-                            peakVelocities[i] += dt * 1.8f // Gravity acceleration
+                            peakVelocities[i] += dt * 2.6f // Gravity acceleration
                             peakHeights[i] = max(0f, peakHeights[i] - peakVelocities[i] * dt)
                         }
                     }

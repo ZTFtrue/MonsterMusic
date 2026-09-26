@@ -1410,9 +1410,13 @@ fun PlayingPage(
                 ) { id ->
                     when (playViewTab[id].id) {
                         CoverID -> {
-                            CoverView(musicViewModel, onEnterFullscreen = {
-                                isVisualizerFullscreen = true
-                            })
+                            CoverView(
+                                musicViewModel = musicViewModel,
+                                isSelected = (pagerTabState.currentPage == id && !isVisualizerFullscreen),
+                                onEnterFullscreen = {
+                                    isVisualizerFullscreen = true
+                                }
+                            )
                         }
 
                         LyricsID -> {

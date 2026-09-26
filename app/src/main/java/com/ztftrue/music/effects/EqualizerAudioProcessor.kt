@@ -180,6 +180,8 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var visPcmBuffer = FloatArray(visRingBufferLen)
     private var visTempArray = FloatArray(fftSize)
     private var nativeFftMagnitudes = FloatArray(halfFftSize)
+    private var lastVisProcessTimeNs = 0L
+    private val minVisIntervalNs = 16_000_000L // ~60 FPS throttle
 
     private val lock = ReentrantLock()
 
@@ -316,6 +318,12 @@ class EqualizerAudioProcessor : AudioProcessor {
             visRingBuffer[visWritePos] = samples[i]
             visWritePos = (visWritePos + 1) and (visRingBufferLen - 1)
         }
+
+        val nowNs = System.nanoTime()
+        if (nowNs - lastVisProcessTimeNs < minVisIntervalNs) {
+            return
+        }
+        lastVisProcessTimeNs = nowNs
 
         var readPos = (visWritePos - fftSize)
         if (readPos < 0) readPos += visRingBufferLen

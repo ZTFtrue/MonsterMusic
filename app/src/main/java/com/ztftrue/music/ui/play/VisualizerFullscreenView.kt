@@ -145,32 +145,26 @@ fun VisualizerFullscreenView(
 
     // Ensure audio processor visualization stream is connected in fullscreen view
     val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner, musicViewModel.browser) {
+    DisposableEffect(lifecycleOwner) {
         val lifecycle = lifecycleOwner.lifecycle
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_START, Lifecycle.Event.ON_RESUME -> {
-                    musicViewModel.browser?.sendCustomCommand(
-                        MediaCommands.COMMAND_VISUALIZATION_CONNECTED,
-                        Bundle()
-                    )
+                Lifecycle.Event.ON_RESUME -> {
+                    musicViewModel.setVisualizationActive(true)
                 }
-                Lifecycle.Event.ON_STOP -> {
-                    musicViewModel.browser?.sendCustomCommand(
-                        MediaCommands.COMMAND_VISUALIZATION_DISCONNECTED,
-                        Bundle()
-                    )
+                Lifecycle.Event.ON_PAUSE -> {
+                    musicViewModel.setVisualizationActive(false)
                 }
                 else -> Unit
             }
         }
         lifecycle.addObserver(observer)
-        musicViewModel.browser?.sendCustomCommand(
-            MediaCommands.COMMAND_VISUALIZATION_CONNECTED,
-            Bundle()
-        )
+        if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            musicViewModel.setVisualizationActive(true)
+        }
         onDispose {
             lifecycle.removeObserver(observer)
+            musicViewModel.setVisualizationActive(false)
         }
     }
 

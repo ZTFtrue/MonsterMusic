@@ -45,6 +45,7 @@ import com.ztftrue.music.play.manager.MediaCommands
 @Composable
 fun CoverView(
     musicViewModel: MusicViewModel,
+    isSelected: Boolean = true,
     onEnterFullscreen: (() -> Unit)? = null
 ) {
     val listState = rememberLazyListState()
@@ -54,22 +55,18 @@ fun CoverView(
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
 
-    DisposableEffect(lifecycleOwner) {
+    DisposableEffect(lifecycleOwner, musicVisualizationEnable.value, isSelected) {
         val lifecycle = lifecycleOwner.lifecycle
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_START, Lifecycle.Event.ON_RESUME -> {
-                    musicViewModel.browser?.sendCustomCommand(
-                        MediaCommands.COMMAND_VISUALIZATION_CONNECTED,
-                        Bundle()
-                    )
+                Lifecycle.Event.ON_RESUME -> {
+                    if (musicVisualizationEnable.value && isSelected) {
+                        musicViewModel.setVisualizationActive(true)
+                    }
                 }
 
-                Lifecycle.Event.ON_STOP -> {
-                    musicViewModel.browser?.sendCustomCommand(
-                        MediaCommands.COMMAND_VISUALIZATION_DISCONNECTED,
-                        Bundle()
-                    )
+                Lifecycle.Event.ON_PAUSE -> {
+                    musicViewModel.setVisualizationActive(false)
                 }
 
                 else -> Unit
@@ -77,12 +74,14 @@ fun CoverView(
         }
 
         lifecycle.addObserver(observer)
-        musicViewModel.browser?.sendCustomCommand(
-            MediaCommands.COMMAND_VISUALIZATION_CONNECTED,
-            Bundle()
-        )
+        if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) && musicVisualizationEnable.value && isSelected) {
+            musicViewModel.setVisualizationActive(true)
+        } else if (!musicVisualizationEnable.value || !isSelected) {
+            musicViewModel.setVisualizationActive(false)
+        }
         onDispose {
             lifecycle.removeObserver(observer)
+            musicViewModel.setVisualizationActive(false)
         }
     }
 
@@ -128,7 +127,7 @@ fun CoverView(
                     )
                 }
 
-                if (musicVisualizationEnable.value) {
+                if (musicVisualizationEnable.value && isSelected) {
                     val mode = musicViewModel.visualizationMode.value
                     if (mode == "Spectrum") {
                         SpectrumVisualizer(

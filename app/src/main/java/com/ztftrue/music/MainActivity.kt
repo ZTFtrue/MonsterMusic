@@ -819,12 +819,14 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onPause() {
+        musicViewModel.setVisualizationActive(false)
         jobSeek?.cancel()
         super.onPause()
     }
 
     public override fun onStop() {
         super.onStop()
+        musicViewModel.setVisualizationActive(false)
         if (::browserFuture.isInitialized) {
             try {
                 musicViewModel.browser?.removeListener(playerListener)
@@ -852,6 +854,12 @@ class MainActivity : ComponentActivity() {
 
     private fun onBrowserConnected(browser: MediaBrowser) {
         browser.addListener(playerListener) // playerListener 是你定义的 Player.Listener 实例
+        if (musicViewModel.isVisualizationActive) {
+            browser.sendCustomCommand(
+                MediaCommands.COMMAND_VISUALIZATION_CONNECTED,
+                Bundle()
+            )
+        }
         val futureResult: ListenableFuture<SessionResult>? =
             musicViewModel.browser?.sendCustomCommand(
                 MediaCommands.COMMAND_GET_INITIALIZED_DATA,

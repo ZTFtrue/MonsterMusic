@@ -115,10 +115,35 @@ class MusicViewModel : ViewModel() {
 
     //    val albumItemsCount = mutableIntStateOf(2)
 //    val genreItemsCount = mutableIntStateOf(2)
-//    var mediaBrowser: MediaBrowserCompat? = null
+    var isVisualizationActive: Boolean = false
+        private set
+
     var browser: MediaBrowser? = null
+        set(value) {
+            field = value
+            if (value != null && isVisualizationActive) {
+                value.sendCustomCommand(
+                    MediaCommands.COMMAND_VISUALIZATION_CONNECTED,
+                    Bundle()
+                )
+            }
+        }
+
+    fun setVisualizationActive(active: Boolean) {
+        isVisualizationActive = active
+        val b = browser
+        if (b != null && b.isConnected) {
+            val cmd = if (active) {
+                MediaCommands.COMMAND_VISUALIZATION_CONNECTED
+            } else {
+                MediaCommands.COMMAND_VISUALIZATION_DISCONNECTED
+            }
+            b.sendCustomCommand(cmd, Bundle())
+        }
+    }
+
     var currentInputFormat =
-        mutableStateMapOf<String, String>() //mutableStateOf<LinkedHashMap<String, String>>(java.util.LinkedHashMap())
+        mutableStateMapOf<String, String>()
 
     //    val albumScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)
 //    val artistScrollDirection = mutableStateOf(ScrollDirectionType.GRID_VERTICAL)

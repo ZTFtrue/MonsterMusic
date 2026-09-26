@@ -39,11 +39,17 @@ fun MatrixRainVisualizer(
     modifier: Modifier = Modifier
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
-    var isLifecycleActive by remember { mutableStateOf(true) }
+    var isLifecycleActive by remember {
+        mutableStateOf(lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
+    }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            isLifecycleActive = event.targetState.isAtLeast(Lifecycle.State.STARTED)
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> isLifecycleActive = true
+                Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> isLifecycleActive = false
+                else -> Unit
+            }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
@@ -70,9 +76,9 @@ fun MatrixRainVisualizer(
     val isPlaying = musicViewModel.playStatus.value
 
     LaunchedEffect(isLifecycleActive, isPlaying) {
-        if (!isLifecycleActive) return@LaunchedEffect
+        if (!isLifecycleActive || !isPlaying) return@LaunchedEffect
         var lastTime = 0L
-        while (isLifecycleActive) {
+        while (isLifecycleActive && isPlaying) {
             withFrameMillis { frameTime ->
                 if (lastTime != 0L) {
                     val dt = (frameTime - lastTime).coerceIn(1L, 100L)
@@ -232,10 +238,10 @@ class MatrixRainSimulation(
                 } else 0f
 
                 // Movement speed directly tracks the frequency magnitude:
-                // Idle speed when quiet (22 px/s), accelerating dynamically up to 850 px/s on loud frequency hits
-                val idleSpeed = if (isPlaying) 22f else 12f
-                val peakSpeed = 680f + freqRatio * 200f // Bass has heavy drops, treble has snappy darts
-                val speedFactor = energy * energy * 0.35f + energy * 0.65f
+                // Fluid base speed, accelerating dynamically on loud frequency hits
+                val idleSpeed = 45f + freqRatio * 20f
+                val peakSpeed = 650f + freqRatio * 220f // Bass has heavy drops, treble has snappy darts
+                val speedFactor = energy * energy * 0.3f + energy * 0.7f
                 val currentSpeed = (idleSpeed + (peakSpeed - idleSpeed) * speedFactor) * speeds[c]
 
                 headY[c] += currentSpeed * dtSec
@@ -270,8 +276,7 @@ class MatrixRainSimulation(
                     // Only draw visible characters strictly within canvas height
                     if (y in -charHeight..currentHeight) {
                         textPaint.color = trailColors[min(i, maxTrail - 1)]
-                        val ch = chars[c][i]
-                        canvas.drawText(ch.toString(), x, y, textPaint)
+                        canvas.drawText(chars[c], i, 1, x, y, textPaint)
                     }
                 }
             }
