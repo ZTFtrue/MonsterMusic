@@ -105,7 +105,7 @@ Or download the latest APK directly from the **[Releases Section](https://github
 
 - **UI Framework**: [Jetpack Compose](https://developer.android.com/jetpack/compose) with Material Design 3
 - **Audio Engine**: [AndroidX Media3 (ExoPlayer)](https://developer.android.com/guide/topics/media/media3) + Native C DSP via JNI
-- **Native Build System**: CMake `3.22.1` + Android NDK `r27c` (`27.3.13750724`)
+- **Native Build System**: CMake `3.22.1` + Android NDK `r30` (`30.0.16248370`)
 - **Database**: [Room](https://developer.android.com/training/data-storage/room) with Kotlin Symbol Processing (KSP)
 - **Concurrency**: Kotlin Coroutines & StateFlow
 - **Image Loading**: [Coil 3](https://coil-kt.github.io/coil/)
@@ -118,7 +118,7 @@ Or download the latest APK directly from the **[Releases Section](https://github
 - Android Studio Ladybug (or newer)
 - JDK 17
 - Android SDK Platform 37
-- Android NDK `27.3.13750724` (`r27c`)
+- Android NDK `30.0.16248370` (`r30`)
 - CMake `3.22.1`
 
 ### Clone and Compile

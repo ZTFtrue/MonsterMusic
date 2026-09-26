@@ -9,7 +9,7 @@ add_library(monster_audio SHARED
     biquad_jni.c
 )
 
-target_compile_options(monster_audio PRIVATE -O3 -ffast-math)
+target_compile_options(monster_audio PRIVATE -O3 -ffast-math -fno-finite-math-only)
 
 find_library(log-lib log)
 

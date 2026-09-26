@@ -15,8 +15,8 @@ android {
         applicationId = "com.ztftrue.music"
         minSdk = 30
         targetSdk = 37
-        versionCode = 76
-        versionName = "0.1.76"
+        versionCode = 77
+        versionName = "0.1.77"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -50,7 +50,7 @@ android {
 
     namespace = "com.ztftrue.music"
     compileSdk = 37
-    ndkVersion = "27.3.13750724"
+    ndkVersion = "30.0.16248370"
 
     splits {
         abi {
