@@ -6,7 +6,9 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
 }
-
+val isBundleTask = gradle.startParameter.taskNames.any {
+    it.contains("bundle", ignoreCase = true)
+}
 android {
 
     defaultConfig {
@@ -52,10 +54,17 @@ android {
 
     splits {
         abi {
-            isEnable = true
-            reset()
-            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
-            isUniversalApk = true
+            isEnable = !isBundleTask
+            if (!isBundleTask) {
+                reset()
+                include(
+                    "armeabi-v7a",
+                    "arm64-v8a",
+                    "x86",
+                    "x86_64"
+                )
+                isUniversalApk = true
+            }
         }
     }
 
