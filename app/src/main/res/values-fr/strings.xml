@@ -284,4 +284,9 @@
     <string name="visualizer_latency">Visualizer Latency</string>
     <string name="output_api">Output API</string>
     <string name="device_name">Device Name</string>
+    <string name="artist_label">Artiste</string>
+    <string name="album_label">Album</string>
+    <string name="year_label">Année</string>
+    <string name="comment_label">Commentaire</string>
+    <string name="path_label">Chemin du fichier</string>
 </resources>

@@ -3,28 +3,22 @@ package com.ztftrue.music.ui.play
 import android.os.Bundle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material3.Icon
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -47,7 +41,6 @@ import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.manager.MediaCommands
-import org.jaudiotagger.tag.FieldKey
 
 @Composable
 fun CoverView(
@@ -172,73 +165,9 @@ fun CoverView(
         }
 
         item {
-            if (showOtherMessage.value) {
+            if (showOtherMessage.value && musicViewModel.currentPlay.value != null) {
                 Column(Modifier.padding(15.dp)) {
-                    musicViewModel.currentPlay.value?.let { it1 ->
-                        if (it1.path.isNotEmpty()) {
-                            Text(
-                                text = it1.path,
-                                modifier = Modifier
-                                    .padding(0.dp)
-                                    .horizontalScroll(rememberScrollState(0))
-                                    .fillMaxWidth(),
-                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                                fontSize = MaterialTheme.typography.bodySmall.fontSize
-                            )
-                        }
-                        if (it1.artist.isNotEmpty()) {
-                            Text(
-                                text = stringResource(R.string.artist, it1.artist),
-                                modifier = Modifier
-                                    .padding(top = 4.dp)
-                                    .horizontalScroll(rememberScrollState(0))
-                                    .fillMaxWidth(),
-                                color = MaterialTheme.colorScheme.onBackground,
-                                fontSize = MaterialTheme.typography.titleSmall.fontSize
-                            )
-                        }
-                        if (it1.album.isNotEmpty()) {
-                            Text(
-                                text = stringResource(R.string.album, it1.album),
-                                modifier = Modifier
-                                    .padding(top = 4.dp)
-                                    .horizontalScroll(rememberScrollState(0))
-                                    .fillMaxWidth(),
-                                color = MaterialTheme.colorScheme.onBackground,
-                                fontSize = MaterialTheme.typography.titleSmall.fontSize
-                            )
-                        }
-                        val comment = musicViewModel.tags[FieldKey.COMMENT.name] ?: ""
-                        if (comment.isNotEmpty()) {
-                            Text(
-                                text = stringResource(R.string.comment, comment),
-                                modifier = Modifier
-                                    .padding(top = 4.dp)
-                                    .horizontalScroll(rememberScrollState(0))
-                                    .fillMaxWidth(),
-                                color = MaterialTheme.colorScheme.onBackground,
-                                fontSize = MaterialTheme.typography.titleSmall.fontSize
-                            )
-                        }
-                        val year = musicViewModel.tags[FieldKey.YEAR.name] ?: ""
-                        if (year.isNotEmpty()) {
-                            Text(
-                                text = stringResource(R.string.year_tracks, year),
-                                modifier = Modifier
-                                    .padding(top = 4.dp)
-                                    .horizontalScroll(rememberScrollState(0))
-                                    .fillMaxWidth(),
-                                color = MaterialTheme.colorScheme.onBackground,
-                                fontSize = MaterialTheme.typography.titleSmall.fontSize
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        androidx.compose.material3.HorizontalDivider(
-                            modifier = Modifier.padding(bottom = 16.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant
-                        )
-                        AudioChainView(musicViewModel = musicViewModel)
-                    }
+                    AudioChainView(musicViewModel = musicViewModel)
                 }
             }
         }

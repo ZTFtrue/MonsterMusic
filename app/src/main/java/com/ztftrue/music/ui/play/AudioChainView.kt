@@ -26,11 +26,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import org.jaudiotagger.tag.FieldKey
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -100,7 +97,7 @@ fun AudioChainView(
 
     // --- 3. Resampler ---
     val hwRate = AudioPathHelper.getHardwareSampleRate(context)
-    val ioRateStr = "$sampleRateInt Hz ➔ $hwRate Hz"
+    val ioRateStr = "In: $sampleRateInt Hz Out: $hwRate Hz"
     val resamplerType = "Hardware (HAL)"
     val cutoffStr = "${minOf(sampleRateInt, hwRate) / 2} Hz, 25%"
     val qualityStr = "HAL Native"
@@ -134,13 +131,33 @@ fun AudioChainView(
         ChainStage(
             title = stringResource(R.string.track_info),
             icon = Icons.Default.MusicNote,
-            items = listOf(
-                stringResource(R.string.format_label) to formatName,
-                stringResource(R.string.bit_depth) to bitDepth,
-                stringResource(R.string.sample_rate_label) to sampleRateStr,
-                stringResource(R.string.bitrate_label) to bitrateStr,
-                stringResource(R.string.channels_label) to channelsStr
-            )
+            items = buildList {
+                if (!currentPlay?.name.isNullOrEmpty()) {
+                    add(stringResource(R.string.title) to currentPlay.name)
+                }
+                if (!currentPlay?.artist.isNullOrEmpty()) {
+                    add(stringResource(R.string.artist_label) to currentPlay.artist)
+                }
+                if (!currentPlay?.album.isNullOrEmpty()) {
+                    add(stringResource(R.string.album_label) to currentPlay.album)
+                }
+                val year = tags[FieldKey.YEAR.name] ?: ""
+                if (year.isNotEmpty()) {
+                    add(stringResource(R.string.year_label) to year)
+                }
+                val comment = tags[FieldKey.COMMENT.name] ?: ""
+                if (comment.isNotEmpty()) {
+                    add(stringResource(R.string.comment_label) to comment)
+                }
+                if (filePath.isNotEmpty()) {
+                    add(stringResource(R.string.path_label) to filePath)
+                }
+                add(stringResource(R.string.format_label) to formatName)
+                add(stringResource(R.string.bit_depth) to bitDepth)
+                add(stringResource(R.string.sample_rate_label) to sampleRateStr)
+                add(stringResource(R.string.bitrate_label) to bitrateStr)
+                add(stringResource(R.string.channels_label) to channelsStr)
+            }
         ),
         ChainStage(
             title = stringResource(R.string.decoder),
@@ -216,23 +233,6 @@ fun AudioChainView(
                                     start = Offset(centerX, startY),
                                     end = Offset(centerX, endY),
                                     strokeWidth = 1.5.dp.toPx()
-                                )
-
-                                // Downward chevron arrow
-                                val arrowSize = 4.dp.toPx()
-                                val path = Path().apply {
-                                    moveTo(centerX - arrowSize, endY - arrowSize)
-                                    lineTo(centerX, endY)
-                                    lineTo(centerX + arrowSize, endY - arrowSize)
-                                }
-                                drawPath(
-                                    path = path,
-                                    color = lineColor,
-                                    style = Stroke(
-                                        width = 1.5.dp.toPx(),
-                                        cap = StrokeCap.Round,
-                                        join = StrokeJoin.Round
-                                    )
                                 )
                             }
                         }

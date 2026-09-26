@@ -6,6 +6,14 @@ The project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.1.77] - 2026-09-26
+- **Build System**: Upgraded Android NDK to `r30` (`30.0.16248370`).
+- **Native DSP**: Added `-fno-finite-math-only` to compiler options to preserve floating-point sanity checks under fast-math optimizations.
+- **Packaging**: Enhanced App Bundle and ABI split configurations.
+- **CI/CD**: Refactored automated release signing workflows.
+
+---
+
 ## [0.1.74] - 2026-09-25
 
 ### 🎛️ Native C DSP Audio Engine

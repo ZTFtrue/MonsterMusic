@@ -1,0 +1,5 @@
+v0.1.77:
+• Upgraded Android NDK to r30 (30.0.16248370) with optimized native DSP compilation.
+• Fixed floating-point sanity checks under fast-math compiler optimizations.
+• Enhanced App Bundle and ABI split release packaging.
+• Updated CI/CD automated signing configuration.

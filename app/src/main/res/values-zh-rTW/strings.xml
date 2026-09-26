@@ -291,4 +291,9 @@
     <string name="visualizer_latency">視覺化延遲</string>
     <string name="output_api">輸出 API</string>
     <string name="device_name">裝置名稱</string>
+    <string name="artist_label">演出者</string>
+    <string name="album_label">專輯</string>
+    <string name="year_label">年份</string>
+    <string name="comment_label">備註</string>
+    <string name="path_label">檔案路徑</string>
 </resources>

@@ -1,0 +1,5 @@
+v0.1.77:
+• Android NDK auf r30 (30.0.16248370) mit nativer DSP-Optimierung aktualisiert.
+• Verbesserte Gleitkomma-Prüfungen unter Fast-Math-Compileroptionen.
+• Optimierte App-Bundle- und ABI-Split-Paketierung.
+• Aktualisierte CI/CD-Signierungskonfiguration.
