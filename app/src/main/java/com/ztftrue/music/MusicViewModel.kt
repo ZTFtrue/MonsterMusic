@@ -118,6 +118,8 @@ class MusicViewModel : ViewModel() {
     var isVisualizationActive: Boolean = false
         private set
 
+    val dismissLyricsTrigger = mutableIntStateOf(0)
+
     var browser: MediaBrowser? = null
         set(value) {
             field = value

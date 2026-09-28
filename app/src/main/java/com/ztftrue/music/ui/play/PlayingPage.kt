@@ -13,6 +13,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.horizontalScroll
@@ -101,6 +103,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
@@ -203,6 +206,12 @@ fun PlayingPage(
     LaunchedEffect(music) {
         if (music == null) {
             navController.removeLastSafe()
+        }
+    }
+
+    LaunchedEffect(pagerTabState.currentPage) {
+        if (playViewTab[pagerTabState.currentPage].id != LyricsID) {
+            musicViewModel.dismissLyricsTrigger.intValue++
         }
     }
 
@@ -396,6 +405,12 @@ fun PlayingPage(
     }
     var isVisualizerFullscreen by remember {
         mutableStateOf(false)
+    }
+
+    LaunchedEffect(showDialog, popupWindow, visualizationPopupWindow, popupWindowDictionary, showAddPlayListDialog, showCreatePlayListDialog, showDeleteTip, isVisualizerFullscreen) {
+        if (showDialog || popupWindow || visualizationPopupWindow || popupWindowDictionary || showAddPlayListDialog || showCreatePlayListDialog || showDeleteTip || isVisualizerFullscreen) {
+            musicViewModel.dismissLyricsTrigger.intValue++
+        }
     }
 
     if (isVisualizerFullscreen) {
@@ -1293,7 +1308,16 @@ fun PlayingPage(
 
     Scaffold(
         topBar = {
-            Column(Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .pointerInput(Unit) {
+                        awaitEachGesture {
+                            awaitFirstDown(pass = PointerEventPass.Initial, requireUnconsumed = false)
+                            musicViewModel.dismissLyricsTrigger.intValue++
+                        }
+                    }
+            ) {
                 key(Unit, pagerTabState.currentPage) {
                     TopBar(navController, musicViewModel, content = {
                         if (playViewTab[pagerTabState.currentPage].id == CoverID) {
@@ -1443,7 +1467,13 @@ fun PlayingPage(
                             (150.dp + WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)
                                 .asPaddingValues().calculateBottomPadding())
                         )
-                        .padding(0.dp), // padding 为 0
+                        .padding(0.dp)
+                        .pointerInput(Unit) {
+                            awaitEachGesture {
+                                awaitFirstDown(pass = PointerEventPass.Initial, requireUnconsumed = false)
+                                musicViewModel.dismissLyricsTrigger.intValue++
+                            }
+                        },
                     containerColor = Color.Transparent, // 透明背景
                     tonalElevation = 0.dp, // 阴影去掉（可选）
                     contentPadding = PaddingValues(0.dp), // 内容也没有内边距

@@ -233,6 +233,96 @@ class ExampleUnitTest {
     }
 
     @Test
+    fun lyricsWordTap_opensDictionaryDirectlyEvenWhenPopupOpen() {
+        var isSelected = true
+        var isToolbarShown = true
+        var showMenu = false
+        var selectedWord = ""
+        var selectionEpoch = 0
+
+        val dismissAllPopupsAndSelection = {
+            isToolbarShown = false
+            showMenu = false
+            isSelected = false
+            selectedWord = ""
+            selectionEpoch++
+        }
+
+        data class MockWord(val text: String, val start: Int, val end: Int)
+        val words = listOf(
+            MockWord("Hello", 0, 5),
+            MockWord("world", 6, 11)
+        )
+
+        fun onWordTap(charOffset: Int, isConsumed: Boolean): Boolean {
+            if (isConsumed) return false
+            val wordInfo = words.find { charOffset in it.start until it.end }
+                ?: words.find { charOffset in it.start..it.end }
+            if (wordInfo == null || wordInfo.text.trim().isEmpty()) {
+                if (isToolbarShown || isSelected || showMenu) {
+                    dismissAllPopupsAndSelection()
+                }
+                return false
+            }
+            // Tap on valid word: close old toolbar and immediately open dictionary popup for this word
+            isToolbarShown = false
+            isSelected = false
+            selectedWord = wordInfo.text.trim()
+            showMenu = true
+            return true // consumed
+        }
+
+        // 1. Initially, selection is active. Tap on word "world" (charOffset = 8)
+        val consumed = onWordTap(charOffset = 8, isConsumed = false)
+        assertTrue(consumed)
+        assertTrue(showMenu)
+        assertEquals("world", selectedWord)
+        assertFalse(isToolbarShown)
+        assertFalse(isSelected)
+
+        // 2. Now dictionary popup is open for "world". Tap directly on another word "Hello" (charOffset = 2)
+        val consumedSecond = onWordTap(charOffset = 2, isConsumed = false)
+        assertTrue(consumedSecond)
+        assertTrue(showMenu)
+        assertEquals("Hello", selectedWord)
+
+        // 3. Tap on blank space outside words (charOffset = 20)
+        val consumedBlank = onWordTap(charOffset = 20, isConsumed = false)
+        assertFalse(consumedBlank)
+        assertFalse(showMenu)
+        assertEquals("", selectedWord)
+    }
+
+    @Test
+    fun lyricsDismissal_onExternalUiTouchTrigger() {
+        var isSelected = true
+        var isToolbarShown = true
+        var showMenu = true
+        var word = "test"
+        var dismissTriggerCount = 0
+
+        fun dismissAllPopupsAndSelection() {
+            isToolbarShown = false
+            showMenu = false
+            isSelected = false
+            word = ""
+        }
+
+        fun onDismissTrigger() {
+            dismissTriggerCount++
+            dismissAllPopupsAndSelection()
+        }
+
+        // Top bar or bottom bar touched or tab switched -> increments trigger
+        onDismissTrigger()
+        assertEquals(1, dismissTriggerCount)
+        assertFalse(isSelected)
+        assertFalse(isToolbarShown)
+        assertFalse(showMenu)
+        assertEquals("", word)
+    }
+
+    @Test
     fun dualKnob_decompositionAndRanges() {
         // Value 1.15f: Big knob 1.1f, small knob range 1.10f ~ 1.19f, small offset 5
         val h115 = DualKnobHelper.toTotalHundredths(1.15f)

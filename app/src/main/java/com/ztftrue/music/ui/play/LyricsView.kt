@@ -315,7 +315,7 @@ fun LyricsView(
 
     LaunchedEffect(showMenu) {
         if (showMenu) {
-            val list = musicViewModel.dictionaryAppList
+            val list = musicViewModel.dictionaryAppList.filter { it.isShow }
             list.forEach {
                 if (it.autoGo) {
                     if (musicViewModel.autoDismissDicPop.value) {
@@ -340,9 +340,14 @@ fun LyricsView(
     }
     key(showMenu) {
         if (showMenu) {
-            val list = musicViewModel.dictionaryAppList
+            val list = musicViewModel.dictionaryAppList.filter { it.isShow }
             if (list.isEmpty()) {
                 showMenu = false
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.no_dictionary_app_tip),
+                    Toast.LENGTH_SHORT
+                ).show()
             } else {
                 Popup(
                     // on below line we are adding
@@ -383,6 +388,8 @@ fun LyricsView(
                                 val resolveInfo = list[index]
                                 Button(
                                     onClick = {
+                                        showMenu = false
+                                        clearSelection()
                                         val intent = Intent()
                                         intent.action = Intent.ACTION_PROCESS_TEXT
                                         intent.setClassName(
@@ -456,10 +463,10 @@ fun LyricsView(
         val focusManager = LocalFocusManager.current
         @Suppress("DEPRECATION")
         val clipboardManager = LocalClipboardManager.current
-        val customTextToolbar = remember(view, focusManager, clipboardManager) {
+        val customTextToolbar = remember(view, focusManager, clipboardManager, musicViewModel.dictionaryAppList.toList()) {
             CustomTextToolbar(
                 view = view,
-                customApp = musicViewModel.dictionaryAppList,
+                customApp = musicViewModel.dictionaryAppList.filter { it.isShow },
                 focusManager = focusManager,
                 clipboardManager = clipboardManager
             )
@@ -467,10 +474,18 @@ fun LyricsView(
         customTextToolbar.onShow = {
             isSelected = true
         }
+        customTextToolbar.onDismiss = {
+            isSelected = false
+        }
         val dismissAllPopupsAndSelection = {
             customTextToolbar.hideAll()
             showMenu = false
             clearSelection()
+        }
+        LaunchedEffect(musicViewModel.dismissLyricsTrigger.intValue) {
+            if (musicViewModel.dismissLyricsTrigger.intValue > 0) {
+                dismissAllPopupsAndSelection()
+            }
         }
         val primaryColor = MaterialTheme.colorScheme.primary
         val customTextSelectionColors = remember(primaryColor) {
@@ -496,12 +511,11 @@ fun LyricsView(
                                 return@awaitEachGesture
                             }
                             val up = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
-                                waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                                waitForUpOrCancellation(pass = PointerEventPass.Final)
                             }
-                            if (up != null) {
+                            if (up != null && !up.isConsumed) {
                                 val distance = (up.position - down.position).getDistance()
                                 if (distance <= viewConfiguration.touchSlop) {
-                                    up.consume()
                                     dismissAllPopupsAndSelection()
                                 }
                             }
@@ -683,21 +697,33 @@ fun LyricsView(
                                                     if (up != null && !up.isConsumed) {
                                                         val distance = (up.position - down.position).getDistance()
                                                         if (distance <= viewConfiguration.touchSlop) {
-                                                            if (customTextToolbar.status == TextToolbarStatus.Shown || isSelected || showMenu) {
-                                                                dismissAllPopupsAndSelection()
-                                                                return@awaitEachGesture
-                                                            }
                                                             val layout = textLayoutResult ?: return@awaitEachGesture
                                                             val line = layout.getLineForVerticalPosition(down.position.y)
                                                             if (down.position.x < layout.getLineLeft(line) || down.position.x > layout.getLineRight(line)) {
+                                                                if (customTextToolbar.status == TextToolbarStatus.Shown || isSelected || showMenu) {
+                                                                    dismissAllPopupsAndSelection()
+                                                                }
                                                                 return@awaitEachGesture
                                                             }
                                                             val charOffset = layout.getOffsetForPosition(down.position)
                                                             val wordInfo = words.find { charOffset in it.start until it.end }
                                                                 ?: words.find { charOffset in it.start..it.end }
-                                                                ?: return@awaitEachGesture
+                                                            if (wordInfo == null) {
+                                                                if (customTextToolbar.status == TextToolbarStatus.Shown || isSelected || showMenu) {
+                                                                    dismissAllPopupsAndSelection()
+                                                                }
+                                                                return@awaitEachGesture
+                                                            }
                                                             val clickedWord = wordInfo.word.trim()
-                                                            if (clickedWord.isEmpty()) return@awaitEachGesture
+                                                            if (clickedWord.isEmpty()) {
+                                                                if (customTextToolbar.status == TextToolbarStatus.Shown || isSelected || showMenu) {
+                                                                    dismissAllPopupsAndSelection()
+                                                                }
+                                                                return@awaitEachGesture
+                                                            }
+
+                                                            up.consume()
+                                                            customTextToolbar.hideAll()
 
                                                             val coords = textCoordinates
                                                             if (coords != null && coords.isAttached) {
