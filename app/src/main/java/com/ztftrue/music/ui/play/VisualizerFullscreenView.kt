@@ -3,7 +3,6 @@ package com.ztftrue.music.ui.play
 import android.app.Activity
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
-import android.os.Bundle
 import android.view.MotionEvent
 import android.view.WindowManager
 import androidx.activity.compose.BackHandler
@@ -20,7 +19,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,11 +28,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -87,12 +83,12 @@ import coil3.request.crossfade
 import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import kotlinx.coroutines.delay
 import kotlin.math.roundToLong
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Immersive fullscreen view for music visualization.
@@ -176,7 +172,7 @@ fun VisualizerFullscreenView(
     // Auto-hide overlay controls after 3.5 seconds of inactivity
     LaunchedEffect(showControls) {
         if (showControls) {
-            delay(3500)
+            delay(3500.milliseconds)
             showControls = false
         }
     }

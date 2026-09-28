@@ -101,16 +101,17 @@ fun WidgetConfigContent(
     }
 
     // Preset color list
-    val presets = remember {
+    val widgetPresetsLabel = stringResource(R.string.widget_presets)
+    val presets = remember(widgetPresetsLabel) {
         listOf(
-            ColorPreset(context.getString(R.string.widget_presets) + " 1 (Theme)", "#FF01579B"),
-            ColorPreset(context.getString(R.string.widget_presets) + " 2 (Dark Glass)", "#80000000"),
-            ColorPreset(context.getString(R.string.widget_presets) + " 3 (Light Glass)", "#80FFFFFF"),
-            ColorPreset(context.getString(R.string.widget_presets) + " 4 (Transparent)", "#00000000"),
-            ColorPreset(context.getString(R.string.widget_presets) + " 5 (Black)", "#FF000000"),
-            ColorPreset(context.getString(R.string.widget_presets) + " 6 (White)", "#FFFFFFFF"),
-            ColorPreset(context.getString(R.string.widget_presets) + " 7 (Teal)", "#FF004D40"),
-            ColorPreset(context.getString(R.string.widget_presets) + " 8 (Purple)", "#FF311B92")
+            ColorPreset("$widgetPresetsLabel 1 (Theme)", "#FF01579B"),
+            ColorPreset("$widgetPresetsLabel 2 (Dark Glass)", "#80000000"),
+            ColorPreset("$widgetPresetsLabel 3 (Light Glass)", "#80FFFFFF"),
+            ColorPreset("$widgetPresetsLabel 4 (Transparent)", "#00000000"),
+            ColorPreset("$widgetPresetsLabel 5 (Black)", "#FF000000"),
+            ColorPreset("$widgetPresetsLabel 6 (White)", "#FFFFFFFF"),
+            ColorPreset("$widgetPresetsLabel 7 (Teal)", "#FF004D40"),
+            ColorPreset("$widgetPresetsLabel 8 (Purple)", "#FF311B92")
         )
     }
 

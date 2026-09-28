@@ -13,7 +13,6 @@ import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.ui.input.pointer.PointerEventPass
-import kotlinx.coroutines.withTimeoutOrNull
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -55,7 +54,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -107,11 +105,11 @@ import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.isCjkLike
 import com.ztftrue.music.utils.model.ListStringCaption
 import com.ztftrue.music.utils.textToolbar.CustomTextToolbar
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.milliseconds
 
 
 const val Lyrics = "lyrics"
@@ -131,7 +129,7 @@ private suspend fun LazyListState.centerItem(
     var retryCount = 0
     while (layoutInfo.viewportSize.height <= 0 && retryCount < 10) {
         retryCount++
-        delay(16)
+        delay(16.milliseconds)
     }
     val viewportHeight = layoutInfo.viewportSize.height
     if (viewportHeight <= 0) return
@@ -147,7 +145,7 @@ private suspend fun LazyListState.centerItem(
         retryCount = 0
         while (visibleItem == null && retryCount < 10) {
             retryCount++
-            delay(16)
+            delay(16.milliseconds)
             visibleItem = layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }
         }
     }
@@ -338,6 +336,7 @@ fun LyricsView(
             }
         }
     }
+    val noDictionaryAppTip = stringResource(R.string.no_dictionary_app_tip)
     key(showMenu) {
         if (showMenu) {
             val list = musicViewModel.dictionaryAppList.filter { it.isShow }
@@ -345,7 +344,7 @@ fun LyricsView(
                 showMenu = false
                 Toast.makeText(
                     context,
-                    context.getString(R.string.no_dictionary_app_tip),
+                    noDictionaryAppTip,
                     Toast.LENGTH_SHORT
                 ).show()
             } else {
@@ -748,7 +747,6 @@ fun LyricsView(
                 }
 
                 val handleSizeDp = 40.dp
-                val handleSizePx = with(density) { handleSizeDp.toPx() }
                 val maxTravel = (viewportHeightPx / 2f) - with(density) { 48.dp.toPx() }
                 val totalCaptions = musicViewModel.currentCaptionList.size
                 val coroutineScope = rememberCoroutineScope()
@@ -804,7 +802,7 @@ fun LyricsView(
                                 pointedIndex = closest.index
                             }
                         }
-                        delay(16)
+                        delay(16.milliseconds)
                     }
                 }
 

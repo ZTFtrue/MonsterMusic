@@ -1,8 +1,5 @@
 package com.ztftrue.music.ui.play
 
-import android.app.Activity
-import android.content.pm.ActivityInfo
-import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
@@ -51,7 +48,6 @@ import androidx.compose.material.icons.automirrored.outlined.FormatAlignRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.outlined.Adjust
 import androidx.compose.material.icons.outlined.CodeOff
 import androidx.compose.material.icons.outlined.Equalizer
@@ -106,7 +102,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo

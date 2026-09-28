@@ -1,6 +1,5 @@
 package com.ztftrue.music.ui.play
 
-import android.os.Bundle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -40,7 +39,6 @@ import coil3.request.crossfade
 import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.play.manager.MediaCommands
 
 @Composable
 fun CoverView(

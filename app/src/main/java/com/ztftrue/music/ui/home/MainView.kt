@@ -140,18 +140,19 @@ fun MainView(
                     musicViewModel, navController
                 )
             }, content = { innerPadding ->
+                val currentPageName = if (musicViewModel.mainTabList.size > pagerState.currentPage) {
+                    musicViewModel.mainTabList[pagerState.currentPage].name
+                } else {
+                    ""
+                }
+                val currentPageDescription = stringResource(R.string.current_page_is, currentPageName)
                 HorizontalPager(
                     state = pagerState,
                     beyondViewportPageCount = tabList.size,
                     modifier = Modifier
                         .padding(innerPadding)
                         .semantics {
-                            context
-                                .getString(
-                                    R.string.current_page_is,
-                                    if (musicViewModel.mainTabList.size > pagerState.currentPage) musicViewModel.mainTabList[pagerState.currentPage].name else ""
-                                )
-                                .also { contentDescription = it }
+                            contentDescription = currentPageDescription
                         },
                 ) { page ->
                     when (tabList[page].type) {
