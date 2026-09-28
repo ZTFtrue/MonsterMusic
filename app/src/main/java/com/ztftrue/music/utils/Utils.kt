@@ -187,7 +187,11 @@ object Utils {
             val showRightIndicator = SharedPreferencesUtils.getShowRightIndicator(context)
             val musicVisualizationEnable = SharedPreferencesUtils.getEnableMusicVisualization(context)
             val visualizationMode = SharedPreferencesUtils.getVisualizationMode(context)
-            val equalizerType = SharedPreferencesUtils.getEqualizerType(context)
+            val aux = musicViewModel.getDb(context).AuxDao().findFirstAux()
+            val equalizerType = aux?.equalizerType ?: 0
+            val selectedPreset = aux?.selectedPreset ?: custom
+            val showPitchFine = aux?.showPitchFine ?: false
+            val showSpeedFine = aux?.showSpeedFine ?: false
             val showMusicCover = SharedPreferencesUtils.getShowMusicCover(context)
             val themeSelected = context.getSharedPreferences(
                 "SelectedTheme",
@@ -197,8 +201,6 @@ object Utils {
             val fontSize = SharedPreferencesUtils.getFontSize(context)
             val autoScroll = SharedPreferencesUtils.getAutoScroll(context)
             val autoHighLight = SharedPreferencesUtils.getAutoHighLight(context)
-            val showPitchFine = SharedPreferencesUtils.getShowPitchFine(context)
-            val showSpeedFine = SharedPreferencesUtils.getShowSpeedFine(context)
             val dicApps = musicViewModel.getDb(context).DictionaryAppDao().findAllDictionaryApp()
             val list = if (dicApps.isEmpty()) {
                 val arrayList = ArrayList<DictionaryApp>()
@@ -225,6 +227,7 @@ object Utils {
                 musicViewModel.musicVisualizationEnable.value = musicVisualizationEnable
                 musicViewModel.visualizationMode.value = visualizationMode
                 musicViewModel.equalizerType.intValue = equalizerType
+                musicViewModel.selectedPreset.value = selectedPreset
                 musicViewModel.showMusicCover.value = showMusicCover
                 musicViewModel.themeSelected.intValue = themeSelected
                 musicViewModel.textAlign.value = textAlign

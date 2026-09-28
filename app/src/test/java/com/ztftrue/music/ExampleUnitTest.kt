@@ -750,4 +750,101 @@ class ExampleUnitTest {
         assertEquals("2x (120ms, 5760 frames)", com.ztftrue.music.utils.AudioPathHelper.calculateBuffers(48000))
         assertEquals("2x (120ms, 5292 frames)", com.ztftrue.music.utils.AudioPathHelper.calculateBuffers(44100))
     }
+
+    @Test
+    fun auxr_defaultValuesAndEquality() {
+        val auxr = com.ztftrue.music.sqlData.model.Auxr(
+            id = 0,
+            speed = 1f,
+            pitch = 1f,
+            echo = false,
+            echoDelay = 0.2f,
+            echoDecay = 0.5f,
+            echoRevert = true,
+            equalizer = false,
+            equalizerBand = IntArray(10),
+            equalizerQ = com.ztftrue.music.utils.Utils.Q,
+            virtualizerEnabled = false,
+            virtualizerStrength = 0,
+            equalizerType = 0,
+            selectedPreset = com.ztftrue.music.utils.Utils.custom,
+            showPitchFine = false,
+            showSpeedFine = false,
+            delayEnabled = false,
+            delayTime = 0.35f,
+            delayFeedback = 0.4f,
+            delayMix = 0.4f,
+            reverbEnabled = false,
+            reverbRoomSize = 0.5f,
+            reverbDamping = 0.5f,
+            reverbMix = 0.3f,
+            chorusEnabled = false,
+            chorusRate = 1.5f,
+            chorusDepth = 0.5f,
+            chorusMix = 0.5f,
+            flangerEnabled = false,
+            flangerRate = 0.5f,
+            flangerDepth = 0.7f,
+            flangerFeedback = 0.5f,
+            flangerMix = 0.5f,
+            polyphonyEnabled = false,
+            polyphonySemitones = 0,
+            polyphonyDetune = 0.0f,
+            polyphonyMix = 0.5f
+        )
+
+        // Verify Equalizer defaults
+        assertEquals(0, auxr.equalizerType)
+        assertEquals("Custom", auxr.selectedPreset)
+        assertEquals(false, auxr.equalizer)
+        assertEquals(10, auxr.equalizerBand.size)
+
+        // Verify Effect fine-tuning defaults
+        assertEquals(false, auxr.showPitchFine)
+        assertEquals(false, auxr.showSpeedFine)
+
+        // Verify Advanced Effects defaults
+        assertEquals(false, auxr.delayEnabled)
+        assertEquals(0.35f, auxr.delayTime, 0.001f)
+        assertEquals(0.4f, auxr.delayFeedback, 0.001f)
+        assertEquals(0.4f, auxr.delayMix, 0.001f)
+
+        assertEquals(false, auxr.reverbEnabled)
+        assertEquals(0.5f, auxr.reverbRoomSize, 0.001f)
+        assertEquals(0.5f, auxr.reverbDamping, 0.001f)
+        assertEquals(0.3f, auxr.reverbMix, 0.001f)
+
+        assertEquals(false, auxr.chorusEnabled)
+        assertEquals(1.5f, auxr.chorusRate, 0.001f)
+        assertEquals(0.5f, auxr.chorusDepth, 0.001f)
+        assertEquals(0.5f, auxr.chorusMix, 0.001f)
+
+        assertEquals(false, auxr.flangerEnabled)
+        assertEquals(0.5f, auxr.flangerRate, 0.001f)
+        assertEquals(0.7f, auxr.flangerDepth, 0.001f)
+        assertEquals(0.5f, auxr.flangerFeedback, 0.001f)
+        assertEquals(0.5f, auxr.flangerMix, 0.001f)
+
+        assertEquals(false, auxr.polyphonyEnabled)
+        assertEquals(0, auxr.polyphonySemitones)
+        assertEquals(0.0f, auxr.polyphonyDetune, 0.001f)
+        assertEquals(0.5f, auxr.polyphonyMix, 0.001f)
+
+        // Verify equality and hash code
+        val auxrCopy = auxr.copy(equalizerBand = auxr.equalizerBand.clone())
+        assertEquals(auxr, auxrCopy)
+        assertEquals(auxr.hashCode(), auxrCopy.hashCode())
+
+        // Mutate fields and verify inequality
+        auxrCopy.reverbEnabled = true
+        assertNotEquals(auxr, auxrCopy)
+        auxrCopy.reverbEnabled = false
+
+        auxrCopy.selectedPreset = "Rock"
+        assertNotEquals(auxr, auxrCopy)
+        auxrCopy.selectedPreset = "Custom"
+
+        auxrCopy.equalizerType = 1
+        assertNotEquals(auxr, auxrCopy)
+    }
 }

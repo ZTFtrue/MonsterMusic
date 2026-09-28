@@ -1,0 +1,595 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 8,
+    "identityHash": "10a0097d8781e318d0c1d7bd57654bcb",
+    "entities": [
+      {
+        "tableName": "aux",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `speed` REAL NOT NULL, `pitch` REAL NOT NULL, `echo` INTEGER NOT NULL, `echoDelay` REAL NOT NULL, `echoDecay` REAL NOT NULL, `echoRevert` INTEGER NOT NULL, `equalizer` INTEGER NOT NULL, `equalizerQ` REAL NOT NULL DEFAULT 3.2, `equalizerBand` TEXT NOT NULL, `virtualizerEnabled` INTEGER NOT NULL DEFAULT 0, `virtualizerStrength` INTEGER NOT NULL DEFAULT 0, `equalizerType` INTEGER NOT NULL DEFAULT 0, `selectedPreset` TEXT NOT NULL DEFAULT 'Custom', `showPitchFine` INTEGER NOT NULL DEFAULT 0, `showSpeedFine` INTEGER NOT NULL DEFAULT 0, `delayEnabled` INTEGER NOT NULL DEFAULT 0, `delayTime` REAL NOT NULL DEFAULT 0.35, `delayFeedback` REAL NOT NULL DEFAULT 0.4, `delayMix` REAL NOT NULL DEFAULT 0.4, `reverbEnabled` INTEGER NOT NULL DEFAULT 0, `reverbRoomSize` REAL NOT NULL DEFAULT 0.5, `reverbDamping` REAL NOT NULL DEFAULT 0.5, `reverbMix` REAL NOT NULL DEFAULT 0.3, `chorusEnabled` INTEGER NOT NULL DEFAULT 0, `chorusRate` REAL NOT NULL DEFAULT 1.5, `chorusDepth` REAL NOT NULL DEFAULT 0.5, `chorusMix` REAL NOT NULL DEFAULT 0.5, `flangerEnabled` INTEGER NOT NULL DEFAULT 0, `flangerRate` REAL NOT NULL DEFAULT 0.5, `flangerDepth` REAL NOT NULL DEFAULT 0.7, `flangerFeedback` REAL NOT NULL DEFAULT 0.5, `flangerMix` REAL NOT NULL DEFAULT 0.5, `polyphonyEnabled` INTEGER NOT NULL DEFAULT 0, `polyphonySemitones` INTEGER NOT NULL DEFAULT 0, `polyphonyDetune` REAL NOT NULL DEFAULT 0.0, `polyphonyMix` REAL NOT NULL DEFAULT 0.5, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "speed",
+            "columnName": "speed",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pitch",
+            "columnName": "pitch",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "echo",
+            "columnName": "echo",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "echoDelay",
+            "columnName": "echoDelay",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "echoDecay",
+            "columnName": "echoDecay",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "echoRevert",
+            "columnName": "echoRevert",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "equalizer",
+            "columnName": "equalizer",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "equalizerQ",
+            "columnName": "equalizerQ",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "3.2"
+          },
+          {
+            "fieldPath": "equalizerBand",
+            "columnName": "equalizerBand",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "virtualizerEnabled",
+            "columnName": "virtualizerEnabled",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "virtualizerStrength",
+            "columnName": "virtualizerStrength",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "equalizerType",
+            "columnName": "equalizerType",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "selectedPreset",
+            "columnName": "selectedPreset",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'Custom'"
+          },
+          {
+            "fieldPath": "showPitchFine",
+            "columnName": "showPitchFine",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "showSpeedFine",
+            "columnName": "showSpeedFine",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "delayEnabled",
+            "columnName": "delayEnabled",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "delayTime",
+            "columnName": "delayTime",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "0.35"
+          },
+          {
+            "fieldPath": "delayFeedback",
+            "columnName": "delayFeedback",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "0.4"
+          },
+          {
+            "fieldPath": "delayMix",
+            "columnName": "delayMix",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "0.4"
+          },
+          {
+            "fieldPath": "reverbEnabled",
+            "columnName": "reverbEnabled",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "reverbRoomSize",
+            "columnName": "reverbRoomSize",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "0.5"
+          },
+          {
+            "fieldPath": "reverbDamping",
+            "columnName": "reverbDamping",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "0.5"
+          },
+          {
+            "fieldPath": "reverbMix",
+            "columnName": "reverbMix",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "0.3"
+          },
+          {
+            "fieldPath": "chorusEnabled",
+            "columnName": "chorusEnabled",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "chorusRate",
+            "columnName": "chorusRate",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "1.5"
+          },
+          {
+            "fieldPath": "chorusDepth",
+            "columnName": "chorusDepth",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "0.5"
+          },
+          {
+            "fieldPath": "chorusMix",
+            "columnName": "chorusMix",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "0.5"
+          },
+          {
+            "fieldPath": "flangerEnabled",
+            "columnName": "flangerEnabled",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "flangerRate",
+            "columnName": "flangerRate",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "0.5"
+          },
+          {
+            "fieldPath": "flangerDepth",
+            "columnName": "flangerDepth",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "0.7"
+          },
+          {
+            "fieldPath": "flangerFeedback",
+            "columnName": "flangerFeedback",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "0.5"
+          },
+          {
+            "fieldPath": "flangerMix",
+            "columnName": "flangerMix",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "0.5"
+          },
+          {
+            "fieldPath": "polyphonyEnabled",
+            "columnName": "polyphonyEnabled",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "polyphonySemitones",
+            "columnName": "polyphonySemitones",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "polyphonyDetune",
+            "columnName": "polyphonyDetune",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "0.0"
+          },
+          {
+            "fieldPath": "polyphonyMix",
+            "columnName": "polyphonyMix",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "0.5"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "CurrentList",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER, `listID` INTEGER NOT NULL, `type` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "listID",
+            "columnName": "listID",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "main_tab",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `priority` INTEGER NOT NULL, `isShow` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "priority",
+            "columnName": "priority",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isShow",
+            "columnName": "isShow",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "PlayConfig",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `repeatModel` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "repeatModel",
+            "columnName": "repeatModel",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "queue",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tableId` INTEGER, `id` INTEGER NOT NULL, `name` TEXT NOT NULL, `path` TEXT NOT NULL, `duration` INTEGER NOT NULL, `displayName` TEXT NOT NULL, `album` TEXT NOT NULL, `albumId` INTEGER NOT NULL, `artist` TEXT NOT NULL, `artistId` INTEGER NOT NULL, `genre` TEXT NOT NULL, `genreId` INTEGER NOT NULL, `year` INTEGER NOT NULL, `songNumber` INTEGER NOT NULL, `priority` INTEGER NOT NULL, `isFavorite` INTEGER NOT NULL, PRIMARY KEY(`tableId`))",
+        "fields": [
+          {
+            "fieldPath": "tableId",
+            "columnName": "tableId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "path",
+            "columnName": "path",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "duration",
+            "columnName": "duration",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "displayName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "album",
+            "columnName": "album",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "albumId",
+            "columnName": "albumId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "artist",
+            "columnName": "artist",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "artistId",
+            "columnName": "artistId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "genre",
+            "columnName": "genre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "genreId",
+            "columnName": "genreId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "year",
+            "columnName": "year",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "songNumber",
+            "columnName": "songNumber",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "priority",
+            "columnName": "priority",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isFavorite",
+            "columnName": "isFavorite",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "tableId"
+          ]
+        }
+      },
+      {
+        "tableName": "dictionary_app",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER, `name` TEXT NOT NULL, `package_name` TEXT NOT NULL, `label` TEXT NOT NULL, `isShow` INTEGER NOT NULL, `autoGo` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "packageName",
+            "columnName": "package_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "label",
+            "columnName": "label",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isShow",
+            "columnName": "isShow",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "autoGo",
+            "columnName": "autoGo",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "storage_folder",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER, `uri` TEXT NOT NULL, `type` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "uri",
+            "columnName": "uri",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "sort_filed_data",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`type` TEXT NOT NULL, `filed` TEXT NOT NULL, `method` TEXT NOT NULL, `methodName` TEXT NOT NULL, `filedName` TEXT NOT NULL, PRIMARY KEY(`type`))",
+        "fields": [
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "filed",
+            "columnName": "filed",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "method",
+            "columnName": "method",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "methodName",
+            "columnName": "methodName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "filedName",
+            "columnName": "filedName",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "type"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '10a0097d8781e318d0c1d7bd57654bcb')"
+    ]
+  }
+}

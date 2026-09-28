@@ -80,6 +80,9 @@ class PlaySessionCallback(
                 .add(MediaCommands.COMMAND_POLYPHONY_SET_PARAMS)
                 .add(MediaCommands.COMMAND_DELAY_ENABLE)
                 .add(MediaCommands.COMMAND_DELAY_SET_PARAMS)
+                .add(MediaCommands.COMMAND_DSP_SET_PRESET)
+                .add(MediaCommands.COMMAND_SET_SHOW_PITCH_FINE)
+                .add(MediaCommands.COMMAND_SET_SHOW_SPEED_FINE)
                 .build()
 
         return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
@@ -147,7 +150,26 @@ class PlaySessionCallback(
             }
 
             MediaCommands.COMMAND_DSP_SET_BANDS.customAction -> {
-                args.getIntArray("value")?.let { effectManager.setEqualizerBands(it) }
+                val preset = args.getString(MediaCommands.KEY_PRESET)
+                args.getIntArray("value")?.let { effectManager.setEqualizerBands(it, preset) }
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            MediaCommands.COMMAND_DSP_SET_PRESET.customAction -> {
+                val preset = args.getString(MediaCommands.KEY_PRESET)
+                if (!preset.isNullOrEmpty()) {
+                    effectManager.setPreset(preset)
+                }
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            MediaCommands.COMMAND_SET_SHOW_PITCH_FINE.customAction -> {
+                effectManager.setShowPitchFine(args.getBoolean(MediaCommands.KEY_ENABLE))
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            MediaCommands.COMMAND_SET_SHOW_SPEED_FINE.customAction -> {
+                effectManager.setShowSpeedFine(args.getBoolean(MediaCommands.KEY_ENABLE))
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
             }
 

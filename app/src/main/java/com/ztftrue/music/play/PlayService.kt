@@ -324,6 +324,10 @@ class PlayService : MediaLibraryService() {
         bundle.putFloat("Q", effectManager.auxr.equalizerQ)
         bundle.putBoolean("equalizerEnable", effectManager.equalizerAudioProcessor.isSetActive())
         bundle.putIntArray("equalizerValue", effectManager.equalizerAudioProcessor.getBandLevels())
+        bundle.putInt("equalizerType", effectManager.auxr.equalizerType)
+        bundle.putString("selectedPreset", effectManager.auxr.selectedPreset)
+        bundle.putBoolean("showPitchFine", effectManager.auxr.showPitchFine)
+        bundle.putBoolean("showSpeedFine", effectManager.auxr.showSpeedFine)
         bundle.putFloat("delayTime", effectManager.auxr.echoDelay)
         bundle.putFloat("decay", effectManager.auxr.echoDecay)
         bundle.putBoolean("echoActive", effectManager.auxr.echo)
@@ -332,35 +336,35 @@ class PlayService : MediaLibraryService() {
         bundle.putBoolean("enableVirtual", effectManager.auxr.virtualizerEnabled)
 
         // Reverb
-        bundle.putBoolean("enableReverb", SharedPreferencesUtils.getReverbEnabled(this))
-        bundle.putFloat("reverbRoomSize", SharedPreferencesUtils.getReverbRoomSize(this))
-        bundle.putFloat("reverbDamping", SharedPreferencesUtils.getReverbDamping(this))
-        bundle.putFloat("reverbMix", SharedPreferencesUtils.getReverbMix(this))
+        bundle.putBoolean("enableReverb", effectManager.auxr.reverbEnabled)
+        bundle.putFloat("reverbRoomSize", effectManager.auxr.reverbRoomSize)
+        bundle.putFloat("reverbDamping", effectManager.auxr.reverbDamping)
+        bundle.putFloat("reverbMix", effectManager.auxr.reverbMix)
 
         // Chorus
-        bundle.putBoolean("enableChorus", SharedPreferencesUtils.getChorusEnabled(this))
-        bundle.putFloat("chorusRate", SharedPreferencesUtils.getChorusRate(this))
-        bundle.putFloat("chorusDepth", SharedPreferencesUtils.getChorusDepth(this))
-        bundle.putFloat("chorusMix", SharedPreferencesUtils.getChorusMix(this))
+        bundle.putBoolean("enableChorus", effectManager.auxr.chorusEnabled)
+        bundle.putFloat("chorusRate", effectManager.auxr.chorusRate)
+        bundle.putFloat("chorusDepth", effectManager.auxr.chorusDepth)
+        bundle.putFloat("chorusMix", effectManager.auxr.chorusMix)
 
         // Flanger
-        bundle.putBoolean("enableFlanger", SharedPreferencesUtils.getFlangerEnabled(this))
-        bundle.putFloat("flangerRate", SharedPreferencesUtils.getFlangerRate(this))
-        bundle.putFloat("flangerDepth", SharedPreferencesUtils.getFlangerDepth(this))
-        bundle.putFloat("flangerFeedback", SharedPreferencesUtils.getFlangerFeedback(this))
-        bundle.putFloat("flangerMix", SharedPreferencesUtils.getFlangerMix(this))
+        bundle.putBoolean("enableFlanger", effectManager.auxr.flangerEnabled)
+        bundle.putFloat("flangerRate", effectManager.auxr.flangerRate)
+        bundle.putFloat("flangerDepth", effectManager.auxr.flangerDepth)
+        bundle.putFloat("flangerFeedback", effectManager.auxr.flangerFeedback)
+        bundle.putFloat("flangerMix", effectManager.auxr.flangerMix)
 
         // Polyphony
-        bundle.putBoolean("enablePolyphony", SharedPreferencesUtils.getPolyphonyEnabled(this))
-        bundle.putInt("polyphonySemitones", SharedPreferencesUtils.getPolyphonySemitones(this))
-        bundle.putFloat("polyphonyDetune", SharedPreferencesUtils.getPolyphonyDetune(this))
-        bundle.putFloat("polyphonyMix", SharedPreferencesUtils.getPolyphonyMix(this))
+        bundle.putBoolean("enablePolyphony", effectManager.auxr.polyphonyEnabled)
+        bundle.putInt("polyphonySemitones", effectManager.auxr.polyphonySemitones)
+        bundle.putFloat("polyphonyDetune", effectManager.auxr.polyphonyDetune)
+        bundle.putFloat("polyphonyMix", effectManager.auxr.polyphonyMix)
 
         // Delay Effect
-        bundle.putBoolean("enableDelay", SharedPreferencesUtils.getDelayEnabled(this))
-        bundle.putFloat("delayEffectTime", SharedPreferencesUtils.getDelayTime(this))
-        bundle.putFloat("delayEffectFeedback", SharedPreferencesUtils.getDelayFeedback(this))
-        bundle.putFloat("delayEffectMix", SharedPreferencesUtils.getDelayMix(this))
+        bundle.putBoolean("enableDelay", effectManager.auxr.delayEnabled)
+        bundle.putFloat("delayEffectTime", effectManager.auxr.delayTime)
+        bundle.putFloat("delayEffectFeedback", effectManager.auxr.delayFeedback)
+        bundle.putFloat("delayEffectMix", effectManager.auxr.delayMix)
 
         // --- 4. 睡眠定时器 (来自 SleepTimerManager) ---
         bundle.putLong("sleepTime", sleepManager.sleepTime)

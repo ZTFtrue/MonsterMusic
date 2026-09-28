@@ -223,6 +223,7 @@ class MusicViewModel : ViewModel() {
 
     var enableEqualizer = mutableStateOf(false)
     var equalizerType = mutableIntStateOf(0)
+    var selectedPreset = mutableStateOf(Utils.custom)
     var enableEcho = mutableStateOf(false)
 
     var playStatus = mutableStateOf(false)

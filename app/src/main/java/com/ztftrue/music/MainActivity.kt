@@ -1036,6 +1036,14 @@ class MainActivity : ComponentActivity() {
             resultData.getLong("remaining")
         musicViewModel.enableEqualizer.value =
             resultData.getBoolean("equalizerEnable")
+        musicViewModel.equalizerType.intValue =
+            resultData.getInt("equalizerType", 0)
+        musicViewModel.selectedPreset.value =
+            resultData.getString("selectedPreset", Utils.custom)
+        musicViewModel.showPitchFine.value =
+            resultData.getBoolean("showPitchFine", false)
+        musicViewModel.showSpeedFine.value =
+            resultData.getBoolean("showSpeedFine", false)
         val equalizerValue =
             resultData.getIntArray("equalizerValue") ?: intArrayOf(
                 0,

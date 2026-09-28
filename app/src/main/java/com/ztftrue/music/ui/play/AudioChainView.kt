@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.utils.AudioPathHelper
-import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 
 private data class ChainStage(
@@ -109,7 +108,7 @@ fun AudioChainView(
     val eqPresetName = if (!enableEqualizer) {
         "Bypassed"
     } else {
-        val preset = SharedPreferencesUtils.getCurrentEqualizerName(context)
+        val preset = musicViewModel.selectedPreset.value
         if (preset == Utils.custom) {
             stringResource(Utils.translateMap[preset] ?: R.string.app_name)
         } else {

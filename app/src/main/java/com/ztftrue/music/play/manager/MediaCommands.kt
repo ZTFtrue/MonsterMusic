@@ -15,6 +15,9 @@ object MediaCommands {
     val COMMAND_DSP_SET_BAND = SessionCommand("dsp.SET_BAND", Bundle.EMPTY)
     val COMMAND_DSP_FLATTEN = SessionCommand("dsp.FLATTEN", Bundle.EMPTY)
     val COMMAND_DSP_SET_BANDS = SessionCommand("dsp.SET_BANDS", Bundle.EMPTY)
+    val COMMAND_DSP_SET_PRESET = SessionCommand("dsp.SET_PRESET", Bundle.EMPTY)
+    val COMMAND_SET_SHOW_PITCH_FINE = SessionCommand("dsp.SET_SHOW_PITCH_FINE", Bundle.EMPTY)
+    val COMMAND_SET_SHOW_SPEED_FINE = SessionCommand("dsp.SET_SHOW_SPEED_FINE", Bundle.EMPTY)
 
     // Echo
     val COMMAND_ECHO_ENABLE = SessionCommand("echo.ENABLE", Bundle.EMPTY)
@@ -101,6 +104,7 @@ object MediaCommands {
     const val KEY_FEEDBACK = "feedback"
     const val KEY_SEMITONES = "semitones"
     const val KEY_DETUNE = "detune"
+    const val KEY_PRESET = "preset"
 
     val COMMAND_CLEAR_QUEUE = SessionCommand("queue.CLEAR", Bundle.EMPTY)
 

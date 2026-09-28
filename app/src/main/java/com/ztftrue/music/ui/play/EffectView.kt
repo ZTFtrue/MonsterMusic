@@ -39,7 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -49,7 +48,6 @@ import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.utils.CustomSlider
-import com.ztftrue.music.utils.SharedPreferencesUtils
 import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -89,8 +87,6 @@ fun EffectView(musicViewModel: MusicViewModel) {
         6 to catFlanger,
         7 to catPolyphony
     )
-
-    val context = LocalContext.current
 
     // Local mutable states synced with ViewModel
     val pitch = remember { mutableFloatStateOf(musicViewModel.pitch.floatValue) }
@@ -262,7 +258,11 @@ fun EffectView(musicViewModel: MusicViewModel) {
                                 onCheckedChange = {
                                     showPitchFine.value = it
                                     musicViewModel.showPitchFine.value = it
-                                    SharedPreferencesUtils.saveShowPitchFine(context, it)
+                                    val bundle = Bundle().apply { putBoolean(MediaCommands.KEY_ENABLE, it) }
+                                    musicViewModel.browser?.sendCustomCommand(
+                                        MediaCommands.COMMAND_SET_SHOW_PITCH_FINE,
+                                        bundle
+                                    )
                                 }
                             )
                         }
@@ -385,7 +385,11 @@ fun EffectView(musicViewModel: MusicViewModel) {
                                 onCheckedChange = {
                                     showSpeedFine.value = it
                                     musicViewModel.showSpeedFine.value = it
-                                    SharedPreferencesUtils.saveShowSpeedFine(context, it)
+                                    val bundle = Bundle().apply { putBoolean(MediaCommands.KEY_ENABLE, it) }
+                                    musicViewModel.browser?.sendCustomCommand(
+                                        MediaCommands.COMMAND_SET_SHOW_SPEED_FINE,
+                                        bundle
+                                    )
                                 }
                             )
                         }

@@ -28,11 +28,43 @@ class AudioEffectManager(private val context: Context) {
 
     // 默认配置，稍后会从数据库覆盖
     var auxr = Auxr(
-        0, 1f, 1f, false, 0.2f, 0.5f,
+        id = 0,
+        speed = 1f,
+        pitch = 1f,
+        echo = false,
+        echoDelay = 0.2f,
+        echoDecay = 0.5f,
         echoRevert = true,
         equalizer = false,
-        equalizerBand = IntArray(10), // 假设是10段EQ
-        equalizerQ = Utils.Q
+        equalizerBand = IntArray(10), // 10段EQ
+        equalizerQ = Utils.Q,
+        virtualizerEnabled = false,
+        virtualizerStrength = 0,
+        equalizerType = 0,
+        selectedPreset = Utils.custom,
+        showPitchFine = false,
+        showSpeedFine = false,
+        delayEnabled = false,
+        delayTime = 0.35f,
+        delayFeedback = 0.4f,
+        delayMix = 0.4f,
+        reverbEnabled = false,
+        reverbRoomSize = 0.5f,
+        reverbDamping = 0.5f,
+        reverbMix = 0.3f,
+        chorusEnabled = false,
+        chorusRate = 1.5f,
+        chorusDepth = 0.5f,
+        chorusMix = 0.5f,
+        flangerEnabled = false,
+        flangerRate = 0.5f,
+        flangerDepth = 0.7f,
+        flangerFeedback = 0.5f,
+        flangerMix = 0.5f,
+        polyphonyEnabled = false,
+        polyphonySemitones = 0,
+        polyphonyDetune = 0.0f,
+        polyphonyMix = 0.5f
     )
 
     private var musicVisualizationEnable = false
@@ -45,77 +77,147 @@ class AudioEffectManager(private val context: Context) {
         // 1. 加载 Auxr 配置
         val auxTemp = db.AuxDao().findFirstAux()
         if (auxTemp == null) {
+            migrateLegacyPreferences(auxr)
             db.AuxDao().insert(auxr)
         } else {
             auxr = auxTemp
+            if (migrateLegacyPreferences(auxr)) {
+                db.AuxDao().update(auxr)
+            }
         }
 
-        // 2. 应用 Echo/Delay 设置
+        // 2. 应用 Delay 设置
+        equalizerAudioProcessor.setDelay(
+            auxr.delayEnabled,
+            auxr.delayTime,
+            auxr.delayFeedback,
+            auxr.delayMix
+        )
+
+        // 3. 应用 Echo 设置
         equalizerAudioProcessor.setDelayTime(auxr.echoDelay)
         equalizerAudioProcessor.setDecay(auxr.echoDecay)
         equalizerAudioProcessor.setFeedBack(auxr.echoRevert)
         equalizerAudioProcessor.setEchoActive(auxr.echo)
-        // 初始化环绕设置 (通过 Native C 优化版 DSP 实现)
+
+        // 4. 应用环绕设置 (通过 Native C 优化版 DSP 实现)
         equalizerAudioProcessor.setVirtualizer(auxr.virtualizerEnabled, auxr.virtualizerStrength / 1000f)
         spatialAudioProcessor.setActive(false)
 
-        // 3. 应用 Reverb, Chorus, Flanger, Polyphony 设置
+        // 5. 应用 Reverb, Chorus, Flanger, Polyphony 设置
         loadAdvancedEffectsSettings()
 
-        // 4. 应用 Equalizer 设置
+        // 6. 应用 Equalizer 设置
         equalizerAudioProcessor.setEqualizerActive(auxr.equalizer)
         equalizerAudioProcessor.setQ(auxr.equalizerQ, false)
+        equalizerAudioProcessor.setEqualizerType(auxr.equalizerType)
 
-        // 5. 加载 EQ 预设 (Preset)
+        // 7. 加载 EQ 预设 (Preset)
         loadEqPresets()
 
-        // 6. 加载可视化设置
+        // 8. 加载可视化设置
         loadVisualizationSettings()
+    }
+
+    private fun migrateLegacyPreferences(target: Auxr): Boolean {
+        var changed = false
+        val effectsPrefs = context.getSharedPreferences("audio_effects_prefs", MODE_PRIVATE)
+        if (effectsPrefs.all.isNotEmpty()) {
+            if (effectsPrefs.contains("reverb_enabled")) {
+                target.reverbEnabled = effectsPrefs.getBoolean("reverb_enabled", target.reverbEnabled)
+                target.reverbRoomSize = effectsPrefs.getFloat("reverb_room_size", target.reverbRoomSize)
+                target.reverbDamping = effectsPrefs.getFloat("reverb_damping", target.reverbDamping)
+                target.reverbMix = effectsPrefs.getFloat("reverb_mix", target.reverbMix)
+                changed = true
+            }
+            if (effectsPrefs.contains("chorus_enabled")) {
+                target.chorusEnabled = effectsPrefs.getBoolean("chorus_enabled", target.chorusEnabled)
+                target.chorusRate = effectsPrefs.getFloat("chorus_rate", target.chorusRate)
+                target.chorusDepth = effectsPrefs.getFloat("chorus_depth", target.chorusDepth)
+                target.chorusMix = effectsPrefs.getFloat("chorus_mix", target.chorusMix)
+                changed = true
+            }
+            if (effectsPrefs.contains("flanger_enabled")) {
+                target.flangerEnabled = effectsPrefs.getBoolean("flanger_enabled", target.flangerEnabled)
+                target.flangerRate = effectsPrefs.getFloat("flanger_rate", target.flangerRate)
+                target.flangerDepth = effectsPrefs.getFloat("flanger_depth", target.flangerDepth)
+                target.flangerFeedback = effectsPrefs.getFloat("flanger_feedback", target.flangerFeedback)
+                target.flangerMix = effectsPrefs.getFloat("flanger_mix", target.flangerMix)
+                changed = true
+            }
+            if (effectsPrefs.contains("polyphony_enabled")) {
+                target.polyphonyEnabled = effectsPrefs.getBoolean("polyphony_enabled", target.polyphonyEnabled)
+                target.polyphonySemitones = effectsPrefs.getInt("polyphony_semitones", target.polyphonySemitones)
+                target.polyphonyDetune = effectsPrefs.getFloat("polyphony_detune", target.polyphonyDetune)
+                target.polyphonyMix = effectsPrefs.getFloat("polyphony_mix", target.polyphonyMix)
+                changed = true
+            }
+            if (effectsPrefs.contains("delay_enabled")) {
+                target.delayEnabled = effectsPrefs.getBoolean("delay_enabled", target.delayEnabled)
+                target.delayTime = effectsPrefs.getFloat("delay_time", target.delayTime)
+                target.delayFeedback = effectsPrefs.getFloat("delay_feedback", target.delayFeedback)
+                target.delayMix = effectsPrefs.getFloat("delay_mix", target.delayMix)
+                changed = true
+            }
+            if (effectsPrefs.contains("show_pitch_fine")) {
+                target.showPitchFine = effectsPrefs.getBoolean("show_pitch_fine", target.showPitchFine)
+                changed = true
+            }
+            if (effectsPrefs.contains("show_speed_fine")) {
+                target.showSpeedFine = effectsPrefs.getBoolean("show_speed_fine", target.showSpeedFine)
+                changed = true
+            }
+        }
+
+        val eqPrefs = context.getSharedPreferences("Equalizer", MODE_PRIVATE)
+        if (eqPrefs.contains("EqualizerType")) {
+            target.equalizerType = eqPrefs.getInt("EqualizerType", target.equalizerType)
+            changed = true
+        }
+
+        val presetPrefs = context.getSharedPreferences("SelectedPreset", MODE_PRIVATE)
+        if (presetPrefs.contains("SelectedPreset")) {
+            target.selectedPreset = presetPrefs.getString("SelectedPreset", target.selectedPreset) ?: target.selectedPreset
+            changed = true
+        }
+
+        return changed
     }
 
     private fun loadAdvancedEffectsSettings() {
         equalizerAudioProcessor.setReverb(
-            SharedPreferencesUtils.getReverbEnabled(context),
-            SharedPreferencesUtils.getReverbRoomSize(context),
-            SharedPreferencesUtils.getReverbDamping(context),
-            SharedPreferencesUtils.getReverbMix(context)
+            auxr.reverbEnabled,
+            auxr.reverbRoomSize,
+            auxr.reverbDamping,
+            auxr.reverbMix
         )
         equalizerAudioProcessor.setChorus(
-            SharedPreferencesUtils.getChorusEnabled(context),
-            SharedPreferencesUtils.getChorusRate(context),
-            SharedPreferencesUtils.getChorusDepth(context),
-            SharedPreferencesUtils.getChorusMix(context)
+            auxr.chorusEnabled,
+            auxr.chorusRate,
+            auxr.chorusDepth,
+            auxr.chorusMix
         )
         equalizerAudioProcessor.setFlanger(
-            SharedPreferencesUtils.getFlangerEnabled(context),
-            SharedPreferencesUtils.getFlangerRate(context),
-            SharedPreferencesUtils.getFlangerDepth(context),
-            SharedPreferencesUtils.getFlangerFeedback(context),
-            SharedPreferencesUtils.getFlangerMix(context)
+            auxr.flangerEnabled,
+            auxr.flangerRate,
+            auxr.flangerDepth,
+            auxr.flangerFeedback,
+            auxr.flangerMix
         )
         equalizerAudioProcessor.setPolyphony(
-            SharedPreferencesUtils.getPolyphonyEnabled(context),
-            SharedPreferencesUtils.getPolyphonySemitones(context),
-            SharedPreferencesUtils.getPolyphonyDetune(context),
-            SharedPreferencesUtils.getPolyphonyMix(context)
-        )
-        equalizerAudioProcessor.setDelay(
-            SharedPreferencesUtils.getDelayEnabled(context),
-            SharedPreferencesUtils.getDelayTime(context),
-            SharedPreferencesUtils.getDelayFeedback(context),
-            SharedPreferencesUtils.getDelayMix(context)
+            auxr.polyphonyEnabled,
+            auxr.polyphonySemitones,
+            auxr.polyphonyDetune,
+            auxr.polyphonyMix
         )
     }
 
     private fun loadEqPresets() {
-        val sharedPreferences = context.getSharedPreferences("SelectedPreset", MODE_PRIVATE)
-        val selectedPreset = sharedPreferences.getString("SelectedPreset", Utils.custom)
-
+        val selectedPreset = auxr.selectedPreset
         if (selectedPreset == Utils.custom) {
             // 如果是自定义，使用数据库中保存的 band 值
-            // 注意：确保 auxr.equalizerBand 长度与处理器支持的一致，这里做个安全遍历
             for (i in auxr.equalizerBand.indices) {
-                if (i < 10) { // 假设最大10段
+                if (i < 10) {
                     equalizerAudioProcessor.setBand(i, auxr.equalizerBand[i])
                 }
             }
@@ -130,8 +232,6 @@ class AudioEffectManager(private val context: Context) {
     private fun loadVisualizationSettings() {
         musicVisualizationEnable = SharedPreferencesUtils.getEnableMusicVisualization(context)
         equalizerAudioProcessor.setVisualizationAudioActive(musicVisualizationEnable)
-        val eqType = SharedPreferencesUtils.getEqualizerType(context)
-        equalizerAudioProcessor.setEqualizerType(eqType)
     }
 
     fun setSpatialEnabled(enable: Boolean) {
@@ -188,16 +288,34 @@ class AudioEffectManager(private val context: Context) {
         if (index in auxr.equalizerBand.indices) {
             equalizerAudioProcessor.setBand(index, value)
             auxr.equalizerBand[index] = value
+            auxr.selectedPreset = Utils.custom
             updateDb()
         }
     }
 
-    fun setEqualizerBands(values: IntArray) {
+    fun setEqualizerBands(values: IntArray, presetName: String? = null) {
         values.forEachIndexed { index, value ->
             if (index in auxr.equalizerBand.indices) {
                 equalizerAudioProcessor.setBand(index, value)
-                // 注意：这里可能需要更新内存中的 auxr 数组
                 auxr.equalizerBand[index] = value
+            }
+        }
+        auxr.selectedPreset = presetName ?: Utils.custom
+        updateDb()
+    }
+
+    fun setPreset(name: String) {
+        auxr.selectedPreset = name
+        if (name == Utils.custom) {
+            for (i in auxr.equalizerBand.indices) {
+                if (i < 10) equalizerAudioProcessor.setBand(i, auxr.equalizerBand[i])
+            }
+        } else {
+            Utils.eqPreset[name]?.forEachIndexed { index, value ->
+                if (index in auxr.equalizerBand.indices) {
+                    auxr.equalizerBand[index] = value
+                }
+                equalizerAudioProcessor.setBand(index, value)
             }
         }
         updateDb()
@@ -218,6 +336,7 @@ class AudioEffectManager(private val context: Context) {
             for (i in auxr.equalizerBand.indices) {
                 auxr.equalizerBand[i] = 0
             }
+            auxr.selectedPreset = Utils.custom
             updateDb()
             return true
         }
@@ -253,7 +372,7 @@ class AudioEffectManager(private val context: Context) {
     }
 
     // ==========================================
-    // Visualization
+    // Visualization & UI Settings
     // ==========================================
 
     fun setVisualizationEnabled(enable: Boolean) {
@@ -274,124 +393,145 @@ class AudioEffectManager(private val context: Context) {
 
     fun setEqualizerType(type: Int) {
         equalizerAudioProcessor.setEqualizerType(type)
-        SharedPreferencesUtils.saveEqualizerType(context, type)
+        auxr.equalizerType = type
+        updateDb()
+    }
+
+    fun setShowPitchFine(enable: Boolean) {
+        auxr.showPitchFine = enable
+        updateDb()
+    }
+
+    fun setShowSpeedFine(enable: Boolean) {
+        auxr.showSpeedFine = enable
+        updateDb()
     }
 
     // ==========================================
-    // Advanced Effects (Reverb, Chorus, Flanger, Polyphony)
+    // Advanced Effects (Reverb, Chorus, Flanger, Polyphony, Delay)
     // ==========================================
 
     fun setReverbEnabled(enable: Boolean) {
-        SharedPreferencesUtils.saveReverbEnabled(context, enable)
+        auxr.reverbEnabled = enable
         equalizerAudioProcessor.setReverb(
             enable,
-            SharedPreferencesUtils.getReverbRoomSize(context),
-            SharedPreferencesUtils.getReverbDamping(context),
-            SharedPreferencesUtils.getReverbMix(context)
+            auxr.reverbRoomSize,
+            auxr.reverbDamping,
+            auxr.reverbMix
         )
+        updateDb()
     }
 
     fun setReverbParams(roomSize: Float, damping: Float, mix: Float) {
-        SharedPreferencesUtils.saveReverbRoomSize(context, roomSize)
-        SharedPreferencesUtils.saveReverbDamping(context, damping)
-        SharedPreferencesUtils.saveReverbMix(context, mix)
+        auxr.reverbRoomSize = roomSize
+        auxr.reverbDamping = damping
+        auxr.reverbMix = mix
         equalizerAudioProcessor.setReverb(
-            SharedPreferencesUtils.getReverbEnabled(context),
+            auxr.reverbEnabled,
             roomSize,
             damping,
             mix
         )
+        updateDb()
     }
 
     fun setChorusEnabled(enable: Boolean) {
-        SharedPreferencesUtils.saveChorusEnabled(context, enable)
+        auxr.chorusEnabled = enable
         equalizerAudioProcessor.setChorus(
             enable,
-            SharedPreferencesUtils.getChorusRate(context),
-            SharedPreferencesUtils.getChorusDepth(context),
-            SharedPreferencesUtils.getChorusMix(context)
+            auxr.chorusRate,
+            auxr.chorusDepth,
+            auxr.chorusMix
         )
+        updateDb()
     }
 
     fun setChorusParams(rate: Float, depth: Float, mix: Float) {
-        SharedPreferencesUtils.saveChorusRate(context, rate)
-        SharedPreferencesUtils.saveChorusDepth(context, depth)
-        SharedPreferencesUtils.saveChorusMix(context, mix)
+        auxr.chorusRate = rate
+        auxr.chorusDepth = depth
+        auxr.chorusMix = mix
         equalizerAudioProcessor.setChorus(
-            SharedPreferencesUtils.getChorusEnabled(context),
+            auxr.chorusEnabled,
             rate,
             depth,
             mix
         )
+        updateDb()
     }
 
     fun setFlangerEnabled(enable: Boolean) {
-        SharedPreferencesUtils.saveFlangerEnabled(context, enable)
+        auxr.flangerEnabled = enable
         equalizerAudioProcessor.setFlanger(
             enable,
-            SharedPreferencesUtils.getFlangerRate(context),
-            SharedPreferencesUtils.getFlangerDepth(context),
-            SharedPreferencesUtils.getFlangerFeedback(context),
-            SharedPreferencesUtils.getFlangerMix(context)
+            auxr.flangerRate,
+            auxr.flangerDepth,
+            auxr.flangerFeedback,
+            auxr.flangerMix
         )
+        updateDb()
     }
 
     fun setFlangerParams(rate: Float, depth: Float, feedback: Float, mix: Float) {
-        SharedPreferencesUtils.saveFlangerRate(context, rate)
-        SharedPreferencesUtils.saveFlangerDepth(context, depth)
-        SharedPreferencesUtils.saveFlangerFeedback(context, feedback)
-        SharedPreferencesUtils.saveFlangerMix(context, mix)
+        auxr.flangerRate = rate
+        auxr.flangerDepth = depth
+        auxr.flangerFeedback = feedback
+        auxr.flangerMix = mix
         equalizerAudioProcessor.setFlanger(
-            SharedPreferencesUtils.getFlangerEnabled(context),
+            auxr.flangerEnabled,
             rate,
             depth,
             feedback,
             mix
         )
+        updateDb()
     }
 
     fun setPolyphonyEnabled(enable: Boolean) {
-        SharedPreferencesUtils.savePolyphonyEnabled(context, enable)
+        auxr.polyphonyEnabled = enable
         equalizerAudioProcessor.setPolyphony(
             enable,
-            SharedPreferencesUtils.getPolyphonySemitones(context),
-            SharedPreferencesUtils.getPolyphonyDetune(context),
-            SharedPreferencesUtils.getPolyphonyMix(context)
+            auxr.polyphonySemitones,
+            auxr.polyphonyDetune,
+            auxr.polyphonyMix
         )
+        updateDb()
     }
 
     fun setPolyphonyParams(semitones: Int, detune: Float, mix: Float) {
-        SharedPreferencesUtils.savePolyphonySemitones(context, semitones)
-        SharedPreferencesUtils.savePolyphonyDetune(context, detune)
-        SharedPreferencesUtils.savePolyphonyMix(context, mix)
+        auxr.polyphonySemitones = semitones
+        auxr.polyphonyDetune = detune
+        auxr.polyphonyMix = mix
         equalizerAudioProcessor.setPolyphony(
-            SharedPreferencesUtils.getPolyphonyEnabled(context),
+            auxr.polyphonyEnabled,
             semitones,
             detune,
             mix
         )
+        updateDb()
     }
 
     fun setDelayEnabled(enable: Boolean) {
-        SharedPreferencesUtils.saveDelayEnabled(context, enable)
+        auxr.delayEnabled = enable
         equalizerAudioProcessor.setDelay(
             enable,
-            SharedPreferencesUtils.getDelayTime(context),
-            SharedPreferencesUtils.getDelayFeedback(context),
-            SharedPreferencesUtils.getDelayMix(context)
+            auxr.delayTime,
+            auxr.delayFeedback,
+            auxr.delayMix
         )
+        updateDb()
     }
 
     fun setDelayParams(time: Float, feedback: Float, mix: Float) {
-        SharedPreferencesUtils.saveDelayTime(context, time)
-        SharedPreferencesUtils.saveDelayFeedback(context, feedback)
-        SharedPreferencesUtils.saveDelayMix(context, mix)
+        auxr.delayTime = time
+        auxr.delayFeedback = feedback
+        auxr.delayMix = mix
         equalizerAudioProcessor.setDelay(
-            SharedPreferencesUtils.getDelayEnabled(context),
+            auxr.delayEnabled,
             time,
             feedback,
             mix
         )
+        updateDb()
     }
 
     // ==========================================

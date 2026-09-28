@@ -1,6 +1,5 @@
 package com.ztftrue.music.ui.play
 
-import android.content.Context
 import android.os.Bundle
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -45,7 +44,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
@@ -55,7 +53,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import androidx.core.content.edit
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.manager.MediaCommands
@@ -71,7 +68,6 @@ import kotlin.math.roundToInt
 fun EqualizerView(musicViewModel: MusicViewModel) {
     val listState = rememberLazyListState()
     val bands = remember { musicViewModel.equalizerBands }
-    val context = LocalContext.current
     val minEQLevel = remember { equalizerMin }
     val maxEQLevel = remember { equalizerMax }
     val equalizerQ = remember { mutableFloatStateOf(musicViewModel.equalizerQ.floatValue) }
@@ -81,13 +77,10 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
         tempBandValue.add(bandValue)
     }
     var selectedIndex by remember {
-        mutableStateOf(Utils.custom)
+        mutableStateOf(musicViewModel.selectedPreset.value)
     }
-    LaunchedEffect(key1 = Unit) {
-        selectedIndex = context.getSharedPreferences(
-            "SelectedPreset",
-            Context.MODE_PRIVATE
-        ).getString("SelectedPreset", Utils.custom) ?: Utils.custom
+    LaunchedEffect(key1 = musicViewModel.selectedPreset.value) {
+        selectedIndex = musicViewModel.selectedPreset.value
     }
     val color = MaterialTheme.colorScheme.onBackground
     val windowInfo = LocalWindowInfo.current
@@ -173,12 +166,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                     it.floatValue = 0f
                                 }
                                 selectedIndex = Utils.custom
-                                context.getSharedPreferences(
-                                    "SelectedPreset",
-                                    Context.MODE_PRIVATE
-                                ).edit {
-                                    putString("SelectedPreset", Utils.custom)
-                                }
+                                musicViewModel.selectedPreset.value = Utils.custom
                             },
                         ) {
                             Text(
@@ -309,10 +297,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                 steps = 21,
                                 onValueChangeFinished = {
                                     selectedIndex = Utils.custom
-                                    context.getSharedPreferences(
-                                        "SelectedPreset",
-                                        Context.MODE_PRIVATE
-                                    ).edit { putString("SelectedPreset", Utils.custom) }
+                                    musicViewModel.selectedPreset.value = Utils.custom
                                     band.value = tempBandValue[index].floatValue.roundToInt()
                                     musicViewModel.browser?.sendCustomCommand(
                                         MediaCommands.COMMAND_DSP_SET_BAND,
@@ -421,6 +406,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                 },
                                 onClick = {
                                     selectedIndex = key
+                                    musicViewModel.selectedPreset.value = key
                                     expanded = false
                                     value.forEachIndexed { i, v ->
                                         tempBandValue[i].floatValue = v.toFloat()
@@ -433,11 +419,8 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                                                 "value",
                                                 value
                                             )
+                                            putString(MediaCommands.KEY_PRESET, key)
                                         })
-                                    context.getSharedPreferences(
-                                        "SelectedPreset",
-                                        Context.MODE_PRIVATE
-                                    ).edit { putString("SelectedPreset", key) }
                                 })
                         }
 
