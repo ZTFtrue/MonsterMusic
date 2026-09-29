@@ -745,6 +745,8 @@ class MainActivity : ComponentActivity() {
                 if (remainTime == 0L) {
                     musicViewModel.sleepTime.longValue = 0
                 }
+            } else if (command.customAction == MediaCommands.COMMAND_AUDIO_EFFECT_UPDATE.customAction) {
+                updateAudioEffectData(args)
             }
             return super.onCustomCommand(controller, command, args)
         }
@@ -921,10 +923,7 @@ class MainActivity : ComponentActivity() {
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             val index: Int = musicViewModel.browser?.currentMediaItemIndex ?: 0
-            val reason = reason
-            if (index >= 0 && musicViewModel.musicQueue.size > index) {
-                musicViewModel.scheduleDealCurrentPlay(this@MainActivity, index, mediaItem, reason)
-            }
+            musicViewModel.scheduleDealCurrentPlay(this@MainActivity, index, mediaItem, reason)
         }
 
         override fun onTracksChanged(tracks: Tracks) {
@@ -1024,75 +1023,7 @@ class MainActivity : ComponentActivity() {
         resultData.getSerializable("playListCurrent")?.also {
             musicViewModel.playListCurrent.value = it as AnyListBase
         }
-        val pitch = resultData.getFloat("pitch", 1f)
-        val speed = resultData.getFloat("speed", 1f)
-        val q = resultData.getFloat("Q", Utils.Q)
-        musicViewModel.equalizerQ.floatValue = q
-        musicViewModel.pitch.floatValue = pitch
-        musicViewModel.speed.floatValue = speed
-        musicViewModel.sleepTime.longValue =
-            resultData.getLong("sleepTime", 0)
-        musicViewModel.remainTime.longValue =
-            resultData.getLong("remaining")
-        musicViewModel.enableEqualizer.value =
-            resultData.getBoolean("equalizerEnable")
-        musicViewModel.equalizerType.intValue =
-            resultData.getInt("equalizerType", 0)
-        musicViewModel.selectedPreset.value =
-            resultData.getString("selectedPreset", Utils.custom)
-        musicViewModel.showPitchFine.value =
-            resultData.getBoolean("showPitchFine", false)
-        musicViewModel.showSpeedFine.value =
-            resultData.getBoolean("showSpeedFine", false)
-        val equalizerValue =
-            resultData.getIntArray("equalizerValue") ?: intArrayOf(
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0
-            )
-        musicViewModel.equalizerBands.forEachIndexed { index1, _ ->
-            musicViewModel.equalizerBands[index1].value =
-                equalizerValue[index1]
-        }
-        musicViewModel.delayTime.floatValue = resultData.getFloat("delayTime")
-        musicViewModel.decay.floatValue = resultData.getFloat("decay")
-        musicViewModel.enableEcho.value = resultData.getBoolean("echoActive")
-        musicViewModel.virtualStrength.intValue = resultData.getInt("virtualStrength")
-        musicViewModel.enableVirtual.value = resultData.getBoolean("enableVirtual")
-        musicViewModel.echoFeedBack.value = resultData.getBoolean("echoFeedBack")
-
-        musicViewModel.enableReverb.value = resultData.getBoolean("enableReverb", false)
-        musicViewModel.reverbRoomSize.floatValue = resultData.getFloat("reverbRoomSize", 0.5f)
-        musicViewModel.reverbDamping.floatValue = resultData.getFloat("reverbDamping", 0.5f)
-        musicViewModel.reverbMix.floatValue = resultData.getFloat("reverbMix", 0.3f)
-
-        musicViewModel.enableChorus.value = resultData.getBoolean("enableChorus", false)
-        musicViewModel.chorusRate.floatValue = resultData.getFloat("chorusRate", 1.5f)
-        musicViewModel.chorusDepth.floatValue = resultData.getFloat("chorusDepth", 0.5f)
-        musicViewModel.chorusMix.floatValue = resultData.getFloat("chorusMix", 0.5f)
-
-        musicViewModel.enableFlanger.value = resultData.getBoolean("enableFlanger", false)
-        musicViewModel.flangerRate.floatValue = resultData.getFloat("flangerRate", 0.5f)
-        musicViewModel.flangerDepth.floatValue = resultData.getFloat("flangerDepth", 0.7f)
-        musicViewModel.flangerFeedback.floatValue = resultData.getFloat("flangerFeedback", 0.5f)
-        musicViewModel.flangerMix.floatValue = resultData.getFloat("flangerMix", 0.5f)
-
-        musicViewModel.enablePolyphony.value = resultData.getBoolean("enablePolyphony", false)
-        musicViewModel.polyphonySemitones.intValue = resultData.getInt("polyphonySemitones", 0)
-        musicViewModel.polyphonyDetune.floatValue = resultData.getFloat("polyphonyDetune", 0.0f)
-        musicViewModel.polyphonyMix.floatValue = resultData.getFloat("polyphonyMix", 0.5f)
-
-        musicViewModel.enableDelay.value = resultData.getBoolean("enableDelay", false)
-        musicViewModel.delayEffectTime.floatValue = resultData.getFloat("delayEffectTime", 0.35f)
-        musicViewModel.delayEffectFeedback.floatValue = resultData.getFloat("delayEffectFeedback", 0.4f)
-        musicViewModel.delayEffectMix.floatValue = resultData.getFloat("delayEffectMix", 0.4f)
+        updateAudioEffectData(resultData)
 
         musicViewModel.repeatModel.intValue = resultData.getInt("repeat", Player.REPEAT_MODE_ALL)
         musicViewModel.playCompleted.value =
@@ -1102,6 +1033,10 @@ class MainActivity : ComponentActivity() {
             needHandleIntent = false
             handleIntent(intent)
         }
+    }
+
+    fun updateAudioEffectData(resultData: Bundle) {
+        musicViewModel.applyAudioEffectBundle(resultData)
     }
 
     private fun updateUiWithCurrentState(player: MediaBrowser) {

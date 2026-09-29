@@ -38,6 +38,7 @@ import com.ztftrue.music.play.CustomMetadataKeys
 import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.sqlData.MusicDatabase
+import com.ztftrue.music.sqlData.model.Auxr
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
 import com.ztftrue.music.sqlData.model.DictionaryApp
 import com.ztftrue.music.sqlData.model.GENRE_TYPE
@@ -224,6 +225,8 @@ class MusicViewModel : ViewModel() {
     var enableEqualizer = mutableStateOf(false)
     var equalizerType = mutableIntStateOf(0)
     var selectedPreset = mutableStateOf(Utils.custom)
+    var trackEffectEnabled = mutableStateOf(false)
+    var effectConfigVersion = mutableIntStateOf(0)
     var enableEcho = mutableStateOf(false)
 
     var playStatus = mutableStateOf(false)
@@ -298,6 +301,206 @@ class MusicViewModel : ViewModel() {
         equalizerBands.addAll(band)
     }
 
+    fun resetAudioEffectsToDefault() {
+        pitch.floatValue = 1f
+        speed.floatValue = 1f
+        equalizerQ.floatValue = Utils.Q
+        enableEqualizer.value = false
+        equalizerType.intValue = 0
+        selectedPreset.value = Utils.custom
+        showPitchFine.value = false
+        showSpeedFine.value = false
+        equalizerBands.forEach { it.value = 0 }
+
+        delayTime.floatValue = 0.2f
+        decay.floatValue = 0.5f
+        enableEcho.value = false
+        echoFeedBack.value = false
+
+        enableVirtual.value = false
+        virtualStrength.intValue = 0
+
+        enableReverb.value = false
+        reverbRoomSize.floatValue = 0.5f
+        reverbDamping.floatValue = 0.5f
+        reverbMix.floatValue = 0.3f
+
+        enableChorus.value = false
+        chorusRate.floatValue = 1.5f
+        chorusDepth.floatValue = 0.5f
+        chorusMix.floatValue = 0.5f
+
+        enableFlanger.value = false
+        flangerRate.floatValue = 0.5f
+        flangerDepth.floatValue = 0.7f
+        flangerFeedback.floatValue = 0.5f
+        flangerMix.floatValue = 0.5f
+
+        enablePolyphony.value = false
+        polyphonySemitones.intValue = 0
+        polyphonyDetune.floatValue = 0.0f
+        polyphonyMix.floatValue = 0.5f
+
+        enableDelay.value = false
+        delayEffectTime.floatValue = 0.35f
+        delayEffectFeedback.floatValue = 0.4f
+        delayEffectMix.floatValue = 0.4f
+
+        effectConfigVersion.intValue++
+    }
+
+    fun applyAuxr(auxr: Auxr) {
+        pitch.floatValue = auxr.pitch
+        speed.floatValue = auxr.speed
+        equalizerQ.floatValue = auxr.equalizerQ
+        enableEqualizer.value = auxr.equalizer
+        equalizerType.intValue = auxr.equalizerType
+        selectedPreset.value = auxr.selectedPreset
+        showPitchFine.value = auxr.showPitchFine
+        showSpeedFine.value = auxr.showSpeedFine
+
+        val bandLevels = auxr.equalizerBand
+        equalizerBands.forEachIndexed { index, _ ->
+            if (index < bandLevels.size) {
+                equalizerBands[index].value = bandLevels[index]
+            } else {
+                equalizerBands[index].value = 0
+            }
+        }
+
+        delayTime.floatValue = auxr.echoDelay
+        decay.floatValue = auxr.echoDecay
+        enableEcho.value = auxr.echo
+        echoFeedBack.value = auxr.echoRevert
+
+        enableVirtual.value = auxr.virtualizerEnabled
+        virtualStrength.intValue = auxr.virtualizerStrength
+
+        enableReverb.value = auxr.reverbEnabled
+        reverbRoomSize.floatValue = auxr.reverbRoomSize
+        reverbDamping.floatValue = auxr.reverbDamping
+        reverbMix.floatValue = auxr.reverbMix
+
+        enableChorus.value = auxr.chorusEnabled
+        chorusRate.floatValue = auxr.chorusRate
+        chorusDepth.floatValue = auxr.chorusDepth
+        chorusMix.floatValue = auxr.chorusMix
+
+        enableFlanger.value = auxr.flangerEnabled
+        flangerRate.floatValue = auxr.flangerRate
+        flangerDepth.floatValue = auxr.flangerDepth
+        flangerFeedback.floatValue = auxr.flangerFeedback
+        flangerMix.floatValue = auxr.flangerMix
+
+        enablePolyphony.value = auxr.polyphonyEnabled
+        polyphonySemitones.intValue = auxr.polyphonySemitones
+        polyphonyDetune.floatValue = auxr.polyphonyDetune
+        polyphonyMix.floatValue = auxr.polyphonyMix
+
+        enableDelay.value = auxr.delayEnabled
+        delayEffectTime.floatValue = auxr.delayTime
+        delayEffectFeedback.floatValue = auxr.delayFeedback
+        delayEffectMix.floatValue = auxr.delayMix
+
+        effectConfigVersion.intValue++
+    }
+
+    fun applyAudioEffectBundle(resultData: Bundle) {
+        if (resultData.containsKey("trackEffectEnabled")) {
+            trackEffectEnabled.value = resultData.getBoolean("trackEffectEnabled", false)
+        }
+        val pitchVal = resultData.getFloat("pitch", 1f)
+        val speedVal = resultData.getFloat("speed", 1f)
+        val q = resultData.getFloat("Q", Utils.Q)
+        equalizerQ.floatValue = q
+        pitch.floatValue = pitchVal
+        speed.floatValue = speedVal
+        enableEqualizer.value = resultData.getBoolean("equalizerEnable")
+        equalizerType.intValue = resultData.getInt("equalizerType", 0)
+        selectedPreset.value = resultData.getString("selectedPreset", Utils.custom)
+        showPitchFine.value = resultData.getBoolean("showPitchFine", false)
+        showSpeedFine.value = resultData.getBoolean("showSpeedFine", false)
+        val equalizerValue = resultData.getIntArray("equalizerValue") ?: intArrayOf(
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        )
+        equalizerBands.forEachIndexed { index1, _ ->
+            if (index1 < equalizerValue.size) {
+                equalizerBands[index1].value = equalizerValue[index1]
+            }
+        }
+        delayTime.floatValue = resultData.getFloat("delayTime")
+        decay.floatValue = resultData.getFloat("decay")
+        enableEcho.value = resultData.getBoolean("echoActive")
+        virtualStrength.intValue = resultData.getInt("virtualStrength")
+        enableVirtual.value = resultData.getBoolean("enableVirtual")
+        echoFeedBack.value = resultData.getBoolean("echoFeedBack")
+
+        enableReverb.value = resultData.getBoolean("enableReverb", false)
+        reverbRoomSize.floatValue = resultData.getFloat("reverbRoomSize", 0.5f)
+        reverbDamping.floatValue = resultData.getFloat("reverbDamping", 0.5f)
+        reverbMix.floatValue = resultData.getFloat("reverbMix", 0.3f)
+
+        enableChorus.value = resultData.getBoolean("enableChorus", false)
+        chorusRate.floatValue = resultData.getFloat("chorusRate", 1.5f)
+        chorusDepth.floatValue = resultData.getFloat("chorusDepth", 0.5f)
+        chorusMix.floatValue = resultData.getFloat("chorusMix", 0.5f)
+
+        enableFlanger.value = resultData.getBoolean("enableFlanger", false)
+        flangerRate.floatValue = resultData.getFloat("flangerRate", 0.5f)
+        flangerDepth.floatValue = resultData.getFloat("flangerDepth", 0.7f)
+        flangerFeedback.floatValue = resultData.getFloat("flangerFeedback", 0.5f)
+        flangerMix.floatValue = resultData.getFloat("flangerMix", 0.5f)
+
+        enablePolyphony.value = resultData.getBoolean("enablePolyphony", false)
+        polyphonySemitones.intValue = resultData.getInt("polyphonySemitones", 0)
+        polyphonyDetune.floatValue = resultData.getFloat("polyphonyDetune", 0.0f)
+        polyphonyMix.floatValue = resultData.getFloat("polyphonyMix", 0.5f)
+
+        enableDelay.value = resultData.getBoolean("enableDelay", false)
+        delayEffectTime.floatValue = resultData.getFloat("delayEffectTime", 0.35f)
+        delayEffectFeedback.floatValue = resultData.getFloat("delayEffectFeedback", 0.4f)
+        delayEffectMix.floatValue = resultData.getFloat("delayEffectMix", 0.4f)
+
+        effectConfigVersion.intValue++
+    }
+
+    fun setTrackEffectEnabled(context: Context, enabled: Boolean) {
+        trackEffectEnabled.value = enabled
+        val bundle = Bundle().apply {
+            putBoolean(MediaCommands.KEY_ENABLE, enabled)
+        }
+        browser?.sendCustomCommand(
+            MediaCommands.COMMAND_SET_TRACK_EFFECT_ENABLE,
+            bundle
+        )
+        viewModelScope.launch(Dispatchers.IO) {
+            if (enabled) {
+                val trackId = currentPlay.value?.id
+                if (trackId != null && trackId > 0) {
+                    val trackAux = getDb(context).AuxDao().findAuxById(trackId)
+                    withContext(Dispatchers.Main) {
+                        if (trackAux != null) {
+                            applyAuxr(trackAux)
+                        } else {
+                            resetAudioEffectsToDefault()
+                        }
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        resetAudioEffectsToDefault()
+                    }
+                }
+            } else {
+                val global = getDb(context).AuxDao().findGlobalAux()
+                withContext(Dispatchers.Main) {
+                    if (global != null) {
+                        applyAuxr(global)
+                    }
+                }
+            }
+        }
+    }
+
     fun getDb(context: Context): MusicDatabase {
         if (db == null) {
             db = MusicDatabase.getDatabase(context)
@@ -311,6 +514,9 @@ class MusicViewModel : ViewModel() {
 
     fun scheduleDealCurrentPlay(context: Context, index: Int, mediaItem: MediaItem?, reason: Int) {
         currentCaptionListLoading.value = true
+        if (trackEffectEnabled.value) {
+            resetAudioEffectsToDefault()
+        }
         dealCurrentPlayJob?.cancel()
         dealCurrentPlayJob = viewModelScope.launch {
             // when reason is Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED
@@ -324,6 +530,16 @@ class MusicViewModel : ViewModel() {
                 val music = MediaItemUtils.mediaItemToMusicItem(mediaItem)
                 currentPlay.value = music
                 if (music != null) {
+                    if (trackEffectEnabled.value) {
+                        val trackAux = withContext(Dispatchers.IO) {
+                            getDb(context).AuxDao().findAuxById(music.id)
+                        }
+                        if (trackAux != null) {
+                            applyAuxr(trackAux)
+                        } else {
+                            resetAudioEffectsToDefault()
+                        }
+                    }
                     dealLyrics(context, music)
                     getCurrentMusicCover(context)
                 }

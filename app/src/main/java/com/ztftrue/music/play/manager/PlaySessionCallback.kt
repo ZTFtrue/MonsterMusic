@@ -83,6 +83,9 @@ class PlaySessionCallback(
                 .add(MediaCommands.COMMAND_DSP_SET_PRESET)
                 .add(MediaCommands.COMMAND_SET_SHOW_PITCH_FINE)
                 .add(MediaCommands.COMMAND_SET_SHOW_SPEED_FINE)
+                .add(MediaCommands.COMMAND_SET_TRACK_EFFECT_ENABLE)
+                .add(MediaCommands.COMMAND_RESET_TRACK_EFFECT)
+                .add(MediaCommands.COMMAND_AUDIO_EFFECT_UPDATE)
                 .build()
 
         return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
@@ -170,6 +173,26 @@ class PlaySessionCallback(
 
             MediaCommands.COMMAND_SET_SHOW_SPEED_FINE.customAction -> {
                 effectManager.setShowSpeedFine(args.getBoolean(MediaCommands.KEY_ENABLE))
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            MediaCommands.COMMAND_SET_TRACK_EFFECT_ENABLE.customAction -> {
+                val enable = args.getBoolean(MediaCommands.KEY_ENABLE)
+                scope.launch {
+                    effectManager.setTrackEffectEnabled(enable, service.currentPlayTrack?.id, service.exoPlayer)
+                    service.broadcastAudioEffectUpdate()
+                }
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            MediaCommands.COMMAND_RESET_TRACK_EFFECT.customAction -> {
+                val currentTrackId = service.currentPlayTrack?.id
+                if (currentTrackId != null) {
+                    scope.launch {
+                        effectManager.resetCurrentTrackEffect(currentTrackId, service.exoPlayer)
+                        service.broadcastAudioEffectUpdate()
+                    }
+                }
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
             }
 

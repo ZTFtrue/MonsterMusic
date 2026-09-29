@@ -296,4 +296,10 @@
     <string name="year_label">年份</string>
     <string name="comment_label">备注</string>
     <string name="path_label">文件路径</string>
+    <string name="track_sound_effect_enable">每首歌专属音效</string>
+    <string name="track_sound_effect_enable_desc">为每首歌曲独立记忆和应用均衡器与音效设置</string>
+    <string name="track_sound_effect_current_track">当前设置: %1$s</string>
+    <string name="track_sound_effect_global">全局通用音效</string>
+    <string name="reset_to_global_effect">重置为默认音效</string>
+    <string name="reset_to_global_effect_confirm">确认将当前歌曲音效重置为全局默认设置？</string>
 </resources>

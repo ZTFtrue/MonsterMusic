@@ -22,10 +22,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -144,6 +146,46 @@ fun EffectView(musicViewModel: MusicViewModel) {
     val polyphonyDetune =
         remember { mutableFloatStateOf(musicViewModel.polyphonyDetune.floatValue) }
     val polyphonyMix = remember { mutableFloatStateOf(musicViewModel.polyphonyMix.floatValue) }
+
+    LaunchedEffect(key1 = musicViewModel.effectConfigVersion.intValue) {
+        pitch.floatValue = musicViewModel.pitch.floatValue
+        speed.floatValue = musicViewModel.speed.floatValue
+        showPitchFine.value = musicViewModel.showPitchFine.value
+        showSpeedFine.value = musicViewModel.showSpeedFine.value
+
+        enableDelay.value = musicViewModel.enableDelay.value
+        delayEffectTime.floatValue = musicViewModel.delayEffectTime.floatValue
+        delayEffectFeedback.floatValue = musicViewModel.delayEffectFeedback.floatValue
+        delayEffectMix.floatValue = musicViewModel.delayEffectMix.floatValue
+
+        enableReverb.value = musicViewModel.enableReverb.value
+        reverbRoomSize.floatValue = musicViewModel.reverbRoomSize.floatValue
+        reverbDamping.floatValue = musicViewModel.reverbDamping.floatValue
+        reverbMix.floatValue = musicViewModel.reverbMix.floatValue
+
+        enableEcho.value = musicViewModel.enableEcho.value
+        delayTime.floatValue = musicViewModel.delayTime.floatValue
+        decay.floatValue = musicViewModel.decay.floatValue
+
+        enableVirtual.value = musicViewModel.enableVirtual.value
+        virtualStrength.intValue = musicViewModel.virtualStrength.intValue
+
+        enableChorus.value = musicViewModel.enableChorus.value
+        chorusRate.floatValue = musicViewModel.chorusRate.floatValue
+        chorusDepth.floatValue = musicViewModel.chorusDepth.floatValue
+        chorusMix.floatValue = musicViewModel.chorusMix.floatValue
+
+        enableFlanger.value = musicViewModel.enableFlanger.value
+        flangerRate.floatValue = musicViewModel.flangerRate.floatValue
+        flangerDepth.floatValue = musicViewModel.flangerDepth.floatValue
+        flangerFeedback.floatValue = musicViewModel.flangerFeedback.floatValue
+        flangerMix.floatValue = musicViewModel.flangerMix.floatValue
+
+        enablePolyphony.value = musicViewModel.enablePolyphony.value
+        polyphonySemitones.intValue = musicViewModel.polyphonySemitones.intValue
+        polyphonyDetune.floatValue = musicViewModel.polyphonyDetune.floatValue
+        polyphonyMix.floatValue = musicViewModel.polyphonyMix.floatValue
+    }
 
     Column(
         modifier = Modifier

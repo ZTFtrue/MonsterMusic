@@ -296,4 +296,10 @@
     <string name="year_label">Year</string>
     <string name="comment_label">Comment</string>
     <string name="path_label">File Path</string>
+    <string name="track_sound_effect_enable">Track-specific sound effect</string>
+    <string name="track_sound_effect_enable_desc">Customize and remember sound effects for each song individually</string>
+    <string name="track_sound_effect_current_track">Editing for: %1$s</string>
+    <string name="track_sound_effect_global">Global sound effect</string>
+    <string name="reset_to_global_effect">Reset to Global</string>
+    <string name="reset_to_global_effect_confirm">Reset sound effect of current track to global settings?</string>
 </resources>

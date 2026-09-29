@@ -9,6 +9,7 @@ import com.ztftrue.music.effects.EqualizerAudioProcessor
 import com.ztftrue.music.effects.SpatialAudioProcessor
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.Auxr
+import com.ztftrue.music.sqlData.model.PlayConfig
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import kotlinx.coroutines.CoroutineScope
@@ -26,46 +27,54 @@ class AudioEffectManager(private val context: Context) {
     val spatialAudioProcessor = SpatialAudioProcessor()
     private val db: MusicDatabase = MusicDatabase.getDatabase(context)
 
+    companion object {
+        fun createDefaultAuxr(id: Long = 0L) = Auxr(
+            id = id,
+            speed = 1f,
+            pitch = 1f,
+            echo = false,
+            echoDelay = 0.2f,
+            echoDecay = 0.5f,
+            echoRevert = true,
+            equalizer = false,
+            equalizerBand = IntArray(10), // 10段EQ
+            equalizerQ = Utils.Q,
+            virtualizerEnabled = false,
+            virtualizerStrength = 0,
+            equalizerType = 0,
+            selectedPreset = Utils.custom,
+            showPitchFine = false,
+            showSpeedFine = false,
+            delayEnabled = false,
+            delayTime = 0.35f,
+            delayFeedback = 0.4f,
+            delayMix = 0.4f,
+            reverbEnabled = false,
+            reverbRoomSize = 0.5f,
+            reverbDamping = 0.5f,
+            reverbMix = 0.3f,
+            chorusEnabled = false,
+            chorusRate = 1.5f,
+            chorusDepth = 0.5f,
+            chorusMix = 0.5f,
+            flangerEnabled = false,
+            flangerRate = 0.5f,
+            flangerDepth = 0.7f,
+            flangerFeedback = 0.5f,
+            flangerMix = 0.5f,
+            polyphonyEnabled = false,
+            polyphonySemitones = 0,
+            polyphonyDetune = 0.0f,
+            polyphonyMix = 0.5f
+        )
+    }
+
     // 默认配置，稍后会从数据库覆盖
-    var auxr = Auxr(
-        id = 0,
-        speed = 1f,
-        pitch = 1f,
-        echo = false,
-        echoDelay = 0.2f,
-        echoDecay = 0.5f,
-        echoRevert = true,
-        equalizer = false,
-        equalizerBand = IntArray(10), // 10段EQ
-        equalizerQ = Utils.Q,
-        virtualizerEnabled = false,
-        virtualizerStrength = 0,
-        equalizerType = 0,
-        selectedPreset = Utils.custom,
-        showPitchFine = false,
-        showSpeedFine = false,
-        delayEnabled = false,
-        delayTime = 0.35f,
-        delayFeedback = 0.4f,
-        delayMix = 0.4f,
-        reverbEnabled = false,
-        reverbRoomSize = 0.5f,
-        reverbDamping = 0.5f,
-        reverbMix = 0.3f,
-        chorusEnabled = false,
-        chorusRate = 1.5f,
-        chorusDepth = 0.5f,
-        chorusMix = 0.5f,
-        flangerEnabled = false,
-        flangerRate = 0.5f,
-        flangerDepth = 0.7f,
-        flangerFeedback = 0.5f,
-        flangerMix = 0.5f,
-        polyphonyEnabled = false,
-        polyphonySemitones = 0,
-        polyphonyDetune = 0.0f,
-        polyphonyMix = 0.5f
-    )
+    var auxr = createDefaultAuxr(0)
+
+    var globalAuxr: Auxr = auxr.copy(id = 0)
+    var trackEffectEnabled: Boolean = false
+    var currentTrackId: Long? = null
 
     private var musicVisualizationEnable = false
 
@@ -73,20 +82,43 @@ class AudioEffectManager(private val context: Context) {
      * 初始化音效设置
      * 必须在协程中调用 (IO上下文)
      */
-    suspend fun initEffects() = withContext(Dispatchers.IO) {
-        // 1. 加载 Auxr 配置
-        val auxTemp = db.AuxDao().findFirstAux()
+    suspend fun initEffects(currentPlayingTrackId: Long? = null, exoPlayer: ExoPlayer? = null) = withContext(Dispatchers.IO) {
+        // 0. 加载播放配置 (是否开启每首歌专属音效)
+        val config = db.PlayConfigDao().findConfig()
+        trackEffectEnabled = config?.trackEffectEnabled ?: false
+
+        // 1. 加载全局 Auxr 配置 (id = 0)
+        val auxTemp = db.AuxDao().findGlobalAux() ?: db.AuxDao().findFirstAux()
         if (auxTemp == null) {
             migrateLegacyPreferences(auxr)
-            db.AuxDao().insert(auxr)
+            db.AuxDao().upsert(auxr)
+            globalAuxr = auxr.copy(id = 0)
         } else {
             auxr = auxTemp
             if (migrateLegacyPreferences(auxr)) {
-                db.AuxDao().update(auxr)
+                db.AuxDao().upsert(auxr)
             }
+            globalAuxr = auxr.copy(id = 0)
         }
 
-        // 2. 应用 Delay 设置
+        // 2. 如果开启了每首歌专属音效且有当前播放歌曲，则载入该歌曲的 Auxr
+        currentTrackId = currentPlayingTrackId
+        if (trackEffectEnabled && currentPlayingTrackId != null && currentPlayingTrackId > 0) {
+            val trackAux = db.AuxDao().findAuxById(currentPlayingTrackId)
+            auxr = trackAux ?: createDefaultAuxr(currentPlayingTrackId)
+        }
+
+        // 3. 应用所有音效
+        withContext(Dispatchers.Main) {
+            applyAllDspEffects(exoPlayer)
+        }
+
+        // 4. 加载可视化设置
+        loadVisualizationSettings()
+    }
+
+    fun applyAllDspEffects(exoPlayer: ExoPlayer? = null) {
+        // 1. Delay
         equalizerAudioProcessor.setDelay(
             auxr.delayEnabled,
             auxr.delayTime,
@@ -94,29 +126,78 @@ class AudioEffectManager(private val context: Context) {
             auxr.delayMix
         )
 
-        // 3. 应用 Echo 设置
+        // 2. Echo
         equalizerAudioProcessor.setDelayTime(auxr.echoDelay)
         equalizerAudioProcessor.setDecay(auxr.echoDecay)
         equalizerAudioProcessor.setFeedBack(auxr.echoRevert)
         equalizerAudioProcessor.setEchoActive(auxr.echo)
 
-        // 4. 应用环绕设置 (通过 Native C 优化版 DSP 实现)
+        // 3. Virtualizer
         equalizerAudioProcessor.setVirtualizer(auxr.virtualizerEnabled, auxr.virtualizerStrength / 1000f)
         spatialAudioProcessor.setActive(false)
 
-        // 5. 应用 Reverb, Chorus, Flanger, Polyphony 设置
+        // 4. Reverb, Chorus, Flanger, Polyphony
         loadAdvancedEffectsSettings()
 
-        // 6. 应用 Equalizer 设置
+        // 5. Equalizer
         equalizerAudioProcessor.setEqualizerActive(auxr.equalizer)
         equalizerAudioProcessor.setQ(auxr.equalizerQ, false)
         equalizerAudioProcessor.setEqualizerType(auxr.equalizerType)
-
-        // 7. 加载 EQ 预设 (Preset)
         loadEqPresets()
 
-        // 8. 加载可视化设置
-        loadVisualizationSettings()
+        // 6. PlaybackParameters (Speed & Pitch)
+        if (exoPlayer != null) {
+            applyPlaybackParameters(exoPlayer)
+        }
+    }
+
+    suspend fun switchTrack(trackId: Long, exoPlayer: ExoPlayer?) = withContext(Dispatchers.IO) {
+        flushDb()
+        currentTrackId = trackId
+        if (!trackEffectEnabled) {
+            return@withContext
+        }
+        val trackAux = db.AuxDao().findAuxById(trackId)
+        auxr = trackAux ?: createDefaultAuxr(trackId)
+        withContext(Dispatchers.Main) {
+            applyAllDspEffects(exoPlayer)
+        }
+    }
+
+    suspend fun setTrackEffectEnabled(enable: Boolean, currentPlayingTrackId: Long?, exoPlayer: ExoPlayer?) = withContext(Dispatchers.IO) {
+        flushDb()
+        trackEffectEnabled = enable
+        currentTrackId = currentPlayingTrackId
+
+        val config = db.PlayConfigDao().findConfig()
+        if (config != null) {
+            config.trackEffectEnabled = enable
+            db.PlayConfigDao().update(config)
+        } else {
+            db.PlayConfigDao().insert(PlayConfig(id = 1, repeatModel = 0, trackEffectEnabled = enable))
+        }
+
+        if (enable && currentPlayingTrackId != null && currentPlayingTrackId > 0) {
+            val trackAux = db.AuxDao().findAuxById(currentPlayingTrackId)
+            auxr = trackAux ?: createDefaultAuxr(currentPlayingTrackId)
+        } else {
+            val globalTemp = db.AuxDao().findGlobalAux() ?: db.AuxDao().findFirstAux()
+            auxr = globalTemp ?: globalAuxr.copy(id = 0)
+            globalAuxr = auxr.copy(id = 0)
+        }
+
+        withContext(Dispatchers.Main) {
+            applyAllDspEffects(exoPlayer)
+        }
+    }
+
+    suspend fun resetCurrentTrackEffect(trackId: Long, exoPlayer: ExoPlayer?) = withContext(Dispatchers.IO) {
+        flushDb()
+        db.AuxDao().deleteAuxById(trackId)
+        auxr = createDefaultAuxr(trackId)
+        withContext(Dispatchers.Main) {
+            applyAllDspEffects(exoPlayer)
+        }
     }
 
     private fun migrateLegacyPreferences(target: Auxr): Boolean {
@@ -543,10 +624,21 @@ class AudioEffectManager(private val context: Context) {
     private var updateJob: Job? = null
 
     private fun updateDb() {
+        if (!trackEffectEnabled && auxr.id == 0L) {
+            globalAuxr = auxr.copy()
+        }
         updateJob?.cancel()
         updateJob = effectScope.launch {
-            db.AuxDao().update(auxr)
+            db.AuxDao().upsert(auxr)
         }
+    }
+
+    suspend fun flushDb() = withContext(Dispatchers.IO) {
+        updateJob?.cancel()
+        if (!trackEffectEnabled && auxr.id == 0L) {
+            globalAuxr = auxr.copy()
+        }
+        db.AuxDao().upsert(auxr)
     }
 
     fun release() {

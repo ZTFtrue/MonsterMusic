@@ -341,6 +341,9 @@ fun MusicItemView(
                             viewModel.browser?.shuffleModeEnabled = false
                             viewModel.browser?.clearMediaItems()
                             viewModel.browser?.setMediaItems(t1)
+                            if (viewModel.trackEffectEnabled.value) {
+                                viewModel.resetAudioEffectsToDefault()
+                            }
                             viewModel.browser?.seekTo(index, currentPosition)
                             viewModel.browser?.playWhenReady = needPlay
                             viewModel.browser?.prepare()
@@ -356,6 +359,9 @@ fun MusicItemView(
                                     viewModel.browser?.prepare()
                                 }
                             } else {
+                                if (viewModel.trackEffectEnabled.value) {
+                                    viewModel.resetAudioEffectsToDefault()
+                                }
                                 viewModel.browser?.seekTo(index, 0)
                                 viewModel.browser?.playWhenReady = true
                                 viewModel.browser?.prepare()

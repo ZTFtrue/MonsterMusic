@@ -438,6 +438,9 @@ fun VisualizerFullscreenView(
 
                     // Previous
                     IconButton(onClick = {
+                        if (musicViewModel.trackEffectEnabled.value) {
+                            musicViewModel.resetAudioEffectsToDefault()
+                        }
                         musicViewModel.browser?.seekToPreviousMediaItem()
                     }) {
                         Icon(
@@ -472,6 +475,9 @@ fun VisualizerFullscreenView(
 
                     // Next
                     IconButton(onClick = {
+                        if (musicViewModel.trackEffectEnabled.value) {
+                            musicViewModel.resetAudioEffectsToDefault()
+                        }
                         musicViewModel.browser?.seekToNextMediaItem()
                     }) {
                         Icon(

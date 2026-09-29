@@ -192,6 +192,8 @@ object Utils {
             val selectedPreset = aux?.selectedPreset ?: custom
             val showPitchFine = aux?.showPitchFine ?: false
             val showSpeedFine = aux?.showSpeedFine ?: false
+            val config = musicViewModel.getDb(context).PlayConfigDao().findConfig()
+            val trackEffectEnabled = config?.trackEffectEnabled ?: false
             val showMusicCover = SharedPreferencesUtils.getShowMusicCover(context)
             val themeSelected = context.getSharedPreferences(
                 "SelectedTheme",
@@ -236,6 +238,7 @@ object Utils {
                 musicViewModel.autoHighLight.value = autoHighLight
                 musicViewModel.showPitchFine.value = showPitchFine
                 musicViewModel.showSpeedFine.value = showSpeedFine
+                musicViewModel.trackEffectEnabled.value = trackEffectEnabled
                 musicViewModel.dictionaryAppList.clear()
                 musicViewModel.dictionaryAppList.addAll(list)
             }

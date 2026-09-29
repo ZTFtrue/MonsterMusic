@@ -152,9 +152,9 @@ class PlayService : MediaLibraryService() {
             withContext(Dispatchers.IO) {
                 // 等待 Repository 和 EffectManager 加载完成
                 repository.loadAllData()
-                effectManager.initEffects()
-                loadLastQueue() // 加载上次播放队列
+                loadLastQueue() // 加载上次播放队列 (确定 currentPlayTrack)
                 loadPlayConfig() // 加载播放配置
+                effectManager.initEffects(currentPlayTrack?.id, exoPlayer)
             }
             // 回到主线程应用到播放器
             applyLoadedDataToPlayer()
@@ -235,6 +235,12 @@ class PlayService : MediaLibraryService() {
                     }
                 }
                 updateWidget(exoPlayer.isPlaying)
+                if (effectManager.trackEffectEnabled) {
+                    serviceScope.launch {
+                        effectManager.switchTrack(nextTrack.id, exoPlayer)
+                        broadcastAudioEffectUpdate()
+                    }
+                }
             }
         }
 
@@ -304,21 +310,8 @@ class PlayService : MediaLibraryService() {
         exoPlayer.setAudioAttributes(exoPlayer.audioAttributes, autoHandle)
     }
 
-    fun fillInitializedData(bundle: Bundle) {
-        // --- 1. 播放器基础状态 ---
-        bundle.putInt("volume", (exoPlayer.volume * 100).toInt())
-        bundle.putBoolean("isPlaying", exoPlayer.isPlaying)
-        bundle.putInt("index", exoPlayer.currentMediaItemIndex)
-        bundle.putInt("repeat", exoPlayer.repeatMode)
-        bundle.putLong("playListID", playListCurrent?.id ?: -1)
-        bundle.putString("playListType", playListCurrent?.type?.name)
-        bundle.putSerializable("playListCurrent", playListCurrent)
-
-        // --- 2. 播放队列与当前歌曲 ---
-        bundle.putParcelableArrayList("musicQueue", musicQueue)
-        bundle.putParcelable("musicItem", currentPlayTrack)
-
-        // --- 3. 音效设置 (来自 AudioEffectManager) ---
+    fun fillAudioEffectData(bundle: Bundle) {
+        bundle.putBoolean("trackEffectEnabled", effectManager.trackEffectEnabled)
         bundle.putFloat("pitch", effectManager.auxr.pitch)
         bundle.putFloat("speed", effectManager.auxr.speed)
         bundle.putFloat("Q", effectManager.auxr.equalizerQ)
@@ -365,6 +358,32 @@ class PlayService : MediaLibraryService() {
         bundle.putFloat("delayEffectTime", effectManager.auxr.delayTime)
         bundle.putFloat("delayEffectFeedback", effectManager.auxr.delayFeedback)
         bundle.putFloat("delayEffectMix", effectManager.auxr.delayMix)
+    }
+
+    fun broadcastAudioEffectUpdate() {
+        val bundle = Bundle()
+        fillAudioEffectData(bundle)
+        mediaSession?.connectedControllers?.forEach { controller ->
+            mediaSession?.sendCustomCommand(controller, MediaCommands.COMMAND_AUDIO_EFFECT_UPDATE, bundle)
+        }
+    }
+
+    fun fillInitializedData(bundle: Bundle) {
+        // --- 1. 播放器基础状态 ---
+        bundle.putInt("volume", (exoPlayer.volume * 100).toInt())
+        bundle.putBoolean("isPlaying", exoPlayer.isPlaying)
+        bundle.putInt("index", exoPlayer.currentMediaItemIndex)
+        bundle.putInt("repeat", exoPlayer.repeatMode)
+        bundle.putLong("playListID", playListCurrent?.id ?: -1)
+        bundle.putString("playListType", playListCurrent?.type?.name)
+        bundle.putSerializable("playListCurrent", playListCurrent)
+
+        // --- 2. 播放队列与当前歌曲 ---
+        bundle.putParcelableArrayList("musicQueue", musicQueue)
+        bundle.putParcelable("musicItem", currentPlayTrack)
+
+        // --- 3. 音效设置 (来自 AudioEffectManager) ---
+        fillAudioEffectData(bundle)
 
         // --- 4. 睡眠定时器 (来自 SleepTimerManager) ---
         bundle.putLong("sleepTime", sleepManager.sleepTime)

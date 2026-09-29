@@ -179,6 +179,11 @@ fun AudioChainView(
             title = stringResource(R.string.dsp),
             icon = Icons.Default.Equalizer,
             items = listOf(
+                stringResource(R.string.type_label) to if (musicViewModel.trackEffectEnabled.value) {
+                    stringResource(R.string.track_sound_effect_enable)
+                } else {
+                    stringResource(R.string.track_sound_effect_global)
+                },
                 stringResource(R.string.pcm_format) to pcmFormatStr,
                 stringResource(R.string.sample_rate_label) to dspSampleRateStr,
                 stringResource(R.string.equalizer_type) to filterTypeStr,

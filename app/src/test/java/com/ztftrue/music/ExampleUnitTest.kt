@@ -6,6 +6,7 @@ import com.ztftrue.music.ui.play.DualKnobHelper
 import com.ztftrue.music.effects.SoundUtils
 
 import org.junit.Assert.*
+import com.ztftrue.music.utils.Utils
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -846,5 +847,67 @@ class ExampleUnitTest {
 
         auxrCopy.equalizerType = 1
         assertNotEquals(auxr, auxrCopy)
+    }
+
+    @Test
+    fun playConfig_trackEffectEnabledDefaultAndMutation() {
+        val config = com.ztftrue.music.sqlData.model.PlayConfig(id = 1, repeatModel = 0)
+        assertEquals(false, config.trackEffectEnabled)
+
+        val configCopy = config.copy()
+        assertEquals(config, configCopy)
+        assertEquals(config.hashCode(), configCopy.hashCode())
+
+        configCopy.trackEffectEnabled = true
+        assertNotEquals(config, configCopy)
+        assertNotEquals(config.hashCode(), configCopy.hashCode())
+    }
+
+    @Test
+    fun auxr_perTrackCloningAndIsolation() {
+        val globalAuxr = com.ztftrue.music.sqlData.model.Auxr(
+            id = 0L,
+            speed = 1f,
+            pitch = 1f,
+            echo = false,
+            echoDelay = 0.2f,
+            echoDecay = 0.5f,
+            echoRevert = true,
+            equalizer = false,
+            equalizerBand = IntArray(10),
+            equalizerQ = Utils.Q,
+            selectedPreset = "Jazz"
+        )
+        // Clone for track 1001
+        val track1001 = globalAuxr.copy(id = 1001L, equalizerBand = globalAuxr.equalizerBand.clone())
+        assertEquals(1001L, track1001.id)
+        assertEquals("Jazz", track1001.selectedPreset)
+
+        // Modify track 1001 - global should remain untouched
+        track1001.selectedPreset = "Rock"
+        track1001.equalizerBand[0] = 5
+        assertEquals("Rock", track1001.selectedPreset)
+        assertEquals(5, track1001.equalizerBand[0])
+        assertEquals("Jazz", globalAuxr.selectedPreset)
+        assertEquals(0, globalAuxr.equalizerBand[0])
+    }
+
+    @Test
+    fun audioEffectManager_createDefaultAuxr_hasProperDefaults() {
+        val defaultAux = com.ztftrue.music.play.manager.AudioEffectManager.createDefaultAuxr(42L)
+        assertEquals(42L, defaultAux.id)
+        assertEquals(1f, defaultAux.speed, 0.001f)
+        assertEquals(1f, defaultAux.pitch, 0.001f)
+        assertFalse(defaultAux.equalizer)
+        assertEquals(Utils.custom, defaultAux.selectedPreset)
+        assertEquals(10, defaultAux.equalizerBand.size)
+        assertTrue(defaultAux.equalizerBand.all { it == 0 })
+        assertFalse(defaultAux.reverbEnabled)
+        assertFalse(defaultAux.delayEnabled)
+        assertFalse(defaultAux.echo)
+        assertFalse(defaultAux.chorusEnabled)
+        assertFalse(defaultAux.flangerEnabled)
+        assertFalse(defaultAux.polyphonyEnabled)
+        assertFalse(defaultAux.virtualizerEnabled)
     }
 }

@@ -18,6 +18,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,6 +31,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableFloatState
@@ -82,6 +87,15 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
     LaunchedEffect(key1 = musicViewModel.selectedPreset.value) {
         selectedIndex = musicViewModel.selectedPreset.value
     }
+    LaunchedEffect(key1 = musicViewModel.effectConfigVersion.intValue) {
+        selectedIndex = musicViewModel.selectedPreset.value
+        equalizerQ.floatValue = musicViewModel.equalizerQ.floatValue
+        bands.forEachIndexed { index, band ->
+            if (index < tempBandValue.size) {
+                tempBandValue[index].floatValue = band.value.toFloat()
+            }
+        }
+    }
     val color = MaterialTheme.colorScheme.onBackground
     val windowInfo = LocalWindowInfo.current
     val density = LocalDensity.current
@@ -108,6 +122,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                     .height(1.dp)
                     .background(color = MaterialTheme.colorScheme.primary)
             )
+
             Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 10.dp)) {
                 Row(
                     modifier = Modifier

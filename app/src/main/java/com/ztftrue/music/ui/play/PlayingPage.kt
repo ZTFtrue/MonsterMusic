@@ -1443,11 +1443,15 @@ fun PlayingPage(
                         }
 
                         EqualizerID -> {
-                            EqualizerView(musicViewModel)
+                            key(musicViewModel.currentPlay.value?.id) {
+                                EqualizerView(musicViewModel)
+                            }
                         }
 
                         EffectID -> {
-                            EffectView(musicViewModel)
+                            key(musicViewModel.currentPlay.value?.id) {
+                                EffectView(musicViewModel)
+                            }
                         }
                     }
 
@@ -1604,6 +1608,9 @@ fun PlayingPage(
                                         contentDescription = "play previous song",
                                         modifier = Modifier
                                             .clickable {
+                                                if (musicViewModel.trackEffectEnabled.value) {
+                                                    musicViewModel.resetAudioEffectsToDefault()
+                                                }
                                                 musicViewModel.browser?.seekToPreviousMediaItem()
                                             }
                                             .width(50.dp)
@@ -1640,6 +1647,9 @@ fun PlayingPage(
                                         contentDescription = "Play next song",
                                         modifier = Modifier
                                             .clickable {
+                                                if (musicViewModel.trackEffectEnabled.value) {
+                                                    musicViewModel.resetAudioEffectsToDefault()
+                                                }
                                                 musicViewModel.browser?.seekToNextMediaItem()
                                             }
                                             .width(50.dp)

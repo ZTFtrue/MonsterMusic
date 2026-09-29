@@ -92,9 +92,11 @@ import androidx.core.content.edit
 import androidx.media3.common.util.UnstableApi
 import com.github.skydoves.colorpicker.compose.ColorEnvelope
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
+import android.os.Bundle
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.PlayMusicWidget
 import com.ztftrue.music.R
+import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.ui.widget.WidgetConfigContent
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
 import com.ztftrue.music.sqlData.model.LYRICS_TYPE
@@ -935,6 +937,50 @@ fun SettingsPage(
                             )
                         }
 
+                    }
+                }
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 60.dp)
+                            .padding(vertical = 4.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+                                val newValue = !musicViewModel.trackEffectEnabled.value
+                                musicViewModel.setTrackEffectEnabled(context, newValue)
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 10.dp)
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.track_sound_effect_enable),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                                Text(
+                                    text = stringResource(R.string.track_sound_effect_enable_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                                )
+                            }
+                            Switch(
+                                checked = musicViewModel.trackEffectEnabled.value,
+                                onCheckedChange = { value ->
+                                    musicViewModel.setTrackEffectEnabled(context, value)
+                                }
+                            )
+                        }
                     }
                 }
                 item {
