@@ -64,17 +64,18 @@ fun EffectView(musicViewModel: MusicViewModel) {
 
     LaunchedEffect(listState.firstVisibleItemIndex) {
         if (!isProgrammaticScroll && listState.isScrollInProgress) {
-            selectedCategory = listState.firstVisibleItemIndex.coerceAtMost(7)
+            selectedCategory = listState.firstVisibleItemIndex.coerceAtMost(8)
         }
     }
 
     // Categories in user specified order:
-    // Pitch Speed, Delay Effect, Reverb, Echo, Virtual Surround, Chorus, Flanger, Polyphony
+    // Pitch Speed, Delay Effect, Reverb, Echo, Bass Boost, Spatial Audio, Chorus, Flanger, Polyphony
     val catPitch = stringResource(R.string.pitch).trimEnd(':', ' ') + " / " + stringResource(R.string.speed).trimEnd(':', ' ')
     val catDelay = stringResource(R.string.delay_effect)
     val catReverb = stringResource(R.string.reverb)
     val catEcho = stringResource(R.string.echo)
-    val catSurround = stringResource(R.string.virtual_surround)
+    val catBassBoost = stringResource(R.string.bass_boost)
+    val catSpatial = stringResource(R.string.spatial_audio)
     val catChorus = stringResource(R.string.chorus)
     val catFlanger = stringResource(R.string.flanger)
     val catPolyphony = stringResource(R.string.polyphony)
@@ -84,10 +85,11 @@ fun EffectView(musicViewModel: MusicViewModel) {
         1 to catDelay,
         2 to catReverb,
         3 to catEcho,
-        4 to catSurround,
-        5 to catChorus,
-        6 to catFlanger,
-        7 to catPolyphony
+        4 to catBassBoost,
+        5 to catSpatial,
+        6 to catChorus,
+        7 to catFlanger,
+        8 to catPolyphony
     )
 
     // Local mutable states synced with ViewModel
@@ -124,6 +126,9 @@ fun EffectView(musicViewModel: MusicViewModel) {
     val enableEcho = remember { mutableStateOf(musicViewModel.enableEcho.value) }
     val delayTime = remember { mutableFloatStateOf(musicViewModel.delayTime.floatValue) }
     val decay = remember { mutableFloatStateOf(musicViewModel.decay.floatValue) }
+
+    val enableBassBoost = remember { mutableStateOf(musicViewModel.enableBassBoost.value) }
+    val bassBoostStrength = remember { mutableIntStateOf(musicViewModel.bassBoostStrength.intValue) }
 
     val enableVirtual = remember { mutableStateOf(musicViewModel.enableVirtual.value) }
     val virtualStrength = remember { mutableIntStateOf(musicViewModel.virtualStrength.intValue) }
@@ -166,6 +171,9 @@ fun EffectView(musicViewModel: MusicViewModel) {
         enableEcho.value = musicViewModel.enableEcho.value
         delayTime.floatValue = musicViewModel.delayTime.floatValue
         decay.floatValue = musicViewModel.decay.floatValue
+
+        enableBassBoost.value = musicViewModel.enableBassBoost.value
+        bassBoostStrength.intValue = musicViewModel.bassBoostStrength.intValue
 
         enableVirtual.value = musicViewModel.enableVirtual.value
         virtualStrength.intValue = musicViewModel.virtualStrength.intValue
@@ -828,10 +836,63 @@ fun EffectView(musicViewModel: MusicViewModel) {
                 }
             }
 
-            // 4. Virtual Surround
+            // 4. Bass Boost
             item {
                 EffectCard(
-                    title = stringResource(R.string.virtual_surround),
+                    title = stringResource(R.string.bass_boost),
+                    enabled = enableBassBoost.value,
+                    onCheckedChange = {
+                        enableBassBoost.value = it
+                        musicViewModel.enableBassBoost.value = it
+                        val bundle = Bundle().apply { putBoolean(MediaCommands.KEY_ENABLE, it) }
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_BASS_BOOST_ENABLE,
+                            bundle
+                        )
+                    },
+                    onReset = {
+                        bassBoostStrength.intValue = 0
+                        musicViewModel.bassBoostStrength.intValue = 0
+                        val bundle = Bundle().apply { putInt(MediaCommands.KEY_STRENGTH, 0) }
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_BASS_BOOST_STRENGTH,
+                            bundle
+                        )
+                    }
+                ) {
+                    val bassBoostStrengthText =
+                        stringResource(R.string.strength_format, bassBoostStrength.intValue)
+                    Text(
+                        text = bassBoostStrengthText,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    CustomSlider(
+                        modifier = Modifier.semantics { contentDescription = bassBoostStrengthText },
+                        value = bassBoostStrength.intValue.toFloat(),
+                        onValueChange = {
+                            bassBoostStrength.intValue = it.roundToInt()
+                        },
+                        enabled = enableBassBoost.value,
+                        valueRange = 0f..1000f,
+                        steps = 100,
+                        onValueChangeFinished = {
+                            musicViewModel.bassBoostStrength.intValue = bassBoostStrength.intValue
+                            val bundle =
+                                Bundle().apply { putInt(MediaCommands.KEY_STRENGTH, bassBoostStrength.intValue) }
+                            musicViewModel.browser?.sendCustomCommand(
+                                MediaCommands.COMMAND_BASS_BOOST_STRENGTH,
+                                bundle
+                            )
+                        }
+                    )
+                }
+            }
+
+            // 5. Spatial Audio
+            item {
+                EffectCard(
+                    title = stringResource(R.string.spatial_audio),
                     enabled = enableVirtual.value,
                     onCheckedChange = {
                         enableVirtual.value = it
@@ -845,7 +906,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                     onReset = {
                         virtualStrength.intValue = 0
                         musicViewModel.virtualStrength.intValue = 0
-                        val bundle = Bundle().apply { putInt("strength", 0) }
+                        val bundle = Bundle().apply { putInt(MediaCommands.KEY_STRENGTH, 0) }
                         musicViewModel.browser?.sendCustomCommand(
                             MediaCommands.COMMAND_VIRTUALIZER_STRENGTH,
                             bundle
@@ -871,7 +932,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                         onValueChangeFinished = {
                             musicViewModel.virtualStrength.intValue = virtualStrength.intValue
                             val bundle =
-                                Bundle().apply { putInt("strength", virtualStrength.intValue) }
+                                Bundle().apply { putInt(MediaCommands.KEY_STRENGTH, virtualStrength.intValue) }
                             musicViewModel.browser?.sendCustomCommand(
                                 MediaCommands.COMMAND_VIRTUALIZER_STRENGTH,
                                 bundle
@@ -881,7 +942,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                 }
             }
 
-            // 5. Chorus
+            // 6. Chorus
             item {
                 EffectCard(
                     title = stringResource(R.string.chorus),
@@ -990,7 +1051,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                 }
             }
 
-            // 6. Flanger
+            // 7. Flanger
             item {
                 EffectCard(
                     title = stringResource(R.string.flanger),
@@ -1133,7 +1194,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
                 }
             }
 
-            // 7. Polyphony
+            // 8. Polyphony
             item {
                 EffectCard(
                     title = stringResource(R.string.polyphony),

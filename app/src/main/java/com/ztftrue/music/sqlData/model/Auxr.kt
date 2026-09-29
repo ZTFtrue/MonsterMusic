@@ -25,6 +25,9 @@ data class Auxr(
     @ColumnInfo var equalizerBand: IntArray,
     @ColumnInfo(defaultValue = "0") var virtualizerEnabled: Boolean = false, // 虚拟环绕开关
     @ColumnInfo(defaultValue = "0") var virtualizerStrength: Int = 0,        // 强度 (0 - 1000)
+    // --- Bass Boost ---
+    @ColumnInfo(defaultValue = "0") var bassBoostEnabled: Boolean = false,
+    @ColumnInfo(defaultValue = "0") var bassBoostStrength: Int = 0,
     // --- Equalizer ---
     @ColumnInfo(defaultValue = "0") var equalizerType: Int = 0,
     @ColumnInfo(defaultValue = "'Custom'") var selectedPreset: String = Utils.custom,
@@ -76,6 +79,8 @@ data class Auxr(
         if (!equalizerBand.contentEquals(other.equalizerBand)) return false
         if (virtualizerEnabled != other.virtualizerEnabled) return false
         if (virtualizerStrength != other.virtualizerStrength) return false
+        if (bassBoostEnabled != other.bassBoostEnabled) return false
+        if (bassBoostStrength != other.bassBoostStrength) return false
         if (equalizerType != other.equalizerType) return false
         if (selectedPreset != other.selectedPreset) return false
         if (showPitchFine != other.showPitchFine) return false
@@ -116,6 +121,8 @@ data class Auxr(
         result = 31 * result + equalizerBand.contentHashCode()
         result = 31 * result + virtualizerEnabled.hashCode()
         result = 31 * result + virtualizerStrength.hashCode()
+        result = 31 * result + bassBoostEnabled.hashCode()
+        result = 31 * result + bassBoostStrength.hashCode()
         result = 31 * result + equalizerType.hashCode()
         result = 31 * result + selectedPreset.hashCode()
         result = 31 * result + showPitchFine.hashCode()

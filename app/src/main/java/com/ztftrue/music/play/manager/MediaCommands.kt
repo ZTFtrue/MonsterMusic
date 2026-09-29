@@ -8,6 +8,8 @@ object MediaCommands {
     val COMMAND_CHANGE_PITCH = SessionCommand("dsp.CHANGE_PITCH", Bundle.EMPTY)
     val COMMAND_CHANGE_Q = SessionCommand("dsp.CHANGE_Q", Bundle.EMPTY)
     val COMMAND_DSP_ENABLE = SessionCommand("dsp.ENABLE", Bundle.EMPTY)
+    val COMMAND_BASS_BOOST_ENABLE = SessionCommand("dsp.BASS_BOOST_ENABLE", Bundle.EMPTY)
+    val COMMAND_BASS_BOOST_STRENGTH = SessionCommand("dsp.BASS_BOOST_STRENGTH", Bundle.EMPTY)
     val COMMAND_VIRTUALIZER_ENABLE = SessionCommand("dsp.VIRTUALIZER_ENABLE", Bundle.EMPTY)
     val COMMAND_VIRTUALIZER_STRENGTH = SessionCommand("dsp.VIRTUALIZER_STRENGTH", Bundle.EMPTY)
 
@@ -108,6 +110,7 @@ object MediaCommands {
     const val KEY_SEMITONES = "semitones"
     const val KEY_DETUNE = "detune"
     const val KEY_PRESET = "preset"
+    const val KEY_STRENGTH = "strength"
 
     val COMMAND_CLEAR_QUEUE = SessionCommand("queue.CLEAR", Bundle.EMPTY)
 

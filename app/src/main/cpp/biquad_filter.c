@@ -354,6 +354,7 @@ BiquadEqualizer* biquad_equalizer_create(int channel_count, int band_count, floa
     }
 
     // Advanced Audio Effects
+    eq->bass_boost = bass_boost_create(eq->sample_rate);
     eq->virtualizer = virtualizer_create(eq->sample_rate);
     eq->reverb = reverb_create(eq->sample_rate);
     eq->chorus = chorus_create(eq->sample_rate);
@@ -366,6 +367,10 @@ BiquadEqualizer* biquad_equalizer_create(int channel_count, int band_count, floa
 
 void biquad_equalizer_destroy(BiquadEqualizer* eq) {
     if (!eq) return;
+    if (eq->bass_boost) {
+        bass_boost_destroy(eq->bass_boost);
+        eq->bass_boost = NULL;
+    }
     if (eq->virtualizer) {
         virtualizer_destroy(eq->virtualizer);
         eq->virtualizer = NULL;
@@ -455,6 +460,7 @@ void biquad_equalizer_reset(BiquadEqualizer* eq) {
         eq->fft_out_fifo_count[ch] = eq->hop_size;
         memset(eq->fft_out_fifo[ch], 0, eq->fft_out_fifo_capacity * sizeof(float));
     }
+    if (eq->bass_boost) bass_boost_reset(eq->bass_boost);
     if (eq->virtualizer) virtualizer_reset(eq->virtualizer);
     if (eq->reverb) reverb_reset(eq->reverb);
     if (eq->chorus) chorus_reset(eq->chorus);
@@ -503,6 +509,11 @@ void biquad_equalizer_set_echo_params(BiquadEqualizer* eq, float delay_time, flo
 void biquad_equalizer_set_type(BiquadEqualizer* eq, int type) {
     if (!eq) return;
     eq->eq_type = (type == EQ_TYPE_FFT) ? EQ_TYPE_FFT : EQ_TYPE_IIR;
+}
+
+void biquad_equalizer_set_bass_boost_params(BiquadEqualizer* eq, int enabled, float strength) {
+    if (!eq || !eq->bass_boost) return;
+    bass_boost_set_params(eq->bass_boost, enabled, strength, eq->sample_rate);
 }
 
 void biquad_equalizer_set_virtualizer_params(BiquadEqualizer* eq, int enabled, float strength) {
@@ -831,6 +842,15 @@ void biquad_equalizer_process_pcm(
         }
     }
 
+    // 8.5. Apply Bass Boost
+    if (eq->bass_boost && eq->bass_boost->enabled) {
+        if (active_channels >= 2) {
+            bass_boost_process(eq->bass_boost, eq->channel_buffers[0], eq->channel_buffers[1], frames_count);
+        } else {
+            bass_boost_process(eq->bass_boost, eq->channel_buffers[0], eq->channel_buffers[0], frames_count);
+        }
+    }
+
     // 9. Apply 3D Virtual Surround (Spatializer)
     if (eq->virtualizer && eq->virtualizer->enabled && active_channels >= 2) {
         virtualizer_process(eq->virtualizer, eq->channel_buffers[0], eq->channel_buffers[1], frames_count);
@@ -838,6 +858,7 @@ void biquad_equalizer_process_pcm(
 
     // 10. Stereo-Linked Peak Limiter (if any effect or EQ active)
     int any_effect_active = eq_active || echo_active ||
+        (eq->bass_boost && eq->bass_boost->enabled) ||
         (eq->polyphony && eq->polyphony->enabled) ||
         (eq->delay && eq->delay->enabled) ||
         (eq->chorus && eq->chorus->enabled) ||

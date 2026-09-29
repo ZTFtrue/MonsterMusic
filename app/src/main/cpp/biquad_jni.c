@@ -133,6 +133,16 @@ Java_com_ztftrue_music_effects_EqualizerAudioProcessor_setEqualizerTypeNative(
 }
 
 JNIEXPORT void JNICALL
+Java_com_ztftrue_music_effects_EqualizerAudioProcessor_setBassBoostNative(
+        JNIEnv *env, jobject thiz, jlong handle, jboolean enabled, jfloat strength) {
+    (void)env;
+    (void)thiz;
+    if (handle == 0) return;
+    BiquadEqualizer* eq = (BiquadEqualizer*)(intptr_t)handle;
+    biquad_equalizer_set_bass_boost_params(eq, enabled ? 1 : 0, strength);
+}
+
+JNIEXPORT void JNICALL
 Java_com_ztftrue_music_effects_EqualizerAudioProcessor_setVirtualizerNative(
         JNIEnv *env, jobject thiz, jlong handle, jboolean enabled, jfloat strength) {
     (void)env;

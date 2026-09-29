@@ -41,6 +41,8 @@ class AudioEffectManager(private val context: Context) {
             equalizerQ = Utils.Q,
             virtualizerEnabled = false,
             virtualizerStrength = 0,
+            bassBoostEnabled = false,
+            bassBoostStrength = 0,
             equalizerType = 0,
             selectedPreset = Utils.custom,
             showPitchFine = false,
@@ -132,7 +134,8 @@ class AudioEffectManager(private val context: Context) {
         equalizerAudioProcessor.setFeedBack(auxr.echoRevert)
         equalizerAudioProcessor.setEchoActive(auxr.echo)
 
-        // 3. Virtualizer
+        // 3. Bass Boost & Virtualizer
+        equalizerAudioProcessor.setBassBoost(auxr.bassBoostEnabled, auxr.bassBoostStrength / 1000f)
         equalizerAudioProcessor.setVirtualizer(auxr.virtualizerEnabled, auxr.virtualizerStrength / 1000f)
         spatialAudioProcessor.setActive(false)
 
@@ -313,6 +316,18 @@ class AudioEffectManager(private val context: Context) {
     private fun loadVisualizationSettings() {
         musicVisualizationEnable = SharedPreferencesUtils.getEnableMusicVisualization(context)
         equalizerAudioProcessor.setVisualizationAudioActive(musicVisualizationEnable)
+    }
+
+    fun setBassBoostEnabled(enable: Boolean) {
+        auxr.bassBoostEnabled = enable
+        equalizerAudioProcessor.setBassBoost(enable, auxr.bassBoostStrength / 1000f)
+        updateDb()
+    }
+
+    fun setBassBoostStrength(strength: Int) {
+        auxr.bassBoostStrength = strength
+        equalizerAudioProcessor.setBassBoost(auxr.bassBoostEnabled, strength / 1000f)
+        updateDb()
     }
 
     fun setSpatialEnabled(enable: Boolean) {

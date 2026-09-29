@@ -58,6 +58,30 @@ static inline float soft_clip(float x) {
 
 
 // =========================================================================
+// 0. Bass Boost (Resonant Low-Shelf Filter)
+// =========================================================================
+typedef struct {
+    float sample_rate;
+    int enabled;
+    float strength;           // 0.0f .. 1.0f (mapped from 0 .. 1000)
+    float gain_db;            // 0.0f .. +15.0f dB
+
+    // Low-shelf biquad filter coefficients
+    float b0, b1, b2;
+    float a1, a2;
+
+    // Stereo biquad delay lines
+    float x1_l, x2_l, y1_l, y2_l;
+    float x1_r, x2_r, y1_r, y2_r;
+} BassBoostEffect;
+
+BassBoostEffect* bass_boost_create(float sample_rate);
+void bass_boost_destroy(BassBoostEffect* bb);
+void bass_boost_reset(BassBoostEffect* bb);
+void bass_boost_set_params(BassBoostEffect* bb, int enabled, float strength, float sample_rate);
+void bass_boost_process(BassBoostEffect* bb, float* left, float* right, int count);
+
+// =========================================================================
 // 1. 3D Virtual Surround (Optimized Spatializer)
 // =========================================================================
 typedef struct {

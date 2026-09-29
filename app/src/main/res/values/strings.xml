@@ -214,6 +214,8 @@
     <string name="merge_same_album">Merge same name and artist album(Don\'t recommend, need restart app)</string>
     <string name="add_tracks_folder">Add Tracks Folder</string>
     <string name="virtual_surround">Virtual Surround</string>
+    <string name="bass_boost">Bass Boost</string>
+    <string name="spatial_audio">Spatial Audio</string>
     <string name="strength_format">Strength %1$s</string>
     <string name="auto_dismiss">Auto Dismiss</string>
     <string name="unknown_route">Unknown route</string>

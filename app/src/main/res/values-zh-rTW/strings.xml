@@ -214,6 +214,8 @@
     <string name="merge_same_album">合併同名與同演出者專輯 (不建議，需重啟應用程式)</string>
     <string name="add_tracks_folder">新增音樂資料夾</string>
     <string name="virtual_surround">虛擬環繞音效</string>
+    <string name="bass_boost">重低音增強</string>
+    <string name="spatial_audio">空間音訊</string>
     <string name="strength_format">強度 %1$s</string>
     <string name="auto_dismiss">自動關閉</string>
     <string name="unknown_route">未知路徑</string>

@@ -30,7 +30,7 @@ const val MUSIC_DATABASE_NAME = "default_data.db"
 @Database(
     entities = [Auxr::class, CurrentList::class, MainTab::class, PlayConfig::class, MusicItem::class,
         DictionaryApp::class, StorageFolder::class, SortFiledData::class],
-    version = 9,
+    version = 10,
     exportSchema = true,
     autoMigrations = [
 //        AutoMigration(from = 1, to = 2),
@@ -40,7 +40,8 @@ const val MUSIC_DATABASE_NAME = "default_data.db"
         AutoMigration(from = 5, to = 6),
         AutoMigration(from = 6, to = 7),
         AutoMigration(from = 7, to = 8),
-        AutoMigration(from = 8, to = 9)
+        AutoMigration(from = 8, to = 9),
+        AutoMigration(from = 9, to = 10)
     ]
 )
 abstract class MusicDatabase : RoomDatabase() {

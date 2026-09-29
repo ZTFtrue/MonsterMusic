@@ -325,6 +325,8 @@ class PlayService : MediaLibraryService() {
         bundle.putFloat("decay", effectManager.auxr.echoDecay)
         bundle.putBoolean("echoActive", effectManager.auxr.echo)
         bundle.putBoolean("echoFeedBack", effectManager.auxr.echoRevert)
+        bundle.putInt("bassBoostStrength", effectManager.auxr.bassBoostStrength)
+        bundle.putBoolean("enableBassBoost", effectManager.auxr.bassBoostEnabled)
         bundle.putInt("virtualStrength", effectManager.auxr.virtualizerStrength)
         bundle.putBoolean("enableVirtual", effectManager.auxr.virtualizerEnabled)
 

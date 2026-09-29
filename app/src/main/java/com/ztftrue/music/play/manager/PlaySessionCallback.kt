@@ -68,6 +68,8 @@ class PlaySessionCallback(
                 .add(MediaCommands.COMMAND_TRACK_DELETE)
                 .add(MediaCommands.COMMAND_PlAY_LIST_CHANGE)
                 .add(MediaCommands.COMMAND_SLEEP_STATE_UPDATE)
+                .add(MediaCommands.COMMAND_BASS_BOOST_ENABLE)
+                .add(MediaCommands.COMMAND_BASS_BOOST_STRENGTH)
                 .add(MediaCommands.COMMAND_VIRTUALIZER_ENABLE)
                 .add(MediaCommands.COMMAND_VIRTUALIZER_STRENGTH)
                 .add(MediaCommands.COMMAND_REVERB_ENABLE)
@@ -121,6 +123,18 @@ class PlaySessionCallback(
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
             }
 // 在 onCustomCommand 中处理
+            MediaCommands.COMMAND_BASS_BOOST_ENABLE.customAction -> {
+                val enable = args.getBoolean(MediaCommands.KEY_ENABLE)
+                effectManager.setBassBoostEnabled(enable)
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            MediaCommands.COMMAND_BASS_BOOST_STRENGTH.customAction -> {
+                val strength = args.getInt(MediaCommands.KEY_STRENGTH)
+                effectManager.setBassBoostStrength(strength)
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
             MediaCommands.COMMAND_VIRTUALIZER_ENABLE.customAction -> {
                 val enable = args.getBoolean(MediaCommands.KEY_ENABLE)
                 effectManager.setSpatialEnabled(enable)

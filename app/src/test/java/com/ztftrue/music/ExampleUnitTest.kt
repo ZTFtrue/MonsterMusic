@@ -767,6 +767,8 @@ class ExampleUnitTest {
             equalizerQ = com.ztftrue.music.utils.Utils.Q,
             virtualizerEnabled = false,
             virtualizerStrength = 0,
+            bassBoostEnabled = false,
+            bassBoostStrength = 0,
             equalizerType = 0,
             selectedPreset = com.ztftrue.music.utils.Utils.custom,
             showPitchFine = false,
@@ -831,12 +833,24 @@ class ExampleUnitTest {
         assertEquals(0.0f, auxr.polyphonyDetune, 0.001f)
         assertEquals(0.5f, auxr.polyphonyMix, 0.001f)
 
+        // Verify Bass Boost defaults
+        assertEquals(false, auxr.bassBoostEnabled)
+        assertEquals(0, auxr.bassBoostStrength)
+
         // Verify equality and hash code
         val auxrCopy = auxr.copy(equalizerBand = auxr.equalizerBand.clone())
         assertEquals(auxr, auxrCopy)
         assertEquals(auxr.hashCode(), auxrCopy.hashCode())
 
         // Mutate fields and verify inequality
+        auxrCopy.bassBoostEnabled = true
+        assertNotEquals(auxr, auxrCopy)
+        auxrCopy.bassBoostEnabled = false
+
+        auxrCopy.bassBoostStrength = 500
+        assertNotEquals(auxr, auxrCopy)
+        auxrCopy.bassBoostStrength = 0
+
         auxrCopy.reverbEnabled = true
         assertNotEquals(auxr, auxrCopy)
         auxrCopy.reverbEnabled = false
@@ -847,6 +861,53 @@ class ExampleUnitTest {
 
         auxrCopy.equalizerType = 1
         assertNotEquals(auxr, auxrCopy)
+    }
+
+    @Test
+    fun bassBoost_scalingAndBiquadCoefficients() {
+        // Test strength mapping: 0 to 1000 maps to 0.0 to 1.0, and 0.0 to +15.0 dB
+        fun strengthToGainDb(strengthInt: Int): Float {
+            val strengthNorm = (strengthInt / 1000f).coerceIn(0f, 1f)
+            return strengthNorm * 15.0f
+        }
+
+        assertEquals(0.0f, strengthToGainDb(0), 0.001f)
+        assertEquals(7.5f, strengthToGainDb(500), 0.001f)
+        assertEquals(15.0f, strengthToGainDb(1000), 0.001f)
+        assertEquals(0.0f, strengthToGainDb(-50), 0.001f)
+        assertEquals(15.0f, strengthToGainDb(1500), 0.001f)
+
+        // RBJ Low-Shelf coefficients verification for 90 Hz at 44.1 kHz, Q = 0.7071
+        val sampleRate = 44100.0f
+        val f0 = 90.0f
+        val q = 0.7071f
+        val gainDb = 12.0f
+        val a = Math.pow(10.0, (gainDb / 40.0)).toFloat()
+        val omega = (2.0 * Math.PI * f0 / sampleRate).toFloat()
+        val sn = Math.sin(omega.toDouble()).toFloat()
+        val cs = Math.cos(omega.toDouble()).toFloat()
+        val alpha = sn / (2.0f * q)
+        val beta = 2.0f * Math.sqrt(a.toDouble()).toFloat() * alpha
+
+        val a0 = (a + 1.0f) + (a - 1.0f) * cs + beta
+        val b0 = (a * ((a + 1.0f) - (a - 1.0f) * cs + beta)) / a0
+        val b1 = (2.0f * a * ((a - 1.0f) - (a + 1.0f) * cs)) / a0
+        val b2 = (a * ((a + 1.0f) - (a - 1.0f) * cs - beta)) / a0
+        val a1 = (-2.0f * ((a - 1.0f) + (a + 1.0f) * cs)) / a0
+        val a2 = ((a + 1.0f) + (a - 1.0f) * cs - beta) / a0
+
+        // Filter must be stable: |a2| < 1, |a1| < 1 + a2
+        assertTrue("Biquad filter must be stable: |a2| < 1", Math.abs(a2) < 1.0f)
+        assertTrue("Biquad filter must be stable: |a1| < 1 + a2", Math.abs(a1) < (1.0f + a2))
+
+        // DC gain (omega = 0, z = 1): H(1) = (b0 + b1 + b2) / (1 + a1 + a2)
+        val dcGainLinear = (b0 + b1 + b2) / (1.0f + a1 + a2)
+        val expectedDcGainLinear = Math.pow(10.0, (gainDb / 20.0)).toFloat()
+        assertEquals(expectedDcGainLinear, dcGainLinear, 0.01f)
+
+        // High-frequency gain (omega = pi, z = -1): H(-1) = (b0 - b1 + b2) / (1 - a1 + a2) should be 1.0 (0 dB)
+        val hfGainLinear = (b0 - b1 + b2) / (1.0f - a1 + a2)
+        assertEquals(1.0f, hfGainLinear, 0.01f)
     }
 
     @Test

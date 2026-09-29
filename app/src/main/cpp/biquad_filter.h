@@ -71,6 +71,7 @@ typedef struct {
     int fft_out_fifo_capacity;
 
     // Advanced Audio Effects
+    BassBoostEffect* bass_boost;
     Virtualizer3D* virtualizer;
     ReverbEffect* reverb;
     ChorusEffect* chorus;
@@ -91,6 +92,7 @@ void biquad_equalizer_configure_band(BiquadEqualizer* eq, int channel, int band,
 void biquad_equalizer_set_echo_params(BiquadEqualizer* eq, float delay_time, float decay, int feedback, float sample_rate);
 void biquad_equalizer_set_type(BiquadEqualizer* eq, int type);
 
+void biquad_equalizer_set_bass_boost_params(BiquadEqualizer* eq, int enabled, float strength);
 void biquad_equalizer_set_virtualizer_params(BiquadEqualizer* eq, int enabled, float strength);
 void biquad_equalizer_set_reverb_params(BiquadEqualizer* eq, int enabled, float room_size, float damping, float mix);
 void biquad_equalizer_set_chorus_params(BiquadEqualizer* eq, int enabled, float rate, float depth, float mix);

@@ -184,6 +184,9 @@ class MusicViewModel : ViewModel() {
     var showPitchFine = mutableStateOf(false)
     var showSpeedFine = mutableStateOf(false)
 
+    var enableBassBoost = mutableStateOf(false)
+    var bassBoostStrength = mutableIntStateOf(0)
+
     var virtualStrength = mutableIntStateOf(0)
     var enableVirtual = mutableStateOf(false)
 
@@ -328,6 +331,9 @@ class MusicViewModel : ViewModel() {
         enableEcho.value = false
         echoFeedBack.value = false
 
+        enableBassBoost.value = false
+        bassBoostStrength.intValue = 0
+
         enableVirtual.value = false
         virtualStrength.intValue = 0
 
@@ -383,6 +389,9 @@ class MusicViewModel : ViewModel() {
         decay.floatValue = auxr.echoDecay
         enableEcho.value = auxr.echo
         echoFeedBack.value = auxr.echoRevert
+
+        enableBassBoost.value = auxr.bassBoostEnabled
+        bassBoostStrength.intValue = auxr.bassBoostStrength
 
         enableVirtual.value = auxr.virtualizerEnabled
         virtualStrength.intValue = auxr.virtualizerStrength
@@ -442,6 +451,8 @@ class MusicViewModel : ViewModel() {
         delayTime.floatValue = resultData.getFloat("delayTime")
         decay.floatValue = resultData.getFloat("decay")
         enableEcho.value = resultData.getBoolean("echoActive")
+        bassBoostStrength.intValue = resultData.getInt("bassBoostStrength", 0)
+        enableBassBoost.value = resultData.getBoolean("enableBassBoost", false)
         virtualStrength.intValue = resultData.getInt("virtualStrength")
         enableVirtual.value = resultData.getBoolean("enableVirtual")
         echoFeedBack.value = resultData.getBoolean("echoFeedBack")

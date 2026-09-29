@@ -70,6 +70,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         visArray: FloatArray?
     ): Int
     private external fun setEqualizerTypeNative(handle: Long, type: Int)
+    private external fun setBassBoostNative(handle: Long, enabled: Boolean, strength: Float)
     private external fun setVirtualizerNative(handle: Long, enabled: Boolean, strength: Float)
     private external fun setReverbNative(
         handle: Long,
@@ -125,6 +126,9 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var visualizationAudioActive = false
 
     // Effect states
+    private var bassBoostActive = false
+    private var bassBoostStrength = 0.0f
+
     private var virtualizerActive = false
     private var virtualizerStrength = 0.0f
 
@@ -210,6 +214,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             nativeEqualizerHandle = initNativeEqualizer(allocChannels, Utils.bandsCenter.count(), sampleRate)
             setEqualizerTypeNative(nativeEqualizerHandle, equalizerType)
             setEchoParamsNative(nativeEqualizerHandle, echoDelay, echoDecay, isWithFeedBack, sampleRate)
+            setBassBoostNative(nativeEqualizerHandle, bassBoostActive, bassBoostStrength)
             setVirtualizerNative(nativeEqualizerHandle, virtualizerActive, virtualizerStrength)
             setReverbNative(nativeEqualizerHandle, reverbActive, reverbRoomSize, reverbDamping, reverbMix)
             setChorusNative(nativeEqualizerHandle, chorusActive, chorusRate, chorusDepth, chorusMix)
@@ -247,7 +252,7 @@ class EqualizerAudioProcessor : AudioProcessor {
 
     private fun processChunk(data: ByteBuffer, length: Int) {
         val needsProcessing = equalizerActive || echoActive || visualizationAudioActive ||
-                virtualizerActive || reverbActive || chorusActive || flangerActive || polyphonyActive
+                bassBoostActive || virtualizerActive || reverbActive || chorusActive || flangerActive || polyphonyActive
 
         val resultBuffer = replaceOutputBuffer(length)
 
@@ -533,6 +538,19 @@ class EqualizerAudioProcessor : AudioProcessor {
                     value.toFloat()
                 )
             }
+        }
+    }
+
+    fun setBassBoost(enabled: Boolean, strength: Float) {
+        lock.lock()
+        try {
+            bassBoostActive = enabled
+            bassBoostStrength = strength
+            if (nativeEqualizerHandle != 0L) {
+                setBassBoostNative(nativeEqualizerHandle, enabled, strength)
+            }
+        } finally {
+            lock.unlock()
         }
     }
 

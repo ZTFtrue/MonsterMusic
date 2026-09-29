@@ -28,6 +28,114 @@ static inline float read_fractional(const float* buffer, int size, float read_in
 }
 
 // =========================================================================
+// 0. Bass Boost Implementation
+// =========================================================================
+
+BassBoostEffect* bass_boost_create(float sample_rate) {
+    BassBoostEffect* bb = (BassBoostEffect*)calloc(1, sizeof(BassBoostEffect));
+    if (!bb) return NULL;
+
+    bb->sample_rate = sample_rate > 0.0f ? sample_rate : 44100.0f;
+    bass_boost_set_params(bb, 0, 0.0f, bb->sample_rate);
+    return bb;
+}
+
+void bass_boost_destroy(BassBoostEffect* bb) {
+    if (!bb) return;
+    free(bb);
+}
+
+void bass_boost_reset(BassBoostEffect* bb) {
+    if (!bb) return;
+    bb->x1_l = bb->x2_l = bb->y1_l = bb->y2_l = 0.0f;
+    bb->x1_r = bb->x2_r = bb->y1_r = bb->y2_r = 0.0f;
+}
+
+void bass_boost_set_params(BassBoostEffect* bb, int enabled, float strength, float sample_rate) {
+    if (!bb) return;
+    if (sample_rate > 0.0f) {
+        bb->sample_rate = sample_rate;
+    }
+    bb->enabled = enabled;
+    if (strength < 0.0f) strength = 0.0f;
+    if (strength > 1.0f) strength = 1.0f;
+    bb->strength = strength;
+    bb->gain_db = strength * 15.0f;
+
+    if (bb->sample_rate <= 0.0f) bb->sample_rate = 44100.0f;
+
+    float f0 = 90.0f;
+    if (f0 >= bb->sample_rate * 0.49f) {
+        f0 = bb->sample_rate * 0.49f;
+    }
+
+    float A = powf(10.0f, bb->gain_db / 40.0f);
+    float omega = 2.0f * (float)M_PI * f0 / bb->sample_rate;
+    float sn = sinf(omega);
+    float cs = cosf(omega);
+    float Q = 0.7071f;
+    float alpha = sn / (2.0f * Q);
+    float beta = 2.0f * sqrtf(A) * alpha;
+
+    float a0 = (A + 1.0f) + (A - 1.0f) * cs + beta;
+    if (fabsf(a0) < 1e-9f) {
+        bb->b0 = 1.0f;
+        bb->b1 = bb->b2 = bb->a1 = bb->a2 = 0.0f;
+        return;
+    }
+
+    bb->b0 = (A * ((A + 1.0f) - (A - 1.0f) * cs + beta)) / a0;
+    bb->b1 = (2.0f * A * ((A - 1.0f) - (A + 1.0f) * cs)) / a0;
+    bb->b2 = (A * ((A + 1.0f) - (A - 1.0f) * cs - beta)) / a0;
+    bb->a1 = (-2.0f * ((A - 1.0f) + (A + 1.0f) * cs)) / a0;
+    bb->a2 = ((A + 1.0f) + (A - 1.0f) * cs - beta) / a0;
+}
+
+void bass_boost_process(BassBoostEffect* bb, float* left, float* right, int count) {
+    if (!bb || !bb->enabled || !left || !right || count <= 0) return;
+    if (bb->strength <= 0.001f) return;
+
+    const float b0 = bb->b0;
+    const float b1 = bb->b1;
+    const float b2 = bb->b2;
+    const float a1 = bb->a1;
+    const float a2 = bb->a2;
+
+    float x1_l = bb->x1_l, x2_l = bb->x2_l, y1_l = bb->y1_l, y2_l = bb->y2_l;
+    float x1_r = bb->x1_r, x2_r = bb->x2_r, y1_r = bb->y1_r, y2_r = bb->y2_r;
+
+    for (int i = 0; i < count; i++) {
+        // Left channel
+        float xl = left[i];
+        float yl = b0 * xl + b1 * x1_l + b2 * x2_l - a1 * y1_l - a2 * y2_l;
+        x2_l = x1_l;
+        x1_l = xl;
+        y2_l = y1_l;
+        y1_l = undenormalise(yl);
+        left[i] = y1_l;
+
+        // Right channel
+        float xr = right[i];
+        float yr = b0 * xr + b1 * x1_r + b2 * x2_r - a1 * y1_r - a2 * y2_r;
+        x2_r = x1_r;
+        x1_r = xr;
+        y2_r = y1_r;
+        y1_r = undenormalise(yr);
+        right[i] = y1_r;
+    }
+
+    bb->x1_l = x1_l;
+    bb->x2_l = x2_l;
+    bb->y1_l = y1_l;
+    bb->y2_l = y2_l;
+
+    bb->x1_r = x1_r;
+    bb->x2_r = x2_r;
+    bb->y1_r = y1_r;
+    bb->y2_r = y2_r;
+}
+
+// =========================================================================
 // 1. 3D Virtual Surround Implementation
 // =========================================================================
 

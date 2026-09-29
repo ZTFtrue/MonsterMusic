@@ -214,6 +214,8 @@
     <string name="merge_same_album">合并同名同艺术家专辑(不推荐，需重启应用)</string>
     <string name="add_tracks_folder">添加曲目文件夹</string>
     <string name="virtual_surround">虚拟环绕声</string>
+    <string name="bass_boost">低音增强</string>
+    <string name="spatial_audio">空间音频</string>
     <string name="strength_format">强度 %1$s</string>
     <string name="auto_dismiss">自动关闭</string>
     <string name="unknown_route">未知路由</string>
