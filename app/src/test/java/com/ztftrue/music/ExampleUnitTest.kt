@@ -910,4 +910,253 @@ class ExampleUnitTest {
         assertFalse(defaultAux.polyphonyEnabled)
         assertFalse(defaultAux.virtualizerEnabled)
     }
+
+    @Test
+    fun scanMode_constantsAndLogic() {
+        assertEquals(0, com.ztftrue.music.utils.SharedPreferencesUtils.SCAN_MODE_ALL)
+        assertEquals(1, com.ztftrue.music.utils.SharedPreferencesUtils.SCAN_MODE_FOLDER)
+    }
+
+    @Test
+    fun exclusiveFolder_pathFilteringLogic() {
+        val exclusiveFolder = "/storage/emulated/0/Music/Favorites"
+        val normalized = exclusiveFolder.trimEnd('/')
+
+        fun isTrackInFolder(filePath: String): Boolean {
+            val itemDir = filePath.substringBeforeLast('/', "")
+            return filePath.startsWith("$normalized/", ignoreCase = true) ||
+                    itemDir.equals(normalized, ignoreCase = true)
+        }
+
+        // Direct child in folder
+        assertTrue(isTrackInFolder("/storage/emulated/0/Music/Favorites/song.mp3"))
+        // Nested subfolder
+        assertTrue(isTrackInFolder("/storage/emulated/0/Music/Favorites/Rock/song.flac"))
+        assertTrue(isTrackInFolder("/storage/emulated/0/Music/Favorites/Pop/2023/album/track.m4a"))
+        // Case insensitive
+        assertTrue(isTrackInFolder("/storage/emulated/0/music/favorites/song.mp3"))
+
+        // Outside folder - completely different directory
+        assertFalse(isTrackInFolder("/storage/emulated/0/Download/song.mp3"))
+        assertFalse(isTrackInFolder("/storage/emulated/0/Podcasts/episode.mp3"))
+
+        // Prefix collision: "Favorites" vs "FavoritesOther"
+        assertFalse(isTrackInFolder("/storage/emulated/0/Music/FavoritesOther/song.mp3"))
+
+        // Parent folder of the exclusive directory
+        assertFalse(isTrackInFolder("/storage/emulated/0/Music/song.mp3"))
+    }
+
+    @Test
+    fun pathResolution_primaryAndSdCardDocIds() {
+        fun resolveDocId(docId: String, primaryDir: String, volumes: Map<String, String>): String? {
+            val split = docId.split(":")
+            val type = split[0]
+            val relativePath = if (split.size > 1) split[1] else ""
+            return if ("primary".equals(type, ignoreCase = true)) {
+                if (relativePath.isNotEmpty()) "$primaryDir/$relativePath" else primaryDir
+            } else {
+                val volumePath = volumes[type]
+                if (volumePath != null) {
+                    if (relativePath.isNotEmpty()) "$volumePath/$relativePath" else volumePath
+                } else {
+                    if (relativePath.isNotEmpty()) "/storage/$type/$relativePath" else "/storage/$type"
+                }
+            }
+        }
+
+        val primaryStorage = "/storage/emulated/0"
+        val sdVolumes = mapOf("1234-5678" to "/storage/1234-5678")
+
+        // Primary storage music folder
+        assertEquals("/storage/emulated/0/Music", resolveDocId("primary:Music", primaryStorage, sdVolumes))
+        assertEquals("/storage/emulated/0/Music/Sub/song.mp3", resolveDocId("primary:Music/Sub/song.mp3", primaryStorage, sdVolumes))
+        assertEquals("/storage/emulated/0", resolveDocId("primary:", primaryStorage, sdVolumes))
+
+        // SD card music folder
+        assertEquals("/storage/1234-5678/MyMusic", resolveDocId("1234-5678:MyMusic", primaryStorage, sdVolumes))
+        assertEquals("/storage/1234-5678/MyMusic/song.flac", resolveDocId("1234-5678:MyMusic/song.flac", primaryStorage, sdVolumes))
+    }
+
+    @Test
+    fun filterFolder_jsonSerialization() {
+        val gson = com.google.gson.Gson()
+        val type = object : com.google.gson.reflect.TypeToken<List<com.ztftrue.music.sqlData.model.FilterFolder>>() {}.type
+        val originalList = listOf(
+            com.ztftrue.music.sqlData.model.FilterFolder(
+                id = "id-1",
+                uri = "content://com.android.externalstorage.documents/tree/primary%3AMusic",
+                path = "/storage/emulated/0/Music",
+                name = "Music"
+            ),
+            com.ztftrue.music.sqlData.model.FilterFolder(
+                id = "id-2",
+                uri = null,
+                path = "/storage/1234-5678/Audio",
+                name = "Audio"
+            )
+        )
+
+        val json = gson.toJson(originalList)
+        assertNotNull(json)
+        val deserialized: List<com.ztftrue.music.sqlData.model.FilterFolder> = gson.fromJson(json, type)
+        assertEquals(2, deserialized.size)
+        assertEquals("id-1", deserialized[0].id)
+        assertEquals("/storage/emulated/0/Music", deserialized[0].path)
+        assertEquals("Music", deserialized[0].name)
+        assertEquals("id-2", deserialized[1].id)
+        assertNull(deserialized[1].uri)
+        assertEquals("/storage/1234-5678/Audio", deserialized[1].path)
+    }
+
+    @Test
+    fun whitelistMode_multiFolderFilteringLogic() {
+        val whitelistFolders = listOf(
+            "/storage/emulated/0/Music",
+            "/storage/1234-5678/Audio"
+        ).map { it.trimEnd('/') }
+
+        fun isTrackAllowed(trackPath: String, whitelist: List<String>): Boolean {
+            if (whitelist.isEmpty()) return false
+            return whitelist.any { folder ->
+                trackPath.startsWith("$folder/", ignoreCase = true) ||
+                trackPath.substringBeforeLast('/', "").equals(folder, ignoreCase = true)
+            }
+        }
+
+        // Whitelisted folder 1
+        assertTrue(isTrackAllowed("/storage/emulated/0/Music/song.mp3", whitelistFolders))
+        assertTrue(isTrackAllowed("/storage/emulated/0/Music/Rock/track.flac", whitelistFolders))
+        assertTrue(isTrackAllowed("/storage/emulated/0/Music/A/B/C/track.ogg", whitelistFolders))
+
+        // Whitelisted folder 2 (SD card)
+        assertTrue(isTrackAllowed("/storage/1234-5678/Audio/song.wav", whitelistFolders))
+        assertTrue(isTrackAllowed("/storage/1234-5678/Audio/Classical/symphony.mp3", whitelistFolders))
+
+        // Non-whitelisted paths
+        assertFalse(isTrackAllowed("/storage/emulated/0/Download/song.mp3", whitelistFolders))
+        assertFalse(isTrackAllowed("/storage/emulated/0/Ringtones/alarm.mp3", whitelistFolders))
+        assertFalse(isTrackAllowed("/storage/emulated/0/MusicVideo/song.mp3", whitelistFolders))
+
+        // Empty whitelist should disallow everything
+        assertFalse(isTrackAllowed("/storage/emulated/0/Music/song.mp3", emptyList()))
+    }
+
+    @Test
+    fun blacklistMode_multiFolderFilteringLogic() {
+        val blacklistFolders = listOf(
+            "/storage/emulated/0/Ringtones",
+            "/storage/emulated/0/Android/data"
+        ).map { it.trimEnd('/') }
+        val ignoredBucketIds = setOf(9999L)
+
+        fun isTrackExcluded(trackPath: String, bucketId: Long, blacklist: List<String>, ignoredBuckets: Set<Long>): Boolean {
+            if (ignoredBuckets.contains(bucketId)) return true
+            return blacklist.any { folder ->
+                trackPath.startsWith("$folder/", ignoreCase = true) ||
+                trackPath.substringBeforeLast('/', "").equals(folder, ignoreCase = true)
+            }
+        }
+
+        // Blacklisted folder 1
+        assertTrue(isTrackExcluded("/storage/emulated/0/Ringtones/ring.mp3", 100L, blacklistFolders, ignoredBucketIds))
+        assertTrue(isTrackExcluded("/storage/emulated/0/Ringtones/Sub/bell.wav", 101L, blacklistFolders, ignoredBucketIds))
+
+        // Blacklisted folder 2
+        assertTrue(isTrackExcluded("/storage/emulated/0/Android/data/app/cache.m4a", 102L, blacklistFolders, ignoredBucketIds))
+
+        // Ignored bucket ID
+        assertTrue(isTrackExcluded("/storage/emulated/0/Recordings/rec.mp3", 9999L, blacklistFolders, ignoredBucketIds))
+
+        // Allowed tracks
+        assertFalse(isTrackExcluded("/storage/emulated/0/Music/song.mp3", 200L, blacklistFolders, ignoredBucketIds))
+        assertFalse(isTrackExcluded("/storage/emulated/0/Download/song.mp3", 201L, blacklistFolders, ignoredBucketIds))
+    }
+
+    @Test
+    fun filterFolder_withBucketIdSerialization() {
+        val gson = com.google.gson.Gson()
+        val type = object : com.google.gson.reflect.TypeToken<List<com.ztftrue.music.sqlData.model.FilterFolder>>() {}.type
+        val originalList = listOf(
+            com.ztftrue.music.sqlData.model.FilterFolder(
+                id = "id-saf",
+                uri = "content://saf/tree",
+                path = "/storage/emulated/0/Podcasts",
+                name = "Podcasts",
+                bucketId = null
+            ),
+            com.ztftrue.music.sqlData.model.FilterFolder(
+                id = "id-device",
+                uri = null,
+                path = "/storage/emulated/0/Ringtones",
+                name = "Ringtones",
+                bucketId = 123456789L
+            )
+        )
+
+        val json = gson.toJson(originalList)
+        val deserialized: List<com.ztftrue.music.sqlData.model.FilterFolder> = gson.fromJson(json, type)
+        assertEquals(2, deserialized.size)
+        assertNull(deserialized[0].bucketId)
+        assertEquals(123456789L, deserialized[1].bucketId)
+        assertEquals("Ringtones", deserialized[1].name)
+        assertEquals("/storage/emulated/0/Ringtones", deserialized[1].path)
+    }
+
+    @Test
+    fun blacklistAndIgnoreSync_synchronizationLogic() {
+        val blacklist = mutableListOf(
+            com.ztftrue.music.sqlData.model.FilterFolder(
+                id = "id-1",
+                path = "/storage/emulated/0/Audiobooks",
+                name = "Audiobooks",
+                bucketId = 1111L
+            ),
+            com.ztftrue.music.sqlData.model.FilterFolder(
+                id = "id-2",
+                path = "/storage/emulated/0/CustomExclude",
+                name = "CustomExclude",
+                bucketId = null
+            )
+        )
+
+        // Generating ignore_folders string from blacklist
+        fun getIgnoreFoldersString(folders: List<com.ztftrue.music.sqlData.model.FilterFolder>): String {
+            return folders.mapNotNull { it.bucketId }.distinct().joinToString(",")
+        }
+        assertEquals("1111", getIgnoreFoldersString(blacklist))
+
+        // Adding an item with bucketId
+        val newItem = com.ztftrue.music.sqlData.model.FilterFolder(
+            id = "id-3",
+            path = "/storage/emulated/0/Notifications",
+            name = "Notifications",
+            bucketId = 2222L
+        )
+        blacklist.add(newItem)
+        assertEquals("1111,2222", getIgnoreFoldersString(blacklist))
+
+        // Removing item
+        blacklist.removeIf { it.bucketId == 1111L }
+        assertEquals("2222", getIgnoreFoldersString(blacklist))
+    }
+
+    @Test
+    fun legacyIgnoreFoldersMigration_detectsMissingBucketIds() {
+        val existingBlacklist = listOf(
+            com.ztftrue.music.sqlData.model.FilterFolder(
+                id = "id-1",
+                path = "/storage/emulated/0/FolderA",
+                name = "FolderA",
+                bucketId = 100L
+            )
+        )
+        val legacyIgnoreString = "100,200,300"
+
+        val legacyIds = legacyIgnoreString.split(",").mapNotNull { it.trim().toLongOrNull() }
+        val currentBucketIds = existingBlacklist.mapNotNull { it.bucketId }.toSet()
+        val missingBucketIds = legacyIds.filter { !currentBucketIds.contains(it) }
+
+        assertEquals(listOf(200L, 300L), missingBucketIds)
+    }
 }

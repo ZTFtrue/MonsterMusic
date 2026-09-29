@@ -223,7 +223,19 @@ object Utils {
             } else {
                 dicApps
             }
+            val scanMode = SharedPreferencesUtils.getScanMode(context)
+            val whitelistFolders = SharedPreferencesUtils.getWhitelistFolders(context)
+            val blacklistFolders = SharedPreferencesUtils.getBlacklistFolders(context)
+            val exclusiveFolderPath = SharedPreferencesUtils.getExclusiveFolderPath(context)
+            val isFirstScanCompleted = SharedPreferencesUtils.isFirstScanSetupCompleted(context)
             withContext(Dispatchers.Main) {
+                musicViewModel.scanMode.intValue = scanMode
+                musicViewModel.whitelistFolders.clear()
+                musicViewModel.whitelistFolders.addAll(whitelistFolders)
+                musicViewModel.blacklistFolders.clear()
+                musicViewModel.blacklistFolders.addAll(blacklistFolders)
+                musicViewModel.exclusiveFolderPath.value = exclusiveFolderPath
+                musicViewModel.showFirstScanSetupDialog.value = !isFirstScanCompleted
                 musicViewModel.showSlideIndicators.value = showSlideIndicators
                 musicViewModel.showRightIndicator.value = showRightIndicator
                 musicViewModel.musicVisualizationEnable.value = musicVisualizationEnable
@@ -761,6 +773,23 @@ object Utils {
     fun setTracksFolder(context: Context) {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
         (context as MainActivity).tracksFolderPickerLauncher.launch(intent)
+    }
+
+    @OptIn(UnstableApi::class)
+    fun addWhitelistFolder(context: Context) {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        (context as MainActivity).whitelistFolderPickerLauncher.launch(intent)
+    }
+
+    @OptIn(UnstableApi::class)
+    fun addBlacklistFolder(context: Context) {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        (context as MainActivity).blacklistFolderPickerLauncher.launch(intent)
+    }
+
+    @OptIn(UnstableApi::class)
+    fun setExclusiveFolder(context: Context) {
+        addWhitelistFolder(context)
     }
 
     @OptIn(UnstableApi::class)

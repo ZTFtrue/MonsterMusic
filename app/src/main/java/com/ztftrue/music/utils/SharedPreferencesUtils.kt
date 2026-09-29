@@ -6,8 +6,13 @@ import android.content.Context
 import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.ztftrue.music.R
+import com.ztftrue.music.sqlData.model.FilterFolder
 import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.utils.model.FolderList
+import com.ztftrue.music.utils.trackManager.FolderManger
 
 object SharedPreferencesUtils {
     fun saveFontSize(context: Context, fontSize: Int) {
@@ -278,6 +283,195 @@ object SharedPreferencesUtils {
             putLong("ignore_duration", durationValue)
         }
     }
+
+    const val SCAN_MODE_BLACKLIST = 0
+    const val SCAN_MODE_WHITELIST = 1
+    const val SCAN_MODE_ALL = SCAN_MODE_BLACKLIST
+    const val SCAN_MODE_FOLDER = SCAN_MODE_WHITELIST
+
+    private val gson = Gson()
+    private val filterFolderListType = object : TypeToken<List<FilterFolder>>() {}.type
+
+    fun getScanMode(context: Context): Int {
+        return context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
+            .getInt("scan_mode", SCAN_MODE_BLACKLIST)
+    }
+
+    fun setScanMode(context: Context, mode: Int) {
+        context.getSharedPreferences("scan_config", Context.MODE_PRIVATE).edit {
+            putInt("scan_mode", mode)
+        }
+    }
+
+    fun getWhitelistFolders(context: Context): List<FilterFolder> {
+        val prefs = context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
+        val json = prefs.getString("whitelist_folders", null)
+        if (!json.isNullOrEmpty()) {
+            try {
+                val list: List<FilterFolder>? = gson.fromJson(json, filterFolderListType)
+                if (list != null) return list
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        val legacyPath = prefs.getString("exclusive_folder_path", null)
+        if (!legacyPath.isNullOrEmpty()) {
+            val legacyUri = prefs.getString("exclusive_folder_uri", null)
+            val name = legacyPath.trimEnd('/').substringAfterLast('/', legacyPath)
+            val migrated = listOf(FilterFolder(uri = legacyUri, path = legacyPath, name = name))
+            saveWhitelistFolders(context, migrated)
+            return migrated
+        }
+        return emptyList()
+    }
+
+    fun saveWhitelistFolders(context: Context, folders: List<FilterFolder>) {
+        val json = gson.toJson(folders)
+        context.getSharedPreferences("scan_config", Context.MODE_PRIVATE).edit {
+            putString("whitelist_folders", json)
+        }
+    }
+
+    fun addWhitelistFolder(context: Context, folder: FilterFolder): Boolean {
+        val current = getWhitelistFolders(context).toMutableList()
+        val normalizedPath = folder.path.trimEnd('/')
+        if (current.any { it.path.trimEnd('/').equals(normalizedPath, ignoreCase = true) }) {
+            return false
+        }
+        current.add(folder)
+        saveWhitelistFolders(context, current)
+        return true
+    }
+
+    fun removeWhitelistFolder(context: Context, folderId: String) {
+        val current = getWhitelistFolders(context).toMutableList()
+        current.removeAll { it.id == folderId }
+        saveWhitelistFolders(context, current)
+    }
+
+    fun getBlacklistFolders(context: Context): List<FilterFolder> {
+        val prefs = context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
+        val json = prefs.getString("blacklist_folders", null)
+        val list = mutableListOf<FilterFolder>()
+        if (!json.isNullOrEmpty()) {
+            try {
+                val parsed: List<FilterFolder>? = gson.fromJson(json, filterFolderListType)
+                if (parsed != null) {
+                    list.addAll(parsed)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        val legacyIgnore = prefs.getString("ignore_folders", null)
+        if (!legacyIgnore.isNullOrEmpty()) {
+            var modified = false
+            val legacyIds = legacyIgnore.split(",").mapNotNull { it.trim().toLongOrNull() }
+            val currentBucketIds = list.mapNotNull { it.bucketId }.toSet()
+            val missingBucketIds = legacyIds.filter { !currentBucketIds.contains(it) }
+            if (missingBucketIds.isNotEmpty()) {
+                val folderMap: HashMap<Long, FolderList> = try {
+                    FolderManger.getMusicFolders(context)
+                } catch (e: Exception) {
+                    HashMap()
+                }
+                missingBucketIds.forEach { id ->
+                    val detected = folderMap[id]
+                    val name = detected?.name?.ifBlank { null } ?: "Folder $id"
+                    val path = detected?.path ?: ""
+                    list.add(FilterFolder(bucketId = id, path = path, name = name))
+                    modified = true
+                }
+                if (modified) {
+                    saveBlacklistFolders(context, list)
+                }
+            }
+        }
+        return list
+    }
+
+    fun saveBlacklistFolders(context: Context, folders: List<FilterFolder>) {
+        val json = gson.toJson(folders)
+        val bucketIds = folders.mapNotNull { it.bucketId }.distinct()
+        val ignoreFoldersString = bucketIds.joinToString(",")
+        context.getSharedPreferences("scan_config", Context.MODE_PRIVATE).edit {
+            putString("blacklist_folders", json)
+            putString("ignore_folders", ignoreFoldersString)
+        }
+    }
+
+    fun addBlacklistFolder(context: Context, folder: FilterFolder): Boolean {
+        val current = getBlacklistFolders(context).toMutableList()
+        val normalizedPath = folder.path.trimEnd('/')
+        if (folder.bucketId != null && current.any { it.bucketId == folder.bucketId }) {
+            return false
+        }
+        if (normalizedPath.isNotEmpty() && current.any { it.path.trimEnd('/').equals(normalizedPath, ignoreCase = true) }) {
+            return false
+        }
+        current.add(folder)
+        saveBlacklistFolders(context, current)
+        return true
+    }
+
+    fun removeBlacklistFolder(context: Context, folderId: String) {
+        val current = getBlacklistFolders(context).toMutableList()
+        current.removeAll { it.id == folderId }
+        saveBlacklistFolders(context, current)
+    }
+
+    fun removeBlacklistFolderByBucketId(context: Context, bucketId: Long) {
+        val current = getBlacklistFolders(context).toMutableList()
+        current.removeAll { it.bucketId == bucketId }
+        saveBlacklistFolders(context, current)
+    }
+
+    fun ignoreFolder(context: Context, folderList: FolderList): Boolean {
+        val folder = FilterFolder(
+            path = folderList.path,
+            name = folderList.name.ifBlank { folderList.path.substringAfterLast('/') },
+            bucketId = folderList.id
+        )
+        return addBlacklistFolder(context, folder)
+    }
+
+    fun getExclusiveFolderUri(context: Context): String? {
+        return context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
+            .getString("exclusive_folder_uri", null)
+    }
+
+    fun setExclusiveFolderUri(context: Context, uri: String?) {
+        context.getSharedPreferences("scan_config", Context.MODE_PRIVATE).edit {
+            putString("exclusive_folder_uri", uri)
+        }
+    }
+
+    fun getExclusiveFolderPath(context: Context): String? {
+        val whitelist = getWhitelistFolders(context)
+        if (whitelist.isNotEmpty()) {
+            return whitelist.first().path
+        }
+        return context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
+            .getString("exclusive_folder_path", null)
+    }
+
+    fun setExclusiveFolderPath(context: Context, path: String?) {
+        context.getSharedPreferences("scan_config", Context.MODE_PRIVATE).edit {
+            putString("exclusive_folder_path", path)
+        }
+    }
+
+    fun isFirstScanSetupCompleted(context: Context): Boolean {
+        return context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
+            .getBoolean("first_scan_setup_completed", false)
+    }
+
+    fun setFirstScanSetupCompleted(context: Context, completed: Boolean) {
+        context.getSharedPreferences("scan_config", Context.MODE_PRIVATE).edit {
+            putBoolean("first_scan_setup_completed", completed)
+        }
+    }
+
 
     fun getCurrentLanguage(context: Context): String? {
         return context.getSharedPreferences("config", Context.MODE_PRIVATE)

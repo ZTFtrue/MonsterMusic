@@ -12,12 +12,14 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,12 +31,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -45,10 +49,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
@@ -60,6 +64,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
@@ -70,45 +75,41 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.SoftwareKeyboardController
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.edit
 import androidx.media3.common.util.UnstableApi
-import com.github.skydoves.colorpicker.compose.ColorEnvelope
-import com.github.skydoves.colorpicker.compose.rememberColorPickerController
-import android.os.Bundle
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.PlayMusicWidget
 import com.ztftrue.music.R
-import com.ztftrue.music.play.manager.MediaCommands
-import com.ztftrue.music.ui.widget.WidgetConfigContent
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
+import com.ztftrue.music.sqlData.model.FilterFolder
 import com.ztftrue.music.sqlData.model.LYRICS_TYPE
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.StorageFolder
 import com.ztftrue.music.sqlData.model.TRACKS_TYPE
 import com.ztftrue.music.ui.public.BackTopBar
+import com.ztftrue.music.ui.widget.WidgetConfigContent
 import com.ztftrue.music.utils.LyricsSettings.FIRST_EMBEDDED_LYRICS
 import com.ztftrue.music.utils.SharedPreferencesName.LYRICS_SETTINGS
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
-import androidx.compose.runtime.rememberCoroutineScope
 import com.ztftrue.music.utils.Utils.openBrowser
 import com.ztftrue.music.utils.model.FolderList
 import com.ztftrue.music.utils.model.LanguageModel
@@ -158,7 +159,7 @@ fun SettingsPage(
     }
 
     Scaffold(
-        modifier = Modifier.padding(all = 0.dp),
+        modifier = Modifier.padding(start = 0.dp, top = 0.dp, end = 0.dp, bottom = 10.dp),
         topBar = {
             Column {
                 BackTopBar(navController, stringResource(id = R.string.settings))
@@ -181,6 +182,8 @@ fun SettingsPage(
                 item {
 
                     var showDialog by remember { mutableStateOf(false) }
+                    var showScanModeDialog by remember { mutableStateOf(false) }
+                    var showManageFilterFoldersDialog by remember { mutableStateOf(false) }
                     var showManageFolderDialog by remember { mutableStateOf(false) }
                     var showLyricsFolderDialog by remember { mutableStateOf(false) }
                     var showAboutDialog by remember { mutableStateOf(false) }
@@ -481,6 +484,65 @@ fun SettingsPage(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .height(60.dp)
+                            .padding(0.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+                                showScanModeDialog = !showScanModeDialog
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 10.dp, end = 10.dp)
+                        ) {
+                            if (showScanModeDialog) {
+                                ScanModeDialog(musicViewModel = musicViewModel, onDismiss = {
+                                    showScanModeDialog = false
+                                })
+                            }
+                            val isWhitelist =
+                                musicViewModel.scanMode.intValue == SharedPreferencesUtils.SCAN_MODE_WHITELIST
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.folder_scan_mode),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                                Text(
+                                    text = if (isWhitelist)
+                                        stringResource(R.string.scan_mode_whitelist)
+                                    else
+                                        stringResource(R.string.scan_mode_blacklist),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+                    }
+
+                    if (showManageFilterFoldersDialog) {
+                        val isWhitelist =
+                            musicViewModel.scanMode.intValue == SharedPreferencesUtils.SCAN_MODE_WHITELIST
+                        ManageFilterFoldersDialog(
+                            musicViewModel = musicViewModel,
+                            isWhitelist = isWhitelist,
+                            onDismiss = { showManageFilterFoldersDialog = false }
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
                             .height(50.dp)
                             .padding(0.dp)
                             .drawBehind {
@@ -492,44 +554,50 @@ fun SettingsPage(
                                 )
                             }
                             .clickable {
-                                showManageFolderDialog = !showManageFolderDialog
+                                showManageFilterFoldersDialog = true
                             },
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
-                                }
-                                .clickable {
-                                    showManageFolderDialog = !showManageFolderDialog
-                                },
+                                .padding(start = 10.dp, end = 10.dp)
                         ) {
-
-                            if (showManageFolderDialog) {
-                                ManageFolderDialog(
-                                    onDismiss = {
-                                        showManageFolderDialog = false
-                                    })
+                            val isWhitelist =
+                                musicViewModel.scanMode.intValue == SharedPreferencesUtils.SCAN_MODE_WHITELIST
+                            Column {
+                                Text(
+                                    text = stringResource(
+                                        if (isWhitelist) R.string.manage_whitelist_folders
+                                        else R.string.manage_blacklist_folders
+                                    ),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                                Text(
+                                    text = if (isWhitelist) {
+                                        if (musicViewModel.whitelistFolders.isEmpty()) stringResource(
+                                            R.string.no_folders_added
+                                        )
+                                        else stringResource(
+                                            R.string.whitelist_mode_summary,
+                                            musicViewModel.whitelistFolders.size
+                                        )
+                                    } else {
+                                        if (musicViewModel.blacklistFolders.isEmpty()) stringResource(
+                                            R.string.no_folders_added
+                                        )
+                                        else stringResource(
+                                            R.string.blacklist_mode_summary,
+                                            musicViewModel.blacklistFolders.size
+                                        )
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                                )
                             }
-                            Text(
-                                text = stringResource(R.string.manage_ignore_folder),
-                                modifier = Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-
-
                         }
-
                     }
                     Box(
                         modifier = Modifier
@@ -547,7 +615,8 @@ fun SettingsPage(
                     ) {
                         Column {
 
-                            val saveIgnoreDurationSuccess = stringResource(R.string.ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect)
+                            val saveIgnoreDurationSuccess =
+                                stringResource(R.string.ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect)
                             Text(
                                 text = stringResource(R.string.ignore_tracks_duration_less_than),
                                 Modifier.padding(start = 10.dp),
@@ -633,7 +702,10 @@ fun SettingsPage(
                                             onClick = {
                                                 saveIgnoreDuration(
                                                     durationValue, context,
-                                                    String.format(saveIgnoreDurationSuccess, durationValue),
+                                                    String.format(
+                                                        saveIgnoreDurationSuccess,
+                                                        durationValue
+                                                    ),
                                                     focusRequester,
                                                     keyboardController
                                                 )
@@ -1359,7 +1431,8 @@ fun AboutDialog(onDismiss: () -> Unit) {
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = stringResource(R.string.settings_link_tarsos_dsp), Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.settings_link_tarsos_dsp),
+                                Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -1385,7 +1458,8 @@ fun AboutDialog(onDismiss: () -> Unit) {
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = stringResource(R.string.settings_link_biquad_designer), Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.settings_link_biquad_designer),
+                                Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -1411,7 +1485,8 @@ fun AboutDialog(onDismiss: () -> Unit) {
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = stringResource(R.string.settings_link_media3), Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.settings_link_media3),
+                                Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -1437,7 +1512,8 @@ fun AboutDialog(onDismiss: () -> Unit) {
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = stringResource(R.string.settings_link_stackoverflow_answer), Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.settings_link_stackoverflow_answer),
+                                Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -1463,7 +1539,8 @@ fun AboutDialog(onDismiss: () -> Unit) {
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = stringResource(R.string.settings_thanks_for_translating), Modifier.padding(start = 10.dp),
+                                text = stringResource(R.string.settings_thanks_for_translating),
+                                Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -1992,9 +2069,184 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
     )
 }
 
+@Composable
+fun ScanModeDialog(
+    musicViewModel: MusicViewModel,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    var selectedMode by remember { mutableIntStateOf(SharedPreferencesUtils.getScanMode(context)) }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = true,
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = stringResource(R.string.folder_scan_mode),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Option 1: Blacklist mode
+            val isModeBlacklist = selectedMode == SharedPreferencesUtils.SCAN_MODE_BLACKLIST
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        if (isModeBlacklist) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    )
+                    .border(
+                        width = if (isModeBlacklist) 2.dp else 1.dp,
+                        color = if (isModeBlacklist) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .clickable { selectedMode = SharedPreferencesUtils.SCAN_MODE_BLACKLIST }
+                    .padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = isModeBlacklist,
+                    onClick = { selectedMode = SharedPreferencesUtils.SCAN_MODE_BLACKLIST }
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.scan_mode_blacklist),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.scan_mode_blacklist_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Option 2: Whitelist mode
+            val isModeWhitelist = selectedMode == SharedPreferencesUtils.SCAN_MODE_WHITELIST
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        if (isModeWhitelist) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    )
+                    .border(
+                        width = if (isModeWhitelist) 2.dp else 1.dp,
+                        color = if (isModeWhitelist) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .clickable { selectedMode = SharedPreferencesUtils.SCAN_MODE_WHITELIST }
+                    .padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = isModeWhitelist,
+                    onClick = { selectedMode = SharedPreferencesUtils.SCAN_MODE_WHITELIST }
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.scan_mode_whitelist),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.scan_mode_whitelist_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.cancel))
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = {
+                        val currentMode = SharedPreferencesUtils.getScanMode(context)
+                        if (selectedMode == SharedPreferencesUtils.SCAN_MODE_BLACKLIST) {
+                            if (currentMode != SharedPreferencesUtils.SCAN_MODE_BLACKLIST) {
+                                musicViewModel.setScanMode(
+                                    context,
+                                    SharedPreferencesUtils.SCAN_MODE_BLACKLIST
+                                )
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.switch_to_blacklist_toast),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                            onDismiss()
+                        } else {
+                            val whitelist = SharedPreferencesUtils.getWhitelistFolders(context)
+                            if (whitelist.isEmpty()) {
+                                onDismiss()
+                                Utils.addWhitelistFolder(context)
+                            } else {
+                                if (currentMode != SharedPreferencesUtils.SCAN_MODE_WHITELIST) {
+                                    musicViewModel.setScanMode(
+                                        context,
+                                        SharedPreferencesUtils.SCAN_MODE_WHITELIST
+                                    )
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.switch_to_whitelist_toast),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                onDismiss()
+                            }
+                        }
+                    }
+                ) {
+                    Text(stringResource(R.string.confirm))
+                }
+            }
+        }
+    }
+}
+
 @UnstableApi
 @Composable
-fun ManageFolderDialog(onDismiss: () -> Unit) {
+fun ManageFolderDialog(
+    musicViewModel: MusicViewModel,
+    onDismiss: () -> Unit
+) {
 
     val context = LocalContext.current
 
@@ -2002,35 +2254,56 @@ fun ManageFolderDialog(onDismiss: () -> Unit) {
 
     LaunchedEffect(Unit) {
         val folderMap: HashMap<Long, FolderList> = withContext(Dispatchers.IO) {
-            val sharedPreferences =
-                context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
-            // -1 don't ignore any,0 ignore duration less than or equal 0s,
-            val ignoreFolders = sharedPreferences.getString("ignore_folders", "")
             val map = FolderManger.getMusicFolders(context)
-            if (!ignoreFolders.isNullOrEmpty()) {
-                ignoreFolders.split(",").forEach {
-                    if (it.isNotEmpty()) {
-                        map[it.toLong()]?.isShow = false
-                    }
+            val currentBlacklist = SharedPreferencesUtils.getBlacklistFolders(context)
+            val blacklistBucketIds = currentBlacklist.mapNotNull { it.bucketId }.toSet()
+            val blacklistPaths =
+                currentBlacklist.map { it.path.trimEnd('/') }.filter { it.isNotEmpty() }.toSet()
+            map.values.forEach { folderItem ->
+                val normalizedFolderPath = folderItem.path.trimEnd('/')
+                if (blacklistBucketIds.contains(folderItem.id) ||
+                    blacklistPaths.contains(normalizedFolderPath) ||
+                    blacklistPaths.any { normalizedFolderPath.startsWith("$it/") || normalizedFolderPath == it }
+                ) {
+                    folderItem.isShow = false
                 }
             }
             map
         }
+        folderList.clear()
         folderList.addAll(folderMap.values)
     }
     fun onConfirmation() {
-        val hideFolderIds = StringBuilder()
-        folderList.forEach {
-            if (!it.isShow) {
-                if (hideFolderIds.isNotEmpty()) {
-                    hideFolderIds.append(",").append(it.id)
-                } else {
-                    hideFolderIds.append(it.id)
+        val currentBlacklist = SharedPreferencesUtils.getBlacklistFolders(context).toMutableList()
+        folderList.forEach { item ->
+            val normalizedItemPath = item.path.trimEnd('/')
+            if (!item.isShow) {
+                val alreadyExists = currentBlacklist.any {
+                    (it.bucketId != null && it.bucketId == item.id) ||
+                            (normalizedItemPath.isNotEmpty() && it.path.trimEnd('/')
+                                .equals(normalizedItemPath, ignoreCase = true))
+                }
+                if (!alreadyExists) {
+                    currentBlacklist.add(
+                        FilterFolder(
+                            path = item.path,
+                            name = item.name.ifBlank { item.path.substringAfterLast('/') },
+                            bucketId = item.id
+                        )
+                    )
+                }
+            } else {
+                currentBlacklist.removeAll {
+                    (it.bucketId != null && it.bucketId == item.id) ||
+                            (normalizedItemPath.isNotEmpty() && it.path.trimEnd('/')
+                                .equals(normalizedItemPath, ignoreCase = true))
                 }
             }
         }
-        val sharedPreferences = context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
-        sharedPreferences.edit { putString("ignore_folders", hideFolderIds.toString()) }
+        SharedPreferencesUtils.saveBlacklistFolders(context, currentBlacklist)
+        musicViewModel.blacklistFolders.clear()
+        musicViewModel.blacklistFolders.addAll(currentBlacklist)
+        musicViewModel.refreshAllTracks(context)
         onDismiss()
     }
 
@@ -2073,7 +2346,7 @@ fun ManageFolderDialog(onDismiss: () -> Unit) {
                     )
                     {
                         Text(
-                            text = stringResource(R.string.check_to_not_ignore_the_folder_you_need_restart_the_app_to_take_effect),
+                            text = stringResource(R.string.uncheck_folders_to_ignore),
                             color = MaterialTheme.colorScheme.onBackground
                         )
                     }
@@ -2351,8 +2624,10 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                     )
                     LazyColumn(modifier = Modifier.fillMaxWidth()) {
                         item {
-                            val showSlideDesc = stringResource(R.string.content_description_show_slide_indicator)
-                            val hideSlideDesc = stringResource(R.string.content_description_hide_slide_indicator)
+                            val showSlideDesc =
+                                stringResource(R.string.content_description_show_slide_indicator)
+                            val hideSlideDesc =
+                                stringResource(R.string.content_description_hide_slide_indicator)
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -2387,8 +2662,10 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                             }
                         }
                         item {
-                            val showTopDesc = stringResource(R.string.content_description_show_top_indicator)
-                            val hideTopDesc = stringResource(R.string.content_description_hide_top_indicator)
+                            val showTopDesc =
+                                stringResource(R.string.content_description_show_top_indicator)
+                            val hideTopDesc =
+                                stringResource(R.string.content_description_hide_top_indicator)
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -2423,8 +2700,10 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                             }
                         }
                         item {
-                            val showQueueDesc = stringResource(R.string.content_description_show_indicator_in_queue)
-                            val hideQueueDesc = stringResource(R.string.content_description_hide_indicator_in_queue)
+                            val showQueueDesc =
+                                stringResource(R.string.content_description_show_indicator_in_queue)
+                            val hideQueueDesc =
+                                stringResource(R.string.content_description_hide_indicator_in_queue)
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -2512,9 +2791,25 @@ fun SwitchLanguageDialog(onDismiss: () -> Unit) {
     var size by remember { mutableIntStateOf(0) }
     var selectIndex by remember { mutableIntStateOf(0) }
     var locale by remember { mutableStateOf(Locale.getDefault().language) }
-    val supportedLanguages = listOf("en", "zh", "zh-TW", "ja", "fr", "ar", "de", "eo", "hu", "ru", "tr") // App-supported languages
+    val supportedLanguages = listOf(
+        "en",
+        "zh",
+        "zh-TW",
+        "ja",
+        "fr",
+        "ar",
+        "de",
+        "eo",
+        "hu",
+        "ru",
+        "tr"
+    ) // App-supported languages
     val currentLocale = LocalConfiguration.current.locales[0]
-    val systemLanguage = if (currentLocale.country.equals("TW", ignoreCase = true) || currentLocale.script.equals("Hant", ignoreCase = true)) {
+    val systemLanguage = if (currentLocale.country.equals(
+            "TW",
+            ignoreCase = true
+        ) || currentLocale.script.equals("Hant", ignoreCase = true)
+    ) {
         "zh-TW"
     } else {
         currentLocale.language
@@ -2546,7 +2841,8 @@ fun SwitchLanguageDialog(onDismiss: () -> Unit) {
             savedLang
         }
         val foundIndex = language.indexOfFirst { it.code == locale }
-        selectIndex = if (foundIndex != -1) foundIndex else language.indexOfFirst { it.code == "" }.coerceAtLeast(0)
+        selectIndex = if (foundIndex != -1) foundIndex else language.indexOfFirst { it.code == "" }
+            .coerceAtLeast(0)
         size = language.size
     }
     fun onConfirmation() {

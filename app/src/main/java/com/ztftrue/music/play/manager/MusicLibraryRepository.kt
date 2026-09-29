@@ -198,6 +198,28 @@ class MusicLibraryRepository(private val context: Context) {
             "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}",
             needMerge
         )
+        val scanMode = SharedPreferencesUtils.getScanMode(context)
+        val hasFolderFilter = scanMode == SharedPreferencesUtils.SCAN_MODE_WHITELIST ||
+                (scanMode == SharedPreferencesUtils.SCAN_MODE_BLACKLIST &&
+                        (SharedPreferencesUtils.getBlacklistFolders(context).isNotEmpty() ||
+                                !context.getSharedPreferences("scan_config", Context.MODE_PRIVATE).getString("ignore_folders", "").isNullOrEmpty()))
+        if (hasFolderFilter) {
+            val validAlbumIds = allTracksLinkedHashMap.values.map { it.albumId }.toSet()
+            val validAlbumNames = if (needMerge) allTracksLinkedHashMap.values.map { it.album.trim() }.toSet() else emptySet()
+            val iterator = albumsLinkedHashMap.iterator()
+            while (iterator.hasNext()) {
+                val entry = iterator.next()
+                val hasTrack = validAlbumIds.contains(entry.key) || (needMerge && validAlbumNames.contains(entry.value.name.trim()))
+                if (!hasTrack) {
+                    iterator.remove()
+                } else {
+                    val count = allTracksLinkedHashMap.values.count {
+                        it.albumId == entry.key || (needMerge && it.album.trim().equals(entry.value.name.trim(), ignoreCase = true))
+                    }
+                    entry.value.trackNumber = count
+                }
+            }
+        }
         return ArrayList(albumsLinkedHashMap.values)
     }
 
@@ -211,6 +233,24 @@ class MusicLibraryRepository(private val context: Context) {
             artistsLinkedHashMap,
             "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
         )
+        val scanMode = SharedPreferencesUtils.getScanMode(context)
+        val hasFolderFilter = scanMode == SharedPreferencesUtils.SCAN_MODE_WHITELIST ||
+                (scanMode == SharedPreferencesUtils.SCAN_MODE_BLACKLIST &&
+                        (SharedPreferencesUtils.getBlacklistFolders(context).isNotEmpty() ||
+                                !context.getSharedPreferences("scan_config", Context.MODE_PRIVATE).getString("ignore_folders", "").isNullOrEmpty()))
+        if (hasFolderFilter) {
+            val validArtistIds = allTracksLinkedHashMap.values.map { it.artistId }.toSet()
+            val iterator = artistsLinkedHashMap.iterator()
+            while (iterator.hasNext()) {
+                val entry = iterator.next()
+                if (!validArtistIds.contains(entry.key)) {
+                    iterator.remove()
+                } else {
+                    val count = allTracksLinkedHashMap.values.count { it.artistId == entry.key }
+                    entry.value.trackNumber = count
+                }
+            }
+        }
         return ArrayList(artistsLinkedHashMap.values)
     }
 
@@ -440,10 +480,37 @@ class MusicLibraryRepository(private val context: Context) {
             ArtistManager.searchArtistByName(context, query)
         }
 
+        val scanMode = SharedPreferencesUtils.getScanMode(context)
+        val hasFolderFilter = scanMode == SharedPreferencesUtils.SCAN_MODE_WHITELIST ||
+                (scanMode == SharedPreferencesUtils.SCAN_MODE_BLACKLIST &&
+                        (SharedPreferencesUtils.getBlacklistFolders(context).isNotEmpty() ||
+                                !context.getSharedPreferences("scan_config", Context.MODE_PRIVATE).getString("ignore_folders", "").isNullOrEmpty()))
+        val albumsResult = albumsDeferred.await()
+        val artistsResult = artistsDeferred.await()
+
+        val finalAlbums = if (hasFolderFilter) {
+            val validAlbumIds = allTracksLinkedHashMap.values.map { it.albumId }.toSet()
+            val validAlbumNames = allTracksLinkedHashMap.values.map { it.album.trim().lowercase() }.toSet()
+            ArrayList(albumsResult.filter {
+                validAlbumIds.contains(it.id) || validAlbumNames.contains(it.name.trim().lowercase())
+            })
+        } else {
+            albumsResult
+        }
+
+        val finalArtists = if (hasFolderFilter) {
+            val validArtistIds = allTracksLinkedHashMap.values.map { it.artistId }.toSet()
+            ArrayList(artistsResult.filter {
+                validArtistIds.contains(it.id)
+            })
+        } else {
+            artistsResult
+        }
+
         SearchResult(
             tracks = tracksDeferred.await(),
-            albums = albumsDeferred.await(),
-            artists = artistsDeferred.await()
+            albums = finalAlbums,
+            artists = finalArtists
         )
     }
 

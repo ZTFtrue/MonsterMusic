@@ -475,6 +475,11 @@ fun TracksListPage(
                                 showAddPlayListDialog = true
                             }
 
+                            OperateType.IgnoreFolder -> {
+                                musicViewModel.ignoreFolder(context, anyListBase)
+                                navController.removeLastSafe()
+                            }
+
                             else -> {
                                 Utils.operateDialogDeal(it, anyListBase, musicViewModel)
                             }

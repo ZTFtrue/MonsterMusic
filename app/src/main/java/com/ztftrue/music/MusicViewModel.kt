@@ -41,6 +41,7 @@ import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.Auxr
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
 import com.ztftrue.music.sqlData.model.DictionaryApp
+import com.ztftrue.music.sqlData.model.FilterFolder
 import com.ztftrue.music.sqlData.model.GENRE_TYPE
 import com.ztftrue.music.sqlData.model.LYRICS_TYPE
 import com.ztftrue.music.sqlData.model.MainTab
@@ -56,9 +57,13 @@ import com.ztftrue.music.utils.LyricsSettings.FIRST_EMBEDDED_LYRICS
 import com.ztftrue.music.utils.LyricsType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.SharedPreferencesName.LYRICS_SETTINGS
+import com.ztftrue.music.utils.SharedPreferencesUtils
+import com.ztftrue.music.utils.model.FolderList
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.detectCharset
 import com.ztftrue.music.utils.Utils.getCover
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.model.Caption
 import com.ztftrue.music.utils.model.EqualizerBand
@@ -228,6 +233,12 @@ class MusicViewModel : ViewModel() {
     var trackEffectEnabled = mutableStateOf(false)
     var effectConfigVersion = mutableIntStateOf(0)
     var enableEcho = mutableStateOf(false)
+    var scanMode = mutableIntStateOf(SharedPreferencesUtils.SCAN_MODE_BLACKLIST)
+    val whitelistFolders = mutableStateListOf<FilterFolder>()
+    val blacklistFolders = mutableStateListOf<FilterFolder>()
+    var exclusiveFolderPath = mutableStateOf<String?>(null)
+    var isRefreshing = mutableStateOf(false)
+    var showFirstScanSetupDialog = mutableStateOf(false)
 
     var playStatus = mutableStateOf(false)
     var equalizerBands = mutableStateListOf<EqualizerBand>()
@@ -1581,117 +1592,280 @@ class MusicViewModel : ViewModel() {
         return extensions.any { fileName.endsWith(it, ignoreCase = true) }
     }
 
-    // 尝试将 treeUri 中的 DocumentFile 转换为物理路径
+    // 尝试将 treeUri 或 DocumentFile 转换为物理路径
     fun getPathFromDocumentUri(context: Context, uri: Uri): String? {
-        if (DocumentsContract.isDocumentUri(context, uri)) {
-            val docId = DocumentsContract.getDocumentId(uri)
-            val split = docId.split(":")
-            val type = split[0]
-            if ("primary".equals(type, ignoreCase = true)) {
-                return "${Environment.getExternalStorageDirectory()}/${split[1]}"
+        return resolvePhysicalPath(context, uri)
+    }
+
+    fun getPathFromTreeUri(context: Context, uri: Uri): String? {
+        return resolvePhysicalPath(context, uri)
+    }
+
+    fun resolvePhysicalPath(context: Context, uri: Uri): String? {
+        val docId = if (DocumentsContract.isTreeUri(uri)) {
+            DocumentsContract.getTreeDocumentId(uri)
+        } else if (DocumentsContract.isDocumentUri(context, uri)) {
+            DocumentsContract.getDocumentId(uri)
+        } else {
+            uri.path
+        } ?: return null
+
+        val split = docId.split(":")
+        val type = split[0]
+        val relativePath = if (split.size > 1) split[1] else ""
+        if ("primary".equals(type, ignoreCase = true)) {
+            return if (relativePath.isNotEmpty()) {
+                "${Environment.getExternalStorageDirectory()}/$relativePath"
             } else {
-                // 处理 SD 卡路径
-                val storageManager =
-                    context.getSystemService(Context.STORAGE_SERVICE) as android.os.storage.StorageManager
-                val volumes = storageManager.storageVolumes
-                for (volume in volumes) {
-                    val uuid = volume.uuid
-                    if (uuid != null && uuid == type) {
-                        return "/storage/$uuid/${split[1]}"
+                Environment.getExternalStorageDirectory().absolutePath
+            }
+        } else {
+            // 处理 SD 卡路径
+            val storageManager =
+                context.getSystemService(Context.STORAGE_SERVICE) as android.os.storage.StorageManager
+            val volumes = storageManager.storageVolumes
+            for (volume in volumes) {
+                val uuid = volume.uuid
+                if (uuid != null && uuid.equals(type, ignoreCase = true)) {
+                    return if (relativePath.isNotEmpty()) {
+                        "/storage/$uuid/$relativePath"
+                    } else {
+                        "/storage/$uuid"
                     }
                 }
             }
+            return if (relativePath.isNotEmpty()) "/storage/$type/$relativePath" else "/storage/$type"
         }
-        return null
+    }
+
+    fun setScanMode(context: Context, mode: Int) {
+        scanMode.intValue = mode
+        SharedPreferencesUtils.setScanMode(context, mode)
+        refreshAllTracks(context)
+    }
+
+    fun addWhitelistFolder(context: Context, folder: FilterFolder) {
+        if (SharedPreferencesUtils.addWhitelistFolder(context, folder)) {
+            if (!whitelistFolders.any { it.id == folder.id }) {
+                whitelistFolders.add(folder)
+            }
+            exclusiveFolderPath.value = folder.path
+            refreshAllTracks(context)
+        }
+    }
+
+    fun removeWhitelistFolder(context: Context, folderId: String) {
+        SharedPreferencesUtils.removeWhitelistFolder(context, folderId)
+        whitelistFolders.removeAll { it.id == folderId }
+        exclusiveFolderPath.value = whitelistFolders.firstOrNull()?.path
+        refreshAllTracks(context)
+    }
+
+    fun addBlacklistFolder(context: Context, folder: FilterFolder) {
+        if (SharedPreferencesUtils.addBlacklistFolder(context, folder)) {
+            if (!blacklistFolders.any { it.id == folder.id || (folder.bucketId != null && it.bucketId == folder.bucketId) }) {
+                blacklistFolders.add(folder)
+            }
+            refreshAllTracks(context)
+        }
+    }
+
+    fun ignoreFolder(context: Context, folderList: FolderList) {
+        val folder = FilterFolder(
+            path = folderList.path,
+            name = folderList.name.ifBlank { folderList.path.substringAfterLast('/') },
+            bucketId = folderList.id
+        )
+        if (SharedPreferencesUtils.addBlacklistFolder(context, folder)) {
+            if (!blacklistFolders.any { it.id == folder.id || (folder.bucketId != null && it.bucketId == folder.bucketId) }) {
+                blacklistFolders.add(folder)
+            }
+            refreshAllTracks(context)
+            Toast.makeText(
+                context,
+                context.getString(R.string.folder_added_to_blacklist, folder.name),
+                Toast.LENGTH_SHORT
+            ).show()
+        } else {
+            Toast.makeText(
+                context,
+                context.getString(R.string.folder_already_added),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    fun removeBlacklistFolder(context: Context, folderId: String) {
+        val target = blacklistFolders.firstOrNull { it.id == folderId }
+        SharedPreferencesUtils.removeBlacklistFolder(context, folderId)
+        if (target?.bucketId != null) {
+            SharedPreferencesUtils.removeBlacklistFolderByBucketId(context, target.bucketId)
+        }
+        blacklistFolders.removeAll { it.id == folderId || (target?.bucketId != null && it.bucketId == target.bucketId) }
+        refreshAllTracks(context)
     }
 
     fun refreshAllTracks(context: Context) {
+        if (isRefreshing.value) return
+        isRefreshing.value = true
+        Toast.makeText(context, context.getString(R.string.refreshing_tracks), Toast.LENGTH_SHORT).show()
         viewModelScope.launch(Dispatchers.IO) {
-            val pathsToScan = mutableListOf<String>()
-            val publicDirs = listOf(
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC),
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PODCASTS),
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_AUDIOBOOKS)
-            )
-            publicDirs.forEach { dir ->
-                if (dir.exists()) {
-                    dir.walk().maxDepth(3) // 限制深度提高性能
-                        .filter { it.isFile && isMusicFile(it.name) }
-                        .forEach { pathsToScan.add(it.absolutePath) }
-                }
-            }
-
-            val folderList = getDb(context).StorageFolderDao().findAllByType(TRACKS_TYPE)
-            folderList.forEach { storageFolder ->
-                val treeUri = storageFolder.uri.toUri()
-                val rootDoc = DocumentFile.fromTreeUri(context, treeUri)
-
-                // 遍历自定义授权的文件夹
-                rootDoc?.listFiles()?.forEach { docFile ->
-                    if (docFile.isFile && isMusicFile(docFile.name)) {
-                        // 尝试获取物理路径
-                        val path = getPathFromDocumentUri(context, docFile.uri)
-                        if (path != null) {
-                            pathsToScan.add(path)
+            try {
+                val pathsToScan = mutableListOf<String>()
+                val scanMode = SharedPreferencesUtils.getScanMode(context)
+                if (scanMode == SharedPreferencesUtils.SCAN_MODE_WHITELIST) {
+                    val whitelist = SharedPreferencesUtils.getWhitelistFolders(context)
+                    whitelist.forEach { filterFolder ->
+                        val folderPath = filterFolder.path
+                        val folderUri = filterFolder.uri
+                        var foundFiles = false
+                        if (folderPath.isNotEmpty()) {
+                            val dir = File(folderPath)
+                            if (dir.exists() && dir.canRead() && dir.listFiles() != null) {
+                                dir.walk().maxDepth(15)
+                                    .filter { it.isFile && isMusicFile(it.name) }
+                                    .forEach { pathsToScan.add(it.absolutePath) }
+                                foundFiles = true
+                            }
                         }
-                    }
-                }
-            }
-
-            // 3. 执行强制系统扫描
-            if (pathsToScan.isNotEmpty()) {
-                // 分批次扫描，防止数组过大
-                val pathArray = pathsToScan.toTypedArray()
-                MediaScannerConnection.scanFile(
-                    context,
-                    pathArray,
-                    null // 让系统根据扩展名自动识别 MIME
-                ) { path, uri ->
-                }
-            }
-            withContext(Dispatchers.Main) {
-                val futureResult: ListenableFuture<SessionResult>? =
-                    browser?.sendCustomCommand(
-                        MediaCommands.COMMAND_REFRESH_ALL,
-                        Bundle().apply { },
-                    )
-                futureResult?.addListener({
-                    try {
-                        val sessionResult = futureResult.get()
-                        if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
-                            refreshPlayList.value =
-                                !refreshPlayList.value
-                            refreshAlbum.value =
-                                !refreshAlbum.value
-                            refreshArtist.value =
-                                !refreshArtist.value
-                            refreshGenre.value =
-                                !refreshGenre.value
-                            refreshFolder.value =
-                                !refreshFolder.value
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                sessionResult.extras.getParcelableArrayList(
-                                    "songsList", MusicItem::class.java
-                                )?.also {
-                                    songsList.clear()
-                                    songsList.addAll(it)
-                                }
-                            } else {
-                                @Suppress("DEPRECATION")
-                                sessionResult.extras.getParcelableArrayList<MusicItem>(
-                                    "songsList"
-                                )?.also {
-                                    songsList.clear()
-                                    songsList.addAll(it)
+                        if (!foundFiles && !folderUri.isNullOrEmpty()) {
+                            fun walkDoc(docFile: DocumentFile, depth: Int = 0) {
+                                if (depth > 15) return
+                                docFile.listFiles().forEach { child ->
+                                    if (child.isDirectory) {
+                                        walkDoc(child, depth + 1)
+                                    } else if (child.isFile && isMusicFile(child.name.orEmpty())) {
+                                        val p = resolvePhysicalPath(context, child.uri)
+                                        if (p != null) pathsToScan.add(p)
+                                    }
                                 }
                             }
-
+                            val rootDoc = DocumentFile.fromTreeUri(context, folderUri.toUri())
+                            if (rootDoc != null) {
+                                walkDoc(rootDoc)
+                            }
                         }
-                    } catch (e: Exception) {
-                        Log.e("Client", "Failed to toggle favorite status", e)
                     }
-                }, ContextCompat.getMainExecutor(context))
+                } else {
+                    val blacklist = SharedPreferencesUtils.getBlacklistFolders(context)
+                    val blacklistPaths = blacklist.map { it.path.trimEnd('/') }.filter { it.isNotEmpty() }
+                    fun isPathBlacklisted(p: String): Boolean {
+                        return blacklistPaths.any { bp ->
+                            p.startsWith("$bp/", ignoreCase = true) || p.equals(bp, ignoreCase = true)
+                        }
+                    }
+
+                    val publicDirs = listOf(
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC),
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PODCASTS),
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_AUDIOBOOKS)
+                    )
+                    publicDirs.forEach { dir ->
+                        if (dir.exists() && !isPathBlacklisted(dir.absolutePath)) {
+                            dir.walk().maxDepth(5)
+                                .filter { file ->
+                                    !isPathBlacklisted(file.absolutePath) && file.isFile && isMusicFile(file.name)
+                                }
+                                .forEach { pathsToScan.add(it.absolutePath) }
+                        }
+                    }
+
+                    val folderList = getDb(context).StorageFolderDao().findAllByType(TRACKS_TYPE)
+                    folderList.forEach { storageFolder ->
+                        val treeUri = storageFolder.uri.toUri()
+                        val rootDoc = DocumentFile.fromTreeUri(context, treeUri)
+                        fun walkDoc(docFile: DocumentFile, depth: Int = 0) {
+                            if (depth > 10) return
+                            docFile.listFiles().forEach { child ->
+                                val p = resolvePhysicalPath(context, child.uri)
+                                if (p != null && isPathBlacklisted(p)) {
+                                    return@forEach
+                                }
+                                if (child.isDirectory) {
+                                    walkDoc(child, depth + 1)
+                                } else if (child.isFile && isMusicFile(child.name.orEmpty())) {
+                                    if (p != null) pathsToScan.add(p)
+                                }
+                            }
+                        }
+                        if (rootDoc != null) {
+                            walkDoc(rootDoc)
+                        }
+                    }
+                }
+
+                // 3. 执行强制系统扫描并等待完成
+                if (pathsToScan.isNotEmpty()) {
+                    for (chunk in pathsToScan.chunked(200)) {
+                        val latch = CountDownLatch(chunk.size)
+                        MediaScannerConnection.scanFile(
+                            context,
+                            chunk.toTypedArray(),
+                            null
+                        ) { _, _ ->
+                            latch.countDown()
+                        }
+                        try {
+                            latch.await(5, TimeUnit.SECONDS)
+                        } catch (_: InterruptedException) {
+                        }
+                    }
+                }
+
+                withContext(Dispatchers.Main) {
+                    val futureResult: ListenableFuture<SessionResult>? =
+                        browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_REFRESH_ALL,
+                            Bundle().apply { },
+                        )
+                    if (futureResult == null) {
+                        isRefreshing.value = false
+                        return@withContext
+                    }
+                    futureResult.addListener({
+                        try {
+                            val sessionResult = futureResult.get()
+                            if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
+                                refreshPlayList.value = !refreshPlayList.value
+                                refreshAlbum.value = !refreshAlbum.value
+                                refreshArtist.value = !refreshArtist.value
+                                refreshGenre.value = !refreshGenre.value
+                                refreshFolder.value = !refreshFolder.value
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    sessionResult.extras.getParcelableArrayList(
+                                        "songsList", MusicItem::class.java
+                                    )?.also {
+                                        songsList.clear()
+                                        songsList.addAll(it)
+                                    }
+                                } else {
+                                    @Suppress("DEPRECATION")
+                                    sessionResult.extras.getParcelableArrayList<MusicItem>(
+                                        "songsList"
+                                    )?.also {
+                                        songsList.clear()
+                                        songsList.addAll(it)
+                                    }
+                                }
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.refresh_completed, songsList.size),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        } catch (e: Exception) {
+                            Log.e("Client", "Failed to refresh tracks", e)
+                        } finally {
+                            isRefreshing.value = false
+                        }
+                    }, ContextCompat.getMainExecutor(context))
+                }
+            } catch (e: Exception) {
+                Log.e("Client", "Error during refreshAllTracks", e)
+                withContext(Dispatchers.Main) {
+                    isRefreshing.value = false
+                }
             }
         }
     }

@@ -12,11 +12,13 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -324,10 +326,28 @@ fun DrawMenu(
                     },
                 contentAlignment = Alignment.CenterStart
             ) {
-                Text(
-                    text = stringResource(R.string.refresh_tracks), Modifier.padding(start = 10.dp),
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp)
+                ) {
+                    Text(
+                        text = if (musicViewModel.isRefreshing.value)
+                            stringResource(R.string.refreshing_tracks)
+                        else
+                            stringResource(R.string.refresh_tracks),
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                    if (musicViewModel.isRefreshing.value) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
             }
         }
 

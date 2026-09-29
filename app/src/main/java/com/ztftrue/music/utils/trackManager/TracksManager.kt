@@ -61,7 +61,14 @@ object TracksManager {
         val sortOrder = sortOrder1.ifBlank {
             "${MediaStore.Audio.Media.TITLE} ASC"
         }
-        // Build the selection clause to exclude the folders by their IDs
+        val scanMode = SharedPreferencesUtils.getScanMode(context)
+        val whitelistFolders = SharedPreferencesUtils.getWhitelistFolders(context)
+        val blacklistFolders = SharedPreferencesUtils.getBlacklistFolders(context)
+        val isWhitelistMode = scanMode == SharedPreferencesUtils.SCAN_MODE_WHITELIST
+        val normalizedWhitelistPaths = whitelistFolders.map { it.path.trimEnd('/') }.filter { it.isNotEmpty() }
+        val normalizedBlacklistPaths = blacklistFolders.map { it.path.trimEnd('/') }.filter { it.isNotEmpty() }
+
+        // Build the selection clause to exclude or include the folders
         val selectionBuilder = StringBuilder()
         val selectionArgs = mutableListOf<String>()
         selectionBuilder.append("  title != ''")
@@ -72,13 +79,40 @@ object TracksManager {
             selectionBuilder.append("${MediaStore.Audio.Media.DURATION} > ?")
             selectionArgs.add(ignoreDuration.toString())
         }
-        if (ignoreFoldersMap.isNotEmpty()) {
-            ignoreFoldersMap.forEach { folderId ->
-                if (selectionBuilder.isNotEmpty()) {
-                    selectionBuilder.append(" AND ")
+        if (isWhitelistMode) {
+            if (normalizedWhitelistPaths.isEmpty()) {
+                // In whitelist mode with no folders added, return empty list immediately
+                return
+            }
+            if (selectionBuilder.isNotEmpty()) {
+                selectionBuilder.append(" AND ")
+            }
+            selectionBuilder.append("(")
+            normalizedWhitelistPaths.forEachIndexed { index, path ->
+                if (index > 0) selectionBuilder.append(" OR ")
+                selectionBuilder.append("${MediaStore.Audio.Media.DATA} LIKE ?")
+                selectionArgs.add("$path/%")
+            }
+            selectionBuilder.append(")")
+        } else {
+            // Blacklist mode
+            if (normalizedBlacklistPaths.isNotEmpty()) {
+                normalizedBlacklistPaths.forEach { path ->
+                    if (selectionBuilder.isNotEmpty()) {
+                        selectionBuilder.append(" AND ")
+                    }
+                    selectionBuilder.append("${MediaStore.Audio.Media.DATA} NOT LIKE ?")
+                    selectionArgs.add("$path/%")
                 }
-                selectionBuilder.append("${MediaStore.Audio.Media.BUCKET_ID} != ?")
-                selectionArgs.add(folderId.toString())
+            }
+            if (ignoreFoldersMap.isNotEmpty()) {
+                ignoreFoldersMap.forEach { folderId ->
+                    if (selectionBuilder.isNotEmpty()) {
+                        selectionBuilder.append(" AND ")
+                    }
+                    selectionBuilder.append("${MediaStore.Audio.Media.BUCKET_ID} != ?")
+                    selectionArgs.add(folderId.toString())
+                }
             }
         }
 
@@ -117,6 +151,23 @@ object TracksManager {
                     val folderId = cursor.getLong(bucketIdColumn)
                     val folderName = cursor.getString(bucketNameColumn)
                     val path = cursor.getString(dataColumn) ?: ""
+                    if (isWhitelistMode) {
+                        val inWhitelist = normalizedWhitelistPaths.any { folderPath ->
+                            path.startsWith("$folderPath/", ignoreCase = true) ||
+                            path.substringBeforeLast('/', "").equals(folderPath, ignoreCase = true)
+                        }
+                        if (!inWhitelist) {
+                            continue
+                        }
+                    } else {
+                        val inBlacklist = normalizedBlacklistPaths.any { folderPath ->
+                            path.startsWith("$folderPath/", ignoreCase = true) ||
+                            path.substringBeforeLast('/', "").equals(folderPath, ignoreCase = true)
+                        }
+                        if (inBlacklist || ignoreFoldersMap.contains(folderId)) {
+                            continue
+                        }
+                    }
                     val displayName = cursor.getString(displayNameColumn) ?: "Unknown"
                     val thisTitle = cursor.getString(titleColumn) ?: "Unknown Title"
                     val thisArtist = cursor.getString(artistColumn) ?: "Unknown Artist"

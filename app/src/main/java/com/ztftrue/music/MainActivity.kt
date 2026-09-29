@@ -68,6 +68,7 @@ import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.sqlData.model.ARTIST_TYPE
+import com.ztftrue.music.sqlData.model.FilterFolder
 import com.ztftrue.music.sqlData.model.GENRE_TYPE
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
@@ -391,6 +392,74 @@ class MainActivity : ComponentActivity() {
                             )
                             musicViewModel.refreshAllTracks(this@MainActivity)
                          }
+                    }
+                }
+            }
+        }
+    val whitelistFolderPickerLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == RESULT_OK && result.data?.data != null) {
+                val treeUri = result.data?.data
+                if (treeUri != null) {
+                    try {
+                        contentResolver.takePersistableUriPermission(
+                            treeUri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        )
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Failed to take persistable URI permission", e)
+                    }
+                    val path = musicViewModel.getPathFromTreeUri(this@MainActivity, treeUri)
+                    if (!path.isNullOrEmpty()) {
+                        val folderName = path.trimEnd('/').substringAfterLast('/', path)
+                        val folder = FilterFolder(
+                            uri = treeUri.toString(),
+                            path = path,
+                            name = folderName
+                        )
+                        musicViewModel.addWhitelistFolder(this@MainActivity, folder)
+                        SharedPreferencesUtils.setScanMode(this@MainActivity, SharedPreferencesUtils.SCAN_MODE_WHITELIST)
+                        SharedPreferencesUtils.setFirstScanSetupCompleted(this@MainActivity, true)
+                        musicViewModel.scanMode.intValue = SharedPreferencesUtils.SCAN_MODE_WHITELIST
+                        musicViewModel.showFirstScanSetupDialog.value = false
+                        Toast.makeText(this@MainActivity, getString(R.string.folder_added, folderName), Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else {
+                if (!SharedPreferencesUtils.isFirstScanSetupCompleted(this@MainActivity)) {
+                    musicViewModel.showFirstScanSetupDialog.value = true
+                }
+            }
+        }
+    val exclusiveFolderPickerLauncher = whitelistFolderPickerLauncher
+
+    val blacklistFolderPickerLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == RESULT_OK && result.data?.data != null) {
+                val treeUri = result.data?.data
+                if (treeUri != null) {
+                    try {
+                        contentResolver.takePersistableUriPermission(
+                            treeUri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        )
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Failed to take persistable URI permission", e)
+                    }
+                    val path = musicViewModel.getPathFromTreeUri(this@MainActivity, treeUri)
+                    if (!path.isNullOrEmpty()) {
+                        val folderName = path.trimEnd('/').substringAfterLast('/', path)
+                        val folder = FilterFolder(
+                            uri = treeUri.toString(),
+                            path = path,
+                            name = folderName
+                        )
+                        musicViewModel.addBlacklistFolder(this@MainActivity, folder)
+                        Toast.makeText(this@MainActivity, getString(R.string.folder_added, folderName), Toast.LENGTH_SHORT).show()
                     }
                 }
             }

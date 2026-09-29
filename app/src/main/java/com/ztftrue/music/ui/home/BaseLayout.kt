@@ -27,6 +27,7 @@ import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.ui.other.EditTrackPage
+import com.ztftrue.music.ui.other.FirstScanSetupDialog
 import com.ztftrue.music.ui.other.FolderListPage
 import com.ztftrue.music.ui.other.SearchPage
 import com.ztftrue.music.ui.other.SettingsPage
@@ -35,6 +36,8 @@ import com.ztftrue.music.ui.play.PlayingPage
 import com.ztftrue.music.ui.public.QueuePage
 import com.ztftrue.music.ui.public.TracksListPage
 import com.ztftrue.music.utils.MutableListExtension.removeLastSafe
+import com.ztftrue.music.utils.SharedPreferencesUtils
+import com.ztftrue.music.utils.Utils
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -145,6 +148,21 @@ fun BaseLayout(
                 }
             },
         )
+        if (musicViewModel.showFirstScanSetupDialog.value) {
+            FirstScanSetupDialog(
+                onSelectScanAll = {
+                    SharedPreferencesUtils.setScanMode(context, SharedPreferencesUtils.SCAN_MODE_BLACKLIST)
+                    SharedPreferencesUtils.setFirstScanSetupCompleted(context, true)
+                    musicViewModel.scanMode.intValue = SharedPreferencesUtils.SCAN_MODE_BLACKLIST
+                    musicViewModel.showFirstScanSetupDialog.value = false
+                    musicViewModel.refreshAllTracks(context)
+                },
+                onSelectSpecificFolder = {
+                    musicViewModel.showFirstScanSetupDialog.value = false
+                    Utils.addWhitelistFolder(context)
+                }
+            )
+        }
     }
 
 }

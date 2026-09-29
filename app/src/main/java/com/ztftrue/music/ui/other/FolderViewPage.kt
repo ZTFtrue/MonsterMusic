@@ -98,6 +98,7 @@ import com.ztftrue.music.ui.public.TracksListView
 import com.ztftrue.music.utils.MutableListExtension.removeLastSafe
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
+import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.model.AnyListBase
@@ -407,11 +408,9 @@ fun FolderListPage(
         }
     }
     if (showMoreOperateDialog) {
-
-        val item = FolderList(path = "", name = "", id = folderList.id, trackNumber = 0)
         FolderListOperateDialog(
             musicViewModel,
-            playList = item,
+            playList = folderList,
             onDismiss = {
                 showMoreOperateDialog = false
                 when (it) {
@@ -419,8 +418,13 @@ fun FolderListPage(
                         showAddPlayListDialog = true
                     }
 
+                    OperateType.IgnoreFolder -> {
+                        musicViewModel.ignoreFolder(context, folderList)
+                        navController.removeLastSafe()
+                    }
+
                     else -> {
-                        Utils.operateDialogDeal(it, item, musicViewModel)
+                        Utils.operateDialogDeal(it, folderList, musicViewModel)
                     }
                 }
             },
@@ -800,22 +804,7 @@ fun FolderItemView(
                     }
 
                     OperateType.IgnoreFolder -> {
-                        val sharedPreferences =
-                            context.getSharedPreferences("scan_config", Context.MODE_PRIVATE)
-                        val ignoreFolders = sharedPreferences.getString("ignore_folders", "")
-                        val newIgnoreFolders: String = if (ignoreFolders.isNullOrEmpty()) {
-                            item.id.toString()
-                        } else {
-                            "$ignoreFolders,${item.id}"
-                        }
-                        sharedPreferences.edit {
-                            putString("ignore_folders", newIgnoreFolders)
-                        }
-                        Toast.makeText(
-                            context,
-                            R.string.ignored_this_folder_please_restart_the_app_to_take_effect,
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        musicViewModel.ignoreFolder(context, item)
                     }
 
                     else -> {
@@ -1090,29 +1079,31 @@ fun FolderListOperateDialog(
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
-                                }
-                                .clickable {
-                                    onDismiss(OperateType.IgnoreFolder)
-                                },
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            Text(
-                                text = stringResource(R.string.ignore_this_folder),
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
+                        if (musicViewModel.scanMode.intValue == SharedPreferencesUtils.SCAN_MODE_BLACKLIST) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(50.dp)
+                                    .padding(0.dp)
+                                    .drawBehind {
+                                        drawLine(
+                                            color = color,
+                                            start = Offset(0f, size.height - 1.dp.toPx()),
+                                            end = Offset(size.width, size.height - 1.dp.toPx()),
+                                            strokeWidth = 1.dp.toPx()
+                                        )
+                                    }
+                                    .clickable {
+                                        onDismiss(OperateType.IgnoreFolder)
+                                    },
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.ignore_this_folder),
+                                    Modifier.padding(start = 10.dp),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
                         }
                     }
                 }
