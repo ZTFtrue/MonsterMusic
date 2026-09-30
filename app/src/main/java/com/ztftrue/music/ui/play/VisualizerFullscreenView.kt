@@ -133,9 +133,7 @@ fun VisualizerFullscreenView(
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
         onDispose {
-            if (activity != null && activity.resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE) {
-                activity.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            }
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
     }
 

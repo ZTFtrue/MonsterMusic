@@ -184,7 +184,6 @@ fun SettingsPage(
                     var showDialog by remember { mutableStateOf(false) }
                     var showScanModeDialog by remember { mutableStateOf(false) }
                     var showManageFilterFoldersDialog by remember { mutableStateOf(false) }
-                    var showManageFolderDialog by remember { mutableStateOf(false) }
                     var showLyricsFolderDialog by remember { mutableStateOf(false) }
                     var showAboutDialog by remember { mutableStateOf(false) }
                     var showSetListIndicatorDialog by remember { mutableStateOf(false) }
@@ -2075,6 +2074,8 @@ fun ScanModeDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val switchToBlacklistToast = stringResource(R.string.switch_to_blacklist_toast)
+    val switchToWhitelistToast = stringResource(R.string.switch_to_whitelist_toast)
     var selectedMode by remember { mutableIntStateOf(SharedPreferencesUtils.getScanMode(context)) }
 
     Dialog(
@@ -2207,7 +2208,7 @@ fun ScanModeDialog(
                                 )
                                 Toast.makeText(
                                     context,
-                                    context.getString(R.string.switch_to_blacklist_toast),
+                                    switchToBlacklistToast,
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
@@ -2225,7 +2226,7 @@ fun ScanModeDialog(
                                     )
                                     Toast.makeText(
                                         context,
-                                        context.getString(R.string.switch_to_whitelist_toast),
+                                        switchToWhitelistToast,
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
