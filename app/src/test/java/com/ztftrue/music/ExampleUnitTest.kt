@@ -1220,4 +1220,84 @@ class ExampleUnitTest {
 
         assertEquals(listOf(200L, 300L), missingBucketIds)
     }
+
+    @Test
+    fun searchTracks_matchesTitleAndArtist_andDeduplicates() {
+        val tracksMap = LinkedHashMap<Long, com.ztftrue.music.sqlData.model.MusicItem>()
+        fun createTrack(id: Long, title: String, artist: String): com.ztftrue.music.sqlData.model.MusicItem {
+            return com.ztftrue.music.sqlData.model.MusicItem(
+                tableId = null,
+                id = id,
+                name = title,
+                path = "/storage/emulated/0/Music/$title.mp3",
+                duration = 180000L,
+                displayName = "$title.mp3",
+                album = "Test Album",
+                albumId = 1L,
+                artist = artist,
+                artistId = 10L,
+                genre = "Pop",
+                genreId = 100L,
+                year = 2024,
+                songNumber = 1
+            )
+        }
+
+        val track1 = createTrack(1L, "Rolling in the Deep", "Adele")
+        val track2 = createTrack(2L, "Someone Like You", "Adele")
+        val track3 = createTrack(3L, "Shape of You", "Ed Sheeran")
+        val track4 = createTrack(4L, "Perfect", "Ed Sheeran")
+        val track5 = createTrack(5L, "Adele Song", "Other Singer")
+
+        tracksMap[1L] = track1
+        tracksMap[2L] = track2
+        tracksMap[3L] = track3
+        tracksMap[4L] = track4
+        tracksMap[5L] = track5
+
+        fun search(query: String?, map: LinkedHashMap<Long, com.ztftrue.music.sqlData.model.MusicItem>): List<com.ztftrue.music.sqlData.model.MusicItem> {
+            if (query.isNullOrBlank()) return emptyList()
+            val trimmed = query.trim()
+            val seenIds = HashSet<Long>()
+            val list = ArrayList<com.ztftrue.music.sqlData.model.MusicItem>()
+            for (item in map.values) {
+                if (!seenIds.contains(item.id)) {
+                    if (item.name.contains(trimmed, ignoreCase = true) ||
+                        item.artist.contains(trimmed, ignoreCase = true)
+                    ) {
+                        seenIds.add(item.id)
+                        list.add(item)
+                    }
+                }
+            }
+            list.sortWith(compareBy(java.lang.String.CASE_INSENSITIVE_ORDER) { it.name })
+            return list
+        }
+
+        // Test 1: Searching for artist "Adele" returns tracks by Adele as well as track with "Adele" in title
+        val adeleResults = search("Adele", tracksMap)
+        assertEquals(3, adeleResults.size)
+        // Check alphabetical sorting by title
+        assertEquals("Adele Song", adeleResults[0].name)
+        assertEquals("Rolling in the Deep", adeleResults[1].name)
+        assertEquals("Someone Like You", adeleResults[2].name)
+
+        // Test 2: Case-insensitivity ("ed sheeran" in lowercase)
+        val edResults = search("ed sheeran", tracksMap)
+        assertEquals(2, edResults.size)
+        assertEquals("Perfect", edResults[0].name)
+        assertEquals("Shape of You", edResults[1].name)
+
+        // Test 3: Deduplication: title and artist both matching query
+        val doubleMatchTrack = createTrack(6L, "Chopin Nocturne", "Chopin")
+        tracksMap[6L] = doubleMatchTrack
+        val chopinResults = search("Chopin", tracksMap)
+        assertEquals(1, chopinResults.size)
+        assertEquals("Chopin Nocturne", chopinResults[0].name)
+
+        // Test 4: Blank/empty query returns empty list
+        assertTrue(search("", tracksMap).isEmpty())
+        assertTrue(search("   ", tracksMap).isEmpty())
+        assertTrue(search(null, tracksMap).isEmpty())
+    }
 }

@@ -263,33 +263,60 @@ object TracksManager {
         tracksHashMap: LinkedHashMap<Long, MusicItem>,
         searchName: String?,
     ): ArrayList<MusicItem> {
+        if (searchName.isNullOrBlank()) {
+            return ArrayList()
+        }
+        val list = ArrayList<MusicItem>()
+        val seenIds = HashSet<Long>()
         // Define the columns to retrieve from the media store for the number of tracks
         val trackProjection = arrayOf(
             MediaStore.Audio.Media._ID,
         )
-        val selection = "${MediaStore.Audio.Media.TITLE} LIKE ?"
-        val selectionArgs = arrayOf("%$searchName%")
+        val selection = "${MediaStore.Audio.Media.TITLE} LIKE ? OR ${MediaStore.Audio.Media.ARTIST} LIKE ?"
+        val selectionArgs = arrayOf("%$searchName%", "%$searchName%")
         val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
 
-        // Create a cursor to query the media store for tracks in the genre
-        val list = ArrayList<MusicItem>()
-        context.contentResolver.query(
-            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-            trackProjection,
-            selection,
-            selectionArgs,
-            sortOrder
-        )?.use { trackCursor ->
-            if (trackCursor.moveToFirst()) {
-                val idColumn = trackCursor.getColumnIndex(MediaStore.Audio.Media._ID)
-                do {
-                    val trackId: Long = trackCursor.getLong(idColumn)
-                    tracksHashMap[trackId]?.let { list.add(it) }
-                } while (trackCursor.moveToNext())
+        try {
+            // Create a cursor to query the media store for tracks matching title or artist
+            context.contentResolver.query(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                trackProjection,
+                selection,
+                selectionArgs,
+                sortOrder
+            )?.use { trackCursor ->
+                if (trackCursor.moveToFirst()) {
+                    val idColumn = trackCursor.getColumnIndex(MediaStore.Audio.Media._ID)
+                    do {
+                        val trackId: Long = trackCursor.getLong(idColumn)
+                        tracksHashMap[trackId]?.let { item ->
+                            if (seenIds.add(trackId)) {
+                                list.add(item)
+                            }
+                        }
+                    } while (trackCursor.moveToNext())
+                }
+            }
+        } catch (_: Exception) {
+        }
+
+        // In-memory fallback/supplement to ensure non-ASCII / Unicode case-insensitivity
+        // or tracks that might have been missed by MediaStore LIKE query
+        val trimmed = searchName.trim()
+        for (item in tracksHashMap.values) {
+            if (!seenIds.contains(item.id)) {
+                if (item.name.contains(trimmed, ignoreCase = true) ||
+                    item.artist.contains(trimmed, ignoreCase = true)
+                ) {
+                    seenIds.add(item.id)
+                    list.add(item)
+                }
             }
         }
+        list.sortWith(compareBy(java.lang.String.CASE_INSENSITIVE_ORDER) { it.name })
         return list
     }
+
 
     @UnstableApi
     fun removeMusicById(context: Context, musicId: Long): Boolean {
