@@ -57,6 +57,7 @@ import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.CustomMetadataKeys
+import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.CreatePlayListDialog
 import com.ztftrue.music.ui.public.DeleteTip
@@ -93,7 +94,7 @@ fun PlayListView(
                 val list = ArrayList<MusicPlayList>()
                 albumMediaItems.forEach { mediaItem ->
                     val album = MusicPlayList(
-                        id = mediaItem.mediaId.toLong(),
+                        id = MediaItemUtils.getId(mediaItem),
                         name = mediaItem.mediaMetadata.title.toString(),
                         trackNumber = mediaItem.mediaMetadata.totalTrackCount ?: 0,
                         path = mediaItem.mediaMetadata.extras?.getString(

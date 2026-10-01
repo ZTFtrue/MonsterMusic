@@ -242,6 +242,7 @@ class MusicViewModel : ViewModel() {
     var exclusiveFolderPath = mutableStateOf<String?>(null)
     var isRefreshing = mutableStateOf(false)
     var showFirstScanSetupDialog = mutableStateOf(false)
+    var videoSupportEnable = mutableStateOf(false)
 
     var playStatus = mutableStateOf(false)
     var equalizerBands = mutableStateListOf<EqualizerBand>()
@@ -1608,7 +1609,9 @@ class MusicViewModel : ViewModel() {
     fun isMusicFile(fileName: String?): Boolean {
         if (fileName == null) return false
         val extensions = listOf("mp3", "flac", "m4a", "wav", "ogg", "aac")
-        return extensions.any { fileName.endsWith(it, ignoreCase = true) }
+        if (extensions.any { fileName.endsWith(it, ignoreCase = true) }) return true
+        if (videoSupportEnable.value && Utils.isVideoPath(fileName)) return true
+        return false
     }
 
     // 尝试将 treeUri 或 DocumentFile 转换为物理路径
@@ -1721,6 +1724,12 @@ class MusicViewModel : ViewModel() {
             SharedPreferencesUtils.removeBlacklistFolderByBucketId(context, target.bucketId)
         }
         blacklistFolders.removeAll { it.id == folderId || (target?.bucketId != null && it.bucketId == target.bucketId) }
+        refreshAllTracks(context)
+    }
+
+    fun setVideoSupportEnable(context: Context, enable: Boolean) {
+        videoSupportEnable.value = enable
+        SharedPreferencesUtils.saveVideoSupportEnable(context, enable)
         refreshAllTracks(context)
     }
 

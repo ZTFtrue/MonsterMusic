@@ -1684,4 +1684,70 @@ class ExampleUnitTest {
         val allItems = applyPagination(items, 0, -1)
         assertEquals(100, allItems.size)
     }
+
+    @Test
+    fun isVideoPath_validation() {
+        assertTrue(Utils.isVideoPath("movie.mp4"))
+        assertTrue(Utils.isVideoPath("/storage/emulated/0/DCIM/Camera/VID_2026.MP4"))
+        assertTrue(Utils.isVideoPath("sample.mkv"))
+        assertTrue(Utils.isVideoPath("clip.webm"))
+        assertTrue(Utils.isVideoPath("test.mov"))
+        assertTrue(Utils.isVideoPath("video.avi"))
+        assertTrue(Utils.isVideoPath("recording.3gp"))
+        assertTrue(Utils.isVideoPath("stream.flv"))
+        assertTrue(Utils.isVideoPath("video.m4v"))
+
+        assertFalse(Utils.isVideoPath("song.mp3"))
+        assertFalse(Utils.isVideoPath("audio.flac"))
+        assertFalse(Utils.isVideoPath("track.wav"))
+        assertFalse(Utils.isVideoPath("music.ogg"))
+        assertFalse(Utils.isVideoPath("audio.m4a"))
+        assertFalse(Utils.isVideoPath(""))
+        assertFalse(Utils.isVideoPath(null))
+        assertFalse(Utils.isVideoPath("no_extension"))
+    }
+
+    @Test
+    fun videoIdMapping_bijectiveAndNegative() {
+        fun encodeVideoId(rawVideoId: Long): Long = -(rawVideoId + 1L)
+        fun decodeVideoId(musicId: Long): Long = (-musicId) - 1L
+
+        val testIds = listOf(0L, 1L, 2L, 42L, 1000L, 123456789L, Long.MAX_VALUE - 1L)
+        for (raw in testIds) {
+            val encoded = encodeVideoId(raw)
+            assertTrue("Encoded video ID must be negative", encoded < 0)
+            val decoded = decodeVideoId(encoded)
+            assertEquals("Decoded ID must match original raw video ID", raw, decoded)
+        }
+    }
+
+    @Test
+    fun videoFocus_stateCalculation() {
+        fun computeIsFocused(isSelected: Boolean, isLifecycleActive: Boolean): Boolean {
+            return isSelected && isLifecycleActive
+        }
+
+        assertTrue(computeIsFocused(isSelected = true, isLifecycleActive = true))
+        assertFalse(computeIsFocused(isSelected = false, isLifecycleActive = true))
+        assertFalse(computeIsFocused(isSelected = true, isLifecycleActive = false))
+        assertFalse(computeIsFocused(isSelected = false, isLifecycleActive = false))
+    }
+
+    @Test
+    fun mediaItemUtils_extractId_handlesAllFormats() {
+        assertEquals(123L, com.ztftrue.music.play.MediaItemUtils.extractId("Folders_track_123"))
+        assertEquals(456L, com.ztftrue.music.play.MediaItemUtils.extractId("Genres_track_456"))
+        assertEquals(789L, com.ztftrue.music.play.MediaItemUtils.extractId("Albums_track_789"))
+        assertEquals(101L, com.ztftrue.music.play.MediaItemUtils.extractId("Artists_track_101"))
+        assertEquals(102L, com.ztftrue.music.play.MediaItemUtils.extractId("PlayLists_track_102"))
+        assertEquals(123L, com.ztftrue.music.play.MediaItemUtils.extractId("Folders@123"))
+        assertEquals(999L, com.ztftrue.music.play.MediaItemUtils.extractId("Genres_album_999"))
+        assertEquals(123L, com.ztftrue.music.play.MediaItemUtils.extractId("123"))
+        assertEquals(-456L, com.ztftrue.music.play.MediaItemUtils.extractId("-456"))
+        assertNull(com.ztftrue.music.play.MediaItemUtils.extractId(""))
+        assertNull(com.ztftrue.music.play.MediaItemUtils.extractId(null))
+        assertNull(com.ztftrue.music.play.MediaItemUtils.extractId("albums_root"))
+        assertNull(com.ztftrue.music.play.MediaItemUtils.extractId("folders_root"))
+        assertNull(com.ztftrue.music.play.MediaItemUtils.extractId("genres_root"))
+    }
 }

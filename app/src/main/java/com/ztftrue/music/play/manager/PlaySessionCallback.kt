@@ -1198,7 +1198,7 @@ class PlaySessionCallback(
                 // 恢复顺序
                 service.musicQueue.sortBy { it.tableId }
 
-                val currentMediaId = service.exoPlayer.currentMediaItem?.mediaId?.toLong()
+                val currentMediaId = service.exoPlayer.currentMediaItem?.let { MediaItemUtils.getId(it) }
                 val newStartIndex =
                     service.musicQueue.indexOfFirst { it.id == currentMediaId }.let { max(0, it) }
 

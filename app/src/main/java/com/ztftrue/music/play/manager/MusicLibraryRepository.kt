@@ -123,7 +123,8 @@ class MusicLibraryRepository(private val context: Context) {
             foldersLinkedHashMap,
             tracksLinkedHashMap,
             "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
-            allTracksLinkedHashMap
+            allTracksLinkedHashMap,
+            foldersListTracksHashMap
         )
     }
 
@@ -256,11 +257,14 @@ class MusicLibraryRepository(private val context: Context) {
         if (genresLinkedHashMap.isNotEmpty()) {
             return ArrayList(genresLinkedHashMap.values)
         }
+        if (tracksLinkedHashMap.isEmpty()) {
+            loadSongsAndFolders()
+        }
         val sortDataP = db.SortFiledDao().findSortByType(PlayListType.Genres.name)
         GenreManager.getGenresList(
             context,
             genresLinkedHashMap,
-            tracksLinkedHashMap,
+            if (tracksLinkedHashMap.isNotEmpty()) tracksLinkedHashMap else allTracksLinkedHashMap,
             "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}"
         )
         return ArrayList(genresLinkedHashMap.values)
@@ -418,13 +422,25 @@ class MusicLibraryRepository(private val context: Context) {
             }
 
             val tracksDeferred = async(Dispatchers.IO) {
-                TracksManager.getTracksById(
+                var tracksList = TracksManager.getTracksById(
                     context, uri, allTracksLinkedHashMap, null, null, sortOrder
                 )
+                if (tracksList.isEmpty()) {
+                    val tracksPool = if (tracksLinkedHashMap.isNotEmpty()) tracksLinkedHashMap.values else allTracksLinkedHashMap.values
+                    tracksList = ArrayList(
+                        tracksPool.filter { it.genreId == id || it.genre.equals(genre.name, ignoreCase = true) }
+                    )
+                }
+                tracksList
             }
 
-            val albums = albumsDeferred.await()
+            var albums = albumsDeferred.await()
             val tracks = tracksDeferred.await()
+
+            if (albums.isEmpty() && tracks.isNotEmpty()) {
+                val albumIds = tracks.map { it.albumId }.toSet()
+                albums = ArrayList(albumsLinkedHashMap.values.filter { albumIds.contains(it.id) })
+            }
 
             genreHasAlbumMap[id] = albums
             genresListTracksHashMap[id] = tracks

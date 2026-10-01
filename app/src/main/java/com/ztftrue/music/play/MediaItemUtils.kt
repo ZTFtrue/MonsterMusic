@@ -33,6 +33,8 @@ object CustomMetadataKeys {
     const val KEY_PRIORITY = "com.ztftrue.music.metadata.KEY_PRIORITY"
     const val KEY_ARTIST_ID = "com.ztftrue.music.metadata.ARTIST_ID"
     const val KEY_ALBUM_ID = "com.ztftrue.music.metadata.ALBUM_ID"
+    const val KEY_FOLDER_ID = "com.ztftrue.music.metadata.FOLDER_ID"
+    const val KEY_PLAYLIST_ID = "com.ztftrue.music.metadata.PLAYLIST_ID"
 }
 
 object MediaItemUtils {
@@ -85,6 +87,7 @@ object MediaItemUtils {
             .setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
             .setExtras(Bundle().apply {
                 putString(CustomMetadataKeys.KEY_PATH, playlist.path)
+                putLong(CustomMetadataKeys.KEY_PLAYLIST_ID, playlist.id)
             })
             .build()
 
@@ -107,6 +110,7 @@ object MediaItemUtils {
             .setExtras(Bundle().apply {
                 putBoolean(CustomMetadataKeys.FOLDER_IS_SHOW, folder.isShow)
                 putString(CustomMetadataKeys.FOLDER_PATH, folder.path)
+                putLong(CustomMetadataKeys.KEY_FOLDER_ID, folder.id)
             })
             .build()
 
@@ -230,11 +234,46 @@ object MediaItemUtils {
     }
 
 
+    fun extractId(mediaId: String?): Long? {
+        if (mediaId.isNullOrEmpty()) return null
+        mediaId.toLongOrNull()?.let { return it }
+        val cleaned = when {
+            mediaId.contains("_track_") -> mediaId.substringAfterLast("_track_")
+            mediaId.contains("_album_") -> mediaId.substringAfterLast("_album_")
+            mediaId.contains('@') -> mediaId.substringAfterLast('@')
+            mediaId.contains('_') -> mediaId.substringAfterLast('_')
+            else -> mediaId
+        }
+        return cleaned.toLongOrNull()
+    }
+
+    fun getId(mediaItem: MediaItem): Long {
+        val extras = mediaItem.mediaMetadata.extras
+        if (extras != null) {
+            if (extras.containsKey(CustomMetadataKeys.KEY_FOLDER_ID)) {
+                return extras.getLong(CustomMetadataKeys.KEY_FOLDER_ID)
+            }
+            if (extras.containsKey(CustomMetadataKeys.KEY_GENRE_ID)) {
+                return extras.getLong(CustomMetadataKeys.KEY_GENRE_ID)
+            }
+            if (extras.containsKey(CustomMetadataKeys.KEY_ALBUM_ID)) {
+                return extras.getLong(CustomMetadataKeys.KEY_ALBUM_ID)
+            }
+            if (extras.containsKey(CustomMetadataKeys.KEY_ARTIST_ID)) {
+                return extras.getLong(CustomMetadataKeys.KEY_ARTIST_ID)
+            }
+            if (extras.containsKey(CustomMetadataKeys.KEY_PLAYLIST_ID)) {
+                return extras.getLong(CustomMetadataKeys.KEY_PLAYLIST_ID)
+            }
+        }
+        return extractId(mediaItem.mediaId) ?: 0L
+    }
+
     fun mediaItemToMusicItem(mediaItem: MediaItem): MusicItem? {
         val metadata = mediaItem.mediaMetadata
 
         // mediaId 是必须的，我们用它来填充 id 字段
-        val id = mediaItem.mediaId.toLongOrNull() ?: return null
+        val id = mediaItem.mediaId.toLongOrNull() ?: extractId(mediaItem.mediaId) ?: return null
 
         val extras = metadata.extras ?: Bundle.EMPTY
 
@@ -280,11 +319,12 @@ object MediaItemUtils {
             )
         }
 
-        // 2. mediaId 是必须的，我们用它来填充 id 字段
-        val id = mediaItem.mediaId.toLongOrNull()
-            ?: // 如果 mediaId 不是 "album_123" 这种格式，而是 "albums_root" 这种，转换会失败
-            // 这种情况下我们不认为它是一个具体的专辑，返回 null
-            return null
+        // 2. 提取 album id
+        val id = if (mediaItem.mediaMetadata.extras?.containsKey(CustomMetadataKeys.KEY_ALBUM_ID) == true) {
+            mediaItem.mediaMetadata.extras!!.getLong(CustomMetadataKeys.KEY_ALBUM_ID)
+        } else {
+            extractId(mediaItem.mediaId)
+        } ?: return null
 
         val extras = metadata.extras ?: Bundle.EMPTY
 

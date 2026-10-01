@@ -56,6 +56,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.CustomMetadataKeys
+import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.model.MusicPlayList
 
@@ -523,7 +524,7 @@ fun AddMusicToPlayListDialog(
                 val list = mutableListOf<MusicPlayList>()
                 items.forEach { mediaItem ->
                     val item = MusicPlayList(
-                        id = mediaItem.mediaId.toLong(),
+                        id = MediaItemUtils.getId(mediaItem),
                         name = mediaItem.mediaMetadata.title.toString(),
                         trackNumber = mediaItem.mediaMetadata.totalTrackCount ?: 0,
                         path = mediaItem.mediaMetadata.extras?.getString(

@@ -289,4 +289,6 @@
     <string name="year_label">Jahr</string>
     <string name="comment_label">Kommentar</string>
     <string name="path_label">Dateipfad</string>
+    <string name="video_support_enable">Video-Unterstützung</string>
+    <string name="video_support_enable_desc">Videos im Cover-Bereich abspielen; bei Inaktivität oder im Hintergrund wird nur Audio abgespielt, um Akku zu sparen</string>
 </resources>

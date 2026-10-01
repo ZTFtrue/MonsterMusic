@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
@@ -115,6 +116,10 @@
                 <data android:mimeType="audio/mpegurl" />
                 <data android:mimeType="application/x-mpegurl" />
                 <data android:mimeType="application/vnd.apple.mpegurl" />
+                <data android:mimeType="video/mp4" />
+                <data android:mimeType="video/x-matroska" />
+                <data android:mimeType="video/webm" />
+                <data android:mimeType="video/quicktime" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -127,10 +132,16 @@
                 <data android:pathPattern=".*\\.m3u8" />
                 <data android:pathPattern=".*\\.M3U" />
                 <data android:pathPattern=".*\\.M3U8" />
+                <data android:pathPattern=".*\\.mp4" />
+                <data android:pathPattern=".*\\.mkv" />
+                <data android:pathPattern=".*\\.webm" />
                 <data android:pathSuffix=".m3u" />
                 <data android:pathSuffix=".m3u8" />
                 <data android:pathSuffix=".M3U" />
                 <data android:pathSuffix=".M3U8" />
+                <data android:pathSuffix=".mp4" />
+                <data android:pathSuffix=".mkv" />
+                <data android:pathSuffix=".webm" />
             </intent-filter>
         </activity-alias>
 
@@ -170,6 +181,10 @@
                 <data android:mimeType="audio/mpegurl" />
                 <data android:mimeType="application/x-mpegurl" />
                 <data android:mimeType="application/vnd.apple.mpegurl" />
+                <data android:mimeType="video/mp4" />
+                <data android:mimeType="video/x-matroska" />
+                <data android:mimeType="video/webm" />
+                <data android:mimeType="video/quicktime" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -182,10 +197,16 @@
                 <data android:pathPattern=".*\\.m3u8" />
                 <data android:pathPattern=".*\\.M3U" />
                 <data android:pathPattern=".*\\.M3U8" />
+                <data android:pathPattern=".*\\.mp4" />
+                <data android:pathPattern=".*\\.mkv" />
+                <data android:pathPattern=".*\\.webm" />
                 <data android:pathSuffix=".m3u" />
                 <data android:pathSuffix=".m3u8" />
                 <data android:pathSuffix=".M3U" />
                 <data android:pathSuffix=".M3U8" />
+                <data android:pathSuffix=".mp4" />
+                <data android:pathSuffix=".mkv" />
+                <data android:pathSuffix=".webm" />
             </intent-filter>
         </activity-alias>
         <!-- 3. Alias for "Add to Queue" -->
@@ -225,6 +246,10 @@
                 <data android:mimeType="audio/mpegurl" />
                 <data android:mimeType="application/x-mpegurl" />
                 <data android:mimeType="application/vnd.apple.mpegurl" />
+                <data android:mimeType="video/mp4" />
+                <data android:mimeType="video/x-matroska" />
+                <data android:mimeType="video/webm" />
+                <data android:mimeType="video/quicktime" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -237,10 +262,16 @@
                 <data android:pathPattern=".*\\.m3u8" />
                 <data android:pathPattern=".*\\.M3U" />
                 <data android:pathPattern=".*\\.M3U8" />
+                <data android:pathPattern=".*\\.mp4" />
+                <data android:pathPattern=".*\\.mkv" />
+                <data android:pathPattern=".*\\.webm" />
                 <data android:pathSuffix=".m3u" />
                 <data android:pathSuffix=".m3u8" />
                 <data android:pathSuffix=".M3U" />
                 <data android:pathSuffix=".M3U8" />
+                <data android:pathSuffix=".mp4" />
+                <data android:pathSuffix=".mkv" />
+                <data android:pathSuffix=".webm" />
             </intent-filter>
         </activity-alias>
 

@@ -340,4 +340,6 @@
     <string name="folder_added_to_blacklist">Folder added to blacklist: %1$s</string>
     <string name="select_device_folders">Select device folders</string>
     <string name="uncheck_folders_to_ignore">Uncheck folders to exclude them from the library</string>
+    <string name="video_support_enable">Video Support</string>
+    <string name="video_support_enable_desc">Display video in cover for video files; automatically plays as audio-only when not focused to save battery</string>
 </resources>

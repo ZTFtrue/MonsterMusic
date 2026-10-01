@@ -72,6 +72,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.Router
+import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.CreatePlayListDialog
 import com.ztftrue.music.utils.DialogOperate
@@ -112,7 +113,7 @@ fun AlbumGridView(
                     val list = ArrayList<AlbumList>()
                     albumMediaItems.forEach { mediaItem ->
                         val album = AlbumList(
-                            id = mediaItem.mediaId.toLong(),
+                            id = MediaItemUtils.getId(mediaItem),
                             name = mediaItem.mediaMetadata.title.toString(),
                             artist = mediaItem.mediaMetadata.artist.toString(),
                             firstYear = mediaItem.mediaMetadata.extras?.getString(

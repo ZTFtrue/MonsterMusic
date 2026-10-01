@@ -1,5 +1,8 @@
 package com.ztftrue.music.ui.play
 
+import android.view.View
+import android.view.ViewGroup
+import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -24,22 +27,30 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.media3.ui.PlayerView
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
+import com.ztftrue.music.play.PlayService
+import com.ztftrue.music.utils.Utils
 
+@OptIn(UnstableApi::class)
 @Composable
 fun CoverView(
     musicViewModel: MusicViewModel,
@@ -52,18 +63,21 @@ fun CoverView(
     val imageModel: ImageSource by musicViewModel.currentMusicCover
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
+    var isLifecycleActive by remember { mutableStateOf(false) }
 
     DisposableEffect(lifecycleOwner, musicVisualizationEnable.value, isSelected) {
         val lifecycle = lifecycleOwner.lifecycle
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
+                    isLifecycleActive = true
                     if (musicVisualizationEnable.value && isSelected) {
                         musicViewModel.setVisualizationActive(true)
                     }
                 }
 
                 Lifecycle.Event.ON_PAUSE -> {
+                    isLifecycleActive = false
                     musicViewModel.setVisualizationActive(false)
                 }
 
@@ -72,16 +86,23 @@ fun CoverView(
         }
 
         lifecycle.addObserver(observer)
-        if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) && musicVisualizationEnable.value && isSelected) {
+        isLifecycleActive = lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+        if (isLifecycleActive && musicVisualizationEnable.value && isSelected) {
             musicViewModel.setVisualizationActive(true)
         } else if (!musicVisualizationEnable.value || !isSelected) {
             musicViewModel.setVisualizationActive(false)
         }
         onDispose {
             lifecycle.removeObserver(observer)
+            isLifecycleActive = false
             musicViewModel.setVisualizationActive(false)
         }
     }
+
+    val isFocused = isSelected && isLifecycleActive
+    val currentTrack = musicViewModel.currentPlay.value
+    val isVideo = currentTrack != null && (Utils.isVideoPath(currentTrack.path) || currentTrack.id < 0)
+    val showVideo = musicViewModel.videoSupportEnable.value && isVideo
 
     LazyColumn(
         state = listState,
@@ -106,15 +127,7 @@ fun CoverView(
                                 .size(600, 600)
                                 .build(),
                             contentDescription = stringResource(R.string.cover),
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .combinedClickable(
-                                    onLongClick = {
-                                        showOtherMessage.value = !showOtherMessage.value
-                                    },
-                                    onClick = {
-                                    }
-                                )
+                            modifier = Modifier.fillMaxSize()
                         )
                     }
                 } else {
@@ -124,6 +137,26 @@ fun CoverView(
                             .background(color = Color.Black)
                     )
                 }
+
+                if (showVideo) {
+                    VideoCoverView(
+                        musicViewModel = musicViewModel,
+                        isFocused = isFocused,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .combinedClickable(
+                            onLongClick = {
+                                showOtherMessage.value = !showOtherMessage.value
+                            },
+                            onClick = {
+                            }
+                        )
+                )
 
                 if (musicVisualizationEnable.value && isSelected) {
                     val mode = musicViewModel.visualizationMode.value
@@ -167,6 +200,53 @@ fun CoverView(
                     AudioChainView(musicViewModel = musicViewModel)
                 }
             }
+        }
+    }
+}
+
+@OptIn(UnstableApi::class)
+@Composable
+fun VideoCoverView(
+    musicViewModel: MusicViewModel,
+    isFocused: Boolean,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier,
+        factory = { ctx ->
+            PlayerView(ctx).apply {
+                useController = false
+                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+            }
+        },
+        update = { playerView ->
+            val player = PlayService.exoPlayerInstance ?: musicViewModel.browser
+            if (isFocused) {
+                playerView.visibility = View.VISIBLE
+                if (playerView.player != player) {
+                    playerView.player = player
+                }
+            } else {
+                if (playerView.player != null) {
+                    playerView.player = null
+                }
+                PlayService.exoPlayerInstance?.clearVideoSurface()
+                playerView.visibility = View.GONE
+            }
+        },
+        onRelease = { playerView ->
+            playerView.player = null
+            PlayService.exoPlayerInstance?.clearVideoSurface()
+        }
+    )
+
+    DisposableEffect(Unit) {
+        onDispose {
+            PlayService.exoPlayerInstance?.clearVideoSurface()
         }
     }
 }

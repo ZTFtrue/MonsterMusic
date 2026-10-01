@@ -64,6 +64,61 @@ object MusicFileParser {
         // 只有 content 协议且属于 media provider 才能查数据库
         if (uri.scheme != "content" || !uri.toString().contains("media")) return null
 
+        val isVideoUri = uri.toString().contains("video")
+        if (isVideoUri) {
+            val videoProjection = arrayOf(
+                MediaStore.Video.Media._ID,
+                MediaStore.Video.Media.TITLE,
+                MediaStore.Video.Media.DATA,
+                MediaStore.Video.Media.DURATION,
+                MediaStore.Video.Media.DISPLAY_NAME,
+                MediaStore.Video.Media.ALBUM,
+                MediaStore.Video.Media.ARTIST
+            )
+            try {
+                context.contentResolver.query(uri, videoProjection, null, null, null)?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val idCol = cursor.getColumnIndex(MediaStore.Video.Media._ID)
+                        val id = if (idCol != -1) cursor.getLong(idCol) else System.currentTimeMillis()
+                        val titleCol = cursor.getColumnIndex(MediaStore.Video.Media.TITLE)
+                        val dataCol = cursor.getColumnIndex(MediaStore.Video.Media.DATA)
+                        val durationCol = cursor.getColumnIndex(MediaStore.Video.Media.DURATION)
+                        val displayNameCol = cursor.getColumnIndex(MediaStore.Video.Media.DISPLAY_NAME)
+                        val albumCol = cursor.getColumnIndex(MediaStore.Video.Media.ALBUM)
+                        val artistCol = cursor.getColumnIndex(MediaStore.Video.Media.ARTIST)
+
+                        val title = if (titleCol != -1) cursor.getString(titleCol) else null
+                        val path = if (dataCol != -1) cursor.getString(dataCol) else null
+                        val duration = if (durationCol != -1) cursor.getLong(durationCol) else 0L
+                        val displayName = if (displayNameCol != -1) cursor.getString(displayNameCol) ?: "Unknown" else "Unknown"
+                        val album = if (albumCol != -1) cursor.getString(albumCol) ?: "<video>" else "<video>"
+                        val artist = if (artistCol != -1) cursor.getString(artistCol) ?: "<video>" else "<video>"
+                        val musicID = -(id + 1L)
+
+                        return MusicItem(
+                            tableId = null,
+                            id = musicID,
+                            name = title ?: displayName,
+                            path = path ?: uri.toString(),
+                            duration = duration,
+                            displayName = displayName,
+                            album = album,
+                            albumId = 0L,
+                            artist = artist,
+                            artistId = 0L,
+                            genre = "Video",
+                            genreId = 0L,
+                            year = 0,
+                            songNumber = 0
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("MusicParser", "Error querying MediaStore for video", e)
+            }
+            return null
+        }
+
         val projection = arrayOf(
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.TITLE,
@@ -143,6 +198,16 @@ object MusicFileParser {
             music.name = music.displayName
         } finally {
             retriever.release()
+        }
+
+        val isVideo = Utils.isVideoPath(uri.toString()) || Utils.isVideoPath(music.displayName) || uri.toString().contains("video")
+        if (isVideo) {
+            if (music.id > 0) {
+                music.id = -(music.id + 1L)
+            }
+            if (music.genre.isEmpty()) {
+                music.genre = "Video"
+            }
         }
 
         return music
@@ -286,6 +351,12 @@ object MusicFileParser {
     fun isSupportedMusicFormat(context: Context, uri: Uri, mimeType: String?): Boolean {
         if (isM3uPlaylist(context, uri, mimeType)) {
             return true
+        }
+        val isVideo = (mimeType != null && mimeType.trim().lowercase().startsWith("video/")) ||
+                Utils.isVideoPath(getFileName(context, uri)) ||
+                Utils.isVideoPath(uri.path)
+        if (isVideo) {
+            return SharedPreferencesUtils.getVideoSupportEnable(context)
         }
         if (!mimeType.isNullOrBlank()) {
             val normalizedMime = mimeType.trim().lowercase()

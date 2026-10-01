@@ -795,4 +795,15 @@ object SharedPreferencesUtils {
             Context.MODE_PRIVATE
         ).getString("SelectedPreset", Utils.custom) ?: Utils.custom
     }
+
+    fun saveVideoSupportEnable(context: Context, value: Boolean) {
+        context.getSharedPreferences("play_config", Context.MODE_PRIVATE).edit {
+            putBoolean("video_support_enable", value)
+        }
+    }
+
+    fun getVideoSupportEnable(context: Context): Boolean {
+        return context.getSharedPreferences("play_config", Context.MODE_PRIVATE)
+            .getBoolean("video_support_enable", false)
+    }
 }

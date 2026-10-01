@@ -105,6 +105,7 @@ class PlayService : MediaLibraryService() {
 
         // 2. 初始化播放器 (需要 effectManager 准备好)
         initExoPlayer()
+        exoPlayerInstance = exoPlayer
 
         // 3. 构建 Session
         val contentIntent = Intent(this, MainActivity::class.java)
@@ -723,11 +724,17 @@ class PlayService : MediaLibraryService() {
 
         effectManager.release()
         mediaSession?.release()
+        exoPlayerInstance = null
         exoPlayer.release()
 
         if (this::audioManager.isInitialized && headsetCallback != null) {
             audioManager.unregisterAudioDeviceCallback(headsetCallback)
         }
         super.onDestroy()
+    }
+
+    companion object {
+        var exoPlayerInstance: ExoPlayer? = null
+            private set
     }
 }

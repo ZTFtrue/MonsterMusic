@@ -21,34 +21,57 @@ object GenreManager {
         val sortOrder = sortOrder1.ifBlank { "${MediaStore.Audio.Genres.NAME} ASC" }
 
         val playList = LinkedHashMap<Long, GenresList>()
-        musicResolver.query(
-            MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,
-            playListProjection,
-            null,
-            null,
-            sortOrder
-        )?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                val iDColumn = cursor.getColumnIndex(MediaStore.Audio.Genres._ID)
-                val nameColumn = cursor.getColumnIndex(MediaStore.Audio.Genres.NAME)
-                do {
-                    val id = cursor.getLong(iDColumn)
-                    val name = cursor.getString(nameColumn)
-                    val trackUri = MediaStore.Audio.Genres.Members.getContentUri("external", id)
-                    val listT: ArrayList<MusicItem> =
-                        TracksManager.getTracksById(context, trackUri, tracksHashMap, null, null, null)
-                    if (listT.isEmpty()) continue
-                    val albumList = GenresList(
-                        id,
-                        name ?: "unknown",
-                        listT.size,
-                        0,
-                        PlayListType.Genres,
-                    )
-                    playList[id] = albumList
-                } while (cursor.moveToNext())
+        try {
+            musicResolver.query(
+                MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,
+                playListProjection,
+                null,
+                null,
+                sortOrder
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val iDColumn = cursor.getColumnIndex(MediaStore.Audio.Genres._ID)
+                    val nameColumn = cursor.getColumnIndex(MediaStore.Audio.Genres.NAME)
+                    do {
+                        val id = cursor.getLong(iDColumn)
+                        val name = cursor.getString(nameColumn)
+                        val trackUri = MediaStore.Audio.Genres.Members.getContentUri("external", id)
+                        val listT: ArrayList<MusicItem> =
+                            TracksManager.getTracksById(context, trackUri, tracksHashMap, null, null, null)
+                        if (listT.isEmpty()) continue
+                        val albumList = GenresList(
+                            id,
+                            name ?: "unknown",
+                            listT.size,
+                            0,
+                            PlayListType.Genres,
+                        )
+                        playList[id] = albumList
+                    } while (cursor.moveToNext())
+                }
+            }
+        } catch (_: Exception) {
+        }
+
+        // Fallback: If MediaStore returned 0 genres (e.g. MediaStore.Audio.Genres.Members deprecated on Android 10+),
+        // group in-memory tracks by track.genre
+        if (playList.isEmpty() && tracksHashMap.isNotEmpty()) {
+            val genreGroups = tracksHashMap.values
+                .filter { it.genre.isNotBlank() && it.genre != "Unknown genre" }
+                .groupBy { it.genre }
+            var pseudoId = 1L
+            for ((genreName, items) in genreGroups) {
+                val existingGenreId = items.firstOrNull { it.genreId > 0 }?.genreId ?: pseudoId++
+                playList[existingGenreId] = GenresList(
+                    existingGenreId,
+                    genreName,
+                    items.size,
+                    0,
+                    PlayListType.Genres
+                )
             }
         }
+
         list.putAll(playList)
     }
 

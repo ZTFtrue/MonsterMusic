@@ -129,6 +129,15 @@ data class CheckLyricsData(val path: String, val type: LyricsType)
 
 @Suppress("deprecation")
 object Utils {
+    val VIDEO_EXTENSIONS = setOf(
+        "mp4", "mkv", "webm", "avi", "3gp", "3gpp", "mov", "flv", "m4v", "wmv", "ts"
+    )
+
+    fun isVideoPath(path: String?): Boolean {
+        if (path.isNullOrEmpty()) return false
+        val ext = path.substringBefore('?').substringAfterLast('.', "").lowercase()
+        return ext in VIDEO_EXTENSIONS
+    }
     val translateMap = HashMap<String, Int>().apply {
         put("Songs", R.string.tab_songs)
         put("PlayLists", R.string.tab_playLists)
@@ -228,7 +237,9 @@ object Utils {
             val blacklistFolders = SharedPreferencesUtils.getBlacklistFolders(context)
             val exclusiveFolderPath = SharedPreferencesUtils.getExclusiveFolderPath(context)
             val isFirstScanCompleted = SharedPreferencesUtils.isFirstScanSetupCompleted(context)
+            val videoSupportEnable = SharedPreferencesUtils.getVideoSupportEnable(context)
             withContext(Dispatchers.Main) {
+                musicViewModel.videoSupportEnable.value = videoSupportEnable
                 musicViewModel.scanMode.intValue = scanMode
                 musicViewModel.whitelistFolders.clear()
                 musicViewModel.whitelistFolders.addAll(whitelistFolders)
@@ -333,6 +344,12 @@ object Utils {
                         coverT.size
                     ).scale(512, 512, false)
                 )
+            } else if (isVideoPath(path) || musicId < 0) {
+                val frame = retriever.getFrameAtTime(1_000_000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+                    ?: retriever.frameAtTime
+                if (frame != null) {
+                    return ImageSource.BitmapFile(frame.scale(512, 512, false))
+                }
             }
         } catch (_: Exception) {
         }

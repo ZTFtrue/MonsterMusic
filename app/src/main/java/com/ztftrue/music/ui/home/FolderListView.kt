@@ -28,6 +28,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.CustomMetadataKeys
+import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.ui.other.FolderItemView
 import com.ztftrue.music.utils.model.FolderList
 import com.ztftrue.music.utils.trackManager.FolderManger
@@ -74,7 +75,7 @@ fun FolderListView(
                             CustomMetadataKeys.FOLDER_PATH,
                             "/"
                         ) ?: "/",
-                        id = mediaItem.mediaId.toLong(),
+                        id = MediaItemUtils.getId(mediaItem),
                         name = mediaItem.mediaMetadata.title.toString(),
                         trackNumber = mediaItem.mediaMetadata.totalTrackCount ?: 0,
                         isShow = mediaItem.mediaMetadata.extras?.getBoolean(

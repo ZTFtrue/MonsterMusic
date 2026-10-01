@@ -47,6 +47,7 @@ object TracksManager {
         tracksHashMap: LinkedHashMap<Long, MusicItem>,
         sortOrder1: String,
         allTracksHashMap: LinkedHashMap<Long, MusicItem>? = null,
+        foldersListTracksHashMap: HashMap<Long, LinkedHashMap<Long, MusicItem>>? = null,
     ) {
         tracksHashMap.clear()
         folderListLinkedHashMap.clear()
@@ -219,9 +220,157 @@ object TracksManager {
             }
         }
 
+        val videoSupportEnable = SharedPreferencesUtils.getVideoSupportEnable(context)
+        if (videoSupportEnable) {
+            val hasVideoPermission = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                androidx.core.content.ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.READ_MEDIA_VIDEO
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            } else {
+                androidx.core.content.ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            }
+            if (hasVideoPermission) {
+                val videoSelectionBuilder = StringBuilder()
+                val videoSelectionArgs = mutableListOf<String>()
+                videoSelectionBuilder.append("  title != ''")
+                if (ignoreDuration >= 0) {
+                    videoSelectionBuilder.append(" AND ${MediaStore.Video.Media.DURATION} > ?")
+                    videoSelectionArgs.add(ignoreDuration.toString())
+                }
+                if (isWhitelistMode) {
+                    if (normalizedWhitelistPaths.isNotEmpty()) {
+                        videoSelectionBuilder.append(" AND (")
+                        normalizedWhitelistPaths.forEachIndexed { index, path ->
+                            if (index > 0) videoSelectionBuilder.append(" OR ")
+                            videoSelectionBuilder.append("${MediaStore.Video.Media.DATA} LIKE ?")
+                            videoSelectionArgs.add("$path/%")
+                        }
+                        videoSelectionBuilder.append(")")
+                    }
+                } else {
+                    if (normalizedBlacklistPaths.isNotEmpty()) {
+                        normalizedBlacklistPaths.forEach { path ->
+                            videoSelectionBuilder.append(" AND ${MediaStore.Video.Media.DATA} NOT LIKE ?")
+                            videoSelectionArgs.add("$path/%")
+                        }
+                    }
+                    if (ignoreFoldersMap.isNotEmpty()) {
+                        ignoreFoldersMap.forEach { folderId ->
+                            videoSelectionBuilder.append(" AND ${MediaStore.Video.Media.BUCKET_ID} != ?")
+                            videoSelectionArgs.add(folderId.toString())
+                        }
+                    }
+                }
+
+                val videoProjection = arrayOf(
+                    MediaStore.Video.Media._ID,
+                    MediaStore.Video.Media.TITLE,
+                    MediaStore.Video.Media.ARTIST,
+                    MediaStore.Video.Media.ALBUM,
+                    MediaStore.Video.Media.DURATION,
+                    MediaStore.Video.Media.DATA,
+                    MediaStore.Video.Media.DISPLAY_NAME,
+                    MediaStore.Video.Media.BUCKET_ID,
+                    MediaStore.Video.Media.BUCKET_DISPLAY_NAME,
+                    MediaStore.Video.Media.DATE_ADDED
+                )
+
+                try {
+                    musicResolver.query(
+                        MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                        videoProjection,
+                        videoSelectionBuilder.toString(),
+                        videoSelectionArgs.toTypedArray(),
+                        "${MediaStore.Video.Media.TITLE} ASC"
+                    )?.use { cursor ->
+                        if (cursor.moveToFirst()) {
+                            val bucketIdCol = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.BUCKET_ID)
+                            val bucketNameCol = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.BUCKET_DISPLAY_NAME)
+                            val idCol = cursor.getColumnIndex(MediaStore.Video.Media._ID)
+                            val dataCol = cursor.getColumnIndex(MediaStore.Video.Media.DATA)
+                            val artistCol = cursor.getColumnIndex(MediaStore.Video.Media.ARTIST)
+                            val durationCol = cursor.getColumnIndex(MediaStore.Video.Media.DURATION)
+                            val titleCol = cursor.getColumnIndex(MediaStore.Video.Media.TITLE)
+                            val displayNameCol = cursor.getColumnIndex(MediaStore.Video.Media.DISPLAY_NAME)
+                            val albumCol = cursor.getColumnIndex(MediaStore.Video.Media.ALBUM)
+
+                            do {
+                                val rawVideoID = cursor.getLong(idCol)
+                                val folderId = cursor.getLong(bucketIdCol)
+                                val folderName = cursor.getString(bucketNameCol)
+                                val path = cursor.getString(dataCol) ?: ""
+
+                                if (isWhitelistMode) {
+                                    val inWhitelist = normalizedWhitelistPaths.any { folderPath ->
+                                        path.startsWith("$folderPath/", ignoreCase = true) ||
+                                        path.substringBeforeLast('/', "").equals(folderPath, ignoreCase = true)
+                                    }
+                                    if (!inWhitelist) continue
+                                } else {
+                                    val inBlacklist = normalizedBlacklistPaths.any { folderPath ->
+                                        path.startsWith("$folderPath/", ignoreCase = true) ||
+                                        path.substringBeforeLast('/', "").equals(folderPath, ignoreCase = true)
+                                    }
+                                    if (inBlacklist || ignoreFoldersMap.contains(folderId)) continue
+                                }
+
+                                val displayName = cursor.getString(displayNameCol) ?: "Unknown"
+                                val thisTitle = cursor.getString(titleCol) ?: displayName
+                                val thisArtist = cursor.getString(artistCol) ?: "<video>"
+                                val duration = cursor.getLong(durationCol)
+                                val album = cursor.getString(albumCol) ?: "<video>"
+
+                                // Bijective negative ID mapping to guarantee zero ID collision with audio
+                                val musicID = -(rawVideoID + 1L)
+
+                                val musicItem = MusicItem(
+                                    tableId = null,
+                                    id = musicID,
+                                    name = thisTitle,
+                                    path = path,
+                                    duration = duration,
+                                    displayName = displayName,
+                                    album = album,
+                                    albumId = 0L,
+                                    artist = thisArtist,
+                                    artistId = 0L,
+                                    genre = "Video",
+                                    genreId = 0L,
+                                    year = 0,
+                                    songNumber = 0
+                                )
+
+                                tracksHashMap[musicID] = musicItem
+                                allTracksHashMap?.set(musicID, musicItem)
+                                map.getOrPut(folderId) {
+                                    LinkedHashMap()
+                                }[musicID] = musicItem
+                                mapFolder.putIfAbsent(
+                                    folderId, FolderList(
+                                        path = path.substringBeforeLast('/', ""),
+                                        name = folderName ?: "/",
+                                        id = folderId,
+                                        trackNumber = map[folderId]?.size ?: 0,
+                                    )
+                                )
+                            } while (cursor.moveToNext())
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.w("TracksManager", "Error querying MediaStore.Video.Media", e)
+                }
+            }
+        }
+
         mapFolder.forEach { it.value.trackNumber = map[it.key]?.size ?: 0 }
         folderListLinkedHashMap.clear()
         folderListLinkedHashMap.putAll(mapFolder)
+        foldersListTracksHashMap?.clear()
+        foldersListTracksHashMap?.putAll(map)
     }
 
 
@@ -300,6 +449,33 @@ object TracksManager {
         } catch (_: Exception) {
         }
 
+        if (SharedPreferencesUtils.getVideoSupportEnable(context)) {
+            try {
+                val videoSelection = "${MediaStore.Video.Media.TITLE} LIKE ? OR ${MediaStore.Video.Media.ARTIST} LIKE ?"
+                context.contentResolver.query(
+                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                    arrayOf(MediaStore.Video.Media._ID),
+                    videoSelection,
+                    selectionArgs,
+                    "${MediaStore.Video.Media.TITLE} ASC"
+                )?.use { trackCursor ->
+                    if (trackCursor.moveToFirst()) {
+                        val idColumn = trackCursor.getColumnIndex(MediaStore.Video.Media._ID)
+                        do {
+                            val rawVideoId: Long = trackCursor.getLong(idColumn)
+                            val videoMusicId = -(rawVideoId + 1L)
+                            tracksHashMap[videoMusicId]?.let { item ->
+                                if (seenIds.add(videoMusicId)) {
+                                    list.add(item)
+                                }
+                            }
+                        } while (trackCursor.moveToNext())
+                    }
+                }
+            } catch (_: Exception) {
+            }
+        }
+
         // In-memory fallback/supplement to ensure non-ASCII / Unicode case-insensitivity
         // or tracks that might have been missed by MediaStore LIKE query
         val trimmed = searchName.trim()
@@ -321,7 +497,12 @@ object TracksManager {
     @UnstableApi
     fun removeMusicById(context: Context, musicId: Long): Boolean {
         val contentResolver = context.contentResolver
-        val uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, musicId)
+        val uri = if (musicId < 0) {
+            val rawVideoId = (-musicId) - 1L
+            ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, rawVideoId)
+        } else {
+            ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, musicId)
+        }
         if (context.checkUriPermission(
                 uri,
                 Process.myPid(),
@@ -397,6 +578,64 @@ object TracksManager {
     @UnstableApi
     fun getMusicById(context: Context, musicId: Long): MusicItem? {
         val contentResolver = context.contentResolver
+
+        if (musicId < 0) {
+            val rawVideoId = (-musicId) - 1L
+            val videoProjection = arrayOf(
+                MediaStore.Video.Media._ID,
+                MediaStore.Video.Media.TITLE,
+                MediaStore.Video.Media.ARTIST,
+                MediaStore.Video.Media.ALBUM,
+                MediaStore.Video.Media.DURATION,
+                MediaStore.Video.Media.DATA,
+                MediaStore.Video.Media.DISPLAY_NAME,
+            )
+            try {
+                contentResolver.query(
+                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                    videoProjection,
+                    "${MediaStore.Video.Media._ID} = ?",
+                    arrayOf(rawVideoId.toString()),
+                    null
+                )?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val dataCol = cursor.getColumnIndex(MediaStore.Video.Media.DATA)
+                        val artistCol = cursor.getColumnIndex(MediaStore.Video.Media.ARTIST)
+                        val durationCol = cursor.getColumnIndex(MediaStore.Video.Media.DURATION)
+                        val titleCol = cursor.getColumnIndex(MediaStore.Video.Media.TITLE)
+                        val displayNameCol = cursor.getColumnIndex(MediaStore.Video.Media.DISPLAY_NAME)
+                        val albumCol = cursor.getColumnIndex(MediaStore.Video.Media.ALBUM)
+
+                        val path = if (dataCol != -1) cursor.getString(dataCol) ?: "" else ""
+                        val displayName = if (displayNameCol != -1) cursor.getString(displayNameCol) ?: "Unknown" else "Unknown"
+                        val thisTitle = if (titleCol != -1) cursor.getString(titleCol) ?: displayName else displayName
+                        val thisArtist = if (artistCol != -1) cursor.getString(artistCol) ?: "<video>" else "<video>"
+                        val duration = if (durationCol != -1) cursor.getLong(durationCol) else 0L
+                        val album = if (albumCol != -1) cursor.getString(albumCol) ?: "<video>" else "<video>"
+
+                        return MusicItem(
+                            tableId = null,
+                            id = musicId,
+                            name = thisTitle,
+                            path = path,
+                            duration = duration,
+                            displayName = displayName,
+                            album = album,
+                            albumId = 0L,
+                            artist = thisArtist,
+                            artistId = 0L,
+                            genre = "Video",
+                            genreId = 0L,
+                            year = 0,
+                            songNumber = 0
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("TracksManager", "Failed to get video by ID $musicId", e)
+            }
+            return null
+        }
 
         var musicItem: MusicItem? = null
         val selectionArgs = arrayOf(musicId.toString())
@@ -482,7 +721,12 @@ object TracksManager {
         lyrics: String?
     ): Boolean {
         val contentResolver = context.contentResolver
-        val uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, musicId)
+        val uri = if (musicId < 0) {
+            val rawVideoId = (-musicId) - 1L
+            ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, rawVideoId)
+        } else {
+            ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, musicId)
+        }
         if (context.checkUriPermission(
                 uri,
                 Process.myPid(),
@@ -537,7 +781,12 @@ object TracksManager {
         musicId: Long,
     ): Boolean {
         val contentResolver = context.contentResolver
-        val uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, musicId)
+        val uri = if (musicId < 0) {
+            val rawVideoId = (-musicId) - 1L
+            ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, rawVideoId)
+        } else {
+            ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, musicId)
+        }
         if (context.checkUriPermission(
                 uri,
                 Process.myPid(),
@@ -632,7 +881,12 @@ object TracksManager {
         var cacheFile: File? = null
 
         try {
-            val uri: Uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, musicId)
+            val uri: Uri = if (musicId < 0) {
+                val rawVideoId = (-musicId) - 1L
+                ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, rawVideoId)
+            } else {
+                ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, musicId)
+            }
 
             // 1. Read the existing file into a temporary cache
             pfd = context.contentResolver.openFileDescriptor(uri, "r")
