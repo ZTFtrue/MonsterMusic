@@ -33,6 +33,7 @@ import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import com.ztftrue.music.MainActivity
 import com.ztftrue.music.PlayMusicWidget
+import com.ztftrue.music.R
 import com.ztftrue.music.play.manager.AudioEffectManager
 import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.play.manager.MusicLibraryRepository
@@ -472,12 +473,12 @@ class PlayService : MediaLibraryService() {
 
     fun createTopLevelCategories(): List<MediaItem> {
         return listOf(
-            createBrowsableItem("songs_root", "歌曲"),
-            createBrowsableItem("albums_root", "专辑"),
-            createBrowsableItem("artists_root", "艺术家"),
-            createBrowsableItem("playlists_root", "播放列表"),
-            createBrowsableItem("genres_root", "流派"),
-            createBrowsableItem("folders_root", "文件夹")
+            createBrowsableItem("songs_root", getString(R.string.tab_songs)),
+            createBrowsableItem("albums_root", getString(R.string.tab_albums)),
+            createBrowsableItem("artists_root", getString(R.string.tab_artists)),
+            createBrowsableItem("playlists_root", getString(R.string.tab_playLists)),
+            createBrowsableItem("genres_root", getString(R.string.tab_genres)),
+            createBrowsableItem("folders_root", getString(R.string.tab_folders))
         )
     }
 
@@ -488,6 +489,7 @@ class PlayService : MediaLibraryService() {
             .setTitle(title)
             .setIsBrowsable(true)
             .setIsPlayable(false)
+            .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER_MIXED)
             .build()
         return MediaItem.Builder().setMediaId(id).setMediaMetadata(metadata).build()
     }

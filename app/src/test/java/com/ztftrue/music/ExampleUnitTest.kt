@@ -1526,4 +1526,73 @@ class ExampleUnitTest {
         assertEquals(10L, queueClearAndPlay[0].id)
         assertEquals(11L, queueClearAndPlay[1].id)
     }
+
+    @Test
+    fun androidAuto_containerIdExtraction() {
+        fun extractId(mediaId: String, typeName: String): Long? {
+            if (mediaId.startsWith("${typeName}_track_")) {
+                return mediaId.removePrefix("${typeName}_track_").toLongOrNull()
+            }
+            if (mediaId.startsWith("${typeName}@")) {
+                return mediaId.removePrefix("${typeName}@").toLongOrNull()
+            }
+            return null
+        }
+
+        // Test Albums
+        assertEquals(123L, extractId("Albums_track_123", "Albums"))
+        assertEquals(123L, extractId("Albums@123", "Albums"))
+        assertNull(extractId("Albums_track_abc", "Albums"))
+        assertNull(extractId("Artists_track_123", "Albums"))
+
+        // Test Artists
+        assertEquals(456L, extractId("Artists_track_456", "Artists"))
+        assertEquals(456L, extractId("Artists@456", "Artists"))
+
+        // Test Playlists
+        assertEquals(789L, extractId("PlayLists_track_789", "PlayLists"))
+        assertEquals(789L, extractId("PlayLists@789", "PlayLists"))
+
+        // Test Genres
+        assertEquals(101L, extractId("Genres_track_101", "Genres"))
+        assertEquals(101L, extractId("Genres@101", "Genres"))
+
+        // Test Folders
+        assertEquals(202L, extractId("Folders_track_202", "Folders"))
+        assertEquals(202L, extractId("Folders@202", "Folders"))
+    }
+
+    @Test
+    fun androidAuto_paginationLogic() {
+        fun <T> applyPagination(items: List<T>, page: Int, pageSize: Int): List<T> {
+            if (pageSize <= 0 || page < 0) {
+                return items
+            }
+            val fromIndex = (page * pageSize).coerceAtMost(items.size)
+            val toIndex = (fromIndex + pageSize).coerceAtMost(items.size)
+            return items.subList(fromIndex, toIndex)
+        }
+
+        val items = (1..100).toList()
+
+        // Page 0 with pageSize 20 -> 1..20
+        val page0 = applyPagination(items, 0, 20)
+        assertEquals(20, page0.size)
+        assertEquals(1, page0.first())
+        assertEquals(20, page0.last())
+
+        // Page 4 with pageSize 20 -> 81..100
+        val page4 = applyPagination(items, 4, 20)
+        assertEquals(20, page4.size)
+        assertEquals(81, page4.first())
+        assertEquals(100, page4.last())
+
+        // Page 5 with pageSize 20 -> out of bounds, returns empty
+        val page5 = applyPagination(items, 5, 20)
+        assertTrue(page5.isEmpty())
+
+        // Non-positive pageSize returns all
+        val allItems = applyPagination(items, 0, -1)
+        assertEquals(100, allItems.size)
+    }
 }

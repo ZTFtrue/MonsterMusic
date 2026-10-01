@@ -32,8 +32,10 @@ class PlaySessionCallback(
         session: MediaSession,
         controller: MediaSession.ControllerInfo
     ): MediaSession.ConnectionResult {
-        // 将 Controller 信息传回 Service (用于后续广播通知)
-        service.setControllerInfo(controller)
+        // 将 Controller 信息传回 Service (用于后续广播通知，仅针对应用内 Controller)
+        if (controller.packageName == service.packageName) {
+            service.setControllerInfo(controller)
+        }
 
         val availableCommands =
             MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS.buildUpon()
@@ -548,12 +550,8 @@ class PlaySessionCallback(
         browser: MediaSession.ControllerInfo,
         params: MediaLibraryService.LibraryParams?
     ): ListenableFuture<LibraryResult<MediaItem>> {
-        val clientPackageName = browser.packageName
-        if (clientPackageName == service.packageName) {
-            val rootItem = MediaItemUtils.createFullFeaturedRoot()
-            return Futures.immediateFuture(LibraryResult.ofItem(rootItem, null))
-        }
-        return Futures.immediateFuture(LibraryResult.ofError(SessionError.ERROR_SESSION_DISCONNECTED))
+        val rootItem = MediaItemUtils.createFullFeaturedRoot()
+        return Futures.immediateFuture(LibraryResult.ofItem(rootItem, params))
     }
 
     override fun onGetChildren(
@@ -567,105 +565,84 @@ class PlaySessionCallback(
         val future = SettableFuture.create<LibraryResult<ImmutableList<MediaItem>>>()
         scope.launch(Dispatchers.IO) {
             try {
-                // 等待初始化完成
-                service.isInitialized.await() // 如果你保留了 Service 的初始化锁
+                service.isInitialized.await()
 
                 when {
                     parentId == "root" -> {
                         val topLevel = service.createTopLevelCategories()
-                        future.set(LibraryResult.ofItemList(topLevel, null))
+                        future.set(LibraryResult.ofItemList(applyPagination(topLevel, page, pageSize), params))
                     }
 
                     parentId == "songs_root" -> {
                         val items =
                             repository.getSongs().map { MediaItemUtils.musicItemToMediaItem(it) }
-                        future.set(LibraryResult.ofItemList(items, null))
+                        future.set(LibraryResult.ofItemList(applyPagination(items, page, pageSize), params))
                     }
 
                     parentId == "albums_root" -> {
                         val items =
                             repository.getAlbums().map { MediaItemUtils.albumToMediaItem(it) }
-                        future.set(LibraryResult.ofItemList(items, null))
+                        future.set(LibraryResult.ofItemList(applyPagination(items, page, pageSize), params))
                     }
 
                     parentId == "artists_root" -> {
                         val items =
                             repository.getArtists().map { MediaItemUtils.artistToMediaItem(it) }
-                        future.set(LibraryResult.ofItemList(items, null))
+                        future.set(LibraryResult.ofItemList(applyPagination(items, page, pageSize), params))
                     }
 
                     parentId == "playlists_root" -> {
                         val items =
                             repository.getPlayLists().map { MediaItemUtils.playlistToMediaItem(it) }
-                        future.set(LibraryResult.ofItemList(items, null))
+                        future.set(LibraryResult.ofItemList(applyPagination(items, page, pageSize), params))
                     }
 
                     parentId == "genres_root" -> {
                         val items =
                             repository.getGenres().map { MediaItemUtils.genreToMediaItem(it) }
-                        future.set(LibraryResult.ofItemList(items, null))
+                        future.set(LibraryResult.ofItemList(applyPagination(items, page, pageSize), params))
                     }
 
                     parentId == "folders_root" -> {
                         val items =
                             repository.getFolders().map { MediaItemUtils.folderToMediaItem(it) }
-                        future.set(LibraryResult.ofItemList(items, null))
+                        future.set(LibraryResult.ofItemList(applyPagination(items, page, pageSize), params))
                     }
 
-                    // --- 具体子列表 ---
-                    parentId.startsWith(PlayListType.Albums.name + "_track_") -> {
-                        handlePrefixedId(
-                            parentId,
-                            PlayListType.Albums.name + "_track_",
-                            future
-                        ) { id ->
-                            repository.getTracksByAlbumId(id)
-                                .map { MediaItemUtils.musicItemToMediaItem(it) }
-                        }
+                    // --- 具体子列表 (支持 _track_ 和 @) ---
+                    extractId(parentId, PlayListType.Albums.name) != null -> {
+                        val id = extractId(parentId, PlayListType.Albums.name)!!
+                        val items = repository.getTracksByAlbumId(id)
+                            .map { MediaItemUtils.musicItemToMediaItem(it) }
+                        future.set(LibraryResult.ofItemList(applyPagination(items, page, pageSize), params))
                     }
 
-                    parentId.startsWith(PlayListType.Artists.name + "_track_") -> {
-                        handlePrefixedId(
-                            parentId,
-                            PlayListType.Artists.name + "_track_",
-                            future
-                        ) { id ->
-                            repository.getTracksByArtistId(id)
-                                .map { MediaItemUtils.musicItemToMediaItem(it) }
-                        }
+                    extractId(parentId, PlayListType.Artists.name) != null -> {
+                        val id = extractId(parentId, PlayListType.Artists.name)!!
+                        val items = repository.getTracksByArtistId(id)
+                            .map { MediaItemUtils.musicItemToMediaItem(it) }
+                        future.set(LibraryResult.ofItemList(applyPagination(items, page, pageSize), params))
                     }
 
-                    parentId.startsWith(PlayListType.Genres.name + "_track_") -> {
-                        handlePrefixedId(
-                            parentId,
-                            PlayListType.Genres.name + "_track_",
-                            future
-                        ) { id ->
-                            repository.getTracksByGenreId(id)
-                                .map { MediaItemUtils.musicItemToMediaItem(it) }
-                        }
+                    extractId(parentId, PlayListType.Genres.name) != null -> {
+                        val id = extractId(parentId, PlayListType.Genres.name)!!
+                        val items = repository.getTracksByGenreId(id)
+                            .map { MediaItemUtils.musicItemToMediaItem(it) }
+                        future.set(LibraryResult.ofItemList(applyPagination(items, page, pageSize), params))
                     }
 
-                    parentId.startsWith(PlayListType.PlayLists.name + "_track_") -> {
-                        handlePrefixedId(
-                            parentId,
-                            PlayListType.PlayLists.name + "_track_",
-                            future
-                        ) { id ->
-                            repository.getTracksByPlayListId(id)
-                                .map { MediaItemUtils.musicItemToMediaItem(it) }
-                        }
+                    extractId(parentId, PlayListType.PlayLists.name) != null -> {
+                        val id = extractId(parentId, PlayListType.PlayLists.name)!!
+                        val items = repository.getTracksByPlayListId(id)
+                            .map { MediaItemUtils.musicItemToMediaItem(it) }
+                        future.set(LibraryResult.ofItemList(applyPagination(items, page, pageSize), params))
                     }
 
-                    parentId.startsWith(PlayListType.Folders.name + "_track_") -> {
-                        handlePrefixedId(
-                            parentId,
-                            PlayListType.Folders.name + "_track_",
-                            future
-                        ) { id ->
-                            repository.getTracksByFolderId(id)
-                                .map { MediaItemUtils.musicItemToMediaItem(it) }
-                        }
+                    extractId(parentId, PlayListType.Folders.name) != null -> {
+                        val id = extractId(parentId, PlayListType.Folders.name)!!
+                        val items = repository.getTracksByFolderId(id)
+                            .map { MediaItemUtils.musicItemToMediaItem(it) }
+                        future.set(LibraryResult.ofItemList(applyPagination(items, page, pageSize), params))
                     }
 
                     // --- 包含关系 (Genre/Artist 包含 Albums) ---
@@ -675,12 +652,9 @@ class PlaySessionCallback(
                             PlayListType.Genres.name + "_album_",
                             future
                         ) { id ->
-                            // 确保触发加载
                             repository.getTracksByGenreId(id)
                             repository.genreHasAlbumMap[id]?.map {
-                                MediaItemUtils.albumToMediaItem(
-                                    it
-                                )
+                                MediaItemUtils.albumToMediaItem(it)
                             } ?: emptyList()
                         }
                     }
@@ -693,14 +667,12 @@ class PlaySessionCallback(
                         ) { id ->
                             repository.getTracksByArtistId(id)
                             repository.artistHasAlbumMap[id]?.map {
-                                MediaItemUtils.albumToMediaItem(
-                                    it
-                                )
+                                MediaItemUtils.albumToMediaItem(it)
                             } ?: emptyList()
                         }
                     }
 
-                    else -> future.set(LibraryResult.ofItemList(listOf(), null))
+                    else -> future.set(LibraryResult.ofItemList(listOf(), params))
                 }
             } catch (e: Exception) {
                 future.setException(e)
@@ -714,41 +686,385 @@ class PlaySessionCallback(
         browser: MediaSession.ControllerInfo,
         mediaId: String
     ): ListenableFuture<LibraryResult<MediaItem>> {
-        // 解析 type@id 格式
-        val parts = mediaId.split("@")
-        if (parts.size == 2) {
-            val type = parts[0]
-            val id = parts[1].toLongOrNull() ?: return super.onGetItem(session, browser, mediaId)
+        if (mediaId == "root") {
+            return Futures.immediateFuture(LibraryResult.ofItem(MediaItemUtils.createFullFeaturedRoot(), null))
+        }
 
-            val item = when (type) {
-                PlayListType.Genres.name -> repository.getGenreById(id)
-                    ?.let { MediaItemUtils.genreToMediaItem(it) }
+        val topCategory = service.createTopLevelCategories().find { it.mediaId == mediaId }
+        if (topCategory != null) {
+            return Futures.immediateFuture(LibraryResult.ofItem(topCategory, null))
+        }
 
-                PlayListType.Artists.name -> repository.getArtistById(id)
-                    ?.let { MediaItemUtils.artistToMediaItem(it) }
-
-                PlayListType.Albums.name -> repository.getAlbumById(id)
-                    ?.let { MediaItemUtils.albumToMediaItem(it) }
-
-                PlayListType.Folders.name -> repository.getFolderById(id)
-                    ?.let { MediaItemUtils.folderToMediaItem(it) }
-
-                PlayListType.PlayLists.name -> repository.getPlaylistById(id)
-                    ?.let { MediaItemUtils.playlistToMediaItem(it) }
-
-                else -> null
-            }
-
-            if (item != null) {
-                return Futures.immediateFuture(LibraryResult.ofItem(item, null))
+        val trackId = mediaId.toLongOrNull()
+        if (trackId != null) {
+            val track = repository.getTrackById(trackId)
+            if (track != null) {
+                return Futures.immediateFuture(LibraryResult.ofItem(MediaItemUtils.musicItemToMediaItem(track), null))
             }
         }
+
+        val item = getItemByContainerMediaId(mediaId)
+        if (item != null) {
+            return Futures.immediateFuture(LibraryResult.ofItem(item, null))
+        }
+
         return super.onGetItem(session, browser, mediaId)
+    }
+
+    override fun onSearch(
+        session: MediaLibraryService.MediaLibrarySession,
+        browser: MediaSession.ControllerInfo,
+        query: String,
+        params: MediaLibraryService.LibraryParams?
+    ): ListenableFuture<LibraryResult<Void>> {
+        val future = SettableFuture.create<LibraryResult<Void>>()
+        scope.launch(Dispatchers.IO) {
+            try {
+                service.isInitialized.await()
+                val result = repository.search(query)
+                val totalCount = result.tracks.size + result.albums.size + result.artists.size
+                session.notifySearchResultChanged(browser, query, totalCount, params)
+                future.set(LibraryResult.ofVoid(params))
+            } catch (e: Exception) {
+                future.setException(e)
+            }
+        }
+        return future
+    }
+
+    override fun onGetSearchResult(
+        session: MediaLibraryService.MediaLibrarySession,
+        browser: MediaSession.ControllerInfo,
+        query: String,
+        page: Int,
+        pageSize: Int,
+        params: MediaLibraryService.LibraryParams?
+    ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
+        val future = SettableFuture.create<LibraryResult<ImmutableList<MediaItem>>>()
+        scope.launch(Dispatchers.IO) {
+            try {
+                service.isInitialized.await()
+                val result = repository.search(query)
+                val mediaItems = ArrayList<MediaItem>()
+                result.tracks.forEach { mediaItems.add(MediaItemUtils.musicItemToMediaItem(it)) }
+                result.albums.forEach { mediaItems.add(MediaItemUtils.albumToMediaItem(it)) }
+                result.artists.forEach { mediaItems.add(MediaItemUtils.artistToMediaItem(it)) }
+
+                val paged = applyPagination(mediaItems, page, pageSize)
+                future.set(LibraryResult.ofItemList(paged, params))
+            } catch (e: Exception) {
+                future.setException(e)
+            }
+        }
+        return future
+    }
+
+    @Suppress("OVERRIDE_DEPRECATION", "DEPRECATION")
+    override fun onPlaybackResumption(
+        mediaSession: MediaSession,
+        controller: MediaSession.ControllerInfo
+    ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
+        val future = SettableFuture.create<MediaSession.MediaItemsWithStartPosition>()
+        scope.launch(Dispatchers.IO) {
+            try {
+                service.isInitialized.await()
+                val queue = service.musicQueue
+                if (queue.isNotEmpty()) {
+                    val mediaItems = queue.map { MediaItemUtils.musicItemToMediaItem(it) }
+                    val currentIndex = queue.indexOfFirst { it.id == service.currentPlayTrack?.id }.coerceAtLeast(0)
+                    val position = withContext(Dispatchers.Main) { service.exoPlayer.currentPosition }.coerceAtLeast(0L)
+                    future.set(MediaSession.MediaItemsWithStartPosition(mediaItems, currentIndex, position))
+                } else {
+                    val allSongs = repository.getSongs()
+                    if (allSongs.isNotEmpty()) {
+                        val mediaItems = allSongs.map { MediaItemUtils.musicItemToMediaItem(it) }
+                        future.set(MediaSession.MediaItemsWithStartPosition(mediaItems, 0, 0L))
+                    } else {
+                        future.setException(UnsupportedOperationException("No media to resume"))
+                    }
+                }
+            } catch (e: Exception) {
+                future.setException(e)
+            }
+        }
+        return future
+    }
+
+    override fun onSetMediaItems(
+        mediaSession: MediaSession,
+        controller: MediaSession.ControllerInfo,
+        mediaItems: MutableList<MediaItem>,
+        startIndex: Int,
+        startPositionMs: Long
+    ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
+        val future = SettableFuture.create<MediaSession.MediaItemsWithStartPosition>()
+        scope.launch(Dispatchers.IO) {
+            try {
+                service.isInitialized.await()
+                if (controller.packageName == service.packageName && mediaItems.isNotEmpty() && mediaItems.all { it.localConfiguration != null }) {
+                    future.set(MediaSession.MediaItemsWithStartPosition(mediaItems, startIndex, startPositionMs))
+                    return@launch
+                }
+
+                val resolved = resolveMediaItemsWithPosition(mediaItems, startIndex, startPositionMs)
+                future.set(resolved)
+            } catch (e: Exception) {
+                future.setException(e)
+            }
+        }
+        return future
+    }
+
+    override fun onAddMediaItems(
+        mediaSession: MediaSession,
+        controller: MediaSession.ControllerInfo,
+        mediaItems: MutableList<MediaItem>
+    ): ListenableFuture<MutableList<MediaItem>> {
+        val future = SettableFuture.create<MutableList<MediaItem>>()
+        scope.launch(Dispatchers.IO) {
+            try {
+                service.isInitialized.await()
+                val resolvedList = mutableListOf<MediaItem>()
+                for (item in mediaItems) {
+                    if (item.localConfiguration != null) {
+                        resolvedList.add(item)
+                    } else {
+                        val resolved = resolveSingleMediaItem(item)
+                        resolvedList.addAll(resolved)
+                    }
+                }
+                future.set(resolvedList)
+            } catch (e: Exception) {
+                future.setException(e)
+            }
+        }
+        return future
     }
 
     // ==========================================
     // Helper Methods
     // ==========================================
+
+    private fun <T> applyPagination(items: List<T>, page: Int, pageSize: Int): ImmutableList<T> {
+        if (pageSize <= 0 || page < 0) {
+            return ImmutableList.copyOf(items)
+        }
+        val fromIndex = (page * pageSize).coerceAtMost(items.size)
+        val toIndex = (fromIndex + pageSize).coerceAtMost(items.size)
+        return ImmutableList.copyOf(items.subList(fromIndex, toIndex))
+    }
+
+    private fun extractId(mediaId: String, typeName: String): Long? {
+        if (mediaId.startsWith("${typeName}_track_")) {
+            return mediaId.removePrefix("${typeName}_track_").toLongOrNull()
+        }
+        if (mediaId.startsWith("${typeName}@")) {
+            return mediaId.removePrefix("${typeName}@").toLongOrNull()
+        }
+        return null
+    }
+
+    private fun getItemByContainerMediaId(mediaId: String): MediaItem? {
+        val types = listOf(
+            PlayListType.Albums.name,
+            PlayListType.Artists.name,
+            PlayListType.Genres.name,
+            PlayListType.PlayLists.name,
+            PlayListType.Folders.name
+        )
+        for (typeName in types) {
+            val id = extractId(mediaId, typeName)
+            if (id != null) {
+                return when (typeName) {
+                    PlayListType.Albums.name -> repository.getAlbumById(id)?.let { MediaItemUtils.albumToMediaItem(it) }
+                    PlayListType.Artists.name -> repository.getArtistById(id)?.let { MediaItemUtils.artistToMediaItem(it) }
+                    PlayListType.Genres.name -> repository.getGenreById(id)?.let { MediaItemUtils.genreToMediaItem(it) }
+                    PlayListType.PlayLists.name -> repository.getPlaylistById(id)?.let { MediaItemUtils.playlistToMediaItem(it) }
+                    PlayListType.Folders.name -> repository.getFolderById(id)?.let { MediaItemUtils.folderToMediaItem(it) }
+                    else -> null
+                }
+            }
+        }
+        return null
+    }
+
+    private suspend fun resolveMediaItemsWithPosition(
+        mediaItems: List<MediaItem>,
+        startIndex: Int,
+        startPositionMs: Long
+    ): MediaSession.MediaItemsWithStartPosition {
+        if (mediaItems.isEmpty()) {
+            val queue = if (service.musicQueue.isNotEmpty()) {
+                service.musicQueue
+            } else {
+                repository.getSongs()
+            }
+            val items = queue.map { MediaItemUtils.musicItemToMediaItem(it) }
+            val currentIndex = queue.indexOfFirst { it.id == service.currentPlayTrack?.id }.coerceAtLeast(0)
+            return MediaSession.MediaItemsWithStartPosition(items, currentIndex, 0L)
+        }
+
+        if (mediaItems.size == 1) {
+            val item = mediaItems[0]
+            val searchQuery = item.requestMetadata.searchQuery
+            if (!searchQuery.isNullOrBlank()) {
+                val searchResult = repository.search(searchQuery)
+                val targetTracks = when {
+                    searchResult.tracks.isNotEmpty() -> searchResult.tracks
+                    searchResult.albums.isNotEmpty() -> repository.getTracksByAlbumId(searchResult.albums[0].id)
+                    searchResult.artists.isNotEmpty() -> repository.getTracksByArtistId(searchResult.artists[0].id)
+                    else -> {
+                        repository.getSongs().filter {
+                            it.name.contains(searchQuery, ignoreCase = true) ||
+                                    it.artist.contains(searchQuery, ignoreCase = true)
+                        }
+                    }
+                }
+                if (targetTracks.isNotEmpty()) {
+                    val resolved = targetTracks.map { MediaItemUtils.musicItemToMediaItem(it) }
+                    return MediaSession.MediaItemsWithStartPosition(resolved, 0, 0L)
+                }
+            }
+
+            val mediaId = item.mediaId
+            when (mediaId) {
+                "root", "" -> {
+                    val queue = if (service.musicQueue.isNotEmpty()) service.musicQueue else repository.getSongs()
+                    val resolved = queue.map { MediaItemUtils.musicItemToMediaItem(it) }
+                    val currentIdx = queue.indexOfFirst { it.id == service.currentPlayTrack?.id }.coerceAtLeast(0)
+                    return MediaSession.MediaItemsWithStartPosition(resolved, currentIdx, 0L)
+                }
+                "songs_root" -> {
+                    val songs = repository.getSongs().map { MediaItemUtils.musicItemToMediaItem(it) }
+                    return MediaSession.MediaItemsWithStartPosition(songs, 0, 0L)
+                }
+            }
+
+            val albumId = extractId(mediaId, PlayListType.Albums.name)
+            if (albumId != null) {
+                val tracks = repository.getTracksByAlbumId(albumId).map { MediaItemUtils.musicItemToMediaItem(it) }
+                return MediaSession.MediaItemsWithStartPosition(tracks, 0, 0L)
+            }
+            val artistId = extractId(mediaId, PlayListType.Artists.name)
+            if (artistId != null) {
+                val tracks = repository.getTracksByArtistId(artistId).map { MediaItemUtils.musicItemToMediaItem(it) }
+                return MediaSession.MediaItemsWithStartPosition(tracks, 0, 0L)
+            }
+            val playlistId = extractId(mediaId, PlayListType.PlayLists.name)
+            if (playlistId != null) {
+                val tracks = repository.getTracksByPlayListId(playlistId).map { MediaItemUtils.musicItemToMediaItem(it) }
+                return MediaSession.MediaItemsWithStartPosition(tracks, 0, 0L)
+            }
+            val genreId = extractId(mediaId, PlayListType.Genres.name)
+            if (genreId != null) {
+                val tracks = repository.getTracksByGenreId(genreId).map { MediaItemUtils.musicItemToMediaItem(it) }
+                return MediaSession.MediaItemsWithStartPosition(tracks, 0, 0L)
+            }
+            val folderId = extractId(mediaId, PlayListType.Folders.name)
+            if (folderId != null) {
+                val tracks = repository.getTracksByFolderId(folderId).map { MediaItemUtils.musicItemToMediaItem(it) }
+                return MediaSession.MediaItemsWithStartPosition(tracks, 0, 0L)
+            }
+
+            val trackId = mediaId.toLongOrNull()
+            if (trackId != null) {
+                val track = repository.getTrackById(trackId)
+                if (track != null) {
+                    val queueIdx = service.musicQueue.indexOfFirst { it.id == trackId }
+                    if (queueIdx != -1) {
+                        val resolved = service.musicQueue.map { MediaItemUtils.musicItemToMediaItem(it) }
+                        return MediaSession.MediaItemsWithStartPosition(resolved, queueIdx, 0L)
+                    }
+                    if (track.albumId > 0) {
+                        val albumTracks = repository.getTracksByAlbumId(track.albumId)
+                        val idx = albumTracks.indexOfFirst { it.id == trackId }
+                        if (idx != -1 && albumTracks.isNotEmpty()) {
+                            val resolved = albumTracks.map { MediaItemUtils.musicItemToMediaItem(it) }
+                            return MediaSession.MediaItemsWithStartPosition(resolved, idx, 0L)
+                        }
+                    }
+                    val allSongs = repository.getSongs()
+                    val idx = allSongs.indexOfFirst { it.id == trackId }
+                    if (idx != -1) {
+                        val resolved = allSongs.map { MediaItemUtils.musicItemToMediaItem(it) }
+                        return MediaSession.MediaItemsWithStartPosition(resolved, idx, 0L)
+                    }
+                    return MediaSession.MediaItemsWithStartPosition(listOf(MediaItemUtils.musicItemToMediaItem(track)), 0, 0L)
+                }
+            }
+        }
+
+        val resolved = mediaItems.mapNotNull { item ->
+            if (item.localConfiguration != null) {
+                item
+            } else {
+                val id = item.mediaId.toLongOrNull()
+                if (id != null) {
+                    repository.getTrackById(id)?.let { MediaItemUtils.musicItemToMediaItem(it) }
+                } else {
+                    null
+                }
+            }
+        }
+        val safeIndex = startIndex.coerceIn(0, (resolved.size - 1).coerceAtLeast(0))
+        return MediaSession.MediaItemsWithStartPosition(resolved, safeIndex, startPositionMs)
+    }
+
+    private suspend fun resolveSingleMediaItem(item: MediaItem): List<MediaItem> {
+        val searchQuery = item.requestMetadata.searchQuery
+        if (!searchQuery.isNullOrBlank()) {
+            val searchResult = repository.search(searchQuery)
+            val targetTracks = when {
+                searchResult.tracks.isNotEmpty() -> searchResult.tracks
+                searchResult.albums.isNotEmpty() -> repository.getTracksByAlbumId(searchResult.albums[0].id)
+                searchResult.artists.isNotEmpty() -> repository.getTracksByArtistId(searchResult.artists[0].id)
+                else -> {
+                    repository.getSongs().filter {
+                        it.name.contains(searchQuery, ignoreCase = true) ||
+                                it.artist.contains(searchQuery, ignoreCase = true)
+                    }
+                }
+            }
+            if (targetTracks.isNotEmpty()) {
+                return targetTracks.map { MediaItemUtils.musicItemToMediaItem(it) }
+            }
+        }
+
+        val mediaId = item.mediaId
+        if (mediaId == "songs_root") {
+            return repository.getSongs().map { MediaItemUtils.musicItemToMediaItem(it) }
+        }
+
+        val albumId = extractId(mediaId, PlayListType.Albums.name)
+        if (albumId != null) {
+            return repository.getTracksByAlbumId(albumId).map { MediaItemUtils.musicItemToMediaItem(it) }
+        }
+        val artistId = extractId(mediaId, PlayListType.Artists.name)
+        if (artistId != null) {
+            return repository.getTracksByArtistId(artistId).map { MediaItemUtils.musicItemToMediaItem(it) }
+        }
+        val playlistId = extractId(mediaId, PlayListType.PlayLists.name)
+        if (playlistId != null) {
+            return repository.getTracksByPlayListId(playlistId).map { MediaItemUtils.musicItemToMediaItem(it) }
+        }
+        val genreId = extractId(mediaId, PlayListType.Genres.name)
+        if (genreId != null) {
+            return repository.getTracksByGenreId(genreId).map { MediaItemUtils.musicItemToMediaItem(it) }
+        }
+        val folderId = extractId(mediaId, PlayListType.Folders.name)
+        if (folderId != null) {
+            return repository.getTracksByFolderId(folderId).map { MediaItemUtils.musicItemToMediaItem(it) }
+        }
+
+        val trackId = mediaId.toLongOrNull()
+        if (trackId != null) {
+            val track = repository.getTrackById(trackId)
+            if (track != null) {
+                return listOf(MediaItemUtils.musicItemToMediaItem(track))
+            }
+        }
+        return emptyList()
+    }
 
     private suspend fun handlePrefixedId(
         parentId: String,

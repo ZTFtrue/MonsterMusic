@@ -10,8 +10,6 @@ import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.MainTab
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.SortFiledData
-import com.ztftrue.music.sqlData.model.StorageFolder
-import com.ztftrue.music.sqlData.model.TRACKS_TYPE
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.model.*
@@ -283,6 +281,10 @@ class MusicLibraryRepository(private val context: Context) {
         }
         loadSongsAndFolders()
         return ArrayList(tracksLinkedHashMap.values)
+    }
+
+    fun getTrackById(id: Long): MusicItem? {
+        return allTracksLinkedHashMap[id] ?: tracksLinkedHashMap[id]
     }
 
     // ==========================================

@@ -1,11 +1,13 @@
 package com.ztftrue.music.play
 
+import android.content.ContentUris
 import android.os.Bundle
 import android.util.Log
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.model.AlbumList
 import com.ztftrue.music.utils.model.ArtistList
 import com.ztftrue.music.utils.model.FolderList
@@ -41,7 +43,14 @@ object MediaItemUtils {
             .setTotalTrackCount(album.trackNumber)
             .setMediaType(MediaMetadata.MEDIA_TYPE_ALBUM)
             .setIsBrowsable(true)
-            .setIsPlayable(false)
+            .setIsPlayable(true)
+        if (album.id > 0) {
+            val artworkUri = ContentUris.withAppendedId(
+                "content://media/external/audio/albumart".toUri(),
+                album.id
+            )
+            metadataBuilder.setArtworkUri(artworkUri)
+        }
         val yearString = if (album.firstYear == album.lastYear) {
             album.lastYear
         } else {
@@ -55,10 +64,11 @@ object MediaItemUtils {
             putString("album_first_year", album.firstYear)
             putString("album_last_year", album.lastYear)
             putString("original_type", album.type.name)
+            putLong(CustomMetadataKeys.KEY_ALBUM_ID, album.id)
         }
         metadataBuilder.setExtras(extras)
         val mediaItemBuilder = MediaItem.Builder()
-        mediaItemBuilder.setMediaId(album.id.toString())
+        mediaItemBuilder.setMediaId("${PlayListType.Albums.name}_track_${album.id}")
         mediaItemBuilder.setMediaMetadata(metadataBuilder.build())
         return mediaItemBuilder.build()
     }
@@ -71,7 +81,7 @@ object MediaItemUtils {
             .setTitle(playlist.name)
             .setTotalTrackCount(playlist.trackNumber)
             .setIsBrowsable(true)
-            .setIsPlayable(false) // 播放列表通常是浏览，也可以设为true以播放全部
+            .setIsPlayable(true)
             .setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
             .setExtras(Bundle().apply {
                 putString(CustomMetadataKeys.KEY_PATH, playlist.path)
@@ -79,7 +89,7 @@ object MediaItemUtils {
             .build()
 
         return MediaItem.Builder()
-            .setMediaId(playlist.id.toString())
+            .setMediaId("${PlayListType.PlayLists.name}_track_${playlist.id}")
             .setMediaMetadata(metadata)
             .build()
     }
@@ -92,34 +102,34 @@ object MediaItemUtils {
             .setTitle(folder.name)
             .setTotalTrackCount(folder.trackNumber)
             .setIsBrowsable(true)
-            .setIsPlayable(false)
-//            .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER)
+            .setIsPlayable(true)
+            .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER_MIXED)
             .setExtras(Bundle().apply {
                 putBoolean(CustomMetadataKeys.FOLDER_IS_SHOW, folder.isShow)
                 putString(CustomMetadataKeys.FOLDER_PATH, folder.path)
-                // folder.isShow 这种UI状态信息通常不放在这里，但如果需要也可以放
             })
             .build()
 
         return MediaItem.Builder()
-            .setMediaId(folder.id.toString())
+            .setMediaId("${PlayListType.Folders.name}_track_${folder.id}")
             .setMediaMetadata(metadata)
             .build()
     }
 
     fun artistToMediaItem(artist: ArtistList): MediaItem {
         val metadata = MediaMetadata.Builder()
-            .setTitle(artist.name) // 艺术家名称作为标题
-            .setTotalTrackCount(artist.trackNumber) // 艺术家作品总数
+            .setTitle(artist.name)
+            .setTotalTrackCount(artist.trackNumber)
             .setIsBrowsable(true)
-            .setIsPlayable(false)
+            .setIsPlayable(true)
             .setMediaType(MediaMetadata.MEDIA_TYPE_ARTIST)
             .setExtras(Bundle().apply {
                 putInt(CustomMetadataKeys.KEY_ALBUM_COUNT, artist.albumNumber)
+                putLong(CustomMetadataKeys.KEY_ARTIST_ID, artist.id)
             })
             .build()
         return MediaItem.Builder()
-            .setMediaId(artist.id.toString())
+            .setMediaId("${PlayListType.Artists.name}_track_${artist.id}")
             .setMediaMetadata(metadata)
             .build()
     }
@@ -129,32 +139,38 @@ object MediaItemUtils {
      */
     fun genreToMediaItem(genre: GenresList): MediaItem {
         val metadata = MediaMetadata.Builder()
-            .setTitle(genre.name) // 流派名称作为标题
-            .setGenre(genre.name) // 也可以设置到标准流派字段
+            .setTitle(genre.name)
+            .setGenre(genre.name)
             .setTotalTrackCount(genre.trackNumber)
             .setIsBrowsable(true)
-            .setIsPlayable(false)
+            .setIsPlayable(true)
             .setMediaType(MediaMetadata.MEDIA_TYPE_GENRE)
             .setExtras(Bundle().apply {
                 putInt(CustomMetadataKeys.KEY_ALBUM_COUNT, genre.albumNumber)
+                putLong(CustomMetadataKeys.KEY_GENRE_ID, genre.id)
             })
             .build()
 
         return MediaItem.Builder()
-            .setMediaId(genre.id.toString())
+            .setMediaId("${PlayListType.Genres.name}_track_${genre.id}")
             .setMediaMetadata(metadata)
             .build()
     }
 
     fun createFullFeaturedRoot(): MediaItem {
+        val rootExtras = Bundle().apply {
+            putBoolean("android.media.browse.SEARCH_SUPPORTED", true)
+            putInt("android.media.browse.CONTENT_STYLE_BROWSABLE_HINT", 1)
+            putInt("android.media.browse.CONTENT_STYLE_PLAYABLE_HINT", 1)
+        }
         val metadata = MediaMetadata.Builder()
-            .setTitle("Music") // 这个标题通常不会在你的App里直接显示
+            .setTitle("Music")
             .setIsBrowsable(true)
             .setIsPlayable(false)
+            .setExtras(rootExtras)
             .build()
 
         return MediaItem.Builder()
-            // 使用一个清晰的 Media ID
             .setMediaId("root")
             .setMediaMetadata(metadata)
             .build()
@@ -173,6 +189,13 @@ object MediaItemUtils {
             .setReleaseYear(musicItem.year)         // 发行年份
             .setGenre(musicItem.genre)
             .setDurationMs(musicItem.duration)
+        if (musicItem.albumId > 0) {
+            val artworkUri = ContentUris.withAppendedId(
+                "content://media/external/audio/albumart".toUri(),
+                musicItem.albumId
+            )
+            metadataBuilder.setArtworkUri(artworkUri)
+        }
         metadataBuilder.setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
         metadataBuilder.setIsPlayable(true)
         metadataBuilder.setIsBrowsable(false)
