@@ -183,4 +183,44 @@ object MusicFileParser {
             0
         }
     }
+
+    val EXCLUDED_MIME_TYPES = setOf(
+        "audio/amr",
+        "audio/amr-wb",
+        "audio/3gpp",
+        "audio/3gpp2",
+        "audio/midi",
+        "audio/mid",
+        "audio/x-midi",
+        "audio/sp-midi",
+        "audio/basic",
+        "audio/qcelp",
+        "audio/evrc"
+    )
+
+    val EXCLUDED_EXTENSIONS = setOf(
+        "amr",
+        "awb",
+        "3gp",
+        "3gpp",
+        "3g2",
+        "mid",
+        "midi",
+        "m4r"
+    )
+
+    fun isSupportedMusicFormat(context: Context, uri: Uri, mimeType: String?): Boolean {
+        if (!mimeType.isNullOrBlank()) {
+            val normalizedMime = mimeType.trim().lowercase()
+            if (EXCLUDED_MIME_TYPES.contains(normalizedMime)) {
+                return false
+            }
+        }
+        val fileName = getFileName(context, uri).lowercase()
+        val extension = fileName.substringAfterLast('.', "")
+        if (extension.isNotEmpty() && EXCLUDED_EXTENSIONS.contains(extension)) {
+            return false
+        }
+        return true
+    }
 }

@@ -1300,4 +1300,39 @@ class ExampleUnitTest {
         assertTrue(search("   ", tracksMap).isEmpty())
         assertTrue(search(null, tracksMap).isEmpty())
     }
+
+    @Test
+    fun musicFileParser_excludedMimeTypesAndExtensions() {
+        val excludedMimes = com.ztftrue.music.utils.MusicFileParser.EXCLUDED_MIME_TYPES
+        val excludedExtensions = com.ztftrue.music.utils.MusicFileParser.EXCLUDED_EXTENSIONS
+
+        // Verify AMR, 3GP, and ringtone/midi formats are excluded
+        assertTrue(excludedMimes.contains("audio/amr"))
+        assertTrue(excludedMimes.contains("audio/amr-wb"))
+        assertTrue(excludedMimes.contains("audio/3gpp"))
+        assertTrue(excludedMimes.contains("audio/midi"))
+        assertTrue(excludedMimes.contains("audio/basic"))
+
+        // Verify standard music formats are NOT excluded
+        assertFalse(excludedMimes.contains("audio/mpeg"))
+        assertFalse(excludedMimes.contains("audio/mp3"))
+        assertFalse(excludedMimes.contains("audio/flac"))
+        assertFalse(excludedMimes.contains("audio/mp4"))
+        assertFalse(excludedMimes.contains("audio/wav"))
+        assertFalse(excludedMimes.contains("audio/ogg"))
+
+        // Verify extensions
+        assertTrue(excludedExtensions.contains("amr"))
+        assertTrue(excludedExtensions.contains("3gp"))
+        assertTrue(excludedExtensions.contains("3gpp"))
+        assertTrue(excludedExtensions.contains("mid"))
+        assertTrue(excludedExtensions.contains("midi"))
+        assertTrue(excludedExtensions.contains("m4r"))
+
+        assertFalse(excludedExtensions.contains("mp3"))
+        assertFalse(excludedExtensions.contains("flac"))
+        assertFalse(excludedExtensions.contains("m4a"))
+        assertFalse(excludedExtensions.contains("wav"))
+        assertFalse(excludedExtensions.contains("ogg"))
+    }
 }

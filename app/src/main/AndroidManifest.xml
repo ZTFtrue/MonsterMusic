@@ -81,9 +81,28 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
 
-                <data android:mimeType="audio/*" />
                 <data android:scheme="content" />
                 <data android:scheme="file" />
+
+                <data android:mimeType="audio/mpeg" />
+                <data android:mimeType="audio/mp3" />
+                <data android:mimeType="audio/x-mp3" />
+                <data android:mimeType="audio/flac" />
+                <data android:mimeType="audio/x-flac" />
+                <data android:mimeType="audio/mp4" />
+                <data android:mimeType="audio/m4a" />
+                <data android:mimeType="audio/x-m4a" />
+                <data android:mimeType="audio/aac" />
+                <data android:mimeType="audio/aac-adts" />
+                <data android:mimeType="audio/wav" />
+                <data android:mimeType="audio/x-wav" />
+                <data android:mimeType="audio/wave" />
+                <data android:mimeType="audio/ogg" />
+                <data android:mimeType="audio/x-ogg" />
+                <data android:mimeType="application/ogg" />
+                <data android:mimeType="audio/opus" />
+                <data android:mimeType="audio/webm" />
+                <data android:mimeType="audio/x-matroska" />
             </intent-filter>
         </activity-alias>
 
@@ -97,9 +116,28 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
 
-                <data android:mimeType="audio/*" />
                 <data android:scheme="content" />
                 <data android:scheme="file" />
+
+                <data android:mimeType="audio/mpeg" />
+                <data android:mimeType="audio/mp3" />
+                <data android:mimeType="audio/x-mp3" />
+                <data android:mimeType="audio/flac" />
+                <data android:mimeType="audio/x-flac" />
+                <data android:mimeType="audio/mp4" />
+                <data android:mimeType="audio/m4a" />
+                <data android:mimeType="audio/x-m4a" />
+                <data android:mimeType="audio/aac" />
+                <data android:mimeType="audio/aac-adts" />
+                <data android:mimeType="audio/wav" />
+                <data android:mimeType="audio/x-wav" />
+                <data android:mimeType="audio/wave" />
+                <data android:mimeType="audio/ogg" />
+                <data android:mimeType="audio/x-ogg" />
+                <data android:mimeType="application/ogg" />
+                <data android:mimeType="audio/opus" />
+                <data android:mimeType="audio/webm" />
+                <data android:mimeType="audio/x-matroska" />
             </intent-filter>
         </activity-alias>
         <!-- 3. Alias for "Add to Queue" -->
@@ -113,9 +151,28 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
 
-                <data android:mimeType="audio/*" />
                 <data android:scheme="content" />
                 <data android:scheme="file" />
+
+                <data android:mimeType="audio/mpeg" />
+                <data android:mimeType="audio/mp3" />
+                <data android:mimeType="audio/x-mp3" />
+                <data android:mimeType="audio/flac" />
+                <data android:mimeType="audio/x-flac" />
+                <data android:mimeType="audio/mp4" />
+                <data android:mimeType="audio/m4a" />
+                <data android:mimeType="audio/x-m4a" />
+                <data android:mimeType="audio/aac" />
+                <data android:mimeType="audio/aac-adts" />
+                <data android:mimeType="audio/wav" />
+                <data android:mimeType="audio/x-wav" />
+                <data android:mimeType="audio/wave" />
+                <data android:mimeType="audio/ogg" />
+                <data android:mimeType="audio/x-ogg" />
+                <data android:mimeType="application/ogg" />
+                <data android:mimeType="audio/opus" />
+                <data android:mimeType="audio/webm" />
+                <data android:mimeType="audio/x-matroska" />
             </intent-filter>
         </activity-alias>
 

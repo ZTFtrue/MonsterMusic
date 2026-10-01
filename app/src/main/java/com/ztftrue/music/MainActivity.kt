@@ -693,6 +693,9 @@ class MainActivity : ComponentActivity() {
             val componentName = intent.component?.className
 
             if (uri != null) {
+                if (!MusicFileParser.isSupportedMusicFormat(this@MainActivity, uri, intent.type)) {
+                    return
+                }
                 lifecycleScope.launch {
                     val musicItem: MusicItem = MusicFileParser.parse(this@MainActivity, uri)
                     when {
