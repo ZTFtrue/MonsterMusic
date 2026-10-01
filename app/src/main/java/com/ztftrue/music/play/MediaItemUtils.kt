@@ -191,9 +191,17 @@ object MediaItemUtils {
 
 
         // --- 3. 构建 MediaItem 本身 ---
+        val mediaUri = if (musicItem.path.startsWith("content://") ||
+            musicItem.path.startsWith("http://") ||
+            musicItem.path.startsWith("https://")
+        ) {
+            musicItem.path.toUri()
+        } else {
+            File(musicItem.path).toUri()
+        }
         return MediaItem.Builder()
             .setMediaId(musicItem.id.toString())
-            .setUri(File(musicItem.path).toUri())
+            .setUri(mediaUri)
             .setMediaMetadata(metadataBuilder.build())
             .build()
     }

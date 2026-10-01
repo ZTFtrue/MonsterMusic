@@ -94,7 +94,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Locale
@@ -697,25 +696,33 @@ class MainActivity : ComponentActivity() {
                     return
                 }
                 lifecycleScope.launch {
-                    val musicItem: MusicItem = MusicFileParser.parse(this@MainActivity, uri)
+                    val isM3u = MusicFileParser.isM3uPlaylist(this@MainActivity, uri, intent.type)
+                    val musicItems: List<MusicItem> = if (isM3u) {
+                        val tracks = MusicFileParser.parseM3u(this@MainActivity, uri, musicViewModel.songsList)
+                        if (tracks.isEmpty()) {
+                            Toast.makeText(this@MainActivity, R.string.no_music, Toast.LENGTH_SHORT).show()
+                            return@launch
+                        }
+                        tracks
+                    } else {
+                        listOf(MusicFileParser.parse(this@MainActivity, uri))
+                    }
+
                     when {
                         componentName?.contains("PlayNextAlias") == true -> {
-                            addMusicToNext(musicItem)
+                            addMusicsToNext(musicItems)
                         }
 
                         componentName?.contains("ClearQueueAndPlayAlias") == true -> {
-                            // Logic for "Add to Queue"
-                            clearQueueAndAddPlay(musicItem)
+                            clearQueueAndAddPlay(musicItems)
                         }
 
                         componentName?.contains("AddToQueueAlias") == true -> {
-                            // Logic for "Add to Queue"
-                            addMusicToQueue(musicItem)
+                            addMusicsToQueue(musicItems)
                         }
 
                         else -> {
-                            // Fallback (e.g. standard open)
-                            addMusicToQueue(musicItem)
+                            addMusicsToQueue(musicItems)
                         }
                     }
                 }
@@ -726,6 +733,11 @@ class MainActivity : ComponentActivity() {
 
 
     private fun addMusicToNext(musicItem: MusicItem) {
+        addMusicsToNext(listOf(musicItem))
+    }
+
+    private fun addMusicsToNext(musicItems: List<MusicItem>) {
+        if (musicItems.isEmpty()) return
         val l = musicViewModel.browser?.mediaItemCount
         val i = if (l == null || l <= 0) {
             C.INDEX_UNSET
@@ -741,28 +753,38 @@ class MainActivity : ComponentActivity() {
         } else {
             0
         }
-        musicViewModel.musicQueue.add(
+        musicViewModel.musicQueue.addAll(
             position,
-            musicItem
+            musicItems
         )
-        val mediaItem = MediaItemUtils.musicItemToMediaItem(musicItem)
-        musicViewModel.browser?.addMediaItem(
+        val mediaItems = musicItems.map { MediaItemUtils.musicItemToMediaItem(it) }
+        musicViewModel.browser?.addMediaItems(
             position,
-            mediaItem
+            mediaItems
         )
     }
 
     private fun addMusicToQueue(musicItem: MusicItem) {
-        musicViewModel.musicQueue.add(musicItem)
-        val mediaItem = MediaItemUtils.musicItemToMediaItem(musicItem)
-        musicViewModel.browser?.addMediaItem(
-            mediaItem
+        addMusicsToQueue(listOf(musicItem))
+    }
+
+    private fun addMusicsToQueue(musicItems: List<MusicItem>) {
+        if (musicItems.isEmpty()) return
+        musicViewModel.musicQueue.addAll(musicItems)
+        val mediaItems = musicItems.map { MediaItemUtils.musicItemToMediaItem(it) }
+        musicViewModel.browser?.addMediaItems(
+            mediaItems
         )
     }
 
     private fun clearQueueAndAddPlay(musicItem: MusicItem) {
+        clearQueueAndAddPlay(listOf(musicItem))
+    }
+
+    private fun clearQueueAndAddPlay(musicItems: List<MusicItem>) {
+        if (musicItems.isEmpty()) return
         musicViewModel.musicQueue.clear()
-        musicViewModel.musicQueue.add(musicItem)
+        musicViewModel.musicQueue.addAll(musicItems)
         val cmdBundle = Bundle()
         cmdBundle.putBoolean("switch_queue", true)
         SharedPreferencesUtils.enableShuffle(this@MainActivity, false)
@@ -775,10 +797,7 @@ class MainActivity : ComponentActivity() {
             MediaCommands.COMMAND_CHANGE_PLAYLIST,
             cmdBundle
         )
-        val t1 = ArrayList<MediaItem>()
-        musicViewModel.musicQueue.forEach {
-            t1.add(MediaItemUtils.musicItemToMediaItem(it))
-        }
+        val t1 = musicViewModel.musicQueue.map { MediaItemUtils.musicItemToMediaItem(it) }
         musicViewModel.browser?.shuffleModeEnabled = false
         musicViewModel.browser?.clearMediaItems()
         musicViewModel.browser?.setMediaItems(t1)

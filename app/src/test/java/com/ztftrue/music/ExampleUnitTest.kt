@@ -1335,4 +1335,195 @@ class ExampleUnitTest {
         assertFalse(excludedExtensions.contains("wav"))
         assertFalse(excludedExtensions.contains("ogg"))
     }
+
+    @Test
+    fun musicFileParser_m3uMimeTypes() {
+        val m3uMimes = com.ztftrue.music.utils.MusicFileParser.M3U_MIME_TYPES
+        assertTrue(m3uMimes.contains("audio/x-mpegurl"))
+        assertTrue(m3uMimes.contains("audio/mpegurl"))
+        assertTrue(m3uMimes.contains("application/x-mpegurl"))
+        assertTrue(m3uMimes.contains("application/vnd.apple.mpegurl"))
+
+        assertFalse(m3uMimes.contains("audio/mpeg"))
+        assertFalse(m3uMimes.contains("audio/flac"))
+    }
+
+    @Test
+    fun musicFileParser_parseM3uLines_withExtInfAndVariousPaths() {
+        val lines = sequenceOf(
+            "#EXTM3U",
+            "# Comment line to ignore",
+            "",
+            "#EXTINF:180,Artist One - Song Alpha",
+            "track1.mp3",
+            "#EXTINF:240.5,Song Beta Without Artist",
+            "/absolute/storage/track2.flac",
+            "#EXTINF:-1,Radio Stream",
+            "https://stream.example.com/live.aac",
+            "#EXTINF:120,Artist Three - Track Three",
+            "file:///sdcard/Music/track3.ogg"
+        )
+
+        val tempDir = java.io.File("/mock/music/playlist")
+        val items = com.ztftrue.music.utils.MusicFileParser.parseM3uLines(
+            lines = lines,
+            playlistDir = tempDir,
+            libraryTracks = null
+        )
+
+        assertEquals(4, items.size)
+
+        // Item 1: relative path resolved against playlistDir + EXTINF with artist and title
+        val item1 = items[0]
+        assertEquals("Song Alpha", item1.name)
+        assertEquals("Artist One", item1.artist)
+        assertEquals(180000L, item1.duration)
+        assertEquals(java.io.File(tempDir, "track1.mp3").absolutePath, item1.path)
+
+        // Item 2: absolute path + EXTINF with title only
+        val item2 = items[1]
+        assertEquals("Song Beta Without Artist", item2.name)
+        assertEquals("<unknown>", item2.artist)
+        assertEquals(240500L, item2.duration)
+        assertEquals("/absolute/storage/track2.flac", item2.path)
+
+        // Item 3: stream URL
+        val item3 = items[2]
+        assertEquals("Radio Stream", item3.name)
+        assertEquals("https://stream.example.com/live.aac", item3.path)
+        assertEquals("<stream>", item3.album)
+
+        // Item 4: file:// path stripped
+        val item4 = items[3]
+        assertEquals("Track Three", item4.name)
+        assertEquals("Artist Three", item4.artist)
+        assertEquals(120000L, item4.duration)
+        assertEquals("/sdcard/Music/track3.ogg", item4.path)
+    }
+
+    @Test
+    fun musicFileParser_parseM3uLines_matchesLibraryTracks() {
+        val libraryTrack1 = com.ztftrue.music.sqlData.model.MusicItem(
+            tableId = 1L,
+            id = 1001L,
+            name = "Library Track 1",
+            path = "/storage/emulated/0/Music/Album1/song1.mp3",
+            duration = 200000L,
+            displayName = "song1.mp3",
+            album = "Best Album",
+            albumId = 55L,
+            artist = "Super Artist",
+            artistId = 77L,
+            genre = "Rock",
+            genreId = 1L,
+            year = 2024,
+            songNumber = 1
+        )
+
+        val libraryTrack2 = com.ztftrue.music.sqlData.model.MusicItem(
+            tableId = 2L,
+            id = 1002L,
+            name = "Library Track 2",
+            path = "/storage/emulated/0/Music/Album2/song2.flac",
+            duration = 310000L,
+            displayName = "song2.flac",
+            album = "Second Album",
+            albumId = 56L,
+            artist = "Another Artist",
+            artistId = 78L,
+            genre = "Pop",
+            genreId = 2L,
+            year = 2023,
+            songNumber = 2
+        )
+
+        val library = listOf(libraryTrack1, libraryTrack2)
+
+        // Playlist references track 1 by exact path, and track 2 by filename only
+        val lines = sequenceOf(
+            "#EXTM3U",
+            "/storage/emulated/0/Music/Album1/song1.mp3",
+            "song2.flac"
+        )
+
+        val items = com.ztftrue.music.utils.MusicFileParser.parseM3uLines(
+            lines = lines,
+            playlistDir = null,
+            libraryTracks = library
+        )
+
+        assertEquals(2, items.size)
+        // Verify matched to library tracks with complete metadata (IDs, album, artist)
+        assertEquals(1001L, items[0].id)
+        assertEquals("Library Track 1", items[0].name)
+        assertEquals(77L, items[0].artistId)
+        assertEquals(55L, items[0].albumId)
+
+        assertEquals(1002L, items[1].id)
+        assertEquals("Library Track 2", items[1].name)
+        assertEquals(78L, items[1].artistId)
+        assertEquals(56L, items[1].albumId)
+    }
+
+    @Test
+    fun batchQueueOperations_orderingVerification() {
+        val createTrack = { id: Long, name: String ->
+            com.ztftrue.music.sqlData.model.MusicItem(
+                tableId = null,
+                id = id,
+                name = name,
+                path = "/storage/$name.mp3",
+                duration = 1000L,
+                displayName = "$name.mp3",
+                album = "Album",
+                albumId = 1L,
+                artist = "Artist",
+                artistId = 1L,
+                genre = "",
+                genreId = 0L,
+                year = 2024,
+                songNumber = 1
+            )
+        }
+
+        val queue = ArrayList<com.ztftrue.music.sqlData.model.MusicItem>()
+        queue.add(createTrack(1L, "Current 1"))
+        queue.add(createTrack(2L, "Current 2"))
+        queue.add(createTrack(3L, "Current 3"))
+
+        val newTracks = listOf(
+            createTrack(10L, "New M3U Track A"),
+            createTrack(11L, "New M3U Track B")
+        )
+
+        // Test 1: Add to Queue (appends to end)
+        val queueAppend = ArrayList(queue)
+        queueAppend.addAll(newTracks)
+        assertEquals(5, queueAppend.size)
+        assertEquals(1L, queueAppend[0].id)
+        assertEquals(2L, queueAppend[1].id)
+        assertEquals(3L, queueAppend[2].id)
+        assertEquals(10L, queueAppend[3].id)
+        assertEquals(11L, queueAppend[4].id)
+
+        // Test 2: Play Next (inserts after current index 1 -> position 2)
+        val queuePlayNext = ArrayList(queue)
+        val currentIndex = 1
+        val insertPosition = currentIndex + 1
+        queuePlayNext.addAll(insertPosition, newTracks)
+        assertEquals(5, queuePlayNext.size)
+        assertEquals(1L, queuePlayNext[0].id)
+        assertEquals(2L, queuePlayNext[1].id)
+        assertEquals(10L, queuePlayNext[2].id)
+        assertEquals(11L, queuePlayNext[3].id)
+        assertEquals(3L, queuePlayNext[4].id)
+
+        // Test 3: Clear queue and play
+        val queueClearAndPlay = ArrayList(queue)
+        queueClearAndPlay.clear()
+        queueClearAndPlay.addAll(newTracks)
+        assertEquals(2, queueClearAndPlay.size)
+        assertEquals(10L, queueClearAndPlay[0].id)
+        assertEquals(11L, queueClearAndPlay[1].id)
+    }
 }
