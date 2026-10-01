@@ -1,7 +1,5 @@
 package com.ztftrue.music.ui.play
 
-import android.view.View
-import android.view.ViewGroup
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -34,20 +32,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.ui.AspectRatioFrameLayout
-import androidx.media3.ui.PlayerView
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.play.PlayService
 import com.ztftrue.music.utils.Utils
 
 @OptIn(UnstableApi::class)
@@ -99,11 +93,6 @@ fun CoverView(
         }
     }
 
-    val isFocused = isSelected && isLifecycleActive
-    val currentTrack = musicViewModel.currentPlay.value
-    val isVideo = currentTrack != null && (Utils.isVideoPath(currentTrack.path) || currentTrack.id < 0)
-    val showVideo = musicViewModel.videoSupportEnable.value && isVideo
-
     LazyColumn(
         state = listState,
         modifier = Modifier
@@ -135,14 +124,6 @@ fun CoverView(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(color = Color.Black)
-                    )
-                }
-
-                if (showVideo) {
-                    VideoCoverView(
-                        musicViewModel = musicViewModel,
-                        isFocused = isFocused,
-                        modifier = Modifier.fillMaxSize()
                     )
                 }
 
@@ -200,53 +181,6 @@ fun CoverView(
                     AudioChainView(musicViewModel = musicViewModel)
                 }
             }
-        }
-    }
-}
-
-@OptIn(UnstableApi::class)
-@Composable
-fun VideoCoverView(
-    musicViewModel: MusicViewModel,
-    isFocused: Boolean,
-    modifier: Modifier = Modifier
-) {
-    AndroidView(
-        modifier = modifier,
-        factory = { ctx ->
-            PlayerView(ctx).apply {
-                useController = false
-                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
-            }
-        },
-        update = { playerView ->
-            val player = PlayService.exoPlayerInstance ?: musicViewModel.browser
-            if (isFocused) {
-                playerView.visibility = View.VISIBLE
-                if (playerView.player != player) {
-                    playerView.player = player
-                }
-            } else {
-                if (playerView.player != null) {
-                    playerView.player = null
-                }
-                PlayService.exoPlayerInstance?.clearVideoSurface()
-                playerView.visibility = View.GONE
-            }
-        },
-        onRelease = { playerView ->
-            playerView.player = null
-            PlayService.exoPlayerInstance?.clearVideoSurface()
-        }
-    )
-
-    DisposableEffect(Unit) {
-        onDispose {
-            PlayService.exoPlayerInstance?.clearVideoSurface()
         }
     }
 }

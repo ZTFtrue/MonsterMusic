@@ -97,10 +97,11 @@ class AudioEffectManager(private val context: Context) {
             globalAuxr = auxr.copy(id = 0)
         } else {
             auxr = auxTemp
-            if (migrateLegacyPreferences(auxr)) {
-                db.AuxDao().upsert(auxr)
-            }
             globalAuxr = auxr.copy(id = 0)
+            // Clean up any stale legacy preferences so they never overwrite database settings
+            context.getSharedPreferences("audio_effects_prefs", MODE_PRIVATE).edit().clear().apply()
+            context.getSharedPreferences("Equalizer", MODE_PRIVATE).edit().clear().apply()
+            context.getSharedPreferences("SelectedPreset", MODE_PRIVATE).edit().clear().apply()
         }
 
         // 2. 如果开启了每首歌专属音效且有当前播放歌曲，则载入该歌曲的 Auxr
@@ -251,18 +252,21 @@ class AudioEffectManager(private val context: Context) {
                 target.showSpeedFine = effectsPrefs.getBoolean("show_speed_fine", target.showSpeedFine)
                 changed = true
             }
+            effectsPrefs.edit().clear().apply()
         }
 
         val eqPrefs = context.getSharedPreferences("Equalizer", MODE_PRIVATE)
         if (eqPrefs.contains("EqualizerType")) {
             target.equalizerType = eqPrefs.getInt("EqualizerType", target.equalizerType)
             changed = true
+            eqPrefs.edit().clear().apply()
         }
 
         val presetPrefs = context.getSharedPreferences("SelectedPreset", MODE_PRIVATE)
         if (presetPrefs.contains("SelectedPreset")) {
             target.selectedPreset = presetPrefs.getString("SelectedPreset", target.selectedPreset) ?: target.selectedPreset
             changed = true
+            presetPrefs.edit().clear().apply()
         }
 
         return changed

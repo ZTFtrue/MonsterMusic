@@ -158,6 +158,7 @@ const val CoverID = 0
 const val LyricsID = 1
 const val EqualizerID = 2
 const val EffectID = 3
+const val VideoID = 4
 
 data class PlayingViewTab(
     val name: String,
@@ -177,11 +178,29 @@ fun PlayingPage(
     musicViewModel: MusicViewModel,
 ) {
     val context = LocalContext.current
-    val playViewTab: Array<PlayingViewTab> = arrayOf(
-        PlayingViewTab("Cover", CoverID, 1), PlayingViewTab("Lyrics", LyricsID, 1),
-        PlayingViewTab("Equalizer", EqualizerID, 1),
-        PlayingViewTab("Effect", EffectID, 1),
-    )
+    val currentTrack = musicViewModel.currentPlay.value
+    val isCurrentTrackVideo = musicViewModel.videoSupportEnable.value &&
+        currentTrack != null &&
+        (Utils.isVideoPath(currentTrack.path) || currentTrack.id < 0)
+
+    val playViewTab: Array<PlayingViewTab> = remember(isCurrentTrackVideo) {
+        if (isCurrentTrackVideo) {
+            arrayOf(
+                PlayingViewTab("Cover", CoverID, 1),
+                PlayingViewTab("Lyrics", LyricsID, 1),
+                PlayingViewTab("Equalizer", EqualizerID, 1),
+                PlayingViewTab("Effect", EffectID, 1),
+                PlayingViewTab("Video", VideoID, 1),
+            )
+        } else {
+            arrayOf(
+                PlayingViewTab("Cover", CoverID, 1),
+                PlayingViewTab("Lyrics", LyricsID, 1),
+                PlayingViewTab("Equalizer", EqualizerID, 1),
+                PlayingViewTab("Effect", EffectID, 1),
+            )
+        }
+    }
     val pagerTabState = rememberPagerState { playViewTab.size }
     val coroutineScope = rememberCoroutineScope()
     var showDialog by remember { mutableStateOf(false) }
@@ -198,6 +217,12 @@ fun PlayingPage(
     @Suppress("ASSIGNED_VALUE_IS_NEVER_READ")
     var showDeleteTip by remember { mutableStateOf(false) }
 
+    LaunchedEffect(playViewTab.size) {
+        if (pagerTabState.currentPage >= playViewTab.size) {
+            pagerTabState.scrollToPage(0)
+        }
+    }
+
     LaunchedEffect(music) {
         if (music == null) {
             navController.removeLastSafe()
@@ -205,7 +230,7 @@ fun PlayingPage(
     }
 
     LaunchedEffect(pagerTabState.currentPage) {
-        if (playViewTab[pagerTabState.currentPage].id != LyricsID) {
+        if (playViewTab.getOrNull(pagerTabState.currentPage)?.id != LyricsID) {
             musicViewModel.dismissLyricsTrigger.intValue++
         }
     }
@@ -401,10 +426,19 @@ fun PlayingPage(
     var isVisualizerFullscreen by remember {
         mutableStateOf(false)
     }
+    var isVideoFullscreen by remember {
+        mutableStateOf(false)
+    }
 
-    LaunchedEffect(showDialog, popupWindow, visualizationPopupWindow, popupWindowDictionary, showAddPlayListDialog, showCreatePlayListDialog, showDeleteTip, isVisualizerFullscreen) {
-        if (showDialog || popupWindow || visualizationPopupWindow || popupWindowDictionary || showAddPlayListDialog || showCreatePlayListDialog || showDeleteTip || isVisualizerFullscreen) {
+    LaunchedEffect(showDialog, popupWindow, visualizationPopupWindow, popupWindowDictionary, showAddPlayListDialog, showCreatePlayListDialog, showDeleteTip, isVisualizerFullscreen, isVideoFullscreen) {
+        if (showDialog || popupWindow || visualizationPopupWindow || popupWindowDictionary || showAddPlayListDialog || showCreatePlayListDialog || showDeleteTip || isVisualizerFullscreen || isVideoFullscreen) {
             musicViewModel.dismissLyricsTrigger.intValue++
+        }
+    }
+
+    LaunchedEffect(isCurrentTrackVideo) {
+        if (!isCurrentTrackVideo && isVideoFullscreen) {
+            isVideoFullscreen = false
         }
     }
 
@@ -413,6 +447,16 @@ fun PlayingPage(
             musicViewModel = musicViewModel,
             onDismiss = {
                 isVisualizerFullscreen = false
+            }
+        )
+        return
+    }
+
+    if (isVideoFullscreen) {
+        VideoFullscreenView(
+            musicViewModel = musicViewModel,
+            onDismiss = {
+                isVideoFullscreen = false
             }
         )
         return
@@ -1315,7 +1359,8 @@ fun PlayingPage(
             ) {
                 key(Unit, pagerTabState.currentPage) {
                     TopBar(navController, musicViewModel, content = {
-                        if (playViewTab[pagerTabState.currentPage].id == CoverID) {
+                        val currentTabId = playViewTab.getOrNull(pagerTabState.currentPage)?.id
+                        if (currentTabId == CoverID) {
                             IconButton(
                                 modifier = Modifier.width(50.dp), onClick = {
                                     visualizationPopupWindow = !visualizationPopupWindow
@@ -1330,7 +1375,7 @@ fun PlayingPage(
                                 )
                             }
                         }
-                        if (playViewTab[pagerTabState.currentPage].id == LyricsID) {
+                        if (currentTabId == LyricsID) {
                             IconButton(
                                 modifier = Modifier.width(50.dp), onClick = {
                                     popupWindow = !popupWindow
@@ -1338,6 +1383,21 @@ fun PlayingPage(
                                 Icon(
                                     imageVector = Icons.Outlined.FormatShapes,
                                     contentDescription = "Set lyrics display format",
+                                    modifier = Modifier
+                                        .width(24.dp)
+                                        .height(24.dp),
+                                    tint = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                        }
+                        if (currentTabId == VideoID) {
+                            IconButton(
+                                modifier = Modifier.width(50.dp), onClick = {
+                                    isVideoFullscreen = true
+                                }) {
+                                Icon(
+                                    imageVector = Icons.Default.Fullscreen,
+                                    contentDescription = stringResource(R.string.fullscreen),
                                     modifier = Modifier
                                         .width(24.dp)
                                         .height(24.dp),
@@ -1381,15 +1441,16 @@ fun PlayingPage(
                 }
 
                 key(Unit) {
+                    val currentTab = pagerTabState.currentPage.coerceIn(0, (playViewTab.size - 1).coerceAtLeast(0))
                     SecondaryScrollableTabRow(
-                        selectedTabIndex = pagerTabState.currentPage,
+                        selectedTabIndex = currentTab,
                         modifier = Modifier.fillMaxWidth(),
                         divider = {},
                         indicator = {
                             TabRowDefaults.SecondaryIndicator(
                                 Modifier
                                     .height(3.0.dp)
-                                    .tabIndicatorOffset(pagerTabState.currentPage),
+                                    .tabIndicatorOffset(currentTab),
                                 height = 3.0.dp,
                                 color = MaterialTheme.colorScheme.onBackground
                             )
@@ -1427,11 +1488,11 @@ fun PlayingPage(
                         },
                     userScrollEnabled = false
                 ) { id ->
-                    when (playViewTab[id].id) {
+                    when (playViewTab.getOrNull(id)?.id) {
                         CoverID -> {
                             CoverView(
                                 musicViewModel = musicViewModel,
-                                isSelected = (pagerTabState.currentPage == id && !isVisualizerFullscreen),
+                                isSelected = (pagerTabState.currentPage == id && !isVisualizerFullscreen && !isVideoFullscreen),
                                 onEnterFullscreen = {
                                     isVisualizerFullscreen = true
                                 }
@@ -1451,6 +1512,18 @@ fun PlayingPage(
                         EffectID -> {
                             key(musicViewModel.currentPlay.value?.id) {
                                 EffectView(musicViewModel)
+                            }
+                        }
+
+                        VideoID -> {
+                            key(musicViewModel.currentPlay.value?.id) {
+                                VideoView(
+                                    musicViewModel = musicViewModel,
+                                    isSelected = (pagerTabState.currentPage == id && !isVideoFullscreen),
+                                    onEnterFullscreen = {
+                                        isVideoFullscreen = true
+                                    }
+                                )
                             }
                         }
                     }

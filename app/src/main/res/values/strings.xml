@@ -340,6 +340,9 @@
     <string name="folder_added_to_blacklist">Folder added to blacklist: %1$s</string>
     <string name="select_device_folders">Select device folders</string>
     <string name="uncheck_folders_to_ignore">Uncheck folders to exclude them from the library</string>
+    <string name="tab_video">Video</string>
     <string name="video_support_enable">Video Support</string>
-    <string name="video_support_enable_desc">Display video in cover for video files; automatically plays as audio-only when not focused to save battery</string>
+    <string name="video_support_enable_desc">Play video in Video tab for video files; automatically plays as audio-only when not focused to save battery</string>
+    <string name="video_not_supported_or_not_video">Current track is not a video</string>
+    <string name="video_support_disabled_tip">Video support is disabled in Settings</string>
 </resources>

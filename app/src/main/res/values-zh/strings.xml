@@ -340,6 +340,9 @@
     <string name="folder_added_to_blacklist">已加入黑名单: %1$s</string>
     <string name="select_device_folders">选择设备文件夹</string>
     <string name="uncheck_folders_to_ignore">取消勾选以在媒体库中排除该文件夹</string>
+    <string name="tab_video">视频</string>
     <string name="video_support_enable">视频支持</string>
-    <string name="video_support_enable_desc">视频文件在封面区域播放画面，离开页面或退至后台时自动仅播放音频以节省电量</string>
+    <string name="video_support_enable_desc">视频文件在视频标签页中播放画面，离开页面或退至后台时自动仅播放音频以节省电量</string>
+    <string name="video_not_supported_or_not_video">当前播放不是视频</string>
+    <string name="video_support_disabled_tip">已在设置中关闭视频支持</string>
 </resources>

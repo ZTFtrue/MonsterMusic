@@ -1750,4 +1750,20 @@ class ExampleUnitTest {
         assertNull(com.ztftrue.music.play.MediaItemUtils.extractId("folders_root"))
         assertNull(com.ztftrue.music.play.MediaItemUtils.extractId("genres_root"))
     }
+
+    @Test
+    fun videoTab_translateMapAndId_isCorrect() {
+        assertEquals(R.string.tab_video, Utils.translateMap["Video"])
+        assertEquals(4, com.ztftrue.music.ui.play.VideoID)
+    }
+
+    @Test
+    fun isVideoTrack_detection_isCorrect() {
+        assertTrue(Utils.isVideoPath("/storage/emulated/0/Music/sample.mp4"))
+        assertTrue(Utils.isVideoPath("/storage/emulated/0/Music/sample.mkv"))
+        assertTrue(Utils.isVideoPath("/storage/emulated/0/Music/sample.webm"))
+        assertFalse(Utils.isVideoPath("/storage/emulated/0/Music/sample.mp3"))
+        assertFalse(Utils.isVideoPath("/storage/emulated/0/Music/sample.flac"))
+        assertFalse(Utils.isVideoPath(null))
+    }
 }

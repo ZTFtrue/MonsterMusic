@@ -151,6 +151,7 @@ object Utils {
         put("Equalizer", R.string.tab_equalizer)
         put("Effect", R.string.effect)
         put("Custom", R.string.custom)
+        put("Video", R.string.tab_video)
     }
 
     val items = listOf(
