@@ -1,0 +1,7 @@
+v0.1.79:
+• Vollständige Android Auto-Unterstützung mit Medien-Browsing, Fahrzeug-Wiedergabe und Sprachsuche.
+• Unterstützung für das Öffnen, Parsen und Abspielen von M3U- und M3U8-Wiedergabelisten.
+• Neuer Bass-Boost-Audio-DSP-Effekt mit anpassbarer Stärke auf der Effektseite.
+• Erweiterte Suchleistenergebnisse zur Suche nach Künstlernamen und Titeln mit Deduplizierung.
+• Ordner-Scanmodi mit Whitelist- und Blacklist-Filterung für die Musikbibliothek hinzugefügt.
+• Verfeinerte Dateityp-Zuordnungen und konfigurationsbewusste UI-Optimierungen.

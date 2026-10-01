@@ -289,16 +289,24 @@ class MusicViewModel : ViewModel() {
 
     private fun subscribeToVisualizationData() {
         viewModelScope.launch {
-            // a. 订阅 (collect) 来自 Repository 的数据流
+            var lastPostTime = 0L
             AudioDataRepository.visualizationDataFlow
-                // b. (可选) 使用 .flowOn(Dispatchers.Default) 可以在后台线程处理数据转换
-                // c. (可选) 使用 .buffer() 进一步增强背压处理
-                .collectLatest { fftArray -> // collectLatest 确保我们只处理最新的数据
-                    // d. 当收到新数据时，这个代码块会被执行
-                    //    我们在这里将 FloatArray 转换为 List<Float> 并更新 LiveData
-                    _visualizationData.postValue(fftArray.toList())
+                .collectLatest { fftArray ->
+                    // Only allocate and post if an observer is actually listening to LiveData,
+                    // and throttle to ~30 FPS to avoid flooding the Android Main Looper MessageQueue
+                    if (_visualizationData.hasActiveObservers()) {
+                        val now = System.currentTimeMillis()
+                        if (now - lastPostTime >= 33L) {
+                            lastPostTime = now
+                            _visualizationData.postValue(fftArray.toList())
+                        }
+                    }
                 }
         }
+    }
+
+    fun getLatestVisualizationData(out: FloatArray): Boolean {
+        return AudioDataRepository.getLatestVisualizationData(out)
     }
 
     init {

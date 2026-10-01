@@ -23,6 +23,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.ztftrue.music.MusicViewModel
+import com.ztftrue.music.play.AudioDataRepository
+import kotlin.math.exp
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
@@ -57,7 +59,7 @@ fun MatrixRainVisualizer(
         }
     }
 
-    val magnitudes by musicViewModel.visualizationData.observeAsState(initial = emptyList())
+    val magnitudesArray = remember { FloatArray(32) }
     val density = LocalDensity.current
     val columnSpacingPx = with(density) { 15.dp.toPx() }
     val charHeightPx = with(density) { 16.dp.toPx() }
@@ -83,7 +85,10 @@ fun MatrixRainVisualizer(
                 if (lastTime != 0L) {
                     val dt = (frameTime - lastTime).coerceIn(1L, 100L)
                     try {
-                        simulation.update(dt.toFloat(), magnitudes, isPlaying)
+                        if (isPlaying) {
+                            AudioDataRepository.getLatestVisualizationData(magnitudesArray)
+                        }
+                        simulation.update(dt.toFloat(), magnitudesArray, isPlaying)
                     } catch (_: Exception) {
                     }
                     frameTick++
@@ -212,17 +217,24 @@ class MatrixRainSimulation(
     }
 
     fun update(dtMs: Float, rawMagnitudes: List<Float>, isPlaying: Boolean) {
+        val arr = FloatArray(rawMagnitudes.size) { rawMagnitudes[it] }
+        update(dtMs, arr, isPlaying)
+    }
+
+    fun update(dtMs: Float, rawMagnitudes: FloatArray, isPlaying: Boolean) {
         synchronized(lock) {
             val dtSec = dtMs / 1000f
 
-            // 1. Smooth audio magnitudes (attack fast, decay smoothly)
+            // 1. Smooth audio magnitudes (adaptive exponential attack, natural logarithmic decay)
             val magSize = rawMagnitudes.size
+            val attack = 1f - exp(-35f * dtSec)
+            val decay = exp(-4.0f * dtSec)
             for (i in 0 until 32) {
                 val target = if (i < magSize) rawMagnitudes[i].coerceIn(0f, 1f) else 0f
                 if (target > smoothedEnergy[i]) {
-                    smoothedEnergy[i] = target // Instant attack
+                    smoothedEnergy[i] += (target - smoothedEnergy[i]) * attack
                 } else {
-                    smoothedEnergy[i] = max(0f, smoothedEnergy[i] - dtSec * 3.5f) // Smooth decay
+                    smoothedEnergy[i] = max(0f, smoothedEnergy[i] * decay - dtSec * 0.1f)
                 }
             }
 

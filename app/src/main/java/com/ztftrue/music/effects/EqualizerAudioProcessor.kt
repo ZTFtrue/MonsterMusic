@@ -176,7 +176,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var changeDb = false
 
     // Visualization
-    private val fftSize = 1024
+    private val fftSize = 512
     private val halfFftSize = fftSize / 2
     private val visRingBufferLen = 4096
     private var visRingBuffer = FloatArray(visRingBufferLen)
@@ -185,7 +185,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var visTempArray = FloatArray(fftSize)
     private var nativeFftMagnitudes = FloatArray(halfFftSize)
     private var lastVisProcessTimeNs = 0L
-    private val minVisIntervalNs = 16_000_000L // ~60 FPS throttle
+    private val minVisIntervalNs = 8_000_000L // ~125 FPS throttle for responsive high refresh rate screens
 
     private val lock = ReentrantLock()
 
@@ -345,7 +345,7 @@ class EqualizerAudioProcessor : AudioProcessor {
                 minDb = -60f,
                 needNormalize = true,
                 needPositive = false,
-                refValue = (fftSize / 4f), // 256f full-scale reference for 1024-pt Hann window FFT
+                refValue = (fftSize / 4f), // 128f full-scale reference for 512-pt Hann window FFT
                 tiltFactor = 1.0f          // Equal-loudness acoustic compensation across spectrum
             )
             AudioDataRepository.postVisualizationData(m)

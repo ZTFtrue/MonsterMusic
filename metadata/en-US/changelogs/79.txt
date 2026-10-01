@@ -1,0 +1,7 @@
+v0.1.79:
+• Added full Android Auto support with media browsing, in-car playback, and voice search.
+• Added support for opening, parsing, and playing M3U and M3U8 playlists.
+• Added Bass Boost audio DSP effect with customizable strength on the Effects page.
+• Enhanced search bar results to search by artist name in addition to song title with smart deduplication.
+• Added folder scanning modes with Whitelist and Blacklist library filtering.
+• Refined MIME type associations and configuration-aware UI optimizations.

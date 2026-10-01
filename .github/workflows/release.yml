@@ -6,6 +6,15 @@ on:
       - 'v*'
       - '[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag name (e.g. 0.1.79; leave blank to use build.gradle version)'
+        required: false
+        type: string
+      custom_update_log:
+        description: 'Custom update log / changelog (optional; if empty, auto-extracted from changelogs)'
+        required: false
+        type: string
 
 jobs:
   build:
@@ -17,6 +26,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -67,9 +78,103 @@ jobs:
         if: always()
         run: rm -f release_keystore.jks
 
+      - name: Generate Release Notes & Custom Update Log
+        id: release_notes
+        env:
+          INPUT_TAG: ${{ inputs.tag_name }}
+          INPUT_CUSTOM_LOG: ${{ inputs.custom_update_log }}
+        run: |
+          VERSION_NAME=$(grep -oE 'versionName\s*=\s*"[^"]+"' app/build.gradle.kts | head -n1 | cut -d'"' -f2)
+          VERSION_CODE=$(grep -oE 'versionCode\s*=\s*[0-9]+' app/build.gradle.kts | head -n1 | grep -oE '[0-9]+')
+
+          TAG_NAME="$INPUT_TAG"
+          if [ -z "$TAG_NAME" ]; then
+            if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+              TAG_NAME="${GITHUB_REF#refs/tags/}"
+            else
+              TAG_NAME="${VERSION_NAME}"
+            fi
+          fi
+
+          echo "tag_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+
+          OUTPUT_FILE="custom_release_notes.md"
+          > "$OUTPUT_FILE"
+
+          if [ -n "$INPUT_CUSTOM_LOG" ]; then
+            echo "$INPUT_CUSTOM_LOG" >> "$OUTPUT_FILE"
+          else
+            EN_LOG="metadata/en-US/changelogs/${VERSION_CODE}.txt"
+            ZH_LOG="metadata/zh-CN/changelogs/${VERSION_CODE}.txt"
+            DE_LOG="metadata/de/changelogs/${VERSION_CODE}.txt"
+
+            HAS_CHANGELOG=false
+
+            if [ -f "$EN_LOG" ] || [ -f "$ZH_LOG" ] || [ -f "$DE_LOG" ]; then
+              echo "## 🚀 What's New in v${VERSION_NAME} / 更新日志" >> "$OUTPUT_FILE"
+              echo "" >> "$OUTPUT_FILE"
+              if [ -f "$EN_LOG" ]; then
+                echo "### 🌐 English" >> "$OUTPUT_FILE"
+                cat "$EN_LOG" >> "$OUTPUT_FILE"
+                echo "" >> "$OUTPUT_FILE"
+                HAS_CHANGELOG=true
+              fi
+              if [ -f "$ZH_LOG" ]; then
+                echo "### 🇨🇳 简体中文" >> "$OUTPUT_FILE"
+                cat "$ZH_LOG" >> "$OUTPUT_FILE"
+                echo "" >> "$OUTPUT_FILE"
+                HAS_CHANGELOG=true
+              fi
+              if [ -f "$DE_LOG" ]; then
+                echo "### 🇩🇪 Deutsch" >> "$OUTPUT_FILE"
+                cat "$DE_LOG" >> "$OUTPUT_FILE"
+                echo "" >> "$OUTPUT_FILE"
+                HAS_CHANGELOG=true
+              fi
+            fi
+
+            if [ "$HAS_CHANGELOG" = false ] && [ -f "CHANGELOG.md" ]; then
+              CHANGELOG_SECTION=$(awk -v ver="$VERSION_NAME" '
+                $0 ~ "^## \\[" ver "\\]" { flag=1; next }
+                flag && /^## / { flag=0 }
+                flag && /^---/ { flag=0 }
+                flag { print }
+              ' CHANGELOG.md | sed -e :a -e '/^\n*$/{$d;N;};/\n$/ba')
+
+              if [ -n "$CHANGELOG_SECTION" ]; then
+                echo "## 🚀 What's New in v${VERSION_NAME} / 更新日志" >> "$OUTPUT_FILE"
+                echo "" >> "$OUTPUT_FILE"
+                echo "$CHANGELOG_SECTION" >> "$OUTPUT_FILE"
+                echo "" >> "$OUTPUT_FILE"
+                HAS_CHANGELOG=true
+              fi
+            fi
+
+            if [ "$HAS_CHANGELOG" = false ]; then
+              TAG_MSG=$(git tag -l --format='%(contents)' "$TAG_NAME" 2>/dev/null || true)
+              if [ -n "$TAG_MSG" ]; then
+                echo "## 🚀 What's New in v${VERSION_NAME}" >> "$OUTPUT_FILE"
+                echo "" >> "$OUTPUT_FILE"
+                echo "$TAG_MSG" >> "$OUTPUT_FILE"
+                echo "" >> "$OUTPUT_FILE"
+              fi
+            fi
+          fi
+
+          if [ -s "$OUTPUT_FILE" ]; then
+            echo "body_path=$OUTPUT_FILE" >> "$GITHUB_OUTPUT"
+          else
+            echo "body_path=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
+          tag_name: ${{ steps.release_notes.outputs.tag_name }}
+          name: MonsterMusic v${{ steps.release_notes.outputs.version_name }}
+          body_path: ${{ steps.release_notes.outputs.body_path }}
           files: app/release/*.apk
           generate_release_notes: true

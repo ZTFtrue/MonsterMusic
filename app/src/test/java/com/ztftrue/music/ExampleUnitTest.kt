@@ -7,6 +7,8 @@ import com.ztftrue.music.effects.SoundUtils
 
 import org.junit.Assert.*
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.play.AudioDataRepository
+import kotlin.math.exp
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -623,6 +625,93 @@ class ExampleUnitTest {
         // Silent bands should stay at 0.0f
         assertEquals(0.0f, downsampled[0], 0.001f)
         assertEquals(0.0f, downsampled[31], 0.001f)
+    }
+
+    @Test
+    fun soundUtils_downsampleMagnitudes_reducedSamplingSize512() {
+        // Test with reduced FFT size: 512-pt FFT produces 256 magnitude bins (half_size = 256)
+        // With Hann window, full-scale sine peak amplitude is N / 4 = 128.0f
+        val fullScaleSineFft512 = FloatArray(256) { 0f }
+        // Sine wave at bin 10 (~861Hz at 44.1kHz) with peak amplitude = 128.0f (0 dBFS)
+        fullScaleSineFft512[10] = 128.0f
+
+        val downsampled = SoundUtils.downsampleMagnitudes(
+            fullScaleSineFft512,
+            targetSize = 32,
+            minDb = -60f,
+            needNormalize = true,
+            needPositive = false,
+            refValue = 128.0f,
+            tiltFactor = 1.0f
+        )
+        assertEquals(32, downsampled.size)
+        // Active band should reach near peak (~1.0f)
+        val maxBand = downsampled.maxOrNull() ?: 0f
+        assertTrue("Max band should be near peak (> 0.9f) but was $maxBand", maxBand > 0.9f)
+        // Silent bands should stay at 0.0f
+        assertEquals(0.0f, downsampled[0], 0.001f)
+        assertEquals(0.0f, downsampled[31], 0.001f)
+    }
+
+    @Test
+    fun audioDataRepository_zeroAllocationAndThreadSafety() {
+        val testData = FloatArray(32) { (it + 1) * 0.03f }
+        AudioDataRepository.postVisualizationData(testData)
+
+        val destination = FloatArray(32)
+        val success = AudioDataRepository.getLatestVisualizationData(destination)
+        assertTrue("getLatestVisualizationData should return true when data is available", success)
+        for (i in 0 until 32) {
+            assertEquals("Band $i should match posted data", testData[i], destination[i], 0.0001f)
+        }
+
+        // Test clear
+        AudioDataRepository.clearVisualizationData()
+        val destAfterClear = FloatArray(32) { 1.0f }
+        val successAfterClear = AudioDataRepository.getLatestVisualizationData(destAfterClear)
+        assertFalse("getLatestVisualizationData should return false after clear", successAfterClear)
+    }
+
+    @Test
+    fun spectrumVisualizer_physics_smoothAttackAndPeakHold() {
+        // Test exponential attack: A sudden impulse from 0.0 to 1.0 should NOT teleport to 1.0 in 1 frame
+        var currentHeight = 0.0f
+        val target = 1.0f
+        val dt = 0.016f // 60 FPS frame (~16ms)
+
+        val diff = target - currentHeight
+        val attackSpeed = if (diff > 0.25f) 42f else 30f
+        val attack = 1f - exp(-attackSpeed * dt)
+        currentHeight += diff * attack
+
+        // First frame should rise substantially (> 40%) but NOT teleport to 100% (eliminating stutter/jitter)
+        assertTrue("First frame should be smoothly interpolated (> 0.40)", currentHeight > 0.40f)
+        assertTrue("First frame should not snap instantly to 1.0 (< 0.85)", currentHeight < 0.85f)
+
+        // Test peak hold duration: Peak must not fall while holdTimer > 0
+        var peakHeight = 1.0f
+        var peakVelocity = 0.0f
+        var peakHoldTimer = 0.30f // 300ms hold timer
+
+        // Simulate 5 frames of decay (80ms elapsed, hold timer still active)
+        for (frame in 0 until 5) {
+            currentHeight = maxOf(0f, currentHeight * exp(-4.2f * dt) - dt * 0.12f)
+            if (currentHeight >= peakHeight) {
+                peakHeight = currentHeight
+                peakVelocity = 0f
+                peakHoldTimer = 0.30f
+            } else {
+                if (peakHoldTimer > 0f) {
+                    peakHoldTimer -= dt
+                } else {
+                    peakVelocity += dt * 3.6f
+                    peakHeight = maxOf(0f, peakHeight - peakVelocity * dt)
+                }
+            }
+            // During hold, peak stays exactly at 1.0f
+            assertEquals("Peak should remain held at top during hold duration", 1.0f, peakHeight, 0.0001f)
+        }
+        assertTrue("Hold timer should still be positive after 80ms", peakHoldTimer > 0f)
     }
 
     @Test

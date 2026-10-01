@@ -6,6 +6,17 @@ The project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.1.79] - 2026-10-01
+- **Android Auto Support**: Full media browsing (Songs, Albums, Artists, Playlists, Genres, Folders), in-car playback, steering wheel controls, and Google Assistant voice search integration.
+- **M3U / M3U8 Playlists**: Native support for opening, parsing, and playing `.m3u` and `.m3u8` playlist files directly.
+- **Bass Boost Audio DSP**: Added native bass boost audio processor with dedicated strength slider on the audio effects page.
+- **Search by Artist**: Search bar now queries both song titles and artist names, with smart deduplication and in-memory fallback.
+- **Folder Scan Modes**: Added configurable library scanning modes with Whitelist (scan only chosen folders) and Blacklist (exclude chosen folders) options.
+- **MIME Type & Playback Filter**: Refined audio MIME types in AndroidManifest to exclude voice memos, AMR recordings, and ringtones.
+- **Compose Lifecycle & Localization**: Migrated resource queries to configuration-aware state, optimized lyrics word selection dismissal, and added track-specific audio effect settings.
+
+---
+
 ## [0.1.78] - 2026-09-26
 - **Visualizer Lifecycle**: Matrix digital rain and spectrum animations now immediately pause and freeze when playback is paused or the window loses focus, using 0% CPU.
 - **Screen Unlock Fix**: Resolved issue where Spectrum visualizer would stop responding after unlocking the device due to asynchronous media browser reconnection.

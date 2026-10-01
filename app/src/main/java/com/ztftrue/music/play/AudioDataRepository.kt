@@ -1,6 +1,7 @@
 package com.ztftrue.music.play
 
 
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
@@ -10,13 +11,22 @@ import kotlinx.coroutines.flow.asSharedFlow
  */
 object AudioDataRepository {
 
+    private val dataLock = Any()
+    private val latestFftData = FloatArray(32)
+    @Volatile
+    private var dataTimestampNs = 0L
+
     // 1. 创建一个私有的、可变的 SharedFlow
     //    - FloatArray: 我们要传输的数据类型
     //    - replay = 0: 这是一个“热”流，新的订阅者不会收到之前已经发出的数据。这对于实时数据非常重要。
-    //    - extraBufferCapacity = 1: 缓冲区大小。设置一个小缓冲区可以帮助处理背压，
-    //      允许生产者在消费者处理慢时，缓存一个最新的值。
+    //    - extraBufferCapacity = 1: 缓冲区大小。
+    //    - onBufferOverflow = BufferOverflow.DROP_OLDEST: 永远不会拒绝新数据，保证实时性并避免丢弃最新帧
     private val _visualizationDataFlow =
-        MutableSharedFlow<FloatArray>(replay = 0, extraBufferCapacity = 1)
+        MutableSharedFlow<FloatArray>(
+            replay = 0,
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
 
     // 2. 暴露一个公有的、不可变的 SharedFlow
     //    这遵循了 Kotlin 的封装原则，外部只能订阅，不能发射
@@ -27,12 +37,35 @@ object AudioDataRepository {
      * @param data 新的 FFT 数据数组。
      */
     fun postVisualizationData(data: FloatArray) {
-        // tryEmit 是一个非挂起的、线程安全的方法。
-        // 如果缓冲区满了，它会失败并返回 false，但不会阻塞生产者。
-        // 这对于实时音频处理至关重要，我们宁愿丢弃一帧，也不愿阻塞音频线程。
-        /* val emitted =*/ _visualizationDataFlow.tryEmit(data)
-        // if (!emitted) {
-        //     Log.w("AudioDataRepository", "Visualization data buffer overflow. Dropping frame.")
-        // }
+        synchronized(dataLock) {
+            val len = minOf(data.size, latestFftData.size)
+            System.arraycopy(data, 0, latestFftData, 0, len)
+            dataTimestampNs = System.nanoTime()
+        }
+        _visualizationDataFlow.tryEmit(data)
+    }
+
+    /**
+     * 将最新的 FFT 频段数据复制到调用方提供的 [destination] 数组中，
+     * 避免在渲染循环中产生任何堆对象分配和装箱开销（Zero-allocation）。
+     * @return 如果成功复制了有效音频数据则返回 true，否则返回 false
+     */
+    fun getLatestVisualizationData(destination: FloatArray): Boolean {
+        synchronized(dataLock) {
+            if (dataTimestampNs == 0L) return false
+            val len = minOf(destination.size, latestFftData.size)
+            System.arraycopy(latestFftData, 0, destination, 0, len)
+            return true
+        }
+    }
+
+    /**
+     * 清理缓存的可视化数据（如播放停止或重置时调用）。
+     */
+    fun clearVisualizationData() {
+        synchronized(dataLock) {
+            latestFftData.fill(0f)
+            dataTimestampNs = 0L
+        }
     }
 }
