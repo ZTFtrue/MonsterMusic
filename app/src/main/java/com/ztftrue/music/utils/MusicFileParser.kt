@@ -66,6 +66,9 @@ object MusicFileParser {
 
         val isVideoUri = uri.toString().contains("video")
         if (isVideoUri) {
+            if (!SharedPreferencesUtils.getVideoSupportEnable(context)) {
+                return null
+            }
             val videoProjection = arrayOf(
                 MediaStore.Video.Media._ID,
                 MediaStore.Video.Media.TITLE,

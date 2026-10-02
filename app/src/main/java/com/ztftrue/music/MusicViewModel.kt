@@ -1728,6 +1728,7 @@ class MusicViewModel : ViewModel() {
     }
 
     fun setVideoSupportEnable(context: Context, enable: Boolean) {
+        if (!BuildConfig.SUPPORT_VIDEO) return
         videoSupportEnable.value = enable
         SharedPreferencesUtils.saveVideoSupportEnable(context, enable)
         refreshAllTracks(context)

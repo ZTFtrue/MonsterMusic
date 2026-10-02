@@ -6,8 +6,13 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
 }
-val isBundleTask = gradle.startParameter.taskNames.any {
+val isBundleTask = project.hasProperty("bundle") || gradle.startParameter.taskNames.any {
     it.contains("bundle", ignoreCase = true)
+}
+val supportVideo = if (project.hasProperty("supportVideo")) {
+    project.property("supportVideo").toString().toBoolean()
+} else {
+    !isBundleTask
 }
 android {
 
@@ -23,6 +28,18 @@ android {
         }
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
+        buildConfigField("Boolean", "SUPPORT_VIDEO", "$supportVideo")
+    }
+
+    sourceSets {
+        if (supportVideo) {
+            getByName("debug") {
+                manifest.srcFile("src/apk/AndroidManifest.xml")
+            }
+            getByName("release") {
+                manifest.srcFile("src/apk/AndroidManifest.xml")
+            }
         }
     }
 

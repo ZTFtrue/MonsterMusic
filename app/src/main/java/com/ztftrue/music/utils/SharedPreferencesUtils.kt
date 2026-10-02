@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.ztftrue.music.BuildConfig
 import com.ztftrue.music.R
 import com.ztftrue.music.sqlData.model.FilterFolder
 import com.ztftrue.music.sqlData.model.MusicItem
@@ -797,12 +798,14 @@ object SharedPreferencesUtils {
     }
 
     fun saveVideoSupportEnable(context: Context, value: Boolean) {
+        if (!BuildConfig.SUPPORT_VIDEO) return
         context.getSharedPreferences("play_config", Context.MODE_PRIVATE).edit {
             putBoolean("video_support_enable", value)
         }
     }
 
     fun getVideoSupportEnable(context: Context): Boolean {
+        if (!BuildConfig.SUPPORT_VIDEO) return false
         return context.getSharedPreferences("play_config", Context.MODE_PRIVATE)
             .getBoolean("video_support_enable", false)
     }

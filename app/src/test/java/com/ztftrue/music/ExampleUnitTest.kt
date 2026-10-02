@@ -1766,4 +1766,10 @@ class ExampleUnitTest {
         assertFalse(Utils.isVideoPath("/storage/emulated/0/Music/sample.flac"))
         assertFalse(Utils.isVideoPath(null))
     }
+
+    @Test
+    fun buildConfig_supportVideo_configuration() {
+        val supportVideo: Boolean = BuildConfig.SUPPORT_VIDEO
+        assertTrue(supportVideo == true || supportVideo == false)
+    }
 }

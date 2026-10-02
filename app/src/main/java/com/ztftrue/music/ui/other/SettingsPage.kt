@@ -16,6 +16,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import com.ztftrue.music.BuildConfig
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -1068,60 +1069,23 @@ fun SettingsPage(
                         }
                     }
                 }
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 60.dp)
-                            .padding(vertical = 4.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-                                val target = !musicViewModel.videoSupportEnable.value
-                                if (target) {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                        if (ContextCompat.checkSelfPermission(
-                                                context,
-                                                Manifest.permission.READ_MEDIA_VIDEO
-                                            ) == PackageManager.PERMISSION_GRANTED
-                                        ) {
-                                            musicViewModel.setVideoSupportEnable(context, true)
-                                        } else {
-                                            videoPermissionLauncher.launch(Manifest.permission.READ_MEDIA_VIDEO)
-                                        }
-                                    } else {
-                                        musicViewModel.setVideoSupportEnable(context, true)
-                                    }
-                                } else {
-                                    musicViewModel.setVideoSupportEnable(context, false)
+                if (BuildConfig.SUPPORT_VIDEO) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 60.dp)
+                                .padding(vertical = 4.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
                                 }
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 10.dp)
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(R.string.video_support_enable),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                                Text(
-                                    text = stringResource(R.string.video_support_enable_desc),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                                )
-                            }
-                            Switch(
-                                checked = musicViewModel.videoSupportEnable.value,
-                                onCheckedChange = { target ->
+                                .clickable {
+                                    val target = !musicViewModel.videoSupportEnable.value
                                     if (target) {
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                             if (ContextCompat.checkSelfPermission(
@@ -1139,8 +1103,47 @@ fun SettingsPage(
                                     } else {
                                         musicViewModel.setVideoSupportEnable(context, false)
                                     }
+                                },
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 10.dp)
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.video_support_enable),
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.video_support_enable_desc),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                                    )
                                 }
-                            )
+                                Switch(
+                                    checked = musicViewModel.videoSupportEnable.value,
+                                    onCheckedChange = { target ->
+                                        if (target) {
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                                if (ContextCompat.checkSelfPermission(
+                                                        context,
+                                                        Manifest.permission.READ_MEDIA_VIDEO
+                                                    ) == PackageManager.PERMISSION_GRANTED
+                                                ) {
+                                                    musicViewModel.setVideoSupportEnable(context, true)
+                                                } else {
+                                                    videoPermissionLauncher.launch(Manifest.permission.READ_MEDIA_VIDEO)
+                                                }
+                                            } else {
+                                                musicViewModel.setVideoSupportEnable(context, true)
+                                            }
+                                        } else {
+                                            musicViewModel.setVideoSupportEnable(context, false)
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
                 }
