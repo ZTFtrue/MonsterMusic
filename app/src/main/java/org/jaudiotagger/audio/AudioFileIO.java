@@ -204,6 +204,32 @@ public class AudioFileIO {
         return getDefaultAudioFileIO().readFile(f);
     }
 
+    public static boolean isSupported(File f) {
+        if (f == null) {
+            return false;
+        }
+        String ext = Utils.getExtension(f);
+        if (ext == null || ext.isEmpty()) {
+            return false;
+        }
+        return getDefaultAudioFileIO().readers.containsKey(ext.toLowerCase());
+    }
+
+    public static boolean isSupported(String path) {
+        if (path == null || path.isEmpty()) {
+            return false;
+        }
+        return isSupported(new File(path));
+    }
+
+    public static boolean isSupportedExtension(String ext) {
+        if (ext == null || ext.isEmpty()) {
+            return false;
+        }
+        String cleanExt = ext.startsWith(".") ? ext.substring(1) : ext;
+        return getDefaultAudioFileIO().readers.containsKey(cleanExt.toLowerCase());
+    }
+
     /**
      *
      * Write the tag contained in the audioFile in the actual file on the disk.

@@ -910,6 +910,9 @@ object TracksManager {
             inputStream.copyTo(outputStream)
 
             // 2. Modify the tags using Jaudiotagger
+            if (!AudioFileIO.isSupported(cacheFile)) {
+                return
+            }
             val f = AudioFileIO.read(cacheFile)
             val tag: Tag = f.tagOrCreateAndSetDefault
             bitmap?.let {

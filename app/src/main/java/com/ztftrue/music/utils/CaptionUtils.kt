@@ -6,6 +6,7 @@ import com.ztftrue.music.R
 import com.ztftrue.music.utils.model.Caption
 import com.ztftrue.music.utils.model.ListStringCaption
 import org.jaudiotagger.audio.AudioFileIO
+import org.jaudiotagger.audio.exceptions.CannotReadException
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.Tag
 import java.io.BufferedReader
@@ -159,8 +160,14 @@ object CaptionUtils {
         context: Context,
         tags: MutableMap<String, String>
     ): ArrayList<ListStringCaption> {
-        val audioFile = File(path)
         val arrayList = arrayListOf<ListStringCaption>()
+        if (path.isEmpty() || Utils.isVideoPath(path)) {
+            return arrayList
+        }
+        val audioFile = File(path)
+        if (!audioFile.exists() || !AudioFileIO.isSupported(audioFile)) {
+            return arrayList
+        }
 
         try {
             val f = AudioFileIO.read(audioFile)
@@ -193,6 +200,8 @@ object CaptionUtils {
                     arrayList.add(an)
                 }
             }
+        } catch (e: CannotReadException) {
+            Log.w("getEmbeddedLyrics", "Cannot read audio file tags for $path: ${e.message}")
         } catch (e: Exception) {
             Log.e("getEmbeddedLyrics", e.message ?: "", e)
         }
@@ -200,9 +209,12 @@ object CaptionUtils {
     }
 
     fun readAudioTagsAndHeader(path: String, tags: MutableMap<String, String>) {
+        if (path.isEmpty() || Utils.isVideoPath(path)) {
+            return
+        }
         try {
             val audioFile = File(path)
-            if (!audioFile.exists()) return
+            if (!audioFile.exists() || !AudioFileIO.isSupported(audioFile)) return
             val f = AudioFileIO.read(audioFile)
             f.audioHeader?.let { header ->
                 if (header.bitsPerSample > 0) {
@@ -222,6 +234,8 @@ object CaptionUtils {
                 tags[FieldKey.COMMENT.name] = tag.getFirst(FieldKey.COMMENT) ?: ""
                 tags[FieldKey.YEAR.name] = tag.getFirst(FieldKey.YEAR) ?: ""
             }
+        } catch (e: CannotReadException) {
+            Log.w("readAudioTagsAndHeader", "Cannot read audio header for $path: ${e.message}")
         } catch (e: Exception) {
             Log.e("readAudioTagsAndHeader", e.message ?: "", e)
         }

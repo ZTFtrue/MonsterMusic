@@ -1772,4 +1772,22 @@ class ExampleUnitTest {
         val supportVideo: Boolean = BuildConfig.SUPPORT_VIDEO
         assertTrue(supportVideo == true || supportVideo == false)
     }
+
+    @Test
+    fun audioFileIO_isSupported_checksFormatsCorrectly() {
+        assertFalse(org.jaudiotagger.audio.AudioFileIO.isSupportedExtension("mkv"))
+        assertFalse(org.jaudiotagger.audio.AudioFileIO.isSupportedExtension("webm"))
+        assertFalse(org.jaudiotagger.audio.AudioFileIO.isSupportedExtension("avi"))
+        assertFalse(org.jaudiotagger.audio.AudioFileIO.isSupportedExtension("mp4v"))
+        assertFalse(org.jaudiotagger.audio.AudioFileIO.isSupportedExtension(".mkv"))
+        assertFalse(org.jaudiotagger.audio.AudioFileIO.isSupportedExtension(null))
+        assertFalse(org.jaudiotagger.audio.AudioFileIO.isSupportedExtension(""))
+
+        assertTrue(org.jaudiotagger.audio.AudioFileIO.isSupportedExtension("mp3"))
+        assertTrue(org.jaudiotagger.audio.AudioFileIO.isSupportedExtension("flac"))
+        assertTrue(org.jaudiotagger.audio.AudioFileIO.isSupportedExtension("m4a"))
+        assertTrue(org.jaudiotagger.audio.AudioFileIO.isSupportedExtension("ogg"))
+        assertTrue(org.jaudiotagger.audio.AudioFileIO.isSupportedExtension("wav"))
+        assertTrue(org.jaudiotagger.audio.AudioFileIO.isSupportedExtension(".mp3"))
+    }
 }
