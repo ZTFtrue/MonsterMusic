@@ -2140,4 +2140,41 @@ class ExampleUnitTest {
         assertEquals(1, androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
         assertEquals(2, androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
     }
+
+    @Test
+    fun calculateInSampleSize_downsamplesCorrectly() {
+        val options = android.graphics.BitmapFactory.Options()
+
+        // Case 1: Image smaller than requested
+        options.outWidth = 250
+        options.outHeight = 250
+        assertEquals(1, Utils.calculateInSampleSize(options, 500, 500))
+
+        // Case 2: Image equal to requested
+        options.outWidth = 500
+        options.outHeight = 500
+        assertEquals(1, Utils.calculateInSampleSize(options, 500, 500))
+
+        // Case 3: Image 2x requested
+        options.outWidth = 1000
+        options.outHeight = 1000
+        assertEquals(2, Utils.calculateInSampleSize(options, 500, 500))
+
+        // Case 4: Image 4x requested
+        options.outWidth = 2000
+        options.outHeight = 2000
+        assertEquals(4, Utils.calculateInSampleSize(options, 500, 500))
+
+        // Case 5: Asymmetric dimensions (e.g. 4000x2000 to 500x500)
+        options.outWidth = 4000
+        options.outHeight = 2000
+        assertEquals(4, Utils.calculateInSampleSize(options, 500, 500))
+    }
+
+    @Test
+    fun decodeSampledBitmapFromByteArray_returnsNullOnInvalidData() {
+        val invalidData = byteArrayOf(0, 1, 2, 3)
+        val result = Utils.decodeSampledBitmapFromByteArray(invalidData, 0, invalidData.size, 100, 100)
+        assertNull(result)
+    }
 }

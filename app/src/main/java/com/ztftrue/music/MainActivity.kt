@@ -11,7 +11,6 @@ import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.database.ContentObserver
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.media.AudioManager
 import android.media.MediaScannerConnection
 import android.media.MediaScannerConnection.MediaScannerConnectionClient
@@ -333,9 +332,12 @@ class MainActivity : ComponentActivity() {
                     val selectedFileUri: Uri? = result.data!!.data
                     if (selectedFileUri != null) {
                         try {
-                            this@MainActivity.contentResolver.openInputStream(selectedFileUri)?.use { inputStream ->
-                                coverBitmap?.value = BitmapFactory.decodeStream(inputStream)
-                            }
+                            coverBitmap?.value = Utils.decodeSampledBitmapFromUri(
+                                this@MainActivity,
+                                selectedFileUri,
+                                512,
+                                512
+                            )
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
@@ -625,7 +627,6 @@ class MainActivity : ComponentActivity() {
 //            val localeList = LocaleListCompat.forLanguageTags("zh-CN")
 //            AppCompatDelegate.setApplicationLocales(localeList)
 //        }
-        window.navigationBarColor = android.graphics.Color.TRANSPARENT
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }

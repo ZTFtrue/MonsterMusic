@@ -42,11 +42,16 @@
 -keep class org.jaudiotagger.** {*;}
 
 
--keep class com.ztftrue.music.play.PlayService { *; }
--keep class com.ztftrue.music.play.PlayService$* { *; }
+# Keep Media3 FFmpeg extension reflection targets
+-keep class androidx.media3.decoder.ffmpeg.FfmpegAudioRenderer {
+    public <init>(android.os.Handler, androidx.media3.exoplayer.audio.AudioRendererEventListener, androidx.media3.exoplayer.audio.AudioSink);
+}
+-keep class androidx.media3.decoder.ffmpeg.FfmpegLibrary {
+    public static boolean isAvailable();
+    public static java.lang.String getVersion();
+}
 
--keep class androidx.media3.** { *; }
--keep interface androidx.media3.** { *; }
+# Preserve native JNI methods
 -keepclasseswithmembernames class * {
     native <methods>;
 }

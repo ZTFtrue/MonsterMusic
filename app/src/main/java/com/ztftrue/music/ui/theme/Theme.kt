@@ -33,6 +33,7 @@ import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.utils.CustomColorUtils
+import com.ztftrue.music.utils.Utils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -207,7 +208,8 @@ fun MusicPitchTheme(
                         defaultCoverBitmap
                     } else {
                         withContext(Dispatchers.IO) {
-                            BitmapFactory.decodeResource(context.applicationContext.resources, cover.id)
+                            Utils.decodeSampledBitmapFromResource(context.applicationContext.resources, cover.id, 256, 256)
+                                ?: BitmapFactory.decodeResource(context.applicationContext.resources, cover.id)
                         }
                     }
                     if (bitmap != null) {
@@ -229,7 +231,8 @@ fun MusicPitchTheme(
 
                 is ImageSource.FilePath -> {
                     withContext(Dispatchers.IO) {
-                        val bitmap = BitmapFactory.decodeFile(cover.path)
+                        val bitmap = Utils.decodeSampledBitmapFromFile(cover.path, 256, 256)
+                            ?: BitmapFactory.decodeFile(cover.path)
                         if (bitmap != null) {
                             withContext(Dispatchers.Main) {
                                 generateAndApplyColorScheme(

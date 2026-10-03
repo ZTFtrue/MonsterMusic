@@ -107,10 +107,16 @@ public class StandardArtwork implements Artwork {
      */
     public boolean setImageFromData() {
         try {
-            Bitmap image = getImage();
-            setWidth(image.getWidth());
-            setHeight(image.getHeight());
-        } catch (IOException ioe) {
+            byte[] data = getBinaryData();
+            if (data == null || data.length == 0) {
+                return false;
+            }
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeByteArray(data, 0, data.length, options);
+            setWidth(options.outWidth);
+            setHeight(options.outHeight);
+        } catch (Exception ioe) {
             return false;
         }
         return true;
