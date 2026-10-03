@@ -211,18 +211,18 @@ fun EffectView(musicViewModel: MusicViewModel) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            OutlinedButton(
-                onClick = { showSaveAudioDialog = true },
-                enabled = musicViewModel.currentPlay.value != null,
-                modifier = Modifier.height(32.dp),
-                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.save_processed_audio),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+//            OutlinedButton(
+//                onClick = { showSaveAudioDialog = true },
+//                enabled = musicViewModel.currentPlay.value != null,
+//                modifier = Modifier.height(32.dp),
+//                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)
+//            ) {
+//                Text(
+//                    text = stringResource(R.string.save_processed_audio),
+//                    color = MaterialTheme.colorScheme.onBackground,
+//                    style = MaterialTheme.typography.bodySmall
+//                )
+//            }
             categories.forEach { (id, label) ->
                 FilterChip(
                     selected = selectedCategory == id,

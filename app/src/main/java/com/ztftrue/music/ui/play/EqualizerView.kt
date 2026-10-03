@@ -192,17 +192,17 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                             )
                         }
                         Spacer(modifier = Modifier.width(6.dp))
-                        OutlinedButton(
-                            enabled = musicViewModel.currentPlay.value != null,
-                            onClick = {
-                                showSaveAudioDialog = true
-                            },
-                        ) {
-                            Text(
-                                text = stringResource(R.string.save_processed_audio),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
+//                        OutlinedButton(
+//                            enabled = musicViewModel.currentPlay.value != null,
+//                            onClick = {
+//                                showSaveAudioDialog = true
+//                            },
+//                        ) {
+//                            Text(
+//                                text = stringResource(R.string.save_processed_audio),
+//                                color = MaterialTheme.colorScheme.onBackground
+//                            )
+//                        }
                     }
                 }
 
