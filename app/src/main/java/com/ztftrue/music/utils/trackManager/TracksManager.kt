@@ -24,6 +24,7 @@ import com.ztftrue.music.R
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.OperateTypeInActivity
 import com.ztftrue.music.utils.SharedPreferencesUtils
+import com.ztftrue.music.utils.SortUtils
 import com.ztftrue.music.utils.model.FolderList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -367,10 +368,15 @@ object TracksManager {
         }
 
         mapFolder.forEach { it.value.trackNumber = map[it.key]?.size ?: 0 }
+        SortUtils.sortTracksMap(tracksHashMap, sortOrder1)
+        SortUtils.sortFolders(mapFolder, ascending = true)
         folderListLinkedHashMap.clear()
         folderListLinkedHashMap.putAll(mapFolder)
         foldersListTracksHashMap?.clear()
-        foldersListTracksHashMap?.putAll(map)
+        map.forEach { (fId, fTracks) ->
+            SortUtils.sortTracksMap(fTracks, sortOrder1)
+            foldersListTracksHashMap?.put(fId, fTracks)
+        }
     }
 
 
@@ -404,6 +410,7 @@ object TracksManager {
                 } while (trackCursor.moveToNext())
             }
         }
+        SortUtils.sortTracks(list, sortOrder1)
         return list
     }
 
@@ -489,7 +496,7 @@ object TracksManager {
                 }
             }
         }
-        list.sortWith(compareBy(java.lang.String.CASE_INSENSITIVE_ORDER) { it.name })
+        SortUtils.sortTracks(list, null)
         return list
     }
 

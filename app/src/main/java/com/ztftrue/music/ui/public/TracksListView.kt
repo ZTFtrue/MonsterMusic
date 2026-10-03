@@ -67,6 +67,7 @@ import com.ztftrue.music.ui.other.FolderItemView
 import com.ztftrue.music.utils.model.AnyListBase
 import com.ztftrue.music.utils.model.FolderList
 import com.ztftrue.music.utils.model.ItemFilterModel
+import com.ztftrue.music.utils.SortUtils
 import kotlinx.coroutines.launch
 
 /**
@@ -134,7 +135,8 @@ fun TracksListView(
                 val folderSize = stableFolderData?.size ?: 0
                 val trackIndex = index - folderSize - offset
                 if (trackIndex >= 0 && tracksList.size > trackIndex) {
-                    val itemFilterModel = itemFilterMap[tracksList[trackIndex].name[0].toString()]
+                    val section = SortUtils.getSectionLabel(tracksList[trackIndex].name)
+                    val itemFilterModel = itemFilterMap[section]
                     itemFilterModel?.selfIndex?.let { listStateFilter.scrollToItem(it) }
                 }
             }
@@ -229,9 +231,9 @@ fun TracksListView(
                     key = { index, item -> "${item.id}_$index" }) { index, music ->
                     // Top indicator
                     if (showTopIndicator) {
-                        val currentF = music.name[0]
-                        val prevF = if (index > 0) tracksList[index - 1].name[0] else null
-                        if (prevF != currentF) {
+                        val currentSection = SortUtils.getSectionLabel(music.name)
+                        val prevSection = if (index > 0) SortUtils.getSectionLabel(tracksList[index - 1].name) else null
+                        if (prevSection != currentSection) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -239,7 +241,7 @@ fun TracksListView(
                                     .combinedClickable(onClick = { showItemFilterDialog = true })
                             ) {
                                 Text(
-                                    text = currentF.toString(),
+                                    text = currentSection,
                                     color = MaterialTheme.colorScheme.onBackground,
                                     modifier = Modifier.padding(start = 10.dp)
                                 )
@@ -409,20 +411,21 @@ fun generateItemFilters(
 
     if (tracks.isEmpty()) return filterList to filterMap
 
-    var lastChar: Char? = null
+    var lastSection: String? = null
 
     tracks.forEachIndexed { index, item ->
-        val firstChar = item.name.firstOrNull() ?: return@forEachIndexed
-        if (firstChar != lastChar) {
-            // 生成一个新的 Filter Model
+        val section = SortUtils.getSectionLabel(item.name)
+        if (section != lastSection) {
             val model = ItemFilterModel(
-                name = firstChar.toString(),
+                name = section,
                 index = index,
                 selfIndex = filterList.size
             )
             filterList.add(model)
-            filterMap[firstChar.toString()] = model
-            lastChar = firstChar
+            if (!filterMap.containsKey(section)) {
+                filterMap[section] = model
+            }
+            lastSection = section
         }
     }
 

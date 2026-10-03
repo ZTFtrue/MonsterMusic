@@ -21,6 +21,7 @@ import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.sqlData.model.MusicItem
+import com.ztftrue.music.utils.SortUtils
 import com.ztftrue.music.utils.model.MusicPlayList
 import java.io.File
 import java.io.FileOutputStream
@@ -36,9 +37,9 @@ object SongsUtils {
         order: String?
     ): ArrayList<MusicItem> {
         val comparator: Comparator<MusicItem> = when (field) {
-            MediaStore.Audio.Media.TITLE -> compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }
-            MediaStore.Audio.Media.ALBUM -> compareBy(String.CASE_INSENSITIVE_ORDER) { it.album }
-            MediaStore.Audio.Media.ARTIST -> compareBy(String.CASE_INSENSITIVE_ORDER) { it.artist }
+            MediaStore.Audio.Media.TITLE -> Comparator { a, b -> SortUtils.compareStrings(a.name, b.name) }
+            MediaStore.Audio.Media.ALBUM -> Comparator { a, b -> SortUtils.compareStrings(a.album, b.album) }
+            MediaStore.Audio.Media.ARTIST -> Comparator { a, b -> SortUtils.compareStrings(a.artist, b.artist) }
             MediaStore.Audio.Media.DURATION -> compareBy { it.duration }
             MediaStore.Audio.Media.YEAR -> compareBy { it.year }
             else -> {
@@ -60,7 +61,7 @@ object SongsUtils {
         order: String?
     ): ArrayList<MusicPlayList> {
         val comparator: Comparator<MusicPlayList> = when (field) {
-            MediaStore.Audio.Playlists.NAME -> compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }
+            MediaStore.Audio.Playlists.NAME -> Comparator { a, b -> SortUtils.compareStrings(a.name, b.name) }
             else -> {
                 return list
             }

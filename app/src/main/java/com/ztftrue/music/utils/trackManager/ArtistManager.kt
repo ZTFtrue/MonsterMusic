@@ -3,6 +3,7 @@ package com.ztftrue.music.utils.trackManager
 import android.content.ContentResolver
 import android.content.Context
 import android.provider.MediaStore
+import com.ztftrue.music.utils.SortUtils
 import com.ztftrue.music.utils.model.ArtistList
 
 object ArtistManager {
@@ -71,6 +72,7 @@ object ArtistManager {
                 } while (cursor.moveToNext())
             }
         }
+        SortUtils.sortArtistsList(list)
         return list
     }
 
@@ -116,6 +118,7 @@ object ArtistManager {
                 } while (cursor.moveToNext())
             }
         }
+        SortUtils.sortArtists(playList, sortOrder1)
         list.putAll(playList)
     }
 }

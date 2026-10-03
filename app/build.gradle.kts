@@ -242,6 +242,7 @@ dependencies {
     implementation("androidx.room:room-ktx:$roomVersion")
     // Test helpers
     testImplementation("androidx.room:room-testing:$roomVersion")
+    androidTestImplementation("androidx.room:room-testing:$roomVersion")
 
     implementation("com.github.skydoves:colorpicker-compose:1.3.0")
 

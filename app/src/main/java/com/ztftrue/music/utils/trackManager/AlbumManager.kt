@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
+import com.ztftrue.music.utils.SortUtils
 import com.ztftrue.music.utils.model.AlbumList
 
 object AlbumManager {
@@ -87,6 +88,7 @@ object AlbumManager {
         } else {
             list.putAll(longMap)
         }
+        SortUtils.sortAlbums(list, sortOrder1)
     }
 
     fun searchAlbumByName(
@@ -165,12 +167,13 @@ object AlbumManager {
                 } while (cursor.moveToNext())
             }
         }
-        if (needMerge) {
-
-            return ArrayList(mergedMap.values)
+        val res = if (needMerge) {
+            ArrayList(mergedMap.values)
         } else {
-            return albumArrayList
+            albumArrayList
         }
+        SortUtils.sortAlbumsList(res)
+        return res
     }
 
     fun getAlbumsByGenre(

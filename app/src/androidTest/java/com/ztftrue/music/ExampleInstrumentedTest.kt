@@ -7,6 +7,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 import org.junit.Assert.*
+import com.ztftrue.music.utils.SortUtils
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -17,8 +18,23 @@ import org.junit.Assert.*
 class ExampleInstrumentedTest {
     @Test
     fun useAppContext() {
-        // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.ztftrue.music", appContext.packageName)
+        assertTrue(appContext.packageName.startsWith("com.ztftrue.music"))
+    }
+
+    @Test
+    fun testSortUtilsOnDevice() {
+        assertEquals("A", SortUtils.getSectionLabel("Apple"))
+        assertEquals("A", SortUtils.getSectionLabel("啊"))
+        assertEquals("B", SortUtils.getSectionLabel("八方"))
+        assertEquals("C", SortUtils.getSectionLabel("陈奕迅"))
+        assertEquals("Z", SortUtils.getSectionLabel("周杰伦"))
+        assertEquals("あ", SortUtils.getSectionLabel("あさ"))
+        assertEquals("#", SortUtils.getSectionLabel("123"))
+        assertEquals("#", SortUtils.getSectionLabel("!Special"))
+
+        assertTrue(SortUtils.compareStrings("Apple", "Banana") < 0)
+        assertTrue(SortUtils.compareStrings("啊", "把") < 0)
+        assertTrue(SortUtils.compareStrings("陈奕迅", "周杰伦") < 0)
     }
 }

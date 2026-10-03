@@ -4,6 +4,7 @@ import android.content.Context
 import android.provider.MediaStore
 import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.utils.PlayListType
+import com.ztftrue.music.utils.SortUtils
 import com.ztftrue.music.utils.model.GenresList
 
 object GenreManager {
@@ -72,6 +73,7 @@ object GenreManager {
             }
         }
 
+        SortUtils.sortGenres(playList, sortOrder1)
         list.putAll(playList)
     }
 

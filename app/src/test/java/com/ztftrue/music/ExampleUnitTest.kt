@@ -7,6 +7,8 @@ import com.ztftrue.music.effects.SoundUtils
 
 import org.junit.Assert.*
 import com.ztftrue.music.utils.Utils
+import com.ztftrue.music.utils.SortUtils
+import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.play.AudioDataRepository
 import kotlin.math.exp
 
@@ -1789,5 +1791,82 @@ class ExampleUnitTest {
         assertTrue(org.jaudiotagger.audio.AudioFileIO.isSupportedExtension("ogg"))
         assertTrue(org.jaudiotagger.audio.AudioFileIO.isSupportedExtension("wav"))
         assertTrue(org.jaudiotagger.audio.AudioFileIO.isSupportedExtension(".mp3"))
+    }
+
+    @Test
+    fun testSortUtilsSectionLabels() {
+        assertEquals("A", SortUtils.getSectionLabel("Apple"))
+        assertEquals("B", SortUtils.getSectionLabel("banana"))
+        assertEquals("L", SortUtils.getSectionLabel("(Live) Rock"))
+        assertEquals("R", SortUtils.getSectionLabel("[Remix] Track"))
+        assertEquals("#", SortUtils.getSectionLabel("123 Song"))
+        assertEquals("#", SortUtils.getSectionLabel("!Special"))
+        assertEquals("#", SortUtils.getSectionLabel(""))
+        assertEquals("#", SortUtils.getSectionLabel(null))
+
+        assertEquals("A", SortUtils.getSectionLabel("啊"))
+        assertEquals("B", SortUtils.getSectionLabel("把"))
+        assertEquals("C", SortUtils.getSectionLabel("陈奕迅"))
+        assertEquals("Z", SortUtils.getSectionLabel("周杰伦"))
+
+        assertEquals("あ", SortUtils.getSectionLabel("あさ"))
+        assertEquals("さ", SortUtils.getSectionLabel("さくら"))
+        assertEquals("あ", SortUtils.getSectionLabel("アサ"))
+    }
+
+    @Test
+    fun testSortUtilsCompareStrings() {
+        assertTrue(SortUtils.compareStrings("Apple", "Banana") < 0)
+        assertTrue(SortUtils.compareStrings("Banana", "Apple") > 0)
+        assertTrue(SortUtils.compareStrings("Apple", "Banana", ascending = false) > 0)
+
+        // Numbers/symbols come before letters in ascending
+        assertTrue(SortUtils.compareStrings("123", "Apple") < 0)
+        assertTrue(SortUtils.compareStrings("!Special", "Apple") < 0)
+
+        // Chinese pinyin comparison
+        assertTrue(SortUtils.compareStrings("啊", "把") < 0)
+        assertTrue(SortUtils.compareStrings("陈奕迅", "周杰伦") < 0)
+    }
+
+    @Test
+    fun testSortUtilsSortTracks() {
+        fun createItem(id: Long, name: String) = MusicItem(
+            tableId = null,
+            id = id,
+            name = name,
+            path = "/path/$id",
+            duration = 100L,
+            displayName = name,
+            album = "Album",
+            albumId = 1L,
+            artist = "Artist",
+            artistId = 1L,
+            genre = "Genre",
+            genreId = 1L,
+            year = 2020,
+            songNumber = id.toInt()
+        )
+
+        val tracks = mutableListOf(
+            createItem(1, "123 Track"),
+            createItem(2, "周杰伦 - 晴天"),
+            createItem(3, "Apple Song"),
+            createItem(4, "陈奕迅 - 十年"),
+            createItem(5, "あさ")
+        )
+
+        SortUtils.sortTracks(tracks, "TITLE ASC")
+        val names = tracks.map { it.name }
+        assertEquals("123 Track", names[0])
+        assertEquals("Apple Song", names[1])
+        assertEquals("陈奕迅 - 十年", names[2])
+        assertEquals("周杰伦 - 晴天", names[3])
+        assertEquals("あさ", names[4])
+
+        // DESC
+        SortUtils.sortTracks(tracks, "TITLE DESC")
+        val descNames = tracks.map { it.name }
+        assertEquals(names.reversed(), descNames)
     }
 }
