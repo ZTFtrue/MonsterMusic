@@ -15,107 +15,132 @@ object SortUtils {
         fun compare(s1: String, s2: String): Int
     }
 
-    private val engine: SortEngine by lazy {
-        try {
-            IcuSortEngine()
-        } catch (_: Throwable) {
-            JavaSortEngine()
-        }
+    private interface CollatorProvider {
+        fun compareLatin(s1: String, s2: String): Int
+        fun compareChinese(s1: String, s2: String): Int
+        fun compareJapanese(s1: String, s2: String): Int
+        fun compareGeneral(s1: String, s2: String): Int
     }
 
-    private class IcuSortEngine : SortEngine {
-        private val immutableIndex = run {
-            val index = android.icu.text.AlphabeticIndex<String>(android.icu.util.ULocale.SIMPLIFIED_CHINESE)
-            index.addLabels(android.icu.util.ULocale.ENGLISH)
-            index.addLabels(android.icu.util.ULocale.JAPANESE)
-            index.addLabels(android.icu.util.ULocale.KOREAN)
-            index.buildImmutableIndex()
-        }
-
-        private val collator: android.icu.text.Collator = run {
+    private class IcuCollatorProvider : CollatorProvider {
+        private val chineseCollator = run {
             val c = android.icu.text.Collator.getInstance(android.icu.util.ULocale.SIMPLIFIED_CHINESE)
             c.strength = android.icu.text.Collator.TERTIARY
             c
         }
+        private val japaneseCollator = run {
+            val c = android.icu.text.Collator.getInstance(android.icu.util.ULocale.JAPANESE)
+            c.strength = android.icu.text.Collator.TERTIARY
+            c
+        }
+        private val latinCollator = run {
+            val c = android.icu.text.Collator.getInstance(android.icu.util.ULocale.ENGLISH)
+            c.strength = android.icu.text.Collator.SECONDARY
+            c
+        }
+        private val generalCollator = run {
+            val c = android.icu.text.Collator.getInstance(android.icu.util.ULocale.ROOT)
+            c.strength = android.icu.text.Collator.TERTIARY
+            c
+        }
 
+        override fun compareLatin(s1: String, s2: String): Int = latinCollator.compare(s1, s2)
+        override fun compareChinese(s1: String, s2: String): Int = chineseCollator.compare(s1, s2)
+        override fun compareJapanese(s1: String, s2: String): Int = japaneseCollator.compare(s1, s2)
+        override fun compareGeneral(s1: String, s2: String): Int = generalCollator.compare(s1, s2)
+    }
+
+    private class JavaCollatorProvider : CollatorProvider {
+        private val chineseCollator: java.text.Collator = java.text.Collator.getInstance(Locale.CHINA)
+        private val japaneseCollator: java.text.Collator = java.text.Collator.getInstance(Locale.JAPAN)
+        private val latinCollator: java.text.Collator = java.text.Collator.getInstance(Locale.ENGLISH)
+        private val generalCollator: java.text.Collator = java.text.Collator.getInstance(Locale.ROOT)
+
+        override fun compareLatin(s1: String, s2: String): Int = latinCollator.compare(s1, s2)
+        override fun compareChinese(s1: String, s2: String): Int = chineseCollator.compare(s1, s2)
+        override fun compareJapanese(s1: String, s2: String): Int = japaneseCollator.compare(s1, s2)
+        override fun compareGeneral(s1: String, s2: String): Int = generalCollator.compare(s1, s2)
+    }
+
+    private class BaseSortEngine(private val provider: CollatorProvider) : SortEngine {
         override fun getSectionLabel(name: String): String {
             val cleanName = clean(name)
             if (cleanName.isEmpty()) return "#"
-            if (cleanName[0] in '0'..'9') return "#"
-            val idx = immutableIndex.getBucketIndex(cleanName)
-            val label = immutableIndex.getBucket(idx).label
-            return if (label == "…" || label.isBlank()) "#" else label
+            val codePoint = cleanName.codePointAt(0)
+            val charCount = Character.charCount(codePoint)
+            val firstStr = cleanName.substring(0, charCount)
+            return when (getCategory(codePoint)) {
+                0 -> "#"
+                1 -> firstStr.uppercase()
+                2 -> firstStr // Keep Chinese character itself
+                3 -> firstStr // Keep Japanese Kana character itself
+                4 -> firstStr // Keep Korean character itself
+                else -> firstStr.uppercase()
+            }
         }
 
         override fun compare(s1: String, s2: String): Int {
             val c1 = clean(s1)
             val c2 = clean(s2)
-            val b1 = immutableIndex.getBucketIndex(c1)
-            val b2 = immutableIndex.getBucketIndex(c2)
-            return if (b1 != b2) {
-                b1.compareTo(b2)
-            } else {
-                val r = collator.compare(c1, c2)
-                if (r != 0) r else s1.compareTo(s2)
+            if (c1.isEmpty() && c2.isEmpty()) return s1.compareTo(s2)
+            if (c1.isEmpty()) return -1
+            if (c2.isEmpty()) return 1
+
+            val codePoint1 = c1.codePointAt(0)
+            val codePoint2 = c2.codePointAt(0)
+            val cat1 = getCategory(codePoint1)
+            val cat2 = getCategory(codePoint2)
+            if (cat1 != cat2) {
+                return cat1.compareTo(cat2)
+            }
+
+            return when (cat1) {
+                0 -> {
+                    val r = c1.compareTo(c2, ignoreCase = true)
+                    if (r != 0) r else s1.compareTo(s2)
+                }
+                1 -> {
+                    val r = provider.compareLatin(c1, c2)
+                    if (r != 0) r else s1.compareTo(s2)
+                }
+                2 -> {
+                    val r = provider.compareChinese(c1, c2)
+                    if (r != 0) r else s1.compareTo(s2)
+                }
+                3 -> {
+                    val r = provider.compareJapanese(c1, c2)
+                    if (r != 0) r else s1.compareTo(s2)
+                }
+                else -> {
+                    val r = provider.compareGeneral(c1, c2)
+                    if (r != 0) r else s1.compareTo(s2)
+                }
             }
         }
     }
 
-    private class JavaSortEngine : SortEngine {
-        private val collator: java.text.Collator = java.text.Collator.getInstance(Locale.CHINA)
-
-        override fun getSectionLabel(name: String): String {
-            val cleanName = clean(name)
-            if (cleanName.isEmpty()) return "#"
-            val first = cleanName[0]
-            if (first in '0'..'9') return "#"
-            if (first in 'A'..'Z' || first in 'a'..'z') return first.uppercaseChar().toString()
-            // Japanese Hiragana Gojūon rows
-            val c = first.code
-            if (c in 0x3041..0x304A || c in 0x30A1..0x30AA) return "あ"
-            if (c in 0x304B..0x3054 || c in 0x30AB..0x30B4) return "か"
-            if (c in 0x3055..0x305E || c in 0x30B5..0x30BE) return "さ"
-            if (c in 0x305F..0x3069 || c in 0x30BF..0x30C9) return "た"
-            if (c in 0x306A..0x306E || c in 0x30CA..0x30CE) return "な"
-            if (c in 0x306F..0x307E || c in 0x30CF..0x30DE) return "は"
-            if (c in 0x307F..0x3083 || c in 0x30DF..0x30E3) return "ま"
-            if (c in 0x3084..0x3088 || c in 0x30E4..0x30E8) return "や"
-            if (c in 0x3089..0x308D || c in 0x30E9..0x30ED) return "ら"
-            if (c in 0x308E..0x3093 || c in 0x30EE..0x30F3) return "わ"
-
-            // Estimate Chinese pinyin letter via collator against boundary characters
-            if (c in 0x4E00..0x9FA5) {
-                val pinyinHeaders = arrayOf(
-                    "啊" to "A", "芭" to "B", "擦" to "C", "搭" to "D", "蛾" to "E",
-                    "发" to "F", "噶" to "G", "哈" to "H", "击" to "J", "喀" to "K",
-                    "垃" to "L", "妈" to "M", "拿" to "N", "哦" to "O", "趴" to "P",
-                    "期" to "Q", "然" to "R", "撒" to "S", "塌" to "T", "挖" to "W",
-                    "昔" to "X", "压" to "Y", "匝" to "Z"
-                )
-                for (i in pinyinHeaders.indices.reversed()) {
-                    if (collator.compare(cleanName, pinyinHeaders[i].first) >= 0) {
-                        return pinyinHeaders[i].second
-                    }
-                }
-                return "A"
-            }
-            return "#"
+    private val engine: SortEngine by lazy {
+        try {
+            BaseSortEngine(IcuCollatorProvider())
+        } catch (_: Throwable) {
+            BaseSortEngine(JavaCollatorProvider())
         }
+    }
 
-        override fun compare(s1: String, s2: String): Int {
-            val c1 = clean(s1)
-            val c2 = clean(s2)
-            val sec1 = getSectionLabel(c1)
-            val sec2 = getSectionLabel(c2)
-            if (sec1 != sec2) {
-                if (sec1 == "#") return -1
-                if (sec2 == "#") return 1
-                val secCmp = sec1.compareTo(sec2)
-                if (secCmp != 0) return secCmp
-            }
-            val r = collator.compare(c1, c2)
-            return if (r != 0) r else s1.compareTo(s2)
+    private fun getCategory(codePoint: Int): Int {
+        if (codePoint in '0'.code..'9'.code) return 0
+        if (codePoint in 'A'.code..'Z'.code || codePoint in 'a'.code..'z'.code) return 1
+        val script = try {
+            Character.UnicodeScript.of(codePoint)
+        } catch (_: Throwable) {
+            null
         }
+        if (script == Character.UnicodeScript.LATIN) return 1
+        if (codePoint in 0x4E00..0x9FFF || codePoint in 0x3400..0x4DBF || script == Character.UnicodeScript.HAN) return 2
+        if (codePoint in 0x3040..0x30FF || script == Character.UnicodeScript.HIRAGANA || script == Character.UnicodeScript.KATAKANA) return 3
+        if (codePoint in 0xAC00..0xD7AF || script == Character.UnicodeScript.HANGUL) return 4
+        if (Character.isLetter(codePoint)) return 5
+        return 0
     }
 
     private fun clean(s: String?): String {
@@ -124,7 +149,7 @@ object SortUtils {
         val len = s.length
         while (start < len) {
             val ch = s[start]
-            if (ch.isWhitespace() || ch in "([{<\"'“‘（【《-_") {
+            if (ch.isWhitespace() || ch in "([{<\"'“‘（【《-_「『〈〔") {
                 start++
             } else {
                 break
@@ -139,11 +164,7 @@ object SortUtils {
     }
 
     fun compareStrings(s1: String?, s2: String?, ascending: Boolean = true): Int {
-        if (s1.isNullOrBlank() && s2.isNullOrBlank()) return 0
-        if (s1.isNullOrBlank()) return if (ascending) 1 else -1
-        if (s2.isNullOrBlank()) return if (ascending) -1 else 1
-
-        val cmp = engine.compare(s1, s2)
+        val cmp = engine.compare(s1 ?: "", s2 ?: "")
         return if (ascending) cmp else -cmp
     }
 

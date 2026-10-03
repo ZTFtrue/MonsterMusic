@@ -1804,14 +1804,16 @@ class ExampleUnitTest {
         assertEquals("#", SortUtils.getSectionLabel(""))
         assertEquals("#", SortUtils.getSectionLabel(null))
 
-        assertEquals("A", SortUtils.getSectionLabel("啊"))
-        assertEquals("B", SortUtils.getSectionLabel("把"))
-        assertEquals("C", SortUtils.getSectionLabel("陈奕迅"))
-        assertEquals("Z", SortUtils.getSectionLabel("周杰伦"))
+        // Non-Western characters (specifically Chinese characters) keep the characters themselves
+        assertEquals("啊", SortUtils.getSectionLabel("啊"))
+        assertEquals("把", SortUtils.getSectionLabel("把"))
+        assertEquals("陈", SortUtils.getSectionLabel("陈奕迅"))
+        assertEquals("周", SortUtils.getSectionLabel("周杰伦"))
 
+        // Japanese Kana
         assertEquals("あ", SortUtils.getSectionLabel("あさ"))
         assertEquals("さ", SortUtils.getSectionLabel("さくら"))
-        assertEquals("あ", SortUtils.getSectionLabel("アサ"))
+        assertEquals("ア", SortUtils.getSectionLabel("アサ"))
     }
 
     @Test
@@ -1820,13 +1822,24 @@ class ExampleUnitTest {
         assertTrue(SortUtils.compareStrings("Banana", "Apple") > 0)
         assertTrue(SortUtils.compareStrings("Apple", "Banana", ascending = false) > 0)
 
-        // Numbers/symbols come before letters in ascending
+        // Numbers & symbols (#) come before Western letters in ascending
         assertTrue(SortUtils.compareStrings("123", "Apple") < 0)
         assertTrue(SortUtils.compareStrings("!Special", "Apple") < 0)
 
-        // Chinese pinyin comparison
+        // Western letters (A-Z) come before Chinese characters
+        assertTrue(SortUtils.compareStrings("Zebra", "啊") < 0)
+        assertTrue(SortUtils.compareStrings("Apple", "周杰伦") < 0)
+
+        // Chinese characters arranged in Pinyin order
         assertTrue(SortUtils.compareStrings("啊", "把") < 0)
+        assertTrue(SortUtils.compareStrings("把", "陈奕迅") < 0)
         assertTrue(SortUtils.compareStrings("陈奕迅", "周杰伦") < 0)
+
+        // Chinese characters come before Japanese Kana
+        assertTrue(SortUtils.compareStrings("周杰伦", "あさ") < 0)
+
+        // Japanese Kana in Gojūon order
+        assertTrue(SortUtils.compareStrings("あさ", "さくら") < 0)
     }
 
     @Test
@@ -1853,16 +1866,18 @@ class ExampleUnitTest {
             createItem(2, "周杰伦 - 晴天"),
             createItem(3, "Apple Song"),
             createItem(4, "陈奕迅 - 十年"),
-            createItem(5, "あさ")
+            createItem(5, "あさ"),
+            createItem(6, "Zebra Song")
         )
 
         SortUtils.sortTracks(tracks, "TITLE ASC")
         val names = tracks.map { it.name }
         assertEquals("123 Track", names[0])
         assertEquals("Apple Song", names[1])
-        assertEquals("陈奕迅 - 十年", names[2])
-        assertEquals("周杰伦 - 晴天", names[3])
-        assertEquals("あさ", names[4])
+        assertEquals("Zebra Song", names[2])
+        assertEquals("陈奕迅 - 十年", names[3])
+        assertEquals("周杰伦 - 晴天", names[4])
+        assertEquals("あさ", names[5])
 
         // DESC
         SortUtils.sortTracks(tracks, "TITLE DESC")

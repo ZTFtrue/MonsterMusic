@@ -25,16 +25,22 @@ class ExampleInstrumentedTest {
     @Test
     fun testSortUtilsOnDevice() {
         assertEquals("A", SortUtils.getSectionLabel("Apple"))
-        assertEquals("A", SortUtils.getSectionLabel("啊"))
-        assertEquals("B", SortUtils.getSectionLabel("八方"))
-        assertEquals("C", SortUtils.getSectionLabel("陈奕迅"))
-        assertEquals("Z", SortUtils.getSectionLabel("周杰伦"))
+        assertEquals("啊", SortUtils.getSectionLabel("啊"))
+        assertEquals("八", SortUtils.getSectionLabel("八方"))
+        assertEquals("陈", SortUtils.getSectionLabel("陈奕迅"))
+        assertEquals("周", SortUtils.getSectionLabel("周杰伦"))
         assertEquals("あ", SortUtils.getSectionLabel("あさ"))
         assertEquals("#", SortUtils.getSectionLabel("123"))
         assertEquals("#", SortUtils.getSectionLabel("!Special"))
 
+        // Western before Chinese
+        assertTrue(SortUtils.compareStrings("Zebra", "啊") < 0)
+        // Chinese in Pinyin order
         assertTrue(SortUtils.compareStrings("Apple", "Banana") < 0)
         assertTrue(SortUtils.compareStrings("啊", "把") < 0)
+        assertTrue(SortUtils.compareStrings("把", "陈奕迅") < 0)
         assertTrue(SortUtils.compareStrings("陈奕迅", "周杰伦") < 0)
+        // Chinese before Japanese
+        assertTrue(SortUtils.compareStrings("周杰伦", "あさ") < 0)
     }
 }
