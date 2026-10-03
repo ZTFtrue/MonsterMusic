@@ -6,6 +6,16 @@ The project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.1.81] - 2026-10-03
+- **FFmpeg Software Audio Decoding**: Integrated `media3-ffmpeg-decoder` with automatic software decoding fallback when hardware decoding cannot decode a format or fails, alongside configurable decoder preferences (Auto, Prefer Software FFmpeg, Hardware Only).
+- **Bitmap Downsampling**: Implemented efficient `inSampleSize` downsampling across album art, gallery cover picker, app widgets, and dynamic theme palette generation to prevent memory spikes and OutOfMemoryErrors.
+- **R8 Full Mode & Resource Optimization**: Enabled R8 full mode and AGP's modern optimized resource shrinking, and streamlined ProGuard keep rules for smaller APK size and faster execution.
+- **Android 15 Edge-to-Edge**: Enabled edge-to-edge support across all activities (`MainActivity`, `WidgetConfigActivity`, `ErrorTipActivity`) with safe drawing insets, and eliminated deprecated window APIs (`window.navigationBarColor`).
+- **Audio Export Improvements**: Fixed audio export pipeline with Sonic processor and resolved 24-bit/32-bit PCM audio export issues.
+- **About & Credits**: Refreshed about dialog with comprehensive library credits and cleaned unused dependencies.
+
+---
+
 ## [0.1.79] - 2026-10-01
 - **Android Auto Support**: Full media browsing (Songs, Albums, Artists, Playlists, Genres, Folders), in-car playback, steering wheel controls, and Google Assistant voice search integration.
 - **M3U / M3U8 Playlists**: Native support for opening, parsing, and playing `.m3u` and `.m3u8` playlist files directly.

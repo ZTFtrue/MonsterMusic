@@ -1,0 +1,8 @@
+v0.1.81:
+• Added FFmpeg software audio decoding support to AndroidX Media3 with automatic software decoding fallback.
+• Added Audio Decoder mode setting (Automatic fallback, Prefer Software FFmpeg, Hardware Only).
+• Implemented efficient bitmap downsampling across album art, gallery picker, widgets, and theme palette extraction.
+• Enabled R8 full-mode compiler optimizations and optimized resource shrinking for improved performance and lower RAM usage.
+• Added full edge-to-edge support across all activities with safe drawing insets for Android 15+.
+• Fixed audio export pipeline and 24-bit/32-bit PCM processing.
+• Refreshed About page with comprehensive library credits and removed unused dependencies.

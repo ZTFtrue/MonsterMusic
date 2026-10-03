@@ -107,32 +107,15 @@ jobs:
             echo "$INPUT_CUSTOM_LOG" >> "$OUTPUT_FILE"
           else
             EN_LOG="metadata/en-US/changelogs/${VERSION_CODE}.txt"
-            ZH_LOG="metadata/zh-CN/changelogs/${VERSION_CODE}.txt"
-            DE_LOG="metadata/de/changelogs/${VERSION_CODE}.txt"
 
             HAS_CHANGELOG=false
 
-            if [ -f "$EN_LOG" ] || [ -f "$ZH_LOG" ] || [ -f "$DE_LOG" ]; then
-              echo "## 🚀 What's New in v${VERSION_NAME} / 更新日志" >> "$OUTPUT_FILE"
+            if [ -f "$EN_LOG" ]; then
+              echo "## 🚀 What's New in v${VERSION_NAME}" >> "$OUTPUT_FILE"
               echo "" >> "$OUTPUT_FILE"
-              if [ -f "$EN_LOG" ]; then
-                echo "### 🌐 English" >> "$OUTPUT_FILE"
-                cat "$EN_LOG" >> "$OUTPUT_FILE"
-                echo "" >> "$OUTPUT_FILE"
-                HAS_CHANGELOG=true
-              fi
-              if [ -f "$ZH_LOG" ]; then
-                echo "### 🇨🇳 简体中文" >> "$OUTPUT_FILE"
-                cat "$ZH_LOG" >> "$OUTPUT_FILE"
-                echo "" >> "$OUTPUT_FILE"
-                HAS_CHANGELOG=true
-              fi
-              if [ -f "$DE_LOG" ]; then
-                echo "### 🇩🇪 Deutsch" >> "$OUTPUT_FILE"
-                cat "$DE_LOG" >> "$OUTPUT_FILE"
-                echo "" >> "$OUTPUT_FILE"
-                HAS_CHANGELOG=true
-              fi
+              cat "$EN_LOG" >> "$OUTPUT_FILE"
+              echo "" >> "$OUTPUT_FILE"
+              HAS_CHANGELOG=true
             fi
 
             if [ "$HAS_CHANGELOG" = false ] && [ -f "CHANGELOG.md" ]; then
@@ -144,7 +127,7 @@ jobs:
               ' CHANGELOG.md | sed -e :a -e '/^\n*$/{$d;N;};/\n$/ba')
 
               if [ -n "$CHANGELOG_SECTION" ]; then
-                echo "## 🚀 What's New in v${VERSION_NAME} / 更新日志" >> "$OUTPUT_FILE"
+                echo "## 🚀 What's New in v${VERSION_NAME}" >> "$OUTPUT_FILE"
                 echo "" >> "$OUTPUT_FILE"
                 echo "$CHANGELOG_SECTION" >> "$OUTPUT_FILE"
                 echo "" >> "$OUTPUT_FILE"
