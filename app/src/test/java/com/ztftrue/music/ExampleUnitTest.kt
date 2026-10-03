@@ -1884,4 +1884,237 @@ class ExampleUnitTest {
         val descNames = tracks.map { it.name }
         assertEquals(names.reversed(), descNames)
     }
+
+    @Test
+    fun audioExport_filenameSanitization() {
+        val sanitize = com.ztftrue.music.utils.AudioExportEngine::sanitizeFilename
+
+        assertEquals("Valid_Name", sanitize("Valid_Name"))
+        assertEquals("Song ___Title_", sanitize("Song /:?Title*"))
+        assertEquals("Song_With_Quotes_", sanitize("Song\"With<Quotes>"))
+        assertEquals("Pipe_And_Backslash", sanitize("Pipe|And\\Backslash"))
+        assertEquals("audio_processed", sanitize(""))
+        assertEquals("audio_processed", sanitize("   "))
+        assertEquals("audio_processed", sanitize("///"))
+        assertEquals("My song", sanitize("  My song  "))
+    }
+
+    @Test
+    fun audioExport_wavHeaderStructure() {
+        val sampleRate = 44100
+        val channels = 2
+        val bitsPerSample = 16
+        val pcmDataLength = 88200L // 1 second of 16-bit stereo PCM
+
+        val header = com.ztftrue.music.utils.AudioExportEngine.WavWriter.createWavHeader(
+            sampleRate = sampleRate,
+            channels = channels,
+            bitsPerSample = bitsPerSample,
+            dataLength = pcmDataLength
+        )
+
+        assertEquals(44, header.size)
+
+        // 1. "RIFF" chunk descriptor
+        val riff = String(header, 0, 4, Charsets.US_ASCII)
+        assertEquals("RIFF", riff)
+
+        // ChunkSize (bytes 4..7) = 36 + pcmDataLength (Little Endian)
+        val expectedChunkSize = (36 + pcmDataLength).toInt()
+        val actualChunkSize = (header[4].toInt() and 0xFF) or
+                ((header[5].toInt() and 0xFF) shl 8) or
+                ((header[6].toInt() and 0xFF) shl 16) or
+                ((header[7].toInt() and 0xFF) shl 24)
+        assertEquals(expectedChunkSize, actualChunkSize)
+
+        // Format: "WAVE"
+        val wave = String(header, 8, 4, Charsets.US_ASCII)
+        assertEquals("WAVE", wave)
+
+        // 2. "fmt " sub-chunk
+        val fmt = String(header, 12, 4, Charsets.US_ASCII)
+        assertEquals("fmt ", fmt)
+
+        val subchunk1Size = (header[16].toInt() and 0xFF) or
+                ((header[17].toInt() and 0xFF) shl 8) or
+                ((header[18].toInt() and 0xFF) shl 16) or
+                ((header[19].toInt() and 0xFF) shl 24)
+        assertEquals(16, subchunk1Size) // 16 for PCM
+
+        val audioFormat = (header[20].toInt() and 0xFF) or
+                ((header[21].toInt() and 0xFF) shl 8)
+        assertEquals(1, audioFormat) // 1 = Linear PCM
+
+        val numChannels = (header[22].toInt() and 0xFF) or
+                ((header[23].toInt() and 0xFF) shl 8)
+        assertEquals(channels, numChannels)
+
+        val actualSampleRate = (header[24].toInt() and 0xFF) or
+                ((header[25].toInt() and 0xFF) shl 8) or
+                ((header[26].toInt() and 0xFF) shl 16) or
+                ((header[27].toInt() and 0xFF) shl 24)
+        assertEquals(sampleRate, actualSampleRate)
+
+        val expectedByteRate = (sampleRate * channels * bitsPerSample) / 8 // 176400
+        val actualByteRate = (header[28].toInt() and 0xFF) or
+                ((header[29].toInt() and 0xFF) shl 8) or
+                ((header[30].toInt() and 0xFF) shl 16) or
+                ((header[31].toInt() and 0xFF) shl 24)
+        assertEquals(expectedByteRate, actualByteRate)
+
+        val expectedBlockAlign = (channels * bitsPerSample) / 8 // 4
+        val actualBlockAlign = (header[32].toInt() and 0xFF) or
+                ((header[33].toInt() and 0xFF) shl 8)
+        assertEquals(expectedBlockAlign, actualBlockAlign)
+
+        val actualBitsPerSample = (header[34].toInt() and 0xFF) or
+                ((header[35].toInt() and 0xFF) shl 8)
+        assertEquals(bitsPerSample, actualBitsPerSample)
+
+        // 3. "data" sub-chunk
+        val data = String(header, 36, 4, Charsets.US_ASCII)
+        assertEquals("data", data)
+
+        val subchunk2Size = (header[40].toInt() and 0xFF) or
+                ((header[41].toInt() and 0xFF) shl 8) or
+                ((header[42].toInt() and 0xFF) shl 16) or
+                ((header[43].toInt() and 0xFF) shl 24)
+        assertEquals(pcmDataLength.toInt(), subchunk2Size)
+    }
+
+    @Test
+    fun audioExport_wavHeader48kHzMono() {
+        val sampleRate = 48000
+        val channels = 1
+        val bitsPerSample = 16
+        val pcmDataLength = 96000L
+
+        val header = com.ztftrue.music.utils.AudioExportEngine.WavWriter.createWavHeader(
+            sampleRate = sampleRate,
+            channels = channels,
+            bitsPerSample = bitsPerSample,
+            dataLength = pcmDataLength
+        )
+
+        val numChannels = (header[22].toInt() and 0xFF) or ((header[23].toInt() and 0xFF) shl 8)
+        assertEquals(1, numChannels)
+
+        val actualSampleRate = (header[24].toInt() and 0xFF) or
+                ((header[25].toInt() and 0xFF) shl 8) or
+                ((header[26].toInt() and 0xFF) shl 16) or
+                ((header[27].toInt() and 0xFF) shl 24)
+        assertEquals(48000, actualSampleRate)
+
+        val expectedByteRate = 48000 * 1 * 2 // 96000
+        val actualByteRate = (header[28].toInt() and 0xFF) or
+                ((header[29].toInt() and 0xFF) shl 8) or
+                ((header[30].toInt() and 0xFF) shl 16) or
+                ((header[31].toInt() and 0xFF) shl 24)
+        assertEquals(expectedByteRate, actualByteRate)
+    }
+
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+    @Test
+    fun audioExport_processorPipelineFlushAndProcess() {
+        val sonic = androidx.media3.common.audio.SonicAudioProcessor()
+        sonic.setOutputSampleRateHz(48000)
+        sonic.setSpeed(1.25f)
+        sonic.setPitch(1.1f)
+
+        val pipeline = com.ztftrue.music.utils.AudioExportEngine.ProcessorPipeline(listOf(sonic))
+        val outputFormat = pipeline.configure(
+            androidx.media3.common.audio.AudioProcessor.AudioFormat(
+                96000,
+                2,
+                androidx.media3.common.C.ENCODING_PCM_16BIT
+            )
+        )
+        assertEquals(48000, outputFormat.sampleRate)
+        assertEquals(2, outputFormat.channelCount)
+
+        // Generate synthetic stereo 16-bit PCM input data (1000 samples @ 96kHz = 4000 bytes)
+        val inputBuffer = java.nio.ByteBuffer.allocateDirect(4000).order(java.nio.ByteOrder.nativeOrder())
+        while (inputBuffer.hasRemaining()) {
+            inputBuffer.putShort(1000)
+        }
+        inputBuffer.flip()
+
+        var outputBytesCount = 0
+        pipeline.process(inputBuffer) { chunk ->
+            outputBytesCount += chunk.remaining()
+        }
+
+        pipeline.drainEndOfStream { chunk ->
+            outputBytesCount += chunk.remaining()
+        }
+
+        assertTrue("Expected processed audio output from SonicAudioProcessor", outputBytesCount > 0)
+        pipeline.reset()
+    }
+
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+    @Test
+    fun audioExport_sonicAudioProcessorNoNoise() {
+        // Reproduce pitch = 0.9 effect as used by the user
+        val sonic = androidx.media3.common.audio.SonicAudioProcessor()
+        sonic.setPitch(0.9f)
+        sonic.setSpeed(1.0f)
+
+        val pipeline = com.ztftrue.music.utils.AudioExportEngine.ProcessorPipeline(listOf(sonic))
+        val sampleRate = 48000
+        val channels = 2
+        val format = androidx.media3.common.audio.AudioProcessor.AudioFormat(
+            sampleRate,
+            channels,
+            androidx.media3.common.C.ENCODING_PCM_16BIT
+        )
+        pipeline.configure(format)
+
+        // Generate a smooth 440Hz sine wave (16-bit stereo PCM)
+        val numFrames = 2400 // 50ms at 48kHz
+        val byteCount = numFrames * channels * 2
+        // Intentionally start with BIG_ENDIAN buffer to verify pipeline normalizes to native order
+        val inputBuffer = java.nio.ByteBuffer.allocateDirect(byteCount).order(java.nio.ByteOrder.BIG_ENDIAN)
+        for (i in 0 until numFrames) {
+            val sampleVal = (kotlin.math.sin(2.0 * Math.PI * 440.0 * i / sampleRate) * 8000.0).toInt().toShort()
+            // Write in native little-endian byte order as MediaExtractor does
+            val lowByte = (sampleVal.toInt() and 0xFF).toByte()
+            val highByte = ((sampleVal.toInt() shr 8) and 0xFF).toByte()
+            inputBuffer.put(lowByte)
+            inputBuffer.put(highByte)
+            inputBuffer.put(lowByte)
+            inputBuffer.put(highByte)
+        }
+        inputBuffer.flip()
+
+        val outputSamples = mutableListOf<Short>()
+        pipeline.process(inputBuffer) { chunk ->
+            val chunkCopy = chunk.duplicate().order(java.nio.ByteOrder.nativeOrder())
+            while (chunkCopy.remaining() >= 2) {
+                outputSamples.add(chunkCopy.getShort())
+            }
+        }
+        pipeline.drainEndOfStream { chunk ->
+            val chunkCopy = chunk.duplicate().order(java.nio.ByteOrder.nativeOrder())
+            while (chunkCopy.remaining() >= 2) {
+                outputSamples.add(chunkCopy.getShort())
+            }
+        }
+
+        assertTrue("Output samples should be generated", outputSamples.size > 100)
+
+        // Verify that the output signal is smooth audio, NOT high-delta static noise
+        var totalDelta = 0L
+        for (i in 1 until outputSamples.size) {
+            totalDelta += kotlin.math.abs(outputSamples[i].toInt() - outputSamples[i - 1].toInt())
+        }
+        val avgDelta = totalDelta.toDouble() / (outputSamples.size - 1)
+
+        // Byte-swapped noise has average delta > 10000. Clean sine wave pitched down has avg delta < 1500.
+        assertTrue(
+            "Average sample delta ($avgDelta) indicates white noise/byte swapping instead of clean audio",
+            avgDelta < 1500.0
+        )
+        pipeline.reset()
+    }
 }

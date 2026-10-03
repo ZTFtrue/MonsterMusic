@@ -283,10 +283,15 @@ class EqualizerAudioProcessor : AudioProcessor {
 
         // Process PCM directly in Native C
         val visBuffer = if (visualizationAudioActive) visPcmBuffer else null
+        val directInput = if (data.position() != 0) {
+            data.slice().order(ByteOrder.nativeOrder())
+        } else {
+            data
+        }
         val visCount = if (nativeEqualizerHandle != 0L) {
             processPcmDirectNative(
                 nativeEqualizerHandle,
-                data,
+                directInput,
                 resultBuffer,
                 framesCount,
                 channelCount,
@@ -298,6 +303,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         } else {
             0
         }
+        data.position(data.limit())
 
         resultBuffer.position(0)
         resultBuffer.limit(length)

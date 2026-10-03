@@ -345,4 +345,15 @@
     <string name="video_support_enable_desc">视频文件在视频标签页中播放画面，离开页面或退至后台时自动仅播放音频以节省电量</string>
     <string name="video_not_supported_or_not_video">当前播放不是视频</string>
     <string name="video_support_disabled_tip">已在设置中关闭视频支持</string>
+    <string name="save_processed_audio">保存处理后音频</string>
+    <string name="export_audio">导出音频</string>
+    <string name="export_format">导出格式</string>
+    <string name="format_wav">WAV（无损）</string>
+    <string name="format_m4a">M4A（AAC，压缩）</string>
+    <string name="exporting_audio">正在导出音频…</string>
+    <string name="export_success">已保存至 %1$s</string>
+    <string name="export_failed">导出音频失败：%1$s</string>
+    <string name="output_filename">文件名</string>
+    <string name="active_effects">已启用的音效：%1$s</string>
+    <string name="no_effects_active">未启用任何音效（将导出原声）</string>
 </resources>

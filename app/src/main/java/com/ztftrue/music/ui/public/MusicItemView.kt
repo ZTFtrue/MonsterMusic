@@ -113,6 +113,8 @@ fun MusicItemView(
 
     @Suppress("ASSIGNED_VALUE_IS_NEVER_READ")
     var showDeleteTip by remember { mutableStateOf(false) }
+
+    var showSaveAudioDialog by remember { mutableStateOf(false) }
     if (showDeleteTip) {
         DeleteTip(music.name, onDismiss = {
             showDeleteTip = false
@@ -245,6 +247,10 @@ fun MusicItemView(
                         showDeleteTip = true
                     }
 
+                    OperateType.SaveProcessedAudio -> {
+                        showSaveAudioDialog = true
+                    }
+
                     OperateType.No -> {
 
                     }
@@ -254,6 +260,15 @@ fun MusicItemView(
                     }
                 }
             },
+        )
+    }
+    if (showSaveAudioDialog) {
+        SaveProcessedAudioDialog(
+            musicViewModel = viewModel,
+            music = music,
+            onDismiss = {
+                showSaveAudioDialog = false
+            }
         )
     }
     if (showAddPlayListDialog) {
@@ -788,6 +803,30 @@ fun OperateDialog(
                         ) {
                             Text(
                                 text = stringResource(R.string.music_info),
+                                Modifier.padding(start = 10.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(0.dp)
+                                .drawBehind {
+                                    drawLine(
+                                        color = color,
+                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
+                                .clickable {
+                                    onDismiss(OperateType.SaveProcessedAudio)
+                                },
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text(
+                                text = stringResource(R.string.save_processed_audio),
                                 Modifier.padding(start = 10.dp),
                                 color = MaterialTheme.colorScheme.onBackground
                             )

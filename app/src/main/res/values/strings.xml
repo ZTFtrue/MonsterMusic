@@ -345,4 +345,15 @@
     <string name="video_support_enable_desc">Play video in Video tab for video files; automatically plays as audio-only when not focused to save battery</string>
     <string name="video_not_supported_or_not_video">Current track is not a video</string>
     <string name="video_support_disabled_tip">Video support is disabled in Settings</string>
+    <string name="save_processed_audio">Save with effects</string>
+    <string name="export_audio">Export Audio</string>
+    <string name="export_format">Export Format</string>
+    <string name="format_wav">WAV (Lossless)</string>
+    <string name="format_m4a">M4A (AAC, Compressed)</string>
+    <string name="exporting_audio">Exporting audio…</string>
+    <string name="export_success">Saved to %1$s</string>
+    <string name="export_failed">Failed to export audio: %1$s</string>
+    <string name="output_filename">Filename</string>
+    <string name="active_effects">Active effects: %1$s</string>
+    <string name="no_effects_active">No effects active (will export original audio)</string>
 </resources>

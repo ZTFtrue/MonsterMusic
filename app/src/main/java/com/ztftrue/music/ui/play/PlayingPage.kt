@@ -137,6 +137,7 @@ import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.CreatePlayListDialog
 import com.ztftrue.music.ui.public.DeleteTip
 import com.ztftrue.music.ui.public.OperateDialog
+import com.ztftrue.music.ui.public.SaveProcessedAudioDialog
 import com.ztftrue.music.ui.public.TopBar
 import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.DialogOperate
@@ -216,6 +217,7 @@ fun PlayingPage(
 
     @Suppress("ASSIGNED_VALUE_IS_NEVER_READ")
     var showDeleteTip by remember { mutableStateOf(false) }
+    var showSaveAudioDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(playViewTab.size) {
         if (pagerTabState.currentPage >= playViewTab.size) {
@@ -364,6 +366,10 @@ fun PlayingPage(
                             showDeleteTip = true
                         }
 
+                        OperateType.SaveProcessedAudio -> {
+                            showSaveAudioDialog = true
+                        }
+
                         OperateType.No -> {
 
                         }
@@ -376,6 +382,15 @@ fun PlayingPage(
             )
         }
 
+    }
+    if (showSaveAudioDialog && music != null) {
+        SaveProcessedAudioDialog(
+            musicViewModel = musicViewModel,
+            music = music,
+            onDismiss = {
+                showSaveAudioDialog = false
+            }
+        )
     }
     if (showAddPlayListDialog) {
         if (music != null) {

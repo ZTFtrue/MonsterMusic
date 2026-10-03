@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.manager.MediaCommands
+import com.ztftrue.music.ui.public.SaveProcessedAudioDialog
 import com.ztftrue.music.utils.CustomSlider
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -61,6 +62,7 @@ fun EffectView(musicViewModel: MusicViewModel) {
     val coroutineScope = rememberCoroutineScope()
     var selectedCategory by remember { mutableIntStateOf(0) }
     var isProgrammaticScroll by remember { mutableStateOf(false) }
+    var showSaveAudioDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(listState.firstVisibleItemIndex) {
         if (!isProgrammaticScroll && listState.isScrollInProgress) {
@@ -206,8 +208,21 @@ fun EffectView(musicViewModel: MusicViewModel) {
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
                 .padding(horizontal = 12.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            OutlinedButton(
+                onClick = { showSaveAudioDialog = true },
+                enabled = musicViewModel.currentPlay.value != null,
+                modifier = Modifier.height(32.dp),
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.save_processed_audio),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
             categories.forEach { (id, label) ->
                 FilterChip(
                     selected = selectedCategory == id,
@@ -1307,6 +1322,15 @@ fun EffectView(musicViewModel: MusicViewModel) {
                 Spacer(modifier = Modifier.height(300.dp))
             }
         }
+    }
+    if (showSaveAudioDialog && musicViewModel.currentPlay.value != null) {
+        SaveProcessedAudioDialog(
+            musicViewModel = musicViewModel,
+            music = musicViewModel.currentPlay.value!!,
+            onDismiss = {
+                showSaveAudioDialog = false
+            }
+        )
     }
 }
 

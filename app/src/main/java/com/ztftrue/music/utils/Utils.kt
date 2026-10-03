@@ -116,7 +116,8 @@ enum class OperateType {
     ShowArtist,
     ClearQueue,
     SaveQueueToPlayList,
-    IgnoreFolder
+    IgnoreFolder,
+    SaveProcessedAudio
 }
 
 enum class ScrollDirectionType {

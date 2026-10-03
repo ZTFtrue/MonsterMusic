@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
 import com.ztftrue.music.play.manager.MediaCommands
+import com.ztftrue.music.ui.public.SaveProcessedAudioDialog
 import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.equalizerMax
@@ -84,6 +85,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
     var selectedIndex by remember {
         mutableStateOf(musicViewModel.selectedPreset.value)
     }
+    var showSaveAudioDialog by remember { mutableStateOf(false) }
     LaunchedEffect(key1 = musicViewModel.selectedPreset.value) {
         selectedIndex = musicViewModel.selectedPreset.value
     }
@@ -186,6 +188,18 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                         ) {
                             Text(
                                 text = stringResource(R.string.flatten),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(6.dp))
+                        OutlinedButton(
+                            enabled = musicViewModel.currentPlay.value != null,
+                            onClick = {
+                                showSaveAudioDialog = true
+                            },
+                        ) {
+                            Text(
+                                text = stringResource(R.string.save_processed_audio),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -504,5 +518,14 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                 }
             }
         }
+    }
+    if (showSaveAudioDialog && musicViewModel.currentPlay.value != null) {
+        SaveProcessedAudioDialog(
+            musicViewModel = musicViewModel,
+            music = musicViewModel.currentPlay.value!!,
+            onDismiss = {
+                showSaveAudioDialog = false
+            }
+        )
     }
 }
