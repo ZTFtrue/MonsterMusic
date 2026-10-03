@@ -165,6 +165,7 @@ class PlayService : MediaLibraryService() {
     }
 
     private fun initExoPlayer() {
+        val decoderMode = SharedPreferencesUtils.getDecoderMode(this)
         val renderersFactory = object : DefaultRenderersFactory(this) {
             override fun buildAudioSink(
                 context: Context,
@@ -195,6 +196,14 @@ class PlayService : MediaLibraryService() {
                     }
                 }
             }
+        }
+            .setExtensionRendererMode(decoderMode)
+            .setEnableDecoderFallback(true)
+
+        if (androidx.media3.decoder.ffmpeg.FfmpegLibrary.isAvailable()) {
+            android.util.Log.i("PlayService", "FFmpeg extension loaded: v${androidx.media3.decoder.ffmpeg.FfmpegLibrary.getVersion()}, decoderMode=$decoderMode")
+        } else {
+            android.util.Log.w("PlayService", "FFmpeg extension native library not available, decoderMode=$decoderMode")
         }
 
         val trackSelector = DefaultTrackSelector(this, AdaptiveTrackSelection.Factory())

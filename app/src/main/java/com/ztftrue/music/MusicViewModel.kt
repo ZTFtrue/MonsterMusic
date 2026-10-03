@@ -243,6 +243,7 @@ class MusicViewModel : ViewModel() {
     var isRefreshing = mutableStateOf(false)
     var showFirstScanSetupDialog = mutableStateOf(false)
     var videoSupportEnable = mutableStateOf(false)
+    var decoderMode = mutableIntStateOf(1)
 
     var playStatus = mutableStateOf(false)
     var equalizerBands = mutableStateListOf<EqualizerBand>()
@@ -1787,6 +1788,11 @@ class MusicViewModel : ViewModel() {
         videoSupportEnable.value = enable
         SharedPreferencesUtils.saveVideoSupportEnable(context, enable)
         refreshAllTracks(context)
+    }
+
+    fun setDecoderMode(context: Context, mode: Int) {
+        decoderMode.intValue = mode
+        SharedPreferencesUtils.saveDecoderMode(context, mode)
     }
 
     fun refreshAllTracks(context: Context) {

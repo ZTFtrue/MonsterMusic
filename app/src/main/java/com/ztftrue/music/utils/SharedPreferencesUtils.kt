@@ -809,4 +809,17 @@ object SharedPreferencesUtils {
         return context.getSharedPreferences("play_config", Context.MODE_PRIVATE)
             .getBoolean("video_support_enable", false)
     }
+
+    fun saveDecoderMode(context: Context, mode: Int) {
+        context.getSharedPreferences("play_config", Context.MODE_PRIVATE).edit {
+            putInt("decoder_mode", mode)
+        }
+    }
+
+    fun getDecoderMode(context: Context): Int {
+        // Default: 1 (DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
+        // Software decoding (FFmpeg) fallback when hardware decoding cannot be used
+        return context.getSharedPreferences("play_config", Context.MODE_PRIVATE)
+            .getInt("decoder_mode", 1)
+    }
 }

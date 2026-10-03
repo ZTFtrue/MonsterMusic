@@ -356,4 +356,14 @@
     <string name="output_filename">文件名</string>
     <string name="active_effects">已启用的音效：%1$s</string>
     <string name="no_effects_active">未启用任何音效（将导出原声）</string>
+    <string name="audio_decoder">音频解码器</string>
+    <string name="decoder_mode_auto">自动（硬件优先，软件备用）</string>
+    <string name="decoder_mode_software">优先软件解码（FFmpeg）</string>
+    <string name="decoder_mode_hardware">仅硬件解码</string>
+    <string name="decoder_mode_desc">当硬件解码不支持或失败时使用 FFmpeg 软件解码</string>
+    <string name="about_item_ffmpeg">FFmpeg（软件音频解码器）</string>
+    <string name="about_item_compose">Jetpack Compose 与 Material 3</string>
+    <string name="about_item_coil">Coil（图像加载库）</string>
+    <string name="about_item_room">Room（本地数据库）</string>
+    <string name="about_item_cookbook">RBJ 音频均衡器设计公式</string>
 </resources>

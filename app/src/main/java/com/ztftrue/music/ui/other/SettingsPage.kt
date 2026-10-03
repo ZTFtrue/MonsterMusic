@@ -46,8 +46,11 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
@@ -1069,6 +1072,56 @@ fun SettingsPage(
                         }
                     }
                 }
+                item {
+                    val openDecoderDialog = remember { mutableStateOf(false) }
+                    if (openDecoderDialog.value) {
+                        AudioDecoderModeDialog(
+                            musicViewModel = musicViewModel,
+                            onDismiss = { openDecoderDialog.value = false }
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 60.dp)
+                            .padding(vertical = 4.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                            .clickable {
+                                openDecoderDialog.value = true
+                            },
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 10.dp)
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.audio_decoder),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                                val currentMode = musicViewModel.decoderMode.intValue
+                                val modeText = when (currentMode) {
+                                    DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER -> stringResource(R.string.decoder_mode_software)
+                                    DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF -> stringResource(R.string.decoder_mode_hardware)
+                                    else -> stringResource(R.string.decoder_mode_auto)
+                                }
+                                Text(
+                                    text = modeText,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+                    }
+                }
                 if (BuildConfig.SUPPORT_VIDEO) {
                     item {
                         Box(
@@ -1437,229 +1490,282 @@ fun ManageTabDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
 }
 
 
+data class AboutItem(
+    val title: String,
+    val subtitle: String,
+    val url: String
+)
+
 @Composable
 fun AboutDialog(onDismiss: () -> Unit) {
-
     val context = LocalContext.current
-
-
-    fun onConfirmation() {
-        onDismiss()
-    }
-
     val color = MaterialTheme.colorScheme.onBackground
 
+    val items = listOf(
+        AboutItem(
+            title = stringResource(R.string.sourcecode),
+            subtitle = "github.com/ZTFtrue/MonsterMusic",
+            url = "https://github.com/ZTFtrue/MonsterMusic"
+        ),
+        AboutItem(
+            title = stringResource(R.string.settings_thanks_for_translating),
+            subtitle = "github.com/ZTFtrue/MonsterMusic/blob/master/readme.md#contribute-translate",
+            url = "https://github.com/ZTFtrue/MonsterMusic/blob/master/readme.md#contribute-translate"
+        ),
+        AboutItem(
+            title = stringResource(R.string.about_item_ffmpeg),
+            subtitle = "ffmpeg.org",
+            url = "https://ffmpeg.org/"
+        ),
+        AboutItem(
+            title = stringResource(R.string.settings_link_media3),
+            subtitle = "developer.android.com/media/media3",
+            url = "https://developer.android.com/guide/topics/media/media3"
+        ),
+        AboutItem(
+            title = stringResource(R.string.about_item_compose),
+            subtitle = "developer.android.com/jetpack/compose",
+            url = "https://developer.android.com/jetpack/compose"
+        ),
+        AboutItem(
+            title = stringResource(R.string.about_item_coil),
+            subtitle = "coil-kt.github.io/coil",
+            url = "https://coil-kt.github.io/coil/"
+        ),
+        AboutItem(
+            title = stringResource(R.string.about_item_room),
+            subtitle = "developer.android.com/training/data-storage/room",
+            url = "https://developer.android.com/training/data-storage/room"
+        ),
+        AboutItem(
+            title = stringResource(R.string.settings_link_biquad_designer),
+            subtitle = "arachnoid.com/BiQuadDesigner",
+            url = "https://arachnoid.com/BiQuadDesigner/index.html"
+        ),
+        AboutItem(
+            title = stringResource(R.string.about_item_cookbook),
+            subtitle = "w3.org/TR/audio-eq-cookbook",
+            url = "https://www.w3.org/TR/audio-eq-cookbook/"
+        )
+    )
 
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
-            usePlatformDefaultWidth = true, dismissOnBackPress = true,
+            usePlatformDefaultWidth = true,
+            dismissOnBackPress = true,
             dismissOnClickOutside = true
-        ),
-        content = {
+        )
+    ) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(color = MaterialTheme.colorScheme.background),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
+                    .padding(vertical = 16.dp, horizontal = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = stringResource(id = R.string.about_thanks), modifier = Modifier
-                        .padding(2.dp),
+                    text = stringResource(id = R.string.about_thanks),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
                     color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.BUILD_TYPE})",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
                 )
 
                 HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
-                        .background(color = MaterialTheme.colorScheme.onBackground)
+                        .background(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
                 )
 
-
-                LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                    items(1) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 420.dp)
+                ) {
+                    items(items.size) { index ->
+                        val item = items[index]
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
+                                .heightIn(min = 52.dp)
                                 .drawBehind {
                                     drawLine(
-                                        color = color,
+                                        color = color.copy(alpha = 0.2f),
                                         start = Offset(0f, size.height - 1.dp.toPx()),
                                         end = Offset(size.width, size.height - 1.dp.toPx()),
                                         strokeWidth = 1.dp.toPx()
                                     )
                                 }
                                 .clickable {
-                                    openBrowser("https://github.com/ZTFtrue/MonsterMusic", context)
-                                },
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            Text(
-                                text = stringResource(R.string.sourcecode),
-                                modifier = Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
+                                    openBrowser(item.url, context)
                                 }
-                                .clickable {
-                                    openBrowser("https://github.com/JorenSix/TarsosDSP", context)
-                                },
+                                .padding(horizontal = 8.dp, vertical = 6.dp),
                             contentAlignment = Alignment.CenterStart
                         ) {
-                            Text(
-                                text = stringResource(R.string.settings_link_tarsos_dsp),
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
-                                }
-                                .clickable {
-                                    openBrowser(
-                                        "https://arachnoid.com/BiQuadDesigner/index.html",
-                                        context
-                                    )
-                                },
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            Text(
-                                text = stringResource(R.string.settings_link_biquad_designer),
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
-                                }
-                                .clickable {
-                                    openBrowser(
-                                        "https://developer.android.com/guide/topics/media/media3",
-                                        context
-                                    )
-                                },
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            Text(
-                                text = stringResource(R.string.settings_link_media3),
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
-                                }
-                                .clickable {
-                                    openBrowser(
-                                        "https://stackoverflow.com/questions/14269144/how-to-implement-an-equalizer",
-                                        context
-                                    )
-                                },
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            Text(
-                                text = stringResource(R.string.settings_link_stackoverflow_answer),
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
-                                }
-                                .clickable {
-                                    openBrowser(
-                                        "https://github.com/ZTFtrue/MonsterMusic/blob/master/readme.md#contribute-translate",
-                                        context
-                                    )
-                                },
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            Text(
-                                text = stringResource(R.string.settings_thanks_for_translating),
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
+                            Column {
+                                Text(
+                                    text = item.title,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                                Text(
+                                    text = item.subtitle,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                                )
+                            }
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(8.dp))
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     TextButton(
-                        onClick = {
-                            onConfirmation()
-                        },
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .fillMaxWidth(),
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
                             stringResource(id = R.string.confirm),
-                            color = MaterialTheme.colorScheme.onBackground
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun AudioDecoderModeDialog(
+    musicViewModel: MusicViewModel,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    var selectedMode by remember { mutableIntStateOf(musicViewModel.decoderMode.intValue) }
+
+    val options = listOf(
+        Triple(
+            DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON,
+            stringResource(R.string.decoder_mode_auto),
+            stringResource(R.string.decoder_mode_desc)
+        ),
+        Triple(
+            DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER,
+            stringResource(R.string.decoder_mode_software),
+            stringResource(R.string.decoder_mode_software)
+        ),
+        Triple(
+            DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF,
+            stringResource(R.string.decoder_mode_hardware),
+            stringResource(R.string.decoder_mode_hardware)
+        )
     )
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = true,
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        )
+    ) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.audio_decoder),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                options.forEach { (mode, title, desc) ->
+                    val isSelected = selectedMode == mode
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                            )
+                            .border(
+                                width = if (isSelected) 2.dp else 1.dp,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .clickable { selectedMode = mode }
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = isSelected,
+                            onClick = { selectedMode = mode }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = title,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 15.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = desc,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            musicViewModel.setDecoderMode(context, selectedMode)
+                            onDismiss()
+                        }
+                    ) {
+                        Text(stringResource(R.string.confirm))
+                    }
+                }
+            }
+        }
+    }
 }
 
 @UnstableApi

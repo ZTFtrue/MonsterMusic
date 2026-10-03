@@ -2117,4 +2117,27 @@ class ExampleUnitTest {
         )
         pipeline.reset()
     }
+
+    @Test
+    fun ffmpeg_extensionClassesAvailable() {
+        // Verify FfmpegAudioRenderer class is present in classpath
+        val clazz = Class.forName("androidx.media3.decoder.ffmpeg.FfmpegAudioRenderer")
+        assertNotNull("FfmpegAudioRenderer class should be found", clazz)
+
+        // Verify constructor required by DefaultRenderersFactory reflection is present
+        val constructor = clazz.getConstructor(
+            android.os.Handler::class.java,
+            androidx.media3.exoplayer.audio.AudioRendererEventListener::class.java,
+            androidx.media3.exoplayer.audio.AudioSink::class.java
+        )
+        assertNotNull("Constructor matching (Handler, AudioRendererEventListener, AudioSink) must exist", constructor)
+    }
+
+    @Test
+    fun defaultRenderersFactory_decoderFallbackAndExtensionMode() {
+        // Verify DefaultRenderersFactory extension renderer mode constants
+        assertEquals(0, androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF)
+        assertEquals(1, androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
+        assertEquals(2, androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+    }
 }

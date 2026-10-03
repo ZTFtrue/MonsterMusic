@@ -47,3 +47,6 @@
 
 -keep class androidx.media3.** { *; }
 -keep interface androidx.media3.** { *; }
+-keepclasseswithmembernames class * {
+    native <methods>;
+}

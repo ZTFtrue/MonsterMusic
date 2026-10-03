@@ -196,6 +196,7 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:1.11.1")
     implementation("androidx.media3:media3-session:1.11.1")
     implementation("androidx.media3:media3-ui:1.11.1")
+    implementation("org.jellyfin.media3:media3-ffmpeg-decoder:1.9.0+1")
 
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")

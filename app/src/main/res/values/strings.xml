@@ -356,4 +356,14 @@
     <string name="output_filename">Filename</string>
     <string name="active_effects">Active effects: %1$s</string>
     <string name="no_effects_active">No effects active (will export original audio)</string>
+    <string name="audio_decoder">Audio Decoder</string>
+    <string name="decoder_mode_auto">Automatic (Hardware with Software Fallback)</string>
+    <string name="decoder_mode_software">Prefer Software (FFmpeg)</string>
+    <string name="decoder_mode_hardware">Hardware Only</string>
+    <string name="decoder_mode_desc">Use FFmpeg software decoding when hardware decoding cannot be used</string>
+    <string name="about_item_ffmpeg">FFmpeg (Software Audio Decoder)</string>
+    <string name="about_item_compose">Jetpack Compose &amp; Material 3</string>
+    <string name="about_item_coil">Coil (Image Loading)</string>
+    <string name="about_item_room">Room (Database)</string>
+    <string name="about_item_cookbook">RBJ Audio EQ Cookbook</string>
 </resources>
