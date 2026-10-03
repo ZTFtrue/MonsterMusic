@@ -24,13 +24,13 @@
     <string name="pitch">Pitch</string>
     <string name="reset">Reset</string>
     <string name="speed">Speed</string>
-    <string name="coarse">Coarse</string>
+
     <string name="fine">Fine</string>
     <string name="echo">Echo</string>
     <string name="delay">Delay</string>
     <string name="decay">Decay</string>
     <string name="equalizer">Equalizer</string>
-    <string name="flatten_failed">flatten failed</string>
+
     <string name="flatten">Flatten</string>
     <string name="can_t_find_any_audio_file_i_need_permission_click_here_to_open_settings">Can\'t find any audio file\n I need permission\nClick here to open settings</string>
     <string name="song">%1$s song%2$s</string>
@@ -42,7 +42,7 @@
     <string name="send_email">Send email</string>
     <string name="error_tip">Error tip</string>
     <string name="sorry_some_error_happens_you_can_feedback_it_with_this_message">error_feedback_tip</string>
-    <string name="play_notify">PlayNotify</string>
+
     <string name="no_music">No music</string>
     <string name="minutes">%1$s\n minutes</string>
     <string name="play_completed_last_song">Play completed last song</string>
@@ -97,14 +97,12 @@
     <string name="enter_minutes">Enter minutes</string>
     <string name="title_">Title</string>
     <string name="create_failed">Create failed</string>
-    <string name="mutiple_error_tip">Many times play error, Play paused</string>
-    <string name="play_error_play_next">Play error, auto play next</string>
+
     <string name="no_dictionary_app_tip">Dictionary app is not installed or your dictionary app do not support this feature.</string>
-    <string name="cant_support_feature_tip">You system don\'t support this feature</string>
+
     <string name="ignore_tracks_duration_less_than">Ignore tracks duration less than(include). -1 don\'t ignore any, 0 ignore duration less than or equal 0s. Need to restart app</string>
     <string name="ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect">Ignore tracks duration less than %1$s s set successfully, please restart the app to take effect</string>
-    <string name="ignored_this_folder_please_restart_the_app_to_take_effect">Ignored this folder, please restart the app to take effect</string>
-    <string name="check_to_not_ignore_the_folder_you_need_restart_the_app_to_take_effect">Check to not ignore the folder, you need restart the app to take effect</string>
+
     <string name="custom">Custom</string>
     <string name="join_discord">Join Discord</string>
     <string name="star_share_tip">If you like it, please share it; And, if you have a GitHub account, please give a star to this project.</string>
@@ -120,7 +118,7 @@
     <string name="set_artist_folder_artist_name_jpg_jpeg_png">Set artist folder(artist_name.jpg/jpeg/png)</string>
     <string name="set_genre_folder_genre_name_jpg_jpeg_png">Set genre folder(genre_name.jpg/jpeg/png)</string>
     <string name="manage_lyrics_folders">Manage folders(For lyrics,Artists Cover,Genres Cover)</string>
-    <string name="manage_ignore_folder">Manage ignore folder</string>
+
     <string name="save">Save</string>
     <string name="clear_album_cover_cache">Clear Album Cover Cache</string>
     <string name="where_are_we_going">Where are we going?</string>
@@ -129,21 +127,20 @@
     <string name="show_top_indicator">Show top indicator</string>
     <string name="show_indicator_in_queue">Show indicator in queue</string>
     <string name="comment">Comment: %1$s</string>
-    <string name="year_tracks">Year: %1$s</string>
+
     <string name="year_tra">Year : %1$s%2$s</string>
     <string name="album_tracks">%1$s album%2$s</string>
     <string name="song_tracks">%1$s song%2$s</string>
     <string name="album_cover">Album cover</string>
     <string name="playing">playing</string>
-    <string name="genre_cover">Genre cover</string>
+
     <string name="operate_more_will_open_dialog">Operate More, will open dialog</string>
-    <string name="mainview">Main View</string>
+
     <string name="this_is_main_page">This is main page</string>
     <string name="current_page_is">current page is %1$s</string>
     <string name="pause">pause</string>
     <string name="close_display_sort_popup">Close display sort popup</string>
-    <string name="pitch_slider">Pitch Slider</string>
-    <string name="speed_slider">Speed Slider</string>
+
     <string name="default_set">Default</string>
     <string name="play">play</string>
     <string name="s">s</string>
@@ -153,26 +150,15 @@
     <string name="i_need_your_help">I need your help!!!</string>
     <string name="refresh_tracks">Refresh tracks</string>
     <string name="monster_music_feedback_subject">MonsterMusic FeedBack</string>
-    <string name="sample_rate_hz_format">Sample Rate: %1$sHz</string>
-    <string name="bitrate_format">Bitrate: %1$s</string>
-    <string name="channel_count_format">Channel Count: %1$s</string>
-    <string name="codec_format">Codec : %1$s</string>
-    <string name="echo_delay_slider_description">Echo delay slider</string>
-    <string name="echo_decay_slider_description">Echo decay slider</string>
+
     <string name="failed_to_open_language_settings">Failed to open language settings</string>
     <string name="set_language">Set language</string>
     <string name="replace_cover_the_rose">Replace cover(the rose)</string>
     <string name="settings_set_widget_background">Set Widget Background</string>
     <string name="settings_set_auto_play">Set Auto Play</string>
-    <string name="error_must_have_at_least_one_tab">Must has at least one tab</string>
-    <string name="content_description_up_tab_priority">Up tab priority</string>
-    <string name="content_description_down_tab_priority">Down tab priority</string>
-    <string name="content_description_show_tab">Show this tab%1$s</string>
-    <string name="content_description_hide_tab">Hide this tab%1$s</string>
-    <string name="settings_link_stackoverflow_answer">Stackoverflow answer</string>
+
     <string name="settings_thanks_for_translating">Thanks for translating</string>
-    <string name="content_description_enable_auto_play">Enable auto play</string>
-    <string name="content_description_disable_auto_play">Disable auto play</string>
+
     <string name="settings_enable_auto_play_description">Enable auto play when bluetooth connected or headset connected. Need restart app.</string>
     <string name="settings_wait_time_before_auto_play">Wait time before auto play</string>
     <string name="text_prefix_lyrics">Lyrics: </string>
@@ -180,26 +166,19 @@
     <string name="text_prefix_artist">Artist: </string>
     <string name="text_prefix_genre">Genre: </string>
     <string name="content_description_remove_folder">Remove folder</string>
-    <string name="close_button_text">Close</string>
+
     <string name="content_description_show_slide_indicator">Show slide indicator</string>
     <string name="content_description_hide_slide_indicator">Hide slide indicator</string>
     <string name="content_description_show_top_indicator">Show top indicator</string>
     <string name="content_description_hide_top_indicator">Hide top indicator</string>
     <string name="content_description_show_indicator_in_queue">Show indicator in queue</string>
     <string name="content_description_hide_indicator_in_queue">Hide indicator in queue</string>
-    <string name="language_english">English</string>
-    <string name="language_chinese">中文</string>
-    <string name="language_german">Deutsch</string>
-    <string name="language_esperanto">Esperanto</string>
-    <string name="language_hungarian">Magyar</string>
+
     <string name="language_follow_system">Follow System</string>
-    <string name="content_description_show_language">Show this language %1$s</string>
-    <string name="content_description_hide_language">Hide this language %1$s</string>
-    <string name="settings_link_tarsos_dsp">tarsos.dsp</string>
+
     <string name="settings_link_biquad_designer">BiQuadDesigner</string>
     <string name="settings_link_media3">Media3</string>
-    <string name="content_description_show_folder">Show this folder %1$s</string>
-    <string name="content_description_hide_folder">Hide this folder %1$s</string>
+
     <string name="auto_switch_current_track_to_top_when_random">Auto switch current track to top when random</string>
     <string name="remove_duplicate_tracks">Remove duplicate tracks</string>
     <string name="equalizer_q">"Equalizer Q: "</string>
@@ -213,26 +192,20 @@
     <string name="folders_count">%1$s Folder%2$s</string>
     <string name="merge_same_album">Merge same name and artist album(Don\'t recommend, need restart app)</string>
     <string name="add_tracks_folder">Add Tracks Folder</string>
-    <string name="virtual_surround">Virtual Surround</string>
+
+    <string name="bass_boost">Bass Boost</string>
+    <string name="spatial_audio">Spatial Audio</string>
     <string name="strength_format">Strength %1$s</string>
     <string name="auto_dismiss">Auto Dismiss</string>
     <string name="unknown_route">Unknown route</string>
     <string name="back">Back</string>
-    <string name="language_russian">Русский</string>
-    <string name="language_arabic">العربية</string>
-    <string name="language_french">Français</string>
-    <string name="language_japanese">日本語</string>
-    <string name="language_taiwanese_mandarin">繁體中文 (台灣)</string>
+
     <string name="file_not_found_please_rescan">File not found or deleted, please rescan music</string>
-    <string name="language_turkish">Türkçe</string>
-    <string name="music_visualization">Music Visualization</string>
-    <string name="fft_engine">FFT Engine</string>
-    <string name="fft_native">Native (C)</string>
-    <string name="fft_kotlin">Kotlin</string>
+
     <string name="equalizer_type">Filter Type</string>
     <string name="equalizer_iir">IIR</string>
     <string name="equalizer_fft">FFT</string>
-    <string name="all">All</string>
+
     <string name="reverb">Reverb</string>
     <string name="room_size">Room Size</string>
     <string name="damping">Damping</string>
@@ -255,7 +228,7 @@
     <string name="widget_preview">Preview</string>
     <string name="widget_add_to_home">Add to Home Screen</string>
     <string name="widget_pin_success">Widget added to home screen</string>
-    <string name="widget_pin_not_supported">Your launcher does not support adding widgets directly</string>
+
     <string name="widget_opacity">Background Opacity</string>
     <string name="widget_text_color">Text &amp; Icon Color</string>
     <string name="widget_text_auto">Auto (Contrast)</string>
@@ -296,4 +269,63 @@
     <string name="year_label">Year</string>
     <string name="comment_label">Comment</string>
     <string name="path_label">File Path</string>
+    <string name="track_sound_effect_enable">Track-specific sound effect</string>
+    <string name="track_sound_effect_enable_desc">Customize and remember sound effects for each song individually</string>
+
+    <string name="track_sound_effect_global">Global sound effect</string>
+
+    <string name="first_scan_setup_title">Welcome to MonsterMusic</string>
+    <string name="first_scan_setup_desc">Please choose how you would like MonsterMusic to scan and organize your music library:</string>
+
+    <string name="exclusive_folder_path">Folder: %1$s</string>
+
+    <string name="refreshing_tracks">Refreshing library…</string>
+    <string name="refresh_completed">Refreshed %1$d tracks</string>
+
+    <string name="select_folder_btn">Select folder</string>
+    <string name="scan_mode_whitelist">Whitelist mode (Selected folders only)</string>
+    <string name="scan_mode_whitelist_desc">Only scan music inside chosen folders. You can add multiple folders.</string>
+    <string name="scan_mode_blacklist">Blacklist mode (Exclude folders)</string>
+    <string name="scan_mode_blacklist_desc">Scan music across the entire device, excluding blacklisted folders.</string>
+    <string name="manage_whitelist_folders">Manage whitelist folders</string>
+    <string name="manage_blacklist_folders">Manage blacklist folders</string>
+    <string name="add_folder">Add folder</string>
+    <string name="no_folders_added">No folders added yet</string>
+    <string name="folder_already_added">This folder has already been added</string>
+    <string name="folder_added">Folder added: %1$s</string>
+
+    <string name="whitelist_mode_summary">Whitelist: %1$d folder(s)</string>
+    <string name="blacklist_mode_summary">Blacklist: %1$d folder(s) excluded</string>
+    <string name="folder_scan_mode">Folder scan mode</string>
+    <string name="switch_to_whitelist_toast">Switched to whitelist mode</string>
+    <string name="switch_to_blacklist_toast">Switched to blacklist mode</string>
+    <string name="folder_added_to_blacklist">Folder added to blacklist: %1$s</string>
+    <string name="select_device_folders">Select device folders</string>
+    <string name="uncheck_folders_to_ignore">Uncheck folders to exclude them from the library</string>
+    <string name="tab_video">Video</string>
+    <string name="video_support_enable">Video Support</string>
+    <string name="video_support_enable_desc">Play video in Video tab for video files; automatically plays as audio-only when not focused to save battery</string>
+    <string name="video_not_supported_or_not_video">Current track is not a video</string>
+    <string name="video_support_disabled_tip">Video support is disabled in Settings</string>
+    <string name="save_processed_audio">Save with effects</string>
+    <string name="export_audio">Export Audio</string>
+    <string name="export_format">Export Format</string>
+    <string name="format_wav">WAV (Lossless)</string>
+    <string name="format_m4a">M4A (AAC, Compressed)</string>
+    <string name="exporting_audio">Exporting audio…</string>
+    <string name="export_success">Saved to %1$s</string>
+    <string name="export_failed">Failed to export audio: %1$s</string>
+    <string name="output_filename">Filename</string>
+    <string name="active_effects">Active effects: %1$s</string>
+    <string name="no_effects_active">No effects active (will export original audio)</string>
+    <string name="audio_decoder">Audio Decoder</string>
+    <string name="decoder_mode_auto">Automatic (Hardware with Software Fallback)</string>
+    <string name="decoder_mode_software">Prefer Software (FFmpeg)</string>
+    <string name="decoder_mode_hardware">Hardware Only</string>
+    <string name="decoder_mode_desc">Use FFmpeg software decoding when hardware decoding cannot be used</string>
+    <string name="about_item_ffmpeg">FFmpeg (Software Audio Decoder)</string>
+    <string name="about_item_compose">Jetpack Compose &amp; Material 3</string>
+    <string name="about_item_coil">Coil (Image Loading)</string>
+    <string name="about_item_room">Room (Database)</string>
+    <string name="about_item_cookbook">RBJ Audio EQ Cookbook</string>
 </resources>

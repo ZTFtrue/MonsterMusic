@@ -24,13 +24,13 @@
     <string name="pitch">音调</string>
     <string name="reset">重置</string>
     <string name="speed">速度</string>
-    <string name="coarse">粗调</string>
+
     <string name="fine">微调</string>
     <string name="echo">回音</string>
     <string name="delay">延迟</string>
     <string name="decay">衰减</string>
     <string name="equalizer">均衡器</string>
-    <string name="flatten_failed">展平失败</string>
+
     <string name="flatten">展平</string>
     <string name="can_t_find_any_audio_file_i_need_permission_click_here_to_open_settings">没有权限，无法获取音乐，点击设置权限</string>
     <string name="song">%1$s 首歌曲</string>
@@ -42,7 +42,7 @@
     <string name="send_email">发送邮件</string>
     <string name="error_tip">错误提示</string>
     <string name="sorry_some_error_happens_you_can_feedback_it_with_this_message">出现意外错误</string>
-    <string name="play_notify">播放通知</string>
+
     <string name="no_music">没有歌曲</string>
     <string name="minutes">%1$s\n 分钟</string>
     <string name="play_completed_last_song">等待歌曲播放结束</string>
@@ -97,14 +97,12 @@
     <string name="enter_minutes">输入分钟数</string>
     <string name="title">标题</string>
     <string name="create_failed">创建失败</string>
-    <string name="mutiple_error_tip">多次播放错误, 暂停播放</string>
-    <string name="play_error_play_next">播放错误, 自动播放下一首</string>
+
     <string name="no_dictionary_app_tip">没有安装字典应用， 或者已安装的应用不支持这个功能</string>
-    <string name="cant_support_feature_tip">当前系统不支持这个功能</string>
+
     <string name="ignore_tracks_duration_less_than">忽略时长少于(包括)该秒数的音频. -1 不忽略任何内容，0 忽略持续时间小于或等于 0 秒的内容。需要重启应用。</string>
     <string name="ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect">忽略时长少于 %1$s s 的音频成功, 请重启APP 以生效。</string>
-    <string name="ignored_this_folder_please_restart_the_app_to_take_effect">忽略文件夹成功，重启后生效</string>
-    <string name="check_to_not_ignore_the_folder_you_need_restart_the_app_to_take_effect">勾选表示扫描这个文件夹，重启后生效</string>
+
     <string name="custom">自定义</string>
     <string name="join_discord">加入 Discord</string>
     <string name="star_share_tip">如果你喜欢这个应用，可以分享它，让更多的人知道；并且，如果你有一个Github账户，请给一个star.</string>
@@ -120,7 +118,7 @@
     <string name="set_artist_folder_artist_name_jpg_jpeg_png">设置艺术家文件夹</string>
     <string name="set_genre_folder_genre_name_jpg_jpeg_png">设置流派文件夹</string>
     <string name="manage_lyrics_folders">管理文件夹</string>
-    <string name="manage_ignore_folder">管理忽略的文件夹</string>
+
     <string name="save">保存</string>
     <string name="clear_album_cover_cache">清除专辑封面缓存</string>
     <string name="where_are_we_going">我们这是要去哪？</string>
@@ -129,21 +127,20 @@
     <string name="show_top_indicator">显示顶部索引</string>
     <string name="show_indicator_in_queue">在播放列表中显示索引</string>
     <string name="comment">注释：%1$s</string>
-    <string name="year_tracks">年 :%1$s</string>
+
     <string name="year_tra">年  : %1$s%2$s</string>
     <string name="album_tracks">%1$s 专辑%2$s</string>
     <string name="song_tracks">%1$s 歌曲%2$s</string>
     <string name="album_cover">专辑封面</string>
     <string name="playing">播放中</string>
-    <string name="genre_cover">流派封面</string>
+
     <string name="operate_more_will_open_dialog">更多操作将会打开对话框</string>
-    <string name="mainview">主页</string>
+
     <string name="this_is_main_page">主页面</string>
     <string name="current_page_is">当前页面是%1$s</string>
     <string name="pause">暂停</string>
     <string name="close_display_sort_popup">关闭排序设置窗口</string>
-    <string name="pitch_slider">音调滑块</string>
-    <string name="speed_slider">速度滑块</string>
+
     <string name="default_set">默认</string>
     <string name="play">播放</string>
     <string name="s">秒</string>
@@ -154,26 +151,15 @@
     <string name="i_need_your_help">我需要你的帮助！！！</string>
     <string name="refresh_tracks">刷新曲目</string>
     <string name="monster_music_feedback_subject">MonsterMusic 反馈</string>
-    <string name="sample_rate_hz_format">采样率: %1$sHz</string>
-    <string name="bitrate_format">比特率: %1$s</string>
-    <string name="channel_count_format">声频通道数: %1$s</string>
-    <string name="codec_format">编码格式: %1$s</string>
-    <string name="echo_delay_slider_description">回声延迟滑块</string>
-    <string name="echo_decay_slider_description">回声衰减滑块</string>
+
     <string name="failed_to_open_language_settings">打开语言设置失败</string>
     <string name="set_language">设置语言</string>
     <string name="replace_cover_the_rose">替换封面(玫瑰)</string>
     <string name="settings_set_widget_background">设置微件背景</string>
     <string name="settings_set_auto_play">设置自动播放</string>
-    <string name="error_must_have_at_least_one_tab">必须至少保留一个标签页</string>
-    <string name="content_description_up_tab_priority">提高标签页优先级</string>
-    <string name="content_description_down_tab_priority">降低标签页优先级</string>
-    <string name="content_description_show_tab">显示此标签页 %1$s</string>
-    <string name="content_description_hide_tab">隐藏此标签页 %1$s</string>
-    <string name="settings_link_stackoverflow_answer">Stack Overflow 回答</string>
+
     <string name="settings_thanks_for_translating">感谢翻译</string>
-    <string name="content_description_enable_auto_play">开启自动播放</string>
-    <string name="content_description_disable_auto_play">关闭自动播放</string>
+
     <string name="settings_enable_auto_play_description">连接蓝牙或耳机时自动播放。需要重启应用。</string>
     <string name="settings_wait_time_before_auto_play">自动播放前等待时间</string>
     <string name="text_prefix_lyrics">歌词: </string>
@@ -181,26 +167,19 @@
     <string name="text_prefix_artist">艺术家: </string>
     <string name="text_prefix_genre">流派: </string>
     <string name="content_description_remove_folder">移除文件夹</string>
-    <string name="close_button_text">关闭</string>
+
     <string name="content_description_show_slide_indicator">显示滑动指示器</string>
     <string name="content_description_hide_slide_indicator">隐藏滑动指示器</string>
     <string name="content_description_show_top_indicator">显示顶部指示器</string>
     <string name="content_description_hide_top_indicator">隐藏顶部指示器</string>
     <string name="content_description_show_indicator_in_queue">在队列中显示指示器</string>
     <string name="content_description_hide_indicator_in_queue">在队列中隐藏指示器</string>
-    <string name="language_english">English</string>
-    <string name="language_chinese">中文</string>
-    <string name="language_german">Deutsch</string>
-    <string name="language_esperanto">Esperanto</string>
-    <string name="language_hungarian">Magyar</string>
+
     <string name="language_follow_system">跟随系统</string>
-    <string name="content_description_show_language">显示此语言 %1$s</string>
-    <string name="content_description_hide_language">隐藏此语言 %1$s</string>
-    <string name="settings_link_tarsos_dsp">tarsos.dsp</string>
+
     <string name="settings_link_biquad_designer">BiQuadDesigner</string>
     <string name="settings_link_media3">Media3</string>
-    <string name="content_description_show_folder">显示此文件夹 %1$s</string>
-    <string name="content_description_hide_folder">隐藏此文件夹 %1$s</string>
+
     <string name="auto_switch_current_track_to_top_when_random">随机播放时自动将当前曲目置顶</string>
     <string name="remove_duplicate_tracks">移除重复曲目</string>
     <string name="equalizer_q">"均衡器 Q 值: "</string>
@@ -213,28 +192,20 @@
     <string name="folders_count">%1$s 个文件夹</string>
     <string name="merge_same_album">合并同名同艺术家专辑(不推荐，需重启应用)</string>
     <string name="add_tracks_folder">添加曲目文件夹</string>
-    <string name="virtual_surround">虚拟环绕声</string>
+
     <string name="bass_boost">低音增强</string>
     <string name="spatial_audio">空间音频</string>
     <string name="strength_format">强度 %1$s</string>
     <string name="auto_dismiss">自动关闭</string>
     <string name="unknown_route">未知路由</string>
     <string name="back">返回</string>
-    <string name="language_russian">Русский</string>
-    <string name="language_arabic">العربية</string>
-    <string name="language_french">Français</string>
-    <string name="language_japanese">日本語</string>
-    <string name="language_taiwanese_mandarin">繁體中文 (台灣)</string>
+
     <string name="file_not_found_please_rescan">文件不存在或已被删除，请重新扫描音乐</string>
-    <string name="language_turkish">土耳其语</string>
-    <string name="music_visualization">音乐可视化</string>
-    <string name="fft_engine">FFT 算法引擎</string>
-    <string name="fft_native">原生 (C)</string>
-    <string name="fft_kotlin">Kotlin</string>
+
     <string name="equalizer_type">滤波器类型</string>
     <string name="equalizer_iir">IIR</string>
     <string name="equalizer_fft">FFT</string>
-    <string name="all">全部</string>
+
     <string name="reverb">混响</string>
     <string name="room_size">空间大小</string>
     <string name="damping">高频阻尼</string>
@@ -257,7 +228,7 @@
     <string name="widget_preview">效果预览</string>
     <string name="widget_add_to_home">添加至桌面</string>
     <string name="widget_pin_success">小部件已添加至桌面</string>
-    <string name="widget_pin_not_supported">当前启动器不支持直接添加小部件</string>
+
     <string name="widget_opacity">背景不透明度</string>
     <string name="widget_text_color">文字与图标颜色</string>
     <string name="widget_text_auto">自动（高对比度）</string>
@@ -300,26 +271,17 @@
     <string name="path_label">文件路径</string>
     <string name="track_sound_effect_enable">每首歌专属音效</string>
     <string name="track_sound_effect_enable_desc">为每首歌曲独立记忆和应用均衡器与音效设置</string>
-    <string name="track_sound_effect_current_track">当前设置: %1$s</string>
+
     <string name="track_sound_effect_global">全局通用音效</string>
-    <string name="reset_to_global_effect">重置为默认音效</string>
-    <string name="reset_to_global_effect_confirm">确认将当前歌曲音效重置为全局默认设置？</string>
+
     <string name="first_scan_setup_title">欢迎使用 MonsterMusic</string>
     <string name="first_scan_setup_desc">请选择您希望如何扫描和管理您的音乐库：</string>
-    <string name="scan_mode_all">扫描整台设备</string>
-    <string name="scan_mode_all_desc">自动检索全设备中的所有音乐文件（标准音乐播放器模式）。</string>
-    <string name="scan_mode_folder">指定专属音乐文件夹</string>
-    <string name="scan_mode_folder_desc">仅扫描并显示您选定文件夹中的歌曲（不受铃声、通知及其他应用杂音干扰）。</string>
-    <string name="music_scan_mode">音乐扫描模式</string>
-    <string name="exclusive_folder">专属音乐文件夹</string>
+
     <string name="exclusive_folder_path">文件夹: %1$s</string>
-    <string name="change_folder">更改文件夹</string>
+
     <string name="refreshing_tracks">正在刷新曲目…</string>
     <string name="refresh_completed">已刷新 %1$d 首曲目</string>
-    <string name="switch_to_scan_all_toast">已切换至全设备扫描模式</string>
-    <string name="switch_to_scan_folder_toast">已切换至专属文件夹模式</string>
-    <string name="ignore_folders_disabled_in_exclusive_mode">专属文件夹模式下无需使用忽略列表</string>
-    <string name="no_folder_selected">请先选择一个文件夹</string>
+
     <string name="select_folder_btn">选择文件夹</string>
     <string name="scan_mode_whitelist">白名单模式（仅扫描选定文件夹）</string>
     <string name="scan_mode_whitelist_desc">仅扫描指定文件夹内的音乐，支持添加多个文件夹。</string>
@@ -331,7 +293,7 @@
     <string name="no_folders_added">尚未添加文件夹</string>
     <string name="folder_already_added">该文件夹已添加</string>
     <string name="folder_added">已添加文件夹: %1$s</string>
-    <string name="folder_removed">已移除文件夹</string>
+
     <string name="whitelist_mode_summary">白名单模式：%1$d 个文件夹</string>
     <string name="blacklist_mode_summary">黑名单模式：已排除 %1$d 个文件夹</string>
     <string name="folder_scan_mode">文件夹扫描模式</string>
