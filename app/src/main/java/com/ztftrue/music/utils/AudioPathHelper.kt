@@ -65,6 +65,17 @@ object AudioPathHelper {
             mime.contains("opus") || format.contains("opus") -> "c2.android.opus.decoder"
             mime.contains("vorbis") || format.contains("ogg") -> "c2.android.vorbis.decoder"
             mime.contains("raw") || mime.contains("wav") || format.contains("wav") -> "c2.android.raw.decoder"
+            mime.contains("ac3") || format.contains("ac3") -> "ffmpeg.ac3.decoder"
+            mime.contains("eac3") || format.contains("eac3") -> "ffmpeg.eac3.decoder"
+            mime.contains("dts") || format.contains("dts") -> "ffmpeg.dca.decoder"
+            mime.contains("true-hd") || mime.contains("truehd") || format.contains("truehd") || format.contains("mlp") -> "ffmpeg.truehd.decoder"
+            mime.contains("alac") || format.contains("alac") -> "ffmpeg.alac.decoder"
+            mime.contains("wma") || format.contains("wma") -> "ffmpeg.wma.decoder"
+            mime.contains("ape") || format.contains("ape") -> "ffmpeg.ape.decoder"
+            mime.contains("wavpack") || mime.contains("wv") || format.contains("wv") -> "ffmpeg.wavpack.decoder"
+            mime.contains("musepack") || mime.contains("mpc") || format.contains("mpc") -> "ffmpeg.musepack.decoder"
+            mime.contains("alaw") || format.contains("alaw") -> "ffmpeg.pcm_alaw.decoder"
+            mime.contains("mlaw") || format.contains("mlaw") -> "ffmpeg.pcm_mulaw.decoder"
             else -> "c2.android.${format.ifEmpty { "audio" }}.decoder"
         }
     }
