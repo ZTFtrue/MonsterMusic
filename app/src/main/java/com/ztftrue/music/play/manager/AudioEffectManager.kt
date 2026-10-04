@@ -6,7 +6,6 @@ import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.ztftrue.music.effects.EqualizerAudioProcessor
-import com.ztftrue.music.effects.SpatialAudioProcessor
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.Auxr
 import com.ztftrue.music.sqlData.model.PlayConfig
@@ -24,7 +23,6 @@ class AudioEffectManager(private val context: Context) {
 
     // 核心音频处理器，需要在 Service 创建 ExoPlayer 时通过 RenderersFactory 传入
     val equalizerAudioProcessor: EqualizerAudioProcessor = EqualizerAudioProcessor()
-    val spatialAudioProcessor = SpatialAudioProcessor()
     private val db: MusicDatabase = MusicDatabase.getDatabase(context)
 
     companion object {
@@ -138,7 +136,6 @@ class AudioEffectManager(private val context: Context) {
         // 3. Bass Boost & Virtualizer
         equalizerAudioProcessor.setBassBoost(auxr.bassBoostEnabled, auxr.bassBoostStrength / 1000f)
         equalizerAudioProcessor.setVirtualizer(auxr.virtualizerEnabled, auxr.virtualizerStrength / 1000f)
-        spatialAudioProcessor.setActive(false)
 
         // 4. Reverb, Chorus, Flanger, Polyphony
         loadAdvancedEffectsSettings()

@@ -28,6 +28,11 @@ import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.ForwardingAudioSink
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
+import androidx.media3.decoder.ffmpeg.FfmpegLibrary
+import androidx.media3.decoder.ffmpeg.SafeFfmpegAudioRenderer
+import androidx.media3.exoplayer.Renderer
+import androidx.media3.exoplayer.audio.AudioRendererEventListener
+import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
@@ -178,8 +183,7 @@ class PlayService : MediaLibraryService() {
                     .setEnableAudioOutputPlaybackParameters(enableAudioTrackPlaybackParams)
                     .setAudioProcessors(
                         arrayOf(
-                            effectManager.equalizerAudioProcessor,
-                            effectManager.spatialAudioProcessor
+                            effectManager.equalizerAudioProcessor
                         )
                     )
                     .build()
@@ -196,14 +200,51 @@ class PlayService : MediaLibraryService() {
                     }
                 }
             }
+
+            override fun buildAudioRenderers(
+                context: Context,
+                extensionRendererMode: Int,
+                mediaCodecSelector: MediaCodecSelector,
+                enableDecoderFallback: Boolean,
+                audioSink: AudioSink,
+                eventHandler: Handler,
+                eventListener: AudioRendererEventListener,
+                out: ArrayList<Renderer>
+            ) {
+                // Pass EXTENSION_RENDERER_MODE_OFF to super to avoid loading default FfmpegAudioRenderer
+                super.buildAudioRenderers(
+                    context,
+                    EXTENSION_RENDERER_MODE_OFF,
+                    mediaCodecSelector,
+                    enableDecoderFallback,
+                    audioSink,
+                    eventHandler,
+                    eventListener,
+                    out
+                )
+                if (extensionRendererMode == EXTENSION_RENDERER_MODE_OFF) return
+                if (!FfmpegLibrary.isAvailable()) return
+
+                val ffmpegRenderer = SafeFfmpegAudioRenderer(
+                    eventHandler,
+                    eventListener,
+                    audioSink
+                )
+                if (extensionRendererMode == EXTENSION_RENDERER_MODE_PREFER) {
+                    out.add(0, ffmpegRenderer)
+                } else {
+                    out.add(ffmpegRenderer)
+                }
+            }
         }
             .setExtensionRendererMode(decoderMode)
             .setEnableDecoderFallback(true)
+            .setEnableAudioFloatOutput(true)
 
-        if (androidx.media3.decoder.ffmpeg.FfmpegLibrary.isAvailable()) {
-            android.util.Log.i("PlayService", "FFmpeg extension loaded: v${androidx.media3.decoder.ffmpeg.FfmpegLibrary.getVersion()}, decoderMode=$decoderMode")
+        if (FfmpegLibrary.isAvailable()) {
+            Log.i("PlayService", "FFmpeg extension loaded: v${FfmpegLibrary.getVersion()}, decoderMode=$decoderMode")
         } else {
-            android.util.Log.w("PlayService", "FFmpeg extension native library not available, decoderMode=$decoderMode")
+            Log.w("PlayService", "FFmpeg extension native library not available, decoderMode=$decoderMode")
         }
 
         val trackSelector = DefaultTrackSelector(this, AdaptiveTrackSelection.Factory())

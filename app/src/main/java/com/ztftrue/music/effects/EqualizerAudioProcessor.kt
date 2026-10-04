@@ -28,7 +28,11 @@ class EqualizerAudioProcessor : AudioProcessor {
                 System.loadLibrary("monster_audio")
                 isNativeLoaded = true
             } catch (t: Throwable) {
-                Log.e(TAG, "Failed to load monster_audio library", t)
+                try {
+                    Log.e(TAG, "Failed to load monster_audio library", t)
+                } catch (_: Throwable) {
+                    // Ignored in JVM unit test environments
+                }
                 isNativeLoaded = false
             }
         }
@@ -129,8 +133,10 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var bassBoostActive = false
     private var bassBoostStrength = 0.0f
 
-    private var virtualizerActive = false
-    private var virtualizerStrength = 0.0f
+    var virtualizerActive = false
+        private set
+    var virtualizerStrength = 0.0f
+        private set
 
     private var reverbActive = false
     private var reverbRoomSize = 0.5f
@@ -301,6 +307,7 @@ class EqualizerAudioProcessor : AudioProcessor {
                 visBuffer
             )
         } else {
+            resultBuffer.put(directInput)
             0
         }
         data.position(data.limit())
@@ -572,6 +579,10 @@ class EqualizerAudioProcessor : AudioProcessor {
             lock.unlock()
         }
     }
+
+    fun setSpatialAudio(enabled: Boolean, strength: Float) = setVirtualizer(enabled, strength)
+    fun setSpatialEnabled(enabled: Boolean) = setVirtualizer(enabled, virtualizerStrength)
+    fun setSpatialStrength(strength: Int) = setVirtualizer(virtualizerActive, strength / 1000f)
 
     fun setReverb(enabled: Boolean, roomSize: Float, damping: Float, mix: Float) {
         lock.lock()

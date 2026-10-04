@@ -2177,4 +2177,125 @@ class ExampleUnitTest {
         val result = Utils.decodeSampledBitmapFromByteArray(invalidData, 0, invalidData.size, 100, 100)
         assertNull(result)
     }
+
+    @Test
+    fun safeFfmpegAudioRenderer_classAndMethodsAvailable() {
+        val clazz = androidx.media3.decoder.ffmpeg.SafeFfmpegAudioRenderer::class.java
+        assertNotNull(clazz)
+        val constructor = clazz.getConstructor(
+            android.os.Handler::class.java,
+            androidx.media3.exoplayer.audio.AudioRendererEventListener::class.java,
+            androidx.media3.exoplayer.audio.AudioSink::class.java
+        )
+        assertNotNull(constructor)
+    }
+
+    @Test
+    fun spatialAudioProcessor_supportsFloatPcm() {
+        val processor = com.ztftrue.music.effects.SpatialAudioProcessor()
+        val formatFloat = androidx.media3.common.audio.AudioProcessor.AudioFormat(44100, 2, androidx.media3.common.C.ENCODING_PCM_FLOAT)
+        val outFormat = processor.configure(formatFloat)
+        assertEquals(androidx.media3.common.C.ENCODING_PCM_FLOAT, outFormat.encoding)
+        assertEquals(2, outFormat.channelCount)
+        assertEquals(44100, outFormat.sampleRate)
+
+        processor.setActive(true)
+        processor.setStrength(500)
+
+        // Generate stereo float audio (4 frames = 8 floats = 32 bytes)
+        val byteBuffer = java.nio.ByteBuffer.allocateDirect(32).order(java.nio.ByteOrder.nativeOrder())
+        byteBuffer.putFloat(0.5f) // L0
+        byteBuffer.putFloat(-0.5f) // R0
+        byteBuffer.putFloat(0.1f) // L1
+        byteBuffer.putFloat(0.1f) // R1
+        byteBuffer.putFloat(0.9f) // L2
+        byteBuffer.putFloat(-0.9f) // R2
+        byteBuffer.putFloat(0.0f) // L3
+        byteBuffer.putFloat(0.0f) // R3
+        byteBuffer.flip()
+
+        processor.queueInput(byteBuffer)
+        val output = processor.output
+        assertTrue("Output buffer should have processed samples", output.hasRemaining())
+        assertEquals(32, output.remaining())
+
+        val l0 = output.float
+        val r0 = output.float
+        // Side enhanced, mid is 0 -> l0 should be positive, r0 negative
+        assertTrue("L0 should be positive", l0 > 0.4f)
+        assertTrue("R0 should be negative", r0 < -0.4f)
+    }
+
+    @Test
+    fun spatialAudioProcessor_supports16BitPcm() {
+        val processor = com.ztftrue.music.effects.SpatialAudioProcessor()
+        val format16 = androidx.media3.common.audio.AudioProcessor.AudioFormat(44100, 2, androidx.media3.common.C.ENCODING_PCM_16BIT)
+        val outFormat = processor.configure(format16)
+        assertEquals(androidx.media3.common.C.ENCODING_PCM_16BIT, outFormat.encoding)
+        assertEquals(2, outFormat.channelCount)
+        assertEquals(44100, outFormat.sampleRate)
+
+        processor.setActive(true)
+        processor.setStrength(500)
+
+        // Generate stereo 16-bit audio (4 frames = 8 shorts = 16 bytes)
+        val byteBuffer = java.nio.ByteBuffer.allocateDirect(16).order(java.nio.ByteOrder.nativeOrder())
+        byteBuffer.putShort(10000.toShort())  // L0
+        byteBuffer.putShort((-10000).toShort()) // R0
+        byteBuffer.putShort(2000.toShort())   // L1
+        byteBuffer.putShort(2000.toShort())   // R1
+        byteBuffer.putShort(30000.toShort())  // L2
+        byteBuffer.putShort((-30000).toShort()) // R2
+        byteBuffer.putShort(0.toShort())      // L3
+        byteBuffer.putShort(0.toShort())      // R3
+        byteBuffer.flip()
+
+        processor.queueInput(byteBuffer)
+        val output = processor.output
+        assertTrue("Output buffer should have processed samples", output.hasRemaining())
+        assertEquals(16, output.remaining())
+
+        val l0 = output.short
+        val r0 = output.short
+        // Side enhanced, mid is 0 -> l0 should be positive, r0 negative
+        assertTrue("L0 should be positive", l0 > 5000)
+        assertTrue("R0 should be negative", r0 < -5000)
+    }
+
+    @Test
+    fun spatialAudioProcessor_passthroughWhenDisabled() {
+        val processor = com.ztftrue.music.effects.SpatialAudioProcessor()
+        val format16 = androidx.media3.common.audio.AudioProcessor.AudioFormat(44100, 2, androidx.media3.common.C.ENCODING_PCM_16BIT)
+        processor.configure(format16)
+        processor.setActive(false) // Disabled
+
+        val byteBuffer = java.nio.ByteBuffer.allocateDirect(4).order(java.nio.ByteOrder.nativeOrder())
+        byteBuffer.putShort(1234.toShort())
+        byteBuffer.putShort(5678.toShort())
+        byteBuffer.flip()
+
+        processor.queueInput(byteBuffer)
+        val output = processor.output
+        assertEquals(4, output.remaining())
+        assertEquals(1234.toShort(), output.short)
+        assertEquals(5678.toShort(), output.short)
+    }
+
+    @Test
+    fun equalizerAudioProcessor_initializationAndPassthrough() {
+        val processor = com.ztftrue.music.effects.EqualizerAudioProcessor()
+        assertNotNull(processor)
+    }
+
+    @Test
+    fun equalizerAudioProcessor_spatialAudioMethods() {
+        val processor = com.ztftrue.music.effects.EqualizerAudioProcessor()
+        processor.setSpatialEnabled(true)
+        assertTrue(processor.virtualizerActive)
+        processor.setSpatialStrength(750)
+        assertEquals(0.75f, processor.virtualizerStrength, 0.001f)
+        processor.setSpatialAudio(false, 0.2f)
+        assertFalse(processor.virtualizerActive)
+        assertEquals(0.2f, processor.virtualizerStrength, 0.001f)
+    }
 }
