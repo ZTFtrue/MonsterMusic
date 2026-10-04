@@ -7,6 +7,7 @@ add_library(monster_audio SHARED
     fft.c
     effects_dsp.c
     biquad_jni.c
+    ffmpeg_fix.c
 )
 
 target_compile_options(monster_audio PRIVATE -O3 -ffast-math -fno-finite-math-only)
@@ -16,6 +17,7 @@ find_library(log-lib log)
 target_link_libraries(monster_audio
     ${log-lib}
     m
+    dl
 )
 
 target_link_options(

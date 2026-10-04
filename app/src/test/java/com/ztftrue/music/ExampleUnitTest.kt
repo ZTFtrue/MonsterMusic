@@ -2191,6 +2191,23 @@ class ExampleUnitTest {
     }
 
     @Test
+    fun safeFfmpegAudioRenderer_methodsAvailable() {
+        val clazz = androidx.media3.decoder.ffmpeg.SafeFfmpegAudioRenderer::class.java
+        val method = clazz.getDeclaredMethod("supportsFormatInternal", androidx.media3.common.Format::class.java)
+        assertNotNull(method)
+    }
+
+    @Test
+    fun nativeFfmpegFix_classAndMethodsAvailable() {
+        val clazz = com.ztftrue.music.play.NativeFfmpegFix::class.java
+        assertNotNull(clazz)
+        val method0 = clazz.getMethod("installFix")
+        assertNotNull(method0)
+        val method1 = clazz.getMethod("installFix", android.content.Context::class.java)
+        assertNotNull(method1)
+    }
+
+    @Test
     fun spatialAudioProcessor_supportsFloatPcm() {
         val processor = com.ztftrue.music.effects.SpatialAudioProcessor()
         val formatFloat = androidx.media3.common.audio.AudioProcessor.AudioFormat(44100, 2, androidx.media3.common.C.ENCODING_PCM_FLOAT)

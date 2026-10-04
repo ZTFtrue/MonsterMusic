@@ -243,6 +243,7 @@ class PlayService : MediaLibraryService() {
 
         if (FfmpegLibrary.isAvailable()) {
             Log.i("PlayService", "FFmpeg extension loaded: v${FfmpegLibrary.getVersion()}, decoderMode=$decoderMode")
+            NativeFfmpegFix.installFix(this)
         } else {
             Log.w("PlayService", "FFmpeg extension native library not available, decoderMode=$decoderMode")
         }
@@ -267,12 +268,21 @@ class PlayService : MediaLibraryService() {
 
     // --- Player Listener (精简版，主要逻辑保持不变) ---
     private val playerListener = object : Player.Listener {
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            if (playbackState == Player.STATE_READY) {
+                errorCount = 0
+            }
+        }
+
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             updateWidget(isPlaying)
             SharedPreferencesUtils.saveCurrentDuration(this@PlayService, exoPlayer.currentPosition)
         }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK) {
+                errorCount = 0
+            }
             if (musicQueue.isEmpty() || exoPlayer.currentMediaItemIndex >= musicQueue.size) return
             val nextTrack = musicQueue[exoPlayer.currentMediaItemIndex]
 
@@ -303,24 +313,34 @@ class PlayService : MediaLibraryService() {
         }
 
         override fun onPlayerError(error: PlaybackException) {
-            Log.e("PlayService", "Player Error", error)
-            if (errorCount > 3) {
+            Log.e("PlayService", "Player Error: ${error.errorCodeName} (${error.errorCode})", error)
+            val totalItems = exoPlayer.mediaItemCount
+            if (errorCount >= 5 || (totalItems > 0 && errorCount >= totalItems)) {
                 Toast.makeText(
                     this@PlayService,
                     "Many times play error, Play paused",
                     Toast.LENGTH_SHORT
                 ).show()
+                errorCount = 0
+                exoPlayer.pause()
             } else {
                 Toast.makeText(
                     this@PlayService,
                     "Play error, auto play next",
                     Toast.LENGTH_SHORT
                 ).show()
-                if (exoPlayer.hasNextMediaItem()) {
-                    exoPlayer.seekToNextMediaItem()
-                    exoPlayer.prepare()
-                }
                 errorCount++
+                if (totalItems > 1) {
+                    if (exoPlayer.hasNextMediaItem()) {
+                        exoPlayer.seekToNextMediaItem()
+                    } else {
+                        exoPlayer.seekToDefaultPosition(0)
+                    }
+                    exoPlayer.prepare()
+                    exoPlayer.play()
+                } else {
+                    exoPlayer.stop()
+                }
             }
         }
 

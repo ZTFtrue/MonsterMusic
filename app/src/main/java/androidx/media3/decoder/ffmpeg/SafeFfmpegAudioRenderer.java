@@ -60,10 +60,15 @@ public final class SafeFfmpegAudioRenderer extends DecoderAudioRenderer<FfmpegAu
     if (!FfmpegLibrary.supportsFormat(sampleMimeType)) {
       return C.FORMAT_UNSUPPORTED_SUBTYPE;
     }
-    int channelCount = format.channelCount != Format.NO_VALUE ? format.channelCount : 2;
+
+    // Multichannel audio (e.g. 5.1 / 7.1 AC-3, E-AC-3, DTS) is automatically downmixed
+    // to stereo (2 channels) by our native FFmpeg resampler hook.
+    // Check if the sink supports stereo (or mono if input is mono) PCM.
+    int outputChannels = (format.channelCount != Format.NO_VALUE && format.channelCount <= 2)
+        ? format.channelCount : 2;
     int sampleRate = format.sampleRate != Format.NO_VALUE ? format.sampleRate : 44100;
-    if (!sinkSupportsFormat(Util.getPcmFormat(C.ENCODING_PCM_FLOAT, channelCount, sampleRate))
-        && !sinkSupportsFormat(Util.getPcmFormat(C.ENCODING_PCM_16BIT, channelCount, sampleRate))) {
+    if (!sinkSupportsFormat(Util.getPcmFormat(C.ENCODING_PCM_FLOAT, outputChannels, sampleRate))
+        && !sinkSupportsFormat(Util.getPcmFormat(C.ENCODING_PCM_16BIT, outputChannels, sampleRate))) {
       return C.FORMAT_UNSUPPORTED_SUBTYPE;
     }
     if (format.cryptoType != C.CRYPTO_TYPE_NONE) {
@@ -81,6 +86,7 @@ public final class SafeFfmpegAudioRenderer extends DecoderAudioRenderer<FfmpegAu
   protected FfmpegAudioDecoder createDecoder(Format format, @Nullable CryptoConfig cryptoConfig)
       throws DecoderException {
     TraceUtil.beginSection("createSafeFfmpegAudioDecoder");
+
     int initialInputBufferSize =
         format.maxInputSize != Format.NO_VALUE ? format.maxInputSize : DEFAULT_INPUT_BUFFER_SIZE;
 
@@ -93,6 +99,12 @@ public final class SafeFfmpegAudioRenderer extends DecoderAudioRenderer<FfmpegAu
     // on Android 5.0+ and safely downsamples/converts in Java if needed.
     boolean outputFloat = true;
 
+    // Ensure native decode hook is installed
+    try {
+      com.ztftrue.music.play.NativeFfmpegFix.INSTANCE.installFix(null);
+    } catch (Throwable ignored) {
+    }
+
     FfmpegAudioDecoder decoder =
         new FfmpegAudioDecoder(
             format,
@@ -100,6 +112,15 @@ public final class SafeFfmpegAudioRenderer extends DecoderAudioRenderer<FfmpegAu
             NUM_BUFFERS,
             initialInputBufferSize,
             outputFloat);
+
+    // Set safe 2 MB output buffer size to eliminate growOutputBuffer calls during playback
+    try {
+      java.lang.reflect.Field field = FfmpegAudioDecoder.class.getDeclaredField("outputBufferSize");
+      field.setAccessible(true);
+      field.setInt(decoder, 2 * 1024 * 1024);
+    } catch (Throwable ignored) {
+    }
+
     TraceUtil.endSection();
     return decoder;
   }
