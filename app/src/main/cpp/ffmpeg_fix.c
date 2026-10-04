@@ -26,6 +26,8 @@
 #define OFF_FRAME_EXTENDED_DATA 0x60
 #define OFF_FRAME_NB_SAMPLES 0x70
 #define OFF_FRAME_FORMAT 0x74
+#define OFF_FRAME_CH_LAYOUT 0x1c0
+#define OFF_FRAME_NB_CHANNELS 0x1c4
 #define OFF_PKT_DATA 0x18
 #define OFF_PKT_SIZE 0x20
 #else
@@ -38,6 +40,8 @@
 #define OFF_FRAME_EXTENDED_DATA 0x40
 #define OFF_FRAME_NB_SAMPLES 0x4c
 #define OFF_FRAME_FORMAT 0x50
+#define OFF_FRAME_CH_LAYOUT 0x148
+#define OFF_FRAME_NB_CHANNELS 0x14c
 #define OFF_PKT_DATA 0x18
 #define OFF_PKT_SIZE 0x1c
 #endif
@@ -65,6 +69,8 @@ typedef int (*fn_swr_get_out_samples_t)(SwrContext* s, int in_samples);
 typedef void (*fn_swr_free_t)(SwrContext** s);
 typedef int (*fn_av_get_bytes_per_sample_t)(int sample_fmt);
 typedef void (*fn_av_channel_layout_default_t)(void* ch_layout, int nb_channels);
+typedef int (*fn_av_channel_layout_check_t)(const void* ch_layout);
+typedef int (*fn_av_opt_get_int_t)(void* obj, const char* name, int search_flags, int64_t* out_val);
 
 static fn_av_packet_alloc_t fn_av_packet_alloc = NULL;
 static fn_av_packet_free_t fn_av_packet_free = NULL;
@@ -79,6 +85,8 @@ static fn_swr_get_out_samples_t fn_swr_get_out_samples = NULL;
 static fn_swr_free_t fn_swr_free = NULL;
 static fn_av_get_bytes_per_sample_t fn_av_get_bytes_per_sample = NULL;
 static fn_av_channel_layout_default_t fn_av_channel_layout_default = NULL;
+static fn_av_channel_layout_check_t fn_av_channel_layout_check = NULL;
+static fn_av_opt_get_int_t fn_av_opt_get_int = NULL;
 
 static jmethodID growOutputBufferMethod = NULL;
 
@@ -149,6 +157,8 @@ static int resolve_ffmpeg_symbols(const char* lib_path) {
     fn_swr_free = (fn_swr_free_t) dlsym(handle, "swr_free");
     fn_av_get_bytes_per_sample = (fn_av_get_bytes_per_sample_t) dlsym(handle, "av_get_bytes_per_sample");
     fn_av_channel_layout_default = (fn_av_channel_layout_default_t) dlsym(handle, "av_channel_layout_default");
+    fn_av_channel_layout_check = (fn_av_channel_layout_check_t) dlsym(handle, "av_channel_layout_check");
+    fn_av_opt_get_int = (fn_av_opt_get_int_t) dlsym(handle, "av_opt_get_int");
 
     return (fn_av_packet_alloc && fn_av_packet_free && fn_avcodec_send_packet &&
             fn_avcodec_receive_frame && fn_av_frame_alloc && fn_av_frame_free &&
@@ -169,9 +179,8 @@ static jint JNICALL hook_ffmpegDecode(
 
     uint8_t* ctx = (uint8_t*)(intptr_t)context_handle;
     uint8_t* inputBuffer = (uint8_t*)(*env)->GetDirectBufferAddress(env, inputData);
-    uint8_t* outputBuffer = (uint8_t*)(*env)->GetDirectBufferAddress(env, outputData);
-    if (!inputBuffer || !outputBuffer) {
-        LOGE("Direct buffer addresses are NULL");
+    if (!inputBuffer) {
+        LOGE("Direct input buffer address is NULL");
         return AUDIO_DECODER_ERROR_INVALID_DATA;
     }
 
@@ -190,6 +199,7 @@ static jint JNICALL hook_ffmpegDecode(
                                                   : AUDIO_DECODER_ERROR_OTHER;
     }
 
+    jobject currentOutputData = outputData;
     int outSize = 0;
     while (1) {
         AVFrame* frame = fn_av_frame_alloc();
@@ -215,43 +225,103 @@ static jint JNICALL hook_ffmpegDecode(
         }
 
         int sampleRate = *(int32_t*)(ctx + OFF_CTX_SAMPLE_RATE);
-        int sampleFormat = *(int32_t*)(ctx + OFF_CTX_SAMPLE_FMT);
+        int sampleFormat = *(int32_t*)((uint8_t*)frame + OFF_FRAME_FORMAT);
+        if (sampleFormat < 0) {
+            sampleFormat = *(int32_t*)(ctx + OFF_CTX_SAMPLE_FMT);
+        }
         int requestSampleFmt = *(int32_t*)(ctx + OFF_CTX_REQUEST_SAMPLE_FMT);
-        int channelCount = *(int32_t*)(ctx + OFF_CTX_NB_CHANNELS);
-        void* chLayout = (void*)(ctx + OFF_CTX_CH_LAYOUT);
 
-        int outChannels = channelCount;
-        uint8_t stereoLayoutBuf[32];
-        memset(stereoLayoutBuf, 0, sizeof(stereoLayoutBuf));
-        const void* outChLayout = chLayout;
+        uint8_t** in_data = *(uint8_t***)((uint8_t*)frame + OFF_FRAME_EXTENDED_DATA);
+        if (!in_data) {
+            in_data = (uint8_t**)frame; // fallback to frame->data
+        }
 
-        if (channelCount > 2) {
-            if (fn_av_channel_layout_default) {
-                fn_av_channel_layout_default(stereoLayoutBuf, 2);
-                outChLayout = (const void*)stereoLayoutBuf;
-                outChannels = 2;
+        // Determine actual valid input channels
+        int inChannels = 0;
+        if (sampleFormat >= 5) {
+            // Planar format: count non-null channel pointers
+            while (inChannels < 8 && in_data[inChannels] != NULL) {
+                inChannels++;
+            }
+        } else {
+            // Packed format: interleaved in in_data[0]
+            inChannels = *(int32_t*)((uint8_t*)frame + OFF_FRAME_NB_CHANNELS);
+            if (inChannels <= 0) {
+                inChannels = *(int32_t*)(ctx + OFF_CTX_NB_CHANNELS);
             }
         }
 
+        if (inChannels <= 0 || in_data[0] == NULL) {
+            fn_av_frame_free(&frame);
+            continue;
+        }
+
+        // Output is always stereo 2.0 (AudioSink expects stereo)
+        int outChannels = 2;
+        uint8_t stereoLayoutBuf[32];
+        memset(stereoLayoutBuf, 0, sizeof(stereoLayoutBuf));
+        if (fn_av_channel_layout_default) {
+            fn_av_channel_layout_default(stereoLayoutBuf, 2);
+        }
+        const void* outChLayout = (const void*)stereoLayoutBuf;
+
+        // Resolve input channel layout
+        uint8_t inLayoutBuf[32];
+        memset(inLayoutBuf, 0, sizeof(inLayoutBuf));
+        const void* inChLayout = NULL;
+
+        int frameChannels = *(int32_t*)((uint8_t*)frame + OFF_FRAME_NB_CHANNELS);
+        const void* frameLayout = (const void*)((uint8_t*)frame + OFF_FRAME_CH_LAYOUT);
+
+        if (frameChannels == inChannels && fn_av_channel_layout_check && fn_av_channel_layout_check(frameLayout)) {
+            inChLayout = frameLayout;
+        } else if (*(int32_t*)(ctx + OFF_CTX_NB_CHANNELS) == inChannels &&
+                   fn_av_channel_layout_check && fn_av_channel_layout_check((const void*)(ctx + OFF_CTX_CH_LAYOUT))) {
+            inChLayout = (const void*)(ctx + OFF_CTX_CH_LAYOUT);
+        } else if (fn_av_channel_layout_default) {
+            fn_av_channel_layout_default(inLayoutBuf, inChannels);
+            inChLayout = (const void*)inLayoutBuf;
+        }
+
         SwrContext* resampleContext = *(SwrContext**)(ctx + OFF_CTX_OPAQUE);
+        if (resampleContext != NULL && fn_av_opt_get_int != NULL) {
+            int64_t current_in_ch = 0;
+            int64_t current_in_sr = 0;
+            int64_t current_in_fmt = 0;
+            fn_av_opt_get_int(resampleContext, "in_channel_count", 0, &current_in_ch);
+            fn_av_opt_get_int(resampleContext, "in_sample_rate", 0, &current_in_sr);
+            fn_av_opt_get_int(resampleContext, "in_sample_fmt", 0, &current_in_fmt);
+
+            if (current_in_ch != inChannels || current_in_sr != sampleRate || current_in_fmt != sampleFormat) {
+                LOGI("Resampler config changed (ch: %lld -> %d, sr: %lld -> %d, fmt: %lld -> %d). Reallocating SwrContext.",
+                     (long long)current_in_ch, inChannels, (long long)current_in_sr, sampleRate, (long long)current_in_fmt, sampleFormat);
+                fn_swr_free(&resampleContext);
+                *(SwrContext**)(ctx + OFF_CTX_OPAQUE) = NULL;
+            }
+        }
+
         if (!resampleContext) {
             ret = fn_swr_alloc_set_opts2(
                 &resampleContext,
                 (const AVChannelLayout*)outChLayout,
                 requestSampleFmt,
                 sampleRate,
-                (const AVChannelLayout*)chLayout,
+                (const AVChannelLayout*)inChLayout,
                 sampleFormat,
                 sampleRate,
                 0,
                 NULL
             );
             if (ret < 0 || !resampleContext) {
+                LOGE("swr_alloc_set_opts2 failed: %d", ret);
                 fn_av_frame_free(&frame);
                 return AUDIO_DECODER_ERROR_OTHER;
             }
             ret = fn_swr_init(resampleContext);
             if (ret < 0) {
+                LOGE("swr_init failed: %d", ret);
+                fn_swr_free(&resampleContext);
+                *(SwrContext**)(ctx + OFF_CTX_OPAQUE) = NULL;
                 fn_av_frame_free(&frame);
                 return AUDIO_DECODER_ERROR_OTHER;
             }
@@ -259,7 +329,11 @@ static jint JNICALL hook_ffmpegDecode(
         }
 
         int outSampleSize = fn_av_get_bytes_per_sample(requestSampleFmt);
+        if (outSampleSize <= 0) outSampleSize = 4;
         int outSamples = fn_swr_get_out_samples(resampleContext, sampleCount);
+        if (outSamples < sampleCount) {
+            outSamples = sampleCount;
+        }
         int bufferOutSize = outSampleSize * outChannels * outSamples;
 
         // Reallocate buffer dynamically if needed
@@ -272,25 +346,21 @@ static jint JNICALL hook_ffmpegDecode(
                 fn_av_frame_free(&frame);
                 return AUDIO_DECODER_ERROR_OTHER;
             }
-            uint8_t* newBase = (uint8_t*)(*env)->GetDirectBufferAddress(env, newOutputData);
-            if (!newBase) {
-                LOGE("Failed to get address of grown output buffer");
-                fn_av_frame_free(&frame);
-                return AUDIO_DECODER_ERROR_OTHER;
-            }
-            // CRITICAL FIX: Offset by outSize to maintain contiguous stream position!
-            outputBuffer = newBase + outSize;
+            currentOutputData = newOutputData;
         }
 
-        uint8_t** in_data = *(uint8_t***)((uint8_t*)frame + OFF_FRAME_EXTENDED_DATA);
-        if (!in_data) {
-            in_data = (uint8_t**)frame; // fallback to frame->data
+        uint8_t* base = (uint8_t*)(*env)->GetDirectBufferAddress(env, currentOutputData);
+        if (!base) {
+            LOGE("Failed to get address of output buffer");
+            fn_av_frame_free(&frame);
+            return AUDIO_DECODER_ERROR_OTHER;
         }
+        uint8_t* writePtr = base + outSize;
 
-        // CRITICAL FIX: Pass outSamples (samples per channel), NOT bufferOutSize (bytes)!
+        // Pass outSamples (samples per channel), NOT bufferOutSize (bytes)!
         int convertedSamples = fn_swr_convert(
             resampleContext,
-            &outputBuffer,
+            &writePtr,
             outSamples,
             (const uint8_t**)in_data,
             sampleCount
@@ -298,13 +368,11 @@ static jint JNICALL hook_ffmpegDecode(
         fn_av_frame_free(&frame);
 
         if (convertedSamples < 0) {
-            LOGE("swr_convert failed: %d", convertedSamples);
-            return AUDIO_DECODER_ERROR_INVALID_DATA;
+            LOGW("swr_convert returned %d, skipping frame", convertedSamples);
+            continue;
         }
 
-        // CRITICAL FIX: Advance buffer pointer and outSize strictly by actual converted bytes!
         int actualBytes = convertedSamples * outChannels * outSampleSize;
-        outputBuffer += actualBytes;
         outSize += actualBytes;
     }
 
@@ -314,14 +382,9 @@ static jint JNICALL hook_ffmpegDecode(
 static jint JNICALL hook_ffmpegGetChannelCount(JNIEnv* env, jobject thiz, jlong context_handle) {
     (void)env;
     (void)thiz;
-    if (!context_handle) return 0;
-    uint8_t* ctx = (uint8_t*)(intptr_t)context_handle;
-    int ch = *(int32_t*)(ctx + OFF_CTX_NB_CHANNELS);
-    // Multichannel (> 2 channels) is downmixed to stereo
-    if (ch > 2) {
-        return 2;
-    }
-    return ch;
+    (void)context_handle;
+    // Always return 2 (stereo) because the native decoder hook downmixes / outputs stereo PCM.
+    return 2;
 }
 
 JNIEXPORT jboolean JNICALL
