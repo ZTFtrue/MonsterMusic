@@ -4,6 +4,14 @@ All notable changes to MonsterMusic are documented in this file.
 
 The project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.1.82] - 2026-10-04
+- **Expanded FFmpeg Audio Decoders**: Added support for AC-3 (Dolby Digital), E-AC-3, DTS, TrueHD, Vorbis, Opus, FLAC, and ALAC.
+- **Multichannel Stereo Downmixing**: Implemented native 5.1 and 7.1 surround sound downmixing to standard stereo in C native engine (`SwrContext`), resolving silent playback and crashes on multichannel files.
+- **Native Spatial Audio Engine**: Merged spatial audio widening into native C DSP equalizer processor, eliminating duplicate audio processing pipelines and reducing latency.
+- **Auto-Skip on Playback Errors**: Automatically advances to the next track upon playback errors (corrupted files or unsupported streams) with loopback support and failure limits.
+- **Localization**: Comprehensive updates and string cleanup across all supported languages (Arabic, German, Esperanto, French, Hungarian, Japanese, Russian, Turkish, Traditional Chinese, etc.).
+- **Intent Filters**: Expanded system file association and intent filters for modern audio file formats.
+
 ---
 
 ## [0.1.81] - 2026-10-03

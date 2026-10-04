@@ -1,0 +1,7 @@
+v0.1.82:
+• Expanded audio format support with FFmpeg decoders (AC-3, E-AC-3, DTS, TrueHD, Vorbis, Opus, FLAC, ALAC).
+• Added native 5.1/7.1 multichannel surround sound downmixing to crystal-clear stereo audio.
+• Consolidated Spatial Audio processor into native C audio engine for improved performance and lower latency.
+• Added automatic track skipping and error recovery on unplayable or corrupted audio files.
+• Comprehensive localization updates and translations across 10+ languages.
+• Expanded Android system intent filters for additional audio file extensions and MIME types.

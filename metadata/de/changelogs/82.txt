@@ -1,0 +1,7 @@
+v0.1.82:
+• Erweiterte Audioformat-Unterstützung mit FFmpeg-Decodern (AC-3, E-AC-3, DTS, TrueHD, Vorbis, Opus, FLAC, ALAC).
+• Native Stereo-Downmixing für 5.1/7.1-Mehrkanal-Surround-Sound.
+• Räumlicher Audioprozessor in die native C-Audio-Engine integriert für bessere Leistung und geringere Latenz.
+• Automatische Titel-Überspringung und Fehlerbehebung bei nicht abspielbaren oder beschädigten Audiodateien.
+• Umfassende Lokalisierungsaktualisierungen und Bereinigung von Zeichenfolgenressourcen.
+• Erweiterte Intent-Filter für zusätzliche Audiodateierweiterungen und MIME-Typen.
