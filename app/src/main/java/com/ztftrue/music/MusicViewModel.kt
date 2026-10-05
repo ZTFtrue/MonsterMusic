@@ -244,6 +244,11 @@ class MusicViewModel : ViewModel() {
     var showFirstScanSetupDialog = mutableStateOf(false)
     var videoSupportEnable = mutableStateOf(false)
     var decoderMode = mutableIntStateOf(1)
+    var bitPerfectUsbEnable = mutableStateOf(false)
+    var bitPerfectActive = mutableStateOf(false)
+    var bitPerfectStatus = mutableStateOf("")
+    var connectedDacName = mutableStateOf<String?>(null)
+    var connectedDacSampleRates = mutableStateListOf<Int>()
 
     var playStatus = mutableStateOf(false)
     var equalizerBands = mutableStateListOf<EqualizerBand>()
@@ -1793,6 +1798,37 @@ class MusicViewModel : ViewModel() {
     fun setDecoderMode(context: Context, mode: Int) {
         decoderMode.intValue = mode
         SharedPreferencesUtils.saveDecoderMode(context, mode)
+    }
+
+    fun setBitPerfectUsbEnable(context: Context, enable: Boolean) {
+        bitPerfectUsbEnable.value = enable
+        SharedPreferencesUtils.saveBitPerfectUsbEnabled(context, enable)
+        val bundle = Bundle().apply {
+            putBoolean(MediaCommands.KEY_BIT_PERFECT_ENABLE, enable)
+        }
+        browser?.sendCustomCommand(MediaCommands.COMMAND_SET_BIT_PERFECT_ENABLE, bundle)
+    }
+
+    fun applyBitPerfectBundle(resultData: Bundle) {
+        if (resultData.containsKey(MediaCommands.KEY_BIT_PERFECT_ENABLE)) {
+            bitPerfectUsbEnable.value = resultData.getBoolean(MediaCommands.KEY_BIT_PERFECT_ENABLE, false)
+        }
+        if (resultData.containsKey(MediaCommands.KEY_BIT_PERFECT_ACTIVE)) {
+            bitPerfectActive.value = resultData.getBoolean(MediaCommands.KEY_BIT_PERFECT_ACTIVE, false)
+        }
+        if (resultData.containsKey(MediaCommands.KEY_DAC_NAME)) {
+            connectedDacName.value = resultData.getString(MediaCommands.KEY_DAC_NAME)
+        }
+        if (resultData.containsKey(MediaCommands.KEY_BIT_PERFECT_STATUS)) {
+            bitPerfectStatus.value = resultData.getString(MediaCommands.KEY_BIT_PERFECT_STATUS, "")
+        }
+        if (resultData.containsKey(MediaCommands.KEY_DAC_SAMPLE_RATES)) {
+            val rates = resultData.getIntArray(MediaCommands.KEY_DAC_SAMPLE_RATES)
+            connectedDacSampleRates.clear()
+            if (rates != null) {
+                connectedDacSampleRates.addAll(rates.toList())
+            }
+        }
     }
 
     fun refreshAllTracks(context: Context) {

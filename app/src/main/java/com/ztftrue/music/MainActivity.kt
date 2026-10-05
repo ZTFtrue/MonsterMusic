@@ -839,6 +839,8 @@ class MainActivity : ComponentActivity() {
                 }
             } else if (command.customAction == MediaCommands.COMMAND_AUDIO_EFFECT_UPDATE.customAction) {
                 updateAudioEffectData(args)
+            } else if (command.customAction == MediaCommands.COMMAND_BIT_PERFECT_STATUS_UPDATE.customAction) {
+                musicViewModel.applyBitPerfectBundle(args)
             }
             return super.onCustomCommand(controller, command, args)
         }
@@ -1116,6 +1118,7 @@ class MainActivity : ComponentActivity() {
             musicViewModel.playListCurrent.value = it as AnyListBase
         }
         updateAudioEffectData(resultData)
+        musicViewModel.applyBitPerfectBundle(resultData)
 
         musicViewModel.repeatModel.intValue = resultData.getInt("repeat", Player.REPEAT_MODE_ALL)
         musicViewModel.playCompleted.value =

@@ -328,4 +328,14 @@
     <string name="about_item_coil">Coil（图像加载库）</string>
     <string name="about_item_room">Room（本地数据库）</string>
     <string name="about_item_cookbook">RBJ 音频均衡器设计公式</string>
+    <string name="bit_perfect_usb">USB DAC 源码独占输出 (Bit-Perfect)</string>
+    <string name="bit_perfect_usb_desc">直接将原始 PCM 音频位完整直通外接 USB DAC/解码耳放，绕过系统混音器 (AudioFlinger)、重采样及 DSP 音效 (需 Android 14+)</string>
+    <string name="bit_perfect_dac_connected">已连接: %1$s</string>
+    <string name="bit_perfect_dac_not_connected">未检测到 USB DAC 设备</string>
+    <string name="bit_perfect_active">Bit-Perfect 独占输出中: %1$s</string>
+    <string name="bit_perfect_routing_active">USB 直通输出中: %1$s</string>
+    <string name="bit_perfect_eq_bypassed">Bit-Perfect 独占输出已激活，均衡器与音效已自动旁路以保证音频无损。</string>
+    <string name="bit_perfect_volume_notice">Bit-Perfect 模式下系统音量控制已旁路，请通过 DAC/耳放硬件旋钮调节音量。</string>
+    <string name="bit_perfect_not_supported">当前音频格式 (%1$s) 未受 DAC 原生支持，已回退至系统混音输出。</string>
+    <string name="bit_perfect_status_title">USB DAC 状态</string>
 </resources>

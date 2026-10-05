@@ -193,9 +193,16 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var lastVisProcessTimeNs = 0L
     private val minVisIntervalNs = 8_000_000L // ~125 FPS throttle for responsive high refresh rate screens
 
+    var bitPerfectMode: Boolean = false
+
     private val lock = ReentrantLock()
 
     override fun configure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
+        if (bitPerfectMode) {
+            this.inputAudioFormat = AudioProcessor.AudioFormat.NOT_SET
+            this.outputAudioFormat = AudioProcessor.AudioFormat.NOT_SET
+            return AudioProcessor.AudioFormat.NOT_SET
+        }
         if (inputAudioFormat.encoding != C.ENCODING_PCM_16BIT && inputAudioFormat.encoding != C.ENCODING_PCM_FLOAT) {
             return AudioProcessor.AudioFormat.NOT_SET
         }
@@ -245,6 +252,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     }
 
     override fun isActive(): Boolean {
+        if (bitPerfectMode) return false
         return outputAudioFormat != AudioProcessor.AudioFormat.NOT_SET
     }
 
@@ -257,10 +265,16 @@ class EqualizerAudioProcessor : AudioProcessor {
     }
 
     private fun processChunk(data: ByteBuffer, length: Int) {
+        val resultBuffer = replaceOutputBuffer(length)
+
+        if (bitPerfectMode) {
+            resultBuffer.put(data)
+            resultBuffer.flip()
+            return
+        }
+
         val needsProcessing = equalizerActive || echoActive || visualizationAudioActive ||
                 bassBoostActive || virtualizerActive || reverbActive || chorusActive || flangerActive || polyphonyActive
-
-        val resultBuffer = replaceOutputBuffer(length)
 
         if (!needsProcessing) {
             resultBuffer.put(data)

@@ -328,4 +328,14 @@
     <string name="about_item_coil">Coil (Image Loading)</string>
     <string name="about_item_room">Room (Database)</string>
     <string name="about_item_cookbook">RBJ Audio EQ Cookbook</string>
+    <string name="bit_perfect_usb">Bit-Perfect USB Output</string>
+    <string name="bit_perfect_usb_desc">Direct unaltered PCM output to external USB DAC, bypassing system mixer, resampling, and DSP effects (Android 14+)</string>
+    <string name="bit_perfect_dac_connected">Connected: %1$s</string>
+    <string name="bit_perfect_dac_not_connected">No USB DAC detected</string>
+    <string name="bit_perfect_active">Bit-Perfect Active: %1$s</string>
+    <string name="bit_perfect_routing_active">Direct USB Routing Active: %1$s</string>
+    <string name="bit_perfect_eq_bypassed">Bit-Perfect USB output is active. DSP and Equalizer are bypassed to preserve bit integrity.</string>
+    <string name="bit_perfect_volume_notice">System volume is bypassed in Bit-Perfect mode. Adjust volume using the DAC hardware control.</string>
+    <string name="bit_perfect_not_supported">Current format (%1$s) not supported bit-perfect by DAC. Fallback to system mixer.</string>
+    <string name="bit_perfect_status_title">USB DAC Status</string>
 </resources>

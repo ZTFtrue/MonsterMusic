@@ -44,6 +44,7 @@ import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.play.manager.MusicLibraryRepository
 import com.ztftrue.music.play.manager.PlaySessionCallback
 import com.ztftrue.music.play.manager.SleepTimerManager
+import com.ztftrue.music.play.manager.UsbDacManager
 import com.ztftrue.music.sqlData.MusicDatabase
 import com.ztftrue.music.sqlData.model.CurrentList
 import com.ztftrue.music.sqlData.model.MusicItem
@@ -69,6 +70,7 @@ class PlayService : MediaLibraryService() {
     lateinit var repository: MusicLibraryRepository
     lateinit var effectManager: AudioEffectManager
     lateinit var sleepManager: SleepTimerManager
+    lateinit var usbDacManager: UsbDacManager
     var isSleeping = false
     val isInitialized = CompletableDeferred<Unit>()
     private var errorCount = 0
@@ -103,6 +105,7 @@ class PlayService : MediaLibraryService() {
         // 1. 初始化各功能模块
         repository = MusicLibraryRepository(this)
         effectManager = AudioEffectManager(this)
+        usbDacManager = UsbDacManager(this, effectManager)
         sleepManager = SleepTimerManager(
             onTimerTick = { remaining -> broadcastSleepUpdate(remaining) },
             onTimerFinish = { playCompleted -> handleSleepFinish(playCompleted) }
@@ -111,6 +114,10 @@ class PlayService : MediaLibraryService() {
         // 2. 初始化播放器 (需要 effectManager 准备好)
         initExoPlayer()
         exoPlayerInstance = exoPlayer
+        usbDacManager.init(exoPlayer)
+        usbDacManager.onStatusChanged = { status ->
+            broadcastBitPerfectStatusUpdate(status)
+        }
 
         // 3. 构建 Session
         val contentIntent = Intent(this, MainActivity::class.java)
@@ -123,7 +130,7 @@ class PlayService : MediaLibraryService() {
             this,
             exoPlayer,
             // 传入所有 Manager 给 Callback
-            PlaySessionCallback(this, repository, effectManager, sleepManager),
+            PlaySessionCallback(this, repository, effectManager, sleepManager, usbDacManager),
         ).setSessionActivity(pendingContentIntent)
             .build()
 
@@ -196,6 +203,7 @@ class PlayService : MediaLibraryService() {
                                 exoPlayer.duration
                             )
                         }
+                        usbDacManager.onAudioSinkConfigured(audioSinkConfig.format)
                         super.configure(audioSinkConfig)
                     }
                 }
@@ -442,6 +450,20 @@ class PlayService : MediaLibraryService() {
         }
     }
 
+    fun broadcastBitPerfectStatusUpdate(status: UsbDacManager.UsbDacStatus? = null) {
+        val s = status ?: usbDacManager.getStatus()
+        val bundle = Bundle().apply {
+            putBoolean(MediaCommands.KEY_BIT_PERFECT_ENABLE, s.isEnabled)
+            putBoolean(MediaCommands.KEY_BIT_PERFECT_ACTIVE, s.isBitPerfectActive)
+            putString(MediaCommands.KEY_DAC_NAME, s.dacName)
+            putString(MediaCommands.KEY_BIT_PERFECT_STATUS, s.statusText)
+            putIntArray(MediaCommands.KEY_DAC_SAMPLE_RATES, s.supportedSampleRates.toIntArray())
+        }
+        mediaSession?.connectedControllers?.forEach { controller ->
+            mediaSession?.sendCustomCommand(controller, MediaCommands.COMMAND_BIT_PERFECT_STATUS_UPDATE, bundle)
+        }
+    }
+
     fun fillInitializedData(bundle: Bundle) {
         // --- 1. 播放器基础状态 ---
         bundle.putInt("volume", (exoPlayer.volume * 100).toInt())
@@ -464,6 +486,14 @@ class PlayService : MediaLibraryService() {
         bundle.putLong("remaining", sleepManager.remainingTime)
         // 补充：告知前端是否要在播放完成后暂停
         bundle.putBoolean("play_completed", sleepManager.playCompleted)
+
+        // --- 5. USB DAC / Bit-Perfect 状态 ---
+        val dacStatus = usbDacManager.getStatus()
+        bundle.putBoolean(MediaCommands.KEY_BIT_PERFECT_ENABLE, dacStatus.isEnabled)
+        bundle.putBoolean(MediaCommands.KEY_BIT_PERFECT_ACTIVE, dacStatus.isBitPerfectActive)
+        bundle.putString(MediaCommands.KEY_DAC_NAME, dacStatus.dacName)
+        bundle.putString(MediaCommands.KEY_BIT_PERFECT_STATUS, dacStatus.statusText)
+        bundle.putIntArray(MediaCommands.KEY_DAC_SAMPLE_RATES, dacStatus.supportedSampleRates.toIntArray())
 
         // --- 5. UI 配置与列表数据 (来自 MusicLibraryRepository) ---
         // 【补充】首页标签列表
@@ -793,6 +823,9 @@ class PlayService : MediaLibraryService() {
         SharedPreferencesUtils.saveCurrentDuration(this, exoPlayer.currentPosition)
 
         effectManager.release()
+        if (this::usbDacManager.isInitialized) {
+            usbDacManager.release()
+        }
         mediaSession?.release()
         exoPlayerInstance = null
         exoPlayer.release()

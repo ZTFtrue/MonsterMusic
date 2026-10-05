@@ -21,7 +21,8 @@ class PlaySessionCallback(
     private val service: PlayService,
     private val repository: MusicLibraryRepository,
     private val effectManager: AudioEffectManager,
-    private val sleepManager: SleepTimerManager
+    private val sleepManager: SleepTimerManager,
+    private val usbDacManager: UsbDacManager
 ) : MediaLibraryService.MediaLibrarySession.Callback {
 
     // 使用 Service 的 Scope 来执行协程任务
@@ -90,6 +91,9 @@ class PlaySessionCallback(
                 .add(MediaCommands.COMMAND_SET_TRACK_EFFECT_ENABLE)
                 .add(MediaCommands.COMMAND_RESET_TRACK_EFFECT)
                 .add(MediaCommands.COMMAND_AUDIO_EFFECT_UPDATE)
+                .add(MediaCommands.COMMAND_SET_BIT_PERFECT_ENABLE)
+                .add(MediaCommands.COMMAND_GET_BIT_PERFECT_STATUS)
+                .add(MediaCommands.COMMAND_BIT_PERFECT_STATUS_UPDATE)
                 .build()
 
         return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
@@ -123,6 +127,25 @@ class PlaySessionCallback(
             MediaCommands.COMMAND_DSP_ENABLE.customAction -> {
                 effectManager.setEqualizerEnabled(args.getBoolean("enable"))
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            MediaCommands.COMMAND_SET_BIT_PERFECT_ENABLE.customAction -> {
+                val enable = args.getBoolean(MediaCommands.KEY_BIT_PERFECT_ENABLE, false)
+                usbDacManager.setBitPerfectEnabled(enable)
+                service.broadcastBitPerfectStatusUpdate()
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            MediaCommands.COMMAND_GET_BIT_PERFECT_STATUS.customAction -> {
+                val status = usbDacManager.getStatus()
+                val resultData = Bundle().apply {
+                    putBoolean(MediaCommands.KEY_BIT_PERFECT_ENABLE, status.isEnabled)
+                    putBoolean(MediaCommands.KEY_BIT_PERFECT_ACTIVE, status.isBitPerfectActive)
+                    putString(MediaCommands.KEY_DAC_NAME, status.dacName)
+                    putString(MediaCommands.KEY_BIT_PERFECT_STATUS, status.statusText)
+                    putIntArray(MediaCommands.KEY_DAC_SAMPLE_RATES, status.supportedSampleRates.toIntArray())
+                }
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, resultData))
             }
 // 在 onCustomCommand 中处理
             MediaCommands.COMMAND_BASS_BOOST_ENABLE.customAction -> {

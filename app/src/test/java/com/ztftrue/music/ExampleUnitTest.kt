@@ -2315,4 +2315,38 @@ class ExampleUnitTest {
         assertFalse(processor.virtualizerActive)
         assertEquals(0.2f, processor.virtualizerStrength, 0.001f)
     }
+
+    @Test
+    fun equalizerAudioProcessor_bitPerfectModeBypass() {
+        val processor = com.ztftrue.music.effects.EqualizerAudioProcessor()
+        assertFalse(processor.bitPerfectMode)
+
+        // When bit-perfect mode is activated
+        processor.bitPerfectMode = true
+        assertTrue(processor.bitPerfectMode)
+
+        // isActive() must return false to bypass the entire pipeline
+        assertFalse(processor.isActive())
+
+        // configure() must return NOT_SET
+        val format = androidx.media3.common.audio.AudioProcessor.AudioFormat(
+            44100, 2, androidx.media3.common.C.ENCODING_PCM_16BIT
+        )
+        val configResult = processor.configure(format)
+        assertEquals(androidx.media3.common.audio.AudioProcessor.AudioFormat.NOT_SET, configResult)
+        assertFalse(processor.isActive())
+
+        // Deactivating bit-perfect mode allows normal configuration
+        processor.bitPerfectMode = false
+        val normalConfig = processor.configure(format)
+        assertEquals(44100, normalConfig.sampleRate)
+        assertEquals(2, normalConfig.channelCount)
+        assertTrue(processor.isActive())
+    }
+
+    @Test
+    fun usbDacManager_deviceDetectionLogic() {
+        // Null or non-sink device should be rejected
+        assertFalse(com.ztftrue.music.play.manager.UsbDacManager.isUsbAudioOutputDevice(null))
+    }
 }

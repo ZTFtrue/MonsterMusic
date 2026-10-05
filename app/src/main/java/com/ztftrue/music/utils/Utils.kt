@@ -240,8 +240,12 @@ object Utils {
             val exclusiveFolderPath = SharedPreferencesUtils.getExclusiveFolderPath(context)
             val isFirstScanCompleted = SharedPreferencesUtils.isFirstScanSetupCompleted(context)
             val videoSupportEnable = SharedPreferencesUtils.getVideoSupportEnable(context)
+            val bitPerfectUsbEnable = SharedPreferencesUtils.getBitPerfectUsbEnabled(context)
+            val decoderMode = SharedPreferencesUtils.getDecoderMode(context)
             withContext(Dispatchers.Main) {
                 musicViewModel.videoSupportEnable.value = videoSupportEnable
+                musicViewModel.bitPerfectUsbEnable.value = bitPerfectUsbEnable
+                musicViewModel.decoderMode.intValue = decoderMode
                 musicViewModel.scanMode.intValue = scanMode
                 musicViewModel.whitelistFolders.clear()
                 musicViewModel.whitelistFolders.addAll(whitelistFolders)

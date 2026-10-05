@@ -822,4 +822,15 @@ object SharedPreferencesUtils {
         return context.getSharedPreferences("play_config", Context.MODE_PRIVATE)
             .getInt("decoder_mode", 1)
     }
+
+    fun saveBitPerfectUsbEnabled(context: Context, value: Boolean) {
+        context.getSharedPreferences("play_config", Context.MODE_PRIVATE).edit {
+            putBoolean("bit_perfect_usb_enable", value)
+        }
+    }
+
+    fun getBitPerfectUsbEnabled(context: Context): Boolean {
+        return context.getSharedPreferences("play_config", Context.MODE_PRIVATE)
+            .getBoolean("bit_perfect_usb_enable", false)
+    }
 }

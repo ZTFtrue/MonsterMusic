@@ -657,6 +657,14 @@ class AudioEffectManager(private val context: Context) {
         db.AuxDao().upsert(auxr)
     }
 
+    fun setBitPerfectMode(enabled: Boolean) {
+        equalizerAudioProcessor.bitPerfectMode = enabled
+    }
+
+    fun isBitPerfectMode(): Boolean {
+        return equalizerAudioProcessor.bitPerfectMode
+    }
+
     fun release() {
         effectJob.cancel()
     }

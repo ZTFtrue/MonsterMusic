@@ -1122,6 +1122,104 @@ fun SettingsPage(
                         }
                     }
                 }
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 60.dp)
+                            .padding(vertical = 4.dp)
+                            .drawBehind {
+                                drawLine(
+                                    color = color,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.bit_perfect_usb),
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.bit_perfect_usb_desc),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                                    )
+                                }
+                                Switch(
+                                    checked = musicViewModel.bitPerfectUsbEnable.value,
+                                    onCheckedChange = {
+                                        musicViewModel.setBitPerfectUsbEnable(context, it)
+                                    }
+                                )
+                            }
+                            if (musicViewModel.connectedDacName.value != null) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(
+                                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                            RoundedCornerShape(8.dp)
+                                        )
+                                        .padding(8.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(
+                                            R.string.bit_perfect_dac_connected,
+                                            musicViewModel.connectedDacName.value ?: ""
+                                        ),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    if (musicViewModel.bitPerfectStatus.value.isNotEmpty()) {
+                                        Text(
+                                            text = musicViewModel.bitPerfectStatus.value,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    if (musicViewModel.connectedDacSampleRates.isNotEmpty()) {
+                                        val ratesText = musicViewModel.connectedDacSampleRates
+                                            .sorted()
+                                            .joinToString(", ") { "${it / 1000.0}k" }
+                                        Text(
+                                            text = "Supported: $ratesText Hz",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                        )
+                                    }
+                                    if (musicViewModel.bitPerfectUsbEnable.value) {
+                                        Text(
+                                            text = stringResource(R.string.bit_perfect_volume_notice),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                        )
+                                    }
+                                }
+                            } else if (musicViewModel.bitPerfectUsbEnable.value) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = stringResource(R.string.bit_perfect_dac_not_connected),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
+                    }
+                }
                 if (BuildConfig.SUPPORT_VIDEO) {
                     item {
                         Box(

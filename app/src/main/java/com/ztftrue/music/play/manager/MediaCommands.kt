@@ -116,4 +116,15 @@ object MediaCommands {
 
     val COMMAND_REFRESH_ALL = SessionCommand("app.REFRESH_ALL", Bundle.EMPTY)
 
+    // Bit-Perfect USB
+    val COMMAND_SET_BIT_PERFECT_ENABLE = SessionCommand("app.SET_BIT_PERFECT_ENABLE", Bundle.EMPTY)
+    val COMMAND_GET_BIT_PERFECT_STATUS = SessionCommand("app.GET_BIT_PERFECT_STATUS", Bundle.EMPTY)
+    val COMMAND_BIT_PERFECT_STATUS_UPDATE = SessionCommand("app.BIT_PERFECT_STATUS_UPDATE", Bundle.EMPTY)
+
+    const val KEY_BIT_PERFECT_ENABLE = "bit_perfect_enable"
+    const val KEY_BIT_PERFECT_ACTIVE = "bit_perfect_active"
+    const val KEY_BIT_PERFECT_STATUS = "bit_perfect_status"
+    const val KEY_DAC_NAME = "dac_name"
+    const val KEY_DAC_SAMPLE_RATES = "dac_sample_rates"
+
 }
