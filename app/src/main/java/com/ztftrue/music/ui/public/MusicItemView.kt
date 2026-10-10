@@ -1,5 +1,6 @@
 package com.ztftrue.music.ui.public
 
+import android.content.ContentUris
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -15,6 +16,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -24,8 +27,12 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.outlined.SwipeVertical
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
@@ -43,21 +50,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.C
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionResult
@@ -306,11 +321,25 @@ fun MusicItemView(
         })
     }
     var offset by remember { mutableFloatStateOf(0f) }
+    val isCurrent = music.id == viewModel.currentPlay.value?.id
+    val isPlaying = isCurrent && viewModel.playStatus.value
+    val itemHeightPx = with(LocalDensity.current) { 72.dp.roundToPx() }
+
     Row(
-        modifier
-            .height(80.dp)
+        modifier = modifier
+            .fillMaxWidth()
+            .height(72.dp)
             .graphicsLayer(
                 translationY = offset,
+            )
+            .padding(horizontal = 8.dp, vertical = 2.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                if (isCurrent) {
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.22f)
+                } else {
+                    Color.Transparent
+                }
             )
             .combinedClickable(
                 onClick = {
@@ -389,124 +418,149 @@ fun MusicItemView(
                         showDialog = true
                     }
                 }
-            ), verticalAlignment = Alignment.CenterVertically) {
-        Row(
-            modifier
-                .wrapContentHeight(Alignment.CenterVertically)
-                .padding(top = 10.dp, bottom = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
+            )
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (selectStatus) {
+            Checkbox(
+                checked = selectList?.contains(music) == true,
+                onCheckedChange = { v ->
+                    if (v) {
+                        selectList?.add(music)
+                    } else {
+                        selectList?.remove(music)
+                    }
+                },
+                modifier = Modifier.padding(end = 8.dp)
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .size(50.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center
         ) {
-            if (selectStatus) {
-                Checkbox(
-                    checked = selectList?.contains(music) == true,
-                    onCheckedChange = { v ->
-                        if (v) {
-                            selectList?.add(music)
-                        } else {
-                            selectList?.remove(music)
-                        }
-                    },
-                    modifier = Modifier.padding(8.dp)
-                )
-            } else {
-                Image(
-                    painter = painterResource(playStatusIcon),
-                    contentDescription = stringResource(R.string.operate_more_will_open_dialog),
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(ContentUris.withAppendedId("content://media/external/audio/albumart".toUri(), music.albumId))
+                    .crossfade(true)
+                    .size(150, 150)
+                    .build(),
+                placeholder = painterResource(R.drawable.songs_thumbnail_cover),
+                error = painterResource(R.drawable.songs_thumbnail_cover),
+                contentDescription = stringResource(R.string.album_cover),
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+            if (isCurrent) {
+                Box(
                     modifier = Modifier
-                        .size(30.dp)
-                        .padding(5.dp)
-                        .clip(CircleShape),
-                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (isPlaying) Icons.Default.GraphicEq else Icons.Default.Pause,
+                        contentDescription = if (isPlaying) stringResource(R.string.play) else stringResource(R.string.pause),
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 12.dp, end = 8.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = music.name,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium,
+                color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(3.dp))
+            val durationText = Utils.formatTime(music.duration)
+            val subtitleText = if (music.artist.isNotBlank()) {
+                "${music.artist} • $durationText"
+            } else {
+                durationText
+            }
+            Text(
+                text = subtitleText,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        if (playList.type == PlayListType.Queue || playList.type == PlayListType.PlayLists) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .draggable(
+                        orientation = Orientation.Vertical,
+                        state = rememberDraggableState { delta ->
+                            offset += delta
+                        },
+                        onDragStopped = { _ ->
+                            var targetPosition =
+                                index + (offset / itemHeightPx).toInt()
+                            if (targetPosition < 0) {
+                                targetPosition = 0
+                            }
+                            if (targetPosition > musicList.size - 1) {
+                                targetPosition = musicList.size - 1
+                            }
+                            if (targetPosition != index) {
+                                saveSortResult(
+                                    playList,
+                                    musicList,
+                                    context,
+                                    music,
+                                    viewModel,
+                                    index,
+                                    targetPosition
+                                )
+                            }
+                            offset = 0f
+                        }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.SwipeVertical,
+                    contentDescription = stringResource(
+                        R.string.item_sort_description,
+                        music.name
+                    ),
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
             }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.weight(1f)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 5.dp, end = 5.dp)
-                ) {
-                    Text(
-                        text = music.name,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.horizontalScroll(rememberScrollState(0))
-                    )
-                    Text(
-                        text = music.artist,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.horizontalScroll(rememberScrollState(0))
-                    )
-                }
-                if (playList.type == PlayListType.Queue || playList.type == PlayListType.PlayLists) {
-                    val itemHeightPx = with(LocalDensity.current) { 80.dp.roundToPx() }
-                    Box(
-                        modifier = Modifier
-                            .height(45.dp)
-                            .width(45.dp)
-                            .draggable(
-                                orientation = Orientation.Vertical,
-                                state = rememberDraggableState { delta ->
-                                    offset += delta
-                                },
-                                onDragStopped = { _ ->
-                                    var targetPosition =
-                                        index + (offset / itemHeightPx).toInt()
-                                    if (targetPosition < 0) {
-                                        targetPosition = 0
-                                    }
-                                    if (targetPosition > musicList.size - 1) {
-                                        targetPosition = musicList.size - 1
-                                    }
-                                    if (targetPosition != index) {
-                                        saveSortResult(
-                                            playList,
-                                            musicList,
-                                            context,
-                                            music,
-                                            viewModel,
-                                            index,
-                                            targetPosition
-                                        )
-                                    }
-                                    offset = 0f
+        }
 
-                                }
-                            )) {
-                        Icon(
-                            imageVector = Icons.Outlined.SwipeVertical,
-                            contentDescription = stringResource(
-                                R.string.item_sort_description,
-                                music.name
-                            ),
-                            modifier = Modifier
-                                .size(40.dp)
-                                .padding(5.dp)
-                                .clip(
-                                    CircleShape
-                                ),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
+        if (!selectStatus) {
+            IconButton(
+                modifier = Modifier.size(40.dp),
+                onClick = {
+                    showDialog = true
                 }
-                if (!selectStatus) {
-                    IconButton(
-                        modifier = Modifier
-                            .width(45.dp), onClick = {
-                            showDialog = true
-                        }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = stringResource(R.string.operate_more_will_open_dialog),
-                            modifier = Modifier
-                                .size(20.dp)
-                                .clip(CircleShape),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = stringResource(R.string.operate_more_will_open_dialog),
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

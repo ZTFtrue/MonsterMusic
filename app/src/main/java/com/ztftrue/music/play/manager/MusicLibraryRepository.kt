@@ -298,6 +298,9 @@ class MusicLibraryRepository(private val context: Context) {
     fun getTracksByPlayListId(id: Long): List<MusicItem> {
         playListTracksHashMap[id]?.let { return it }
 
+        if (playListLinkedHashMap.isEmpty()) {
+            getPlayLists()
+        }
         val sortData = db.SortFiledDao().findSortByType(PlayUtils.ListTypeTracks.PlayListsTracks)
         val playList = playListLinkedHashMap[id] ?: return emptyList()
 
@@ -355,6 +358,9 @@ class MusicLibraryRepository(private val context: Context) {
     suspend fun getTracksByArtistId(id: Long): List<MusicItem> = coroutineScope {
         artistsListTracksHashMap[id]?.let { return@coroutineScope it }
 
+        if (artistsLinkedHashMap.isEmpty()) {
+            getArtists()
+        }
         val artist = artistsLinkedHashMap[id]
         if (artist != null) {
             val sortData = db.SortFiledDao().findSortByType(PlayUtils.ListTypeTracks.ArtistsTracks)
@@ -400,6 +406,9 @@ class MusicLibraryRepository(private val context: Context) {
     suspend fun getTracksByGenreId(id: Long): List<MusicItem> = coroutineScope {
         genresListTracksHashMap[id]?.let { return@coroutineScope it }
 
+        if (genresLinkedHashMap.isEmpty()) {
+            getGenres()
+        }
         val genre = genresLinkedHashMap[id]
         if (genre != null) {
             val sortData = db.SortFiledDao().findSortByType(PlayUtils.ListTypeTracks.GenresTracks)
@@ -570,11 +579,40 @@ class MusicLibraryRepository(private val context: Context) {
     // 单项获取 (ById)
     // ==========================================
 
-    fun getGenreById(id: Long): GenresList? = genresLinkedHashMap[id]
-    fun getArtistById(id: Long): ArtistList? = artistsLinkedHashMap[id]
-    fun getAlbumById(id: Long): AlbumList? = albumsLinkedHashMap[id]
-    fun getFolderById(id: Long): FolderList? = foldersLinkedHashMap[id]
-    fun getPlaylistById(id: Long): MusicPlayList? = playListLinkedHashMap[id]
+    fun getGenreById(id: Long): GenresList? {
+        if (genresLinkedHashMap.isEmpty()) {
+            getGenres()
+        }
+        return genresLinkedHashMap[id]
+    }
+
+    fun getArtistById(id: Long): ArtistList? {
+        if (artistsLinkedHashMap.isEmpty()) {
+            getArtists()
+        }
+        return artistsLinkedHashMap[id]
+    }
+
+    fun getAlbumById(id: Long): AlbumList? {
+        if (albumsLinkedHashMap.isEmpty()) {
+            getAlbums()
+        }
+        return albumsLinkedHashMap[id]
+    }
+
+    fun getFolderById(id: Long): FolderList? {
+        if (foldersLinkedHashMap.isEmpty()) {
+            getFolders()
+        }
+        return foldersLinkedHashMap[id]
+    }
+
+    fun getPlaylistById(id: Long): MusicPlayList? {
+        if (playListLinkedHashMap.isEmpty()) {
+            getPlayLists()
+        }
+        return playListLinkedHashMap[id]
+    }
 
 
     suspend fun handleSort(type: String) = withContext(Dispatchers.IO) {

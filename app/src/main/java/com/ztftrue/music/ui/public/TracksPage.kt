@@ -126,7 +126,7 @@ fun TracksListPage(
     val tracksList = remember { mutableStateListOf<MusicItem>() }
     val showIndicator = remember { mutableStateOf(false) }
     val durationAll = remember { mutableStateOf("") }
-    val musicPlayList = remember { mutableStateOf(AnyListBase(2, PlayListType.None)) }
+    val musicPlayList = remember(anyListBase) { mutableStateOf(anyListBase) }
     val albumsList = remember { mutableStateListOf<AlbumList>() }
     var refreshCurrentValueList by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -693,10 +693,8 @@ fun TracksListPage(
                 val result: SessionResult? = futureResultItem.get()
                 if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
                     Log.e("Client", "Failed COMMAND_GET_PLAY_LIST_ITEM ${result?.resultCode}")
-                    if(SharedPreferencesUtils.getMergeAlbum(context)){
-                        Toast.makeText(context,"In merged album mode, this title may be empty. Yes, I slacked off.",Toast.LENGTH_SHORT).show()
-                    }else{
-                        navController.removeLastSafe()
+                    if (SharedPreferencesUtils.getMergeAlbum(context)) {
+                        Toast.makeText(context, "In merged album mode, this title may be empty. Yes, I slacked off.", Toast.LENGTH_SHORT).show()
                     }
                     return@addListener
                 }
@@ -704,8 +702,7 @@ fun TracksListPage(
                     musicPlayList.value = it
                 }
             } catch (e: Exception) {
-                navController.removeLastSafe()
-                Log.e("Client", "Failed to toggle favorite status", e)
+                Log.e("Client", "Failed to get playlist item", e)
             }
         }, ContextCompat.getMainExecutor(context))
     }
