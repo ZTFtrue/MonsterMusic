@@ -143,22 +143,22 @@ fun VisualizerFullscreenView(
         val lifecycle = lifecycleOwner.lifecycle
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> {
-                    musicViewModel.setVisualizationActive(true)
+                Lifecycle.Event.ON_START, Lifecycle.Event.ON_RESUME -> {
+                    musicViewModel.setVisualizationActive("VisualizerFullscreenView", true)
                 }
-                Lifecycle.Event.ON_PAUSE -> {
-                    musicViewModel.setVisualizationActive(false)
+                Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> {
+                    musicViewModel.setVisualizationActive("VisualizerFullscreenView", false)
                 }
                 else -> Unit
             }
         }
         lifecycle.addObserver(observer)
-        if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-            musicViewModel.setVisualizationActive(true)
+        if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+            musicViewModel.setVisualizationActive("VisualizerFullscreenView", true)
         }
         onDispose {
             lifecycle.removeObserver(observer)
-            musicViewModel.setVisualizationActive(false)
+            musicViewModel.setVisualizationActive("VisualizerFullscreenView", false)
         }
     }
 

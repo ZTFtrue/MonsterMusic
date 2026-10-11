@@ -185,8 +185,10 @@ class PlayService : MediaLibraryService() {
                 enableAudioTrackPlaybackParams: Boolean,
             ): AudioSink {
                 // 关键：将 AudioEffectManager 中的 Processor 注入
+                // 注意：setEnableFloatOutput 必须为 false。如果为 true，DefaultAudioSink 会在播放
+                // 高解析度音频（24位/32位/Float FLAC）时完全跳过 audioProcessorChain（包括 Equalizer 和 Visualizer）。
                 val au = DefaultAudioSink.Builder(context)
-                    .setEnableFloatOutput(enableFloatOutput)
+                    .setEnableFloatOutput(false)
                     .setEnableAudioOutputPlaybackParameters(enableAudioTrackPlaybackParams)
                     .setAudioProcessors(
                         arrayOf(
@@ -247,7 +249,7 @@ class PlayService : MediaLibraryService() {
         }
             .setExtensionRendererMode(decoderMode)
             .setEnableDecoderFallback(true)
-            .setEnableAudioFloatOutput(true)
+            .setEnableAudioFloatOutput(false)
 
         if (FfmpegLibrary.isAvailable()) {
             Log.i("PlayService", "FFmpeg extension loaded: v${FfmpegLibrary.getVersion()}, decoderMode=$decoderMode")

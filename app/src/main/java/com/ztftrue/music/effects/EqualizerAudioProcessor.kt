@@ -127,6 +127,7 @@ class EqualizerAudioProcessor : AudioProcessor {
 
     private var equalizerActive = false
     private var echoActive = false
+    @Volatile
     private var visualizationAudioActive = false
 
     // Effect states
@@ -192,6 +193,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var nativeFftMagnitudes = FloatArray(halfFftSize)
     private var lastVisProcessTimeNs = 0L
     private val minVisIntervalNs = 8_000_000L // ~125 FPS throttle for responsive high refresh rate screens
+    private var directInputBuffer = EMPTY_BUFFER
 
     var bitPerfectMode: Boolean = false
 
@@ -247,18 +249,18 @@ class EqualizerAudioProcessor : AudioProcessor {
         nativeFftMagnitudes = FloatArray(halfFftSize)
 
         restoreBands()
-
         return outputAudioFormat
     }
 
     override fun isActive(): Boolean {
-        if (bitPerfectMode) return false
-        return outputAudioFormat != AudioProcessor.AudioFormat.NOT_SET
+        val active = !bitPerfectMode && outputAudioFormat != AudioProcessor.AudioFormat.NOT_SET
+        return active
     }
 
     override fun queueInput(inputBuffer: ByteBuffer) {
         if (!inputBuffer.hasRemaining()) return
-        processChunk(inputBuffer, inputBuffer.remaining())
+        val rem = inputBuffer.remaining()
+        processChunk(inputBuffer, rem)
         if (inputBuffer.hasRemaining()) {
             inputBuffer.position(inputBuffer.limit())
         }
@@ -303,7 +305,17 @@ class EqualizerAudioProcessor : AudioProcessor {
 
         // Process PCM directly in Native C
         val visBuffer = if (visualizationAudioActive) visPcmBuffer else null
-        val directInput = if (data.position() != 0) {
+        val directInput = if (!data.isDirect) {
+            if (directInputBuffer.capacity() < length) {
+                directInputBuffer = ByteBuffer.allocateDirect(length + BUFFER_HEADROOM).order(ByteOrder.nativeOrder())
+            }
+            directInputBuffer.clear()
+            val pos = data.position()
+            directInputBuffer.put(data)
+            data.position(pos)
+            directInputBuffer.flip()
+            directInputBuffer
+        } else if (data.position() != 0) {
             data.slice().order(ByteOrder.nativeOrder())
         } else {
             data
@@ -369,11 +381,11 @@ class EqualizerAudioProcessor : AudioProcessor {
             val m = downsampleMagnitudes(
                 nativeFftMagnitudes,
                 targetSize = 32,
-                minDb = -60f,
+                minDb = -48f,
                 needNormalize = true,
                 needPositive = false,
-                refValue = (fftSize / 4f), // 128f full-scale reference for 512-pt Hann window FFT
-                tiltFactor = 1.0f          // Equal-loudness acoustic compensation across spectrum
+                refValue = 18f, // Calibrated dynamic range for real music signals
+                tiltFactor = 1.2f // Equal-loudness acoustic compensation across spectrum
             )
             AudioDataRepository.postVisualizationData(m)
         }
@@ -446,6 +458,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     }
 
     fun setVisualizationAudioActive(active: Boolean) {
+        Log.d("VisDebug", "setVisualizationAudioActive: active=$active (was $visualizationAudioActive)")
         visualizationAudioActive = active
     }
 

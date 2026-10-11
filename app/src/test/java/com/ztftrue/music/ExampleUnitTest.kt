@@ -675,6 +675,20 @@ class ExampleUnitTest {
     }
 
     @Test
+    fun audioDataRepository_staleDataExpiration() {
+        val testData = FloatArray(32) { 0.5f }
+        AudioDataRepository.postVisualizationData(testData)
+        val destination = FloatArray(32)
+        assertTrue(AudioDataRepository.getLatestVisualizationData(destination))
+
+        // Wait for data to become stale (> 250ms)
+        Thread.sleep(280)
+        val successStale = AudioDataRepository.getLatestVisualizationData(destination)
+        assertFalse("getLatestVisualizationData should return false when data is older than 250ms", successStale)
+        assertEquals(0f, destination[0], 0.0001f)
+    }
+
+    @Test
     fun spectrumVisualizer_physics_smoothAttackAndPeakHold() {
         // Test exponential attack: A sudden impulse from 0.0 to 1.0 should NOT teleport to 1.0 in 1 frame
         var currentHeight = 0.0f

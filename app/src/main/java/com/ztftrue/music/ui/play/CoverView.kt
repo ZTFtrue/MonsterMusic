@@ -62,16 +62,16 @@ fun CoverView(
         val lifecycle = lifecycleOwner.lifecycle
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> {
+                Lifecycle.Event.ON_START, Lifecycle.Event.ON_RESUME -> {
                     isLifecycleActive = true
                     if (musicVisualizationEnable.value && isSelected) {
-                        musicViewModel.setVisualizationActive(true)
+                        musicViewModel.setVisualizationActive("CoverView", true)
                     }
                 }
 
-                Lifecycle.Event.ON_PAUSE -> {
+                Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> {
                     isLifecycleActive = false
-                    musicViewModel.setVisualizationActive(false)
+                    musicViewModel.setVisualizationActive("CoverView", false)
                 }
 
                 else -> Unit
@@ -79,16 +79,16 @@ fun CoverView(
         }
 
         lifecycle.addObserver(observer)
-        isLifecycleActive = lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+        isLifecycleActive = lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
         if (isLifecycleActive && musicVisualizationEnable.value && isSelected) {
-            musicViewModel.setVisualizationActive(true)
-        } else if (!musicVisualizationEnable.value || !isSelected) {
-            musicViewModel.setVisualizationActive(false)
+            musicViewModel.setVisualizationActive("CoverView", true)
+        } else {
+            musicViewModel.setVisualizationActive("CoverView", false)
         }
         onDispose {
             lifecycle.removeObserver(observer)
             isLifecycleActive = false
-            musicViewModel.setVisualizationActive(false)
+            musicViewModel.setVisualizationActive("CoverView", false)
         }
     }
 
@@ -123,6 +123,15 @@ fun CoverView(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(color = Color.Black)
+                    )
+                }
+
+                // If both cover and visualizer are shown, add a translucent dark scrim for vivid contrast
+                if (musicVisualizationEnable.value && musicViewModel.showMusicCover.value && isSelected) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.45f))
                     )
                 }
 

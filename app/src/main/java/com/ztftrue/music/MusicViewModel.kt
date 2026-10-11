@@ -119,8 +119,11 @@ class MusicViewModel : ViewModel() {
 
     //    val albumItemsCount = mutableIntStateOf(2)
 //    val genreItemsCount = mutableIntStateOf(2)
+    @Volatile
     var isVisualizationActive: Boolean = false
         private set
+
+    private val activeVisualizationTokens = mutableSetOf<String>()
 
     val dismissLyricsTrigger = mutableIntStateOf(0)
 
@@ -135,17 +138,53 @@ class MusicViewModel : ViewModel() {
             }
         }
 
-    fun setVisualizationActive(active: Boolean) {
-        isVisualizationActive = active
+    fun setVisualizationActive(token: String, active: Boolean) {
+        val wasActive: Boolean
+        val isNowActive: Boolean
+        synchronized(activeVisualizationTokens) {
+            wasActive = activeVisualizationTokens.isNotEmpty()
+            if (active) {
+                activeVisualizationTokens.add(token)
+            } else {
+                activeVisualizationTokens.remove(token)
+            }
+            isNowActive = activeVisualizationTokens.isNotEmpty()
+            isVisualizationActive = isNowActive
+        }
         val b = browser
         if (b != null && b.isConnected) {
-            val cmd = if (active) {
-                MediaCommands.COMMAND_VISUALIZATION_CONNECTED
-            } else {
-                MediaCommands.COMMAND_VISUALIZATION_DISCONNECTED
+            if (active) {
+                b.sendCustomCommand(MediaCommands.COMMAND_VISUALIZATION_CONNECTED, Bundle())
+            } else if (wasActive && !isNowActive) {
+                b.sendCustomCommand(MediaCommands.COMMAND_VISUALIZATION_DISCONNECTED, Bundle())
             }
-            b.sendCustomCommand(cmd, Bundle())
         }
+    }
+
+    fun setVisualizationActive(active: Boolean) {
+        if (!active) {
+            val wasActive: Boolean
+            synchronized(activeVisualizationTokens) {
+                wasActive = activeVisualizationTokens.isNotEmpty()
+                activeVisualizationTokens.clear()
+                isVisualizationActive = false
+            }
+            if (wasActive) {
+                val b = browser
+                if (b != null && b.isConnected) {
+                    b.sendCustomCommand(MediaCommands.COMMAND_VISUALIZATION_DISCONNECTED, Bundle())
+                }
+            }
+        } else {
+            setVisualizationActive("default", true)
+        }
+    }
+
+    fun setVisualizationEnabled(context: Context, enabled: Boolean) {
+        musicVisualizationEnable.value = enabled
+        SharedPreferencesUtils.saveEnableMusicVisualization(context, enabled)
+        val bundle = Bundle().apply { putBoolean(MediaCommands.KEY_ENABLE, enabled) }
+        browser?.sendCustomCommand(MediaCommands.COMMAND_VISUALIZATION_ENABLE, bundle)
     }
 
     var currentInputFormat =

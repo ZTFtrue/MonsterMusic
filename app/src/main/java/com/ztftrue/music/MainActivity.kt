@@ -922,7 +922,6 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onPause() {
-        musicViewModel.setVisualizationActive(false)
         jobSeek?.cancel()
         super.onPause()
     }

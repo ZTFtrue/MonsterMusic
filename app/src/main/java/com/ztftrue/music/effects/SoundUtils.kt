@@ -39,9 +39,10 @@ object SoundUtils {
             val startIdx = (startFrac * totalSize).toInt()
             val endIdx = (endFrac * totalSize).toInt()
 
-            // Ensure distinct non-empty bin ranges: early bass bands get distinct bins
-            val start = maxOf(minOf(i, totalSize - 1), startIdx.coerceIn(0, totalSize - 1))
-            val end = maxOf(start + 1, endIdx.coerceIn(0, totalSize))
+            // Ensure distinct non-empty bin ranges: early bass bands get distinct bins, skip DC bin 0
+            val minBin = if (totalSize > targetSize) 1 else 0
+            val start = maxOf(minOf(i + minBin, totalSize - 1), startIdx.coerceIn(minBin, totalSize - 1))
+            val end = maxOf(start + 1, endIdx.coerceIn(start + 1, totalSize))
 
             var sum = 0f
             var maxVal = 0f

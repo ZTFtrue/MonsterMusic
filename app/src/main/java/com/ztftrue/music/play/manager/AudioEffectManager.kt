@@ -76,6 +76,7 @@ class AudioEffectManager(private val context: Context) {
     var trackEffectEnabled: Boolean = false
     var currentTrackId: Long? = null
 
+    @Volatile
     private var musicVisualizationEnable = false
 
     /**
@@ -479,13 +480,14 @@ class AudioEffectManager(private val context: Context) {
     }
 
     fun onVisualizationConnected() {
-        if (musicVisualizationEnable) {
-            equalizerAudioProcessor.setVisualizationAudioActive(true)
-        }
+        musicVisualizationEnable = true
+        equalizerAudioProcessor.setVisualizationAudioActive(true)
     }
 
     fun onVisualizationDisconnected() {
-        equalizerAudioProcessor.setVisualizationAudioActive(false)
+        if (!musicVisualizationEnable) {
+            equalizerAudioProcessor.setVisualizationAudioActive(false)
+        }
     }
 
     fun setEqualizerType(type: Int) {

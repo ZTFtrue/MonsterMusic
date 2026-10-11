@@ -945,13 +945,7 @@ fun PlayingPage(
                             Switch(
                                 checked = musicViewModel.musicVisualizationEnable.value,
                                 onCheckedChange = {
-                                    musicViewModel.musicVisualizationEnable.value = it
-                                    val bundleTemp = Bundle()
-                                    bundleTemp.putBoolean("enable", it)
-                                    musicViewModel.browser?.sendCustomCommand(
-                                        MediaCommands.COMMAND_VISUALIZATION_ENABLE,
-                                        bundleTemp
-                                    )
+                                    musicViewModel.setVisualizationEnabled(context, it)
                                 }
                             )
                         }

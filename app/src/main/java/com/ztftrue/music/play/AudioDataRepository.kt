@@ -52,7 +52,16 @@ object AudioDataRepository {
      */
     fun getLatestVisualizationData(destination: FloatArray): Boolean {
         synchronized(dataLock) {
-            if (dataTimestampNs == 0L) return false
+            if (dataTimestampNs == 0L) {
+                destination.fill(0f)
+                return false
+            }
+            val nowNs = System.nanoTime()
+            // If data is older than 250ms (silence, pause, or track transition), treat as stale
+            if (nowNs - dataTimestampNs > 250_000_000L) {
+                destination.fill(0f)
+                return false
+            }
             val len = minOf(destination.size, latestFftData.size)
             System.arraycopy(latestFftData, 0, destination, 0, len)
             return true

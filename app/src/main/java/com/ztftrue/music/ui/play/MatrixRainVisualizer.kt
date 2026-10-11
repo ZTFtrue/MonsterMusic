@@ -5,22 +5,17 @@ import android.graphics.Typeface
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameMillis
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.play.AudioDataRepository
 import kotlin.math.exp
@@ -39,25 +34,6 @@ fun MatrixRainVisualizer(
     musicViewModel: MusicViewModel,
     modifier: Modifier = Modifier
 ) {
-    val lifecycleOwner = LocalLifecycleOwner.current
-    var isLifecycleActive by remember {
-        mutableStateOf(lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
-    }
-
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> isLifecycleActive = true
-                Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> isLifecycleActive = false
-                else -> Unit
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
-
     val magnitudesArray = remember { FloatArray(32) }
     val density = LocalDensity.current
     val columnSpacingPx = with(density) { 15.dp.toPx() }
@@ -72,41 +48,49 @@ fun MatrixRainVisualizer(
         )
     }
 
+    // VSYNC-locked continuous frame clock (60Hz / 90Hz / 120Hz)
     var frameTick by remember { mutableLongStateOf(0L) }
+    val lastFrameTimeHolder = remember { LongArray(1) { 0L } }
 
-    val isPlaying = musicViewModel.playStatus.value
-
-    LaunchedEffect(isLifecycleActive, isPlaying) {
-        if (!isLifecycleActive || !isPlaying) return@LaunchedEffect
-        var lastTime = 0L
-        while (isLifecycleActive && isPlaying) {
-            withFrameMillis { frameTime ->
-                if (lastTime != 0L) {
-                    val dt = (frameTime - lastTime).coerceIn(1L, 100L)
-                    try {
-                        if (isPlaying) {
-                            AudioDataRepository.getLatestVisualizationData(magnitudesArray)
-                        }
-                        simulation.update(dt.toFloat(), magnitudesArray, isPlaying)
-                    } catch (_: Exception) {
-                    }
-                    frameTick++
-                }
-                lastTime = frameTime
+    LaunchedEffect(Unit) {
+        while (true) {
+            withFrameNanos { frameNanos ->
+                frameTick = frameNanos
             }
         }
     }
 
     Canvas(modifier = modifier.fillMaxSize().clipToBounds()) {
-        // Read frameTick to trigger redraw per frame
-        @Suppress("UNUSED_VARIABLE")
-        val tick = frameTick
+        val currentFrameNanos = frameTick
+        if (currentFrameNanos == 0L) return@Canvas
 
         val width = size.width
         val height = size.height
-        if (width > 0 && height > 0) {
+        if (width <= 0f || height <= 0f) return@Canvas
+
+        val lastTime = lastFrameTimeHolder[0]
+        val dtMs = if (lastTime != 0L) {
+            ((currentFrameNanos - lastTime) / 1_000_000f).coerceIn(1f, 100f)
+        } else {
+            16f
+        }
+        lastFrameTimeHolder[0] = currentFrameNanos
+
+        val isPlaying = musicViewModel.playStatus.value
+
+        try {
+            if (isPlaying) {
+                val hasData = AudioDataRepository.getLatestVisualizationData(magnitudesArray)
+                if (!hasData) {
+                    magnitudesArray.fill(0f)
+                }
+            } else {
+                magnitudesArray.fill(0f)
+            }
             simulation.ensureDimensions(width, height)
+            simulation.update(dtMs, magnitudesArray, isPlaying)
             simulation.draw(drawContext.canvas.nativeCanvas, width, height)
+        } catch (_: Exception) {
         }
     }
 }
