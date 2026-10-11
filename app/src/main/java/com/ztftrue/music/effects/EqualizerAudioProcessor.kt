@@ -5,7 +5,6 @@ import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessor.EMPTY_BUFFER
 import androidx.media3.common.util.UnstableApi
-import com.ztftrue.music.effects.SoundUtils.downsampleMagnitudes
 import com.ztftrue.music.play.AudioDataRepository
 import com.ztftrue.music.utils.Utils
 import java.nio.ByteBuffer
@@ -124,6 +123,18 @@ class EqualizerAudioProcessor : AudioProcessor {
         inputArray: FloatArray,
         outputArray: FloatArray
     )
+    private external fun processFftAndDownsampleNative(
+        handle: Long,
+        inputArray: FloatArray,
+        outputArray: FloatArray,
+        targetSize: Int,
+        minDb: Float,
+        needNormalize: Boolean,
+        needPositive: Boolean,
+        refValue: Float,
+        tiltFactor: Float,
+        sampleRate: Int
+    )
 
     private var equalizerActive = false
     private var echoActive = false
@@ -191,9 +202,11 @@ class EqualizerAudioProcessor : AudioProcessor {
     private var visPcmBuffer = FloatArray(visRingBufferLen)
     private var visTempArray = FloatArray(fftSize)
     private var nativeFftMagnitudes = FloatArray(halfFftSize)
+    private var visDownsampled = FloatArray(32)
     private var lastVisProcessTimeNs = 0L
     private val minVisIntervalNs = 8_000_000L // ~125 FPS throttle for responsive high refresh rate screens
     private var directInputBuffer = EMPTY_BUFFER
+    private var currentSampleRate: Int = 44100
 
     var bitPerfectMode: Boolean = false
 
@@ -211,6 +224,7 @@ class EqualizerAudioProcessor : AudioProcessor {
 
         this.inputAudioFormat = inputAudioFormat
         this.outputAudioFormat = inputAudioFormat
+        this.currentSampleRate = inputAudioFormat.sampleRate
 
         val frameSize = inputAudioFormat.bytesPerFrame
         val initialSize = inputAudioFormat.sampleRate * frameSize / 5
@@ -377,17 +391,19 @@ class EqualizerAudioProcessor : AudioProcessor {
         }
 
         if (nativeFftHandle != 0L) {
-            processNativeFft(nativeFftHandle, visTempArray, nativeFftMagnitudes)
-            val m = downsampleMagnitudes(
-                nativeFftMagnitudes,
+            processFftAndDownsampleNative(
+                nativeFftHandle,
+                visTempArray,
+                visDownsampled,
                 targetSize = 32,
                 minDb = -48f,
                 needNormalize = true,
                 needPositive = false,
                 refValue = 18f, // Calibrated dynamic range for real music signals
-                tiltFactor = 1.2f // Equal-loudness acoustic compensation across spectrum
+                tiltFactor = 1.2f, // Equal-loudness acoustic compensation across spectrum
+                sampleRate = currentSampleRate
             )
-            AudioDataRepository.postVisualizationData(m)
+            AudioDataRepository.postVisualizationData(visDownsampled)
         }
     }
 

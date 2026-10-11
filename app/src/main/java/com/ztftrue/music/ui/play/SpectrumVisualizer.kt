@@ -1,5 +1,6 @@
 package com.ztftrue.music.ui.play
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +20,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.play.AudioDataRepository
 import kotlin.math.exp
@@ -32,8 +34,15 @@ import kotlin.math.max
 @Composable
 fun SpectrumVisualizer(
     musicViewModel: MusicViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    maxHeightRatio: Float? = null,
+    baseYRatio: Float? = null
 ) {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val effectiveMaxHeightRatio = maxHeightRatio ?: if (isLandscape) 0.78f else 0.48f
+    val effectiveBaseYRatio = baseYRatio ?: if (isLandscape) 0.92f else 0.96f
+
     val primaryColor = MaterialTheme.colorScheme.primary
     val tertiaryColor = MaterialTheme.colorScheme.tertiary
     val secondaryColor = MaterialTheme.colorScheme.secondary
@@ -52,6 +61,8 @@ fun SpectrumVisualizer(
 
     var cachedWidth by remember { mutableFloatStateOf(0f) }
     var cachedHeight by remember { mutableFloatStateOf(0f) }
+    var cachedMaxBarH by remember { mutableFloatStateOf(0f) }
+    var cachedBaseY by remember { mutableFloatStateOf(0f) }
     var cachedPrimary by remember { mutableStateOf(Color.Unspecified) }
     var cachedSecondary by remember { mutableStateOf(Color.Unspecified) }
     var cachedTertiary by remember { mutableStateOf(Color.Unspecified) }
@@ -152,11 +163,12 @@ fun SpectrumVisualizer(
         val slotWidth = w / barCount
         val barWidth = slotWidth * (1f - totalBarSpacingRatio)
         val spacing = slotWidth * totalBarSpacingRatio
-        val maxBarH = h * 0.85f
-        val baseY = h * 0.92f
+        val maxBarH = h * effectiveMaxHeightRatio
+        val baseY = h * effectiveBaseYRatio
 
         // Cache brushes to avoid per-frame native shader allocation in onDraw
         if (w != cachedWidth || h != cachedHeight ||
+            maxBarH != cachedMaxBarH || baseY != cachedBaseY ||
             primaryColor != cachedPrimary ||
             secondaryColor != cachedSecondary ||
             tertiaryColor != cachedTertiary ||
@@ -164,6 +176,8 @@ fun SpectrumVisualizer(
         ) {
             cachedWidth = w
             cachedHeight = h
+            cachedMaxBarH = maxBarH
+            cachedBaseY = baseY
             cachedPrimary = primaryColor
             cachedSecondary = secondaryColor
             cachedTertiary = tertiaryColor

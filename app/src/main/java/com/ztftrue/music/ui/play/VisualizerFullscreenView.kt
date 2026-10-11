@@ -214,7 +214,9 @@ fun VisualizerFullscreenView(
         if (mode == "Spectrum") {
             SpectrumVisualizer(
                 musicViewModel = musicViewModel,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                maxHeightRatio = if (isLandscape) 0.78f else 0.48f,
+                baseYRatio = if (isLandscape) 0.92f else 0.96f
             )
         } else {
             MatrixRainVisualizer(

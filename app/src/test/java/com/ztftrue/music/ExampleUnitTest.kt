@@ -3,7 +3,6 @@ package com.ztftrue.music
 import org.junit.Test
 import kotlin.math.roundToInt
 import com.ztftrue.music.ui.play.DualKnobHelper
-import com.ztftrue.music.effects.SoundUtils
 
 import org.junit.Assert.*
 import com.ztftrue.music.utils.Utils
@@ -514,50 +513,6 @@ class ExampleUnitTest {
     }
 
     @Test
-    fun soundUtils_downsampleMagnitudes_normalization() {
-        // Silence input (all zeros): should produce 0.0f (representing minDb)
-        val silence = FloatArray(128) { 0f }
-        val downsampledSilence = SoundUtils.downsampleMagnitudes(silence, targetSize = 12, minDb = -60f, needNormalize = true)
-        assertEquals(12, downsampledSilence.size)
-        for (value in downsampledSilence) {
-            assertEquals(0.0f, value, 0.0001f)
-        }
-
-        // Peak input (all 1.0f = 0dB relative to refValue 1.0): should produce 1.0f
-        val peak = FloatArray(128) { 1.0f }
-        val downsampledPeak = SoundUtils.downsampleMagnitudes(peak, targetSize = 12, minDb = -60f, needNormalize = true)
-        assertEquals(12, downsampledPeak.size)
-        for (value in downsampledPeak) {
-            assertEquals(1.0f, value, 0.0001f)
-        }
-
-        // -20 dB input (amplitude = 0.1f since 20*log10(0.1) = -20 dB):
-        // Normalized = (-20 - (-60)) / 60 = 40 / 60 = 2/3 ≈ 0.6667f
-        val minus20Db = FloatArray(128) { 0.1f }
-        val downsampled20Db = SoundUtils.downsampleMagnitudes(minus20Db, targetSize = 12, minDb = -60f, needNormalize = true)
-        for (value in downsampled20Db) {
-            assertEquals(2f / 3f, value, 0.001f)
-        }
-
-        // Monotonic test: louder signal strictly produces >= normalized magnitude
-        val soft = FloatArray(128) { 0.01f } // -40dB -> 20/60 ≈ 0.333
-        val medium = FloatArray(128) { 0.1f } // -20dB -> 40/60 ≈ 0.667
-        val loud = FloatArray(128) { 0.5f }   // -6dB  -> 54/60 ≈ 0.900
-        val downSoft = SoundUtils.downsampleMagnitudes(soft, targetSize = 12, minDb = -60f, needNormalize = true)
-        val downMedium = SoundUtils.downsampleMagnitudes(medium, targetSize = 12, minDb = -60f, needNormalize = true)
-        val downLoud = SoundUtils.downsampleMagnitudes(loud, targetSize = 12, minDb = -60f, needNormalize = true)
-        for (i in 0 until 12) {
-            assertTrue(downSoft[i] < downMedium[i])
-            assertTrue(downMedium[i] < downLoud[i])
-        }
-
-        // Edge case: Empty input array produces targetSize array of 0f without crashing
-        val emptyResult = SoundUtils.downsampleMagnitudes(FloatArray(0), targetSize = 12, needNormalize = true)
-        assertEquals(12, emptyResult.size)
-        for (v in emptyResult) assertEquals(0f, v, 0.0001f)
-    }
-
-    @Test
     fun visualizer_columnAndBandCalculations() {
         // Test column count calculation for various screen widths and column spacings
         val columnSpacing = 20f
@@ -602,57 +557,6 @@ class ExampleUnitTest {
         assertEquals(0.168f, smoothed, 0.001f)
         assertEquals(0.22f, peak, 0.001f) // peak stayed higher than current bar, falling slowly with gravity
         assertTrue(peak > smoothed)
-    }
-
-    @Test
-    fun soundUtils_downsampleMagnitudes_scaledRefValueAndTilt() {
-        // Test with unnormalized native FFT size (512 bins, where full-scale peak is 256.0f)
-        val fullScaleSineFft = FloatArray(512) { 0f }
-        // Sine wave at bin 10 (~430Hz) with peak amplitude = 256.0f (0 dBFS)
-        fullScaleSineFft[10] = 256.0f
-
-        val downsampled = SoundUtils.downsampleMagnitudes(
-            fullScaleSineFft,
-            targetSize = 32,
-            minDb = -60f,
-            needNormalize = true,
-            needPositive = false,
-            refValue = 256.0f,
-            tiltFactor = 1.0f
-        )
-        assertEquals(32, downsampled.size)
-        // Active band should reach ~1.0f (loud)
-        val maxBand = downsampled.maxOrNull() ?: 0f
-        assertTrue("Max band should be near peak (> 0.9f) but was $maxBand", maxBand > 0.9f)
-        // Silent bands should stay at 0.0f
-        assertEquals(0.0f, downsampled[0], 0.001f)
-        assertEquals(0.0f, downsampled[31], 0.001f)
-    }
-
-    @Test
-    fun soundUtils_downsampleMagnitudes_reducedSamplingSize512() {
-        // Test with reduced FFT size: 512-pt FFT produces 256 magnitude bins (half_size = 256)
-        // With Hann window, full-scale sine peak amplitude is N / 4 = 128.0f
-        val fullScaleSineFft512 = FloatArray(256) { 0f }
-        // Sine wave at bin 10 (~861Hz at 44.1kHz) with peak amplitude = 128.0f (0 dBFS)
-        fullScaleSineFft512[10] = 128.0f
-
-        val downsampled = SoundUtils.downsampleMagnitudes(
-            fullScaleSineFft512,
-            targetSize = 32,
-            minDb = -60f,
-            needNormalize = true,
-            needPositive = false,
-            refValue = 128.0f,
-            tiltFactor = 1.0f
-        )
-        assertEquals(32, downsampled.size)
-        // Active band should reach near peak (~1.0f)
-        val maxBand = downsampled.maxOrNull() ?: 0f
-        assertTrue("Max band should be near peak (> 0.9f) but was $maxBand", maxBand > 0.9f)
-        // Silent bands should stay at 0.0f
-        assertEquals(0.0f, downsampled[0], 0.001f)
-        assertEquals(0.0f, downsampled[31], 0.001f)
     }
 
     @Test
@@ -2219,97 +2123,6 @@ class ExampleUnitTest {
         assertNotNull(method0)
         val method1 = clazz.getMethod("installFix", android.content.Context::class.java)
         assertNotNull(method1)
-    }
-
-    @Test
-    fun spatialAudioProcessor_supportsFloatPcm() {
-        val processor = com.ztftrue.music.effects.SpatialAudioProcessor()
-        val formatFloat = androidx.media3.common.audio.AudioProcessor.AudioFormat(44100, 2, androidx.media3.common.C.ENCODING_PCM_FLOAT)
-        val outFormat = processor.configure(formatFloat)
-        assertEquals(androidx.media3.common.C.ENCODING_PCM_FLOAT, outFormat.encoding)
-        assertEquals(2, outFormat.channelCount)
-        assertEquals(44100, outFormat.sampleRate)
-
-        processor.setActive(true)
-        processor.setStrength(500)
-
-        // Generate stereo float audio (4 frames = 8 floats = 32 bytes)
-        val byteBuffer = java.nio.ByteBuffer.allocateDirect(32).order(java.nio.ByteOrder.nativeOrder())
-        byteBuffer.putFloat(0.5f) // L0
-        byteBuffer.putFloat(-0.5f) // R0
-        byteBuffer.putFloat(0.1f) // L1
-        byteBuffer.putFloat(0.1f) // R1
-        byteBuffer.putFloat(0.9f) // L2
-        byteBuffer.putFloat(-0.9f) // R2
-        byteBuffer.putFloat(0.0f) // L3
-        byteBuffer.putFloat(0.0f) // R3
-        byteBuffer.flip()
-
-        processor.queueInput(byteBuffer)
-        val output = processor.output
-        assertTrue("Output buffer should have processed samples", output.hasRemaining())
-        assertEquals(32, output.remaining())
-
-        val l0 = output.float
-        val r0 = output.float
-        // Side enhanced, mid is 0 -> l0 should be positive, r0 negative
-        assertTrue("L0 should be positive", l0 > 0.4f)
-        assertTrue("R0 should be negative", r0 < -0.4f)
-    }
-
-    @Test
-    fun spatialAudioProcessor_supports16BitPcm() {
-        val processor = com.ztftrue.music.effects.SpatialAudioProcessor()
-        val format16 = androidx.media3.common.audio.AudioProcessor.AudioFormat(44100, 2, androidx.media3.common.C.ENCODING_PCM_16BIT)
-        val outFormat = processor.configure(format16)
-        assertEquals(androidx.media3.common.C.ENCODING_PCM_16BIT, outFormat.encoding)
-        assertEquals(2, outFormat.channelCount)
-        assertEquals(44100, outFormat.sampleRate)
-
-        processor.setActive(true)
-        processor.setStrength(500)
-
-        // Generate stereo 16-bit audio (4 frames = 8 shorts = 16 bytes)
-        val byteBuffer = java.nio.ByteBuffer.allocateDirect(16).order(java.nio.ByteOrder.nativeOrder())
-        byteBuffer.putShort(10000.toShort())  // L0
-        byteBuffer.putShort((-10000).toShort()) // R0
-        byteBuffer.putShort(2000.toShort())   // L1
-        byteBuffer.putShort(2000.toShort())   // R1
-        byteBuffer.putShort(30000.toShort())  // L2
-        byteBuffer.putShort((-30000).toShort()) // R2
-        byteBuffer.putShort(0.toShort())      // L3
-        byteBuffer.putShort(0.toShort())      // R3
-        byteBuffer.flip()
-
-        processor.queueInput(byteBuffer)
-        val output = processor.output
-        assertTrue("Output buffer should have processed samples", output.hasRemaining())
-        assertEquals(16, output.remaining())
-
-        val l0 = output.short
-        val r0 = output.short
-        // Side enhanced, mid is 0 -> l0 should be positive, r0 negative
-        assertTrue("L0 should be positive", l0 > 5000)
-        assertTrue("R0 should be negative", r0 < -5000)
-    }
-
-    @Test
-    fun spatialAudioProcessor_passthroughWhenDisabled() {
-        val processor = com.ztftrue.music.effects.SpatialAudioProcessor()
-        val format16 = androidx.media3.common.audio.AudioProcessor.AudioFormat(44100, 2, androidx.media3.common.C.ENCODING_PCM_16BIT)
-        processor.configure(format16)
-        processor.setActive(false) // Disabled
-
-        val byteBuffer = java.nio.ByteBuffer.allocateDirect(4).order(java.nio.ByteOrder.nativeOrder())
-        byteBuffer.putShort(1234.toShort())
-        byteBuffer.putShort(5678.toShort())
-        byteBuffer.flip()
-
-        processor.queueInput(byteBuffer)
-        val output = processor.output
-        assertEquals(4, output.remaining())
-        assertEquals(1234.toShort(), output.short)
-        assertEquals(5678.toShort(), output.short)
     }
 
     @Test

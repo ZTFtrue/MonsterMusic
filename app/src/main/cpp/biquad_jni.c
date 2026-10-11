@@ -253,3 +253,63 @@ Java_com_ztftrue_music_effects_EqualizerAudioProcessor_processNativeFft(
         (*env)->ReleasePrimitiveArrayCritical(env, input_array, in_ptr, JNI_ABORT);
     }
 }
+
+JNIEXPORT void JNICALL
+Java_com_ztftrue_music_effects_EqualizerAudioProcessor_processFftAndDownsampleNative(
+        JNIEnv *env, jobject thiz, jlong handle,
+        jfloatArray input_array, jfloatArray output_array,
+        jint target_size, jfloat min_db, jboolean need_normalize,
+        jboolean need_positive, jfloat ref_value, jfloat tilt_factor,
+        jint sample_rate) {
+    (void)thiz;
+    if (handle == 0 || !input_array || !output_array) return;
+
+    FftContext* ctx = (FftContext*)(intptr_t)handle;
+    jfloat* in_ptr = (*env)->GetPrimitiveArrayCritical(env, input_array, NULL);
+    jfloat* out_ptr = (*env)->GetPrimitiveArrayCritical(env, output_array, NULL);
+
+    if (in_ptr && out_ptr) {
+        fft_process_and_downsample(
+            ctx, in_ptr, out_ptr,
+            target_size, min_db, need_normalize ? 1 : 0, need_positive ? 1 : 0,
+            ref_value, tilt_factor, sample_rate
+        );
+    }
+
+    if (out_ptr) {
+        (*env)->ReleasePrimitiveArrayCritical(env, output_array, out_ptr, 0);
+    }
+    if (in_ptr) {
+        (*env)->ReleasePrimitiveArrayCritical(env, input_array, in_ptr, JNI_ABORT);
+    }
+}
+
+JNIEXPORT void JNICALL
+Java_com_ztftrue_music_effects_SoundUtils_downsampleMagnitudesNative(
+        JNIEnv *env, jobject thiz,
+        jfloatArray magnitudes_array, jfloatArray downsampled_array,
+        jint target_size, jfloat min_db, jboolean need_normalize,
+        jboolean need_positive, jfloat ref_value, jfloat tilt_factor,
+        jint sample_rate) {
+    (void)thiz;
+    if (!magnitudes_array || !downsampled_array) return;
+
+    int total_size = (*env)->GetArrayLength(env, magnitudes_array);
+    jfloat* mag_ptr = (*env)->GetPrimitiveArrayCritical(env, magnitudes_array, NULL);
+    jfloat* out_ptr = (*env)->GetPrimitiveArrayCritical(env, downsampled_array, NULL);
+
+    if (mag_ptr && out_ptr) {
+        downsample_magnitudes(
+            mag_ptr, total_size, out_ptr,
+            target_size, min_db, need_normalize ? 1 : 0, need_positive ? 1 : 0,
+            ref_value, tilt_factor, sample_rate
+        );
+    }
+
+    if (out_ptr) {
+        (*env)->ReleasePrimitiveArrayCritical(env, downsampled_array, out_ptr, 0);
+    }
+    if (mag_ptr) {
+        (*env)->ReleasePrimitiveArrayCritical(env, magnitudes_array, mag_ptr, JNI_ABORT);
+    }
+}

@@ -152,7 +152,9 @@ fun CoverView(
                     if (mode == "Spectrum") {
                         SpectrumVisualizer(
                             musicViewModel = musicViewModel,
-                            modifier = Modifier.fillMaxSize().clipToBounds()
+                            modifier = Modifier.fillMaxSize().clipToBounds(),
+                            maxHeightRatio = 0.48f,
+                            baseYRatio = 0.96f
                         )
                     } else {
                         MatrixRainVisualizer(
