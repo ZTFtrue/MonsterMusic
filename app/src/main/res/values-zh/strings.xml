@@ -33,7 +33,7 @@
 
     <string name="flatten">展平</string>
     <string name="can_t_find_any_audio_file_i_need_permission_click_here_to_open_settings">没有权限，无法获取音乐，点击设置权限</string>
-    <string name="song">%1$s 首歌曲</string>
+    <string name="song">%1$s 首歌曲%2$s</string>
     <string name="settings">设置</string>
     <string name="feedback">反馈</string>
     <string name="exit_app">退出APP</string>
@@ -195,7 +195,7 @@
     <string name="auto_remove_duplicate_songs">自动移除重复歌曲</string>
     <string name="duration">时长: %1$s</string>
     <string name="disable_audio_focus">停用音频焦点</string>
-    <string name="folders_count">%1$s 个文件夹</string>
+    <string name="folders_count">%1$s 个文件夹%2$s</string>
     <string name="merge_same_album">合并同名同艺术家专辑(不推荐，需重启应用)</string>
     <string name="add_tracks_folder">添加曲目文件夹</string>
 

@@ -77,6 +77,9 @@ fun SaveProcessedAudioDialog(
     var progress by remember { mutableFloatStateOf(0f) }
     var exportJob by remember { mutableStateOf<Job?>(null) }
 
+    val exportSuccessMsg = stringResource(R.string.export_success, "Music/MonsterMusic")
+    val exportFailedTemplate = stringResource(R.string.export_failed, "%s")
+
     LaunchedEffect(music.id) {
         auxr = musicViewModel.getAuxrForTrack(context, music.id)
     }
@@ -329,16 +332,17 @@ fun SaveProcessedAudioDialog(
                                         )
                                         Toast.makeText(
                                             context,
-                                            context.getString(R.string.export_success, "Music/MonsterMusic"),
+                                            exportSuccessMsg,
                                             Toast.LENGTH_LONG
                                         ).show()
                                         onDismiss()
                                     } catch (_: CancellationException) {
                                         // User cancelled export
                                     } catch (e: Exception) {
+                                        val errorMsg = exportFailedTemplate.replace("%s", e.message ?: "")
                                         Toast.makeText(
                                             context,
-                                            context.getString(R.string.export_failed, e.message ?: ""),
+                                            errorMsg,
                                             Toast.LENGTH_LONG
                                         ).show()
                                     } finally {

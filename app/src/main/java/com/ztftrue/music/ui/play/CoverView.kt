@@ -42,7 +42,6 @@ import coil3.request.crossfade
 import com.ztftrue.music.ImageSource
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.R
-import com.ztftrue.music.utils.Utils
 
 @OptIn(UnstableApi::class)
 @Composable

@@ -10,7 +10,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -53,6 +51,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -71,8 +70,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
@@ -93,6 +90,7 @@ import com.ztftrue.music.utils.model.ItemFilterModel
 import com.ztftrue.music.utils.SortUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * @Description:  music list
@@ -108,7 +106,7 @@ fun TracksListView(
     selectStatus: Boolean = false,
     selectList: SnapshotStateList<MusicItem>? = null,
     folderData: List<FolderList>? = null,
-    header: @Composable (() -> Unit)? = null,
+    header: (@Composable () -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -186,7 +184,7 @@ fun TracksListView(
                 }
             }
     }
-    var itemHeight by remember { mutableStateOf(0) }
+    var itemHeight by remember { mutableIntStateOf(0) }
 
     // ---- TracksListView UI ----
     ConstraintLayout(modifier = Modifier.fillMaxSize()) {
@@ -383,7 +381,7 @@ fun AlphabetScroller(
 
     LaunchedEffect(showTapBubble) {
         if (showTapBubble) {
-            delay(700)
+            delay(700.milliseconds)
             showTapBubble = false
         }
     }

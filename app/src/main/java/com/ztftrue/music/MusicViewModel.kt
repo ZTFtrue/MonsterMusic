@@ -24,7 +24,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -112,7 +111,6 @@ class MusicViewModel : ViewModel() {
     var themeSelected = mutableIntStateOf(0)
     var editTrackEnable = mutableStateOf(false)
     private val _visualizationData = MutableLiveData<List<Float>>()
-    val visualizationData: LiveData<List<Float>> = _visualizationData
     var loadingTracks = mutableStateOf(false)
 
 
@@ -312,18 +310,15 @@ class MusicViewModel : ViewModel() {
         }
     }
 
-    fun getLatestVisualizationData(out: FloatArray): Boolean {
-        return AudioDataRepository.getLatestVisualizationData(out)
-    }
 
     init {
         subscribeToVisualizationData()
         val band = ArrayList<EqualizerBand>()
-        for (index in 0 until Utils.bandsCenter.size) {
-            val hz = if (Utils.bandsCenter[index] < 1000) {
-                "${Utils.bandsCenter[index]}"
+        for ((index, element) in Utils.bandsCenter.withIndex()) {
+            val hz = if (element < 1000) {
+                "$element"
             } else {
-                "${Utils.bandsCenter[index] / 1000}k"
+                "${element / 1000}k"
             }
             band.add(EqualizerBand(index, hz, 0))
         }
@@ -1562,9 +1557,9 @@ class MusicViewModel : ViewModel() {
         if (genreCover.isEmpty()) {
             viewModelScope.launch(Dispatchers.IO) {
                 val files = getDb(context).StorageFolderDao().findAllByType(GENRE_TYPE)
-                outer@ for (storageFolder in files) {
+                outer@ for ((_, uri) in files) {
                     try {
-                        val treeUri = storageFolder.uri.toUri()
+                        val treeUri = uri.toUri()
                         context.contentResolver.takePersistableUriPermission(
                             treeUri,
                             Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
@@ -1596,9 +1591,9 @@ class MusicViewModel : ViewModel() {
         if (artistCover.isEmpty()) {
             viewModelScope.launch(Dispatchers.IO) {
                 val files = getDb(context).StorageFolderDao().findAllByType(ARTIST_TYPE)
-                outer@ for (storageFolder in files) {
+                outer@ for ((_, uri) in files) {
                     try {
-                        val treeUri = storageFolder.uri.toUri()
+                        val treeUri = uri.toUri()
                         context.contentResolver.takePersistableUriPermission(
                             treeUri,
                             Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
@@ -1675,22 +1670,23 @@ class MusicViewModel : ViewModel() {
         return false
     }
 
-    // 尝试将 treeUri 或 DocumentFile 转换为物理路径
-    fun getPathFromDocumentUri(context: Context, uri: Uri): String? {
-        return resolvePhysicalPath(context, uri)
-    }
-
     fun getPathFromTreeUri(context: Context, uri: Uri): String? {
         return resolvePhysicalPath(context, uri)
     }
 
     fun resolvePhysicalPath(context: Context, uri: Uri): String? {
-        val docId = if (DocumentsContract.isTreeUri(uri)) {
-            DocumentsContract.getTreeDocumentId(uri)
-        } else if (DocumentsContract.isDocumentUri(context, uri)) {
-            DocumentsContract.getDocumentId(uri)
-        } else {
-            uri.path
+        val docId = when {
+            DocumentsContract.isTreeUri(uri) -> {
+                DocumentsContract.getTreeDocumentId(uri)
+            }
+
+            DocumentsContract.isDocumentUri(context, uri) -> {
+                DocumentsContract.getDocumentId(uri)
+            }
+
+            else -> {
+                uri.path
+            }
         } ?: return null
 
         val split = docId.split(":")

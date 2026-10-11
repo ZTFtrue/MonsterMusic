@@ -140,14 +140,14 @@ object DualKnobHelper {
 fun HorizontalEdgeKnob(
     value: Float,
     valueRange: ClosedFloatingPointRange<Float>,
+    onStep: (Int) -> Unit,
+    onValueChangeFinished: () -> Unit,
+    modifier: Modifier = Modifier,
     width: Dp? = null,
     height: Dp = 32.dp,
-    modifier: Modifier = Modifier,
     enabled: Boolean = true,
     stepThreshold: Dp = 14.dp,
-    indicatorColor: Color = MaterialTheme.colorScheme.primary,
-    onStep: (Int) -> Unit,
-    onValueChangeFinished: () -> Unit
+    indicatorColor: Color = MaterialTheme.colorScheme.primary
 ) {
     val currentOnStep by rememberUpdatedState(onStep)
     val currentOnValueChangeFinished by rememberUpdatedState(onValueChangeFinished)

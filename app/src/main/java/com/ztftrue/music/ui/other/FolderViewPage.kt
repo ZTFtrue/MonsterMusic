@@ -86,10 +86,8 @@ import com.ztftrue.music.Router
 import com.ztftrue.music.play.manager.MediaCommands
 import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.play.PlayUtils
-import com.ztftrue.music.sqlData.MusicDatabase
-import com.ztftrue.music.sqlData.dao.SortFiledDao
 import com.ztftrue.music.sqlData.model.MusicItem
-import com.ztftrue.music.sqlData.model.SortFiledData
+import com.ztftrue.music.ui.public.SortSelectionPopup
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
 import com.ztftrue.music.ui.public.Bottom
 import com.ztftrue.music.ui.public.CreatePlayListDialog
@@ -109,10 +107,7 @@ import com.ztftrue.music.utils.trackManager.PlaylistManager
 import com.ztftrue.music.utils.trackManager.SongsUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 @UnstableApi
 @Composable
@@ -148,270 +143,49 @@ fun FolderListPage(
     if (showSortDialog) {
         val sortFiledOptions =
             PlayUtils.trackSortFiledMap[folderList.type.name + "@Tracks"]
-        if (sortFiledOptions.isNullOrEmpty()) {
-            return
-        }
-        val (filedSelected, onFiledOptionSelected) = remember {
-            mutableStateOf("")
-        }
-
-        val (methodSelected, onMethodOptionSelected) = remember {
-            mutableStateOf("")
-        }
-        var sortDb: SortFiledDao? = null
-        LaunchedEffect(key1 = Unit) {
-            val sortData1 = withContext(Dispatchers.IO) {
-                val db = MusicDatabase.getDatabase(context).SortFiledDao()
-                sortDb = db
-                db.findSortByType(folderList.type.name + "@Tracks")
-            }
-            if (sortData1 != null) {
-                onFiledOptionSelected(sortData1.filedName)
-                onMethodOptionSelected(sortData1.methodName)
-            }
-        }
-        Popup(
-            // on below line we are adding
-            // alignment and properties.
-            alignment = Alignment.TopEnd,
-            properties = PopupProperties(),
-            offset = IntOffset(
-                -10.dp.toPx(),
-                50.dp.toPx()
-            ),
-            onDismissRequest = {
-                showSortDialog = false
-            }
-        ) {
-            Column(
-                modifier = Modifier
-                    .wrapContentSize()
-                    .padding(top = 5.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.background,
-                        RoundedCornerShape(10.dp)
+        if (!sortFiledOptions.isNullOrEmpty()) {
+            SortSelectionPopup(
+                sortType = folderList.type.name + "@Tracks",
+                sortFiledOptions = sortFiledOptions,
+                onDismissRequest = {
+                    showSortDialog = false
+                },
+                onSortConfirmed = { filedSelected, methodSelected, filedCode ->
+                    musicViewModel.showIndicatorMap[trackTypeKey] =
+                        filedSelected == "Alphabetical"
+                    musicViewModel.showIndicatorMap[folderList.type.name] =
+                        filedSelected == "Alphabetical"
+                    showIndicator.value = filedSelected == "Alphabetical"
+                    val bundle = Bundle()
+                    bundle.putString(
+                        "method",
+                        PlayUtils.methodMap[methodSelected] ?: ""
                     )
-                    .border(
-                        1.dp,
-                        color = MaterialTheme.colorScheme.primary,
-                        RoundedCornerShape(10.dp)
+                    bundle.putString(
+                        "filed",
+                        filedCode
                     )
-            ) {
-                LazyColumn(
-                    contentPadding = PaddingValues(5.dp),
-                    modifier = Modifier
-                ) {
-                    item {
-                        Row(
-                            horizontalArrangement = Arrangement.End,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .wrapContentSize()
-                                .clickable {
-
-                                }
-                                .padding(all = Dp(value = 8F))
-                        ) {
-                            Text(
-                                text = stringResource(R.string.default_set),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            RadioButton(
-                                selected = ("" == filedSelected),
-                                modifier = Modifier
-                                    .wrapContentSize(),
-                                onClick = {
-                                    onFiledOptionSelected("")
-                                    onMethodOptionSelected("")
-                                }
-                            )
-                        }
-                        HorizontalDivider(
-                            modifier = Modifier
-                                .height(1.dp)
-                                .wrapContentSize(align = Alignment.BottomCenter)
-                                .width(140.dp)
-                                .background(color = MaterialTheme.colorScheme.onBackground)
+                    bundle.putString(
+                        "type",
+                        folderList.type.name + "@Tracks"
+                    )
+                    val futureResult: ListenableFuture<SessionResult>? =
+                        musicViewModel.browser?.sendCustomCommand(
+                            MediaCommands.COMMAND_SORT_TRACKS,
+                            bundle
                         )
-                    }
-                    val filedKeys = sortFiledOptions.keys.toList()
-                    items(filedKeys.size) { i ->
-                        Row(
-                            horizontalArrangement = Arrangement.End,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .wrapContentSize()
-                                .clickable {
-                                    onFiledOptionSelected(filedKeys[i])
-                                    if (methodSelected.isEmpty() || methodSelected.isBlank()) {
-                                        onMethodOptionSelected(PlayUtils.methodMap.entries.first().key)
-                                    }
-                                }
-                                .padding(all = Dp(value = 8F))
-                        ) {
-                            Text(
-                                text = filedKeys[i],
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            RadioButton(
-                                selected = (filedKeys[i] == filedSelected),
-                                modifier = Modifier
-                                    .wrapContentSize(),
-                                onClick = {
-                                    onFiledOptionSelected(filedKeys[i])
-                                    if (methodSelected.isEmpty() || methodSelected.isBlank()) {
-                                        onMethodOptionSelected(PlayUtils.methodMap.entries.first().key)
-                                    }
-                                }
-                            )
-                        }
-                    }
-                    item {
-                        HorizontalDivider(
-                            modifier = Modifier
-                                .height(1.dp)
-                                .wrapContentSize(align = Alignment.BottomCenter)
-                                .width(140.dp)
-                                .background(color = MaterialTheme.colorScheme.onBackground)
-                        )
-                    }
-                    val methodKeys = PlayUtils.methodMap.keys.toList()
-                    items(
-                        methodKeys.size
-                    ) { i ->
-                        Row(
-                            horizontalArrangement = Arrangement.End,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .wrapContentSize()
-                                .padding(all = Dp(value = 8F))
-                                .clickable {
-                                    onMethodOptionSelected(methodKeys[i])
-                                    if (filedSelected.isEmpty() || filedSelected.isBlank()) {
-                                        onFiledOptionSelected(sortFiledOptions.entries.first().key)
-                                    }
-                                }
-                        ) {
-                            Text(
-                                text = methodKeys[i],
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            RadioButton(
-                                selected = (methodKeys[i] == methodSelected),
-                                modifier = Modifier
-                                    .wrapContentSize(),
-                                onClick = {
-                                    onMethodOptionSelected(methodKeys[i])
-                                    if (filedSelected.isEmpty() || filedSelected.isBlank()) {
-                                        onFiledOptionSelected(sortFiledOptions.entries.first().key)
-                                    }
-                                }
-                            )
-                        }
-                    }
-                }
-
-                Row(
-                    horizontalArrangement = Arrangement.SpaceAround,
-                    modifier = Modifier
-                        .wrapContentSize()
-                        .width(120.dp)
-                ) {
-                    IconButton(
-                        modifier = Modifier.width(50.dp),
-                        onClick = {
-                            showSortDialog = false
-                        }) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close display sort popup",
-                            modifier = Modifier
-                                .size(30.dp)
-                                .clip(CircleShape),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                    IconButton(
-                        modifier = Modifier.width(50.dp),
-                        onClick = {
-                            showSortDialog = false
-                            runBlocking {
-                                awaitAll(
-                                    async(Dispatchers.IO) {
-                                        sortDb =
-                                            MusicDatabase.getDatabase(context).SortFiledDao()
-                                        var sortData =
-                                            sortDb.findSortByType(folderList.type.name + "@Tracks")
-                                        if (sortData != null) {
-                                            sortData.method =
-                                                PlayUtils.methodMap[methodSelected] ?: ""
-                                            sortData.methodName = methodSelected
-                                            sortData.filed = sortFiledOptions[filedSelected]
-                                                ?: ""
-                                            sortData.filedName = filedSelected
-                                            sortDb.update(sortData)
-                                        } else {
-                                            sortData = SortFiledData(
-                                                folderList.type.name + "@Tracks",
-                                                sortFiledOptions[filedSelected]
-                                                    ?: "",
-                                                PlayUtils.methodMap[methodSelected] ?: "",
-                                                methodSelected,
-                                                filedSelected
-                                            )
-                                            sortDb.insert(sortData)
-                                        }
-                                    })
+                    futureResult?.addListener({
+                        try {
+                            val sessionResult = futureResult.get()
+                            if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
+                                refreshCurrentValueList = !refreshCurrentValueList
                             }
-                            musicViewModel.showIndicatorMap[trackTypeKey] =
-                                filedSelected == "Alphabetical"
-                            musicViewModel.showIndicatorMap[folderList.type.name] =
-                                filedSelected == "Alphabetical"
-                            showIndicator.value = filedSelected == "Alphabetical"
-                            val bundle = Bundle()
-                            bundle.putString(
-                                "method",
-                                PlayUtils.methodMap[methodSelected] ?: ""
-                            )
-                            bundle.putString(
-                                "filed", sortFiledOptions[filedSelected]
-                                    ?: ""
-                            )
-                            bundle.putString(
-                                "type",
-                                folderList.type.name + "@Tracks"
-                            )
-                            val futureResult: ListenableFuture<SessionResult>? =
-                                musicViewModel.browser?.sendCustomCommand(
-                                    MediaCommands.COMMAND_SORT_TRACKS,
-                                    bundle
-                                )
-                            futureResult?.addListener({
-                                try {
-                                    // a. 获取 SessionResult
-                                    val sessionResult = futureResult.get()
-                                    // b. 检查操作是否成功
-                                    if (sessionResult.resultCode == SessionResult.RESULT_SUCCESS) {
-                                        refreshCurrentValueList = !refreshCurrentValueList
-                                    }
-                                } catch (e: Exception) {
-                                    // 处理在获取结果过程中可能发生的异常 (如 ExecutionException)
-                                    Log.e("Client", "Failed to toggle favorite status", e)
-                                }
-                            }, ContextCompat.getMainExecutor(context))
-                        }) {
-                        Icon(
-                            imageVector = Icons.Default.Done,
-                            contentDescription = "Close display sort popup and save select",
-                            modifier = Modifier
-                                .size(30.dp)
-                                .clip(CircleShape),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
+                        } catch (e: Exception) {
+                            Log.e("Client", "Failed to toggle favorite status", e)
+                        }
+                    }, ContextCompat.getMainExecutor(context))
                 }
-
-            }
+            )
         }
     }
     if (showMoreOperateDialog) {
@@ -534,9 +308,9 @@ fun FolderListPage(
             ),
             onDismissRequest = {
                 showOperatePopup = false
-            }
-        ) {
-            Column(
+            },
+            content = {
+                Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .wrapContentSize()
@@ -610,6 +384,7 @@ fun FolderListPage(
 
             }
         }
+    )
     }
 
 

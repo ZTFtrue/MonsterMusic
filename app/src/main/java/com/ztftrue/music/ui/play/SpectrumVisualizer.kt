@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,8 +75,8 @@ fun SpectrumVisualizer(
     val peakColor = remember { Color.White.copy(alpha = 0.9f) }
     val peakCornerRadius = remember { CornerRadius(1.5f, 1.5f) }
 
-    var cachedWidth by remember { mutableStateOf(0f) }
-    var cachedHeight by remember { mutableStateOf(0f) }
+    var cachedWidth by remember { mutableFloatStateOf(0f) }
+    var cachedHeight by remember { mutableFloatStateOf(0f) }
     var cachedPrimary by remember { mutableStateOf(Color.Unspecified) }
     var cachedSecondary by remember { mutableStateOf(Color.Unspecified) }
     var cachedTertiary by remember { mutableStateOf(Color.Unspecified) }

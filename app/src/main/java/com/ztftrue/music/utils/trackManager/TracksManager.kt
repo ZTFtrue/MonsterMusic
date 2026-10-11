@@ -26,10 +26,6 @@ import com.ztftrue.music.utils.OperateTypeInActivity
 import com.ztftrue.music.utils.SharedPreferencesUtils
 import com.ztftrue.music.utils.SortUtils
 import com.ztftrue.music.utils.model.FolderList
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.Tag
@@ -842,29 +838,23 @@ object TracksManager {
         bitmap: Bitmap?,
         lyrics: String?
     ) {
-        runBlocking {
-            awaitAll(
-                async(Dispatchers.IO) {
-                    saveEmbeddedCover(
-                        musicId, musicPath, context, bitmap, lyrics, title,
-                        album,
-                        artist,
-                        genre,
-                        year
-                    )
-                    MediaScannerConnection.scanFile(
-                        context,
-                        arrayOf(musicPath),
-                        arrayOf("*/*"),
-                        object : MediaScannerConnectionClient {
-                            override fun onMediaScannerConnected() {}
-                            override fun onScanCompleted(path: String, uri: Uri) {
+        saveEmbeddedCover(
+            musicId, musicPath, context, bitmap, lyrics, title,
+            album,
+            artist,
+            genre,
+            year
+        )
+        MediaScannerConnection.scanFile(
+            context,
+            arrayOf(musicPath),
+            arrayOf("*/*"),
+            object : MediaScannerConnectionClient {
+                override fun onMediaScannerConnected() {}
+                override fun onScanCompleted(path: String, uri: Uri) {
 
-                            }
-                        })
-                })
-        }
-
+                }
+            })
     }
 
     private fun saveEmbeddedCover(

@@ -226,10 +226,10 @@ fun AlbumGridView(
                         item,
                         musicViewModel,
                         navController,
-                        type,
                         modifier = Modifier
                             .padding(5.dp)
-                            .width(width)
+                            .width(width),
+                        type = type
                     )
                 }
             }
@@ -260,8 +260,8 @@ fun AlbumGridView(
                             item,
                             musicViewModel,
                             navController,
-                            type,
-                            modifier = Modifier.padding(5.dp)
+                            modifier = Modifier.padding(5.dp),
+                            type = type
                         )
                     }
                 }
@@ -296,8 +296,8 @@ fun AlbumItemView(
     item: AlbumList,
     musicViewModel: MusicViewModel,
     navController: SnapshotStateList<Any>,
-    type: PlayListType = PlayListType.Albums,
-    modifier: Modifier = Modifier // 接收外部 Modifier
+    modifier: Modifier = Modifier,
+    type: PlayListType = PlayListType.Albums
 ) {
     val number = item.trackNumber
     val context = LocalContext.current

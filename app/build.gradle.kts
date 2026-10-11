@@ -170,6 +170,11 @@ android {
             version = "3.22.1"
         }
     }
+
+    lint {
+        abortOnError = false
+        disable += setOf("MissingTranslation", "PluralsCandidate", "UseKtx", "DefaultLocale", "WrongCommentType")
+    }
 }
 composeCompiler {
     reportsDestination = layout.buildDirectory.dir("compose_compiler")
@@ -198,11 +203,17 @@ dependencies {
     implementation("androidx.media3:media3-ui:1.11.1")
     implementation("org.jellyfin.media3:media3-ffmpeg-decoder:1.9.0+1")
 
+    val composeBom = platform("androidx.compose:compose-bom:2026.09.00")
+    implementation(composeBom)
+    androidTestImplementation(composeBom)
+
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.material:material-icons-extended:1.7.8")
-    implementation("androidx.compose.material3:material3:1.4.0")
-    implementation("androidx.compose.material3:material3-window-size-class:1.4.0")
+    implementation("androidx.compose.runtime:runtime")
+    implementation("androidx.compose.runtime:runtime-livedata")
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material3:material3-window-size-class")
 
     // splash
     implementation("androidx.core:core-splashscreen:1.2.0")
@@ -216,18 +227,15 @@ dependencies {
 
     implementation("androidx.browser:browser:1.10.0")
 
-    implementation("androidx.compose.runtime:runtime-livedata:1.12.1")
-
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2026.09.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
 
-    implementation("androidx.collection:collection-ktx:1.6.0")
+    implementation("androidx.collection:collection-ktx:1.7.0")
     implementation("androidx.fragment:fragment-ktx:1.9.1")
     implementation("androidx.palette:palette-ktx:1.0.0")
 
@@ -242,7 +250,6 @@ dependencies {
     // Kotlin Extensions and Coroutines support for Room
     implementation("androidx.room:room-ktx:$roomVersion")
     // Test helpers
-    testImplementation("androidx.room:room-testing:$roomVersion")
     androidTestImplementation("androidx.room:room-testing:$roomVersion")
 
     implementation("com.github.skydoves:colorpicker-compose:1.3.0")

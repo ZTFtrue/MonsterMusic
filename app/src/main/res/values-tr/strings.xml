@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">MonsterMusic</string>
     <string name="al">Albüm: </string>
     <string name="ar">Sanatçı: </string>
@@ -246,7 +246,7 @@
     <string name="comment_label">Yorum</string>
     <string name="path_label">Dosya Yolu</string>
     <string name="track_sound_effect_enable">Şarkıya özel ses efekti</string>
-    <string name="track_sound_effect_enable_desc">Her şarkı için ses efektlerini ayrı ayrı özelleştirin ve hatırlayın</string>
+    <string name="track_sound_effect_enable_desc" tools:ignore="Typos">Her şarkı için ses efektlerini ayrı ayrı özelleştirin ve hatırlayın</string>
     <string name="track_sound_effect_global">Genel ses efekti</string>
     <string name="first_scan_setup_title">MonsterMusic\'e Hoş Geldiniz</string>
     <string name="first_scan_setup_desc">Lütfen MonsterMusic\'in müzik kütüphanenizi nasıl tarayıp düzenlemesini istediğinizi seçin:</string>

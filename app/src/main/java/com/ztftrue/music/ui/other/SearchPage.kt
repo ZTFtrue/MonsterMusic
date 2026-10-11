@@ -201,11 +201,13 @@ fun SearchPage(
                         .padding(paddingValues)
                 ) {
                     TracksListView(
-                        musicViewModel,
-                        modeList, searchScreenViewModel._tracksList, remember {
+                        musicViewModel = musicViewModel,
+                        playList = modeList,
+                        tracksList = searchScreenViewModel._tracksList,
+                        showIndicator = remember {
                             mutableStateOf(true)
-                        }
-                    ) {
+                        },
+                        header = {
                         if (searchScreenViewModel._albumsList.isNotEmpty()) {
                             Text(
                                 text = stringResource(R.string.album, ""),
@@ -258,8 +260,9 @@ fun SearchPage(
                             )
                         }
                     }
-                }
+                )
             }
-        },
-    )
+        }
+    },
+)
 }

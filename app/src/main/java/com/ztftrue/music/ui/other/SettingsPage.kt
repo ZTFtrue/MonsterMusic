@@ -1748,6 +1748,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
     }
 }
 
+@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun AudioDecoderModeDialog(
     musicViewModel: MusicViewModel,

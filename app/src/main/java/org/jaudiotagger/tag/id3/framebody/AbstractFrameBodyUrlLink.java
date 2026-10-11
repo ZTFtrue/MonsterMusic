@@ -20,8 +20,6 @@
  */
 package org.jaudiotagger.tag.id3.framebody;
 
-import android.os.Build;
-
 import org.jaudiotagger.logging.ErrorMessage;
 import org.jaudiotagger.tag.InvalidTagException;
 import org.jaudiotagger.tag.datatype.DataTypes;
@@ -140,12 +138,11 @@ public abstract class AbstractFrameBodyUrlLink extends AbstractID3v2FrameBody {
         final String[] splitURL = url.split("(?<!/)/(?!/)", -1);
         final StringBuffer sb = new StringBuffer(splitURL[0]);
         for (int i = 1; i < splitURL.length; i++) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // TIRAMISU 是 API 33
-                sb.append("/").append(URLEncoder.encode(splitURL[i], StandardCharsets.UTF_8));
-            } else {
-                sb.append("/").append(URLEncoder.encode(splitURL[i], StandardCharsets.UTF_8));
+            try {
+                sb.append("/").append(URLEncoder.encode(splitURL[i], "UTF-8"));
+            } catch (java.io.UnsupportedEncodingException e) {
+                sb.append("/").append(splitURL[i]);
             }
-
         }
         return sb.toString();
     }

@@ -251,11 +251,12 @@ class MainActivity : ComponentActivity() {
                             else -> return@registerForActivityResult
                         }
                         lyricsPath += ext
-                        this@MainActivity.contentResolver.openInputStream(selectedFileUri)?.use { inputStream ->
-                            FileOutputStream(File(lyricsPath)).use { outputStream ->
-                                inputStream.copyTo(outputStream)
+                        this@MainActivity.contentResolver.openInputStream(selectedFileUri)
+                            ?.use { inputStream ->
+                                FileOutputStream(File(lyricsPath)).use { outputStream ->
+                                    inputStream.copyTo(outputStream)
+                                }
                             }
-                        }
                         if (musicViewModel.currentPlay.value != null) {
                             musicViewModel.dealLyrics(
                                 this@MainActivity,
@@ -389,10 +390,10 @@ class MainActivity : ComponentActivity() {
                         )
                         lifecycleScope.launch(Dispatchers.IO) {
                             musicViewModel.getDb(this@MainActivity).StorageFolderDao().insert(
-                                StorageFolder(null, treeUri.toString(),TRACKS_TYPE)
+                                StorageFolder(null, treeUri.toString(), TRACKS_TYPE)
                             )
                             musicViewModel.refreshAllTracks(this@MainActivity)
-                         }
+                        }
                     }
                 }
             }
@@ -421,11 +422,19 @@ class MainActivity : ComponentActivity() {
                             name = folderName
                         )
                         musicViewModel.addWhitelistFolder(this@MainActivity, folder)
-                        SharedPreferencesUtils.setScanMode(this@MainActivity, SharedPreferencesUtils.SCAN_MODE_WHITELIST)
+                        SharedPreferencesUtils.setScanMode(
+                            this@MainActivity,
+                            SharedPreferencesUtils.SCAN_MODE_WHITELIST
+                        )
                         SharedPreferencesUtils.setFirstScanSetupCompleted(this@MainActivity, true)
-                        musicViewModel.scanMode.intValue = SharedPreferencesUtils.SCAN_MODE_WHITELIST
+                        musicViewModel.scanMode.intValue =
+                            SharedPreferencesUtils.SCAN_MODE_WHITELIST
                         musicViewModel.showFirstScanSetupDialog.value = false
-                        Toast.makeText(this@MainActivity, getString(R.string.folder_added, folderName), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MainActivity,
+                            getString(R.string.folder_added, folderName),
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             } else {
@@ -434,7 +443,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    val exclusiveFolderPickerLauncher = whitelistFolderPickerLauncher
 
     val blacklistFolderPickerLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(
@@ -460,7 +468,11 @@ class MainActivity : ComponentActivity() {
                             name = folderName
                         )
                         musicViewModel.addBlacklistFolder(this@MainActivity, folder)
-                        Toast.makeText(this@MainActivity, getString(R.string.folder_added, folderName), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MainActivity,
+                            getString(R.string.folder_added, folderName),
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
@@ -635,7 +647,8 @@ class MainActivity : ComponentActivity() {
         Utils.initSettingsData(musicViewModel, this)
         musicViewModel.prepareArtistAndGenreCover(this@MainActivity)
         val customMusicCoverPath = SharedPreferencesUtils.getTrackCoverData(this@MainActivity)
-        musicViewModel. autoDismissDicPop.value = SharedPreferencesUtils.getAutoDismissDicPop(this@MainActivity)
+        musicViewModel.autoDismissDicPop.value =
+            SharedPreferencesUtils.getAutoDismissDicPop(this@MainActivity)
         musicViewModel.customMusicCover.value = customMusicCoverPath?.takeIf {
             File(it).exists()
         } ?: R.drawable.songs_thumbnail_cover
@@ -699,9 +712,14 @@ class MainActivity : ComponentActivity() {
                 lifecycleScope.launch {
                     val isM3u = MusicFileParser.isM3uPlaylist(this@MainActivity, uri, intent.type)
                     val musicItems: List<MusicItem> = if (isM3u) {
-                        val tracks = MusicFileParser.parseM3u(this@MainActivity, uri, musicViewModel.songsList)
+                        val tracks = MusicFileParser.parseM3u(
+                            this@MainActivity,
+                            uri,
+                            musicViewModel.songsList
+                        )
                         if (tracks.isEmpty()) {
-                            Toast.makeText(this@MainActivity, R.string.no_music, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@MainActivity, R.string.no_music, Toast.LENGTH_SHORT)
+                                .show()
                             return@launch
                         }
                         tracks
@@ -733,10 +751,6 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    private fun addMusicToNext(musicItem: MusicItem) {
-        addMusicsToNext(listOf(musicItem))
-    }
-
     private fun addMusicsToNext(musicItems: List<MusicItem>) {
         if (musicItems.isEmpty()) return
         val l = musicViewModel.browser?.mediaItemCount
@@ -765,9 +779,6 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private fun addMusicToQueue(musicItem: MusicItem) {
-        addMusicsToQueue(listOf(musicItem))
-    }
 
     private fun addMusicsToQueue(musicItems: List<MusicItem>) {
         if (musicItems.isEmpty()) return
@@ -776,10 +787,6 @@ class MainActivity : ComponentActivity() {
         musicViewModel.browser?.addMediaItems(
             mediaItems
         )
-    }
-
-    private fun clearQueueAndAddPlay(musicItem: MusicItem) {
-        clearQueueAndAddPlay(listOf(musicItem))
     }
 
     private fun clearQueueAndAddPlay(musicItems: List<MusicItem>) {
@@ -942,7 +949,10 @@ class MainActivity : ComponentActivity() {
         try {
             super.unbindService(conn)
         } catch (e: IllegalArgumentException) {
-            Log.w("MainActivity", "ServiceConnection already unbound or not registered: ${e.message}")
+            Log.w(
+                "MainActivity",
+                "ServiceConnection already unbound or not registered: ${e.message}"
+            )
         } catch (e: Exception) {
             Log.e("MainActivity", "Unexpected error in unbindService", e)
         }
@@ -1110,7 +1120,10 @@ class MainActivity : ComponentActivity() {
             musicViewModel.showIndicatorMap[sort.type] =
                 sort.filedName == "Alphabetical"
             val baseType = sort.type.replace("@Tracks", "")
-            if (!sort.type.endsWith("@Tracks") || !musicViewModel.showIndicatorMap.containsKey(baseType)) {
+            if (!sort.type.endsWith("@Tracks") || !musicViewModel.showIndicatorMap.containsKey(
+                    baseType
+                )
+            ) {
                 musicViewModel.showIndicatorMap[baseType] = sort.filedName == "Alphabetical"
             }
         }
