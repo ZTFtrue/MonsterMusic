@@ -105,7 +105,16 @@ Builds:
     ndk: r30
     output: app/release/app-universal-release-unsigned.apk
 
+  - versionName: 0.1.83
+    versionCode: 83
+    commit: 0.1.83
+    subdir: app
+    gradle:
+      - yes
+    ndk: r30
+    output: app/release/app-universal-release-unsigned.apk
+
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: 0.1.82
-CurrentVersionCode: 82
+CurrentVersion: 0.1.83
+CurrentVersionCode: 83

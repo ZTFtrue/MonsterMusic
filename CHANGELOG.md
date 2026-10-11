@@ -4,6 +4,14 @@ All notable changes to MonsterMusic are documented in this file.
 
 The project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.1.83] - 2026-10-11
+- **Bit-Perfect USB Audio Output**: Support bit-perfect PCM passthrough to external USB DACs (Android 14+ `MIXER_BEHAVIOR_BIT_PERFECT`), bypassing system mixer, resampling, and DSP effects.
+- **Track List UI Redesign & Adaptive Alphabet Scroller**: Modernized track list items with rounded corners, album art thumbnails, and active track highlight. Added adaptive drag-scroller with magnifier badge and haptic feedback, plus alphabetical indicators for Album and Artist views.
+- **Sort Selection Dialog**: Centralized sort configuration dialog and optimized Compose state performance.
+- **Music Visualization Overhaul**: High-performance VSYNC frame clock (90/120 FPS, 0 allocations), native C FFT magnitude downsampling (`downsample_magnitudes`), balanced equal-loudness acoustic curves (tamed bass, elevated treble), and reduced visualizer height in portrait mode to keep album artwork unobstructed.
+
+---
+
 ## [0.1.82] - 2026-10-04
 - **Expanded FFmpeg Audio Decoders**: Added support for AC-3 (Dolby Digital), E-AC-3, DTS, TrueHD, Vorbis, Opus, FLAC, and ALAC.
 - **Multichannel Stereo Downmixing**: Implemented native 5.1 and 7.1 surround sound downmixing to standard stereo in C native engine (`SwrContext`), resolving silent playback and crashes on multichannel files.

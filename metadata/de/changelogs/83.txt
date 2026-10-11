@@ -1,0 +1,6 @@
+v0.1.83:
+• Bit-Perfect-USB-Audioausgabe und DAC-Passthrough hinzugefügt (Android 14+).
+• Überarbeitete Titellisten-UI mit Albumcover-Vorschau, Titelhervorhebung und adaptivem Alphabet-Scroller.
+• Alphabetische Schnelllaufleisten für Album- und Interpreten-Rasteransichten hinzugefügt.
+• Zentralisierter und optimierter Auswahldialog für die Sortierung.
+• Umfassende Überarbeitung des Musikvisualisierers mit nativer C-Audio-Downsampling-Engine und optimierter Equal-Loudness-Kurve.

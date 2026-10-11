@@ -1,0 +1,6 @@
+v0.1.83:
+• Added Bit-Perfect USB audio output and DAC passthrough for audiophile hardware (Android 14+).
+• Redesigned track list UI with album art thumbnails, active track highlighting, and adaptive AlphabetScroller.
+• Added alphabetical quick-scrollers for Album and Artist grid views.
+• Centralized and optimized sort selection dialog with improved Compose state management.
+• Overhauled music visualizer with native C audio downsampling, balanced equal-loudness curves, and portrait layout.

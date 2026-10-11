@@ -1,7 +1,7 @@
 Builds:
-  - versionName: 0.1.82
-    versionCode: 82
-    commit: 0.1.82
+  - versionName: 0.1.83
+    versionCode: 83
+    commit: 0.1.83
     subdir: app
     gradle:
       - yes
@@ -10,5 +10,5 @@ Builds:
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: 0.1.82
-CurrentVersionCode: 82
+CurrentVersion: 0.1.83
+CurrentVersionCode: 83
