@@ -467,7 +467,7 @@ fun MainTopBar(
                                             }
                                         })
                                 }
-                                musicViewModel.showIndicatorMap[PlayListType.Songs.name] =
+                                musicViewModel.showIndicatorMap[currentTab.type.name] =
                                     filedSelected == "Alphabetical"
 
                                 val bundle = Bundle()

@@ -1,6 +1,7 @@
 package com.ztftrue.music.ui.public
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -47,6 +48,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -122,12 +124,27 @@ fun TracksListView(
     // Slide / Top indicator 开关
     val sharedPreferences =
         context.getSharedPreferences("list_indicator_config", Context.MODE_PRIVATE)
-    val showSlideIndicator = remember(showIndicatorValue) {
-        sharedPreferences.getBoolean("show_slide_indicator", true) && showIndicatorValue
+    var showSlideIndicatorPref by remember {
+        mutableStateOf(sharedPreferences.getBoolean("show_slide_indicator", false))
     }
-    val showTopIndicator = remember(showIndicatorValue) {
-        sharedPreferences.getBoolean("show_top_indicator", true) && showIndicatorValue
+    var showTopIndicatorPref by remember {
+        mutableStateOf(sharedPreferences.getBoolean("show_top_indicator", false))
     }
+    DisposableEffect(Unit) {
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { sp, key ->
+            if (key == "show_slide_indicator") {
+                showSlideIndicatorPref = sp.getBoolean("show_slide_indicator", false)
+            } else if (key == "show_top_indicator") {
+                showTopIndicatorPref = sp.getBoolean("show_top_indicator", false)
+            }
+        }
+        sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
+        onDispose {
+            sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
+        }
+    }
+    val showSlideIndicator = showSlideIndicatorPref && showIndicatorValue
+    val showTopIndicator = showTopIndicatorPref && showIndicatorValue
 
     // ---- 生成 ItemFilterModel ----
     val (itemFilterList, itemFilterMap) = remember(tracksList.size, showIndicatorValue) {
@@ -628,19 +645,19 @@ fun ItemFilterDialog(
     )
 }
 
-fun generateItemFilters(
-    tracks: List<MusicItem>
+fun <T> generateItemFilters(
+    items: List<T>,
+    nameSelector: (T) -> String
 ): Pair<List<ItemFilterModel>, HashMap<String, ItemFilterModel>> {
-
     val filterList = ArrayList<ItemFilterModel>()
     val filterMap = HashMap<String, ItemFilterModel>()
 
-    if (tracks.isEmpty()) return filterList to filterMap
+    if (items.isEmpty()) return filterList to filterMap
 
     var lastSection: String? = null
 
-    tracks.forEachIndexed { index, item ->
-        val section = SortUtils.getSectionLabel(item.name)
+    items.forEachIndexed { index, item ->
+        val section = SortUtils.getSectionLabel(nameSelector(item))
         if (section != lastSection) {
             val model = ItemFilterModel(
                 name = section,
@@ -656,4 +673,10 @@ fun generateItemFilters(
     }
 
     return filterList to filterMap
+}
+
+fun generateItemFilters(
+    tracks: List<MusicItem>
+): Pair<List<ItemFilterModel>, HashMap<String, ItemFilterModel>> {
+    return generateItemFilters(tracks) { it.name }
 }

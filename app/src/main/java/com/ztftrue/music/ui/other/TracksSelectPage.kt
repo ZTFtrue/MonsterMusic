@@ -60,10 +60,12 @@ fun TracksSelectPage(
     playListName: String?,
     playListId: Long?
 ) {
-    val showIndicator = remember { mutableStateOf(false) }
-    LaunchedEffect(key1 = musicViewModel.showIndicatorMap) {
+    val showIndicator = remember {
+        mutableStateOf(musicViewModel.showIndicatorMap.getOrDefault(PlayListType.Songs.name, false))
+    }
+    LaunchedEffect(key1 = musicViewModel.showIndicatorMap[PlayListType.Songs.name]) {
         showIndicator.value =
-            musicViewModel.showIndicatorMap.getOrDefault(PlayListType.Songs.toString(), false)
+            musicViewModel.showIndicatorMap.getOrDefault(PlayListType.Songs.name, false)
     }
     val musicList = remember { mutableStateListOf<MusicItem>() }
     val context = LocalContext.current

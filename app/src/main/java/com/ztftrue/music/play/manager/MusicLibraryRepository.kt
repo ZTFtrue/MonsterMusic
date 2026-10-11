@@ -132,7 +132,14 @@ class MusicLibraryRepository(private val context: Context) {
         val sortData1 = db.SortFiledDao().findSortAll()
         showIndicatorList.clear()
         sortData1.forEach {
-            if (it.type == PlayListType.Songs.name || it.type.endsWith("@Tracks")) {
+            if (it.type == PlayListType.Songs.name ||
+                it.type == PlayListType.Albums.name ||
+                it.type == PlayListType.Artists.name ||
+                it.type == PlayListType.Folders.name ||
+                it.type == PlayListType.PlayLists.name ||
+                it.type == PlayListType.Genres.name ||
+                it.type.endsWith("@Tracks")
+            ) {
                 showIndicatorList.add(it)
             }
         }

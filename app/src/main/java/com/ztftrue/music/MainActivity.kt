@@ -1107,8 +1107,12 @@ class MainActivity : ComponentActivity() {
 
     fun getInitData(resultData: Bundle) {
         resultData.getParcelableArrayList<SortFiledData>("showIndicatorList")?.onEach { sort ->
-            musicViewModel.showIndicatorMap[sort.type.replace("@Tracks", "")] =
+            musicViewModel.showIndicatorMap[sort.type] =
                 sort.filedName == "Alphabetical"
+            val baseType = sort.type.replace("@Tracks", "")
+            if (!sort.type.endsWith("@Tracks") || !musicViewModel.showIndicatorMap.containsKey(baseType)) {
+                musicViewModel.showIndicatorMap[baseType] = sort.filedName == "Alphabetical"
+            }
         }
         resultData.getParcelableArrayList<MainTab>("mainTabList")?.also {
             musicViewModel.mainTabList.clear()

@@ -2875,12 +2875,16 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
     var showSlideIndicator by remember { mutableStateOf(false) }
     var showTopIndicator by remember { mutableStateOf(false) }
     var showQueueIndicator by remember { mutableStateOf(false) }
+    var showAlbumIndicator by remember { mutableStateOf(false) }
+    var showArtistIndicator by remember { mutableStateOf(false) }
     val sharedPreferences =
         context.getSharedPreferences("list_indicator_config", Context.MODE_PRIVATE)
     LaunchedEffect(Unit) {
-        showSlideIndicator = sharedPreferences.getBoolean("show_slide_indicator", true)
-        showTopIndicator = sharedPreferences.getBoolean("show_top_indicator", true)
+        showSlideIndicator = sharedPreferences.getBoolean("show_slide_indicator", false)
+        showTopIndicator = sharedPreferences.getBoolean("show_top_indicator", false)
         showQueueIndicator = sharedPreferences.getBoolean("show_queue_indicator", false)
+        showAlbumIndicator = sharedPreferences.getBoolean("show_album_indicator", false)
+        showArtistIndicator = sharedPreferences.getBoolean("show_artist_indicator", false)
     }
     @SuppressLint("ApplySharedPref")
     fun onConfirmation() {
@@ -2888,6 +2892,8 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
             putBoolean("show_slide_indicator", showSlideIndicator)
                 .putBoolean("show_top_indicator", showTopIndicator)
                 .putBoolean("show_queue_indicator", showQueueIndicator)
+                .putBoolean("show_album_indicator", showAlbumIndicator)
+                .putBoolean("show_artist_indicator", showArtistIndicator)
         }
         onDismiss()
     }
@@ -3030,6 +3036,82 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                                                 showQueueDesc
                                             } else {
                                                 hideQueueDesc
+                                            }
+                                        }
+                                )
+                            }
+                        }
+                        item {
+                            val showAlbumDesc =
+                                stringResource(R.string.content_description_show_indicator_in_albums)
+                            val hideAlbumDesc =
+                                stringResource(R.string.content_description_hide_indicator_in_albums)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        start = 10.dp, end = 10.dp
+                                    ),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            )
+                            {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = stringResource(R.string.show_indicator_in_albums),
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                                Checkbox(
+                                    checked = showAlbumIndicator,
+                                    onCheckedChange = { v ->
+                                        showAlbumIndicator = v
+                                    },
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .semantics {
+                                            contentDescription = if (showAlbumIndicator) {
+                                                showAlbumDesc
+                                            } else {
+                                                hideAlbumDesc
+                                            }
+                                        }
+                                )
+                            }
+                        }
+                        item {
+                            val showArtistDesc =
+                                stringResource(R.string.content_description_show_indicator_in_artists)
+                            val hideArtistDesc =
+                                stringResource(R.string.content_description_hide_indicator_in_artists)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        start = 10.dp, end = 10.dp
+                                    ),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            )
+                            {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = stringResource(R.string.show_indicator_in_artists),
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                                Checkbox(
+                                    checked = showArtistIndicator,
+                                    onCheckedChange = { v ->
+                                        showArtistIndicator = v
+                                    },
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .semantics {
+                                            contentDescription = if (showArtistIndicator) {
+                                                showArtistDesc
+                                            } else {
+                                                hideArtistDesc
                                             }
                                         }
                                 )

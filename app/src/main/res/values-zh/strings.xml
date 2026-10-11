@@ -126,6 +126,8 @@
     <string name="show_slide_indicator">显示侧边索引</string>
     <string name="show_top_indicator">显示顶部索引</string>
     <string name="show_indicator_in_queue">在播放列表中显示索引</string>
+    <string name="show_indicator_in_albums">在专辑中显示索引</string>
+    <string name="show_indicator_in_artists">在艺术家中显示索引</string>
     <string name="comment">注释：%1$s</string>
 
     <string name="year_tra">年  : %1$s%2$s</string>
@@ -174,6 +176,10 @@
     <string name="content_description_hide_top_indicator">隐藏顶部指示器</string>
     <string name="content_description_show_indicator_in_queue">在队列中显示指示器</string>
     <string name="content_description_hide_indicator_in_queue">在队列中隐藏指示器</string>
+    <string name="content_description_show_indicator_in_albums">在专辑中显示指示器</string>
+    <string name="content_description_hide_indicator_in_albums">在专辑中隐藏指示器</string>
+    <string name="content_description_show_indicator_in_artists">在艺术家中显示指示器</string>
+    <string name="content_description_hide_indicator_in_artists">在艺术家中隐藏指示器</string>
 
     <string name="language_follow_system">跟随系统</string>
 

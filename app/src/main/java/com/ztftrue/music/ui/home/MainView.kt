@@ -1,6 +1,7 @@
 package com.ztftrue.music.ui.home
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -13,6 +14,7 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -52,7 +54,9 @@ fun MainView(
     activity: MainActivity,
     navController: SnapshotStateList<Any>,
 ) {
-    val showIndicator = remember { mutableStateOf(false) }
+    val showIndicator = remember {
+        mutableStateOf(musicViewModel.showIndicatorMap.getOrDefault(PlayListType.Songs.name, false))
+    }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -62,6 +66,17 @@ fun MainView(
         context.getSharedPreferences("list_indicator_config", Context.MODE_PRIVATE)
     val queueD = remember {
         mutableStateOf(sharedPreferences.getBoolean("show_queue_indicator", false))
+    }
+    DisposableEffect(Unit) {
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { sp, key ->
+            if (key == "show_queue_indicator") {
+                queueD.value = sp.getBoolean("show_queue_indicator", false)
+            }
+        }
+        sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
+        onDispose {
+            sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
+        }
     }
     val tabList = remember {
         mutableStateListOf<MainTab>()
@@ -103,10 +118,10 @@ fun MainView(
 
         }
     }
-//    LaunchedEffect(key1 = musicViewModel.showIndicatorMap) {
-    showIndicator.value =
-        musicViewModel.showIndicatorMap.getOrDefault(PlayListType.Songs.toString(), false)
-//    }
+    LaunchedEffect(musicViewModel.showIndicatorMap[PlayListType.Songs.name]) {
+        showIndicator.value =
+            musicViewModel.showIndicatorMap.getOrDefault(PlayListType.Songs.name, false)
+    }
 
     BackHandler(enabled = drawerState.isOpen) {
         if (drawerState.isOpen) {

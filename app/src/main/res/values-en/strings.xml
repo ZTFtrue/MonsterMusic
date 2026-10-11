@@ -126,6 +126,8 @@
     <string name="show_slide_indicator">Show slide indicator</string>
     <string name="show_top_indicator">Show top indicator</string>
     <string name="show_indicator_in_queue">Show indicator in queue</string>
+    <string name="show_indicator_in_albums">Show indicator in albums</string>
+    <string name="show_indicator_in_artists">Show indicator in artists</string>
     <string name="comment">Comment: %1$s</string>
 
     <string name="year_tra">Year : %1$s%2$s</string>
@@ -173,6 +175,10 @@
     <string name="content_description_hide_top_indicator">Hide top indicator</string>
     <string name="content_description_show_indicator_in_queue">Show indicator in queue</string>
     <string name="content_description_hide_indicator_in_queue">Hide indicator in queue</string>
+    <string name="content_description_show_indicator_in_albums">Show indicator in albums</string>
+    <string name="content_description_hide_indicator_in_albums">Hide indicator in albums</string>
+    <string name="content_description_show_indicator_in_artists">Show indicator in artists</string>
+    <string name="content_description_hide_indicator_in_artists">Hide indicator in artists</string>
 
     <string name="language_follow_system">Follow System</string>
 

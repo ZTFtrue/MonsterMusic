@@ -119,6 +119,8 @@
     <string name="show_slide_indicator">顯示側邊索引</string>
     <string name="show_top_indicator">顯示頂部索引</string>
     <string name="show_indicator_in_queue">在播放清單中顯示索引</string>
+    <string name="show_indicator_in_albums">在專輯中顯示索引</string>
+    <string name="show_indicator_in_artists">在演出者中顯示索引</string>
     <string name="comment">備註: %1$s</string>
     <string name="year_tra">年份: %1$s%2$s</string>
     <string name="album_tracks">%1$s 張專輯%2$s</string>
@@ -158,6 +160,10 @@
     <string name="content_description_hide_top_indicator">隱藏頂部指示器</string>
     <string name="content_description_show_indicator_in_queue">在待播清單中顯示指示器</string>
     <string name="content_description_hide_indicator_in_queue">在待播清單中隱藏指示器</string>
+    <string name="content_description_show_indicator_in_albums">在專輯中顯示指示器</string>
+    <string name="content_description_hide_indicator_in_albums">在專輯中隱藏指示器</string>
+    <string name="content_description_show_indicator_in_artists">在演出者中顯示指示器</string>
+    <string name="content_description_hide_indicator_in_artists">在演出者中隱藏指示器</string>
     <string name="language_follow_system">跟隨系統</string>
     <string name="settings_link_biquad_designer">BiQuadDesigner</string>
     <string name="settings_link_media3">Media3</string>

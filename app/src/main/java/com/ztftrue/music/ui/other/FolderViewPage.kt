@@ -122,7 +122,13 @@ fun FolderListPage(
     folderList: FolderList
 ) {
     val tracksList = remember { mutableStateListOf<MusicItem>() }
-    val showIndicator = remember { mutableStateOf(false) }
+    val trackTypeKey = folderList.type.name + "@Tracks"
+    val showIndicator = remember {
+        mutableStateOf(
+            musicViewModel.showIndicatorMap[trackTypeKey]
+                ?: musicViewModel.showIndicatorMap.getOrDefault(folderList.type.name, false)
+        )
+    }
     val durationAll = remember { mutableStateOf("") }
     val musicPlayList = remember { mutableStateOf(AnyListBase(2, PlayListType.None)) }
     val childrenFolderList = remember { mutableStateListOf<FolderList>() }
@@ -134,8 +140,11 @@ fun FolderListPage(
     var showAddPlayListDialog by remember { mutableStateOf(false) }
     var showCreatePlayListDialog by remember { mutableStateOf(false) }
     var showSortDialog by remember { mutableStateOf(false) }
-    showIndicator.value =
-        musicViewModel.showIndicatorMap.getOrDefault(folderList.type.toString(), false)
+    LaunchedEffect(musicViewModel.showIndicatorMap[trackTypeKey], musicViewModel.showIndicatorMap[folderList.type.name]) {
+        showIndicator.value =
+            musicViewModel.showIndicatorMap[trackTypeKey]
+                ?: musicViewModel.showIndicatorMap.getOrDefault(folderList.type.name, false)
+    }
     if (showSortDialog) {
         val sortFiledOptions =
             PlayUtils.trackSortFiledMap[folderList.type.name + "@Tracks"]
@@ -354,13 +363,11 @@ fun FolderListPage(
                                         }
                                     })
                             }
+                            musicViewModel.showIndicatorMap[trackTypeKey] =
+                                filedSelected == "Alphabetical"
                             musicViewModel.showIndicatorMap[folderList.type.name] =
                                 filedSelected == "Alphabetical"
-                            showIndicator.value =
-                                musicViewModel.showIndicatorMap.getOrDefault(
-                                    folderList.type.toString(),
-                                    false
-                                )
+                            showIndicator.value = filedSelected == "Alphabetical"
                             val bundle = Bundle()
                             bundle.putString(
                                 "method",

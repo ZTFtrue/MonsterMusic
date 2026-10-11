@@ -1,5 +1,7 @@
 package com.ztftrue.music.ui.home
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -36,6 +38,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -43,7 +46,9 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,13 +79,18 @@ import com.ztftrue.music.R
 import com.ztftrue.music.Router
 import com.ztftrue.music.play.MediaItemUtils
 import com.ztftrue.music.ui.public.AddMusicToPlayListDialog
+import com.ztftrue.music.ui.public.AlphabetScroller
 import com.ztftrue.music.ui.public.CreatePlayListDialog
+import com.ztftrue.music.ui.public.generateItemFilters
 import com.ztftrue.music.utils.DialogOperate
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType
+import com.ztftrue.music.utils.SortUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.model.AlbumList
+import com.ztftrue.music.utils.model.ItemFilterModel
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -98,6 +108,50 @@ fun AlbumGridView(
         albumList = albumListDefault
     }
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    val sharedPreferences = remember {
+        context.getSharedPreferences("list_indicator_config", Context.MODE_PRIVATE)
+    }
+    var showAlbumIndicator by remember {
+        mutableStateOf(sharedPreferences.getBoolean("show_album_indicator", false))
+    }
+    DisposableEffect(Unit) {
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { sp, key ->
+            if (key == "show_album_indicator") {
+                showAlbumIndicator = sp.getBoolean("show_album_indicator", false)
+            }
+        }
+        sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
+        onDispose {
+            sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
+        }
+    }
+    val showIndicatorValue = remember(musicViewModel.showIndicatorMap[PlayListType.Albums.name]) {
+        musicViewModel.showIndicatorMap.getOrDefault(PlayListType.Albums.name, false)
+    }
+    val enableIndicator = showAlbumIndicator && showIndicatorValue
+
+    val (itemFilterList, itemFilterMap) = remember(albumList.size, enableIndicator) {
+        if (enableIndicator) generateItemFilters(albumList) { it.name } else emptyList<ItemFilterModel>() to hashMapOf()
+    }
+    val listStateFilter = rememberLazyListState()
+    var activeSection by remember { mutableStateOf("") }
+
+    LaunchedEffect(listState, albumList.size) {
+        snapshotFlow { listState.firstVisibleItemIndex }
+            .collect { index ->
+                if (index in albumList.indices) {
+                    val section = SortUtils.getSectionLabel(albumList[index].name)
+                    activeSection = section
+                    itemFilterMap[section]?.selfIndex?.let { selfIndex ->
+                        if (itemFilterList.size > 28) {
+                            listStateFilter.scrollToItem(selfIndex)
+                        }
+                    }
+                }
+            }
+    }
     LaunchedEffect(musicViewModel.refreshAlbum.value, albumListDefault) {
         if (albumListDefault == null) {
             albumList.clear()
@@ -182,24 +236,50 @@ fun AlbumGridView(
         }
 
         else -> {
-            LazyVerticalGrid(
-                modifier = Modifier
+            Box(
+                modifier = modifier
                     .background(MaterialTheme.colorScheme.background)
-                    .fillMaxSize(),
-                columns = GridCells.Adaptive(140.dp), // Number of columns in the grid
-                contentPadding = PaddingValues(5.dp),
-                state = listState
+                    .fillMaxSize()
             ) {
-                items(
-                    count = albumList.size,
-                    key = { index -> albumList[index].id }) { index ->
-                    val item = albumList[index]
-                    AlbumItemView(
-                        item,
-                        musicViewModel,
-                        navController,
-                        type,
-                        modifier = Modifier.padding(5.dp)
+                LazyVerticalGrid(
+                    modifier = Modifier.fillMaxSize(),
+                    columns = GridCells.Adaptive(140.dp), // Number of columns in the grid
+                    contentPadding = PaddingValues(
+                        top = 5.dp,
+                        bottom = 5.dp,
+                        start = 5.dp,
+                        end = if (enableIndicator && itemFilterList.isNotEmpty()) 36.dp else 5.dp
+                    ),
+                    state = listState
+                ) {
+                    items(
+                        count = albumList.size,
+                        key = { index -> albumList[index].id }) { index ->
+                        val item = albumList[index]
+                        AlbumItemView(
+                            item,
+                            musicViewModel,
+                            navController,
+                            type,
+                            modifier = Modifier.padding(5.dp)
+                        )
+                    }
+                }
+
+                if (enableIndicator && itemFilterList.isNotEmpty()) {
+                    AlphabetScroller(
+                        itemFilterList = itemFilterList,
+                        activeSection = activeSection,
+                        listStateFilter = listStateFilter,
+                        onSectionSelected = { targetModel ->
+                            activeSection = targetModel.name
+                            scope.launch {
+                                listState.scrollToItem(targetModel.index)
+                            }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .padding(top = 8.dp, bottom = 8.dp, end = 2.dp)
                     )
                 }
             }
