@@ -74,6 +74,22 @@ Or download the latest APK directly from the **[Releases Section](https://github
 - **Word-Level Dictionary Popup**: Tap any word in the lyrics to open a dictionary lookup popup with support for multiple dictionary providers and auto-dismiss settings.
 - **Universal Formats**: Supports embedded lyrics (ID3/Vorbis/MP4) as well as external `.lrc`, `.vtt`, `.srt`, and `.txt` files.
 
+### 🎬 Video Playback Support
+- **Dedicated Video Tab**: Play local video files directly in the player's dedicated Video tab.
+- **Battery-Saving Background Playback**: Automatically switches to audio-only playback when minimized or navigating away from the Video tab to conserve battery.
+- **Full DSP Audio Processing**: Native C equalizer, spatial effects, audio filters, and visualizers apply seamlessly to video soundtracks.
+
+#### How to Enable Video Playback
+1. Open **Settings** (⚙️) from the top app bar.
+2. Scroll to the **Video Support** toggle and turn it on *(available when compiled with video support enabled)*.
+3. Grant the **Videos** media permission when prompted by Android.
+4. Return to the main screen — local video files will appear in your library and a dedicated **Video** tab will be active on the Now Playing screen.
+
+#### Why is the `READ_MEDIA_VIDEO` Permission Needed?
+- **Privacy-First Design**: MonsterMusic strictly adheres to user privacy. By default, the app only asks for audio permissions (`READ_MEDIA_AUDIO` / `READ_EXTERNAL_STORAGE`) so it **never** accesses your personal photos or videos without explicit intent.
+- **Android 13+ Granular Permissions**: Starting with Android 13 (API 33), Android separated media storage into distinct permissions (`READ_MEDIA_AUDIO`, `READ_MEDIA_VIDEO`, `READ_MEDIA_IMAGES`). The `READ_MEDIA_VIDEO` permission is required by the Android OS exclusively to scan and play local video files.
+- **100% Offline & Private**: MonsterMusic has no network permissions, no internet access, zero analytics, and zero tracking. Your media files never leave your device.
+
 ### 🎨 Material Design 3 & Theming
 - Fully compatible with Material Design 3 and Android 12+ dynamic colors (Monet).
 - Multiple customizable themes and accents to match your personal aesthetic.

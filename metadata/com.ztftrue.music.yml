@@ -20,6 +20,7 @@ Description: |-
   • Dynamic Audio Visualizers: Matrix Digital Rain and 32-band Audio Spectrum visualizers with frequency reactivity, fullscreen mode, and landscape orientation lock.
   • Dual Pitch & Speed Controls: Coarse (0.1x) and fine-tuning (0.01x) sliders for tempo and pitch stretching.
   • Interactive Synced Lyrics: Smooth auto-scrolling, drag-to-seek timestamp navigation, and tap-to-lookup dictionary popup with multi-dictionary support.
+  • Video Playback Support: Dedicated Video tab for local video files with battery-saving audio-only background playback and full DSP audio effects. Enable in Settings (requests READ_MEDIA_VIDEO on Android 13+ solely to discover and play local videos).
   • Privacy First: 100% offline, zero network requests, no analytics, and no intrusive permissions.
 
 RepoType: git
