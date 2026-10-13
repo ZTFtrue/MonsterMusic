@@ -1,0 +1,5 @@
+v0.1.84:
+• Redesigned Settings page into organized categories with modern Material 3 styling and full-row clickability.
+• Overhauled custom default cover replacement with live preview, system photo chooser, and in-place restore.
+• Optimized album merging for split albums sharing artist and title, ensuring complete track retrieval.
+• Improved visualizer lifecycle: Matrix rain freezes in place upon pause, and native FFT processing turns off when not visible.

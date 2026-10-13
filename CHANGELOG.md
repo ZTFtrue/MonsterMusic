@@ -4,6 +4,14 @@ All notable changes to MonsterMusic are documented in this file.
 
 The project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.1.84] - 2026-10-13
+- **Settings Page Overhaul**: Categorized all preferences into intuitive sections (Appearance & Interface, Library & Scanning, Playback & Audio, Lyrics, About). Modernized Material 3 styling, eliminated redundant nested borders and paddings, and made switch rows fully clickable.
+- **Custom Default Cover Picker**: Redesigned default cover dialog with live preview and status indicators. Added system photo picker chooser supporting Gallery, Photo Picker, and Files with safe MIME/URI handling, fallback storage, and real-time in-place preview and restore.
+- **Enhanced Album Merging**: Robust multi-ID album aggregation across disparate MediaStore entries with case-insensitive matching. Unified track queries across merged IDs to ensure complete tracklists for albums featuring guest artists, and instant cache refresh on toggle without app restarts.
+- **Visualization Performance & Lifecycle**: Matrix rain visualizer freezes in place upon pause without disappearing and drops CPU/GPU calculations to 0%. Spectrum visualizer cleanly settles to baseline on pause. Native C++ FFT calculations automatically shut off when visualizers are not in view (e.g. lyrics tab).
+
+---
+
 ## [0.1.83] - 2026-10-11
 - **Bit-Perfect USB Audio Output**: Support bit-perfect PCM passthrough to external USB DACs (Android 14+ `MIXER_BEHAVIOR_BIT_PERFECT`), bypassing system mixer, resampling, and DSP effects.
 - **Track List UI Redesign & Adaptive Alphabet Scroller**: Modernized track list items with rounded corners, album art thumbnails, and active track highlight. Added adaptive drag-scroller with magnifier badge and haptic feedback, plus alphabetical indicators for Album and Artist views.

@@ -1,0 +1,5 @@
+v0.1.84:
+• Neu gestaltete Einstellungsseite mit strukturierter Kategorisierung und durchgehender Material 3-Bedienung.
+• Überarbeiteter Dialog für Standard-Cover mit Live-Vorschau, System-Fotoauswahl und Echtzeit-Wiederherstellung.
+• Optimierte Zusammenführung von Alben mit gleichem Namen und Interpreten für vollständige Titellisten.
+• Verbesserter Visualisierer-Lebenszyklus: Matrix-Regen friert bei Pause ein und native C++-FFT schaltet sich im Hintergrund ab.
