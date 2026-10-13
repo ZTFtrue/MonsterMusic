@@ -141,6 +141,11 @@
     <string name="failed_to_open_language_settings">Malsukcesis malfermi lingvajn agordojn</string>
     <string name="set_language">Agordi lingvon</string>
     <string name="replace_cover_the_rose">Anstataŭigi kovrilon (la rozo)</string>
+    <string name="select_image">Elekti bildon</string>
+    <string name="restore_default_cover">Restaŭri defaŭltan kovrilon</string>
+    <string name="custom_cover">Propra kovrilo</string>
+    <string name="default_cover">Defaŭlta kovrilo (rozo)</string>
+    <string name="default_cover_restored">Defaŭlta kovrilo restaŭrita</string>
     <string name="settings_set_widget_background">Agordi fonon de fenestraĵo</string>
     <string name="settings_set_auto_play">Agordi aŭtomatan ludadon</string>
     <string name="settings_thanks_for_translating">Dankon pro tradukado</string>

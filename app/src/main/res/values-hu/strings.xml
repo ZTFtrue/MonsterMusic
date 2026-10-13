@@ -141,6 +141,11 @@
     <string name="failed_to_open_language_settings">Nem sikerült megnyitni a nyelvi beállításokat</string>
     <string name="set_language">Nyelv beállítása</string>
     <string name="replace_cover_the_rose">Borító cseréje (a rózsa)</string>
+    <string name="select_image">Kép kiválasztása</string>
+    <string name="restore_default_cover">Alapértelmezett borító visszaállítása</string>
+    <string name="custom_cover">Egyéni borító</string>
+    <string name="default_cover">Alapértelmezett borító (rózsa)</string>
+    <string name="default_cover_restored">Alapértelmezett borító visszaállítva</string>
     <string name="settings_set_widget_background">Widget háttér beállítása</string>
     <string name="settings_set_auto_play">Automatikus lejátszás beállítása</string>
     <string name="settings_thanks_for_translating">Köszönjük a fordítást</string>

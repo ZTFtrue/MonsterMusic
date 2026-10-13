@@ -1,5 +1,7 @@
 package com.ztftrue.music
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
@@ -77,6 +79,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.File
+import java.io.FileOutputStream
 import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -1536,6 +1539,142 @@ class MusicViewModel : ViewModel() {
             needRefreshTheme.value = !needRefreshTheme.value
         }
         return currentMusicCover.value
+    }
+
+    fun getCustomCoverModel(): Any {
+        return when (val c = customMusicCover.value) {
+            is String -> File(c)
+            else -> c
+        }
+    }
+
+    fun setCustomCover(context: Context, uri: Uri) {
+        val appContext = context.applicationContext
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val mimeType = try {
+                    context.contentResolver.getType(uri)
+                } catch (_: Exception) {
+                    try {
+                        appContext.contentResolver.getType(uri)
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
+                val fileExtension = when (mimeType?.lowercase()) {
+                    "image/png" -> "png"
+                    "image/webp" -> "webp"
+                    "image/gif" -> "gif"
+                    "image/jpeg", "image/jpg" -> "jpg"
+                    "image/svg+xml" -> "svg"
+                    "image/bmp" -> "bmp"
+                    else -> {
+                        val fileName = try {
+                            Utils.getFileNameFromUri(context, uri)
+                        } catch (_: Exception) {
+                            null
+                        } ?: "cover.jpg"
+                        if (fileName.contains('.')) {
+                            fileName.substringAfterLast('.').lowercase()
+                        } else {
+                            "jpg"
+                        }
+                    }
+                }
+                val folder = context.getExternalFilesDir("cover")
+                    ?: appContext.getExternalFilesDir("cover")
+                    ?: File(context.filesDir, "cover")
+                if (!folder.exists()) {
+                    folder.mkdirs()
+                }
+
+                // Delete old track covers
+                listOfNotNull(
+                    context.getExternalFilesDir("cover"),
+                    File(context.filesDir, "cover")
+                ).forEach { f ->
+                    f.listFiles()?.forEach { file ->
+                        if (file.isFile && file.name.startsWith("track_cover")) {
+                            file.delete()
+                        }
+                    }
+                }
+
+                val targetFile = File(folder, "track_cover_${System.currentTimeMillis()}.$fileExtension")
+                val inputStream = try {
+                    context.contentResolver.openInputStream(uri)
+                } catch (e: Exception) {
+                    Log.w("MusicViewModel", "context.contentResolver failed for $uri, trying appContext", e)
+                    appContext.contentResolver.openInputStream(uri)
+                } ?: throw IllegalStateException("Cannot open input stream for $uri")
+
+                inputStream.use { input ->
+                    FileOutputStream(targetFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+
+                if (!targetFile.exists() || targetFile.length() <= 0L) {
+                    throw IllegalStateException("Failed to write cover image file")
+                }
+
+                withContext(Dispatchers.Main) {
+                    customMusicCover.value = targetFile.absolutePath
+                    SharedPreferencesUtils.setTrackCoverData(appContext, targetFile.absolutePath)
+                    getCurrentMusicCover(appContext)
+                    if (Utils.hasAppWidget(appContext, PlayMusicWidget::class.java)) {
+                        val appWidgetManager = AppWidgetManager.getInstance(appContext)
+                        val ids = appWidgetManager.getAppWidgetIds(
+                            ComponentName(appContext, PlayMusicWidget::class.java)
+                        )
+                        for (id in ids) {
+                            PlayMusicWidget.updateAppWidget(appContext, appWidgetManager, id)
+                        }
+                    }
+                    Toast.makeText(appContext, R.string.save, Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e("MusicViewModel", "Failed to set custom cover", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(appContext, "Failed: ${e.message ?: "Unknown error"}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    fun resetCustomCover(context: Context) {
+        val appContext = context.applicationContext
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                listOfNotNull(
+                    context.getExternalFilesDir("cover"),
+                    File(context.filesDir, "cover")
+                ).forEach { f ->
+                    f.listFiles()?.forEach { file ->
+                        if (file.isFile && file.name.startsWith("track_cover")) {
+                            file.delete()
+                        }
+                    }
+                }
+                withContext(Dispatchers.Main) {
+                    customMusicCover.value = R.drawable.songs_thumbnail_cover
+                    SharedPreferencesUtils.setTrackCoverData(appContext, "")
+                    getCurrentMusicCover(appContext)
+                    if (Utils.hasAppWidget(appContext, PlayMusicWidget::class.java)) {
+                        val appWidgetManager = AppWidgetManager.getInstance(appContext)
+                        val ids = appWidgetManager.getAppWidgetIds(
+                            ComponentName(appContext, PlayMusicWidget::class.java)
+                        )
+                        for (id in ids) {
+                            PlayMusicWidget.updateAppWidget(appContext, appWidgetManager, id)
+                        }
+                    }
+                    Toast.makeText(appContext, R.string.default_cover_restored, Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e("MusicViewModel", "Failed to reset custom cover", e)
+            }
+        }
     }
 
     suspend fun getAlbumCover(id: Long, context: Context): Any {

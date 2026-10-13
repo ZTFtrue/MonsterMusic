@@ -142,6 +142,11 @@
     <string name="failed_to_open_language_settings">Не удалось открыть настройки языка</string>
     <string name="set_language">Выбрать язык</string>
     <string name="replace_cover_the_rose">Заменить обложку (роза)</string>
+    <string name="select_image">Выбрать изображение</string>
+    <string name="restore_default_cover">Восстановить обложку по умолчанию</string>
+    <string name="custom_cover">Пользовательская обложка</string>
+    <string name="default_cover">Обложка по умолчанию (роза)</string>
+    <string name="default_cover_restored">Обложка по умолчанию восстановлена</string>
     <string name="settings_set_widget_background">Настроить фон виджета</string>
     <string name="settings_set_auto_play">Настроить автовоспроизведение</string>
     <string name="settings_thanks_for_translating">Спасибо за перевод</string>

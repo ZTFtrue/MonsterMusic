@@ -15,8 +15,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
-import com.ztftrue.music.BuildConfig
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -44,19 +42,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.media3.exoplayer.DefaultRenderersFactory
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -84,6 +82,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -96,14 +95,20 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DefaultRenderersFactory
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import com.ztftrue.music.BuildConfig
+import com.ztftrue.music.MainActivity
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.PlayMusicWidget
 import com.ztftrue.music.R
@@ -146,6 +151,13 @@ fun SettingsPage(
             musicViewModel.setVideoSupportEnable(context, true)
         } else {
             Toast.makeText(context, R.string.video_support_enable, Toast.LENGTH_SHORT).show()
+        }
+    }
+    val coverImagePickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            musicViewModel.setCustomCover(context, uri)
         }
     }
     var durationValue by remember { mutableStateOf("0") }
@@ -195,8 +207,12 @@ fun SettingsPage(
         ScanModeDialog(musicViewModel = musicViewModel, onDismiss = { showScanModeDialog = false })
     }
     if (showManageFilterFoldersDialog) {
-        val isWhitelist = musicViewModel.scanMode.intValue == SharedPreferencesUtils.SCAN_MODE_WHITELIST
-        ManageFilterFoldersDialog(musicViewModel = musicViewModel, isWhitelist = isWhitelist, onDismiss = { showManageFilterFoldersDialog = false })
+        val isWhitelist =
+            musicViewModel.scanMode.intValue == SharedPreferencesUtils.SCAN_MODE_WHITELIST
+        ManageFilterFoldersDialog(
+            musicViewModel = musicViewModel,
+            isWhitelist = isWhitelist,
+            onDismiss = { showManageFilterFoldersDialog = false })
     }
     if (showLyricsFolderDialog) {
         ManageLyricsFolderDialog(musicViewModel, onDismiss = { showLyricsFolderDialog = false })
@@ -208,7 +224,17 @@ fun SettingsPage(
         SetListIndicatorDialog(onDismiss = { showSetListIndicatorDialog = false })
     }
     if (showReplaceCoverDialog) {
-        ReplaceCoverDialog(musicViewModel, onDismiss = { showReplaceCoverDialog = false })
+        ReplaceCoverDialog(
+            musicViewModel = musicViewModel,
+            onPickImage = {
+                if (context is MainActivity) {
+                    context.roseImagPicker()
+                } else {
+                    coverImagePickerLauncher.launch("image/*")
+                }
+            },
+            onDismiss = { showReplaceCoverDialog = false }
+        )
     }
     if (showSetLanguageDialog) {
         SwitchLanguageDialog(onDismiss = { showSetLanguageDialog = false })
@@ -223,7 +249,9 @@ fun SettingsPage(
         ManageAutoPlayDialog(onDismiss = { showAutoPlaySetDialog = false })
     }
     if (openDecoderDialog.value) {
-        AudioDecoderModeDialog(musicViewModel = musicViewModel, onDismiss = { openDecoderDialog.value = false })
+        AudioDecoderModeDialog(
+            musicViewModel = musicViewModel,
+            onDismiss = { openDecoderDialog.value = false })
     }
 
     Scaffold(
@@ -304,7 +332,8 @@ fun SettingsPage(
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                 try {
                                     val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS)
-                                    intent.data = Uri.fromParts("package", context.packageName, null)
+                                    intent.data =
+                                        Uri.fromParts("package", context.packageName, null)
                                     context.startActivity(intent)
                                 } catch (e: Exception) {
                                     Log.e("SettingsPage", "Failed to open language settings", e)
@@ -339,9 +368,30 @@ fun SettingsPage(
                     )
                 }
                 item {
+                    val isCustom = musicViewModel.customMusicCover.value !is Int
                     SettingsItem(
                         title = stringResource(R.string.replace_cover_the_rose),
-                        onClick = { showReplaceCoverDialog = true }
+                        subtitle = stringResource(if (isCustom) R.string.custom_cover else R.string.default_cover),
+                        onClick = { showReplaceCoverDialog = true },
+                        trailingContent = {
+                            AsyncImage(
+                                model = ImageRequest.Builder(context)
+                                    .data(musicViewModel.getCustomCoverModel())
+                                    .crossfade(true)
+                                    .size(100, 100)
+                                    .build(),
+                                contentDescription = stringResource(R.string.cover),
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .border(
+                                        width = 0.5.dp,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                                        shape = RoundedCornerShape(6.dp)
+                                    )
+                            )
+                        }
                     )
                 }
 
@@ -350,21 +400,31 @@ fun SettingsPage(
                     SettingsCategoryHeader(stringResource(R.string.settings_category_library))
                 }
                 item {
-                    val isWhitelist = musicViewModel.scanMode.intValue == SharedPreferencesUtils.SCAN_MODE_WHITELIST
+                    val isWhitelist =
+                        musicViewModel.scanMode.intValue == SharedPreferencesUtils.SCAN_MODE_WHITELIST
                     SettingsItem(
                         title = stringResource(R.string.folder_scan_mode),
-                        subtitle = if (isWhitelist) stringResource(R.string.scan_mode_whitelist) else stringResource(R.string.scan_mode_blacklist),
+                        subtitle = if (isWhitelist) stringResource(R.string.scan_mode_whitelist) else stringResource(
+                            R.string.scan_mode_blacklist
+                        ),
                         onClick = { showScanModeDialog = true }
                     )
                 }
                 item {
-                    val isWhitelist = musicViewModel.scanMode.intValue == SharedPreferencesUtils.SCAN_MODE_WHITELIST
+                    val isWhitelist =
+                        musicViewModel.scanMode.intValue == SharedPreferencesUtils.SCAN_MODE_WHITELIST
                     val folderSubtitle = if (isWhitelist) {
                         if (musicViewModel.whitelistFolders.isEmpty()) stringResource(R.string.no_folders_added)
-                        else stringResource(R.string.whitelist_mode_summary, musicViewModel.whitelistFolders.size)
+                        else stringResource(
+                            R.string.whitelist_mode_summary,
+                            musicViewModel.whitelistFolders.size
+                        )
                     } else {
                         if (musicViewModel.blacklistFolders.isEmpty()) stringResource(R.string.no_folders_added)
-                        else stringResource(R.string.blacklist_mode_summary, musicViewModel.blacklistFolders.size)
+                        else stringResource(
+                            R.string.blacklist_mode_summary,
+                            musicViewModel.blacklistFolders.size
+                        )
                     }
                     SettingsItem(
                         title = stringResource(
@@ -381,7 +441,8 @@ fun SettingsPage(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 10.dp)
                     ) {
-                        val saveIgnoreDurationSuccess = stringResource(R.string.ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect)
+                        val saveIgnoreDurationSuccess =
+                            stringResource(R.string.ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect)
                         Text(
                             text = stringResource(R.string.ignore_tracks_duration_less_than),
                             style = MaterialTheme.typography.bodyLarge,
@@ -426,7 +487,10 @@ fun SettingsPage(
                                         onClick = {
                                             saveIgnoreDuration(
                                                 durationValue, context,
-                                                String.format(saveIgnoreDurationSuccess, durationValue),
+                                                String.format(
+                                                    saveIgnoreDurationSuccess,
+                                                    durationValue
+                                                ),
                                                 focusRequester,
                                                 keyboardController
                                             )
@@ -580,14 +644,18 @@ fun SettingsPage(
                                     Text(
                                         text = "Supported: $ratesText Hz",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                            alpha = 0.7f
+                                        )
                                     )
                                 }
                                 if (musicViewModel.bitPerfectUsbEnable.value) {
                                     Text(
                                         text = stringResource(R.string.bit_perfect_volume_notice),
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                            alpha = 0.7f
+                                        )
                                     )
                                 }
                             }
@@ -1216,7 +1284,9 @@ fun AudioDecoderModeDialog(
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
                             .background(
-                                if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                                if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(
+                                    alpha = 0.4f
+                                )
                                 else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                             )
                             .border(
@@ -2771,107 +2841,142 @@ fun SwitchLanguageDialog(onDismiss: () -> Unit) {
 
 @UnstableApi
 @Composable
-fun ReplaceCoverDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
-
+fun ReplaceCoverDialog(
+    musicViewModel: MusicViewModel,
+    onPickImage: () -> Unit,
+    onDismiss: () -> Unit
+) {
     val context = LocalContext.current
-
+    val isCustom = musicViewModel.customMusicCover.value !is Int
 
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
-            usePlatformDefaultWidth = true, dismissOnBackPress = true,
+            usePlatformDefaultWidth = true,
+            dismissOnBackPress = true,
             dismissOnClickOutside = true
         ),
         content = {
-            Column(
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(color = MaterialTheme.colorScheme.background),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
+                    .padding(16.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             ) {
-                HorizontalDivider(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(1.dp)
-                        .background(color = MaterialTheme.colorScheme.onBackground)
-                )
-                LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                    item {
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = stringResource(R.string.replace_cover_the_rose),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Clickable image preview to select another image
+                    Box(
+                        modifier = Modifier
+                            .size(150.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .clickable(onClick = onPickImage),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data(musicViewModel.getCustomCoverModel())
+                                .crossfade(true)
+                                .size(300, 300)
+                                .build(),
+                            contentDescription = stringResource(R.string.cover),
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+
+                        // Edit icon badge in the bottom-right corner
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .clickable {
-                                    onDismiss()
-                                    Utils.setCoverFile(musicViewModel, context)
-                                },
-                            contentAlignment = Alignment.CenterStart
+                                .align(Alignment.BottomEnd)
+                                .padding(8.dp)
+                                .size(28.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(50.dp)
-                                    .padding(0.dp)
-                                    .drawBehind {
-
-                                    }
-
-                            ) {
-
-                                Text(
-                                    text = stringResource(R.string.replace_cover_the_rose),
-                                    modifier = Modifier
-                                        .padding(2.dp),
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                )
-                            }
+                            Icon(
+                                imageVector = Icons.Outlined.Edit,
+                                contentDescription = "Edit cover",
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
                         }
-
                     }
-                    item {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(if (isCustom) R.string.custom_cover else R.string.default_cover),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Button(
+                        onClick = onPickImage,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = stringResource(R.string.select_image),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+
+                    if (isCustom) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedButton(
+                            onClick = {
+                                musicViewModel.resetCustomCover(context)
+                            },
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            TextButton(
-                                onClick = { onDismiss() },
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .fillMaxWidth(0.5f),
-                            ) {
-                                Text(
-                                    stringResource(R.string.cancel),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            }
-//                            HorizontalDivider(
-//                                modifier = Modifier
-//                                    .background(MaterialTheme.colorScheme.onBackground)
-//                                    .width(1.dp)
-//                                    .height(50.dp)
-//                            )
-//                            TextButton(
-//                                onClick = {
-//                                    onConfirmation()
-//                                },
-//                                modifier = Modifier
-//                                    .padding(8.dp)
-//                                    .fillMaxWidth(),
-//
-//                                ) {
-//                                Text(
-//                                    stringResource(id = R.string.confirm),
-//                                    color = MaterialTheme.colorScheme.onBackground
-//                                )
-//                            }
+                            Text(
+                                text = stringResource(R.string.restore_default_cover),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    TextButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = stringResource(R.string.cancel),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
-
             }
         }
     )

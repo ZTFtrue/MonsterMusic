@@ -141,6 +141,11 @@
     <string name="failed_to_open_language_settings">Spracheinstellungen konnten nicht geöffnet werden</string>
     <string name="set_language">Sprache einstellen</string>
     <string name="replace_cover_the_rose">Cover ersetzen (Die Rose)</string>
+    <string name="select_image">Bild auswählen</string>
+    <string name="restore_default_cover">Standard-Cover wiederherstellen</string>
+    <string name="custom_cover">Benutzerdefiniertes Cover</string>
+    <string name="default_cover">Standard-Cover (Rose)</string>
+    <string name="default_cover_restored">Standard-Cover wiederhergestellt</string>
     <string name="settings_set_widget_background">Widget-Hintergrund festlegen</string>
     <string name="settings_set_auto_play">Automatisches Abspielen festlegen</string>
     <string name="settings_thanks_for_translating">Danke für die Übersetzung</string>

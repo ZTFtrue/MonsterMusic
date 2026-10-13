@@ -157,6 +157,11 @@
     <string name="failed_to_open_language_settings">打开语言设置失败</string>
     <string name="set_language">设置语言</string>
     <string name="replace_cover_the_rose">替换封面(玫瑰)</string>
+    <string name="select_image">选择图片</string>
+    <string name="restore_default_cover">恢复默认封面</string>
+    <string name="custom_cover">自定义封面</string>
+    <string name="default_cover">默认封面 (玫瑰)</string>
+    <string name="default_cover_restored">已恢复默认封面</string>
     <string name="settings_set_widget_background">设置微件背景</string>
     <string name="settings_set_auto_play">设置自动播放</string>
 

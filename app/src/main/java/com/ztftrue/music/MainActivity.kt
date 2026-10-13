@@ -18,6 +18,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
+import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.provider.Settings
 import android.util.Log
@@ -273,54 +274,14 @@ class MainActivity : ComponentActivity() {
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (result.resultCode == RESULT_OK) {
-                if (result.data != null) {
-                    val selectedFileUri: Uri? = result.data?.data
-                    if (selectedFileUri != null) {
-                        contentResolver.openInputStream(selectedFileUri)?.use { inputStream ->
-                            try {
-                                //  read file name
-                                val fileName =
-                                    Utils.getFileNameFromUri(this@MainActivity, selectedFileUri)
-                                        ?: "cover.jpg"
-                                val fileExtension = if (fileName.contains('.')) {
-                                    fileName.substringAfterLast('.').lowercase()
-                                } else {
-                                    ""
-                                }
-                                val folderPath = "cover"
-                                val folder = this@MainActivity.getExternalFilesDir(
-                                    folderPath
-                                )
-                                if (folder != null) {
-                                    if (folder.exists()) {
-                                        folder.listFiles()?.forEach {
-                                            if (it.isFile && it.name.startsWith("track_cover")) {
-                                                it.delete()
-                                                return@forEach
-                                            }
-                                        }
-                                    } else {
-                                        folder.mkdirs()
-                                    }
-
-                                    val tempPath: String? =
-                                        this@MainActivity.getExternalFilesDir(folderPath)?.absolutePath
-                                    val targetFile = File(tempPath, "track_cover.$fileExtension")
-                                    FileOutputStream(targetFile).use { outputStream ->
-                                        inputStream.copyTo(outputStream)
-                                    }
-                                    musicViewModel.customMusicCover.value = targetFile.absolutePath
-                                    SharedPreferencesUtils.setTrackCoverData(
-                                        this@MainActivity,
-                                        targetFile.absolutePath
-                                    )
-                                    musicViewModel.getCurrentMusicCover(this@MainActivity)
-                                }
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-                        }
-                    }
+                val selectedFileUri: Uri? = result.data?.data
+                    ?: if (result.data?.clipData != null && result.data!!.clipData!!.itemCount > 0) {
+                        result.data!!.clipData!!.getItemAt(0).uri
+                    } else null
+                if (selectedFileUri != null) {
+                    musicViewModel.setCustomCover(this@MainActivity, selectedFileUri)
+                } else {
+                    Toast.makeText(this@MainActivity, "No image selected", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -544,11 +505,32 @@ class MainActivity : ComponentActivity() {
     }
 
     fun roseImagPicker() {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-        intent.type = "image/*" // Specify the MIME type for text files
-//        intent.addCategory(Intent.CATEGORY_OPENABLE)
-//        intent.type = "text/plain|application/octet-stream";
-        roseImagePickerLauncher.launch(intent)
+        val getContentIntent = Intent(Intent.ACTION_GET_CONTENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "image/*"
+        }
+        val pickIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        val chooser = Intent.createChooser(getContentIntent, getString(R.string.select_image)).apply {
+            putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(pickIntent))
+        }
+        try {
+            roseImagePickerLauncher.launch(chooser)
+        } catch (_: Exception) {
+            try {
+                roseImagePickerLauncher.launch(getContentIntent)
+            } catch (_: Exception) {
+                try {
+                    val openDocIntent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = "image/*"
+                    }
+                    roseImagePickerLauncher.launch(openDocIntent)
+                } catch (e: Exception) {
+                    Log.e("MainActivity", "Failed to launch image picker", e)
+                    Toast.makeText(this@MainActivity, "Failed to open image picker", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     private var coverBitmap: MutableState<Bitmap?>? = null

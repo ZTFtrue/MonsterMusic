@@ -141,6 +141,11 @@
     <string name="failed_to_open_language_settings">Dil ayarları açılamadı</string>
     <string name="set_language">Dili ayarla</string>
     <string name="replace_cover_the_rose">Kapağı değiştir (gül)</string>
+    <string name="select_image">Resim seç</string>
+    <string name="restore_default_cover">Varsayılan kapağı geri yükle</string>
+    <string name="custom_cover">Özel kapak</string>
+    <string name="default_cover">Varsayılan kapak (gül)</string>
+    <string name="default_cover_restored">Varsayılan kapak geri yüklendi</string>
     <string name="settings_set_widget_background">Widget Arka Planını Ayarla</string>
     <string name="settings_set_auto_play">Otomatik Oynatmayı Ayarla</string>
     <string name="settings_thanks_for_translating">Çeviri için teşekkürler</string>

@@ -142,6 +142,11 @@
     <string name="failed_to_open_language_settings">فشل فتح إعدادات اللغة</string>
     <string name="set_language">تعيين اللغة</string>
     <string name="replace_cover_the_rose">استبدال الغلاف (الوردة)</string>
+    <string name="select_image">اختيار صورة</string>
+    <string name="restore_default_cover">استعادة الغلاف الافتراضي</string>
+    <string name="custom_cover">غلاف مخصص</string>
+    <string name="default_cover">الغلاف الافتراضي (الوردة)</string>
+    <string name="default_cover_restored">تمت استعادة الغلاف الافتراضي</string>
     <string name="settings_set_widget_background">تعيين خلفية الأداة</string>
     <string name="settings_set_auto_play">تعيين التشغيل التلقائي</string>
     <string name="settings_thanks_for_translating">شكر خاص للمستخدمين التاليين لمساهمتهم في الترجمة:</string>

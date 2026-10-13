@@ -142,6 +142,11 @@
     <string name="failed_to_open_language_settings">Impossible d\'ouvrir les paramètres de langue</string>
     <string name="set_language">Langue</string>
     <string name="replace_cover_the_rose">Remplacer la pochette (la rose)</string>
+    <string name="select_image">Sélectionner une image</string>
+    <string name="restore_default_cover">Restaurer la pochette par défaut</string>
+    <string name="custom_cover">Pochette personnalisée</string>
+    <string name="default_cover">Pochette par défaut (Rose)</string>
+    <string name="default_cover_restored">Pochette par défaut restaurée</string>
     <string name="settings_set_widget_background">Fond du widget</string>
     <string name="settings_set_auto_play">Lecture automatique</string>
     <string name="settings_thanks_for_translating">Remerciements particuliers aux contributeurs pour la traduction :</string>

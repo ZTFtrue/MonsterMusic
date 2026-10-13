@@ -468,8 +468,7 @@ object Utils {
                 return if (sourceFile.exists()) {
                     ImageSource.FilePath(defaultCoverResId)
                 } else {
-                    musicViewModel.customMusicCover.value =
-                        ImageSource.Resource(R.drawable.songs_thumbnail_cover)
+                    musicViewModel.customMusicCover.value = R.drawable.songs_thumbnail_cover
                     SharedPreferencesUtils.setTrackCoverData(context, "")
                     ImageSource.Resource(R.drawable.songs_thumbnail_cover)
                 }
@@ -515,7 +514,7 @@ object Utils {
         val defaultCoverResId = SharedPreferencesUtils.getTrackCoverData(
             context
         )
-        if (defaultCoverResId == null) {
+        if (defaultCoverResId.isNullOrEmpty()) {
             return (decodeSampledBitmapFromResource(context.resources, R.drawable.songs_thumbnail_cover, 512, 512)
                 ?: BitmapFactory.decodeResource(context.resources, R.drawable.songs_thumbnail_cover))
                 .scale(512, 512, false)
@@ -981,28 +980,36 @@ object Utils {
 
     @OptIn(UnstableApi::class)
     fun setCoverFile(musicViewModel: MusicViewModel, context: Context) {
-        (context as MainActivity).roseImagPicker()
+        if (context is MainActivity) {
+            context.roseImagPicker()
+        }
     }
 
     fun getFileNameFromUri(context: Context, uri: Uri): String? {
         var result: String? = null
         if (uri.scheme == "content") {
-            val cursor = context.contentResolver.query(uri, null, null, null, null)
-            cursor?.use {
-                if (it.moveToFirst()) {
-                    val index = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                    if (index != -1) {
-                        result = it.getString(index)
+            try {
+                val projection = arrayOf(OpenableColumns.DISPLAY_NAME)
+                context.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                        if (index != -1) {
+                            result = cursor.getString(index)
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                Log.w("Utils", "Cannot query display name for URI: $uri", e)
             }
         }
         if (result == null) {
-            result = uri.path
-            val cut = result?.lastIndexOf('/')
-            if (cut != null && cut != -1) {
-                result = result.substring(cut + 1)
-            }
+            try {
+                result = uri.path
+                val cut = result?.lastIndexOf('/')
+                if (cut != null && cut != -1) {
+                    result = result.substring(cut + 1)
+                }
+            } catch (_: Exception) {}
         }
         return result
     }

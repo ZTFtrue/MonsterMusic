@@ -142,6 +142,11 @@
     <string name="failed_to_open_language_settings">言語設定を開けませんでした</string>
     <string name="set_language">言語を設定</string>
     <string name="replace_cover_the_rose">カバーを置換(薔薇)</string>
+    <string name="select_image">画像を選択</string>
+    <string name="restore_default_cover">デフォルトのカバーに戻す</string>
+    <string name="custom_cover">カスタムカバー</string>
+    <string name="default_cover">デフォルトカバー (薔薇)</string>
+    <string name="default_cover_restored">デフォルトのカバーに戻しました</string>
     <string name="settings_set_widget_background">ウィジェットの背景を設定</string>
     <string name="settings_set_auto_play">自動再生を設定</string>
     <string name="settings_thanks_for_translating">翻訳にご協力いただいた皆様に感謝申し上げます:</string>

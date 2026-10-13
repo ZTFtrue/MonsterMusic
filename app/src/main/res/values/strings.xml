@@ -156,6 +156,11 @@
     <string name="failed_to_open_language_settings">Failed to open language settings</string>
     <string name="set_language">Set language</string>
     <string name="replace_cover_the_rose">Replace cover(the rose)</string>
+    <string name="select_image">Select Image</string>
+    <string name="restore_default_cover">Restore Default Cover</string>
+    <string name="custom_cover">Custom cover</string>
+    <string name="default_cover">Default cover (Rose)</string>
+    <string name="default_cover_restored">Default cover restored</string>
     <string name="settings_set_widget_background">Set Widget Background</string>
     <string name="settings_set_auto_play">Set Auto Play</string>
 
