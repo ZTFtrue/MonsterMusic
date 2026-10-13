@@ -167,6 +167,13 @@
     <string name="language_follow_system">跟隨系統</string>
     <string name="settings_link_biquad_designer">BiQuadDesigner</string>
     <string name="settings_link_media3">Media3</string>
+
+    <string name="settings_category_appearance">外觀與介面</string>
+    <string name="settings_category_library">曲庫與掃描</string>
+    <string name="settings_category_playback">播放與音訊</string>
+    <string name="settings_category_lyrics">歌詞設定</string>
+    <string name="settings_category_about">關於</string>
+
     <string name="auto_switch_current_track_to_top_when_random">隨機播放時自動將當前曲目置頂</string>
     <string name="remove_duplicate_tracks">移除重複曲目</string>
     <string name="equalizer_q">"等化器 Q 值: "</string>

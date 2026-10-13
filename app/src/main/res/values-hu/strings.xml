@@ -160,6 +160,12 @@
     <string name="language_follow_system">Rendszer nyelve</string>
     <string name="settings_link_biquad_designer">BiQuadDesigner</string>
     <string name="settings_link_media3">Media3</string>
+
+    <string name="settings_category_appearance">Megjelenés és felület</string>
+    <string name="settings_category_library">Könyvtár és beolvasás</string>
+    <string name="settings_category_playback">Lejátszás és hang</string>
+    <string name="settings_category_lyrics">Dalszöveg</string>
+    <string name="settings_category_about">Névjegy</string>
     <string name="auto_switch_current_track_to_top_when_random">Aktuális szám automatikus felülre helyezése véletlenszerű lejátszáskor</string>
     <string name="remove_duplicate_tracks">Duplikált számok eltávolítása</string>
     <string name="equalizer_q">"Hangszínszabályzó Q: "</string>

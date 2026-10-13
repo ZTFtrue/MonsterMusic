@@ -148,7 +148,6 @@ fun SettingsPage(
             Toast.makeText(context, R.string.video_support_enable, Toast.LENGTH_SHORT).show()
         }
     }
-    val color = MaterialTheme.colorScheme.onBackground
     var durationValue by remember { mutableStateOf("0") }
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -172,8 +171,59 @@ fun SettingsPage(
             SharedPreferencesUtils.getMergeAlbum(context)
         )
     }
+
+    var showDialog by remember { mutableStateOf(false) }
+    var showScanModeDialog by remember { mutableStateOf(false) }
+    var showManageFilterFoldersDialog by remember { mutableStateOf(false) }
+    var showLyricsFolderDialog by remember { mutableStateOf(false) }
+    var showAboutDialog by remember { mutableStateOf(false) }
+    var showSetListIndicatorDialog by remember { mutableStateOf(false) }
+    var showReplaceCoverDialog by remember { mutableStateOf(false) }
+    var showSetLanguageDialog by remember { mutableStateOf(false) }
+    var showSetWidgetDialog by remember { mutableStateOf(false) }
+    var showAutoPlaySetDialog by remember { mutableStateOf(false) }
+    val openDecoderDialog = remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         durationValue = SharedPreferencesUtils.getIgnoreDuration(context).toString()
+    }
+
+    if (showDialog) {
+        ManageTabDialog(musicViewModel, onDismiss = { showDialog = false })
+    }
+    if (showScanModeDialog) {
+        ScanModeDialog(musicViewModel = musicViewModel, onDismiss = { showScanModeDialog = false })
+    }
+    if (showManageFilterFoldersDialog) {
+        val isWhitelist = musicViewModel.scanMode.intValue == SharedPreferencesUtils.SCAN_MODE_WHITELIST
+        ManageFilterFoldersDialog(musicViewModel = musicViewModel, isWhitelist = isWhitelist, onDismiss = { showManageFilterFoldersDialog = false })
+    }
+    if (showLyricsFolderDialog) {
+        ManageLyricsFolderDialog(musicViewModel, onDismiss = { showLyricsFolderDialog = false })
+    }
+    if (showAboutDialog) {
+        AboutDialog(onDismiss = { showAboutDialog = false })
+    }
+    if (showSetListIndicatorDialog) {
+        SetListIndicatorDialog(onDismiss = { showSetListIndicatorDialog = false })
+    }
+    if (showReplaceCoverDialog) {
+        ReplaceCoverDialog(musicViewModel, onDismiss = { showReplaceCoverDialog = false })
+    }
+    if (showSetLanguageDialog) {
+        SwitchLanguageDialog(onDismiss = { showSetLanguageDialog = false })
+    }
+    if (showClearAlbumCache) {
+        ClearAlbumCoverDialog(onDismiss = { showClearAlbumCache = false })
+    }
+    if (showSetWidgetDialog) {
+        SetWidgetDialog(musicViewModel, onDismiss = { showSetWidgetDialog = false })
+    }
+    if (showAutoPlaySetDialog) {
+        ManageAutoPlayDialog(onDismiss = { showAutoPlaySetDialog = false })
+    }
+    if (openDecoderDialog.value) {
+        AudioDecoderModeDialog(musicViewModel = musicViewModel, onDismiss = { openDecoderDialog.value = false })
     }
 
     Scaffold(
@@ -182,10 +232,9 @@ fun SettingsPage(
             Column {
                 BackTopBar(navController, stringResource(id = R.string.settings))
                 HorizontalDivider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .background(color = MaterialTheme.colorScheme.onBackground)
+                    modifier = Modifier.fillMaxWidth(),
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f)
                 )
             }
         },
@@ -197,1164 +246,514 @@ fun SettingsPage(
                     .fillMaxSize()
                     .padding(it)
             ) {
+                // Section 1: Appearance & Interface
                 item {
-
-                    var showDialog by remember { mutableStateOf(false) }
-                    var showScanModeDialog by remember { mutableStateOf(false) }
-                    var showManageFilterFoldersDialog by remember { mutableStateOf(false) }
-                    var showLyricsFolderDialog by remember { mutableStateOf(false) }
-                    var showAboutDialog by remember { mutableStateOf(false) }
-                    var showSetListIndicatorDialog by remember { mutableStateOf(false) }
-                    var showReplaceCoverDialog by remember { mutableStateOf(false) }
-                    var showSetLanguageDialog by remember { mutableStateOf(false) }
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(0.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-                                showDialog = !showDialog
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        if (showDialog) {
-                            ManageTabDialog(
-                                musicViewModel,
-                                onDismiss = {
-                                    showDialog = false
-                                })
-                        }
-                        Text(
-                            text = stringResource(R.string.manage_tab_items),
-                            Modifier.padding(start = 10.dp),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
+                    SettingsCategoryHeader(stringResource(R.string.settings_category_appearance))
+                }
+                item {
+                    var selectedIndex by remember { musicViewModel.themeSelected }
+                    val offset = remember { mutableIntStateOf(0) }
+                    val selectedText = if (selectedIndex >= 0) {
+                        Utils.items[selectedIndex]
+                    } else {
+                        R.string.app_name
                     }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(0.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = stringResource(R.string.prefer_embedded_lyrics),
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            Switch(
-                                checked = preferEmbedded,
-                                onCheckedChange = { value ->
-                                    preferEmbedded = value
-                                    context.getSharedPreferences(
-                                        LYRICS_SETTINGS,
-                                        Context.MODE_PRIVATE
-                                    ).edit { putBoolean(FIRST_EMBEDDED_LYRICS, value) }
-                                },
-//                                colors = SwitchDefaults.colors(checkedThumbColor = Color.Green)
-                            )
-                        }
-
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(0.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
+                    SettingsItem(
+                        title = stringResource(R.string.select_theme),
+                        subtitle = stringResource(id = selectedText),
+                        onClick = { expanded = !expanded },
+                        trailingContent = {
+                            Box {
+                                DropdownMenu(
+                                    expanded = expanded,
+                                    onDismissRequest = { expanded = false },
+                                    modifier = Modifier
+                                        .background(MaterialTheme.colorScheme.tertiaryContainer),
+                                    offset = DpOffset(
+                                        x = 0.dp,
+                                        y = with(LocalDensity.current) { offset.intValue.toDp() }
                                     )
-                                }
-                                .clickable {
-                                    showSetListIndicatorDialog = !showSetListIndicatorDialog
-                                },
-                        ) {
-                            if (showSetListIndicatorDialog) {
-                                SetListIndicatorDialog(
-                                    onDismiss = {
-                                        showSetListIndicatorDialog = false
-                                    })
-                            }
-                            Text(
-                                text = stringResource(R.string.set_list_indicator),
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(0.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
-                                }
-                                .clickable {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                        try {
-                                            val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS)
-                                            intent.data =
-                                                Uri.fromParts("package", context.packageName, null)
-                                            context.startActivity(intent)
-                                        } catch (e: Exception) {
-                                            Log.e(
-                                                "SettingsPage",
-                                                "Failed to open language settings",
-                                                e
-                                            )
-                                            Toast.makeText(
-                                                context,
-                                                R.string.failed_to_open_language_settings,
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    } else {
-                                        showSetLanguageDialog = !showSetLanguageDialog
-                                    }
-                                },
-                        ) {
-                            if (showSetLanguageDialog) {
-                                SwitchLanguageDialog(
-                                    onDismiss = {
-                                        showSetLanguageDialog = false
-                                    })
-                            }
-                            Text(
-                                text = stringResource(R.string.set_language),
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(0.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
-                                }
-                                .clickable {
-                                    showReplaceCoverDialog = !showReplaceCoverDialog
-                                },
-                        ) {
-                            if (showReplaceCoverDialog) {
-                                ReplaceCoverDialog(
-                                    musicViewModel,
-                                    onDismiss = {
-                                        showReplaceCoverDialog = false
-                                    })
-                            }
-                            Text(
-                                text = stringResource(R.string.replace_cover_the_rose),
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                    }
-
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(0.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-                                showLyricsFolderDialog = !showLyricsFolderDialog
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
-                                }
-                                .clickable {
-                                    showLyricsFolderDialog = !showLyricsFolderDialog
-                                },
-                        ) {
-                            if (showLyricsFolderDialog) {
-                                ManageLyricsFolderDialog(
-                                    musicViewModel,
-                                    onDismiss = {
-                                        showLyricsFolderDialog = false
-                                    })
-                            }
-                            Text(
-                                text = stringResource(R.string.manage_lyrics_folders),
-                                modifier = Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(60.dp)
-                            .padding(0.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-                                showScanModeDialog = !showScanModeDialog
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 10.dp, end = 10.dp)
-                        ) {
-                            if (showScanModeDialog) {
-                                ScanModeDialog(musicViewModel = musicViewModel, onDismiss = {
-                                    showScanModeDialog = false
-                                })
-                            }
-                            val isWhitelist =
-                                musicViewModel.scanMode.intValue == SharedPreferencesUtils.SCAN_MODE_WHITELIST
-                            Column {
-                                Text(
-                                    text = stringResource(R.string.folder_scan_mode),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                                Text(
-                                    text = if (isWhitelist)
-                                        stringResource(R.string.scan_mode_whitelist)
-                                    else
-                                        stringResource(R.string.scan_mode_blacklist),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                                )
-                            }
-                        }
-                    }
-
-                    if (showManageFilterFoldersDialog) {
-                        val isWhitelist =
-                            musicViewModel.scanMode.intValue == SharedPreferencesUtils.SCAN_MODE_WHITELIST
-                        ManageFilterFoldersDialog(
-                            musicViewModel = musicViewModel,
-                            isWhitelist = isWhitelist,
-                            onDismiss = { showManageFilterFoldersDialog = false }
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(0.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-                                showManageFilterFoldersDialog = true
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 10.dp, end = 10.dp)
-                        ) {
-                            val isWhitelist =
-                                musicViewModel.scanMode.intValue == SharedPreferencesUtils.SCAN_MODE_WHITELIST
-                            Column {
-                                Text(
-                                    text = stringResource(
-                                        if (isWhitelist) R.string.manage_whitelist_folders
-                                        else R.string.manage_blacklist_folders
-                                    ),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                                Text(
-                                    text = if (isWhitelist) {
-                                        if (musicViewModel.whitelistFolders.isEmpty()) stringResource(
-                                            R.string.no_folders_added
-                                        )
-                                        else stringResource(
-                                            R.string.whitelist_mode_summary,
-                                            musicViewModel.whitelistFolders.size
-                                        )
-                                    } else {
-                                        if (musicViewModel.blacklistFolders.isEmpty()) stringResource(
-                                            R.string.no_folders_added
-                                        )
-                                        else stringResource(
-                                            R.string.blacklist_mode_summary,
-                                            musicViewModel.blacklistFolders.size
-                                        )
-                                    },
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                                )
-                            }
-                        }
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(0.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Column {
-
-                            val saveIgnoreDurationSuccess =
-                                stringResource(R.string.ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect)
-                            Text(
-                                text = stringResource(R.string.ignore_tracks_duration_less_than),
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-
-                            OutlinedTextField(
-                                value = durationValue,
-                                onValueChange = { s ->
-                                    if (!s.contains(".")) {
-                                        durationValue = s
-                                    }
-                                },
-                                keyboardOptions = KeyboardOptions.Default.copy(
-                                    imeAction = ImeAction.Done,
-                                    keyboardType = KeyboardType.Number
-                                ),
-                                keyboardActions = KeyboardActions(
-                                    onDone = {
-                                        saveIgnoreDuration(
-                                            durationValue, context,
-                                            String.format(saveIgnoreDurationSuccess, durationValue),
-                                            focusRequester,
-                                            keyboardController
-                                        )
-                                    }
-                                ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .focusRequester(focusRequester)
-                                    .background(MaterialTheme.colorScheme.primary),
-                                colors = TextFieldDefaults.colors(
-                                    errorTextColor = MaterialTheme.colorScheme.primary,
-                                    focusedTextColor = MaterialTheme.colorScheme.primary,
-                                    disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.38f
-                                    ),
-                                    unfocusedTextColor = MaterialTheme.colorScheme.primary,
-                                    focusedContainerColor = MaterialTheme.colorScheme.background,
-                                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                                    cursorColor = MaterialTheme.colorScheme.primary,
-                                    errorCursorColor = MaterialTheme.colorScheme.error,
-                                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                                    unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.38f
-                                    ),
-                                    disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.12f
-                                    ),
-                                    errorIndicatorColor = MaterialTheme.colorScheme.error,
-                                    disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.38f
-                                    ),
-                                    errorLeadingIconColor = MaterialTheme.colorScheme.error,
-                                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.38f
-                                    ),
-                                    errorTrailingIconColor = MaterialTheme.colorScheme.error,
-                                    focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.38f
-                                    ),
-                                    disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.38f
-                                    ),
-                                    errorLabelColor = MaterialTheme.colorScheme.error,
-                                    disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.38f
-                                    )
-                                ),
-                                textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
-                                suffix = {
-                                    Row(
-                                        horizontalArrangement = Arrangement.Start,
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        Text(
-                                            text = stringResource(R.string.s),
-                                            Modifier.padding(start = 10.dp, end = 20.dp),
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                        ElevatedButton(
-                                            onClick = {
-                                                saveIgnoreDuration(
-                                                    durationValue, context,
-                                                    String.format(
-                                                        saveIgnoreDurationSuccess,
-                                                        durationValue
-                                                    ),
-                                                    focusRequester,
-                                                    keyboardController
+                                ) {
+                                    Utils.items.forEachIndexed { index, item ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    stringResource(id = item),
+                                                    color = MaterialTheme.colorScheme.onTertiaryContainer
                                                 )
                                             },
-                                            modifier = Modifier
-                                        ) {
-                                            Text(
-                                                text = stringResource(R.string.save),
-                                                textAlign = TextAlign.Center,
-                                                color = MaterialTheme.colorScheme.onBackground
-                                            )
-                                        }
+                                            onClick = {
+                                                selectedIndex = index
+                                                expanded = false
+                                                context.getSharedPreferences(
+                                                    "SelectedTheme",
+                                                    Context.MODE_PRIVATE
+                                                ).edit { putInt("SelectedTheme", index) }
+                                            }
+                                        )
                                     }
                                 }
-                            )
+                            }
                         }
+                    )
+                }
+                item {
+                    SettingsItem(
+                        title = stringResource(R.string.set_language),
+                        onClick = {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                try {
+                                    val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS)
+                                    intent.data = Uri.fromParts("package", context.packageName, null)
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    Log.e("SettingsPage", "Failed to open language settings", e)
+                                    Toast.makeText(
+                                        context,
+                                        R.string.failed_to_open_language_settings,
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            } else {
+                                showSetLanguageDialog = true
+                            }
+                        }
+                    )
+                }
+                item {
+                    SettingsItem(
+                        title = stringResource(R.string.manage_tab_items),
+                        onClick = { showDialog = true }
+                    )
+                }
+                item {
+                    SettingsItem(
+                        title = stringResource(R.string.set_list_indicator),
+                        onClick = { showSetListIndicatorDialog = true }
+                    )
+                }
+                item {
+                    SettingsItem(
+                        title = stringResource(R.string.settings_set_widget_background),
+                        onClick = { showSetWidgetDialog = true }
+                    )
+                }
+                item {
+                    SettingsItem(
+                        title = stringResource(R.string.replace_cover_the_rose),
+                        onClick = { showReplaceCoverDialog = true }
+                    )
+                }
+
+                // Section 2: Library & Scanning
+                item {
+                    SettingsCategoryHeader(stringResource(R.string.settings_category_library))
+                }
+                item {
+                    val isWhitelist = musicViewModel.scanMode.intValue == SharedPreferencesUtils.SCAN_MODE_WHITELIST
+                    SettingsItem(
+                        title = stringResource(R.string.folder_scan_mode),
+                        subtitle = if (isWhitelist) stringResource(R.string.scan_mode_whitelist) else stringResource(R.string.scan_mode_blacklist),
+                        onClick = { showScanModeDialog = true }
+                    )
+                }
+                item {
+                    val isWhitelist = musicViewModel.scanMode.intValue == SharedPreferencesUtils.SCAN_MODE_WHITELIST
+                    val folderSubtitle = if (isWhitelist) {
+                        if (musicViewModel.whitelistFolders.isEmpty()) stringResource(R.string.no_folders_added)
+                        else stringResource(R.string.whitelist_mode_summary, musicViewModel.whitelistFolders.size)
+                    } else {
+                        if (musicViewModel.blacklistFolders.isEmpty()) stringResource(R.string.no_folders_added)
+                        else stringResource(R.string.blacklist_mode_summary, musicViewModel.blacklistFolders.size)
                     }
-                    Box(
+                    SettingsItem(
+                        title = stringResource(
+                            if (isWhitelist) R.string.manage_whitelist_folders
+                            else R.string.manage_blacklist_folders
+                        ),
+                        subtitle = folderSubtitle,
+                        onClick = { showManageFilterFoldersDialog = true }
+                    )
+                }
+                item {
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(0.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-                                showAboutDialog = !showAboutDialog
-                            },
-                        contentAlignment = Alignment.CenterStart
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
                     ) {
-                        if (showAboutDialog) {
-                            AboutDialog {
-                                showAboutDialog = false
-                            }
-                        }
+                        val saveIgnoreDurationSuccess = stringResource(R.string.ignore_tracks_duration_less_than_s_set_successfully_please_restart_the_app_to_take_effect)
                         Text(
-                            text = stringResource(R.string.about),
-                            Modifier.padding(start = 10.dp),
+                            text = stringResource(R.string.ignore_tracks_duration_less_than),
+                            style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onBackground
                         )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(0.dp)
-                            .clickable { expanded = !expanded }
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = durationValue,
+                            onValueChange = { s ->
+                                if (!s.contains(".")) {
+                                    durationValue = s
+                                }
                             },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-
-                        var selectedIndex by remember {
-                            musicViewModel.themeSelected
-                        }
-
-                        val offset = remember { mutableIntStateOf(0) }
-                        val selectedText = if (selectedIndex >= 0) {
-                            Utils.items[selectedIndex]
-                        } else {
-                            R.string.app_name
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = stringResource(R.string.select_theme),
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            Text(
-                                text = stringResource(id = selectedText),
-                                Modifier.padding(end = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-
-                        DropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Done,
+                                keyboardType = KeyboardType.Number
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    saveIgnoreDuration(
+                                        durationValue, context,
+                                        String.format(saveIgnoreDurationSuccess, durationValue),
+                                        focusRequester,
+                                        keyboardController
+                                    )
+                                }
+                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(
-                                    MaterialTheme.colorScheme.tertiaryContainer
-                                ),
-                            offset = DpOffset(
-                                x = 0.dp,
-                                y = with(LocalDensity.current) { offset.intValue.toDp() }
-                            )
-                        ) {
-                            Utils.items.forEachIndexed { index, item ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            stringResource(id = item),
-                                            color = MaterialTheme.colorScheme.onTertiaryContainer
-                                        )
-                                    },
-                                    onClick = {
-                                        selectedIndex = index
-                                        expanded = false
-                                        context.getSharedPreferences(
-                                            "SelectedTheme",
-                                            Context.MODE_PRIVATE
-                                        ).edit { putInt("SelectedTheme", index) }
-                                    })
-                            }
-                        }
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(0.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-                                showClearAlbumCache = true
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        if (showClearAlbumCache) {
-                            ClearAlbumCoverDialog {
-                                showClearAlbumCache = false
-                            }
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = stringResource(R.string.clear_album_cover_cache),
-                                Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-
-                    }
-                }
-                item {
-                    var showSetWidgetDialog by remember { mutableStateOf(false) }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(0.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-                                showSetWidgetDialog = !showSetWidgetDialog
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
-                                }
-                                .clickable {
-                                    showSetWidgetDialog = !showSetWidgetDialog
-                                },
-                        ) {
-
-                            if (showSetWidgetDialog) {
-                                SetWidgetDialog(
-                                    musicViewModel,
-                                    onDismiss = {
-                                        showSetWidgetDialog = false
-                                    })
-                            }
-                            Text(
-                                text = stringResource(R.string.settings_set_widget_background),
-                                modifier = Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                    }
-                }
-                item {
-                    var showAutoPlaySetDialog by remember { mutableStateOf(false) }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(0.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-                                showAutoPlaySetDialog = !showAutoPlaySetDialog
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .padding(0.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
-                                }
-                                .clickable {
-                                    showAutoPlaySetDialog = !showAutoPlaySetDialog
-                                },
-                        ) {
-
-                            if (showAutoPlaySetDialog) {
-                                ManageAutoPlayDialog(
-                                    onDismiss = {
-                                        showAutoPlaySetDialog = false
-                                    })
-                            }
-                            Text(
-                                text = stringResource(R.string.settings_set_auto_play),
-                                modifier = Modifier.padding(start = 10.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                    }
-                }
-                item {
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(0.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = stringResource(R.string.auto_switch_current_track_to_top_when_random),
-                                Modifier
-                                    .padding(start = 10.dp)
-                                    .weight(1f),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            Switch(
-                                checked = autoToTopRandom,
-                                onCheckedChange = { value ->
-                                    autoToTopRandom = value
-                                    SharedPreferencesUtils.setAutoToTopRandom(
-                                        context,
-                                        autoToTopRandom
-                                    )
-                                },
-//                                colors = SwitchDefaults.colors(checkedThumbColor = Color.Green)
-                            )
-                        }
-
-                    }
-                }
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 60.dp)
-                            .padding(vertical = 4.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-                                val newValue = !musicViewModel.trackEffectEnabled.value
-                                musicViewModel.setTrackEffectEnabled(context, newValue)
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 10.dp)
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(R.string.track_sound_effect_enable),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                                Text(
-                                    text = stringResource(R.string.track_sound_effect_enable_desc),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                                )
-                            }
-                            Switch(
-                                checked = musicViewModel.trackEffectEnabled.value,
-                                onCheckedChange = { value ->
-                                    musicViewModel.setTrackEffectEnabled(context, value)
-                                }
-                            )
-                        }
-                    }
-                }
-                item {
-                    val openDecoderDialog = remember { mutableStateOf(false) }
-                    if (openDecoderDialog.value) {
-                        AudioDecoderModeDialog(
-                            musicViewModel = musicViewModel,
-                            onDismiss = { openDecoderDialog.value = false }
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 60.dp)
-                            .padding(vertical = 4.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-                                openDecoderDialog.value = true
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 10.dp)
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(R.string.audio_decoder),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                                val currentMode = musicViewModel.decoderMode.intValue
-                                val modeText = when (currentMode) {
-                                    DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER -> stringResource(R.string.decoder_mode_software)
-                                    DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF -> stringResource(R.string.decoder_mode_hardware)
-                                    else -> stringResource(R.string.decoder_mode_auto)
-                                }
-                                Text(
-                                    text = modeText,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                                )
-                            }
-                        }
-                    }
-                }
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 60.dp)
-                            .padding(vertical = 4.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 10.dp, vertical = 6.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(R.string.bit_perfect_usb),
-                                        color = MaterialTheme.colorScheme.onBackground
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.bit_perfect_usb_desc),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                                    )
-                                }
-                                Switch(
-                                    checked = musicViewModel.bitPerfectUsbEnable.value,
-                                    onCheckedChange = {
-                                        musicViewModel.setBitPerfectUsbEnable(context, it)
-                                    }
-                                )
-                            }
-                            if (musicViewModel.connectedDacName.value != null) {
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(
-                                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                            RoundedCornerShape(8.dp)
-                                        )
-                                        .padding(8.dp)
+                                .focusRequester(focusRequester),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                            suffix = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Text(
-                                        text = stringResource(
-                                            R.string.bit_perfect_dac_connected,
-                                            musicViewModel.connectedDacName.value ?: ""
-                                        ),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.primary
+                                        text = stringResource(R.string.s),
+                                        Modifier.padding(end = 12.dp),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
-                                    if (musicViewModel.bitPerfectStatus.value.isNotEmpty()) {
+                                    Button(
+                                        onClick = {
+                                            saveIgnoreDuration(
+                                                durationValue, context,
+                                                String.format(saveIgnoreDurationSuccess, durationValue),
+                                                focusRequester,
+                                                keyboardController
+                                            )
+                                        },
+                                        modifier = Modifier.height(36.dp)
+                                    ) {
                                         Text(
-                                            text = musicViewModel.bitPerfectStatus.value,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                    if (musicViewModel.connectedDacSampleRates.isNotEmpty()) {
-                                        val ratesText = musicViewModel.connectedDacSampleRates
-                                            .sorted()
-                                            .joinToString(", ") { "${it / 1000.0}k" }
-                                        Text(
-                                            text = "Supported: $ratesText Hz",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                                        )
-                                    }
-                                    if (musicViewModel.bitPerfectUsbEnable.value) {
-                                        Text(
-                                            text = stringResource(R.string.bit_perfect_volume_notice),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                            text = stringResource(R.string.save),
+                                            style = MaterialTheme.typography.labelLarge
                                         )
                                     }
                                 }
-                            } else if (musicViewModel.bitPerfectUsbEnable.value) {
-                                Spacer(modifier = Modifier.height(4.dp))
+                            }
+                        )
+                    }
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.08f),
+                        thickness = 0.5.dp
+                    )
+                }
+                item {
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.merge_same_album),
+                        subtitle = stringResource(R.string.merge_same_album_desc),
+                        checked = mergeAlbum,
+                        onCheckedChange = { value ->
+                            mergeAlbum = value
+                            musicViewModel.setMergeAlbum(context, value)
+                        }
+                    )
+                }
+                item {
+                    SettingsItem(
+                        title = stringResource(R.string.clear_album_cover_cache),
+                        onClick = { showClearAlbumCache = true }
+                    )
+                }
+
+                // Section 3: Playback & Audio
+                item {
+                    SettingsCategoryHeader(stringResource(R.string.settings_category_playback))
+                }
+                item {
+                    SettingsItem(
+                        title = stringResource(R.string.settings_set_auto_play),
+                        onClick = { showAutoPlaySetDialog = true }
+                    )
+                }
+                item {
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.auto_switch_current_track_to_top_when_random),
+                        checked = autoToTopRandom,
+                        onCheckedChange = { value ->
+                            autoToTopRandom = value
+                            SharedPreferencesUtils.setAutoToTopRandom(context, value)
+                        }
+                    )
+                }
+                item {
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.track_sound_effect_enable),
+                        subtitle = stringResource(R.string.track_sound_effect_enable_desc),
+                        checked = musicViewModel.trackEffectEnabled.value,
+                        onCheckedChange = { value ->
+                            musicViewModel.setTrackEffectEnabled(context, value)
+                        }
+                    )
+                }
+                item {
+                    val currentMode = musicViewModel.decoderMode.intValue
+                    val modeText = when (currentMode) {
+                        DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER -> stringResource(R.string.decoder_mode_software)
+                        DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF -> stringResource(R.string.decoder_mode_hardware)
+                        else -> stringResource(R.string.decoder_mode_auto)
+                    }
+                    SettingsItem(
+                        title = stringResource(R.string.audio_decoder),
+                        subtitle = modeText,
+                        onClick = { openDecoderDialog.value = true }
+                    )
+                }
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                val next = !musicViewModel.bitPerfectUsbEnable.value
+                                musicViewModel.setBitPerfectUsbEnable(context, next)
+                            }
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 12.dp)
+                            ) {
                                 Text(
-                                    text = stringResource(R.string.bit_perfect_dac_not_connected),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                                    text = stringResource(R.string.bit_perfect_usb),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = stringResource(R.string.bit_perfect_usb_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                                 )
                             }
+                            Switch(
+                                checked = musicViewModel.bitPerfectUsbEnable.value,
+                                onCheckedChange = {
+                                    musicViewModel.setBitPerfectUsbEnable(context, it)
+                                }
+                            )
+                        }
+                        if (musicViewModel.connectedDacName.value != null) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                        RoundedCornerShape(8.dp)
+                                    )
+                                    .padding(10.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(
+                                        R.string.bit_perfect_dac_connected,
+                                        musicViewModel.connectedDacName.value ?: ""
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                if (musicViewModel.bitPerfectStatus.value.isNotEmpty()) {
+                                    Text(
+                                        text = musicViewModel.bitPerfectStatus.value,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                if (musicViewModel.connectedDacSampleRates.isNotEmpty()) {
+                                    val ratesText = musicViewModel.connectedDacSampleRates
+                                        .sorted()
+                                        .joinToString(", ") { "${it / 1000.0}k" }
+                                    Text(
+                                        text = "Supported: $ratesText Hz",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                    )
+                                }
+                                if (musicViewModel.bitPerfectUsbEnable.value) {
+                                    Text(
+                                        text = stringResource(R.string.bit_perfect_volume_notice),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                        } else if (musicViewModel.bitPerfectUsbEnable.value) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = stringResource(R.string.bit_perfect_dac_not_connected),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                            )
                         }
                     }
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.08f),
+                        thickness = 0.5.dp
+                    )
                 }
                 if (BuildConfig.SUPPORT_VIDEO) {
                     item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 60.dp)
-                                .padding(vertical = 4.dp)
-                                .drawBehind {
-                                    drawLine(
-                                        color = color,
-                                        start = Offset(0f, size.height - 1.dp.toPx()),
-                                        end = Offset(size.width, size.height - 1.dp.toPx()),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
-                                }
-                                .clickable {
-                                    val target = !musicViewModel.videoSupportEnable.value
-                                    if (target) {
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                            if (ContextCompat.checkSelfPermission(
-                                                    context,
-                                                    Manifest.permission.READ_MEDIA_VIDEO
-                                                ) == PackageManager.PERMISSION_GRANTED
-                                            ) {
-                                                musicViewModel.setVideoSupportEnable(context, true)
-                                            } else {
-                                                videoPermissionLauncher.launch(Manifest.permission.READ_MEDIA_VIDEO)
-                                            }
-                                        } else {
+                        SettingsSwitchItem(
+                            title = stringResource(R.string.video_support_enable),
+                            subtitle = stringResource(R.string.video_support_enable_desc),
+                            checked = musicViewModel.videoSupportEnable.value,
+                            onCheckedChange = { target ->
+                                if (target) {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                        if (ContextCompat.checkSelfPermission(
+                                                context,
+                                                Manifest.permission.READ_MEDIA_VIDEO
+                                            ) == PackageManager.PERMISSION_GRANTED
+                                        ) {
                                             musicViewModel.setVideoSupportEnable(context, true)
+                                        } else {
+                                            videoPermissionLauncher.launch(Manifest.permission.READ_MEDIA_VIDEO)
                                         }
                                     } else {
-                                        musicViewModel.setVideoSupportEnable(context, false)
+                                        musicViewModel.setVideoSupportEnable(context, true)
                                     }
-                                },
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(horizontal = 10.dp)
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(R.string.video_support_enable),
-                                        color = MaterialTheme.colorScheme.onBackground
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.video_support_enable_desc),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                                    )
+                                } else {
+                                    musicViewModel.setVideoSupportEnable(context, false)
                                 }
-                                Switch(
-                                    checked = musicViewModel.videoSupportEnable.value,
-                                    onCheckedChange = { target ->
-                                        if (target) {
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                                if (ContextCompat.checkSelfPermission(
-                                                        context,
-                                                        Manifest.permission.READ_MEDIA_VIDEO
-                                                    ) == PackageManager.PERMISSION_GRANTED
-                                                ) {
-                                                    musicViewModel.setVideoSupportEnable(context, true)
-                                                } else {
-                                                    videoPermissionLauncher.launch(Manifest.permission.READ_MEDIA_VIDEO)
-                                                }
-                                            } else {
-                                                musicViewModel.setVideoSupportEnable(context, true)
-                                            }
-                                        } else {
-                                            musicViewModel.setVideoSupportEnable(context, false)
-                                        }
-                                    }
-                                )
                             }
-                        }
+                        )
                     }
+                }
+
+                // Section 4: Lyrics
+                item {
+                    SettingsCategoryHeader(stringResource(R.string.settings_category_lyrics))
                 }
                 item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 60.dp)
-                            .padding(vertical = 4.dp)
-                            .drawBehind {
-                                drawLine(
-                                    color = color,
-                                    start = Offset(0f, size.height - 1.dp.toPx()),
-                                    end = Offset(size.width, size.height - 1.dp.toPx()),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                            .clickable {
-                                val value = !mergeAlbum
-                                mergeAlbum = value
-                                musicViewModel.setMergeAlbum(
-                                    context,
-                                    value
-                                )
-                            },
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 10.dp)
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(R.string.merge_same_album),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                                Text(
-                                    text = stringResource(R.string.merge_same_album_desc),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                                )
-                            }
-                            Switch(
-                                checked = mergeAlbum,
-                                onCheckedChange = { value ->
-                                    mergeAlbum = value
-                                    musicViewModel.setMergeAlbum(
-                                        context,
-                                        value
-                                    )
-                                }
-                            )
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.prefer_embedded_lyrics),
+                        checked = preferEmbedded,
+                        onCheckedChange = { value ->
+                            preferEmbedded = value
+                            context.getSharedPreferences(
+                                LYRICS_SETTINGS,
+                                Context.MODE_PRIVATE
+                            ).edit { putBoolean(FIRST_EMBEDDED_LYRICS, value) }
                         }
-                    }
+                    )
+                }
+                item {
+                    SettingsItem(
+                        title = stringResource(R.string.manage_lyrics_folders),
+                        onClick = { showLyricsFolderDialog = true }
+                    )
+                }
+
+                // Section 5: About
+                item {
+                    SettingsCategoryHeader(stringResource(R.string.settings_category_about))
+                }
+                item {
+                    SettingsItem(
+                        title = stringResource(R.string.about),
+                        onClick = { showAboutDialog = true }
+                    )
                 }
             }
-        },
+        }
     )
+}
 
+@Composable
+fun SettingsCategoryHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 6.dp)
+    )
+}
 
+@Composable
+fun SettingsItem(
+    title: String,
+    subtitle: String? = null,
+    onClick: (() -> Unit)? = null,
+    trailingContent: @Composable (() -> Unit)? = null
+) {
+    val clickableModifier = if (onClick != null) {
+        Modifier.clickable(onClick = onClick)
+    } else Modifier
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(clickableModifier)
+                .heightIn(min = 56.dp)
+                .padding(horizontal = 16.dp, vertical = 10.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = if (trailingContent != null) 12.dp else 0.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                if (!subtitle.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                    )
+                }
+            }
+            if (trailingContent != null) {
+                trailingContent()
+            }
+        }
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.08f),
+            thickness = 0.5.dp
+        )
+    }
+}
+
+@Composable
+fun SettingsSwitchItem(
+    title: String,
+    subtitle: String? = null,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    SettingsItem(
+        title = title,
+        subtitle = subtitle,
+        onClick = { onCheckedChange(!checked) },
+        trailingContent = {
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange
+            )
+        }
+    )
 }
 
 fun saveIgnoreDuration(

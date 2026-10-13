@@ -161,6 +161,12 @@
     <string name="language_follow_system">システムに従う</string>
     <string name="settings_link_biquad_designer">BiQuadDesigner</string>
     <string name="settings_link_media3">Media3</string>
+
+    <string name="settings_category_appearance">外観とインターフェース</string>
+    <string name="settings_category_library">ライブラリとスキャン</string>
+    <string name="settings_category_playback">再生とオーディオ</string>
+    <string name="settings_category_lyrics">歌詞設定</string>
+    <string name="settings_category_about">このアプリについて</string>
     <string name="auto_switch_current_track_to_top_when_random">シャッフル時に再生中の曲を先頭に移動</string>
     <string name="remove_duplicate_tracks">重複した曲を削除</string>
     <string name="equalizer_q">"イコライザー Q値: "</string>

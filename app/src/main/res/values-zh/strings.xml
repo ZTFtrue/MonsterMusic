@@ -186,6 +186,12 @@
     <string name="settings_link_biquad_designer">BiQuadDesigner</string>
     <string name="settings_link_media3">Media3</string>
 
+    <string name="settings_category_appearance">外观与界面</string>
+    <string name="settings_category_library">曲库与扫描</string>
+    <string name="settings_category_playback">播放与音频</string>
+    <string name="settings_category_lyrics">歌词设置</string>
+    <string name="settings_category_about">关于</string>
+
     <string name="auto_switch_current_track_to_top_when_random">随机播放时自动将当前曲目置顶</string>
     <string name="remove_duplicate_tracks">移除重复曲目</string>
     <string name="equalizer_q">"均衡器 Q 值: "</string>

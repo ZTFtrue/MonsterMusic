@@ -160,6 +160,12 @@
     <string name="language_follow_system">Systemsprache folgen</string>
     <string name="settings_link_biquad_designer">BiQuadDesigner</string>
     <string name="settings_link_media3">Media3</string>
+
+    <string name="settings_category_appearance">Erscheinungsbild &amp; Oberfläche</string>
+    <string name="settings_category_library">Bibliothek &amp; Scannen</string>
+    <string name="settings_category_playback">Wiedergabe &amp; Audio</string>
+    <string name="settings_category_lyrics">Songtexte</string>
+    <string name="settings_category_about">Über</string>
     <string name="auto_switch_current_track_to_top_when_random">Aktuellen Titel bei Zufallswiedergabe nach oben verschieben</string>
     <string name="remove_duplicate_tracks">Doppelte Titel entfernen</string>
     <string name="equalizer_q">"Equalizer Q: "</string>

@@ -161,6 +161,12 @@
     <string name="language_follow_system">اتباع النظام</string>
     <string name="settings_link_biquad_designer">BiQuadDesigner</string>
     <string name="settings_link_media3">Media3</string>
+
+    <string name="settings_category_appearance">المظهر والواجهة</string>
+    <string name="settings_category_library">المكتبة والمسح</string>
+    <string name="settings_category_playback">التشغيل والصوت</string>
+    <string name="settings_category_lyrics">كلمات الأغاني</string>
+    <string name="settings_category_about">حول</string>
     <string name="auto_switch_current_track_to_top_when_random">نقل المسار الحالي إلى الأعلى عند التبديل العشوائي</string>
     <string name="remove_duplicate_tracks">إزالة المسارات المكررة</string>
     <string name="equalizer_q">"معامل Q للمعادل: "</string>

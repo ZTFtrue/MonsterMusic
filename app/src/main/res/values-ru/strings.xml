@@ -161,6 +161,12 @@
     <string name="language_follow_system">Как в системе</string>
     <string name="settings_link_biquad_designer">BiQuadDesigner</string>
     <string name="settings_link_media3">Media3</string>
+
+    <string name="settings_category_appearance">Внешний вид и интерфейс</string>
+    <string name="settings_category_library">Медиатека и сканирование</string>
+    <string name="settings_category_playback">Воспроизведение и звук</string>
+    <string name="settings_category_lyrics">Тексты песен</string>
+    <string name="settings_category_about">О приложении</string>
     <string name="auto_switch_current_track_to_top_when_random">Автоматически перемещать текущий трек наверх при случайном воспроизведении</string>
     <string name="remove_duplicate_tracks">Удалить повторяющиеся треки</string>
     <string name="equalizer_q">"Эквалайзер Q: "</string>

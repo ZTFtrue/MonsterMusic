@@ -160,6 +160,12 @@
     <string name="language_follow_system">Sekvi la sistemon</string>
     <string name="settings_link_biquad_designer">BiQuadDesigner</string>
     <string name="settings_link_media3">Media3</string>
+
+    <string name="settings_category_appearance">Aspekto kaj fasado</string>
+    <string name="settings_category_library">Biblioteko kaj skanado</string>
+    <string name="settings_category_playback">Ludado kaj sono</string>
+    <string name="settings_category_lyrics">Kantoteksto</string>
+    <string name="settings_category_about">Pri</string>
     <string name="auto_switch_current_track_to_top_when_random">Aŭtomate movi nunan trakon al la supro dum hazarda ludado</string>
     <string name="remove_duplicate_tracks">Forigi duoblajn trakojn</string>
     <string name="equalizer_q">"Egaligilo Q: "</string>

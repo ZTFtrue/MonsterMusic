@@ -161,6 +161,12 @@
     <string name="language_follow_system">Suivre le système</string>
     <string name="settings_link_biquad_designer">BiQuadDesigner</string>
     <string name="settings_link_media3">Media3</string>
+
+    <string name="settings_category_appearance">Apparence &amp; Interface</string>
+    <string name="settings_category_library">Bibliothèque &amp; Analyse</string>
+    <string name="settings_category_playback">Lecture &amp; Audio</string>
+    <string name="settings_category_lyrics">Paroles</string>
+    <string name="settings_category_about">À propos</string>
     <string name="auto_switch_current_track_to_top_when_random">Placer la piste en cours en haut en mode aléatoire</string>
     <string name="remove_duplicate_tracks">Supprimer les doublons</string>
     <string name="equalizer_q">"Facteur Q de l\'égaliseur : "</string>

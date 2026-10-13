@@ -160,6 +160,12 @@
     <string name="language_follow_system">Sistemi Takip Et</string>
     <string name="settings_link_biquad_designer">BiQuadDesigner</string>
     <string name="settings_link_media3">Media3</string>
+
+    <string name="settings_category_appearance">Görünüm ve Arayüz</string>
+    <string name="settings_category_library">Kitaplık ve Tarama</string>
+    <string name="settings_category_playback">Oynatma ve Ses</string>
+    <string name="settings_category_lyrics">Şarkı Sözleri</string>
+    <string name="settings_category_about">Hakkında</string>
     <string name="auto_switch_current_track_to_top_when_random">Rastgele çalarken mevcut parçayı otomatik olarak başa al</string>
     <string name="remove_duplicate_tracks">Yinelenen parçaları kaldır</string>
     <string name="equalizer_q">"Ekolayzer Q: "</string>
