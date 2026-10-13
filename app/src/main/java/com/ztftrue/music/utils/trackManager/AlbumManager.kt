@@ -12,9 +12,11 @@ object AlbumManager {
         context: Context,
         list: LinkedHashMap<Long, AlbumList>,
         sortOrder1: String,
-        needMerge: Boolean = false
+        needMerge: Boolean = false,
+        mergedIdsMap: HashMap<Long, HashSet<Long>>? = null
     ) {
         val playListProjection = arrayOf(
+            MediaStore.Audio.Albums._ID,
             MediaStore.Audio.Albums.ALBUM,
             MediaStore.Audio.Albums.ALBUM_ID,
             MediaStore.Audio.Albums.ARTIST,
@@ -37,7 +39,9 @@ object AlbumManager {
         cursor?.use {
             if (cursor.moveToFirst()) {
                 val albumColumn = cursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM)
+                val idColumn = cursor.getColumnIndex(MediaStore.Audio.Albums._ID)
                 val albumIdColumn = cursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ID)
+                val actualIdCol = if (idColumn != -1) idColumn else albumIdColumn
                 val artistColumn = cursor.getColumnIndex(MediaStore.Audio.Albums.ARTIST)
                 val numberOfSongsColumn =
                     cursor.getColumnIndex(MediaStore.Audio.Albums.NUMBER_OF_SONGS)
@@ -46,17 +50,24 @@ object AlbumManager {
                 do {
                     val artist = cursor.getString(artistColumn)
                     val albumResult = cursor.getString(albumColumn)
-                    val albumId = cursor.getLong(albumIdColumn)
+                    val albumId = if (actualIdCol != -1) cursor.getLong(actualIdCol) else 0L
                     val numberSongs = cursor.getInt(numberOfSongsColumn)
                     val firstYear = cursor.getString(firstYearColumn)
                     val lastYear = cursor.getString(lastYearColumn)
                     if (needMerge) {
-                        val albumName = albumResult ?: "Unknown Album"
-                        val artistName = artist ?: "Unknown"
-                        val uniqueKey = "${albumName.trim()}|${artistName.trim()}"
+                        val albumName = albumResult?.trim() ?: "Unknown Album"
+                        val artistName = artist?.trim() ?: "Unknown"
+                        val uniqueKey = "${albumName.lowercase()}|${artistName.lowercase()}"
                         if (mergedMap.containsKey(uniqueKey)) {
                             val existingAlbum = mergedMap[uniqueKey]!!
                             existingAlbum.trackNumber += numberSongs
+                            mergedIdsMap?.getOrPut(existingAlbum.id) { hashSetOf(existingAlbum.id) }?.add(albumId)
+                            if (existingAlbum.firstYear.isBlank() || (!firstYear.isNullOrBlank() && firstYear < existingAlbum.firstYear)) {
+                                existingAlbum.firstYear = firstYear ?: existingAlbum.firstYear
+                            }
+                            if (existingAlbum.lastYear.isBlank() || (!lastYear.isNullOrBlank() && lastYear > existingAlbum.lastYear)) {
+                                existingAlbum.lastYear = lastYear ?: existingAlbum.lastYear
+                            }
                         } else {
                             val albumList = AlbumList(
                                 albumId, // We use the ID of the first part found (for Album Art)
@@ -67,6 +78,7 @@ object AlbumManager {
                                 numberSongs
                             )
                             mergedMap[uniqueKey] = albumList
+                            mergedIdsMap?.getOrPut(albumId) { hashSetOf(albumId) }?.add(albumId)
                         }
                     } else {
                         val albumList = AlbumList(
@@ -97,6 +109,7 @@ object AlbumManager {
         needMerge: Boolean = false
     ): ArrayList<AlbumList> {
         val projection = arrayOf(
+            MediaStore.Audio.Albums._ID,
             MediaStore.Audio.Albums.ALBUM,
             MediaStore.Audio.Albums.ALBUM_ID,
             MediaStore.Audio.Albums.ARTIST,
@@ -119,7 +132,9 @@ object AlbumManager {
         )?.use { cursor ->
             if (cursor.moveToFirst()) {
                 val albumColumn = cursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM)
+                val idColumn = cursor.getColumnIndex(MediaStore.Audio.Albums._ID)
                 val albumIdColumn = cursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ID)
+                val actualIdCol = if (idColumn != -1) idColumn else albumIdColumn
                 val artistColumn = cursor.getColumnIndex(MediaStore.Audio.Albums.ARTIST)
                 val numberOfSongsColumn =
                     cursor.getColumnIndex(MediaStore.Audio.Albums.NUMBER_OF_SONGS)
@@ -128,18 +143,24 @@ object AlbumManager {
                 do {
                     val artist = cursor.getString(artistColumn)
                     val albumResult = cursor.getString(albumColumn)
-                    val albumId = cursor.getLong(albumIdColumn)
+                    val albumId = if (actualIdCol != -1) cursor.getLong(actualIdCol) else 0L
                     val numberSongs = cursor.getInt(numberOfSongsColumn)
                     val firstYear = cursor.getString(firstYearColumn)
                     val lastYear = cursor.getString(lastYearColumn)
 
                     if (needMerge) {
-                        val albumName = albumResult ?: "Unknown Album"
-                        val artistName = artist ?: "Unknown"
-                        val uniqueKey = "${albumName.trim()}|${artistName.trim()}"
+                        val albumName = albumResult?.trim() ?: "Unknown Album"
+                        val artistName = artist?.trim() ?: "Unknown"
+                        val uniqueKey = "${albumName.lowercase()}|${artistName.lowercase()}"
                         if (mergedMap.containsKey(uniqueKey)) {
                             val existingAlbum = mergedMap[uniqueKey]!!
                             existingAlbum.trackNumber += numberSongs
+                            if (existingAlbum.firstYear.isBlank() || (!firstYear.isNullOrBlank() && firstYear < existingAlbum.firstYear)) {
+                                existingAlbum.firstYear = firstYear ?: existingAlbum.firstYear
+                            }
+                            if (existingAlbum.lastYear.isBlank() || (!lastYear.isNullOrBlank() && lastYear > existingAlbum.lastYear)) {
+                                existingAlbum.lastYear = lastYear ?: existingAlbum.lastYear
+                            }
                         } else {
                             val albumList = AlbumList(
                                 albumId, // We use the ID of the first part found (for Album Art)
@@ -183,6 +204,7 @@ object AlbumManager {
         selection: String?,
         selectionArgs: Array<String>?,
         sortOrder: String?,
+        mergedIdsMap: HashMap<Long, HashSet<Long>>? = null
     ): ArrayList<AlbumList> {
         // Define the columns to retrieve from the media store for the number of tracks
         val trackProjection = arrayOf(
@@ -202,7 +224,10 @@ object AlbumManager {
                 val idColumn = trackCursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ID)
                 do {
                     val trackId: Long = trackCursor.getLong(idColumn)
-                    albumsHashMap[trackId]?.let {
+                    val resolvedAlbum = albumsHashMap[trackId] ?: if (mergedIdsMap != null) {
+                        albumsHashMap.values.firstOrNull { mergedIdsMap[it.id]?.contains(trackId) == true }
+                    } else null
+                    resolvedAlbum?.let {
                         if (!list.contains(it)) {
                             list.add(it)
                         }
@@ -220,6 +245,7 @@ object AlbumManager {
         selection: String?,
         selectionArgs: Array<String>?,
         sortOrder: String?,
+        mergedIdsMap: HashMap<Long, HashSet<Long>>? = null
     ): ArrayList<AlbumList> {
         // Define the columns to retrieve from the media store for the number of tracks
         val trackProjection = arrayOf(
@@ -242,7 +268,10 @@ object AlbumManager {
                 val idColumn = trackCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
                 do {
                     val trackId: Long = trackCursor.getLong(idColumn)
-                    albumsHashMap[trackId]?.let {
+                    val resolvedAlbum = albumsHashMap[trackId] ?: if (mergedIdsMap != null) {
+                        albumsHashMap.values.firstOrNull { mergedIdsMap[it.id]?.contains(trackId) == true }
+                    } else null
+                    resolvedAlbum?.let {
                         if (!list.contains(it)) {
                             list.add(it)
                         }
@@ -261,9 +290,13 @@ object AlbumManager {
         val infoCursor = context.contentResolver.query(
             MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
             arrayOf(
+                MediaStore.Audio.Albums._ID,
                 MediaStore.Audio.Albums.ALBUM,
                 MediaStore.Audio.Albums.ARTIST,
-                MediaStore.Audio.Albums.ALBUM_ID
+                MediaStore.Audio.Albums.ALBUM_ID,
+                MediaStore.Audio.Albums.NUMBER_OF_SONGS,
+                MediaStore.Audio.Albums.FIRST_YEAR,
+                MediaStore.Audio.Albums.LAST_YEAR
             ),
             "${MediaStore.Audio.Albums._ID} = ?",
             arrayOf(albumId.toString()),
@@ -272,26 +305,28 @@ object AlbumManager {
         var albumList: AlbumList? = null
         infoCursor?.use {
             if (it.moveToFirst()) {
-                val albumColumn = it.getColumnIndex(MediaStore.Audio.Albums.ALBUM)
+                val idColumn = it.getColumnIndex(MediaStore.Audio.Albums._ID)
                 val albumIdColumn = it.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ID)
+                val actualIdCol = if (idColumn != -1) idColumn else albumIdColumn
+                val albumColumn = it.getColumnIndex(MediaStore.Audio.Albums.ALBUM)
                 val artistColumn = it.getColumnIndex(MediaStore.Audio.Albums.ARTIST)
-//                val numberOfSongsColumn =
-//                    it.getColumnIndex(MediaStore.Audio.Albums.NUMBER_OF_SONGS)
-//                val firstYearColumn = it.getColumnIndex(MediaStore.Audio.Albums.FIRST_YEAR)
-//                val lastYearColumn = it.getColumnIndex(MediaStore.Audio.Albums.LAST_YEAR)
+                val numberOfSongsColumn =
+                    it.getColumnIndex(MediaStore.Audio.Albums.NUMBER_OF_SONGS)
+                val firstYearColumn = it.getColumnIndex(MediaStore.Audio.Albums.FIRST_YEAR)
+                val lastYearColumn = it.getColumnIndex(MediaStore.Audio.Albums.LAST_YEAR)
                 val artist = it.getString(artistColumn)
                 val albumResult = it.getString(albumColumn)
-                val albumId = it.getLong(albumIdColumn)
-//                val numberSongs = it.getInt(numberOfSongsColumn)
-//                val firstYear = it.getString(firstYearColumn)
-//                val lastYear = it.getString(lastYearColumn)
+                val id = if (actualIdCol != -1) it.getLong(actualIdCol) else albumId
+                val numberSongs = if (numberOfSongsColumn != -1) it.getInt(numberOfSongsColumn) else 0
+                val firstYear = if (firstYearColumn != -1) it.getString(firstYearColumn) else ""
+                val lastYear = if (lastYearColumn != -1) it.getString(lastYearColumn) else ""
                 albumList = AlbumList(
-                    albumId, // We use the ID of the first part found (for Album Art)
+                    id,
                     albumResult ?: "Unknown Album",
                     artist ?: "Unknown",
-                    /*  firstYear ?:*/ "",
-                    /*   lastYear ?:*/ "",
-                    0
+                    firstYear ?: "",
+                    lastYear ?: "",
+                    numberSongs
                 )
             }
         }

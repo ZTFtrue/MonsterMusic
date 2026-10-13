@@ -463,9 +463,6 @@ fun TracksListPage(
                 val result: SessionResult? = futureResultItem.get()
                 if (result == null || result.resultCode != LibraryResult.RESULT_SUCCESS) {
                     Log.e("Client", "Failed COMMAND_GET_PLAY_LIST_ITEM ${result?.resultCode}")
-                    if (SharedPreferencesUtils.getMergeAlbum(context)) {
-                        Toast.makeText(context, "In merged album mode, this title may be empty. Yes, I slacked off.", Toast.LENGTH_SHORT).show()
-                    }
                     return@addListener
                 }
                 androidx.core.os.BundleCompat.getParcelable(result.extras, "data", AnyListBase::class.java)?.let {

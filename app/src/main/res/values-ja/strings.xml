@@ -172,7 +172,8 @@
     <string name="title">タイトル</string>
     <string name="disable_audio_focus">オーディオフォーカスを無効にする</string>
     <string name="folders_count">%1$s個のフォルダー%2$s</string>
-    <string name="merge_same_album">同名・同アーティストのアルバムを統合 (非推奨、アプリの再起動が必要)</string>
+    <string name="merge_same_album">同名・同アーティストのアルバムを統合</string>
+    <string name="merge_same_album_desc">同じアルバム名とアーティストを持つ分割されたアルバムを1つにまとめます</string>
     <string name="add_tracks_folder">楽曲フォルダーを追加</string>
     <string name="bass_boost">バスブースト</string>
     <string name="spatial_audio">空間オーディオ</string>

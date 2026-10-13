@@ -63,6 +63,7 @@ import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -139,22 +140,31 @@ fun VisualizerFullscreenView(
 
     // Ensure audio processor visualization stream is connected in fullscreen view
     val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
+    val windowInfo = LocalWindowInfo.current
+    val isWindowFocused = windowInfo.isWindowFocused
+    DisposableEffect(lifecycleOwner, isWindowFocused) {
         val lifecycle = lifecycleOwner.lifecycle
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_START, Lifecycle.Event.ON_RESUME -> {
-                    musicViewModel.setVisualizationActive("VisualizerFullscreenView", true)
+                    if (isWindowFocused) {
+                        musicViewModel.setVisualizationActive("VisualizerFullscreenView", true)
+                    } else {
+                        musicViewModel.setVisualizationActive("VisualizerFullscreenView", false)
+                    }
                 }
-                Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> {
+                Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> {
                     musicViewModel.setVisualizationActive("VisualizerFullscreenView", false)
                 }
                 else -> Unit
             }
         }
         lifecycle.addObserver(observer)
-        if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+        val isResumed = lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+        if (isResumed && isWindowFocused) {
             musicViewModel.setVisualizationActive("VisualizerFullscreenView", true)
+        } else {
+            musicViewModel.setVisualizationActive("VisualizerFullscreenView", false)
         }
         onDispose {
             lifecycle.removeObserver(observer)

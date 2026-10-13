@@ -1866,6 +1866,14 @@ class MusicViewModel : ViewModel() {
         }
     }
 
+    fun setMergeAlbum(context: Context, enable: Boolean) {
+        SharedPreferencesUtils.setMergeAlbum(context, enable)
+        browser?.sendCustomCommand(MediaCommands.COMMAND_CLEAR_ALBUM_CACHE, Bundle())
+        refreshAlbum.value = !refreshAlbum.value
+        refreshArtist.value = !refreshArtist.value
+        refreshGenre.value = !refreshGenre.value
+    }
+
     fun refreshAllTracks(context: Context) {
         if (isRefreshing.value) return
         isRefreshing.value = true

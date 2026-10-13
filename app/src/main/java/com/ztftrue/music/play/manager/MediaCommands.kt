@@ -76,6 +76,7 @@ object MediaCommands {
     val COMMAND_TRACK_DELETE = SessionCommand("app.TRACK_DELETE", Bundle.EMPTY)
     val COMMAND_PlAY_LIST_CHANGE = SessionCommand("app.PlAY_LIST_CHANGE", Bundle.EMPTY)
     val COMMAND_GET_PLAY_LIST_ITEM = SessionCommand("app.GET_PLAY_LIST_ITEM", Bundle.EMPTY)
+    val COMMAND_CLEAR_ALBUM_CACHE = SessionCommand("app.CLEAR_ALBUM_CACHE", Bundle.EMPTY)
 
     val COMMAND_SORT_QUEUE = SessionCommand("queue.SORT_QUEUE", Bundle.EMPTY)
     val COMMAND_SORT_TRACKS = SessionCommand("queue.SORT_TRACKS", Bundle.EMPTY)

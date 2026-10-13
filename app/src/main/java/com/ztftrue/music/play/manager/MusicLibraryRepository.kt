@@ -50,6 +50,7 @@ class MusicLibraryRepository(private val context: Context) {
     // 关联关系缓存
     val artistHasAlbumMap = HashMap<Long, ArrayList<AlbumList>>()
     val genreHasAlbumMap = HashMap<Long, ArrayList<AlbumList>>()
+    val mergedAlbumIdsMap = HashMap<Long, HashSet<Long>>()
 
     // UI 显示相关的排序指示器 (部分逻辑依赖它)
     val showIndicatorList = ArrayList<SortFiledData>()
@@ -97,6 +98,14 @@ class MusicLibraryRepository(private val context: Context) {
         }
     }
 
+    fun clearAlbumCache() {
+        albumsLinkedHashMap.clear()
+        albumsListTracksHashMap.clear()
+        artistHasAlbumMap.clear()
+        genreHasAlbumMap.clear()
+        mergedAlbumIdsMap.clear()
+    }
+
     private fun clearCache() {
         playListLinkedHashMap.clear()
         albumsLinkedHashMap.clear()
@@ -111,6 +120,7 @@ class MusicLibraryRepository(private val context: Context) {
         allTracksLinkedHashMap.clear()
         artistHasAlbumMap.clear()
         genreHasAlbumMap.clear()
+        mergedAlbumIdsMap.clear()
     }
 
     private fun loadSongsAndFolders() {
@@ -196,13 +206,18 @@ class MusicLibraryRepository(private val context: Context) {
         if (albumsLinkedHashMap.isNotEmpty()) {
             return ArrayList(albumsLinkedHashMap.values)
         }
+        if (allTracksLinkedHashMap.isEmpty()) {
+            loadSongsAndFolders()
+        }
         val sortDataP = db.SortFiledDao().findSortByType(PlayListType.Albums.name)
         val needMerge = SharedPreferencesUtils.getMergeAlbum(context)
+        mergedAlbumIdsMap.clear()
         AlbumManager.getAlbumList(
             context,
             albumsLinkedHashMap,
             "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}",
-            needMerge
+            needMerge,
+            mergedAlbumIdsMap
         )
         val scanMode = SharedPreferencesUtils.getScanMode(context)
         val hasFolderFilter = scanMode == SharedPreferencesUtils.SCAN_MODE_WHITELIST ||
@@ -211,16 +226,17 @@ class MusicLibraryRepository(private val context: Context) {
                                 !context.getSharedPreferences("scan_config", Context.MODE_PRIVATE).getString("ignore_folders", "").isNullOrEmpty()))
         if (hasFolderFilter) {
             val validAlbumIds = allTracksLinkedHashMap.values.map { it.albumId }.toSet()
-            val validAlbumNames = if (needMerge) allTracksLinkedHashMap.values.map { it.album.trim() }.toSet() else emptySet()
+            val validAlbumNames = if (needMerge) allTracksLinkedHashMap.values.map { it.album.trim().lowercase() }.toSet() else emptySet()
             val iterator = albumsLinkedHashMap.iterator()
             while (iterator.hasNext()) {
                 val entry = iterator.next()
-                val hasTrack = validAlbumIds.contains(entry.key) || (needMerge && validAlbumNames.contains(entry.value.name.trim()))
+                val mergedIds = mergedAlbumIdsMap[entry.key] ?: setOf(entry.key)
+                val hasTrack = mergedIds.any { validAlbumIds.contains(it) } || (needMerge && validAlbumNames.contains(entry.value.name.trim().lowercase()))
                 if (!hasTrack) {
                     iterator.remove()
                 } else {
                     val count = allTracksLinkedHashMap.values.count {
-                        it.albumId == entry.key || (needMerge && it.album.trim().equals(entry.value.name.trim(), ignoreCase = true))
+                        mergedIds.contains(it.albumId) || (needMerge && it.album.trim().equals(entry.value.name.trim(), ignoreCase = true) && (entry.value.artist.isBlank() || entry.value.artist.equals("Unknown", ignoreCase = true) || it.artist.trim().equals(entry.value.artist.trim(), ignoreCase = true)))
                     }
                     entry.value.trackNumber = count
                 }
@@ -337,20 +353,28 @@ class MusicLibraryRepository(private val context: Context) {
         val tracks: ArrayList<MusicItem>
         val sortData = db.SortFiledDao().findSortByType(PlayUtils.ListTypeTracks.AlbumsTracks)
         val sortOrder = "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
+        val trackUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
 
         if (needMerge) {
-            val albumList = AlbumManager.getAlbumById(context, id)
-            val targetAlbumName = albumList?.name ?: ""
-            val targetArtistName = albumList?.artist ?: ""
-            val trackUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-            val selection =
-                "${MediaStore.Audio.Media.ALBUM} = ? AND ${MediaStore.Audio.Media.ARTIST} = ?"
-            val selectionArgs = arrayOf(targetAlbumName, targetArtistName)
+            val albumList = getAlbumById(id) ?: AlbumManager.getAlbumById(context, id)
+            val mergedIds = mergedAlbumIdsMap[id] ?: setOf(id)
+            val selection: String
+            val selectionArgs: Array<String>
+            if (mergedIds.isNotEmpty()) {
+                val placeholders = mergedIds.joinToString(",") { "?" }
+                selection = "${MediaStore.Audio.Media.ALBUM_ID} IN ($placeholders)"
+                selectionArgs = mergedIds.map { it.toString() }.toTypedArray()
+            } else if (albumList != null && albumList.name.isNotBlank()) {
+                selection = "${MediaStore.Audio.Media.ALBUM} = ?"
+                selectionArgs = arrayOf(albumList.name)
+            } else {
+                selection = "${MediaStore.Audio.Media.ALBUM_ID} = ?"
+                selectionArgs = arrayOf(id.toString())
+            }
             tracks = TracksManager.getTracksById(
                 context, trackUri, allTracksLinkedHashMap, selection, selectionArgs, sortOrder
             )
         } else {
-            val trackUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
             tracks = TracksManager.getTracksById(
                 context, trackUri, allTracksLinkedHashMap,
                 MediaStore.Audio.Media.ALBUM_ID + "=?",
@@ -380,15 +404,18 @@ class MusicLibraryRepository(private val context: Context) {
                 if (albumsLinkedHashMap.isEmpty()) {
                     val sortDataP = db.SortFiledDao().findSortByType(PlayListType.Albums.name)
                     val needMerge = SharedPreferencesUtils.getMergeAlbum(context)
+                    mergedAlbumIdsMap.clear()
                     AlbumManager.getAlbumList(
                         context, albumsLinkedHashMap,
-                        "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}", needMerge
+                        "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}", needMerge,
+                        mergedAlbumIdsMap
                     )
                 }
                 AlbumManager.getAlbumsByArtist(
                     context, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     albumsLinkedHashMap, MediaStore.Audio.Media.ARTIST_ID + "=?",
-                    arrayOf(id.toString()), null
+                    arrayOf(id.toString()), null,
+                    mergedAlbumIdsMap
                 )
             }
 
@@ -427,13 +454,16 @@ class MusicLibraryRepository(private val context: Context) {
                 if (albumsLinkedHashMap.isEmpty()) {
                     val sortDataP = db.SortFiledDao().findSortByType(PlayListType.Albums.name)
                     val needMerge = SharedPreferencesUtils.getMergeAlbum(context)
+                    mergedAlbumIdsMap.clear()
                     AlbumManager.getAlbumList(
                         context, albumsLinkedHashMap,
-                        "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}", needMerge
+                        "${sortDataP?.filed ?: ""} ${sortDataP?.method ?: ""}", needMerge,
+                        mergedAlbumIdsMap
                     )
                 }
                 AlbumManager.getAlbumsByGenre(
-                    context, uri, albumsLinkedHashMap, null, null, null
+                    context, uri, albumsLinkedHashMap, null, null, null,
+                    mergedAlbumIdsMap
                 )
             }
 

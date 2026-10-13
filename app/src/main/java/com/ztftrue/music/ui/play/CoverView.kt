@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -55,21 +56,25 @@ fun CoverView(
     val showOtherMessage = remember { mutableStateOf(true) }
     val imageModel: ImageSource by musicViewModel.currentMusicCover
     val lifecycleOwner = LocalLifecycleOwner.current
+    val windowInfo = LocalWindowInfo.current
+    val isWindowFocused = windowInfo.isWindowFocused
     val context = LocalContext.current
     var isLifecycleActive by remember { mutableStateOf(false) }
 
-    DisposableEffect(lifecycleOwner, musicVisualizationEnable.value, isSelected) {
+    DisposableEffect(lifecycleOwner, musicVisualizationEnable.value, isSelected, isWindowFocused) {
         val lifecycle = lifecycleOwner.lifecycle
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_START, Lifecycle.Event.ON_RESUME -> {
                     isLifecycleActive = true
-                    if (musicVisualizationEnable.value && isSelected) {
+                    if (musicVisualizationEnable.value && isSelected && isWindowFocused) {
                         musicViewModel.setVisualizationActive("CoverView", true)
+                    } else {
+                        musicViewModel.setVisualizationActive("CoverView", false)
                     }
                 }
 
-                Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> {
+                Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> {
                     isLifecycleActive = false
                     musicViewModel.setVisualizationActive("CoverView", false)
                 }
@@ -79,8 +84,8 @@ fun CoverView(
         }
 
         lifecycle.addObserver(observer)
-        isLifecycleActive = lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
-        if (isLifecycleActive && musicVisualizationEnable.value && isSelected) {
+        isLifecycleActive = lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+        if (isLifecycleActive && musicVisualizationEnable.value && isSelected && isWindowFocused) {
             musicViewModel.setVisualizationActive("CoverView", true)
         } else {
             musicViewModel.setVisualizationActive("CoverView", false)

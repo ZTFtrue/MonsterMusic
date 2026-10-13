@@ -67,6 +67,7 @@ class PlaySessionCallback(
                 .add(MediaCommands.COMMAND_SORT_QUEUE)
                 .add(MediaCommands.COMMAND_CLEAR_QUEUE)
                 .add(MediaCommands.COMMAND_GET_PLAY_LIST_ITEM)
+                .add(MediaCommands.COMMAND_CLEAR_ALBUM_CACHE)
                 .add(MediaCommands.COMMAND_REFRESH_ALL)
                 .add(MediaCommands.COMMAND_TRACK_DELETE)
                 .add(MediaCommands.COMMAND_PlAY_LIST_CHANGE)
@@ -521,6 +522,11 @@ class PlaySessionCallback(
             MediaCommands.COMMAND_GET_PLAY_LIST_ITEM.customAction -> {
                 handleGetPlayListItem(args, future)
                 return future
+            }
+
+            MediaCommands.COMMAND_CLEAR_ALBUM_CACHE.customAction -> {
+                repository.clearAlbumCache()
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
             }
 
             MediaCommands.COMMAND_PlAY_LIST_CHANGE.customAction -> {

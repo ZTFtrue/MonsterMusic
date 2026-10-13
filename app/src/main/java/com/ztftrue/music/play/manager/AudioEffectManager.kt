@@ -78,6 +78,8 @@ class AudioEffectManager(private val context: Context) {
 
     @Volatile
     private var musicVisualizationEnable = false
+    @Volatile
+    private var isVisualizationUiConnected = false
 
     /**
      * 初始化音效设置
@@ -317,7 +319,7 @@ class AudioEffectManager(private val context: Context) {
 
     private fun loadVisualizationSettings() {
         musicVisualizationEnable = SharedPreferencesUtils.getEnableMusicVisualization(context)
-        equalizerAudioProcessor.setVisualizationAudioActive(musicVisualizationEnable)
+        equalizerAudioProcessor.setVisualizationAudioActive(musicVisualizationEnable && isVisualizationUiConnected)
     }
 
     fun setBassBoostEnabled(enable: Boolean) {
@@ -475,19 +477,20 @@ class AudioEffectManager(private val context: Context) {
 
     fun setVisualizationEnabled(enable: Boolean) {
         musicVisualizationEnable = enable
-        equalizerAudioProcessor.setVisualizationAudioActive(enable)
+        equalizerAudioProcessor.setVisualizationAudioActive(enable && isVisualizationUiConnected)
         SharedPreferencesUtils.saveEnableMusicVisualization(context, enable)
     }
 
     fun onVisualizationConnected() {
-        musicVisualizationEnable = true
-        equalizerAudioProcessor.setVisualizationAudioActive(true)
+        isVisualizationUiConnected = true
+        if (musicVisualizationEnable) {
+            equalizerAudioProcessor.setVisualizationAudioActive(true)
+        }
     }
 
     fun onVisualizationDisconnected() {
-        if (!musicVisualizationEnable) {
-            equalizerAudioProcessor.setVisualizationAudioActive(false)
-        }
+        isVisualizationUiConnected = false
+        equalizerAudioProcessor.setVisualizationAudioActive(false)
     }
 
     fun setEqualizerType(type: Int) {

@@ -1299,12 +1299,11 @@ fun SettingsPage(
                     }
                 }
                 item {
-
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(0.dp)
+                            .heightIn(min = 60.dp)
+                            .padding(vertical = 4.dp)
                             .drawBehind {
                                 drawLine(
                                     color = color,
@@ -1314,31 +1313,41 @@ fun SettingsPage(
                                 )
                             }
                             .clickable {
-
+                                val value = !mergeAlbum
+                                mergeAlbum = value
+                                musicViewModel.setMergeAlbum(
+                                    context,
+                                    value
+                                )
                             },
                         contentAlignment = Alignment.CenterStart
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = stringResource(R.string.merge_same_album),
-                                Modifier
-                                    .padding(start = 10.dp)
-                                    .weight(1f),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 10.dp)
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.merge_same_album),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                                Text(
+                                    text = stringResource(R.string.merge_same_album_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                                )
+                            }
                             Switch(
                                 checked = mergeAlbum,
                                 onCheckedChange = { value ->
                                     mergeAlbum = value
-                                    SharedPreferencesUtils.setMergeAlbum(
+                                    musicViewModel.setMergeAlbum(
                                         context,
-                                        mergeAlbum
+                                        value
                                     )
-                                },
-//                                colors = SwitchDefaults.colors(checkedThumbColor = Color.Green)
+                                }
                             )
                         }
-
                     }
                 }
             }

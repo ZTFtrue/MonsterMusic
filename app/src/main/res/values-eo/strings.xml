@@ -171,7 +171,8 @@
     <string name="title">Titolo</string>
     <string name="disable_audio_focus">Malebligi sonfokuson</string>
     <string name="folders_count">%1$s Dosierujo%2$s</string>
-    <string name="merge_same_album">Kunfandi samnomajn albumojn de sama artisto (Ne rekomendita, bezonas rekomencon)</string>
+    <string name="merge_same_album">Kunfandi samnomajn albumojn de sama artisto</string>
+    <string name="merge_same_album_desc">Kunfandas apartajn albumerojn kun sama titolo kaj artisto en ununuran albumon</string>
     <string name="add_tracks_folder">Aldoni dosierujon de trakoj</string>
     <string name="bass_boost">Plifortigo de Baso</string>
     <string name="spatial_audio">Spaca Sono</string>

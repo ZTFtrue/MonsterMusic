@@ -5,9 +5,11 @@ import android.graphics.Typeface
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
@@ -15,7 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.play.AudioDataRepository
 import kotlin.math.exp
@@ -48,11 +54,44 @@ fun MatrixRainVisualizer(
         )
     }
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val windowInfo = LocalWindowInfo.current
+    val isWindowFocused = windowInfo.isWindowFocused
+    val isPlaying = musicViewModel.playStatus.value
+
+    var isResumed by remember {
+        mutableStateOf(lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START, Lifecycle.Event.ON_RESUME -> {
+                    isResumed = true
+                }
+                Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> {
+                    isResumed = false
+                }
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    val shouldRun = isPlaying && isWindowFocused && isResumed
+
     // VSYNC-locked continuous frame clock (60Hz / 90Hz / 120Hz)
     var frameTick by remember { mutableLongStateOf(0L) }
     val lastFrameTimeHolder = remember { LongArray(1) { 0L } }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(shouldRun) {
+        if (!shouldRun) {
+            lastFrameTimeHolder[0] = 0L
+            return@LaunchedEffect
+        }
         while (true) {
             withFrameNanos { frameNanos ->
                 frameTick = frameNanos
@@ -61,34 +100,30 @@ fun MatrixRainVisualizer(
     }
 
     Canvas(modifier = modifier.fillMaxSize().clipToBounds()) {
-        val currentFrameNanos = frameTick
-        if (currentFrameNanos == 0L) return@Canvas
-
         val width = size.width
         val height = size.height
         if (width <= 0f || height <= 0f) return@Canvas
 
-        val lastTime = lastFrameTimeHolder[0]
-        val dtMs = if (lastTime != 0L) {
-            ((currentFrameNanos - lastTime) / 1_000_000f).coerceIn(1f, 100f)
-        } else {
-            16f
-        }
-        lastFrameTimeHolder[0] = currentFrameNanos
-
         val isPlaying = musicViewModel.playStatus.value
 
         try {
-            if (isPlaying) {
+            simulation.ensureDimensions(width, height)
+            if (shouldRun) {
+                val currentFrameNanos = frameTick
+                val lastTime = lastFrameTimeHolder[0]
+                val dtMs = if (lastTime != 0L && currentFrameNanos != 0L) {
+                    ((currentFrameNanos - lastTime) / 1_000_000f).coerceIn(1f, 100f)
+                } else {
+                    16f
+                }
+                lastFrameTimeHolder[0] = currentFrameNanos
+
                 val hasData = AudioDataRepository.getLatestVisualizationData(magnitudesArray)
                 if (!hasData) {
                     magnitudesArray.fill(0f)
                 }
-            } else {
-                magnitudesArray.fill(0f)
+                simulation.update(dtMs, magnitudesArray, isPlaying)
             }
-            simulation.ensureDimensions(width, height)
-            simulation.update(dtMs, magnitudesArray, isPlaying)
             simulation.draw(drawContext.canvas.nativeCanvas, width, height)
         } catch (_: Exception) {
         }
@@ -205,6 +240,7 @@ class MatrixRainSimulation(
     }
 
     fun update(dtMs: Float, rawMagnitudes: FloatArray, isPlaying: Boolean) {
+        if (!isPlaying) return
         synchronized(lock) {
             val dtSec = dtMs / 1000f
 

@@ -5,6 +5,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -21,6 +22,10 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.ztftrue.music.MusicViewModel
 import com.ztftrue.music.play.AudioDataRepository
 import kotlin.math.exp
@@ -69,11 +74,52 @@ fun SpectrumVisualizer(
     var cachedBarBrush by remember { mutableStateOf<Brush?>(null) }
     var cachedReflectionBrush by remember { mutableStateOf<Brush?>(null) }
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val windowInfo = LocalWindowInfo.current
+    val isWindowFocused = windowInfo.isWindowFocused
+    val isPlaying = musicViewModel.playStatus.value
+
+    var isResumed by remember {
+        mutableStateOf(lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START, Lifecycle.Event.ON_RESUME -> {
+                    isResumed = true
+                }
+                Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> {
+                    isResumed = false
+                }
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    var isSettled by remember { mutableStateOf(!isPlaying) }
+
+    LaunchedEffect(isPlaying) {
+        if (isPlaying) {
+            isSettled = false
+        }
+    }
+
+    val shouldRun = isWindowFocused && isResumed && (isPlaying || !isSettled)
+
     // VSYNC-locked continuous frame clock (60Hz / 90Hz / 120Hz)
     var frameTick by remember { mutableLongStateOf(0L) }
     val lastFrameTimeHolder = remember { LongArray(1) { 0L } }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(shouldRun) {
+        if (!shouldRun) {
+            lastFrameTimeHolder[0] = 0L
+            return@LaunchedEffect
+        }
         while (true) {
             withFrameNanos { frameNanos ->
                 frameTick = frameNanos
@@ -82,6 +128,7 @@ fun SpectrumVisualizer(
     }
 
     Canvas(modifier = modifier.fillMaxSize().clipToBounds()) {
+        if (!shouldRun && frameTick == 0L) return@Canvas
         val currentFrameNanos = frameTick
         if (currentFrameNanos == 0L) return@Canvas
 
@@ -156,6 +203,28 @@ fun SpectrumVisualizer(
                     peakVelocities[i] += dt * 3.6f // Gravity acceleration
                     peakHeights[i] = max(0f, peakHeights[i] - peakVelocities[i] * dt)
                 }
+            }
+        }
+
+        // When paused, stop running once all bars and peaks have cleanly settled to 0
+        if (!isPlaying && !isSettled) {
+            var allZero = true
+            for (i in 0 until barCount) {
+                if (currentHeights[i] > 0.001f || peakHeights[i] > 0.001f) {
+                    allZero = false
+                    break
+                }
+            }
+            if (allZero) {
+                for (i in 0 until barCount) {
+                    currentHeights[i] = 0f
+                    peakHeights[i] = 0f
+                    peakVelocities[i] = 0f
+                    peakHoldTimers[i] = 0f
+                    targetMagnitudes[i] = 0f
+                    spatialMagnitudes[i] = 0f
+                }
+                isSettled = true
             }
         }
 

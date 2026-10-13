@@ -172,7 +172,8 @@
     <string name="title">Название</string>
     <string name="disable_audio_focus">Отключить аудиофокус</string>
     <string name="folders_count">%1$s папка%2$s</string>
-    <string name="merge_same_album">Объединять альбомы с одинаковым названием и исполнителем (Не рекомендуется, требуется перезапуск)</string>
+    <string name="merge_same_album">Объединять альбомы с одинаковым названием и исполнителем</string>
+    <string name="merge_same_album_desc">Объединяет разделенные части альбома с одинаковым названием и исполнителем в один альбом</string>
     <string name="add_tracks_folder">Добавить папку с треками</string>
     <string name="bass_boost">Усиление басов</string>
     <string name="spatial_audio">Пространственный звук</string>
