@@ -7,6 +7,8 @@ import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -464,7 +466,7 @@ fun MusicItemView(
                 placeholder = rememberAsyncImagePainter(model = defaultCover),
                 error = rememberAsyncImagePainter(model = defaultCover),
                 contentDescription = stringResource(R.string.album_cover),
-                contentScale = ContentScale.Crop,
+                contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxSize()
             )
             if (isCurrent) {
@@ -496,7 +498,7 @@ fun MusicItemView(
                 fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium,
                 color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                modifier = Modifier.horizontalScroll(rememberScrollState(0))
             )
             Spacer(modifier = Modifier.height(3.dp))
             val durationText = Utils.formatTime(music.duration)

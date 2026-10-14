@@ -426,12 +426,19 @@ object Utils {
         }
     }
 
+    fun scaleCoverIfNeeded(bitmap: Bitmap, targetSize: Int = 512): Bitmap {
+        if (bitmap.width != bitmap.height) {
+            return bitmap
+        }
+        return bitmap.scale(targetSize, targetSize, false)
+    }
+
     fun getVideoCoverCacheFile(context: Context, path: String): File {
         val cacheDir = File(context.externalCacheDir ?: context.cacheDir, "video_cover")
         if (!cacheDir.exists()) {
             cacheDir.mkdirs()
         }
-        val safeName = "${kotlin.math.abs(path.hashCode())}.jpg"
+        val safeName = "${kotlin.math.abs(path.hashCode())}_v2.jpg"
         return File(cacheDir, safeName)
     }
 
@@ -470,7 +477,7 @@ object Utils {
         }
 
         if (bitmap != null) {
-            val scaled = bitmap.scale(512, 512, false)
+            val scaled = scaleCoverIfNeeded(bitmap, 512)
             try {
                 FileOutputStream(cacheFile).use { out ->
                     scaled.compress(Bitmap.CompressFormat.JPEG, 85, out)
@@ -507,7 +514,7 @@ object Utils {
                     if (coverT != null) {
                         val bitmap = decodeSampledBitmapFromByteArray(coverT, 0, coverT.size, 512, 512)
                         if (bitmap != null) {
-                            return ImageSource.BitmapFile(bitmap.scale(512, 512, false))
+                            return ImageSource.BitmapFile(scaleCoverIfNeeded(bitmap, 512))
                         }
                     }
                 } finally {
@@ -552,12 +559,13 @@ object Utils {
             retriever.setDataSource(path)
             val coverT = retriever.embeddedPicture
             if (coverT != null) {
-                return decodeSampledBitmapFromByteArray(coverT, 0, coverT.size, 512, 512)?.scale(512, 512, false)
+                val bitmap = decodeSampledBitmapFromByteArray(coverT, 0, coverT.size, 512, 512)
+                return if (bitmap != null) scaleCoverIfNeeded(bitmap, 512) else null
             } else if (isVideoPath(path)) {
                 val frame = retriever.getFrameAtTime(1_000_000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
                     ?: retriever.frameAtTime
                 if (frame != null) {
-                    return frame.scale(512, 512, false)
+                    return scaleCoverIfNeeded(frame, 512)
                 }
             }
         } catch (_: Exception) {
@@ -591,7 +599,7 @@ object Utils {
                     if (coverT != null) {
                         val bitmap = decodeSampledBitmapFromByteArray(coverT, 0, coverT.size, 512, 512)
                         if (bitmap != null) {
-                            return bitmap.scale(512, 512, false)
+                            return scaleCoverIfNeeded(bitmap, 512)
                         }
                     }
                 } finally {
@@ -607,20 +615,20 @@ object Utils {
             context
         )
         if (defaultCoverResId.isNullOrEmpty()) {
-            return (decodeSampledBitmapFromResource(context.resources, R.drawable.songs_thumbnail_cover, 512, 512)
+            val b = (decodeSampledBitmapFromResource(context.resources, R.drawable.songs_thumbnail_cover, 512, 512)
                 ?: BitmapFactory.decodeResource(context.resources, R.drawable.songs_thumbnail_cover))
-                .scale(512, 512, false)
+            return scaleCoverIfNeeded(b, 512)
         } else {
             val sourceFile = File(defaultCoverResId)
             return if (sourceFile.exists()) {
-                (decodeSampledBitmapFromFile(sourceFile.absolutePath, 512, 512)
+                val b = (decodeSampledBitmapFromFile(sourceFile.absolutePath, 512, 512)
                     ?: BitmapFactory.decodeFile(sourceFile.absolutePath))
-                    .scale(512, 512, false)
+                scaleCoverIfNeeded(b, 512)
             } else {
                 SharedPreferencesUtils.setTrackCoverData(context, "")
-                (decodeSampledBitmapFromResource(context.resources, R.drawable.songs_thumbnail_cover, 512, 512)
+                val b = (decodeSampledBitmapFromResource(context.resources, R.drawable.songs_thumbnail_cover, 512, 512)
                     ?: BitmapFactory.decodeResource(context.resources, R.drawable.songs_thumbnail_cover))
-                    .scale(512, 512, false)
+                scaleCoverIfNeeded(b, 512)
             }
         }
     }
