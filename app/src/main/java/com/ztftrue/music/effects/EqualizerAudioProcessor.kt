@@ -44,6 +44,7 @@ class EqualizerAudioProcessor : AudioProcessor {
     private external fun freeNativeEqualizer(handle: Long)
     private external fun resetNativeEqualizer(handle: Long)
     private external fun resetLimiterNative(handle: Long)
+    private external fun getLimiterEnvelopeNative(handle: Long): Float
     private external fun configureBandNative(
         handle: Long,
         channel: Int,
@@ -463,6 +464,9 @@ class EqualizerAudioProcessor : AudioProcessor {
                 if (active) {
                     restoreBands()
                 }
+                if (nativeEqualizerHandle != 0L) {
+                    resetLimiterNative(nativeEqualizerHandle)
+                }
             } finally {
                 lock.unlock()
             }
@@ -470,7 +474,15 @@ class EqualizerAudioProcessor : AudioProcessor {
     }
 
     fun setEchoActive(active: Boolean) {
-        echoActive = active
+        lock.lock()
+        try {
+            echoActive = active
+            if (nativeEqualizerHandle != 0L) {
+                resetLimiterNative(nativeEqualizerHandle)
+            }
+        } finally {
+            lock.unlock()
+        }
     }
 
     fun setVisualizationAudioActive(active: Boolean) {
@@ -484,6 +496,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             equalizerType = type
             if (nativeEqualizerHandle != 0L) {
                 setEqualizerTypeNative(nativeEqualizerHandle, type)
+                resetLimiterNative(nativeEqualizerHandle)
             }
         } finally {
             lock.unlock()
@@ -499,6 +512,9 @@ class EqualizerAudioProcessor : AudioProcessor {
                 gainDBArray[index] = value
                 gainDBAbsArray[index] = 10.0.pow(value.toDouble() / 20.0).toFloat()
                 configureBandFilter(index, value)
+                if (nativeEqualizerHandle != 0L) {
+                    resetLimiterNative(nativeEqualizerHandle)
+                }
                 changeDb = true
             }
         } finally {
@@ -533,6 +549,9 @@ class EqualizerAudioProcessor : AudioProcessor {
             this.Q = value
             if (needChange) {
                 restoreBands()
+                if (nativeEqualizerHandle != 0L) {
+                    resetLimiterNative(nativeEqualizerHandle)
+                }
                 changeDb = true
             }
         } finally {
@@ -565,9 +584,15 @@ class EqualizerAudioProcessor : AudioProcessor {
     }
 
     private fun updateNativeEcho() {
-        if (nativeEqualizerHandle != 0L && outputAudioFormat.sampleRate > 0) {
-            val sampleRate = outputAudioFormat.sampleRate.toFloat()
-            setEchoParamsNative(nativeEqualizerHandle, echoDelay, echoDecay, isWithFeedBack, sampleRate)
+        lock.lock()
+        try {
+            if (nativeEqualizerHandle != 0L && outputAudioFormat.sampleRate > 0) {
+                val sampleRate = outputAudioFormat.sampleRate.toFloat()
+                setEchoParamsNative(nativeEqualizerHandle, echoDelay, echoDecay, isWithFeedBack, sampleRate)
+                resetLimiterNative(nativeEqualizerHandle)
+            }
+        } finally {
+            lock.unlock()
         }
     }
 
@@ -604,6 +629,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             bassBoostStrength = strength
             if (nativeEqualizerHandle != 0L) {
                 setBassBoostNative(nativeEqualizerHandle, enabled, strength)
+                resetLimiterNative(nativeEqualizerHandle)
             }
         } finally {
             lock.unlock()
@@ -617,6 +643,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             virtualizerStrength = strength
             if (nativeEqualizerHandle != 0L) {
                 setVirtualizerNative(nativeEqualizerHandle, enabled, strength)
+                resetLimiterNative(nativeEqualizerHandle)
             }
         } finally {
             lock.unlock()
@@ -636,6 +663,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             reverbMix = mix
             if (nativeEqualizerHandle != 0L) {
                 setReverbNative(nativeEqualizerHandle, enabled, roomSize, damping, mix)
+                resetLimiterNative(nativeEqualizerHandle)
             }
         } finally {
             lock.unlock()
@@ -651,6 +679,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             chorusMix = mix
             if (nativeEqualizerHandle != 0L) {
                 setChorusNative(nativeEqualizerHandle, enabled, rate, depth, mix)
+                resetLimiterNative(nativeEqualizerHandle)
             }
         } finally {
             lock.unlock()
@@ -667,6 +696,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             flangerMix = mix
             if (nativeEqualizerHandle != 0L) {
                 setFlangerNative(nativeEqualizerHandle, enabled, rate, depth, feedback, mix)
+                resetLimiterNative(nativeEqualizerHandle)
             }
         } finally {
             lock.unlock()
@@ -682,6 +712,7 @@ class EqualizerAudioProcessor : AudioProcessor {
             polyphonyMix = mix
             if (nativeEqualizerHandle != 0L) {
                 setPolyphonyNative(nativeEqualizerHandle, enabled, semitones, detuneCents, mix)
+                resetLimiterNative(nativeEqualizerHandle)
             }
         } finally {
             lock.unlock()
@@ -697,7 +728,31 @@ class EqualizerAudioProcessor : AudioProcessor {
             delayEffectMix = mix
             if (nativeEqualizerHandle != 0L) {
                 setDelayNative(nativeEqualizerHandle, enabled, delayTime, feedback, mix)
+                resetLimiterNative(nativeEqualizerHandle)
             }
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    fun resetLimiter() {
+        lock.lock()
+        try {
+            if (nativeEqualizerHandle != 0L) {
+                resetLimiterNative(nativeEqualizerHandle)
+            }
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    fun getLimiterEnvelope(): Float {
+        lock.lock()
+        try {
+            if (nativeEqualizerHandle != 0L) {
+                return getLimiterEnvelopeNative(nativeEqualizerHandle)
+            }
+            return 1.0f
         } finally {
             lock.unlock()
         }

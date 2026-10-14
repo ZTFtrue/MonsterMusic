@@ -153,6 +153,9 @@ class AudioEffectManager(private val context: Context) {
         if (exoPlayer != null) {
             applyPlaybackParameters(exoPlayer)
         }
+
+        // 7. Reset Limiter
+        equalizerAudioProcessor.resetLimiter()
     }
 
     suspend fun switchTrack(trackId: Long, exoPlayer: ExoPlayer?) = withContext(Dispatchers.IO) {
@@ -344,6 +347,10 @@ class AudioEffectManager(private val context: Context) {
         auxr.virtualizerStrength = strength
         equalizerAudioProcessor.setVirtualizer(auxr.virtualizerEnabled, strength / 1000f)
         updateDb()
+    }
+
+    fun resetLimiter() {
+        equalizerAudioProcessor.resetLimiter()
     }
     // ==========================================
     // Playback Parameters (Speed & Pitch)

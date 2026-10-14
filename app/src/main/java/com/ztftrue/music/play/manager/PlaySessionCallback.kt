@@ -92,6 +92,7 @@ class PlaySessionCallback(
                 .add(MediaCommands.COMMAND_SET_TRACK_EFFECT_ENABLE)
                 .add(MediaCommands.COMMAND_RESET_TRACK_EFFECT)
                 .add(MediaCommands.COMMAND_AUDIO_EFFECT_UPDATE)
+                .add(MediaCommands.COMMAND_RESET_LIMITER)
                 .add(MediaCommands.COMMAND_SET_BIT_PERFECT_ENABLE)
                 .add(MediaCommands.COMMAND_GET_BIT_PERFECT_STATUS)
                 .add(MediaCommands.COMMAND_BIT_PERFECT_STATUS_UPDATE)
@@ -233,6 +234,11 @@ class PlaySessionCallback(
                         service.broadcastAudioEffectUpdate()
                     }
                 }
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+
+            MediaCommands.COMMAND_RESET_LIMITER.customAction -> {
+                effectManager.resetLimiter()
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
             }
 

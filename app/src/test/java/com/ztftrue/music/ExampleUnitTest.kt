@@ -2144,6 +2144,37 @@ class ExampleUnitTest {
     }
 
     @Test
+    fun equalizerAudioProcessor_limiterResetAndEffectMethods() {
+        val processor = com.ztftrue.music.effects.EqualizerAudioProcessor()
+        // Default limiter envelope should be 1.0f
+        assertEquals(1.0f, processor.getLimiterEnvelope(), 0.001f)
+
+        // Reset limiter
+        processor.resetLimiter()
+        assertEquals(1.0f, processor.getLimiterEnvelope(), 0.001f)
+
+        // Changing bass boost resets limiter
+        processor.setBassBoost(true, 0.8f)
+        processor.setBassBoost(false, 0.0f)
+
+        // Changing other effects (virtualizer, reverb, chorus, flanger, polyphony, delay)
+        processor.setVirtualizer(true, 0.5f)
+        assertTrue(processor.virtualizerActive)
+        assertEquals(0.5f, processor.virtualizerStrength, 0.001f)
+
+        processor.setReverb(true, 0.6f, 0.4f, 0.3f)
+        processor.setChorus(true, 1.2f, 0.4f, 0.5f)
+        processor.setFlanger(true, 0.8f, 0.6f, 0.5f, 0.4f)
+        processor.setPolyphony(true, 2, 5.0f, 0.5f)
+        processor.setDelay(true, 0.4f, 0.3f, 0.2f)
+
+        // EQ and Echo
+        processor.setEqualizerActive(true)
+        assertTrue(processor.isSetActive())
+        processor.setEchoActive(true)
+    }
+
+    @Test
     fun equalizerAudioProcessor_bitPerfectModeBypass() {
         val processor = com.ztftrue.music.effects.EqualizerAudioProcessor()
         assertFalse(processor.bitPerfectMode)

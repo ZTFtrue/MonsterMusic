@@ -504,46 +504,55 @@ void biquad_equalizer_set_echo_params(BiquadEqualizer* eq, float delay_time, flo
     for (int ch = 0; ch < eq->channel_count; ch++) {
         echo_delay_set_params(&eq->channel_delays[ch], delay_time, decay, feedback, sample_rate);
     }
+    biquad_equalizer_reset_limiter(eq);
 }
 
 void biquad_equalizer_set_type(BiquadEqualizer* eq, int type) {
     if (!eq) return;
     eq->eq_type = (type == EQ_TYPE_FFT) ? EQ_TYPE_FFT : EQ_TYPE_IIR;
+    biquad_equalizer_reset_limiter(eq);
 }
 
 void biquad_equalizer_set_bass_boost_params(BiquadEqualizer* eq, int enabled, float strength) {
     if (!eq || !eq->bass_boost) return;
     bass_boost_set_params(eq->bass_boost, enabled, strength, eq->sample_rate);
+    biquad_equalizer_reset_limiter(eq);
 }
 
 void biquad_equalizer_set_virtualizer_params(BiquadEqualizer* eq, int enabled, float strength) {
     if (!eq || !eq->virtualizer) return;
     virtualizer_set_params(eq->virtualizer, enabled, strength, eq->sample_rate);
+    biquad_equalizer_reset_limiter(eq);
 }
 
 void biquad_equalizer_set_reverb_params(BiquadEqualizer* eq, int enabled, float room_size, float damping, float mix) {
     if (!eq || !eq->reverb) return;
     reverb_set_params(eq->reverb, enabled, room_size, damping, mix, eq->sample_rate);
+    biquad_equalizer_reset_limiter(eq);
 }
 
 void biquad_equalizer_set_chorus_params(BiquadEqualizer* eq, int enabled, float rate, float depth, float mix) {
     if (!eq || !eq->chorus) return;
     chorus_set_params(eq->chorus, enabled, rate, depth, mix, eq->sample_rate);
+    biquad_equalizer_reset_limiter(eq);
 }
 
 void biquad_equalizer_set_flanger_params(BiquadEqualizer* eq, int enabled, float rate, float depth, float feedback, float mix) {
     if (!eq || !eq->flanger) return;
     flanger_set_params(eq->flanger, enabled, rate, depth, feedback, mix, eq->sample_rate);
+    biquad_equalizer_reset_limiter(eq);
 }
 
 void biquad_equalizer_set_polyphony_params(BiquadEqualizer* eq, int enabled, int semitones, float detune_cents, float mix) {
     if (!eq || !eq->polyphony) return;
     polyphony_set_params(eq->polyphony, enabled, semitones, detune_cents, mix, eq->sample_rate);
+    biquad_equalizer_reset_limiter(eq);
 }
 
 void biquad_equalizer_set_delay_params(BiquadEqualizer* eq, int enabled, float delay_time, float feedback, float mix) {
     if (!eq || !eq->delay) return;
     delay_set_params(eq->delay, enabled, delay_time, feedback, mix, eq->sample_rate);
+    biquad_equalizer_reset_limiter(eq);
 }
 
 static void fft_equalizer_ensure_fifo_capacity(BiquadEqualizer* eq, int max_needed) {

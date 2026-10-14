@@ -51,6 +51,16 @@ Java_com_ztftrue_music_effects_EqualizerAudioProcessor_resetLimiterNative(
     biquad_equalizer_reset_limiter(eq);
 }
 
+JNIEXPORT jfloat JNICALL
+Java_com_ztftrue_music_effects_EqualizerAudioProcessor_getLimiterEnvelopeNative(
+        JNIEnv *env, jobject thiz, jlong handle) {
+    (void)env;
+    (void)thiz;
+    if (handle == 0) return 1.0f;
+    BiquadEqualizer* eq = (BiquadEqualizer*)(intptr_t)handle;
+    return eq->limiter_envelope;
+}
+
 JNIEXPORT void JNICALL
 Java_com_ztftrue_music_effects_EqualizerAudioProcessor_configureBandNative(
         JNIEnv *env, jobject thiz, jlong handle, jint channel, jint band,

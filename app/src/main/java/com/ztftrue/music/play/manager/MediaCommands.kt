@@ -23,6 +23,7 @@ object MediaCommands {
     val COMMAND_SET_TRACK_EFFECT_ENABLE = SessionCommand("dsp.SET_TRACK_EFFECT_ENABLE", Bundle.EMPTY)
     val COMMAND_RESET_TRACK_EFFECT = SessionCommand("dsp.RESET_TRACK_EFFECT", Bundle.EMPTY)
     val COMMAND_AUDIO_EFFECT_UPDATE = SessionCommand("dsp.AUDIO_EFFECT_UPDATE", Bundle.EMPTY)
+    val COMMAND_RESET_LIMITER = SessionCommand("dsp.RESET_LIMITER", Bundle.EMPTY)
 
     // Echo
     val COMMAND_ECHO_ENABLE = SessionCommand("echo.ENABLE", Bundle.EMPTY)
