@@ -12,6 +12,7 @@ import com.ztftrue.music.sqlData.model.MusicItem
 import com.ztftrue.music.sqlData.model.SortFiledData
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.SharedPreferencesUtils
+import com.ztftrue.music.utils.SortUtils
 import com.ztftrue.music.utils.model.*
 import com.ztftrue.music.utils.trackManager.*
 import kotlinx.coroutines.*
@@ -132,10 +133,15 @@ class MusicLibraryRepository(private val context: Context) {
             context,
             foldersLinkedHashMap,
             tracksLinkedHashMap,
-            "${sortData?.filed ?: ""} ${sortData?.method ?: ""}",
+            "${sortData?.filed ?: ""} ${sortData?.method ?: ""}".trim(),
             allTracksLinkedHashMap,
             foldersListTracksHashMap
         )
+        val folderSortData = db.SortFiledDao().findSortByType(PlayUtils.ListTypeTracks.FoldersTracks)
+        val folderSortOrder = "${folderSortData?.filed ?: ""} ${folderSortData?.method ?: ""}".trim()
+        foldersListTracksHashMap.forEach { (_, fTracks) ->
+            SortUtils.sortTracksMap(fTracks, folderSortOrder)
+        }
     }
 
     private fun loadShowIndicatorList() {
@@ -352,7 +358,11 @@ class MusicLibraryRepository(private val context: Context) {
         val needMerge = SharedPreferencesUtils.getMergeAlbum(context)
         val tracks: ArrayList<MusicItem>
         val sortData = db.SortFiledDao().findSortByType(PlayUtils.ListTypeTracks.AlbumsTracks)
-        val sortOrder = "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
+        val sortOrder = if (sortData == null || sortData.filed.isNullOrBlank()) {
+            "${MediaStore.Audio.Media.TRACK} ASC"
+        } else {
+            "${sortData.filed} ${sortData.method}".trim()
+        }
         val trackUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
 
         if (needMerge) {
@@ -476,6 +486,7 @@ class MusicLibraryRepository(private val context: Context) {
                     tracksList = ArrayList(
                         tracksPool.filter { it.genreId == id || it.genre.equals(genre.name, ignoreCase = true) }
                     )
+                    SortUtils.sortTracks(tracksList, sortOrder)
                 }
                 tracksList
             }
@@ -496,9 +507,15 @@ class MusicLibraryRepository(private val context: Context) {
     }
 
     fun getTracksByFolderId(id: Long): List<MusicItem> {
-        foldersListTracksHashMap[id]?.let { return ArrayList(it.values) }
-
         val sortData = db.SortFiledDao().findSortByType(PlayUtils.ListTypeTracks.FoldersTracks)
+        val sortOrder = "${sortData?.filed ?: ""} ${sortData?.method ?: ""}".trim()
+
+        foldersListTracksHashMap[id]?.let { tracksMap ->
+            val list = ArrayList(tracksMap.values)
+            SortUtils.sortTracks(list, sortOrder)
+            return list
+        }
+
         val uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         val selection = MediaStore.Audio.Media.BUCKET_ID + "=?"
 
@@ -508,8 +525,30 @@ class MusicLibraryRepository(private val context: Context) {
             allTracksLinkedHashMap,
             selection,
             arrayOf(id.toString()),
-            "${sortData?.filed ?: ""} ${sortData?.method ?: ""}"
+            sortOrder
         )
+
+        if (SharedPreferencesUtils.getVideoSupportEnable(context)) {
+            try {
+                context.contentResolver.query(
+                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                    arrayOf(MediaStore.Video.Media._ID),
+                    MediaStore.Video.Media.BUCKET_ID + "=?",
+                    arrayOf(id.toString()),
+                    null
+                )?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val idCol = cursor.getColumnIndex(MediaStore.Video.Media._ID)
+                        do {
+                            val rawVideoId = cursor.getLong(idCol)
+                            val musicId = -(rawVideoId + 1L)
+                            allTracksLinkedHashMap[musicId]?.let { listT.add(it) }
+                        } while (cursor.moveToNext())
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+        SortUtils.sortTracks(listT, sortOrder)
 
         val tracksMap = LinkedHashMap<Long, MusicItem>()
         listT.forEach { tracksMap[it.id] = it }
@@ -652,7 +691,26 @@ class MusicLibraryRepository(private val context: Context) {
     }
 
 
-    suspend fun handleSort(type: String) = withContext(Dispatchers.IO) {
+    suspend fun handleSort(
+        type: String,
+        filed: String? = null,
+        filedName: String? = null,
+        method: String? = null,
+        methodName: String? = null
+    ) = withContext(Dispatchers.IO) {
+        if (filed != null && method != null) {
+            val sortDao = db.SortFiledDao()
+            val sortData = sortDao.findSortByType(type)
+            if (sortData != null) {
+                sortData.filed = filed
+                sortData.filedName = filedName ?: ""
+                sortData.method = method
+                sortData.methodName = methodName ?: ""
+                sortDao.update(sortData)
+            } else {
+                sortDao.insert(SortFiledData(type, filed, method, methodName ?: "", filedName ?: ""))
+            }
+        }
         // 1. 无论哪种类型排序，指示器列表可能都变了，重新加载
         loadShowIndicatorList()
 
@@ -672,6 +730,11 @@ class MusicLibraryRepository(private val context: Context) {
 
             PlayListType.Genres.name -> {
                 genresLinkedHashMap.clear()
+            }
+
+            PlayListType.Folders.name -> {
+                val isDesc = method?.equals("DESC", ignoreCase = true) == true
+                SortUtils.sortFolders(foldersLinkedHashMap, ascending = !isDesc)
             }
 
             // --- 所有歌曲排序：立即重新加载 ---
@@ -703,7 +766,11 @@ class MusicLibraryRepository(private val context: Context) {
             }
 
             PlayUtils.ListTypeTracks.FoldersTracks -> {
-                foldersListTracksHashMap.clear()
+                val sortData = db.SortFiledDao().findSortByType(PlayUtils.ListTypeTracks.FoldersTracks)
+                val sortOrder = "${sortData?.filed ?: ""} ${sortData?.method ?: ""}".trim()
+                foldersListTracksHashMap.forEach { (_, tracksMap) ->
+                    SortUtils.sortTracksMap(tracksMap, sortOrder)
+                }
             }
         }
     }

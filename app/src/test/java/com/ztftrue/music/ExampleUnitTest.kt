@@ -2176,4 +2176,104 @@ class ExampleUnitTest {
         // Null or non-sink device should be rejected
         assertFalse(com.ztftrue.music.play.manager.UsbDacManager.isUsbAudioOutputDevice(null))
     }
+
+    @Test
+    fun trackSort_songsUtils_trackNumberOrdering() {
+        fun createItem(id: Long, name: String, songNumber: Int) = MusicItem(
+            tableId = null,
+            id = id,
+            name = name,
+            path = "/path/$id",
+            duration = 100L,
+            displayName = name,
+            album = "Album",
+            albumId = 1L,
+            artist = "Artist",
+            artistId = 1L,
+            genre = "Genre",
+            genreId = 1L,
+            year = 2020,
+            songNumber = songNumber
+        )
+
+        val list = arrayListOf(
+            createItem(1, "Track 5", 5),
+            createItem(2, "Track 2", 2),
+            createItem(3, "Track 10", 10),
+            createItem(4, "Track 1", 1),
+            createItem(5, "Track 2 Alt", 2)
+        )
+
+        // Test ASC sort by track number
+        val sortedAsc = com.ztftrue.music.utils.trackManager.SongsUtils.sortSongs(list, "track", "ASC")
+        assertEquals(listOf(1, 2, 2, 5, 10), sortedAsc.map { it.songNumber })
+        assertEquals("Track 1", sortedAsc[0].name)
+        // Check tie-breaking by name: "Track 2" < "Track 2 Alt"
+        assertEquals("Track 2", sortedAsc[1].name)
+        assertEquals("Track 2 Alt", sortedAsc[2].name)
+
+        // Test DESC sort by track number
+        val sortedDesc = com.ztftrue.music.utils.trackManager.SongsUtils.sortSongs(list, "track", "DESC")
+        assertEquals(listOf(10, 5, 2, 2, 1), sortedDesc.map { it.songNumber })
+        assertEquals("Track 10", sortedDesc[0].name)
+        assertEquals("Track 5", sortedDesc[1].name)
+    }
+
+    @Test
+    fun trackSort_sortUtils_getTrackComparator_trackAndTitle() {
+        fun createItem(id: Long, name: String, songNumber: Int, duration: Long) = MusicItem(
+            tableId = null,
+            id = id,
+            name = name,
+            path = "/path/$id",
+            duration = duration,
+            displayName = name,
+            album = "Album",
+            albumId = 1L,
+            artist = "Artist",
+            artistId = 1L,
+            genre = "Genre",
+            genreId = 1L,
+            year = 2020,
+            songNumber = songNumber
+        )
+
+        val itemA = createItem(1, "Alpha", 2, 120L)
+        val itemB = createItem(2, "Beta", 1, 300L)
+        val itemC = createItem(3, "Gamma", 3, 200L)
+
+        val list = listOf(itemA, itemB, itemC)
+
+        // Sort by track number ASC
+        val trackAscComparator = SortUtils.getTrackComparator("track", true)
+        val sortedByTrackAsc = list.sortedWith(trackAscComparator)
+        assertEquals(listOf(itemB, itemA, itemC), sortedByTrackAsc)
+
+        // Sort by track number DESC
+        val trackDescComparator = SortUtils.getTrackComparator("track", false)
+        val sortedByTrackDesc = list.sortedWith(trackDescComparator)
+        assertEquals(listOf(itemC, itemA, itemB), sortedByTrackDesc)
+
+        // Sort by title ASC
+        val titleAscComparator = SortUtils.getTrackComparator("title", true)
+        val sortedByTitleAsc = list.sortedWith(titleAscComparator)
+        assertEquals(listOf(itemA, itemB, itemC), sortedByTitleAsc)
+
+        // Sort by duration DESC
+        val durationDescComparator = SortUtils.getTrackComparator("duration", false)
+        val sortedByDurationDesc = list.sortedWith(durationDescComparator)
+        assertEquals(listOf(itemB, itemC, itemA), sortedByDurationDesc)
+    }
+
+    @Test
+    fun videoCover_diskCacheFilePathLogic() {
+        val path1 = "/storage/emulated/0/Movies/sample1.mp4"
+        val path2 = "/storage/emulated/0/Movies/sample2.mkv"
+        val hash1 = kotlin.math.abs(path1.hashCode())
+        val hash2 = kotlin.math.abs(path2.hashCode())
+
+        assertNotEquals(hash1, hash2)
+        assertTrue(hash1 >= 0)
+        assertTrue(hash2 >= 0)
+    }
 }

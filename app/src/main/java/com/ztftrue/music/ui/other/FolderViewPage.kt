@@ -97,6 +97,7 @@ import com.ztftrue.music.utils.MutableListExtension.removeLastSafe
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.SharedPreferencesUtils
+import com.ztftrue.music.utils.SortUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.model.AnyListBase
@@ -156,14 +157,29 @@ fun FolderListPage(
                     musicViewModel.showIndicatorMap[folderList.type.name] =
                         filedSelected == "Alphabetical"
                     showIndicator.value = filedSelected == "Alphabetical"
+
+                    val isAsc = (PlayUtils.methodMap[methodSelected] ?: "ASC").equals("ASC", ignoreCase = true)
+                    val comparator = SortUtils.getTrackComparator(filedCode, isAsc)
+                    val sorted = tracksList.sortedWith(comparator)
+                    tracksList.clear()
+                    tracksList.addAll(sorted)
+
                     val bundle = Bundle()
                     bundle.putString(
                         "method",
                         PlayUtils.methodMap[methodSelected] ?: ""
                     )
                     bundle.putString(
+                        "methodName",
+                        methodSelected
+                    )
+                    bundle.putString(
                         "filed",
                         filedCode
+                    )
+                    bundle.putString(
+                        "filedName",
+                        filedSelected
                     )
                     bundle.putString(
                         "type",
@@ -390,7 +406,7 @@ fun FolderListPage(
 
 
 
-    LaunchedEffect(musicViewModel.refreshPlayList.value, refreshCurrentValueList) {
+    LaunchedEffect(musicViewModel.refreshPlayList.value, musicViewModel.refreshFolder.value, refreshCurrentValueList) {
         if (musicViewModel.browser == null) {
             navController.removeLastSafe()
             return@LaunchedEffect
@@ -461,7 +477,7 @@ fun FolderListPage(
                     ) {
                         Image(
                             painter = rememberAsyncImagePainter(
-                                musicViewModel.customMusicCover.value
+                                musicViewModel.getCustomCoverModel()
                             ),
                             contentDescription = "cover",
                             modifier = Modifier

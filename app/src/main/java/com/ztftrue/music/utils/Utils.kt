@@ -2,6 +2,7 @@ package com.ztftrue.music.utils
 
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
+import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ResolveInfo
@@ -9,8 +10,11 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.util.Size
 import android.text.TextUtils
 import android.util.Log
 import android.util.TypedValue
@@ -422,34 +426,95 @@ object Utils {
         }
     }
 
-    private val retriever = MediaMetadataRetriever()
+    fun getVideoCoverCacheFile(context: Context, path: String): File {
+        val cacheDir = File(context.externalCacheDir ?: context.cacheDir, "video_cover")
+        if (!cacheDir.exists()) {
+            cacheDir.mkdirs()
+        }
+        val safeName = "${kotlin.math.abs(path.hashCode())}.jpg"
+        return File(cacheDir, safeName)
+    }
+
+    fun extractVideoFrame(context: Context, musicId: Long, path: String): Bitmap? {
+        val cacheFile = getVideoCoverCacheFile(context, path)
+        if (cacheFile.exists() && cacheFile.length() > 0) {
+            val cachedBitmap = BitmapFactory.decodeFile(cacheFile.absolutePath)
+            if (cachedBitmap != null) {
+                return cachedBitmap
+            }
+        }
+
+        var bitmap: Bitmap? = null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
+                val rawId = if (musicId < 0) (-musicId) - 1L else musicId
+                val uri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, rawId)
+                bitmap = context.contentResolver.loadThumbnail(uri, Size(512, 512), null)
+            } catch (_: Exception) {
+            }
+        }
+
+        if (bitmap == null && path.isNotEmpty()) {
+            val retriever = MediaMetadataRetriever()
+            try {
+                retriever.setDataSource(path)
+                bitmap = retriever.getFrameAtTime(1_000_000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+                    ?: retriever.frameAtTime
+            } catch (_: Exception) {
+            } finally {
+                try {
+                    retriever.release()
+                } catch (_: Exception) {
+                }
+            }
+        }
+
+        if (bitmap != null) {
+            val scaled = bitmap.scale(512, 512, false)
+            try {
+                FileOutputStream(cacheFile).use { out ->
+                    scaled.compress(Bitmap.CompressFormat.JPEG, 85, out)
+                }
+            } catch (_: Exception) {
+            }
+            return scaled
+        }
+
+        return null
+    }
+
     fun getCover(
         musicViewModel: MusicViewModel?,
         context: Context,
         musicId: Long,
         path: String
     ): ImageSource {
-//        try {
-//            var uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-//            uri = ContentUris.withAppendedId(uri, musicId)
-//            val thumbnail =
-//                context.contentResolver.loadThumbnail(uri, Size(512, 512), null);
-//            return thumbnail
-//        } catch (_: IOException) {
-//        }
         try {
-            retriever.setDataSource(path)
-            val coverT = retriever.embeddedPicture
-            if (coverT != null) {
-                val bitmap = decodeSampledBitmapFromByteArray(coverT, 0, coverT.size, 512, 512)
-                if (bitmap != null) {
-                    return ImageSource.BitmapFile(bitmap.scale(512, 512, false))
+            if (isVideoPath(path) || musicId < 0) {
+                val cacheFile = getVideoCoverCacheFile(context, path)
+                if (cacheFile.exists() && cacheFile.length() > 0) {
+                    return ImageSource.FilePath(cacheFile.absolutePath)
                 }
-            } else if (isVideoPath(path) || musicId < 0) {
-                val frame = retriever.getFrameAtTime(1_000_000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
-                    ?: retriever.frameAtTime
+                val frame = extractVideoFrame(context, musicId, path)
                 if (frame != null) {
-                    return ImageSource.BitmapFile(frame.scale(512, 512, false))
+                    return ImageSource.BitmapFile(frame)
+                }
+            } else {
+                val retriever = MediaMetadataRetriever()
+                try {
+                    retriever.setDataSource(path)
+                    val coverT = retriever.embeddedPicture
+                    if (coverT != null) {
+                        val bitmap = decodeSampledBitmapFromByteArray(coverT, 0, coverT.size, 512, 512)
+                        if (bitmap != null) {
+                            return ImageSource.BitmapFile(bitmap.scale(512, 512, false))
+                        }
+                    }
+                } finally {
+                    try {
+                        retriever.release()
+                    } catch (_: Exception) {
+                    }
                 }
             }
         } catch (_: Exception) {
@@ -482,13 +547,25 @@ object Utils {
      * for edit track page
      */
     fun getCoverNoFallback(path: String): Bitmap? {
+        val retriever = MediaMetadataRetriever()
         try {
             retriever.setDataSource(path)
             val coverT = retriever.embeddedPicture
             if (coverT != null) {
                 return decodeSampledBitmapFromByteArray(coverT, 0, coverT.size, 512, 512)?.scale(512, 512, false)
+            } else if (isVideoPath(path)) {
+                val frame = retriever.getFrameAtTime(1_000_000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+                    ?: retriever.frameAtTime
+                if (frame != null) {
+                    return frame.scale(512, 512, false)
+                }
             }
         } catch (_: Exception) {
+        } finally {
+            try {
+                retriever.release()
+            } catch (_: Exception) {
+            }
         }
         return null
     }
@@ -501,12 +578,27 @@ object Utils {
         path: String
     ): Bitmap {
         try {
-            retriever.setDataSource(path)
-            val coverT = retriever.embeddedPicture
-            if (coverT != null) {
-                val bitmap = decodeSampledBitmapFromByteArray(coverT, 0, coverT.size, 512, 512)
-                if (bitmap != null) {
-                    return bitmap.scale(512, 512, false)
+            if (isVideoPath(path)) {
+                val frame = extractVideoFrame(context, -1L, path)
+                if (frame != null) {
+                    return frame
+                }
+            } else {
+                val retriever = MediaMetadataRetriever()
+                try {
+                    retriever.setDataSource(path)
+                    val coverT = retriever.embeddedPicture
+                    if (coverT != null) {
+                        val bitmap = decodeSampledBitmapFromByteArray(coverT, 0, coverT.size, 512, 512)
+                        if (bitmap != null) {
+                            return bitmap.scale(512, 512, false)
+                        }
+                    }
+                } finally {
+                    try {
+                        retriever.release()
+                    } catch (_: Exception) {
+                    }
                 }
             }
         } catch (_: Exception) {

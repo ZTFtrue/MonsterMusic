@@ -1548,6 +1548,20 @@ class MusicViewModel : ViewModel() {
         }
     }
 
+    suspend fun getVideoCover(context: Context, id: Long, path: String): Any {
+        val cacheFile = Utils.getVideoCoverCacheFile(context, path)
+        if (cacheFile.exists() && cacheFile.length() > 0) {
+            return cacheFile
+        }
+        val bitmap = withContext(Dispatchers.IO) {
+            Utils.extractVideoFrame(context, id, path)
+        }
+        if (bitmap != null && cacheFile.exists() && cacheFile.length() > 0) {
+            return cacheFile
+        }
+        return getCustomCoverModel()
+    }
+
     fun setCustomCover(context: Context, uri: Uri) {
         val appContext = context.applicationContext
         viewModelScope.launch(Dispatchers.IO) {

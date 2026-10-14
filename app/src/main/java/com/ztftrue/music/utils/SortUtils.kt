@@ -184,7 +184,7 @@ object SortUtils {
         }
     }
 
-    private fun getTrackComparator(sortOrder: String?, ascending: Boolean): Comparator<MusicItem> {
+    fun getTrackComparator(sortOrder: String?, ascending: Boolean): Comparator<MusicItem> {
         val orderLower = sortOrder?.lowercase().orEmpty()
         return when {
             orderLower.contains("album") -> Comparator { a, b ->
@@ -206,6 +206,9 @@ object SortUtils {
             orderLower.contains("track") -> Comparator { a, b ->
                 val c = if (ascending) a.songNumber.compareTo(b.songNumber) else b.songNumber.compareTo(a.songNumber)
                 if (c != 0) c else compareStrings(a.name, b.name, true)
+            }
+            orderLower.contains("title") -> Comparator { a, b ->
+                compareStrings(a.name, b.name, ascending)
             }
             else -> Comparator { a, b ->
                 compareStrings(a.name, b.name, ascending)

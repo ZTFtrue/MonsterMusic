@@ -96,6 +96,7 @@ import com.ztftrue.music.utils.CustomSlider
 import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.SharedPreferencesUtils
+import com.ztftrue.music.utils.SortUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.model.MusicPlayList
@@ -254,14 +255,30 @@ fun MainTopBar(
                         musicViewModel.showIndicatorMap[currentTab.type.name] =
                             filedSelected == "Alphabetical"
 
+                        val isAsc = (PlayUtils.methodMap[methodSelected] ?: "ASC").equals("ASC", ignoreCase = true)
+                        if (currentTab.type.name == PlayListType.Songs.name) {
+                            val comparator = SortUtils.getTrackComparator(filedCode, isAsc)
+                            val sorted = musicViewModel.songsList.sortedWith(comparator)
+                            musicViewModel.songsList.clear()
+                            musicViewModel.songsList.addAll(sorted)
+                        }
+
                         val bundle = Bundle()
                         bundle.putString(
                             "method",
                             PlayUtils.methodMap[methodSelected] ?: ""
                         )
                         bundle.putString(
+                            "methodName",
+                            methodSelected
+                        )
+                        bundle.putString(
                             "filed",
                             filedCode
+                        )
+                        bundle.putString(
+                            "filedName",
+                            filedSelected
                         )
                         bundle.putString(
                             "type",
@@ -297,8 +314,12 @@ fun MainTopBar(
                                                 !musicViewModel.refreshGenre.value
                                         }
 
+                                        PlayListType.Folders.name -> {
+                                            musicViewModel.refreshFolder.value =
+                                                !musicViewModel.refreshFolder.value
+                                        }
+
                                         PlayListType.Songs.name -> {
-                                            musicViewModel.songsList.clear()
                                             val songsResult: ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>? =
                                                 musicViewModel.browser?.getChildren(
                                                     "songs_root",
@@ -321,6 +342,7 @@ fun MainTopBar(
                                                                 mediaItem
                                                             )
                                                         }.fastFilterNotNull()
+                                                    musicViewModel.songsList.clear()
                                                     musicViewModel.songsList.addAll(list)
                                                 } catch (e: Exception) {
                                                     Log.e(

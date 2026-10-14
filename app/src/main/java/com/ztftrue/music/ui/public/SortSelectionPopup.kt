@@ -43,7 +43,6 @@ fun SortSelectionPopup(
     onSortConfirmed: (filedSelected: String, methodSelected: String, filedCode: String) -> Unit
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     var filedSelected by remember { mutableStateOf("") }
     var methodSelected by remember { mutableStateOf("") }
 
@@ -221,33 +220,11 @@ fun SortSelectionPopup(
                 IconButton(
                     modifier = Modifier.width(50.dp),
                     onClick = {
-                        onDismissRequest()
                         val capturedField = filedSelected
                         val capturedMethod = methodSelected
                         val filedCode = sortFiledOptions[capturedField] ?: ""
-                        scope.launch(Dispatchers.IO) {
-                            val db = MusicDatabase.getDatabase(context).SortFiledDao()
-                            val sortData = db.findSortByType(sortType)
-                            if (sortData != null) {
-                                sortData.method = PlayUtils.methodMap[capturedMethod] ?: ""
-                                sortData.methodName = capturedMethod
-                                sortData.filed = filedCode
-                                sortData.filedName = capturedField
-                                db.update(sortData)
-                            } else {
-                                val newData = SortFiledData(
-                                    sortType,
-                                    filedCode,
-                                    PlayUtils.methodMap[capturedMethod] ?: "",
-                                    capturedMethod,
-                                    capturedField
-                                )
-                                db.insert(newData)
-                            }
-                            withContext(Dispatchers.Main) {
-                                onSortConfirmed(capturedField, capturedMethod, filedCode)
-                            }
-                        }
+                        onSortConfirmed(capturedField, capturedMethod, filedCode)
+                        onDismissRequest()
                     }
                 ) {
                     Icon(

@@ -86,6 +86,7 @@ import com.ztftrue.music.utils.OperateType
 import com.ztftrue.music.utils.PlayListType
 import com.ztftrue.music.utils.ScrollDirectionType
 import com.ztftrue.music.utils.SharedPreferencesUtils
+import com.ztftrue.music.utils.SortUtils
 import com.ztftrue.music.utils.Utils
 import com.ztftrue.music.utils.Utils.toPx
 import com.ztftrue.music.utils.model.AlbumList
@@ -149,14 +150,29 @@ fun TracksListPage(
                     musicViewModel.showIndicatorMap[anyListBase.type.name] =
                         filedSelected == "Alphabetical"
                     showIndicator.value = filedSelected == "Alphabetical"
+
+                    val isAsc = (PlayUtils.methodMap[methodSelected] ?: "ASC").equals("ASC", ignoreCase = true)
+                    val comparator = SortUtils.getTrackComparator(filedCode, isAsc)
+                    val sorted = tracksList.sortedWith(comparator)
+                    tracksList.clear()
+                    tracksList.addAll(sorted)
+
                     val bundle = Bundle()
                     bundle.putString(
                         "method",
                         PlayUtils.methodMap[methodSelected] ?: ""
                     )
                     bundle.putString(
+                        "methodName",
+                        methodSelected
+                    )
+                    bundle.putString(
                         "filed",
                         filedCode
+                    )
+                    bundle.putString(
+                        "filedName",
+                        filedSelected
                     )
                     bundle.putString(
                         "type",
@@ -584,7 +600,7 @@ fun TracksListPage(
                                     is AlbumList -> {
                                         val albumList = musicPlayList.value as AlbumList
                                         val albumCoverModel by produceState(
-                                            initialValue = musicViewModel.customMusicCover.value, // 初始显示默认封面
+                                            initialValue = musicViewModel.getCustomCoverModel(), // 初始显示默认封面
                                             key1 = albumList.id
                                         ) {
                                             value =
@@ -608,7 +624,7 @@ fun TracksListPage(
                                     }
 
                                     else -> {
-                                        musicViewModel.customMusicCover.value
+                                        musicViewModel.getCustomCoverModel()
                                     }
                                 }
                             ),

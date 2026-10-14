@@ -36,12 +36,16 @@ object SongsUtils {
         field: String?,
         order: String?
     ): ArrayList<MusicItem> {
-        val comparator: Comparator<MusicItem> = when (field) {
-            MediaStore.Audio.Media.TITLE -> Comparator { a, b -> SortUtils.compareStrings(a.name, b.name) }
-            MediaStore.Audio.Media.ALBUM -> Comparator { a, b -> SortUtils.compareStrings(a.album, b.album) }
-            MediaStore.Audio.Media.ARTIST -> Comparator { a, b -> SortUtils.compareStrings(a.artist, b.artist) }
-            MediaStore.Audio.Media.DURATION -> compareBy { it.duration }
-            MediaStore.Audio.Media.YEAR -> compareBy { it.year }
+        val comparator: Comparator<MusicItem> = when (field?.lowercase()) {
+            MediaStore.Audio.Media.TITLE.lowercase() -> Comparator { a, b -> SortUtils.compareStrings(a.name, b.name) }
+            MediaStore.Audio.Media.ALBUM.lowercase() -> Comparator { a, b -> SortUtils.compareStrings(a.album, b.album) }
+            MediaStore.Audio.Media.ARTIST.lowercase() -> Comparator { a, b -> SortUtils.compareStrings(a.artist, b.artist) }
+            MediaStore.Audio.Media.DURATION.lowercase() -> compareBy { it.duration }
+            MediaStore.Audio.Media.YEAR.lowercase() -> compareBy { it.year }
+            MediaStore.Audio.Media.TRACK.lowercase(), "track" -> Comparator { a, b ->
+                val c = a.songNumber.compareTo(b.songNumber)
+                if (c != 0) c else SortUtils.compareStrings(a.name, b.name)
+            }
             else -> {
                 return list
             }

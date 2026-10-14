@@ -365,6 +365,7 @@ object TracksManager {
 
         mapFolder.forEach { it.value.trackNumber = map[it.key]?.size ?: 0 }
         SortUtils.sortTracksMap(tracksHashMap, sortOrder1)
+        allTracksHashMap?.let { SortUtils.sortTracksMap(it, sortOrder1) }
         SortUtils.sortFolders(mapFolder, ascending = true)
         folderListLinkedHashMap.clear()
         folderListLinkedHashMap.putAll(mapFolder)

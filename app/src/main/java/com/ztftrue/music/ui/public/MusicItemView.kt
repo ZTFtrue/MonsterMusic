@@ -35,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -63,6 +64,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.C
 import coil3.compose.AsyncImage
+import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import androidx.media3.common.MediaItem
@@ -422,6 +424,30 @@ fun MusicItemView(
             )
         }
 
+        val isVideo = music.id < 0 || Utils.isVideoPath(music.path)
+        val defaultCover = viewModel.getCustomCoverModel()
+        var coverModel by remember(music.id, music.path, defaultCover) {
+            val initial: Any = if (isVideo) {
+                val cacheFile = Utils.getVideoCoverCacheFile(context, music.path)
+                if (cacheFile.exists() && cacheFile.length() > 0) cacheFile else defaultCover
+            } else if (music.albumId > 0) {
+                ContentUris.withAppendedId("content://media/external/audio/albumart".toUri(), music.albumId)
+            } else {
+                defaultCover
+            }
+            mutableStateOf(initial)
+        }
+
+        if (isVideo) {
+            LaunchedEffect(music.id, music.path) {
+                val cacheFile = Utils.getVideoCoverCacheFile(context, music.path)
+                if (!cacheFile.exists() || cacheFile.length() <= 0L) {
+                    val result = viewModel.getVideoCover(context, music.id, music.path)
+                    coverModel = result
+                }
+            }
+        }
+
         Box(
             modifier = Modifier
                 .size(50.dp)
@@ -431,12 +457,12 @@ fun MusicItemView(
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data(ContentUris.withAppendedId("content://media/external/audio/albumart".toUri(), music.albumId))
+                    .data(coverModel)
                     .crossfade(true)
                     .size(150, 150)
                     .build(),
-                placeholder = painterResource(R.drawable.songs_thumbnail_cover),
-                error = painterResource(R.drawable.songs_thumbnail_cover),
+                placeholder = rememberAsyncImagePainter(model = defaultCover),
+                error = rememberAsyncImagePainter(model = defaultCover),
                 contentDescription = stringResource(R.string.album_cover),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()

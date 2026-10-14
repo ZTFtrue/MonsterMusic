@@ -553,9 +553,13 @@ class PlaySessionCallback(
                 scope.launch {
                     try {
                         val type = args.getString("type")
+                        val filed = args.getString("filed")
+                        val filedName = args.getString("filedName")
+                        val method = args.getString("method")
+                        val methodName = args.getString("methodName")
                         if (!type.isNullOrEmpty()) {
                             // 调用 Repository 执行清理和重载
-                            repository.handleSort(type)
+                            repository.handleSort(type, filed, filedName, method, methodName)
                         }
                         // 返回成功，UI 收到结果后通常会触发数据刷新（如重新 getChildren 或 getInitializedData）
                         future.set(SessionResult(SessionResult.RESULT_SUCCESS))
