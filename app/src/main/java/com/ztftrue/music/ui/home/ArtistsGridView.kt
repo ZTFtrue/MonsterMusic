@@ -130,7 +130,7 @@ fun ArtistsGridView(
     }
     val enableIndicator = showArtistIndicator && showIndicatorValue
 
-    val (itemFilterList, itemFilterMap) = remember(artistLists.size, enableIndicator) {
+    val (itemFilterList, itemFilterMap) = remember(artistLists.size, artistLists.firstOrNull()?.id, enableIndicator) {
         if (enableIndicator) generateItemFilters(artistLists) { it.name } else emptyList<ItemFilterModel>() to hashMapOf()
     }
     val listStateFilter = rememberLazyListState()
@@ -243,7 +243,7 @@ fun ArtistsGridView(
                         top = 5.dp,
                         bottom = 5.dp,
                         start = 5.dp,
-                        end = if (enableIndicator && itemFilterList.isNotEmpty()) 36.dp else 5.dp
+                        end = if (enableIndicator && itemFilterList.size > 1) 36.dp else 5.dp
                     ),
                     state = listState,
                     modifier = Modifier.fillMaxSize()
@@ -261,7 +261,7 @@ fun ArtistsGridView(
                     }
                 }
 
-                if (enableIndicator && itemFilterList.isNotEmpty()) {
+                if (enableIndicator && itemFilterList.size > 1) {
                     AlphabetScroller(
                         itemFilterList = itemFilterList,
                         activeSection = activeSection,

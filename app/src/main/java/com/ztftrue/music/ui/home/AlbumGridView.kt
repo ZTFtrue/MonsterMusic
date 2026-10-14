@@ -132,7 +132,7 @@ fun AlbumGridView(
     }
     val enableIndicator = showAlbumIndicator && showIndicatorValue
 
-    val (itemFilterList, itemFilterMap) = remember(albumList.size, enableIndicator) {
+    val (itemFilterList, itemFilterMap) = remember(albumList.size, albumList.firstOrNull()?.id, enableIndicator) {
         if (enableIndicator) generateItemFilters(albumList) { it.name } else emptyList<ItemFilterModel>() to hashMapOf()
     }
     val listStateFilter = rememberLazyListState()
@@ -248,7 +248,7 @@ fun AlbumGridView(
                         top = 5.dp,
                         bottom = 5.dp,
                         start = 5.dp,
-                        end = if (enableIndicator && itemFilterList.isNotEmpty()) 36.dp else 5.dp
+                        end = if (enableIndicator && itemFilterList.size > 1) 36.dp else 5.dp
                     ),
                     state = listState
                 ) {
@@ -266,7 +266,7 @@ fun AlbumGridView(
                     }
                 }
 
-                if (enableIndicator && itemFilterList.isNotEmpty()) {
+                if (enableIndicator && itemFilterList.size > 1) {
                     AlphabetScroller(
                         itemFilterList = itemFilterList,
                         activeSection = activeSection,

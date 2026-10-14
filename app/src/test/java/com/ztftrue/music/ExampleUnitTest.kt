@@ -2175,6 +2175,43 @@ class ExampleUnitTest {
     }
 
     @Test
+    fun generateItemFilters_singleWordOrLess_doesNotShow() {
+        // Empty list
+        val emptyResult = com.ztftrue.music.ui.public.generateItemFilters(emptyList<String>()) { it }
+        assertTrue(emptyResult.first.isEmpty())
+        assertTrue(emptyResult.second.isEmpty())
+
+        // Single item (just has one word) -> do not show indicator
+        val singleItemResult = com.ztftrue.music.ui.public.generateItemFilters(listOf("Song A")) { it }
+        assertTrue(singleItemResult.first.isEmpty())
+        assertTrue(singleItemResult.second.isEmpty())
+
+        // Multiple items, but all share the same section label (e.g., all start with '#' or 'A')
+        val allSameSectionResult = com.ztftrue.music.ui.public.generateItemFilters(
+            listOf("1 - Track One", "2 - Track Two", "3 - Track Three")
+        ) { it }
+        assertTrue(allSameSectionResult.first.isEmpty())
+        assertTrue(allSameSectionResult.second.isEmpty())
+
+        val allLetterAResult = com.ztftrue.music.ui.public.generateItemFilters(
+            listOf("Apple", "Ant", "Airplane", "Art")
+        ) { it }
+        assertTrue(allLetterAResult.first.isEmpty())
+        assertTrue(allLetterAResult.second.isEmpty())
+
+        // Multiple distinct sections -> show indicator
+        val multiSectionResult = com.ztftrue.music.ui.public.generateItemFilters(
+            listOf("Apple", "Banana", "Cat", "Dog")
+        ) { it }
+        assertEquals(4, multiSectionResult.first.size)
+        assertEquals(listOf("A", "B", "C", "D"), multiSectionResult.first.map { it.name })
+        assertEquals(0, multiSectionResult.first[0].index)
+        assertEquals(1, multiSectionResult.first[1].index)
+        assertEquals(2, multiSectionResult.first[2].index)
+        assertEquals(3, multiSectionResult.first[3].index)
+    }
+
+    @Test
     fun equalizerAudioProcessor_bitPerfectModeBypass() {
         val processor = com.ztftrue.music.effects.EqualizerAudioProcessor()
         assertFalse(processor.bitPerfectMode)

@@ -145,13 +145,13 @@ fun TracksListView(
     val showTopIndicator = showTopIndicatorPref && showIndicatorValue
 
     // ---- 生成 ItemFilterModel ----
-    val (itemFilterList, itemFilterMap) = remember(tracksList.size, showIndicatorValue) {
+    val (itemFilterList, itemFilterMap) = remember(tracksList.size, tracksList.firstOrNull()?.id, showIndicatorValue) {
         if (showIndicatorValue) generateItemFilters(tracksList) else emptyList<ItemFilterModel>() to hashMapOf()
     }
 
     // ---- 滑动指示器 Dialog ----
     var showItemFilterDialog by remember { mutableStateOf(false) }
-    if (showItemFilterDialog) {
+    if (showItemFilterDialog && itemFilterList.size > 1) {
         ItemFilterDialog(itemFilterList, onDismiss = {
             showItemFilterDialog = false
             if (it >= 0) {
@@ -198,7 +198,7 @@ fun TracksListView(
             LazyColumn(
                 state = listState,
                 contentPadding = PaddingValues(
-                    end = if (showSlideIndicator && itemFilterList.isNotEmpty()) 36.dp else 0.dp
+                    end = if (showSlideIndicator && itemFilterList.size > 1) 36.dp else 0.dp
                 ),
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -240,7 +240,7 @@ fun TracksListView(
                     key = { index, item -> "${item.id}_$index" }
                 ) { index, music ->
                     // Top indicator (Modern section header)
-                    if (showTopIndicator) {
+                    if (showTopIndicator && itemFilterList.size > 1) {
                         val currentSection = SortUtils.getSectionLabel(music.name)
                         val prevSection = if (index > 0) SortUtils.getSectionLabel(tracksList[index - 1].name) else null
                         if (prevSection != currentSection) {
@@ -295,7 +295,7 @@ fun TracksListView(
             }
 
             // Right-side Alphabet Scroller with Floating Preview Bubble
-            if (showSlideIndicator && itemFilterList.isNotEmpty()) {
+            if (showSlideIndicator && itemFilterList.size > 1) {
                 AlphabetScroller(
                     itemFilterList = itemFilterList,
                     activeSection = activeSection,
@@ -366,6 +366,7 @@ fun AlphabetScroller(
     onSectionSelected: (ItemFilterModel) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    if (itemFilterList.size <= 1) return
     val haptic = LocalHapticFeedback.current
     var isDragging by remember { mutableStateOf(false) }
     var currentLetter by remember { mutableStateOf(activeSection) }
@@ -668,6 +669,10 @@ fun <T> generateItemFilters(
             }
             lastSection = section
         }
+    }
+
+    if (filterList.size <= 1 || filterMap.size <= 1) {
+        return emptyList<ItemFilterModel>() to hashMapOf()
     }
 
     return filterList to filterMap
