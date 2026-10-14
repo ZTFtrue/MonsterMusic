@@ -4,6 +4,16 @@ All notable changes to MonsterMusic are documented in this file.
 
 The project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.1.85] - 2026-10-14
+- **Audio DSP Limiter Reset**: Automatically reset the native peak limiter whenever bass boost, equalizer bands, or DSP effects (virtualizer, reverb, chorus, flanger, polyphony, delay, echo) are modified, preventing persistent audio attenuation after lowering effect levels.
+- **Track Sorting & Folder Navigation**: Resolved track sort updates not taking immediate effect across tracks and folder views. Added support for track number ordering with secondary title tie-breaking.
+- **Video Cover Integration**: Extracted video thumbnails with disk caching and custom default cover fallbacks.
+- **Aspect Ratio Preservation for Covers**: Prevented squashing and distortion of non-square covers (such as 16:9 video thumbnails), preserving their original aspect ratio.
+- **Indicator Clutter Reduction**: Suppressed alphabetical slide scroller and section header when only one section/word is present, removing redundant list padding.
+- **Track Item Title Scrolling**: Enabled horizontal scrolling for long song titles in `MusicItemView`.
+
+---
+
 ## [0.1.84] - 2026-10-13
 - **Settings Page Overhaul**: Categorized all preferences into intuitive sections (Appearance & Interface, Library & Scanning, Playback & Audio, Lyrics, About). Modernized Material 3 styling, eliminated redundant nested borders and paddings, and made switch rows fully clickable.
 - **Custom Default Cover Picker**: Redesigned default cover dialog with live preview and status indicators. Added system photo picker chooser supporting Gallery, Photo Picker, and Files with safe MIME/URI handling, fallback storage, and real-time in-place preview and restore.

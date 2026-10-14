@@ -1,0 +1,6 @@
+v0.1.85:
+• Automatically reset audio limiter on bass boost and DSP effect changes to avoid persistent attenuation.
+• Fixed track sorting in folder and playlist views with track number support and instant UI updates.
+• Preserved original aspect ratio for non-square covers (e.g. 16:9 video covers).
+• Suppressed alphabetical indicator when only a single section is present.
+• Enabled horizontal touch scrolling for long track titles in list items.

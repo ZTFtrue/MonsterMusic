@@ -1,0 +1,6 @@
+v0.1.85:
+• Automatischer Limiter-Reset bei Änderung von Bass-Boost und DSP-Effekten zur Vermeidung dauerhafter Dämpfung.
+• Problem mit Titel- und Ordnersortierung behoben und Unterstützung für Titelnummern hinzugefügt.
+• Originales Seitenverhältnis für nicht-quadratische Cover (z. B. 16:9 Video-Cover) beibehalten.
+• Alphabetischer Indikator wird ausgeblendet, wenn nur ein einzelner Abschnitt vorhanden ist.
+• Horizontales Scrollen für lange Titelnamen in der Titelliste aktiviert.
