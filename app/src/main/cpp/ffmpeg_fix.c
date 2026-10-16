@@ -346,6 +346,9 @@ static jint JNICALL hook_ffmpegDecode(
                 fn_av_frame_free(&frame);
                 return AUDIO_DECODER_ERROR_OTHER;
             }
+            if (currentOutputData != outputData) {
+                (*env)->DeleteLocalRef(env, currentOutputData);
+            }
             currentOutputData = newOutputData;
         }
 
