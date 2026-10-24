@@ -291,7 +291,7 @@ class EqualizerAudioProcessor : AudioProcessor {
         }
 
         val needsProcessing = equalizerActive || echoActive || visualizationAudioActive ||
-                bassBoostActive || virtualizerActive || reverbActive || chorusActive || flangerActive || polyphonyActive
+                bassBoostActive || virtualizerActive || reverbActive || chorusActive || flangerActive || polyphonyActive || delayActive
 
         if (!needsProcessing) {
             resultBuffer.put(data)

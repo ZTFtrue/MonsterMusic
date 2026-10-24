@@ -2344,4 +2344,22 @@ class ExampleUnitTest {
         assertTrue(hash1 >= 0)
         assertTrue(hash2 >= 0)
     }
+
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+    @Test
+    fun defaultAudioEffects_allDisabled() {
+        val defaultAuxr = com.ztftrue.music.play.manager.AudioEffectManager.createDefaultAuxr(0L)
+        assertFalse("Equalizer should be disabled by default", defaultAuxr.equalizer)
+        assertFalse("Echo should be disabled by default", defaultAuxr.echo)
+        assertFalse("Bass boost should be disabled by default", defaultAuxr.bassBoostEnabled)
+        assertEquals(0, defaultAuxr.bassBoostStrength)
+        assertFalse("Virtualizer should be disabled by default", defaultAuxr.virtualizerEnabled)
+        assertEquals(0, defaultAuxr.virtualizerStrength)
+        assertFalse("Reverb should be disabled by default", defaultAuxr.reverbEnabled)
+        assertFalse("Chorus should be disabled by default", defaultAuxr.chorusEnabled)
+        assertFalse("Flanger should be disabled by default", defaultAuxr.flangerEnabled)
+        assertFalse("Polyphony should be disabled by default", defaultAuxr.polyphonyEnabled)
+        assertFalse("Delay should be disabled by default", defaultAuxr.delayEnabled)
+        assertEquals("legacy_audio_effects_cleaned_v3", com.ztftrue.music.play.manager.AudioEffectManager.KEY_AUDIO_EFFECTS_CLEANED_V3)
+    }
 }

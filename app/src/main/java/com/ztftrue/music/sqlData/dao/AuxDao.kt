@@ -23,6 +23,9 @@ interface AuxDao {
     @Query("DELETE FROM aux WHERE id = :id")
     fun deleteAuxById(id: Long)
 
+    @Query("DELETE FROM aux WHERE id != 0")
+    fun deleteAllTrackAux()
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(auxr: Auxr)
 

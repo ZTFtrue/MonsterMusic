@@ -393,9 +393,6 @@ fun VideoFullscreenView(
 
                     // Previous
                     IconButton(onClick = {
-                        if (musicViewModel.trackEffectEnabled.value) {
-                            musicViewModel.resetAudioEffectsToDefault()
-                        }
                         musicViewModel.browser?.seekToPreviousMediaItem()
                     }) {
                         Icon(
@@ -427,9 +424,6 @@ fun VideoFullscreenView(
 
                     // Next
                     IconButton(onClick = {
-                        if (musicViewModel.trackEffectEnabled.value) {
-                            musicViewModel.resetAudioEffectsToDefault()
-                        }
                         musicViewModel.browser?.seekToNextMediaItem()
                     }) {
                         Icon(

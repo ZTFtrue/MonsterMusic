@@ -26,6 +26,19 @@ class AudioEffectManager(private val context: Context) {
     private val db: MusicDatabase = MusicDatabase.getDatabase(context)
 
     companion object {
+        const val CLEANUP_PREFS = "app_internal_cleanup"
+        const val KEY_AUDIO_EFFECTS_CLEANED_V3 = "legacy_audio_effects_cleaned_v3"
+
+        fun cleanLegacyPreferences(context: Context) {
+            val prefs = listOf("audio_effects_prefs", "Equalizer", "SelectedPreset")
+            for (name in prefs) {
+                try {
+                    context.getSharedPreferences(name, MODE_PRIVATE).edit().clear().apply()
+                    context.deleteSharedPreferences(name)
+                } catch (_: Exception) {}
+            }
+        }
+
         fun createDefaultAuxr(id: Long = 0L) = Auxr(
             id = id,
             speed = 1f,
@@ -86,23 +99,41 @@ class AudioEffectManager(private val context: Context) {
      * 必须在协程中调用 (IO上下文)
      */
     suspend fun initEffects(currentPlayingTrackId: Long? = null, exoPlayer: ExoPlayer? = null) = withContext(Dispatchers.IO) {
-        // 0. 加载播放配置 (是否开启每首歌专属音效)
-        val config = db.PlayConfigDao().findConfig()
-        trackEffectEnabled = config?.trackEffectEnabled ?: false
+        cleanLegacyPreferences(context)
 
-        // 1. 加载全局 Auxr 配置 (id = 0)
-        val auxTemp = db.AuxDao().findGlobalAux() ?: db.AuxDao().findFirstAux()
-        if (auxTemp == null) {
-            migrateLegacyPreferences(auxr)
-            db.AuxDao().upsert(auxr)
+        val cleanupPrefs = context.getSharedPreferences(CLEANUP_PREFS, MODE_PRIVATE)
+        if (!cleanupPrefs.getBoolean(KEY_AUDIO_EFFECTS_CLEANED_V3, false)) {
+            // One-time cleanup to ensure all effects and equalizer are disabled by default
+            // and old settings/track-specific effect data are removed
+            auxr = createDefaultAuxr(0)
             globalAuxr = auxr.copy(id = 0)
+            db.AuxDao().upsert(globalAuxr)
+            db.AuxDao().deleteAllTrackAux()
+
+            val config = db.PlayConfigDao().findConfig()
+            if (config != null) {
+                config.trackEffectEnabled = false
+                db.PlayConfigDao().update(config)
+            } else {
+                db.PlayConfigDao().insert(PlayConfig(id = 1, repeatModel = 0, trackEffectEnabled = false))
+            }
+            trackEffectEnabled = false
+            cleanupPrefs.edit().putBoolean(KEY_AUDIO_EFFECTS_CLEANED_V3, true).apply()
         } else {
-            auxr = auxTemp
-            globalAuxr = auxr.copy(id = 0)
-            // Clean up any stale legacy preferences so they never overwrite database settings
-            context.getSharedPreferences("audio_effects_prefs", MODE_PRIVATE).edit().clear().apply()
-            context.getSharedPreferences("Equalizer", MODE_PRIVATE).edit().clear().apply()
-            context.getSharedPreferences("SelectedPreset", MODE_PRIVATE).edit().clear().apply()
+            // 0. 加载播放配置 (是否开启每首歌专属音效)
+            val config = db.PlayConfigDao().findConfig()
+            trackEffectEnabled = config?.trackEffectEnabled ?: false
+
+            // 1. 加载全局 Auxr 配置 (id = 0)
+            val auxTemp = db.AuxDao().findGlobalAux() ?: db.AuxDao().findFirstAux()
+            if (auxTemp == null) {
+                auxr = createDefaultAuxr(0)
+                db.AuxDao().upsert(auxr)
+                globalAuxr = auxr.copy(id = 0)
+            } else {
+                auxr = auxTemp
+                globalAuxr = auxr.copy(id = 0)
+            }
         }
 
         // 2. 如果开启了每首歌专属音效且有当前播放歌曲，则载入该歌曲的 Auxr
@@ -207,73 +238,7 @@ class AudioEffectManager(private val context: Context) {
         }
     }
 
-    private fun migrateLegacyPreferences(target: Auxr): Boolean {
-        var changed = false
-        val effectsPrefs = context.getSharedPreferences("audio_effects_prefs", MODE_PRIVATE)
-        if (effectsPrefs.all.isNotEmpty()) {
-            if (effectsPrefs.contains("reverb_enabled")) {
-                target.reverbEnabled = effectsPrefs.getBoolean("reverb_enabled", target.reverbEnabled)
-                target.reverbRoomSize = effectsPrefs.getFloat("reverb_room_size", target.reverbRoomSize)
-                target.reverbDamping = effectsPrefs.getFloat("reverb_damping", target.reverbDamping)
-                target.reverbMix = effectsPrefs.getFloat("reverb_mix", target.reverbMix)
-                changed = true
-            }
-            if (effectsPrefs.contains("chorus_enabled")) {
-                target.chorusEnabled = effectsPrefs.getBoolean("chorus_enabled", target.chorusEnabled)
-                target.chorusRate = effectsPrefs.getFloat("chorus_rate", target.chorusRate)
-                target.chorusDepth = effectsPrefs.getFloat("chorus_depth", target.chorusDepth)
-                target.chorusMix = effectsPrefs.getFloat("chorus_mix", target.chorusMix)
-                changed = true
-            }
-            if (effectsPrefs.contains("flanger_enabled")) {
-                target.flangerEnabled = effectsPrefs.getBoolean("flanger_enabled", target.flangerEnabled)
-                target.flangerRate = effectsPrefs.getFloat("flanger_rate", target.flangerRate)
-                target.flangerDepth = effectsPrefs.getFloat("flanger_depth", target.flangerDepth)
-                target.flangerFeedback = effectsPrefs.getFloat("flanger_feedback", target.flangerFeedback)
-                target.flangerMix = effectsPrefs.getFloat("flanger_mix", target.flangerMix)
-                changed = true
-            }
-            if (effectsPrefs.contains("polyphony_enabled")) {
-                target.polyphonyEnabled = effectsPrefs.getBoolean("polyphony_enabled", target.polyphonyEnabled)
-                target.polyphonySemitones = effectsPrefs.getInt("polyphony_semitones", target.polyphonySemitones)
-                target.polyphonyDetune = effectsPrefs.getFloat("polyphony_detune", target.polyphonyDetune)
-                target.polyphonyMix = effectsPrefs.getFloat("polyphony_mix", target.polyphonyMix)
-                changed = true
-            }
-            if (effectsPrefs.contains("delay_enabled")) {
-                target.delayEnabled = effectsPrefs.getBoolean("delay_enabled", target.delayEnabled)
-                target.delayTime = effectsPrefs.getFloat("delay_time", target.delayTime)
-                target.delayFeedback = effectsPrefs.getFloat("delay_feedback", target.delayFeedback)
-                target.delayMix = effectsPrefs.getFloat("delay_mix", target.delayMix)
-                changed = true
-            }
-            if (effectsPrefs.contains("show_pitch_fine")) {
-                target.showPitchFine = effectsPrefs.getBoolean("show_pitch_fine", target.showPitchFine)
-                changed = true
-            }
-            if (effectsPrefs.contains("show_speed_fine")) {
-                target.showSpeedFine = effectsPrefs.getBoolean("show_speed_fine", target.showSpeedFine)
-                changed = true
-            }
-            effectsPrefs.edit().clear().apply()
-        }
 
-        val eqPrefs = context.getSharedPreferences("Equalizer", MODE_PRIVATE)
-        if (eqPrefs.contains("EqualizerType")) {
-            target.equalizerType = eqPrefs.getInt("EqualizerType", target.equalizerType)
-            changed = true
-            eqPrefs.edit().clear().apply()
-        }
-
-        val presetPrefs = context.getSharedPreferences("SelectedPreset", MODE_PRIVATE)
-        if (presetPrefs.contains("SelectedPreset")) {
-            target.selectedPreset = presetPrefs.getString("SelectedPreset", target.selectedPreset) ?: target.selectedPreset
-            changed = true
-            presetPrefs.edit().clear().apply()
-        }
-
-        return changed
-    }
 
     private fun loadAdvancedEffectsSettings() {
         equalizerAudioProcessor.setReverb(

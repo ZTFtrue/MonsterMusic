@@ -602,32 +602,6 @@ class MusicViewModel : ViewModel() {
             MediaCommands.COMMAND_SET_TRACK_EFFECT_ENABLE,
             bundle
         )
-        viewModelScope.launch(Dispatchers.IO) {
-            if (enabled) {
-                val trackId = currentPlay.value?.id
-                if (trackId != null && trackId > 0) {
-                    val trackAux = getDb(context).AuxDao().findAuxById(trackId)
-                    withContext(Dispatchers.Main) {
-                        if (trackAux != null) {
-                            applyAuxr(trackAux)
-                        } else {
-                            resetAudioEffectsToDefault()
-                        }
-                    }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        resetAudioEffectsToDefault()
-                    }
-                }
-            } else {
-                val global = getDb(context).AuxDao().findGlobalAux()
-                withContext(Dispatchers.Main) {
-                    if (global != null) {
-                        applyAuxr(global)
-                    }
-                }
-            }
-        }
     }
 
     fun getDb(context: Context): MusicDatabase {
@@ -643,9 +617,6 @@ class MusicViewModel : ViewModel() {
 
     fun scheduleDealCurrentPlay(context: Context, index: Int, mediaItem: MediaItem?, reason: Int) {
         currentCaptionListLoading.value = true
-        if (trackEffectEnabled.value) {
-            resetAudioEffectsToDefault()
-        }
         dealCurrentPlayJob?.cancel()
         dealCurrentPlayJob = viewModelScope.launch {
             // when reason is Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED
@@ -659,16 +630,6 @@ class MusicViewModel : ViewModel() {
                 val music = MediaItemUtils.mediaItemToMusicItem(mediaItem)
                 currentPlay.value = music
                 if (music != null) {
-                    if (trackEffectEnabled.value) {
-                        val trackAux = withContext(Dispatchers.IO) {
-                            getDb(context).AuxDao().findAuxById(music.id)
-                        }
-                        if (trackAux != null) {
-                            applyAuxr(trackAux)
-                        } else {
-                            resetAudioEffectsToDefault()
-                        }
-                    }
                     dealLyrics(context, music)
                     getCurrentMusicCover(context)
                 }

@@ -121,9 +121,6 @@ fun Bottom(musicViewModel: MusicViewModel, navController: SnapshotStateList<Any>
                         contentDescription = "play previous song",
                         modifier = Modifier
                             .clickable {
-                                if (musicViewModel.trackEffectEnabled.value) {
-                                    musicViewModel.resetAudioEffectsToDefault()
-                                }
                                 musicViewModel.browser?.seekToPreviousMediaItem()
                             }
                             .width(50.dp)
@@ -164,9 +161,6 @@ fun Bottom(musicViewModel: MusicViewModel, navController: SnapshotStateList<Any>
                         contentDescription = "Play next song",
                         modifier = Modifier
                             .clickable {
-                                if (musicViewModel.trackEffectEnabled.value) {
-                                    musicViewModel.resetAudioEffectsToDefault()
-                                }
                                 musicViewModel.browser?.seekToNextMediaItem()
                             }
                             .width(50.dp)
