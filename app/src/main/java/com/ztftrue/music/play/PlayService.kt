@@ -54,6 +54,7 @@ import com.ztftrue.music.utils.model.AnyListBase
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -92,6 +93,7 @@ class PlayService : MediaLibraryService() {
     // 数据库引用 (仅用于简单的状态保存，复杂查询走 Repository)
     private lateinit var db: MusicDatabase
     private val dbQueueWriteMutex = Mutex()
+    private var trackSwitchJob: Job? = null
 
     // 回调通知用
     private var mControllerInfo: MediaSession.ControllerInfo? = null
@@ -307,9 +309,10 @@ class PlayService : MediaLibraryService() {
                     }
                 }
                 updateWidget(exoPlayer.isPlaying)
-                if (effectManager.trackEffectEnabled) {
-                    serviceScope.launch {
-                        effectManager.switchTrack(nextTrack.id, exoPlayer)
+                trackSwitchJob?.cancel()
+                trackSwitchJob = serviceScope.launch {
+                    effectManager.switchTrack(nextTrack.id, exoPlayer)
+                    if (effectManager.trackEffectEnabled) {
                         broadcastAudioEffectUpdate()
                     }
                 }
@@ -363,13 +366,9 @@ class PlayService : MediaLibraryService() {
             serviceScope.launch {
                 withContext(Dispatchers.IO) {
                     val config = db.PlayConfigDao().findConfig()
-                    if (config != null) {
-                        config.repeatModel = repeatMode
-                        db.PlayConfigDao().update(config)
-                    } else {
-                        val config = PlayConfig(0, Player.REPEAT_MODE_ALL)
-                        db.PlayConfigDao().insert(config)
-                    }
+                    val trackEffect = config?.trackEffectEnabled ?: false
+                    db.PlayConfigDao().upsert(PlayConfig(id = 0, repeatModel = repeatMode, trackEffectEnabled = trackEffect))
+                    db.PlayConfigDao().cleanupDuplicateConfigs()
                 }
             }
         }
@@ -817,6 +816,7 @@ class PlayService : MediaLibraryService() {
 
     override fun onDestroy() {
         // 取消所有协程
+        trackSwitchJob?.cancel()
         serviceJob.cancel()
 
         stopForeground(STOP_FOREGROUND_REMOVE)

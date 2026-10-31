@@ -111,36 +111,39 @@ class AudioEffectManager(private val context: Context) {
             db.AuxDao().deleteAllTrackAux()
 
             val config = db.PlayConfigDao().findConfig()
-            if (config != null) {
-                config.trackEffectEnabled = false
-                db.PlayConfigDao().update(config)
-            } else {
-                db.PlayConfigDao().insert(PlayConfig(id = 1, repeatModel = 0, trackEffectEnabled = false))
-            }
+            val repeatModel = config?.repeatModel ?: 0
+            db.PlayConfigDao().upsert(PlayConfig(id = 0, repeatModel = repeatModel, trackEffectEnabled = false))
+            db.PlayConfigDao().cleanupDuplicateConfigs()
             trackEffectEnabled = false
             cleanupPrefs.edit().putBoolean(KEY_AUDIO_EFFECTS_CLEANED_V3, true).apply()
         } else {
-            // 0. 加载播放配置 (是否开启每首歌专属音效)
+            // Ensure any duplicate / legacy configs are cleaned up to single row id = 0
+            db.PlayConfigDao().cleanupDuplicateConfigs()
             val config = db.PlayConfigDao().findConfig()
-            trackEffectEnabled = config?.trackEffectEnabled ?: false
-
-            // 1. 加载全局 Auxr 配置 (id = 0)
-            val auxTemp = db.AuxDao().findGlobalAux() ?: db.AuxDao().findFirstAux()
-            if (auxTemp == null) {
-                auxr = createDefaultAuxr(0)
-                db.AuxDao().upsert(auxr)
-                globalAuxr = auxr.copy(id = 0)
-            } else {
-                auxr = auxTemp
-                globalAuxr = auxr.copy(id = 0)
+            if (config != null && config.id != 0) {
+                db.PlayConfigDao().upsert(config.copy(id = 0))
+                db.PlayConfigDao().cleanupDuplicateConfigs()
             }
+            trackEffectEnabled = config?.trackEffectEnabled ?: false
         }
 
-        // 2. 如果开启了每首歌专属音效且有当前播放歌曲，则载入该歌曲的 Auxr
+        // Always ensure cached globalAuxr is loaded for fallback
+        val globalTemp = db.AuxDao().findGlobalAux() ?: db.AuxDao().findFirstAux()
+        if (globalTemp == null) {
+            globalAuxr = createDefaultAuxr(0)
+            db.AuxDao().upsert(globalAuxr)
+        } else {
+            globalAuxr = globalTemp.copy(id = 0)
+        }
+
+        // 1. FIRST check 'track specific' setting
+        // 2. THEN read aux setting based on track-specific mode
         currentTrackId = currentPlayingTrackId
         if (trackEffectEnabled && currentPlayingTrackId != null && currentPlayingTrackId > 0) {
             val trackAux = db.AuxDao().findAuxById(currentPlayingTrackId)
             auxr = trackAux ?: createDefaultAuxr(currentPlayingTrackId)
+        } else {
+            auxr = globalAuxr
         }
 
         // 3. 应用所有音效
@@ -193,6 +196,13 @@ class AudioEffectManager(private val context: Context) {
         flushDb()
         currentTrackId = trackId
         if (!trackEffectEnabled) {
+            if (auxr.id != 0L) {
+                val globalTemp = db.AuxDao().findGlobalAux() ?: db.AuxDao().findFirstAux()
+                auxr = globalTemp ?: globalAuxr.copy(id = 0)
+                withContext(Dispatchers.Main) {
+                    applyAllDspEffects(exoPlayer)
+                }
+            }
             return@withContext
         }
         val trackAux = db.AuxDao().findAuxById(trackId)
@@ -208,12 +218,9 @@ class AudioEffectManager(private val context: Context) {
         currentTrackId = currentPlayingTrackId
 
         val config = db.PlayConfigDao().findConfig()
-        if (config != null) {
-            config.trackEffectEnabled = enable
-            db.PlayConfigDao().update(config)
-        } else {
-            db.PlayConfigDao().insert(PlayConfig(id = 1, repeatModel = 0, trackEffectEnabled = enable))
-        }
+        val repeatModel = config?.repeatModel ?: 0
+        db.PlayConfigDao().upsert(PlayConfig(id = 0, repeatModel = repeatModel, trackEffectEnabled = enable))
+        db.PlayConfigDao().cleanupDuplicateConfigs()
 
         if (enable && currentPlayingTrackId != null && currentPlayingTrackId > 0) {
             val trackAux = db.AuxDao().findAuxById(currentPlayingTrackId)
@@ -231,8 +238,15 @@ class AudioEffectManager(private val context: Context) {
 
     suspend fun resetCurrentTrackEffect(trackId: Long, exoPlayer: ExoPlayer?) = withContext(Dispatchers.IO) {
         flushDb()
-        db.AuxDao().deleteAuxById(trackId)
-        auxr = createDefaultAuxr(trackId)
+        if (trackEffectEnabled && trackId > 0) {
+            db.AuxDao().deleteAuxById(trackId)
+            auxr = createDefaultAuxr(trackId)
+        } else {
+            db.AuxDao().deleteAuxById(0L)
+            auxr = createDefaultAuxr(0L)
+            globalAuxr = auxr.copy(id = 0L)
+            db.AuxDao().upsert(globalAuxr)
+        }
         withContext(Dispatchers.Main) {
             applyAllDspEffects(exoPlayer)
         }
@@ -617,8 +631,11 @@ class AudioEffectManager(private val context: Context) {
     private var updateJob: Job? = null
 
     private fun updateDb() {
-        if (!trackEffectEnabled && auxr.id == 0L) {
-            globalAuxr = auxr.copy()
+        if (!trackEffectEnabled) {
+            if (auxr.id != 0L) {
+                auxr = auxr.copy(id = 0L)
+            }
+            globalAuxr = auxr.copy(id = 0L)
         }
         updateJob?.cancel()
         updateJob = effectScope.launch {
@@ -628,8 +645,11 @@ class AudioEffectManager(private val context: Context) {
 
     suspend fun flushDb() = withContext(Dispatchers.IO) {
         updateJob?.cancel()
-        if (!trackEffectEnabled && auxr.id == 0L) {
-            globalAuxr = auxr.copy()
+        if (!trackEffectEnabled) {
+            if (auxr.id != 0L) {
+                auxr = auxr.copy(id = 0L)
+            }
+            globalAuxr = auxr.copy(id = 0L)
         }
         db.AuxDao().upsert(auxr)
     }

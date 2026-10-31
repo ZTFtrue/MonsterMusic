@@ -213,6 +213,31 @@ fun EffectView(musicViewModel: MusicViewModel) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Card(
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (musicViewModel.trackEffectEnabled.value) {
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                    }
+                )
+            ) {
+                Text(
+                    text = if (musicViewModel.trackEffectEnabled.value) {
+                        stringResource(R.string.track_sound_effect_enable)
+                    } else {
+                        stringResource(R.string.track_sound_effect_global)
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (musicViewModel.trackEffectEnabled.value) {
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                )
+            }
 //            OutlinedButton(
 //                onClick = { showSaveAudioDialog = true },
 //                enabled = musicViewModel.currentPlay.value != null,

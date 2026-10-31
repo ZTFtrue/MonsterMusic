@@ -202,13 +202,22 @@ object Utils {
             val showRightIndicator = SharedPreferencesUtils.getShowRightIndicator(context)
             val musicVisualizationEnable = SharedPreferencesUtils.getEnableMusicVisualization(context)
             val visualizationMode = SharedPreferencesUtils.getVisualizationMode(context)
-            val aux = musicViewModel.getDb(context).AuxDao().findFirstAux()
+            val config = musicViewModel.getDb(context).PlayConfigDao().findConfig()
+            val trackEffectEnabled = config?.trackEffectEnabled ?: false
+            val currentPlayId = musicViewModel.currentPlay.value?.id
+                ?: SharedPreferencesUtils.getCurrentPlayId(context)
+            val aux = if (trackEffectEnabled && currentPlayId > 0) {
+                musicViewModel.getDb(context).AuxDao().findAuxById(currentPlayId)
+                    ?: musicViewModel.getDb(context).AuxDao().findGlobalAux()
+                    ?: musicViewModel.getDb(context).AuxDao().findFirstAux()
+            } else {
+                musicViewModel.getDb(context).AuxDao().findGlobalAux()
+                    ?: musicViewModel.getDb(context).AuxDao().findFirstAux()
+            }
             val equalizerType = aux?.equalizerType ?: 0
             val selectedPreset = aux?.selectedPreset ?: custom
             val showPitchFine = aux?.showPitchFine ?: false
             val showSpeedFine = aux?.showSpeedFine ?: false
-            val config = musicViewModel.getDb(context).PlayConfigDao().findConfig()
-            val trackEffectEnabled = config?.trackEffectEnabled ?: false
             val showMusicCover = SharedPreferencesUtils.getShowMusicCover(context)
             val themeSelected = context.getSharedPreferences(
                 "SelectedTheme",

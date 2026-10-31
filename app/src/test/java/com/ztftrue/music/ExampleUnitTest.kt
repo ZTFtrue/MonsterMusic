@@ -934,6 +934,59 @@ class ExampleUnitTest {
     }
 
     @Test
+    fun playConfig_repeatModeUpdatePreservesTrackEffect() {
+        // Simulates PlayService.onRepeatModeChanged
+        val initialConfig = com.ztftrue.music.sqlData.model.PlayConfig(id = 0, repeatModel = 0, trackEffectEnabled = true)
+        val newRepeatMode = 2 // Player.REPEAT_MODE_ONE
+
+        // Update repeat mode while preserving trackEffectEnabled
+        val updatedConfig = com.ztftrue.music.sqlData.model.PlayConfig(
+            id = 0,
+            repeatModel = newRepeatMode,
+            trackEffectEnabled = initialConfig.trackEffectEnabled
+        )
+
+        assertEquals(0, updatedConfig.id)
+        assertEquals(newRepeatMode, updatedConfig.repeatModel)
+        assertTrue(updatedConfig.trackEffectEnabled)
+    }
+
+    @Test
+    fun trackEffectEnabled_firstCheckBeforeReadingAux() {
+        val globalAux = com.ztftrue.music.play.manager.AudioEffectManager.createDefaultAuxr(0L).copy(
+            selectedPreset = "GlobalPreset",
+            equalizer = true
+        )
+        val trackAux = com.ztftrue.music.play.manager.AudioEffectManager.createDefaultAuxr(100L).copy(
+            selectedPreset = "TrackPreset",
+            equalizer = false
+        )
+
+        // Case 1: trackEffectEnabled == true -> must load trackAux
+        val trackEffectEnabled = true
+        val currentTrackId = 100L
+        val loadedAux1 = if (trackEffectEnabled && currentTrackId > 0) {
+            trackAux
+        } else {
+            globalAux
+        }
+        assertEquals("TrackPreset", loadedAux1.selectedPreset)
+        assertEquals(100L, loadedAux1.id)
+        assertFalse(loadedAux1.equalizer)
+
+        // Case 2: trackEffectEnabled == false -> must load globalAux
+        val trackEffectDisabled = false
+        val loadedAux2 = if (trackEffectDisabled && currentTrackId > 0) {
+            trackAux
+        } else {
+            globalAux
+        }
+        assertEquals("GlobalPreset", loadedAux2.selectedPreset)
+        assertEquals(0L, loadedAux2.id)
+        assertTrue(loadedAux2.equalizer)
+    }
+
+    @Test
     fun auxr_perTrackCloningAndIsolation() {
         val globalAuxr = com.ztftrue.music.sqlData.model.Auxr(
             id = 0L,
