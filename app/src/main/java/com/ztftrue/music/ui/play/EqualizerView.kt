@@ -158,7 +158,7 @@ fun EqualizerView(musicViewModel: MusicViewModel) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 6.dp),
+                        .padding(bottom = 6.dp, start = 6.dp,top=6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start
                 ) {
