@@ -30,9 +30,14 @@ import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.decoder.ffmpeg.FfmpegLibrary
 import androidx.media3.decoder.ffmpeg.SafeFfmpegAudioRenderer
+import androidx.media3.common.Format
 import androidx.media3.exoplayer.Renderer
 import androidx.media3.exoplayer.audio.AudioRendererEventListener
+import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
+import androidx.media3.exoplayer.mediacodec.MediaCodecInfo
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
@@ -223,17 +228,26 @@ class PlayService : MediaLibraryService() {
                 eventListener: AudioRendererEventListener,
                 out: ArrayList<Renderer>
             ) {
-                // Pass EXTENSION_RENDERER_MODE_OFF to super to avoid loading default FfmpegAudioRenderer
-                super.buildAudioRenderers(
+                val mediaCodecAudioRenderer = object : MediaCodecAudioRenderer(
                     context,
-                    EXTENSION_RENDERER_MODE_OFF,
+                    codecAdapterFactory,
                     mediaCodecSelector,
                     enableDecoderFallback,
-                    audioSink,
                     eventHandler,
                     eventListener,
-                    out
-                )
+                    audioSink
+                ) {
+                    override fun getDecoderInfos(
+                        mediaCodecSelector: MediaCodecSelector,
+                        format: Format,
+                        requiresSecureDecoder: Boolean
+                    ): List<MediaCodecInfo> {
+                        val decoderInfos = super.getDecoderInfos(mediaCodecSelector, format, requiresSecureDecoder)
+                        return AudioDecoderHelper.filterDecodersForFormat(decoderInfos, format)
+                    }
+                }
+                out.add(mediaCodecAudioRenderer)
+
                 if (extensionRendererMode == EXTENSION_RENDERER_MODE_OFF) return
                 if (!FfmpegLibrary.isAvailable()) return
 
@@ -249,6 +263,7 @@ class PlayService : MediaLibraryService() {
                 }
             }
         }
+            .setMediaCodecSelector(AudioDecoderHelper.createMediaCodecSelector())
             .setExtensionRendererMode(decoderMode)
             .setEnableDecoderFallback(true)
             .setEnableAudioFloatOutput(false)
@@ -260,9 +275,15 @@ class PlayService : MediaLibraryService() {
             Log.w("PlayService", "FFmpeg extension native library not available, decoderMode=$decoderMode")
         }
 
+        val extractorsFactory = DefaultExtractorsFactory()
+            .setConstantBitrateSeekingEnabled(true)
+            .setConstantBitrateSeekingAlwaysEnabled(true)
+        val mediaSourceFactory = DefaultMediaSourceFactory(this, extractorsFactory)
+
         val trackSelector = DefaultTrackSelector(this, AdaptiveTrackSelection.Factory())
 
         exoPlayer = ExoPlayer.Builder(this, renderersFactory)
+            .setMediaSourceFactory(mediaSourceFactory)
             .setTrackSelector(trackSelector)
             .build()
 
