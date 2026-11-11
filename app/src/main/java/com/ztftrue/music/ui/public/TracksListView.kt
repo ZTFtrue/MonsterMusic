@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -600,7 +601,9 @@ fun ItemFilterDialog(
                     columns = GridCells.Fixed(4),
                     contentPadding = PaddingValues(10.dp),
                     modifier = Modifier
-                        .height(containerHeightDp / 2f)
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                        .heightIn(max = containerHeightDp / 2f)
                 ) {
                     items(itemFilterList.size) { item ->
                         val iFilter = itemFilterList[item]

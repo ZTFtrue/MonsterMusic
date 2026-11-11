@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -616,7 +617,8 @@ fun AddMusicToPlayListDialog(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(300.dp)
+                        .weight(1f, fill = false)
+                        .heightIn(max = 300.dp)
                         .drawBehind {
                             drawLine(
                                 color = color,

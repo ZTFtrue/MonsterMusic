@@ -644,7 +644,11 @@ fun OperateDialog(
                         .height(1.dp)
                         .background(color = MaterialTheme.colorScheme.onBackground)
                 )
-                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                ) {
                     items(1) {
                         if (musicViewModel.musicQueue.any { it.id == music.id }) {
                             Box(

@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -297,8 +299,46 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                         .height(1.dp)
                         .background(color = MaterialTheme.colorScheme.onBackground)
                 )
-                val sleepT: IntArray = intArrayOf(5, 10, 15, 30)
-                if (musicViewModel.remainTime.longValue > 0) {
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (musicViewModel.remainTime.longValue > 0) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 20.dp, end = 20.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(
+                                    R.string.running,
+                                    Utils.formatTime(musicViewModel.remainTime.longValue)
+                                ),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            TextButton(
+                                onClick = { onConfirmation(0L) },
+                                modifier = Modifier.padding(8.dp),
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.stop),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                        }
+                        HorizontalDivider(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(color = MaterialTheme.colorScheme.onBackground)
+                        )
+                    }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -306,44 +346,147 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Checkbox(checked = musicViewModel.playCompleted.value, onCheckedChange = {
+                            musicViewModel.playCompleted.value = it
+                        })
                         Text(
-                            text = stringResource(
-                                R.string.running,
-                                Utils.formatTime(musicViewModel.remainTime.longValue)
-                            ),
+                            text = stringResource(R.string.play_completed_last_song),
                             color = MaterialTheme.colorScheme.onBackground
                         )
-                        TextButton(
-                            onClick = { onConfirmation(0L) },
-                            modifier = Modifier.padding(8.dp),
-                        ) {
-                            Text(
-                                text = stringResource(R.string.stop),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
                     }
+
                     HorizontalDivider(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(1.dp)
                             .background(color = MaterialTheme.colorScheme.onBackground)
                     )
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 20.dp, end = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(checked = musicViewModel.playCompleted.value, onCheckedChange = {
-                        musicViewModel.playCompleted.value = it
-                    })
-                    Text(
-                        text = stringResource(R.string.play_completed_last_song),
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ElevatedButton(
+                            onClick = { onConfirmation((5 * 60 * 1000).toLong()) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.minutes, 5),
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                        ElevatedButton(
+                            onClick = { onConfirmation((10 * 60 * 1000).toLong()) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.minutes, 10),
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ElevatedButton(
+                            onClick = { onConfirmation((15 * 60 * 1000).toLong()) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.minutes, 15),
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                        ElevatedButton(
+                            onClick = { onConfirmation((30 * 60 * 1000).toLong()) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.minutes, 30),
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
+
+                    Row {
+                        TextField(
+                            value = inputMinutes,
+                            onValueChange = {
+                                if (it.isNotEmpty()) {
+                                    if (it.isDigitsOnly() && !it.contains(".") && it.length < 6 && (it.toLong() > 0)) {
+                                        inputMinutes = it
+                                    }
+                                } else {
+                                    inputMinutes = ""
+                                }
+
+                            },
+                            label = {
+                                Text(
+                                    text = stringResource(R.string.enter_minutes),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            },
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Done,
+                                keyboardType = KeyboardType.Number
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+//                            startTimer(inputMinutes.toInt())
+                                }
+                            ),
+                            colors = TextFieldDefaults.colors(
+                                errorTextColor = MaterialTheme.colorScheme.primary,
+                                focusedTextColor = MaterialTheme.colorScheme.primary,
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                unfocusedTextColor = MaterialTheme.colorScheme.primary,
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                errorCursorColor = MaterialTheme.colorScheme.error,
+                                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                                unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                                errorIndicatorColor = MaterialTheme.colorScheme.error,
+                                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                ),
+                                errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                errorLabelColor = MaterialTheme.colorScheme.error,
+                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                )
+                            ),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                            suffix = {
+                                Text(
+                                    text = stringResource(id = R.string.minutes, ""),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            },
+                        )
+                    }
                 }
 
                 HorizontalDivider(
@@ -352,99 +495,6 @@ fun SleepTimeDialog(musicViewModel: MusicViewModel, onDismiss: () -> Unit) {
                         .height(1.dp)
                         .background(color = MaterialTheme.colorScheme.onBackground)
                 )
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(10.dp),
-                ) {
-                    items(sleepT.size) { item ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            ElevatedButton(
-                                onClick = { onConfirmation((sleepT[item] * 60 * 1000).toLong()) },
-                                modifier = Modifier
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.minutes, sleepT[item]),
-                                    textAlign = TextAlign.Center,
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            }
-                        }
-                    }
-                }
-                Row {
-                    TextField(
-                        value = inputMinutes,
-                        onValueChange = {
-                            if (it.isNotEmpty()) {
-                                if (it.isDigitsOnly() && !it.contains(".") && it.length < 6 && (it.toLong() > 0)) {
-                                    inputMinutes = it
-                                }
-                            } else {
-                                inputMinutes = ""
-                            }
-
-                        },
-                        label = {
-                            Text(
-                                text = stringResource(R.string.enter_minutes),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        },
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = ImeAction.Done,
-                            keyboardType = KeyboardType.Number
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-//                            startTimer(inputMinutes.toInt())
-                            }
-                        ),
-                        colors = TextFieldDefaults.colors(
-                            errorTextColor = MaterialTheme.colorScheme.primary,
-                            focusedTextColor = MaterialTheme.colorScheme.primary,
-                            disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                            unfocusedTextColor = MaterialTheme.colorScheme.primary,
-                            focusedContainerColor = MaterialTheme.colorScheme.background,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                            cursorColor = MaterialTheme.colorScheme.primary,
-                            errorCursorColor = MaterialTheme.colorScheme.error,
-                            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                            unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                            disabledIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                            errorIndicatorColor = MaterialTheme.colorScheme.error,
-                            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                alpha = 0.38f
-                            ),
-                            errorLeadingIconColor = MaterialTheme.colorScheme.error,
-                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(
-                                alpha = 0.38f
-                            ),
-                            errorTrailingIconColor = MaterialTheme.colorScheme.error,
-                            focusedLabelColor = MaterialTheme.colorScheme.primary,
-                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                            disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                            errorLabelColor = MaterialTheme.colorScheme.error,
-                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(
-                                alpha = 0.38f
-                            )
-                        ),
-                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        suffix = {
-                            Text(
-                                text = stringResource(id = R.string.minutes, ""),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        },
-                    )
-                }
 
                 Row(
                     modifier = Modifier

@@ -12,11 +12,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
@@ -79,6 +82,7 @@ fun DrawMenu(
     }
 
     ModalDrawerSheet(
+        drawerContainerColor = MaterialTheme.colorScheme.background,
         modifier = Modifier
             .width(drawerWidth)
     ) {
@@ -86,6 +90,7 @@ fun DrawMenu(
             Modifier
                 .width(drawerWidth)
                 .fillMaxHeight()
+                .verticalScroll(rememberScrollState())
                 .background(color = MaterialTheme.colorScheme.background)
                 .padding(all = 0.dp),
             horizontalAlignment = Alignment.Start,
@@ -349,6 +354,7 @@ fun DrawMenu(
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(20.dp))
         }
 
     }
@@ -402,7 +408,11 @@ fun FeedBackDialog(onDismiss: () -> Unit) {
                 )
 
 
-                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                ) {
                     items(1) {
                         Box(
                             modifier = Modifier

@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -1165,6 +1166,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .weight(1f, fill = false)
                         .heightIn(max = 420.dp)
                 ) {
                     items(items.size) { index ->
@@ -1277,49 +1279,56 @@ fun AudioDecoderModeDialog(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                options.forEach { (mode, title, desc) ->
-                    val isSelected = selectedMode == mode
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(
-                                    alpha = 0.4f
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    options.forEach { (mode, title, desc) ->
+                        val isSelected = selectedMode == mode
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(
+                                        alpha = 0.4f
+                                    )
+                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                                 )
-                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                .border(
+                                    width = if (isSelected) 2.dp else 1.dp,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .clickable { selectedMode = mode }
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = isSelected,
+                                onClick = { selectedMode = mode }
                             )
-                            .border(
-                                width = if (isSelected) 2.dp else 1.dp,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            .clickable { selectedMode = mode }
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = isSelected,
-                            onClick = { selectedMode = mode }
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = title,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 15.sp,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = desc,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = title,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 15.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = desc,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
+                        Spacer(modifier = Modifier.height(10.dp))
                     }
-                    Spacer(modifier = Modifier.height(10.dp))
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -1755,7 +1764,7 @@ fun ManageLyricsFolderDialog(musicViewModel: MusicViewModel, onDismiss: () -> Un
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = (containerHeightPx - 203).dp)
+                        .weight(1f, fill = false)
                 ) {
                     items(folderList.size) {
                         val item = folderList[it]
@@ -1879,91 +1888,99 @@ fun ScanModeDialog(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Option 1: Blacklist mode
-            val isModeBlacklist = selectedMode == SharedPreferencesUtils.SCAN_MODE_BLACKLIST
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(
-                        if (isModeBlacklist) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                    )
-                    .border(
-                        width = if (isModeBlacklist) 2.dp else 1.dp,
-                        color = if (isModeBlacklist) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .clickable { selectedMode = SharedPreferencesUtils.SCAN_MODE_BLACKLIST }
-                    .padding(14.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .weight(1f, fill = false)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                RadioButton(
-                    selected = isModeBlacklist,
-                    onClick = { selectedMode = SharedPreferencesUtils.SCAN_MODE_BLACKLIST }
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.scan_mode_blacklist),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onSurface
+                // Option 1: Blacklist mode
+                val isModeBlacklist = selectedMode == SharedPreferencesUtils.SCAN_MODE_BLACKLIST
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            if (isModeBlacklist) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        )
+                        .border(
+                            width = if (isModeBlacklist) 2.dp else 1.dp,
+                            color = if (isModeBlacklist) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .clickable { selectedMode = SharedPreferencesUtils.SCAN_MODE_BLACKLIST }
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = isModeBlacklist,
+                        onClick = { selectedMode = SharedPreferencesUtils.SCAN_MODE_BLACKLIST }
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.scan_mode_blacklist_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.scan_mode_blacklist),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(R.string.scan_mode_blacklist_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Option 2: Whitelist mode
+                val isModeWhitelist = selectedMode == SharedPreferencesUtils.SCAN_MODE_WHITELIST
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            if (isModeWhitelist) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        )
+                        .border(
+                            width = if (isModeWhitelist) 2.dp else 1.dp,
+                            color = if (isModeWhitelist) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .clickable { selectedMode = SharedPreferencesUtils.SCAN_MODE_WHITELIST }
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = isModeWhitelist,
+                        onClick = { selectedMode = SharedPreferencesUtils.SCAN_MODE_WHITELIST }
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.scan_mode_whitelist),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(R.string.scan_mode_whitelist_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Option 2: Whitelist mode
-            val isModeWhitelist = selectedMode == SharedPreferencesUtils.SCAN_MODE_WHITELIST
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(
-                        if (isModeWhitelist) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                    )
-                    .border(
-                        width = if (isModeWhitelist) 2.dp else 1.dp,
-                        color = if (isModeWhitelist) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .clickable { selectedMode = SharedPreferencesUtils.SCAN_MODE_WHITELIST }
-                    .padding(14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                RadioButton(
-                    selected = isModeWhitelist,
-                    onClick = { selectedMode = SharedPreferencesUtils.SCAN_MODE_WHITELIST }
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.scan_mode_whitelist),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.scan_mode_whitelist_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -2095,7 +2112,7 @@ fun ManageFolderDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(0.6f)
+                    .fillMaxHeight(0.75f)
                     .background(color = MaterialTheme.colorScheme.background),
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -2103,7 +2120,7 @@ fun ManageFolderDialog(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .fillMaxHeight(0.85f)
+                        .weight(1f)
                         .background(color = MaterialTheme.colorScheme.background),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -2127,7 +2144,11 @@ fun ManageFolderDialog(
                             color = MaterialTheme.colorScheme.onBackground
                         )
                     }
-                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f, fill = false)
+                    ) {
                         items(folderList.size) {
                             val item = folderList[it]
                             Row(
@@ -2173,8 +2194,7 @@ fun ManageFolderDialog(
 
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(),
+                        .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                 ) {
                     TextButton(
@@ -2395,6 +2415,7 @@ fun SetListIndicatorDialog(onDismiss: () -> Unit) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .weight(1f, fill = false)
                         .background(color = MaterialTheme.colorScheme.background),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -2739,10 +2760,14 @@ fun SwitchLanguageDialog(onDismiss: () -> Unit) {
                         .height(1.dp)
                         .background(color = MaterialTheme.colorScheme.onBackground)
                 )
-                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                ) {
                     item {
                         Text(
-                            text = stringResource(R.string.manage_tab_items), modifier = Modifier
+                            text = stringResource(R.string.set_language), modifier = Modifier
                                 .padding(2.dp),
                             color = MaterialTheme.colorScheme.onBackground
                         )
@@ -2792,44 +2817,48 @@ fun SwitchLanguageDialog(onDismiss: () -> Unit) {
                             }
                         }
                     }
-                    item {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                        ) {
-                            TextButton(
-                                onClick = { onDismiss() },
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .fillMaxWidth(0.5f),
-                            ) {
-                                Text(
-                                    stringResource(R.string.cancel),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            }
-                            HorizontalDivider(
-                                modifier = Modifier
-                                    .background(MaterialTheme.colorScheme.onBackground)
-                                    .width(1.dp)
-                                    .height(50.dp)
-                            )
-                            TextButton(
-                                onClick = {
-                                    onConfirmation()
-                                },
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .fillMaxWidth(),
+                }
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(color = MaterialTheme.colorScheme.onBackground)
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    TextButton(
+                        onClick = { onDismiss() },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(0.5f),
+                    ) {
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.onBackground)
+                            .width(1.dp)
+                            .height(50.dp)
+                    )
+                    TextButton(
+                        onClick = {
+                            onConfirmation()
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(),
 
-                                ) {
-                                Text(
-                                    stringResource(id = R.string.confirm),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            }
-                        }
+                        ) {
+                        Text(
+                            stringResource(id = R.string.confirm),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
 
@@ -2869,6 +2898,7 @@ fun ReplaceCoverDialog(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
                         .padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {

@@ -348,7 +348,11 @@ fun PlayListOperateDialog(
                         .height(1.dp)
                         .background(color = MaterialTheme.colorScheme.onBackground)
                 )
-                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                ) {
                     items(1) {
                         Box(
                             modifier = Modifier

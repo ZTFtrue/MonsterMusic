@@ -795,7 +795,11 @@ fun FolderListOperateDialog(
                         .height(1.dp)
                         .background(color = MaterialTheme.colorScheme.onBackground)
                 )
-                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                ) {
                     items(1) {
                         if (!(musicViewModel.playListCurrent.value?.type?.equals(playList.type) == true
                                     && musicViewModel.playListCurrent.value?.id?.equals(playList.id) == true)
