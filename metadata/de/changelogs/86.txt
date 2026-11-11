@@ -1,0 +1,5 @@
+v0.1.86:
+• Wiedergabe von MPEG-2/2.5-MP3s mit niedriger Abtastrate korrigiert und CBR-Spulen aktiviert.
+• Feste Aktionsschaltflächen (Bestätigen/Abbrechen) mit scrollbaren Optionen für kleine Bildschirme und große Schriftarten.
+• Vertikales Scrollen für das Navigationsmenü im Querformat aktiviert.
+• Isolierung titelspezifischer Audioeffekte verfeinert und veraltete Einstellungen bereinigt.

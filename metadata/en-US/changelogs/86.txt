@@ -1,0 +1,5 @@
+v0.1.86:
+• Fixed MPEG-2/2.5 low sample rate MP3 playback stalling and enabled CBR seeking.
+• Pinned dialog action buttons (Confirm/Cancel) with scrollable options for small screens and large fonts.
+• Enabled vertical scrolling for navigation drawer in landscape mode.
+• Refined track-specific sound effect isolation and cleaned up legacy audio preferences.

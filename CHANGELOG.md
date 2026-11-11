@@ -4,6 +4,15 @@ All notable changes to MonsterMusic are documented in this file.
 
 The project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.1.86] - 2026-11-11
+- **Low Sample Rate MP3 Playback & CBR Seeking**: Resolved playback stalling on low sample rate MPEG-2 and MPEG-2.5 Layer 3 files (e.g. 22.05 kHz) by prioritizing standard software decoders and enabling FFmpeg fallback. Enabled constant bitrate (CBR) seeking for accurate seeking without seek tables.
+- **Dialog Layout & Button Visibility**: Pinned action buttons ("Confirm", "Cancel", "Select folder") and made options scrollable across all dialogs (first scan setup, scan mode, audio decoder selector, sleep timer, lyrics folder, language switcher, operation menus) on small screens and large display font scaling.
+- **Navigation Drawer Scrolling**: Enabled vertical scrolling in the navigation drawer (`DrawMenu`) to ensure all menu items remain accessible in landscape orientation or on constrained screen heights.
+- **Audio Effect Isolation & Preference Cleanup**: Purged legacy preferences and refined track-specific versus global audio effect isolation.
+- **Permissions**: Removed unused `ACCESS_NETWORK_STATE` permission from AndroidManifest.
+
+---
+
 ## [0.1.85] - 2026-10-14
 - **Audio DSP Limiter Reset**: Automatically reset the native peak limiter whenever bass boost, equalizer bands, or DSP effects (virtualizer, reverb, chorus, flanger, polyphony, delay, echo) are modified, preventing persistent audio attenuation after lowering effect levels.
 - **Track Sorting & Folder Navigation**: Resolved track sort updates not taking immediate effect across tracks and folder views. Added support for track number ordering with secondary title tie-breaking.
